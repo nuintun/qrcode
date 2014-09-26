@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <link rel="StyleSheet" type="text/css" href="default.css">
+        <title>QrCode</title>
+        <style type="text/css">
+            body {overflow-y: scroll;}
+            html *, body * {font-family: MICROSOFT YAHEI,serif;}
+            textarea {resize: none; width: 100%;}
+        </style>
+    </head>
+    <body>
+        <div class="main">
+            <ul class="tabs clearfix">
+                <li class="selected">编码</li>
+                <li>解码</li>
+            </ul>
+            <ul class="content clearfix">
+                <li class="encode selected">
+                    <p>输入文本：</p>
+
+                    <div><textarea id="encode-text"></textarea></div>
+                    <p>纠错等级：<select id="encode-eclevel">
+                        <option value="1">Level L (7%)</option>
+                        <option value="0">Level M (15%)</option>
+                        <option value="3">Level Q (25%)</option>
+                        <option value="2" selected>Level H (30%)</option>
+                    </select> 编码方式：<select id="encode-mode">
+                        <option value="4" selected>8bit</option>
+                        <option value="2">Alphanumeric</option>
+                        <option value="1">Numeric</option>
+                    </select></p>
+                    <p>
+                        色块大小：<input id="encode-msize" type="number" min="2" max="10" value="5" />
+                        留白大小：<input id="encode-margin" type="number" min="2" max="10" value="1" />
+                    </p>
+
+                    <p>
+                        前景色：<input type="color" value="#000000" id="encode-mcolor" />
+                        背景色：<input type="color" value="#ffffff" id="encode-bgcolor" />
+                    </p>
+
+                    <p>Logo 和 LogoUrl 选填一个：</p>
+
+                    <p><label>&nbsp;&nbsp;&nbsp;&nbsp;Logo：</label><input type="file" name="files[]" id="encode-logo" /></p>
+
+                    <p>
+                        <label>&nbsp;&nbsp;&nbsp;&nbsp;LogoUrl：</label><input type="url" id="encode-logourl" />
+                        <button id="encode-logobtn">加载Logo</button>
+                    </p>
+                    <div>
+                        <canvas id="logo-canvas"></canvas>
+                    </div>
+                    <p>
+                        渲染方式：
+                        <select id="encode-render">
+                            <option value="canvas" selected>Canvas</option>
+                            <option value="table">Table</option>
+                        </select>
+                    </p>
+                    <p>
+                        <button id="encode-btn">编码</button>
+                    </p>
+                    <div id="encode-canvas"></div>
+                </li>
+                <li class="decode">
+                    <p><label>选择二维码图片：</label><input type="file" name="files[]" id="decode-file" /></p>
+
+                    <div>
+                        <canvas id="decode-canvas"></canvas>
+                    </div>
+                    <p>
+                        <button id="decode-btn">解码</button>
+                    </p>
+                    <p id="decode-text" class="hide">解码值为：<br/><br/><textarea></textarea></p>
+                </li>
+            </ul>
+        </div>
+
+        <script src="jquery-1.11.1.js"></script>
+        <script type="text/javascript" src="../reedsolomon.js"></script>
+        <script type="text/javascript" src="../qrbase.js"></script>
+        <script type="text/javascript" src="../decode.js"></script>
+        <script type="text/javascript" src="../qrdecode.js"></script>
+        <script type="text/javascript" src="../encode.js"></script>
+        <script type="text/javascript" src="../qrcode.js"></script>
+        <script type="text/javascript" src="../render.table.js"></script>
+        <script type="text/javascript" src="../render.canvas.js"></script>
+        <script type="text/javascript">
+            function renderLogo(canvas, url){
+                var img = new Image(),
+                    ctx = canvas.getContext('2d'),
+                    canvasSize = 200;
+
+                if (!url) {
+                    ctx.fillStyle = 'rgb(255, 255, 255)';
+                    ctx.fillRect(0, 0, canvasSize, canvasSize);
+                    return;
+                }
+
+                img.onload = function (){
+                    var imgSize, zoom,
+                        imgW = img.width, imgH = img.height;
+
+                    canvas.width = canvasSize;
+                    canvas.height = canvasSize;
+
+                    ctx.fillStyle = 'rgb(255, 255, 255)';
+                    ctx.fillRect(0, 0, canvasSize, canvasSize);
+
+                    imgSize = Math.max(imgW, imgH);
+
+                    if (imgSize > canvasSize) {
+                        zoom = canvasSize / imgSize;
+                        imgW = imgW * zoom;
+                        imgH = imgH * zoom;
+                    }
+
+                    ctx.drawImage(img, (canvasSize - imgW) / 2, (canvasSize - imgH) / 2, imgW, imgH);
+                };
+
+                img.src = url;
+            }
+
+            // Tab 切换
+            var nav = $('.tabs li'),
+                content = $('.content li');
+
+            nav.on('click', function (e){
+                nav.removeClass('selected');
+                $(this).addClass('selected');
+                content.removeClass('selected').eq($(this).index()).addClass('selected');
+            });
+
+            // Logo 加载
+            $('#encode-logo').on('change', function (e){
+                var canvas = $('#logo-canvas')[0],
+                    file = e.target.files[0],
+                    reader = new FileReader();
+
+                reader.onload = ( function (e){
+                    $(canvas).data('logo', e.target.result);
+                    renderLogo(canvas, e.target.result);
+                });
+
+                file && reader.readAsDataURL(file);
+            });
+
+            // Logo 加载（Url 方式）
+            $('#encode-logobtn').on('click', function (e){
+                var imgUrl = $('#encode-logourl').val(),
+                    canvas = $('#logo-canvas')[0];
+
+                $(canvas).data('logo', imgUrl);
+                renderLogo(canvas, imgUrl);
+            });
+
+            // 生成二维码
+            $('#encode-btn').on('click', function (){
+                var config = {},
+                    encodeCanvas = $('#encode-canvas');
+
+                config.text = $('#encode-text').val();
+                config.render = $('#encode-render').val();
+                config.bgColor = $('#encode-bgcolor').val();
+                config.moduleColor = $('#encode-mcolor').val();
+                config.moduleSize = $('#encode-msize').val();
+                config.mode = Number($('#encode-mode').val());
+                config.ECLevel = Number($('#encode-eclevel').val());
+                config.margin = Number($('#encode-margin').val());
+                config.logo = $('#logo-canvas').data('logo');
+                config.error = function(e){
+                    encodeCanvas.html('');
+                    alert(e.message);
+                    throw (e);
+                };
+
+                if (!config.text) {
+                    alert("请输入文本");
+                    return;
+                }
+
+                encodeCanvas.QREncode(config);
+            });
+
+            // 二维码加载
+            $('#decode-file').on('change', function (e){
+                var canvas = $('#decode-canvas')[0],
+                    ctx = canvas.getContext('2d'),
+                    file = e.target.files[0],
+                    reader = new FileReader();
+
+                reader.onload = ( function (e){
+                    var img = new Image();
+                    img.onload = function (){
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+                    };
+                    img.src = e.target.result;
+                });
+
+                file && reader.readAsDataURL(file);
+            });
+
+            $('#decode-btn').on('click', function (){
+                var decodeText = $('#decode-text'),
+                    text = decodeText.find('textarea'),
+                    result = $('#decode-canvas').QRDecode(function(e){
+                        decodeText.hide();
+                        text.val('');
+                        alert(e.message);
+                        throw e;
+                    });
+
+                if(result) {
+                    decodeText.show();
+                    text.val(result);
+                }
+            });
+        </script>
+    </body>
+</html>
