@@ -50,9 +50,9 @@
 
             for (; j < size; j++) {
                 if (self.pixArr[j][i]) {
-                    table += '<td style="background-color:' + cfg.moduleColor + ';margin:0;padding:0;"></td>';
+                    table += '<td style="background-color:' + cfg.moduleColor + ';margin:0;padding:0;">&nbsp;</td>';
                 } else {
-                    table += '<td style="background-color:transparent;margin:0;padding:0;"></td>';
+                    table += '<td style="background-color:transparent;margin:0;padding:0;">&nbsp;</td>';
                 }
             }
 
