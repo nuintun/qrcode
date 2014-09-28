@@ -43,6 +43,7 @@ QREncode.prototype = {
         pix.setBackground = function (){
             for (i = 0; i < nModules; i++) {
                 var j;
+
                 for (j = 0; j < nModules; j++) {
                     this.arr[i][j] = false;
                 }
@@ -53,6 +54,7 @@ QREncode.prototype = {
             if (x > nModules - 1 || y > nModules - 1) {
                 return;
             }
+
             this.arr[x][y] = true;
         };
 
@@ -60,6 +62,7 @@ QREncode.prototype = {
             if (x > nModules - 1 || y > nModules - 1) {
                 return false;
             }
+
             return pix.arr[x][y];
         };
 
@@ -686,6 +689,7 @@ QREncode.prototype = {
                         setMasked(this.pixels, qrmask, j - col, i, v & mask);
                         mask = (mask >>> 1);
                         bitsWritten++;
+
                         if (bitsWritten === 8) {
                             bitsWritten = 0;
                             mask = (1 << 7);
