@@ -1,6 +1,3 @@
-/**
- * Created by Newton on 2014/9/28.
- */
 (function ($, window, document, undefined){
     'use strict';
 
@@ -54,7 +51,7 @@
                         + 'top:' + (i * mSize + margin) + 'px;'
                         + 'left:' + (j * mSize + margin) + 'px;'
                         + 'background-color:' + cfg.moduleColor
-                        + ';margin:0;padding:0;font-size:0;line-height:0"></em>';
+                        + ';margin:0;padding:0;"></em>';
                 }
             }
         }

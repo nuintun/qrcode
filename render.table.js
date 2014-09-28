@@ -41,8 +41,8 @@
             img.src = cfg.logo;
         }
 
-        table = '<table style="width: 100%;height:100%;border-collapse:collapse;'
-            + 'border:0;font-size:0;line-height:0;margin:0;padding:0;">';
+        table = '<table style="width: 100%;height:100%;border:0;border-collapse:collapse;'
+            + 'font-size:0;line-height:0;margin:0;padding:0;background-color:transparent;">';
 
         for (; i < size; i++) {
             j = 0;
