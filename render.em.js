@@ -1,3 +1,6 @@
+/**
+ * Created by Newton on 2014/9/28.
+ */
 (function ($, window, document, undefined){
     'use strict';
 
@@ -5,9 +8,9 @@
         return;
     }
 
-    $.QREncode.Render.table = function (self, callback){
+    $.QREncode.Render.em = function (self, callback){
         var cfg = self.config,
-            table, i = 0, j = 0,
+            modules = '', i = 0, j = 0,
             mSize = cfg.moduleSize,
             margin = cfg.margin * mSize,
             size = self.pixArr.length,
@@ -41,32 +44,27 @@
             img.src = cfg.logo;
         }
 
-        table = '<table style="width: 100%;height:100%;border-collapse:collapse;'
-            + 'border:0;font-size:0;line-height:0;margin:0;padding:0;">';
-
         for (; i < size; i++) {
             j = 0;
-            table += '<tr>';
 
             for (; j < size; j++) {
                 if (self.pixArr[j][i]) {
-                    table += '<td style="background-color:' + cfg.moduleColor + ';margin:0;padding:0;"></td>';
-                } else {
-                    table += '<td style="background-color:transparent;margin:0;padding:0;"></td>';
+                    modules += '<em style="position:absolute;'
+                        + 'width:' + mSize + 'px;height:' + mSize + 'px;'
+                        + 'top:' + (i * mSize + margin) + 'px;'
+                        + 'left:' + (j * mSize + margin) + 'px;'
+                        + 'background-color:' + cfg.moduleColor
+                        + ';margin:0;padding:0;font-size:0;line-height:0"></em>';
                 }
             }
-
-            table += '</tr>';
         }
-
-        table += '</table>';
 
         panel.css({
             width: size * mSize,
             height: size * mSize,
             backgroundColor: cfg.bgColor,
             padding: margin
-        }).html(table);
+        }).html(modules);
 
         if (cfg.logo) {
             renderLogo(function (logo){

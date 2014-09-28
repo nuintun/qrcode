@@ -366,4 +366,3 @@ ReedSolomon.prototype = {
         return (this.gexp[255 - this.glog[elt]]);
     }
 };
-
