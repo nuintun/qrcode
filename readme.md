@@ -14,7 +14,7 @@ config 参数可以是一个对象或者字符串，字符串时会将字符串�
 
 * `text` _String_
 
-    生成二维码的文字，默认值为 "QRCode"；
+    生成二维码的文字，默认值为 "Test"；
 
 * `render` _String_
 
@@ -52,10 +52,10 @@ config 参数可以是一个对象或者字符串，字符串时会将字符串�
 
 * `error` _Function_
 
-    报错函数，默认空函数，接收错误对象的参数。
+    报错函数，默认使用 alert 弹出，接收错误字符串的参数。
 
 ***
 
 ### QRCode Decode
 
-使用 `$('canvas').QRDecode()` 即可，选择器取到的是绘有二维码的 canvas 元素 jQuery 对象。
+使用 `$('canvas').qrdecode()` 即可，选择器取到的是绘有二维码的 canvas 元素 jQuery 对象。

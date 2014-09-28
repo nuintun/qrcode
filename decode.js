@@ -128,6 +128,7 @@ QRDecode.prototype = {
      */
     decodeImage: function (image){
         this.image = image;
+
         return this.decode();
     },
     /**
@@ -137,6 +138,7 @@ QRDecode.prototype = {
         this.findImageBorders();
         this.maxVersion = 40;
         this.decodeInsideBordersWithMaxVersion();
+
         return this.data;
     },
     /**
@@ -150,6 +152,7 @@ QRDecode.prototype = {
         QRBase.setBlocks(this);
         this.correctErrors();
         this.extractData();
+
         return this.data;
     },
     /**
@@ -431,10 +434,12 @@ QRDecode.prototype = {
 
         function matchVersionCode(qr, pattern){
             var v, hd;
+
             for (v = 7; v <= 40; v++) {
                 hd = qr.hammingDistance(pattern, QRBase.versionInfo[v]);
                 if (hd <= 3) { return [v, hd]; }
             }
+
             return [0, 4];
         }
 
@@ -442,6 +447,7 @@ QRDecode.prototype = {
             var factor = 1,
                 pattern = 0,
                 x, y;
+
             for (y = 0; y < 6; y++) {
                 for (x = nModules - 11; x < nModules - 11 + 3; x++) {
                     if (qr.isDarkWithSize(x, y, moduleSize)) {
@@ -450,6 +456,7 @@ QRDecode.prototype = {
                     factor *= 2;
                 }
             }
+
             return matchVersionCode(qr, pattern);
         }
 
