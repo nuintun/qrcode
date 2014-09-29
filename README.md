@@ -1,4 +1,6 @@
 #### 二维码相关知识简介
+>[二维码应用实例](http://nuintun.github.io/qrcode/examples/qrcode.html)
+
 >[二维码的生成细节和原理](http://coolshell.cn/articles/10590.html)
 
 #### 文档参考
