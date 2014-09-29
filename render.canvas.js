@@ -61,7 +61,7 @@
             var img = new Image();
 
             img.onload = function (){
-                var zoom,
+                var zoom, x, y,
                     imgW = img.width,
                     imgH = img.height,
                     imgSize = Math.max(imgW, imgH);
@@ -72,7 +72,10 @@
                     imgH = imgH * zoom;
                 }
 
-                ctx.drawImage(img, (outSize * mSize - imgW) / 2, (outSize * mSize - imgH) / 2, imgW, imgH);
+                x = Math.round((outSize * mSize - imgW) / 2);
+                y = Math.round((outSize * mSize - imgH) / 2);
+
+                ctx.drawImage(img, x, y, imgW, imgH);
 
                 $.isFunction(callback) && callback();
 

@@ -21,7 +21,7 @@
                 var imgW = img.width,
                     imgH = img.height,
                     imgSize = Math.max(imgW, imgH),
-                    zoom, logo;
+                    zoom, logo, top, left;
 
                 if (imgSize > size * mSize * 0.3) {
                     zoom = (size * mSize * 0.3) / imgSize;
@@ -29,9 +29,11 @@
                     imgH = imgH * zoom;
                 }
 
-                logo = $('<img src="' + cfg.logo + '" height="' + imgH + '" width="' + imgW + '"/>');
+                top = Math.round((outSize * mSize - imgH) / 2);
+                left = Math.round((outSize * mSize - imgW) / 2);
+                logo = $('<img src="' + cfg.logo + '" height="' + imgH + '" width="' + imgW + '" alt="QRCode Logo" />');
 
-                logo.css({position: 'absolute', top: (outSize * mSize - imgH) / 2, left: (outSize * mSize - imgW) / 2});
+                logo.css({position: 'absolute', top: top, left: left});
 
                 $.isFunction(callback) && callback(logo);
 
