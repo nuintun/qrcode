@@ -2,7 +2,7 @@
 >[二维码的生成细节和原理](http://coolshell.cn/articles/10590.html)
 
 #### 文档参考
-##### 二维码编码（$.fn.QREncode）
+##### 二维码编码（*$.fn.QREncode*）
 >######使用 `$('canvas').QREncode(config)`，具体配置参看下文。
 >***参数格式：***
 
@@ -38,5 +38,5 @@
 >* `error` _Function_
 > 报错函数，默认空函数，接收错误异常对象。
 
-##### 二维码解码（$.fn.QRDecode）
+##### 二维码解码（*$.fn.QRDecode*）
 >######使用 `$('canvas').QRDecode(error)`，选择器取到的是绘有二维码的 canvas 元素。
