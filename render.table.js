@@ -12,7 +12,7 @@
             margin = cfg.margin * mSize,
             size = self.pixArr.length,
             outSize = 2 * cfg.margin + size,
-            panel = $('<div style="position:relative;display:inline-block;*zoom:1;margin:0;padding:0;"></div>');
+            panel = $('<div style="position:relative;display:inline-block;*zoom:1;margin:0;padding:0;border:0;"></div>');
 
         function renderLogo(callback){
             var img = new Image();
@@ -50,9 +50,9 @@
 
             for (; j < size; j++) {
                 if (self.pixArr[j][i]) {
-                    table += '<td style="background-color:' + cfg.moduleColor + ';margin:0;padding:0;">&nbsp;</td>';
+                    table += '<td style="background-color:' + cfg.moduleColor + ';margin:0;padding:0;border:0;">&nbsp;</td>';
                 } else {
-                    table += '<td style="background-color:transparent;margin:0;padding:0;">&nbsp;</td>';
+                    table += '<td style="background-color:transparent;margin:0;padding:0;border:0;">&nbsp;</td>';
                 }
             }
 

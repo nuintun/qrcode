@@ -12,7 +12,7 @@
             margin = cfg.margin * mSize,
             size = self.pixArr.length,
             outSize = 2 * cfg.margin + size,
-            panel = $('<div style="position:relative;display:inline-block;*zoom:1;margin:0;padding:0;"></div>');
+            panel = $('<div style="position:relative;display:inline-block;*zoom:1;margin:0;padding:0;border:0;"></div>');
 
         function renderLogo(callback){
             var img = new Image();
@@ -51,7 +51,7 @@
                         + 'top:' + (i * mSize + margin) + 'px;'
                         + 'left:' + (j * mSize + margin) + 'px;'
                         + 'background-color:' + cfg.moduleColor
-                        + ';margin:0;padding:0;"></em>';
+                        + ';margin:0;padding:0;border:0;"></em>';
                 }
             }
         }
