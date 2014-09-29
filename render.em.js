@@ -6,8 +6,8 @@
     }
 
     $.QREncode.Render.em = function (self, callback){
-        var cfg = self.config,
-            modules = '', i = 0, j = 0,
+        var i, j, cfg = self.config,
+            modules = '',
             mSize = cfg.moduleSize,
             margin = cfg.margin * mSize,
             size = self.pixArr.length,
@@ -43,15 +43,13 @@
             img.src = cfg.logo;
         }
 
-        for (; i < size; i++) {
-            j = 0;
-
-            for (; j < size; j++) {
-                if (self.pixArr[j][i]) {
+        for (i = 0; i < size; i++) {
+            for (j = 0; j < size; j++) {
+                if (self.pixArr[i][j]) {
                     modules += '<em style="position:absolute;'
                         + 'width:' + mSize + 'px;height:' + mSize + 'px;'
-                        + 'top:' + (i * mSize + margin) + 'px;'
-                        + 'left:' + (j * mSize + margin) + 'px;'
+                        + 'top:' + (j * mSize + margin) + 'px;'
+                        + 'left:' + (i * mSize + margin) + 'px;'
                         + 'background-color:' + cfg.moduleColor
                         + ';margin:0;padding:0;border:0;"></em>';
                 }

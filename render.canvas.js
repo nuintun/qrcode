@@ -6,9 +6,7 @@
     }
 
     $.QREncode.Render.canvas = function (self, callback){
-        var cfg = self.config,
-            i = cfg.margin,
-            j = cfg.margin,
+        var i, j, cfg = self.config,
             mSize = cfg.moduleSize,
             size = self.pixArr.length,
             outSize = 2 * cfg.margin + size,
@@ -87,10 +85,8 @@
 
         init(size);
 
-        for (; i < size + cfg.margin; i++) {
-            j = cfg.margin;
-
-            for (; j < size + cfg.margin; j++) {
+        for (i = cfg.margin; i < size + cfg.margin; i++) {
+            for (j = cfg.margin; j < size + cfg.margin; j++) {
                 if (self.pixArr[i - cfg.margin][j - cfg.margin]) {
                     setBlock(i, j, getRGB(cfg.moduleColor));
                 }

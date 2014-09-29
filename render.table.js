@@ -6,8 +6,7 @@
     }
 
     $.QREncode.Render.table = function (self, callback){
-        var cfg = self.config,
-            table, i = 0, j = 0,
+        var i, j, table, cfg = self.config,
             mSize = cfg.moduleSize,
             margin = cfg.margin * mSize,
             size = self.pixArr.length,
@@ -46,11 +45,10 @@
         table = '<table style="width: 100%;height:100%;border:0;border-collapse:collapse;'
             + 'font-size:0;line-height:0;margin:0;padding:0;background-color:transparent;">';
 
-        for (; i < size; i++) {
-            j = 0;
+        for (i = 0; i < size; i++) {
             table += '<tr>';
 
-            for (; j < size; j++) {
+            for (j = 0; j < size; j++) {
                 if (self.pixArr[j][i]) {
                     table += '<td style="background-color:' + cfg.moduleColor + ';margin:0;padding:0;border:0;">&nbsp;</td>';
                 } else {
