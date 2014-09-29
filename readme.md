@@ -58,4 +58,4 @@ config 参数可以是一个对象或者字符串，字符串时会将字符串�
 
 ### QRCode Decode
 
-使用 `$('canvas').qrdecode()` 即可，选择器取到的是绘有二维码的 canvas 元素 jQuery 对象。
+使用 `$('canvas').QRDecode()` 即可，选择器取到的是绘有二维码的 canvas 元素 jQuery 对象。
