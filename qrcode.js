@@ -74,6 +74,11 @@
             config = $.extend({}, $.QREncode.config, cfg);
         }
 
+        config.moduleSize = Math.round(config.moduleSize);
+        config.margin = Math.round(config.margin);
+        config.moduleSize = config.moduleSize > 0 ? config.moduleSize : $.QREncode.config.moduleSize;
+        config.margin = config.margin < 0 ? $.QREncode.config.margin : config.margin;
+
         new Encode(config, function (qrdom){
             that.each(function (i, item){
                 $(item).empty().append(qrdom);
