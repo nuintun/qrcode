@@ -43,10 +43,10 @@
         // 初始化画布
         function init(size){
             size = cfg.margin * 2 + size;
-
             canvas.width = size * mSize;
             canvas.height = size * mSize;
             ctx.fillStyle = getRGB(cfg.bgColor);
+
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
