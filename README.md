@@ -1,4 +1,3 @@
-##使用说明
 #### 二维码相关知识简介
 >[二维码的生成细节和原理](http://coolshell.cn/articles/10590.html)
 
