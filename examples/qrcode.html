@@ -5,9 +5,9 @@
         <link rel="StyleSheet" type="text/css" href="default.css">
         <title>QRCode</title>
         <style type="text/css">
-            body {overflow-y: scroll;}
-            html *, body * {font-family: MICROSOFT YAHEI,serif;}
-            textarea {resize: none; width: 100%;}
+            body { overflow-y: scroll; }
+            html *, body * { font-family: MICROSOFT YAHEI, serif; }
+            textarea { resize: none; width: 100%; }
         </style>
     </head>
     <body>
@@ -21,52 +21,69 @@
                     <p>输入文本：</p>
 
                     <div><textarea id="encode-text"></textarea></div>
-                    <p>纠错等级：<select id="encode-eclevel">
-                        <option value="1">Level L (7%)</option>
-                        <option value="0">Level M (15%)</option>
-                        <option value="3">Level Q (25%)</option>
-                        <option value="2" selected>Level H (30%)</option>
-                    </select> 编码方式：<select id="encode-mode">
-                        <option value="4" selected>8bit</option>
-                        <option value="2">Alphanumeric</option>
-                        <option value="1">Numeric</option>
-                    </select></p>
                     <p>
-                        色块大小：<input id="encode-msize" type="number" min="1" max="10" value="5" />
-                        留白大小：<input id="encode-margin" type="number" min="0" max="10" value="4" />
+                        <label>纠错等级：</label>
+                        <select id="encode-eclevel">
+                            <option value="1">Level L (7%)</option>
+                            <option value="0">Level M (15%)</option>
+                            <option value="3">Level Q (25%)</option>
+                            <option value="2" selected>Level H (30%)</option>
+                        </select>
+                        <label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;编码方式：</label>
+                        <select id="encode-mode">
+                            <option value="4" selected>8bit</option>
+                            <option value="2">Alphanumeric</option>
+                            <option value="1">Numeric</option>
+                        </select>
+                    </p>
+                    <p>
+                        <label>色块大小：</label>
+                        <input id="encode-msize" type="number" min="1" max="10" value="5"/>
+                        <label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;留白大小：</label>
+                        <input id="encode-margin" type="number" min="0" max="10" value="4"/>
                     </p>
 
                     <p>
-                        前景色：<input type="color" value="#000000" id="encode-mcolor" />
-                        背景色：<input type="color" value="#ffffff" id="encode-bgcolor" />
+                        <label>前景色：</label>
+                        <input type="color" value="#000000" id="encode-mcolor"/>
+                        <label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;背景色：</label>
+                        <input type="color" value="#ffffff" id="encode-bgcolor"/>
                     </p>
 
                     <p>Logo 和 LogoUrl 选填一个：</p>
 
-                    <p><label>&nbsp;&nbsp;&nbsp;&nbsp;Logo：</label><input type="file" name="files[]" id="encode-logo" /></p>
+                    <p>
+                        <label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Logo：</label>
+                        <input type="file" name="files[]" id="encode-logo"/>
+                    </p>
 
                     <p>
-                        <label>&nbsp;&nbsp;&nbsp;&nbsp;LogoUrl：</label><input type="url" id="encode-logourl" />
+                        <label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;LogoUrl：</label>
+                        <input type="url" id="encode-logourl"/>
                         <button id="encode-logobtn">加载Logo</button>
                     </p>
+
                     <div>
                         <canvas id="logo-canvas"></canvas>
                     </div>
+
                     <p>
-                        渲染方式：
+                        <label>渲染方式：</label>
                         <select id="encode-render">
                             <option value="canvas" selected>Canvas</option>
                             <option value="table">Table</option>
                             <option value="em">Em</option>
                         </select>
                     </p>
+
                     <p>
                         <button id="encode-btn">编码</button>
                     </p>
+
                     <div id="encode-canvas"></div>
                 </li>
                 <li class="decode">
-                    <p><label>选择二维码图片：</label><input type="file" name="files[]" id="decode-file" /></p>
+                    <p><label>选择二维码图片：</label><input type="file" name="files[]" id="decode-file"/></p>
 
                     <div>
                         <canvas id="decode-canvas"></canvas>
@@ -98,6 +115,7 @@
                 if (!url) {
                     ctx.fillStyle = 'rgb(255, 255, 255)';
                     ctx.fillRect(0, 0, canvasSize, canvasSize);
+
                     return;
                 }
 
@@ -127,7 +145,7 @@
 
             // Tab 切换
             var nav = $('.tabs li'),
-                content = $('.content li');
+                    content = $('.content li');
 
             nav.on('click', function (e){
                 nav.removeClass('selected');
@@ -172,7 +190,7 @@
                 config.ECLevel = Number($('#encode-eclevel').val());
                 config.margin = Number($('#encode-margin').val());
                 config.logo = $('#logo-canvas').data('logo');
-                config.error = function(e){
+                config.error = function (e){
                     encodeCanvas.html('');
                     alert(e.message);
                     throw (e);
@@ -195,11 +213,13 @@
 
                 reader.onload = ( function (e){
                     var img = new Image();
+
                     img.onload = function (){
                         canvas.width = img.width;
                         canvas.height = img.height;
                         ctx.drawImage(img, 0, 0);
                     };
+
                     img.src = e.target.result;
                 });
 
@@ -209,14 +229,14 @@
             $('#decode-btn').on('click', function (){
                 var decodeText = $('#decode-text'),
                     text = decodeText.find('textarea'),
-                    result = $('#decode-canvas').QRDecode(function(e){
+                    result = $('#decode-canvas').QRDecode(function (e){
                         decodeText.hide();
                         text.val('');
                         alert(e.message);
                         throw e;
                     });
 
-                if(result) {
+                if (result) {
                     decodeText.show();
                     text.val(result);
                 }
