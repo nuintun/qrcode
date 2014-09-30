@@ -1,8 +1,8 @@
 /**
  * QRCode Base
  */
-
 'use strict';
+
 var QRBase = {
     /**
      * 编码格式
