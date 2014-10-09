@@ -52,7 +52,7 @@
                 this.version = this.qr.getVersionFromLength(config.ECLevel, config.mode, config.text);
                 this.pixArr = this.qr.encodeToPix(config.mode, config.text, this.version, config.ECLevel);
             } catch (e) {
-                this.config.error(e);
+                $.isFunction(config.error) && config.error(e);
             }
 
             this.pixArr && $.QREncode.Render[config.render](this, callback);
