@@ -1,10 +1,5 @@
+'use strict';
 (function ($, window, document, undefined){
-    'use strict';
-
-    if (!$.QREncode) {
-        return;
-    }
-
     $.QREncode.Render.table = function (self, callback){
         var i, j, table, cfg = self.config,
             mSize = cfg.moduleSize,

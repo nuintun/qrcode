@@ -20,7 +20,7 @@
             logo: '', // logo;
             error: $.noop
         },
-        Render: []
+        Render: {}
     };
 
     /**
