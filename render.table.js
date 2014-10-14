@@ -1,4 +1,5 @@
 'use strict';
+
 (function ($, window, document, undefined){
     $.QREncode.Render.table = function (self, callback){
         var i, j, table, cfg = self.config,
