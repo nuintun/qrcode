@@ -1,0 +1,70 @@
+body {
+  margin: 0;
+  background-color: #F0F0F0;
+}
+.main {
+  width: 1000px;
+  margin: 20px auto;
+  background-color: #FFF;
+  border: 1px solid #BBB;
+}
+ul, li {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+.clearfix:after {
+  visibility: hidden;
+  display: block;
+  font-size: 0;
+  content: " ";
+  clear: both;
+  height: 0;
+}
+.clearfix {
+  zoom: 1;
+}
+.tabs {
+  width: 1002px;
+  margin: -1px;
+  height: 40px;
+}
+.tabs li {
+  float: left;
+  width: 500px;
+  height: 38px;
+  border: 1px solid #BBB;
+  line-height: 38px;
+  text-align: center;
+}
+.tabs li.selected {
+  height: 39px;
+  border-width: 1px 0 0 0;
+}
+.content {
+  margin: 20px;
+  position: relative;
+}
+.content li {
+  display: none;
+}
+.content li.selected {
+  display: block;
+}
+textarea {
+  width: 400px;
+  height: 180px;
+  resize: none;
+}
+#logo-canvas {
+  position: absolute;
+  top: 330px;
+  right: 0;
+  width: 200px;
+  height: 200px;
+}
+.hide {
+  display: none;
+}
+
+
