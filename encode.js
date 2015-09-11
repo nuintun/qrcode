@@ -155,13 +155,13 @@ QREncode.prototype = {
       qr.bitIdx += nCountBits;
 
       for (i = 0; i < n - 1; i += 2) {
-        val = 45 * getAlphaNum(qr, text.substr(i, 1)) + getAlphaNum(qr, text.substr(i + 1, 1));
+        val = 45 * getAlphaNum(qr, text.charAt(i)) + getAlphaNum(qr, text.charAt(i + 1));
         appendBits(qr.data, qr.bitIdx, 11, val);
         qr.bitIdx += 11;
       }
 
       if (n % 2) {
-        appendBits(qr.data, qr.bitIdx, 6, getAlphaNum(qr, text.substr(n - 1, 1)));
+        appendBits(qr.data, qr.bitIdx, 6, getAlphaNum(qr, text.charAt(n - 1)));
         qr.bitIdx += 6;
       }
     }
@@ -189,7 +189,7 @@ QREncode.prototype = {
       qr.bitIdx += nCountBits;
 
       for (i = 0; i < n; i++) {
-        item = text[i];
+        item = text.charAt(i);
         ch = text.charCodeAt(i) - 48;
 
         if ((ch < 0) || (ch > 9)) {
