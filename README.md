@@ -3,6 +3,8 @@
 
 >[二维码的生成细节和原理](http://coolshell.cn/articles/10590.html)
 
+>由 [AlphaTr/jquery-qrcode](https://github.com/AlphaTr/jquery-qrcode) 修改而来
+
 #### 文档参考
 ##### 二维码编码（*$.fn.QREncode*）
 >######使用 `$('canvas').QREncode(config)`，具体配置参看下文。
