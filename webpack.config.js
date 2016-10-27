@@ -5,7 +5,7 @@ const path = require('path');
 module.exports = {
   // 页面入口文件配置
   entry: {
-    'qrcode.all': './src/index.es6',
+    'qrcode.all': './src/index',
     'qrcode.encode': './src/encode/qrcode.js',
     'qrcode.decode': './src/decode/qrdecode.js'
   },
