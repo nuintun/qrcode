@@ -2,5 +2,8 @@
   "name": "qrcode",
   "author": "nuintun",
   "version": "0.0.1",
-  "description": "A javascript qrcode encode and decode library."
+  "description": "A javascript qrcode encode and decode library.",
+  "scripts": {
+    "build": "webpack -d"
+  }
 }
