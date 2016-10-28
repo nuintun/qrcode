@@ -1,4 +1,8 @@
-#### 二维码实例及相关知识简介
+二维码实例及相关知识简介
+==========
+
+>[![Dependencies][david-image]][david-url]
+
 >[二维码应用实例](https://nuintun.github.io/qrcode/examples/qrcode.html)
 
 >[二维码的生成细节和原理](http://coolshell.cn/articles/10590.html)
@@ -44,3 +48,6 @@
 
 ##### 二维码解码（*$.fn.QRDecode*）
 >######使用 `$('canvas').QRDecode(error)`，选择器取到的是绘有二维码的 canvas 元素。
+
+[david-image]: http://img.shields.io/david/nuintun/fengine.svg?style=flat-square
+[david-url]: https://david-dm.org/nuintun/fengine
