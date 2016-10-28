@@ -46,12 +46,918 @@
 
 	'use strict';
 
-	var _base = __webpack_require__(1);
+	exports.__esModule = true;
+	exports.QRDecode = exports.QREncode = undefined;
 
-	console.log(_base.QRBase);
+	var _encode = __webpack_require__(1);
+
+	var _encode2 = _interopRequireDefault(_encode);
+
+	var _decode = __webpack_require__(6);
+
+	var _decode2 = _interopRequireDefault(_decode);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	exports.QREncode = _encode2['default'];
+	exports.QRDecode = _decode2['default'];
 
 /***/ },
 /* 1 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * QRCode Encode
+	 */
+	'use strict';
+
+	exports.__esModule = true;
+	exports.QREncode = undefined;
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _base = __webpack_require__(2);
+
+	var _base2 = _interopRequireDefault(_base);
+
+	var _reedsolomon = __webpack_require__(5);
+
+	var _reedsolomon2 = _interopRequireDefault(_reedsolomon);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var QREncode = exports.QREncode = function () {
+	  function QREncode() {
+	    _classCallCheck(this, QREncode);
+
+	    this.image = null; // 二维码画布
+	    this.nModules = 0; // 二维码大小
+	    this.version = 0; // 二维码版本
+	    this.functionalGrade = 0;
+	    this.ECLevel = 0; // 二维码错误等级
+	    this.mask = 0; // 掩码图片类型
+	    this.maskPattern = []; // 掩码图片画布
+	    this.nDataCodewords = 0; // 数据区
+	    this.nBlockEcWords = 0;
+	    this.blockIndices = []; // 纠错码转换 Map
+	    this.blockDataLengths = [];
+	  }
+
+	  /**
+	   * 调用入口文件
+	   * Encode text into a QR Code in a pixel array
+	   * @param mode      Mode according to ISO/IEC 18004:2006(E) Section 6.3
+	   * @param text      The text to be encoded
+	   * @param version   Version according to ISO/IEC 18004:2006(E) Section 5.3.1
+	   * @param ECLevel  Error correction level according to ISO/IEC 18004:2006(E) Section 6.5.1
+	   */
+
+
+	  QREncode.prototype.encodeToPix = function encodeToPix(mode, text, version, ECLevel) {
+	    var nModules = _base2['default'].nModulesFromVersion(version);
+	    var pix = {};
+	    var i;
+
+	    this.nModules = nModules;
+	    pix.width = nModules;
+	    pix.height = nModules;
+	    pix.arr = [];
+
+	    for (i = 0; i < nModules; i++) {
+	      pix.arr[i] = [];
+	    }
+
+	    pix.setBackground = function () {
+	      for (i = 0; i < nModules; i++) {
+	        var j;
+
+	        for (j = 0; j < nModules; j++) {
+	          this.arr[i][j] = false;
+	        }
+	      }
+	    };
+
+	    pix.setDark = function (x, y) {
+	      if (x > nModules - 1 || y > nModules - 1) {
+	        return;
+	      }
+
+	      this.arr[x][y] = true;
+	    };
+
+	    pix.isDark = function (x, y) {
+	      if (x > nModules - 1 || y > nModules - 1) {
+	        return false;
+	      }
+
+	      return pix.arr[x][y];
+	    };
+
+	    this.encodeInit(version, ECLevel, pix);
+	    this.encodeAddText(mode, text);
+	    this.encode();
+
+	    return pix.arr;
+	  };
+
+	  /**
+	   * Prepare for encoding text to QR Code
+	   * @param version       Version according to ISO/IEC 18004:2006(E) Section 5.3.1
+	   * @param ECLevel      Error correction level according to ISO/IEC 18004:2006(E) Section 6.5.1
+	   * @param canvas        Canvas or pixel array
+	   */
+
+
+	  QREncode.prototype.encodeInit = function encodeInit(version, ECLevel, canvas) {
+	    var i;
+
+	    this.version = version;
+	    this.ECLevel = ECLevel;
+	    this.image = canvas;
+	    this.image.setBackground();
+	    this.bitIdx = 0;
+
+	    _base2['default'].setBlocks(this);
+
+	    this.data = [];
+
+	    for (i = 0; i < this.nDataCodewords; i++) {
+	      this.data[i] = 0;
+	    }
+
+	    this.pixels = [];
+
+	    for (i = 0; i < this.nModules; i++) {
+	      this.pixels[i] = [];
+	    }
+	  };
+
+	  /**
+	   * Add text to a QR code
+	   * @param mode  Mode according to ISO/IEC 18004:2006(E) Section 6.3
+	   * @param text  The text to be encoded
+	   */
+
+
+	  QREncode.prototype.encodeAddText = function encodeAddText(mode, text) {
+	    this.addTextImplementation(mode, text);
+	  };
+
+	  /**
+	   * Encode this class to an image/canvas.
+	   */
+
+
+	  QREncode.prototype.encode = function encode() {
+	    this.addTextImplementation(_base2['default'].MODE.Terminator, null); // 添加结束符
+	    this.appendPadding();
+	    this.addErrorCorrection();
+	    this.encodeBestMask();
+	    this.pixelsToImage();
+	  };
+
+	  /**
+	   * QRCode internal encoding functions
+	   */
+
+
+	  QREncode.prototype.addTextImplementation = function addTextImplementation(mode, text) {
+	    // 字符编码
+	    function appendBits(bytes, pos, len, value) {
+	      var byteIndex = pos >>> 3;
+	      var shift = 24 - (pos & 7) - len;
+	      var v = value << shift;
+
+	      bytes[byteIndex + 2] = v & 0xFF;
+	      v = v >>> 8;
+	      bytes[byteIndex + 1] = v & 0xFF;
+	      v = v >>> 8;
+	      bytes[byteIndex] += v & 0xFF;
+	    }
+
+	    function getAlphaNum(qr, ch) {
+	      ch = ch.toUpperCase();
+
+	      if (!qr.alphanumRev.hasOwnProperty(ch)) {
+	        throw new _base2['default'].QRError('Invalid character for Alphanumeric encoding [' + ch + ']', 3, ch);
+	      }
+
+	      return qr.alphanumRev[ch];
+	    }
+
+	    function addAlphaNum(qr, text) {
+	      var n = text.length;
+	      var nCountBits = _base2['default'].nCountBits(_base2['default'].MODE.AlphaNumeric, qr.version);
+	      var i, val;
+
+	      appendBits(qr.data, qr.bitIdx, nCountBits, n);
+
+	      qr.bitIdx += nCountBits;
+
+	      for (i = 0; i < n - 1; i += 2) {
+	        val = 45 * getAlphaNum(qr, text.charAt(i)) + getAlphaNum(qr, text.charAt(i + 1));
+
+	        appendBits(qr.data, qr.bitIdx, 11, val);
+
+	        qr.bitIdx += 11;
+	      }
+
+	      if (n % 2) {
+	        appendBits(qr.data, qr.bitIdx, 6, getAlphaNum(qr, text.charAt(n - 1)));
+
+	        qr.bitIdx += 6;
+	      }
+	    }
+
+	    function add8bit(qr, text) {
+	      var nCountBits = _base2['default'].nCountBits(_base2['default'].MODE.EightBit, qr.version);
+	      var i;
+
+	      appendBits(qr.data, qr.bitIdx, nCountBits, text.length);
+
+	      qr.bitIdx += nCountBits;
+
+	      for (i = 0; i < text.length; i++) {
+	        appendBits(qr.data, qr.bitIdx, 8, text.charCodeAt(i));
+
+	        qr.bitIdx += 8;
+	      }
+	    }
+
+	    function addNumeric(qr, text) {
+	      var item;
+	      var n = text.length;
+	      var nCountBits = _base2['default'].nCountBits(_base2['default'].MODE.Numeric, qr.version);
+	      var num = [];
+	      var val, i, ch;
+
+	      appendBits(qr.data, qr.bitIdx, nCountBits, n);
+
+	      qr.bitIdx += nCountBits;
+
+	      for (i = 0; i < n; i++) {
+	        item = text.charAt(i);
+	        ch = text.charCodeAt(i) - 48;
+
+	        if (ch < 0 || ch > 9) {
+	          throw new _base2['default'].QRError('Invalid character for Numeric encoding [' + item + ']', 4, item);
+	        }
+
+	        num.push(ch);
+	      }
+
+	      for (i = 0; i < n - 2; i += 3) {
+	        val = 100 * num[i] + 10 * num[i + 1] + num[i + 2];
+
+	        appendBits(qr.data, qr.bitIdx, 10, val);
+
+	        qr.bitIdx += 10;
+	      }
+
+	      if (n % 3 === 1) {
+	        val = num[n - 1];
+
+	        appendBits(qr.data, qr.bitIdx, 4, val);
+
+	        qr.bitIdx += 4;
+	      } else if (n % 3 === 2) {
+	        val = 10 * num[n - 2] + num[n - 1];
+
+	        appendBits(qr.data, qr.bitIdx, 7, val);
+
+	        qr.bitIdx += 7;
+	      }
+	    }
+
+	    // addTextImplementation
+	    appendBits(this.data, this.bitIdx, 4, mode);
+
+	    this.bitIdx += 4;
+
+	    if (mode === _base2['default'].MODE.AlphaNumeric) {
+	      addAlphaNum(this, text);
+	    } else if (mode === _base2['default'].MODE.EightBit) {
+	      add8bit(this, _base2['default'].unicodeToUtf8(text));
+	    } else if (mode === _base2['default'].MODE.Numeric) {
+	      addNumeric(this, text);
+	    } else if (mode === _base2['default'].MODE.Terminator) {
+	      return;
+	    } else {
+	      throw new _base2['default'].QRError('Unsupported ECI mode: ' + mode, 1, mode);
+	    }
+
+	    if (this.bitIdx / 8 > this.nDataCodewords) {
+	      throw new _base2['default'].QRError('Text too long for this EC version', 5);
+	    }
+	  };
+
+	  QREncode.prototype.appendPadding = function appendPadding() {
+	    // 添加补齐码
+	    var i;
+
+	    for (i = Math.floor((this.bitIdx - 1) / 8) + 1; i < this.nDataCodewords; i += 2) {
+	      this.data[i] = 0xEC;
+	      this.data[i + 1] = 0x11;
+	    }
+	  };
+
+	  QREncode.prototype.addErrorCorrection = function addErrorCorrection() {
+	    // 添加纠错码
+	    var rs = new _reedsolomon2['default'](this.nBlockEcWords);
+	    var bytes = [];
+	    var n = 0;
+	    var b, i, m, bytesIn, bytesOut;
+
+	    for (b = 0; b < this.blockDataLengths.length; b++) {
+	      m = this.blockDataLengths[b];
+	      bytesIn = this.data.slice(n, n + m);
+	      n += m;
+
+	      for (i = 0; i < m; i++) {
+	        bytes[this.blockIndices[b][i]] = bytesIn[i];
+	      }
+
+	      bytesOut = rs.encode(bytesIn);
+
+	      for (i = 0; i < bytesOut.length; i++) {
+	        bytes[this.blockIndices[b][m + i]] = bytesOut[i];
+	      }
+	    }
+
+	    this.bytes = bytes;
+	  };
+
+	  QREncode.prototype.calculatePenalty = function calculatePenalty() {
+	    // TODO: Verify all penalty calculations
+	    function penaltyAdjacent(qr) {
+	      var p = 0;
+	      var i, j, nDark, nLight, rc;
+
+	      for (i = 0; i < qr.nModules; i++) {
+	        nDark = [0, 0];
+	        nLight = [0, 0];
+
+	        for (rc = 0; rc <= 1; rc++) {
+	          for (j = 0; j < qr.nModules; j++) {
+	            if (qr.pixels[rc * i + (1 - rc) * j][(1 - rc) * i + rc * j]) {
+	              if (nLight[rc] > 5) {
+	                p += 3 + nLight[rc] - 5;
+	              }
+
+	              nLight[rc] = 0;
+	              nDark[rc]++;
+	            } else {
+	              if (nDark[rc] > 5) {
+	                p += 3 + nDark[rc] - 5;
+	              }
+
+	              nLight[rc]++;
+	              nDark[rc] = 0;
+	            }
+	          }
+
+	          if (nLight[rc] > 5) {
+	            p += 3 + nLight[rc] - 5;
+	          }
+
+	          if (nDark[rc] > 5) {
+	            p += 3 + nDark[rc] - 5;
+	          }
+	        }
+	      }
+
+	      return p;
+	    }
+
+	    function penaltyBlocks(qr) {
+	      // Not clear from ISO standard, if blocks have to be rectangular?
+	      // Here we give 3 penalty to every 2x2 block, so odd shaped areas will have penalties as well as rectangles
+	      var p = 0;
+	      var i, j, b;
+
+	      for (i = 0; i < qr.nModules - 1; i++) {
+	        for (j = 0; j < qr.nModules - 1; j++) {
+	          b = 0;
+
+	          if (qr.pixels[i][j]) {
+	            b++;
+	          }
+
+	          if (qr.pixels[i + 1][j]) {
+	            b++;
+	          }
+
+	          if (qr.pixels[i][j + 1]) {
+	            b++;
+	          }
+
+	          if (qr.pixels[i + 1][j + 1]) {
+	            b++;
+	          }
+
+	          if (b === 0 || b === 4) {
+	            p += 3;
+	          }
+	        }
+	      }
+
+	      return p;
+	    }
+
+	    function penaltyDarkLight(qr) {
+	      // we shift bits in one by one, and see if the resulting pattern match the bad one
+	      var p = 0;
+	      var bad = 128 - 1 - 2 - 32 << 4; // 4_ : 1D : 1L : 3D : 1L : 1D : 4x
+	      var badmask1 = 2048 - 1; // 4_ : 1D : 1L : 3D : 1L : 1D : 4L
+	      var badmask2 = badmask1 << 4; // 4L : 1D : 1L : 3D : 1L : 1D : 4_
+	      var patmask = 32768 - 1; // 4  +           7            + 4
+	      var i, j, pat, rc;
+
+	      for (i = 0; i < qr.nModules - 1; i++) {
+	        pat = [0, 0];
+
+	        for (j = 0; j < qr.nModules - 1; j++) {
+	          for (rc = 0; rc <= 1; rc++) {
+	            pat[rc] = pat[rc] << 1 & patmask;
+
+	            if (qr.pixels[rc * i + (1 - rc) * j][(1 - rc) * i + rc * j]) {
+	              pat[rc]++;
+	            }
+
+	            if (j >= 7 + 4) {
+	              if ((pat[rc] & badmask1) === bad) {
+	                p += 40;
+	              } else {
+	                if (j < qr.nModules - 4 - 7) {
+	                  if ((pat[rc] & badmask2) === bad) {
+	                    p += 40;
+	                  }
+	                }
+	              }
+	            }
+	          }
+	        }
+	      }
+
+	      return p;
+	    }
+
+	    function penaltyDark(qr) {
+	      var dark = 0;
+	      var i, j;
+
+	      for (i = 0; i < qr.nModules - 1; i++) {
+	        for (j = 0; j < qr.nModules - 1; j++) {
+	          if (qr.pixels[i][j]) {
+	            dark++;
+	          }
+	        }
+	      }
+
+	      return 10 * Math.floor(Math.abs(dark / (qr.nModule * qr.nModules) - 0.5) / 0.05);
+	    }
+
+	    // calculatePenalty
+	    var pAdjacent = penaltyAdjacent(this);
+	    var pBlocks = penaltyBlocks(this);
+	    var pDarkLight = penaltyDarkLight(this);
+	    var pDark = penaltyDark(this);
+
+	    return pAdjacent + pBlocks + pDarkLight + pDark;
+	  };
+
+	  QREncode.prototype.encodeBestMask = function encodeBestMask() {
+	    var bestMask = 0;
+	    var bestPenalty = 999999;
+	    var mask, i, j, penalty;
+
+	    _base2['default'].setFunctionalPattern(this);
+
+	    for (mask = 0; mask < 8; mask++) {
+	      for (i = 0; i < this.nModules; i++) {
+	        for (j = 0; j < this.nModules; j++) {
+	          this.pixels[i][j] = false;
+	        }
+	      }
+
+	      this.encodeFunctionalPatterns(mask);
+	      this.encodeData(mask);
+	      penalty = this.calculatePenalty(mask);
+
+	      if (penalty < bestPenalty) {
+	        bestPenalty = penalty;
+	        bestMask = mask;
+	      }
+	    }
+
+	    this.mask = bestMask;
+
+	    if (this.mask !== 7) {
+	      for (i = 0; i < this.nModules; i++) {
+	        for (j = 0; j < this.nModules; j++) {
+	          this.pixels[i][j] = false;
+	        }
+	      }
+
+	      this.encodeFunctionalPatterns(this.mask);
+	      this.encodeData(this.mask);
+	    }
+	  };
+
+	  /**
+	   * 定位
+	   */
+
+
+	  QREncode.prototype.encodeFunctionalPatterns = function encodeFunctionalPatterns(mask) {
+	    function encodeFinderPattern(qr, x, y) {
+	      var i, j;
+
+	      // Outer 7x7 black boundary
+	      for (i = 0; i <= 5; i++) {
+	        qr.pixels[x + i][y] = true;
+	        qr.pixels[x + 6][y + i] = true;
+	        qr.pixels[x + 6 - i][y + 6] = true;
+	        qr.pixels[x][y + 6 - i] = true;
+	      }
+
+	      // Inner 3*3 black box
+	      for (i = 2; i <= 4; i++) {
+	        for (j = 2; j <= 4; j++) {
+	          qr.pixels[x + i][y + j] = true;
+	        }
+	      }
+	    }
+
+	    function encodeVersionTopright(qr) {
+	      var pattern = _base2['default'].versionInfo[qr.version];
+	      var x, y;
+
+	      for (y = 0; y < 6; y++) {
+	        for (x = qr.nModules - 11; x < qr.nModules - 11 + 3; x++) {
+	          if (pattern & 1) {
+	            qr.pixels[x][y] = true;
+	          }
+
+	          pattern /= 2;
+	        }
+	      }
+	    }
+
+	    function encodeVersionBottomleft(qr) {
+	      var pattern = _base2['default'].versionInfo[qr.version];
+	      var x, y;
+
+	      for (x = 0; x < 6; x++) {
+	        for (y = qr.nModules - 11; y < qr.nModules - 11 + 3; y++) {
+	          if (pattern & 1) {
+	            qr.pixels[x][y] = true;
+	          }
+
+	          pattern /= 2;
+	        }
+	      }
+	    }
+
+	    function encodeTimingPattern(qr, horizontal) {
+	      var i;
+
+	      for (i = 8; i < qr.nModules - 8; i += 2) {
+	        if (horizontal) {
+	          qr.pixels[i][6] = true;
+	        } else {
+	          qr.pixels[6][i] = true;
+	        }
+	      }
+	    }
+
+	    function encodeOneAlignmentPattern(qr, x, y) {
+	      // Outer 5x5 black boundary
+	      var i;
+
+	      for (i = 0; i <= 3; i++) {
+	        qr.pixels[x + i][y] = true;
+	        qr.pixels[x + 4][y + i] = true;
+	        qr.pixels[x + 4 - i][y + 4] = true;
+	        qr.pixels[x][y + 4 - i] = true;
+	      }
+
+	      // center black
+	      qr.pixels[x + 2][y + 2] = true;
+	    }
+
+	    function encodeAlignmentPatterns(qr) {
+	      var n = _base2['default'].alignmentPatterns[qr.version].length;
+	      var i, j;
+
+	      for (i = 0; i < n; i++) {
+	        for (j = 0; j < n; j++) {
+	          if (i === 0 && j === 0 || i === 0 && j === n - 1 || i === n - 1 && j === 0) {
+	            continue;
+	          }
+
+	          encodeOneAlignmentPattern(qr, _base2['default'].alignmentPatterns[qr.version][i] - 2, _base2['default'].alignmentPatterns[qr.version][j] - 2);
+	        }
+	      }
+	    }
+
+	    function encodeFormatNW(qr, code) {
+	      var x = 8;
+	      var y;
+
+	      for (y = 0; y <= 5; y++) {
+	        if (code & 1) {
+	          qr.pixels[x][y] = true;
+	        }
+
+	        code /= 2;
+	      }
+
+	      if (code & 1) {
+	        qr.pixels[8][7] = true;
+	      }
+
+	      code /= 2;
+
+	      if (code & 1) {
+	        qr.pixels[8][8] = true;
+	      }
+
+	      code /= 2;
+
+	      if (code & 1) {
+	        qr.pixels[7][8] = true;
+	      }
+
+	      code /= 2;
+	      y = 8;
+
+	      for (x = 5; x >= 0; x--) {
+	        if (code & 1) {
+	          qr.pixels[x][y] = true;
+	        }
+
+	        code /= 2;
+	      }
+	    }
+
+	    function encodeFormatNESW(qr, code) {
+	      var y = 8;
+	      var x;
+
+	      for (x = qr.nModules - 1; x > qr.nModules - 1 - 8; x--) {
+	        if (code & 1) {
+	          qr.pixels[x][y] = true;
+	        }
+
+	        code /= 2;
+	      }
+
+	      x = 8;
+
+	      for (y = qr.nModules - 7; y < qr.nModules - 1; y++) {
+	        if (code & 1) {
+	          qr.pixels[x][y] = true;
+	        }
+
+	        code /= 2;
+	      }
+	    }
+
+	    // encodeFunctionalPatterns
+	    encodeFinderPattern(this, 0, 0);
+	    encodeFinderPattern(this, 0, this.nModules - 7);
+	    encodeFinderPattern(this, this.nModules - 7, 0);
+
+	    if (this.version >= 7) {
+	      encodeVersionTopright(this);
+	      encodeVersionBottomleft(this);
+	    }
+
+	    encodeTimingPattern(this, true);
+	    encodeTimingPattern(this, false);
+
+	    if (this.version > 1) {
+	      encodeAlignmentPatterns(this);
+	    }
+
+	    var code = _base2['default'].formatInfo[mask + 8 * this.ECLevel];
+
+	    encodeFormatNW(this, code); // 版本信息
+	    encodeFormatNESW(this, code);
+	  };
+
+	  QREncode.prototype.encodeData = function encodeData(qrmask) {
+	    function setMasked(pixels, mask, j, i, f) {
+	      var m;
+
+	      switch (mask) {
+	        case 0:
+	          m = (i + j) % 2;
+	          break;
+	        case 1:
+	          m = i % 2;
+	          break;
+	        case 2:
+	          m = j % 3;
+	          break;
+	        case 3:
+	          m = (i + j) % 3;
+	          break;
+	        case 4:
+	          m = (Math.floor(i / 2) + Math.floor(j / 3)) % 2;
+	          break;
+	        case 5:
+	          m = i * j % 2 + i * j % 3;
+	          break;
+	        case 6:
+	          m = (i * j % 2 + i * j % 3) % 2;
+	          break;
+	        case 7:
+	          m = ((i + j) % 2 + i * j % 3) % 2;
+	          break;
+	      }
+
+	      if (m === 0) {
+	        pixels[j][i] = !f;
+	      } else {
+	        pixels[j][i] = f;
+	      }
+	    }
+
+	    // encodeData
+	    var writingUp = true;
+	    var n = 0;
+	    var v = this.bytes[n];
+	    var bitsWritten = 0;
+	    var mask = 1 << 7;
+	    var i, j;
+	    var count;
+	    var col;
+
+	    // Write columns in pairs, from right to left
+	    for (j = this.nModules - 1; j > 0; j -= 2) {
+	      if (j === 6) {
+	        // Skip whole column with vertical alignment pattern;
+	        // saves time and makes the other code proceed more cleanly
+	        j--;
+	      }
+
+	      // Read alternatingly from bottom to top then top to bottom
+	      for (count = 0; count < this.nModules; count++) {
+	        i = writingUp ? this.nModules - 1 - count : count;
+
+	        for (col = 0; col < 2; col++) {
+	          // Ignore bits covered by the function pattern
+	          if (!this.functionalPattern[j - col][i]) {
+	            setMasked(this.pixels, qrmask, j - col, i, v & mask);
+
+	            mask = mask >>> 1;
+	            bitsWritten++;
+
+	            if (bitsWritten === 8) {
+	              bitsWritten = 0;
+	              mask = 1 << 7;
+	              n++;
+	              v = this.bytes[n];
+	            }
+	          }
+	        }
+	      }
+
+	      writingUp ^= true; // switch directions, or can use: writingUp = !writingUp;
+	    }
+	  };
+
+	  QREncode.prototype.pixelsToImage = function pixelsToImage() {
+	    var i, j;
+
+	    for (i = 0; i < this.nModules; i++) {
+	      for (j = 0; j < this.nModules; j++) {
+	        if (this.pixels[i][j]) {
+	          this.setDark(i, j);
+	        }
+	      }
+	    }
+	  };
+
+	  QREncode.prototype.getDataCapacity = function getDataCapacity(version, ECLevel, mode) {
+	    var nCodewords = _base2['default'].nCodewords[version];
+	    var nECCodewords = _base2['default'].nECCodewords[version][ECLevel];
+	    var nDataCodewords = nCodewords - nECCodewords;
+	    var bits = 8 * nDataCodewords;
+	    var cap = 0;
+
+	    bits -= 4; // mode
+	    bits -= _base2['default'].nCountBits(mode, version);
+
+	    if (mode === _base2['default'].MODE.AlphaNumeric) {
+	      cap = Math.floor(bits / 11) * 2;
+
+	      if (bits >= cap / 2 * 11 + 6) {
+	        cap++;
+	      }
+	    } else if (mode === _base2['default'].MODE.EightBit) {
+	      cap = Math.floor(bits / 8);
+	    } else if (mode === _base2['default'].MODE.Numeric) {
+	      cap = Math.floor(bits / 10) * 3;
+
+	      if (bits >= cap / 3 * 10 + 4) {
+	        if (bits >= cap / 3 * 10 + 7) {
+	          cap++;
+	        }
+
+	        cap++;
+	      }
+	    } else {
+	      throw new _base2['default'].QRError('Unsupported ECI mode: ' + mode, 1, mode);
+	    }
+
+	    return cap;
+	  };
+
+	  QREncode.prototype.getVersionFromLength = function getVersionFromLength(ECLevel, mode, text) {
+	    var v;
+	    var length = _base2['default'].unicodeToUtf8(text).length;
+
+	    for (v = 1; v <= 40; v++) {
+	      if (this.getDataCapacity(v, ECLevel, mode) >= length) {
+	        return v;
+	      }
+	    }
+
+	    throw new _base2['default'].QRError('Text is too long, even for a version 40 QR Code', 2);
+	  };
+
+	  QREncode.prototype.setDark = function setDark(x, y) {
+	    this.image.setDark(x, y);
+	  };
+
+	  /**
+	   * QRCode encode constants
+	   */
+
+
+	  _createClass(QREncode, [{
+	    key: 'alphanumRev',
+	    get: function get() {
+	      return {
+	        '0': 0,
+	        '1': 1,
+	        '2': 2,
+	        '3': 3,
+	        '4': 4,
+	        '5': 5,
+	        '6': 6,
+	        '7': 7,
+	        '8': 8,
+	        '9': 9,
+	        'A': 10,
+	        'B': 11,
+	        'C': 12,
+	        'D': 13,
+	        'E': 14,
+	        'F': 15,
+	        'G': 16,
+	        'H': 17,
+	        'I': 18,
+	        'J': 19,
+	        'K': 20,
+	        'L': 21,
+	        'M': 22,
+	        'N': 23,
+	        'O': 24,
+	        'P': 25,
+	        'Q': 26,
+	        'R': 27,
+	        'S': 28,
+	        'T': 29,
+	        'U': 30,
+	        'V': 31,
+	        'W': 32,
+	        'X': 33,
+	        'Y': 34,
+	        'Z': 35,
+	        ' ': 36,
+	        '$': 37,
+	        '%': 38,
+	        '*': 39,
+	        '+': 40,
+	        '-': 41,
+	        '.': 42,
+	        '/': 43,
+	        ':': 44
+	      };
+	    }
+	  }]);
+
+	  return QREncode;
+	}();
+
+/***/ },
+/* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -62,11 +968,11 @@
 	exports.__esModule = true;
 	exports.QRBase = undefined;
 
-	var _en = __webpack_require__(2);
+	var _en = __webpack_require__(3);
 
 	var _en2 = _interopRequireDefault(_en);
 
-	var _error = __webpack_require__(3);
+	var _error = __webpack_require__(4);
 
 	var _error2 = _interopRequireDefault(_error);
 
@@ -325,7 +1231,7 @@
 	};
 
 /***/ },
-/* 2 */
+/* 3 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -336,7 +1242,7 @@
 	};
 
 /***/ },
-/* 3 */
+/* 4 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -367,6 +1273,1531 @@
 
 	  return QRError;
 	}(Error);
+
+/***/ },
+/* 5 */
+/***/ function(module, exports) {
+
+	/**
+	 QR-Logo: http://qrlogo.kaarposoft.dk
+
+	 Copyright (C) 2011 Henrik Kaare Poulsen
+
+	 Licensed under the Apache License, Version 2.0 (the "License");
+	 you may not use this file except in compliance with the License.
+	 You may obtain a copy of the License at
+
+	 http://www.apache.org/licenses/LICENSE-2.0
+
+	 Unless required by applicable law or agreed to in writing, software
+	 distributed under the License is distributed on an "AS IS" BASIS,
+	 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 See the License for the specific language governing permissions and
+	 limitations under the License.
+	 */
+
+	/**
+	 Parts of the Reed Solomon decoding algorithms have been inspired by
+	 http://rscode.sourceforge.net
+	 Original version Copyright (C) by Henry Minsky
+	 */
+
+	/**
+	 * JavaScript strict mode
+	 */
+	'use strict';
+
+	/**
+	 * @export
+	 * @class ReedSolomon
+	 */
+
+	exports.__esModule = true;
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var ReedSolomon = exports.ReedSolomon = function () {
+	  /**
+	   * ReedSolomon constructor
+	   */
+	  function ReedSolomon(n_ec_bytes) {
+	    _classCallCheck(this, ReedSolomon);
+
+	    this.n_ec_bytes = n_ec_bytes;
+	    this.n_degree_max = 2 * n_ec_bytes;
+	    this.syndroms = [];
+	    this.gen_poly = null;
+	    this.initGaloisTables();
+	  }
+
+	  /**
+	   * ReedSolomon main functions to be called by clients
+	   */
+
+
+	  ReedSolomon.prototype.encode = function encode(msg) {
+	    var LFSR, i, dbyte, j, parity;
+
+	    // return parity bytes
+	    // Simulate a LFSR with generator polynomial for n byte RS code.
+	    if (this.gen_poly == null) {
+	      this.gen_poly = this.genPoly(this.n_ec_bytes);
+	    }
+
+	    LFSR = new Array(this.n_ec_bytes + 1);
+
+	    for (i = 0; i < this.n_ec_bytes + 1; i++) {
+	      LFSR[i] = 0;
+	    }
+
+	    for (i = 0; i < msg.length; i++) {
+	      dbyte = msg[i] ^ LFSR[this.n_ec_bytes - 1];
+
+	      for (j = this.n_ec_bytes - 1; j > 0; j--) {
+	        LFSR[j] = LFSR[j - 1] ^ this.gmult(this.gen_poly[j], dbyte);
+	      }
+
+	      LFSR[0] = this.gmult(this.gen_poly[0], dbyte);
+	    }
+
+	    parity = [];
+
+	    for (i = this.n_ec_bytes - 1; i >= 0; i--) {
+	      parity.push(LFSR[i]);
+	    }
+
+	    return parity;
+	  };
+
+	  ReedSolomon.prototype.decode = function decode(bytes_in) {
+	    var n_err;
+
+	    this.bytes_in = bytes_in;
+	    this.bytes_out = bytes_in.slice();
+
+	    n_err = this.calculateSyndroms();
+
+	    if (n_err > 0) {
+	      this.correctErrors();
+	    } else {
+	      this.corrected = true;
+	    }
+
+	    return this.bytes_out.slice(0, this.bytes_out.length - this.n_ec_bytes);
+	  };
+
+	  /**
+	   * ReedSolomon implementation
+	   */
+
+
+	  ReedSolomon.prototype.genPoly = function genPoly(nbytes) {
+	    var tp, tp1, genpoly, i;
+
+	    // multiply (x + a^n) for n = 1 to nbytes
+	    tp1 = this.zeroPoly();
+	    tp1[0] = 1;
+
+	    for (i = 0; i < nbytes; i++) {
+	      tp = this.zeroPoly();
+	      tp[0] = this.gexp[i]; // set up x+a^n
+	      tp[1] = 1;
+	      genpoly = this.multPolys(tp, tp1);
+	      tp1 = this.copyPoly(genpoly);
+	    }
+
+	    return genpoly;
+	  };
+
+	  ReedSolomon.prototype.calculateSyndroms = function calculateSyndroms() {
+	    var sum,
+	        n_err = 0;
+	    var i, j;
+
+	    this.syndroms = [];
+
+	    for (j = 0; j < this.n_ec_bytes; j++) {
+	      sum = 0;
+
+	      for (i = 0; i < this.bytes_in.length; i++) {
+	        sum = this.bytes_in[i] ^ this.gmult(this.gexp[j], sum);
+	      }
+
+	      this.syndroms.push(sum);
+
+	      if (sum > 0) {
+	        n_err++;
+	      }
+	    }
+
+	    return n_err;
+	  };
+
+	  ReedSolomon.prototype.correctErrors = function correctErrors() {
+	    var e, r, i, num, j, denom, err;
+
+	    this.berlekampMassey();
+	    this.findRoots();
+
+	    this.corrected = false;
+
+	    if (2 * this.n_errors > this.n_ec_bytes) {
+	      this.uncorrected_reason = 'Too many errors';
+
+	      return;
+	    }
+
+	    for (e = 0; e < this.n_errors; e++) {
+	      if (this.error_locs[e] >= this.bytes_in.length) {
+	        this.uncorrected_reason = 'Corrections out of scope';
+
+	        return;
+	      }
+	    }
+
+	    if (this.n_errors === 0) {
+	      this.uncorrected_reason = 'Could not identify errors';
+
+	      return;
+	    }
+
+	    for (r = 0; r < this.n_errors; r++) {
+	      i = this.error_locs[r];
+	      // evaluate omega at alpha^(-i)
+	      num = 0;
+
+	      for (j = 0; j < this.n_degree_max; j++) {
+	        num ^= this.gmult(this.omega[j], this.gexp[(255 - i) * j % 255]);
+	      }
+
+	      // evaluate psi' (derivative) at alpha^(-i) ; all odd powers disappear
+	      denom = 0;
+
+	      for (j = 0; j < this.n_degree_max; j += 2) {
+	        denom ^= this.gmult(this.psi[j], this.gexp[(255 - i) * j % 255]);
+	      }
+
+	      err = this.gmult(num, this.ginv(denom));
+
+	      this.bytes_out[this.bytes_out.length - i - 1] ^= err;
+	    }
+
+	    this.corrected = true;
+	  };
+
+	  ReedSolomon.prototype.berlekampMassey = function berlekampMassey() {
+	    // initialize Gamma, the erasure locator polynomial
+	    var gamma = this.zeroPoly();
+	    var D, psi2, k, L, i, n, d, L2, om;
+
+	    gamma[0] = 1;
+
+	    // initialize to z
+	    D = this.copyPoly(gamma);
+
+	    this.mulZPoly(D);
+	    this.psi = this.copyPoly(gamma);
+
+	    psi2 = new Array(this.n_degree_max);
+	    k = -1;
+	    L = 0;
+
+	    for (n = 0; n < this.n_ec_bytes; n++) {
+	      d = this.computeDiscrepancy(this.psi, this.syndroms, L, n);
+
+	      if (d !== 0) {
+	        for (i = 0; i < this.n_degree_max; i++) {
+	          psi2[i] = this.psi[i] ^ this.gmult(d, D[i]);
+	        }
+
+	        if (L < n - k) {
+	          L2 = n - k;
+	          k = n - L;
+
+	          for (i = 0; i < this.n_degree_max; i++) {
+	            D[i] = this.gmult(this.psi[i], this.ginv(d));
+	          }
+
+	          L = L2;
+	        }
+
+	        this.psi = this.copyPoly(psi2);
+	      }
+
+	      this.mulZPoly(D);
+	    }
+
+	    // omega
+	    om = this.multPolys(this.psi, this.syndroms);
+
+	    this.omega = this.zeroPoly();
+
+	    for (i = 0; i < this.n_ec_bytes; i++) {
+	      this.omega[i] = om[i];
+	    }
+	  };
+
+	  ReedSolomon.prototype.findRoots = function findRoots() {
+	    var sum, r, k;
+
+	    this.n_errors = 0;
+	    this.error_locs = [];
+
+	    for (r = 1; r < 256; r++) {
+	      sum = 0;
+	      // evaluate psi at r
+	      for (k = 0; k < this.n_ec_bytes + 1; k++) {
+	        sum ^= this.gmult(this.gexp[k * r % 255], this.psi[k]);
+	      }
+
+	      if (sum === 0) {
+	        this.error_locs.push(255 - r);
+	        this.n_errors++;
+	      }
+	    }
+	  };
+
+	  /**
+	   * Polynome functions
+	   */
+
+
+	  ReedSolomon.prototype.computeDiscrepancy = function computeDiscrepancy(lambda, S, L, n) {
+	    var sum = 0;
+	    var i;
+
+	    for (i = 0; i <= L; i++) {
+	      sum ^= this.gmult(lambda[i], S[n - i]);
+	    }
+
+	    return sum;
+	  };
+
+	  ReedSolomon.prototype.copyPoly = function copyPoly(src) {
+	    var dst = new Array(this.n_degree_max);
+	    var i;
+
+	    for (i = 0; i < this.n_degree_max; i++) {
+	      dst[i] = src[i];
+	    }
+
+	    return dst;
+	  };
+
+	  ReedSolomon.prototype.zeroPoly = function zeroPoly() {
+	    var poly = new Array(this.n_degree_max);
+	    var i;
+
+	    for (i = 0; i < this.n_degree_max; i++) {
+	      poly[i] = 0;
+	    }
+
+	    return poly;
+	  };
+
+	  ReedSolomon.prototype.mulZPoly = function mulZPoly(poly) {
+	    var i;
+
+	    for (i = this.n_degree_max - 1; i > 0; i--) {
+	      poly[i] = poly[i - 1];
+	    }
+
+	    poly[0] = 0;
+	  };
+
+	  /**
+	   * polynomial multiplication
+	   */
+
+
+	  ReedSolomon.prototype.multPolys = function multPolys(p1, p2) {
+	    var dst = new Array(this.n_degree_max);
+	    var tmp1 = new Array(this.n_degree_max * 2);
+	    var i, j;
+
+	    for (i = 0; i < this.n_degree_max * 2; i++) {
+	      dst[i] = 0;
+	    }
+
+	    for (i = 0; i < this.n_degree_max; i++) {
+	      for (j = this.n_degree_max; j < this.n_degree_max * 2; j++) {
+	        tmp1[j] = 0;
+	      }
+
+	      // scale tmp1 by p1[i]
+	      for (j = 0; j < this.n_degree_max; j++) {
+	        tmp1[j] = this.gmult(p2[j], p1[i]);
+	      }
+
+	      // and mult (shift) tmp1 right by i
+	      for (j = this.n_degree_max * 2 - 1; j >= i; j--) {
+	        tmp1[j] = tmp1[j - i];
+	      }
+
+	      for (j = 0; j < i; j++) {
+	        tmp1[j] = 0;
+	      }
+
+	      // add into partial product
+	      for (j = 0; j < this.n_degree_max * 2; j++) {
+	        dst[j] ^= tmp1[j];
+	      }
+	    }
+
+	    return dst;
+	  };
+
+	  /**
+	   * Galois field functions
+	   */
+
+
+	  ReedSolomon.prototype.initGaloisTables = function initGaloisTables() {
+	    var pinit = 0;
+	    var p1 = 1;
+	    var p2 = 0;
+	    var p3 = 0;
+	    var p4 = 0;
+	    var p5 = 0;
+	    var p6 = 0;
+	    var p7 = 0;
+	    var p8 = 0;
+	    var i, z;
+
+	    this.gexp = new Array(512);
+	    this.glog = new Array(256);
+	    this.gexp[0] = 1;
+	    this.gexp[255] = this.gexp[0];
+	    this.glog[0] = 0;
+
+	    for (i = 1; i < 256; i++) {
+	      pinit = p8;
+	      p8 = p7;
+	      p7 = p6;
+	      p6 = p5;
+	      p5 = p4 ^ pinit;
+	      p4 = p3 ^ pinit;
+	      p3 = p2 ^ pinit;
+	      p2 = p1;
+	      p1 = pinit;
+	      this.gexp[i] = p1 + p2 * 2 + p3 * 4 + p4 * 8 + p5 * 16 + p6 * 32 + p7 * 64 + p8 * 128;
+	      this.gexp[i + 255] = this.gexp[i];
+	    }
+
+	    for (i = 1; i < 256; i++) {
+	      for (z = 0; z < 256; z++) {
+	        if (this.gexp[z] === i) {
+	          this.glog[i] = z;
+	          break;
+	        }
+	      }
+	    }
+	  };
+
+	  ReedSolomon.prototype.gmult = function gmult(a, b) {
+	    var i, j;
+
+	    if (a === 0 || b === 0) {
+	      return 0;
+	    }
+
+	    i = this.glog[a];
+	    j = this.glog[b];
+
+	    return this.gexp[i + j];
+	  };
+
+	  ReedSolomon.prototype.ginv = function ginv(elt) {
+	    return this.gexp[255 - this.glog[elt]];
+	  };
+
+	  return ReedSolomon;
+	}();
+
+/***/ },
+/* 6 */
+/***/ function(module, exports) {
+
+	/**
+	 * QRCode Decode
+	 */
+	'use strict';
+
+	function QRDecode() {
+	  this.image = null;
+	  this.imageTop = 0;
+	  this.imageBottom = 0;
+	  this.imageLeft = 0;
+	  this.imageRight = 0;
+	  this.nModules = 0;
+	  this.moduleSize = 0;
+	  this.version = 0;
+	  this.functionalGrade = 0;
+	  this.ECLevel = 0;
+	  this.mask = 0;
+	  this.maskPattern = [];
+	  this.nBlockEcWords = 0;
+	  this.blockIndices = [];
+	  this.blockDataLengths = [];
+	}
+
+	QRDecode.prototype = {
+	  /**
+	   * Decode a pixel array
+	   * @param pix
+	   * @returns {*}
+	   */
+	  decodePix: function decodePix(pix) {
+	    return this.decodeImage(pix);
+	  },
+	  /**
+	   * Decode image data as QR Code
+	   * @param imageData    The image data (canvas.getContext('2d').getImageData, pixel array or similar)
+	   * @param imageWidth   The pixel width of the image
+	   * @param imageHeight  The pixel height of the image
+	   */
+	  decodeImageData: function decodeImageData(imageData, imageWidth, imageHeight) {
+	    this.setImageData(imageData, imageWidth, imageHeight);
+
+	    return this.decode();
+	  },
+	  /**
+	   * Decode image data as QR Code
+	   * @param imageData    The image data (canvas.getContext('2d').getImageData, pixel array or similar)
+	   * @param imageWidth   The pixel width of the image
+	   * @param imageHeight  The pixel height of the image
+	   * @param left         Leftmost pixel of image
+	   * @param right        Rightmost pixel of image
+	   * @param top          Top pixel of image
+	   * @param bottom       Bottom pixel of image
+	   * @param maxVersion   Do not try to decode with version higher than this
+	   */
+	  decodeImageDataInsideBordersWithMaxVersion: function decodeImageDataInsideBordersWithMaxVersion(imageData, imageWidth, imageHeight, left, right, top, bottom, maxVersion) {
+	    this.setImageData(imageData, imageWidth, imageHeight);
+	    this.imageLeft = left;
+	    this.imageRight = right;
+	    this.imageTop = top;
+	    this.imageBottom = bottom;
+	    this.imageSize = (this.imageRight - this.imageLeft + 1 + (this.imageBottom - this.imageTop + 1)) / 2.0;
+	    this.maxVersion = maxVersion;
+
+	    return this.decodeInsideBordersWithMaxVersion();
+	  },
+	  /**
+	   * Set image data in preparation for decoding QR Code
+	   * @param imageData    The image data (canvas.getContext('2d').getImageData, pixel array or similar)
+	   * @param imageWidth   The pixel width of the image
+	   * @param imageHeight  The pixel height of the image
+	   */
+	  setImageData: function setImageData(imageData, imageWidth, imageHeight) {
+	    var total = 0,
+	        x,
+	        y,
+	        p,
+	        v;
+
+	    imageData.minCol = 255;
+	    imageData.maxCol = 0;
+
+	    for (x = 0; x < imageWidth; x++) {
+	      for (y = 0; y < imageHeight; y++) {
+	        p = x * 4 + y * imageWidth * 4;
+	        v = 0.30 * imageData.data[p] + 0.59 * imageData.data[p + 1] + 0.11 * imageData.data[p + 2];
+	        total += v;
+
+	        if (v < imageData.minCol) {
+	          imageData.minCol = v;
+	        }
+
+	        if (v > imageData.maxCol) {
+	          imageData.maxCol = v;
+	        }
+	      }
+	    }
+
+	    if (imageData.maxCol - imageData.minCol < 255 / 10) {
+	      throw new QRBase.QRError('Image does not have enough contrast (this.image_data.min_col=' + imageData.minCol + ' this.image_data.max_col=' + imageData.maxCol + ')', 2, { minCol: imageData.minCol, maxCol: imageData.maxCol });
+	    }
+
+	    imageData.threshold = total / (imageWidth * imageHeight);
+
+	    imageData.getGray = function (x, y, d) {
+	      var n = 0,
+	          i,
+	          j,
+	          p;
+
+	      for (i = x; i < x + d; i++) {
+	        for (j = y; j < y + d; j++) {
+	          p = i * 4 + j * this.width * 4;
+	          n = n + 0.30 * this.data[p] + 0.59 * this.data[p + 1] + 0.11 * this.data[p + 2];
+	        }
+	      }
+
+	      return n / d / d;
+	    };
+
+	    imageData.isDark = function (x, y, d) {
+	      var g = this.getGray(x, y, d);
+	      return g < this.threshold;
+	    };
+
+	    this.image = imageData;
+	  },
+	  /**
+	   * Decode a QR Code in an image.
+	   * The image MUST already have .getGray set
+	   */
+	  decodeImage: function decodeImage(image) {
+	    this.image = image;
+
+	    return this.decode();
+	  },
+	  /**
+	   * Decode a QR Code in an image which has already been set.
+	   */
+	  decode: function decode() {
+	    this.findImageBorders();
+	    this.maxVersion = 40;
+	    this.decodeInsideBordersWithMaxVersion();
+
+	    return this.data;
+	  },
+	  /**
+	   * Decode a QR Code in an image which has already been set -
+	   * inside borders already defined
+	   */
+	  decodeInsideBordersWithMaxVersion: function decodeInsideBordersWithMaxVersion() {
+	    this.findModuleSize();
+	    QRBase.setFunctionalPattern(this);
+	    this.extractCodewords();
+	    QRBase.setBlocks(this);
+	    this.correctErrors();
+	    this.extractData();
+
+	    return this.data;
+	  },
+	  /**
+	   * QRCode internal decoding functions
+	   */
+	  findImageBorders: function findImageBorders() {
+	    var i,
+	        j,
+	        n,
+	        limit = 7,
+	        skewLimit = 2;
+
+	    for (i = 0; i < this.image.width; i++) {
+	      n = 0;
+
+	      for (j = 0; j < this.image.height; j++) {
+	        n = n + this.image.isDark(i, j, 1);
+	      }
+
+	      if (n >= limit) {
+	        break;
+	      }
+	    }
+
+	    this.imageLeft = i;
+
+	    for (i = this.image.width - 1; i >= 0; i--) {
+	      n = 0;
+
+	      for (j = 0; j < this.image.height; j++) {
+	        n = n + this.image.isDark(i, j, 1);
+	      }
+
+	      if (n >= limit) {
+	        break;
+	      }
+	    }
+
+	    this.imageRight = i;
+
+	    for (j = 0; j < this.image.height; j++) {
+	      n = 0;
+
+	      for (i = 0; i < this.image.width; i++) {
+	        n = n + this.image.isDark(i, j, 1);
+	      }
+
+	      if (n >= limit) {
+	        break;
+	      }
+	    }
+
+	    this.imageTop = j;
+
+	    for (j = this.image.height - 1; j >= 0; j--) {
+	      n = 0;
+
+	      for (i = 0; i < this.image.width; i++) {
+	        n = n + this.image.isDark(i, j, 1);
+	      }
+
+	      if (n >= limit) {
+	        break;
+	      }
+	    }
+
+	    this.imageBottom = j;
+
+	    if (this.imageRight - this.imageLeft + 1 < 21 || this.imageBottom - this.imageTop + 1 < 21) {
+	      throw new QRBase.QRError('Found no image data to decode', 3);
+	    }
+
+	    if (Math.abs(this.imageRight - this.imageLeft - (this.imageBottom - this.imageTop)) > skewLimit) {
+	      throw new QRBase.QRError('Image data is not rectangular', 4);
+	    }
+
+	    this.imageSize = (this.imageRight - this.imageLeft + 1 + (this.imageBottom - this.imageTop + 1)) / 2.0;
+	  },
+	  findModuleSize: function findModuleSize() {
+	    /**
+	     * returns number of matches found
+	     * perferct is 8*8 = 64
+	     */
+	    function matchFinderPattern(qr, x, y, quietX, quietY, moduleSize) {
+	      var i,
+	          j,
+	          n = 0;
+
+	      // Outer 7x7 black boundary
+	      for (i = 0; i <= 5; i++) {
+	        if (qr.isDarkWithSize(x + i, y, moduleSize)) {
+	          n = n + 1;
+	        }
+
+	        if (qr.isDarkWithSize(x + 6, y + i, moduleSize)) {
+	          n = n + 1;
+	        }
+
+	        if (qr.isDarkWithSize(x + 6 - i, y + 6, moduleSize)) {
+	          n = n + 1;
+	        }
+
+	        if (qr.isDarkWithSize(x, y + 6 - i, moduleSize)) {
+	          n = n + 1;
+	        }
+	      }
+
+	      // Intermediate 5*5 white
+	      for (i = 0; i <= 3; i++) {
+	        if (!qr.isDarkWithSize(x + i + 1, y + 1, moduleSize)) {
+	          n = n + 1;
+	        }
+
+	        if (!qr.isDarkWithSize(x + 5, y + i + 1, moduleSize)) {
+	          n = n + 1;
+	        }
+
+	        if (!qr.isDarkWithSize(x + 5 - i, y + 5, moduleSize)) {
+	          n = n + 1;
+	        }
+
+	        if (!qr.isDarkWithSize(x + 1, y + 5 - i, moduleSize)) {
+	          n = n + 1;
+	        }
+	      }
+
+	      // Inner 3*3 black box
+	      for (i = 0; i <= 2; i++) {
+	        for (j = 0; j <= 2; j++) {
+	          if (qr.isDarkWithSize(3 + x, 3 + y, moduleSize)) {
+	            n = n + 1;
+	          }
+	        }
+	      }
+
+	      // quiet area
+	      for (i = 0; i <= 6; i++) {
+	        if (!qr.isDarkWithSize(x + quietX, y + i, moduleSize)) {
+	          n = n + 1;
+	        }
+
+	        if (!qr.isDarkWithSize(x + i, y + quietY, moduleSize)) {
+	          n = n + 1;
+	        }
+	      }
+
+	      // 'bottom right' quiet area
+	      if (!qr.isDarkWithSize(x + quietX, y + quietY, moduleSize)) {
+	        n = n + 1;
+	      }
+
+	      return n;
+	    }
+
+	    function matchTimingPattern(qr, horizontal, nModules, moduleSize) {
+	      var n = 0,
+	          x0 = 6,
+	          y0 = 8,
+	          dx = 0,
+	          dy = 1,
+	          consecutive = 5,
+	          ok = [],
+	          c,
+	          black = true,
+	          i,
+	          x,
+	          y,
+	          last5;
+
+	      if (horizontal) {
+	        x0 = 8;
+	        y0 = 6;
+	        dx = 1;
+	        dy = 0;
+	      }
+
+	      for (c = 0; c < consecutive; c++) {
+	        ok.push(1);
+	      }
+
+	      for (i = 0; i < nModules - 8 - 8; i++) {
+	        x = x0 + i * dx;
+	        y = y0 + i * dy;
+
+	        if (black === qr.isDarkWithSize(x, y, moduleSize)) {
+	          n++;
+	          ok.push(1);
+	        } else {
+	          ok.push(0);
+	        }
+
+	        black = !black;
+	        last5 = 0;
+
+	        for (c = ok.length - consecutive; c < ok.length - 1; c++) {
+	          if (ok[c]) {
+	            last5 = last5 + 1;
+	          }
+	        }
+
+	        if (last5 < 3) {
+	          return 0;
+	        }
+	      }
+
+	      return n;
+	    }
+
+	    function matchOneAlignmentPattern(qr, x, y, moduleSize) {
+	      var n = 0,
+	          i;
+
+	      // Outer 5x5 black boundary
+	      for (i = 0; i <= 3; i++) {
+	        if (qr.isDarkWithSize(x + i, y, moduleSize)) {
+	          n = n + 1;
+	        }
+
+	        if (qr.isDarkWithSize(x + 4, y + i, moduleSize)) {
+	          n = n + 1;
+	        }
+
+	        if (qr.isDarkWithSize(x + 4 - i, y + 4, moduleSize)) {
+	          n = n + 1;
+	        }
+
+	        if (qr.isDarkWithSize(x, y + 4 - i, moduleSize)) {
+	          n = n + 1;
+	        }
+	      }
+
+	      // Intermediate 3*3 white
+	      for (i = 0; i <= 1; i++) {
+	        if (!qr.isDarkWithSize(x + i + 1, y + 1, moduleSize)) {
+	          n = n + 1;
+	        }
+
+	        if (!qr.isDarkWithSize(x + 3, y + i + 1, moduleSize)) {
+	          n = n + 1;
+	        }
+
+	        if (!qr.isDarkWithSize(x + 3 - i, y + 3, moduleSize)) {
+	          n = n + 1;
+	        }
+
+	        if (!qr.isDarkWithSize(x + 1, y + 3 - i, moduleSize)) {
+	          n = n + 1;
+	        }
+	      }
+
+	      // center black
+	      if (qr.isDarkWithSize(x + 2, y + 2, moduleSize)) {
+	        n = n + 1;
+	      }
+
+	      return n;
+	    }
+
+	    function matchAlignmentPatterns(qr, version, moduleSize) {
+	      var a = 0,
+	          n = QRBase.alignmentPatterns[version].length,
+	          i,
+	          j,
+	          na;
+
+	      for (i = 0; i < n; i++) {
+	        for (j = 0; j < n; j++) {
+	          if (i === 0 && j === 0 || i === 0 && j === n - 1 || i === n - 1 && j === 0) {
+	            continue;
+	          }
+
+	          na = matchOneAlignmentPattern(qr, QRBase.alignmentPatterns[version][i] - 2, QRBase.alignmentPatterns[version][j] - 2, moduleSize);
+
+	          if (na > 24) {
+	            a++;
+	          }
+	        }
+	      }
+
+	      return a;
+	    }
+
+	    function matchVersionCode(qr, pattern) {
+	      var v, hd;
+
+	      for (v = 7; v <= 40; v++) {
+	        hd = qr.hammingDistance(pattern, QRBase.versionInfo[v]);
+	        if (hd <= 3) {
+	          return [v, hd];
+	        }
+	      }
+
+	      return [0, 4];
+	    }
+
+	    function matchVersionTopright(qr, nModules, moduleSize) {
+	      var factor = 1,
+	          pattern = 0,
+	          x,
+	          y;
+
+	      for (y = 0; y < 6; y++) {
+	        for (x = nModules - 11; x < nModules - 11 + 3; x++) {
+	          if (qr.isDarkWithSize(x, y, moduleSize)) {
+	            pattern += factor;
+	          }
+	          factor *= 2;
+	        }
+	      }
+
+	      return matchVersionCode(qr, pattern);
+	    }
+
+	    function matchVersionBottomleft(qr, nModules, moduleSize) {
+	      var factor = 1,
+	          pattern = 0,
+	          x,
+	          y;
+
+	      for (x = 0; x < 6; x++) {
+	        for (y = nModules - 11; y < nModules - 11 + 3; y++) {
+	          if (qr.isDarkWithSize(x, y, moduleSize)) {
+	            pattern += factor;
+	          }
+
+	          factor *= 2;
+	        }
+	      }
+
+	      return matchVersionCode(qr, pattern);
+	    }
+
+	    function matchFormatCode(qr, pattern) {
+	      var f, hd;
+
+	      for (f = 0; f < 32; f++) {
+	        hd = qr.hammingDistance(pattern, QRBase.formatInfo[f]);
+
+	        if (hd <= 3) {
+	          return [f, hd];
+	        }
+	      }
+
+	      return [0, 4];
+	    }
+
+	    function matchFormatNW(qr, nModules, moduleSize) {
+	      var factor = 1,
+	          pattern = 0,
+	          x = 8,
+	          y;
+
+	      for (y = 0; y <= 5; y++) {
+	        if (qr.isDarkWithSize(x, y, moduleSize)) {
+	          pattern += factor;
+	        }
+
+	        factor *= 2;
+	      }
+
+	      if (qr.isDarkWithSize(8, 7, moduleSize)) {
+	        pattern += factor;
+	      }
+
+	      factor *= 2;
+
+	      if (qr.isDarkWithSize(8, 8, moduleSize)) {
+	        pattern += factor;
+	      }
+
+	      factor *= 2;
+
+	      if (qr.isDarkWithSize(7, 8, moduleSize)) {
+	        pattern += factor;
+	      }
+
+	      factor *= 2;
+	      y = 8;
+
+	      for (x = 5; x >= 0; x--) {
+	        if (qr.isDarkWithSize(x, y, moduleSize)) {
+	          pattern += factor;
+	        }
+
+	        factor *= 2;
+	      }
+
+	      return matchFormatCode(qr, pattern);
+	    }
+
+	    function matchFormatNESW(qr, nModules, moduleSize) {
+	      var factor = 1,
+	          pattern = 0,
+	          x,
+	          y = 8;
+
+	      for (x = nModules - 1; x > nModules - 1 - 8; x--) {
+	        if (qr.isDarkWithSize(x, y, moduleSize)) {
+	          pattern += factor;
+	        }
+
+	        factor *= 2;
+	      }
+
+	      x = 8;
+
+	      for (y = nModules - 7; y < nModules - 1; y++) {
+	        if (qr.isDarkWithSize(x, y, moduleSize)) {
+	          pattern += factor;
+	        }
+
+	        factor *= 2;
+	      }
+
+	      return matchFormatCode(qr, pattern);
+	    }
+
+	    function gradeFinderPatterns(finderPattern) {
+	      var g = 4,
+	          i;
+
+	      for (i = 0; i < 3; i++) {
+	        g = g - (64 - finderPattern[i]);
+	      }
+
+	      if (g < 0) {
+	        g = 0;
+	      }
+
+	      return g;
+	    }
+
+	    function gradeTimingPatterns(timingPattern, n) {
+	      var t = (timingPattern[0] + timingPattern[1]) / (2 * n);
+
+	      t = 1 - t;
+
+	      if (t >= 0.14) {
+	        return 0;
+	      }
+
+	      if (t >= 0.11) {
+	        return 1;
+	      }
+
+	      if (t >= 0.07) {
+	        return 2;
+	      }
+
+	      if (t >= 0.00001) {
+	        return 3;
+	      }
+
+	      return 4;
+	    }
+
+	    function gradeAlignmentPatterns(alignmentPatterns, n) {
+	      var a = alignmentPatterns / n;
+
+	      a = 1 - a;
+
+	      if (a >= 0.30) {
+	        return 0;
+	      }
+
+	      if (a >= 0.20) {
+	        return 1;
+	      }
+
+	      if (a >= 0.10) {
+	        return 2;
+	      }
+
+	      if (a >= 0.00001) {
+	        return 3;
+	      }
+
+	      return 4;
+	    }
+
+	    function matchVersion(qr, version) {
+	      var g,
+	          grades = [],
+	          nModules = QRBase.nModulesFromVersion(version),
+	          moduleSize = qr.imageSize / nModules,
+	          finderPattern = [0, 0, 0],
+	          versionTopright = [0, 0],
+	          versionBottomleft = [0, 0],
+	          timingPattern = [0, 0],
+	          alignmentPatterns = -3,
+	          format = 0,
+	          v1,
+	          formatNW,
+	          formatNESW,
+	          ECLevel,
+	          mask,
+	          grade = 4,
+	          i;
+
+	      finderPattern[0] = matchFinderPattern(qr, 0, 0, 7, 7, moduleSize);
+
+	      if (finderPattern[0] < 64 - 3) {
+	        return [version, 0]; // performance hack!
+	      }
+
+	      finderPattern[1] = matchFinderPattern(qr, 0, nModules - 7, 7, -1, moduleSize);
+
+	      if (finderPattern[0] + finderPattern[1] < 64 + 64 - 3) {
+	        return [version, 0]; // performance hack!
+	      }
+
+	      finderPattern[2] = matchFinderPattern(qr, nModules - 7, 0, -1, 7, moduleSize);
+	      g = gradeFinderPatterns(finderPattern);
+
+	      if (g < 1) {
+	        return [version, 0];
+	      } else {
+	        grades.push(g);
+	      }
+
+	      if (version >= 7) {
+	        versionTopright = matchVersionTopright(qr, nModules, moduleSize);
+	        versionBottomleft = matchVersionBottomleft(qr, nModules, moduleSize);
+	        v1 = version;
+
+	        if (versionTopright[1] < versionBottomleft[1]) {
+	          if (versionTopright[1] < 4) {
+	            v1 = versionTopright[0];
+	          }
+	        } else {
+	          if (versionBottomleft[1] < 4) {
+	            v1 = versionBottomleft[0];
+	          }
+	        }
+
+	        if (v1 !== version) {
+	          version = v1;
+	        }
+
+	        nModules = QRBase.nModulesFromVersion(version);
+	        moduleSize = qr.imageSize / nModules;
+	        g = Math.round((4 - versionTopright[1] + (4 - versionBottomleft[1])) / 2);
+
+	        if (g < 1) {
+	          return [version, 0];
+	        } else {
+	          grades.push(g);
+	        }
+	      }
+
+	      timingPattern[0] = matchTimingPattern(qr, true, nModules, moduleSize);
+	      timingPattern[1] = matchTimingPattern(qr, false, nModules, moduleSize);
+	      g = gradeTimingPatterns(timingPattern, nModules - 8 - 8);
+
+	      if (g < 1) {
+	        return [version, 0];
+	      } else {
+	        grades.push(g);
+	      }
+
+	      if (version > 1) {
+	        alignmentPatterns = matchAlignmentPatterns(qr, version, moduleSize);
+	      }
+
+	      g = gradeAlignmentPatterns(alignmentPatterns, QRBase.alignmentPatterns[version].length * QRBase.alignmentPatterns[version].length - 3);
+
+	      if (g < 1) {
+	        return [version, 0];
+	      } else {
+	        grades.push(g);
+	      }
+
+	      formatNW = matchFormatNW(qr, nModules, moduleSize);
+	      formatNESW = matchFormatNESW(qr, nModules, moduleSize);
+
+	      if (formatNW[1] < formatNESW[1]) {
+	        format = formatNW[0];
+	      } else {
+	        format = formatNESW[0];
+	      }
+
+	      ECLevel = Math.floor(format / 8);
+	      mask = format % 8;
+	      g = Math.round((4 - formatNW[1] + (4 - formatNESW[1])) / 2);
+
+	      if (g < 1) {
+	        return [version, 0];
+	      } else {
+	        grades.push(g);
+	      }
+
+	      for (i = 0; i < grades.length; i++) {
+	        if (grades[i] < grade) {
+	          grade = grades[i];
+	        }
+	      }
+
+	      return [version, grade, ECLevel, mask];
+	    }
+
+	    /**
+	     * findModuleSize
+	     */
+	    var bestMatchSoFar = [0, 0],
+	        version,
+	        match;
+
+	    for (version = 1; version <= this.maxVersion; version++) {
+	      match = matchVersion(this, version);
+
+	      if (match[1] > bestMatchSoFar[1]) {
+	        bestMatchSoFar = match;
+	      }
+	      if (match[1] === 4) {
+	        break;
+	      }
+	    }
+
+	    this.version = bestMatchSoFar[0];
+	    this.nModules = QRBase.nModulesFromVersion(this.version);
+	    this.moduleSize = this.imageSize / this.nModules;
+	    this.functionalGrade = bestMatchSoFar[1];
+	    this.ECLevel = bestMatchSoFar[2];
+	    this.mask = bestMatchSoFar[3];
+
+	    if (this.functionalGrade < 1) {
+	      throw new QRBase.QRError('Unable to decode a function pattern', 5);
+	    }
+	  },
+	  extractCodewords: function extractCodewords() {
+	    function getUnmasked(qr, j, i) {
+	      var m, u;
+
+	      switch (qr.mask) {
+	        case 0:
+	          m = (i + j) % 2;
+	          break;
+	        case 1:
+	          m = i % 2;
+	          break;
+	        case 2:
+	          m = j % 3;
+	          break;
+	        case 3:
+	          m = (i + j) % 3;
+	          break;
+	        case 4:
+	          m = (Math.floor(i / 2) + Math.floor(j / 3)) % 2;
+	          break;
+	        case 5:
+	          m = i * j % 2 + i * j % 3;
+	          break;
+	        case 6:
+	          m = (i * j % 2 + i * j % 3) % 2;
+	          break;
+	        case 7:
+	          m = ((i + j) % 2 + i * j % 3) % 2;
+	          break;
+	      }
+
+	      if (m === 0) {
+	        u = !qr.isDark(j, i);
+	      } else {
+	        u = qr.isDark(j, i);
+	      }
+
+	      return u;
+	    }
+
+	    /**
+	     * extractCodewords
+	     * Original Java version by Sean Owen
+	     * Copyright 2007 ZXing authors
+	     */
+	    this.codewords = [];
+
+	    var readingUp = true,
+	        currentByte = 0,
+	        factor = 128,
+	        bitsRead = 0,
+	        i,
+	        j,
+	        col,
+	        count;
+
+	    // Read columns in pairs, from right to left
+	    for (j = this.nModules - 1; j > 0; j -= 2) {
+	      if (j === 6) {
+	        // Skip whole column with vertical alignment pattern;
+	        // saves time and makes the other code proceed more cleanly
+	        j--;
+	      }
+
+	      // Read alternatingly from bottom to top then top to bottom
+	      for (count = 0; count < this.nModules; count++) {
+	        i = readingUp ? this.nModules - 1 - count : count;
+
+	        for (col = 0; col < 2; col++) {
+	          // Ignore bits covered by the function pattern
+	          if (!this.functionalPattern[j - col][i]) {
+	            // Read a bit
+	            if (getUnmasked(this, j - col, i)) {
+	              currentByte += factor;
+	            }
+
+	            factor /= 2;
+
+	            // If we've made a whole byte, save it off
+	            if (factor < 1) {
+	              this.codewords.push(currentByte);
+	              bitsRead = 0;
+	              factor = 128;
+	              currentByte = 0;
+	            }
+	          }
+	        }
+	      }
+
+	      readingUp ^= true; // switch directions
+	    }
+	  },
+	  extractData: function extractData() {
+	    function extract(qr, bytes, pos, len) {
+	      // http://stackoverflow.com/questions/3846711/extract-bit-sequences-of-arbitrary-length-from-byte-array-efficiently
+	      var shift = 24 - (pos & 7) - len,
+	          mask = (1 << len) - 1,
+	          byteIndex = pos >>> 3;
+
+	      return (bytes[byteIndex] << 16 | bytes[++byteIndex] << 8 | bytes[++byteIndex]) >> shift & mask;
+	    }
+
+	    function extract8bit(qr, bytes) {
+	      var nCountBits = QRBase.nCountBits(QRBase.MODE.EightBit, qr.version),
+	          n = extract(qr, bytes, qr.bitIdx, nCountBits),
+	          data = '',
+	          i,
+	          a;
+
+	      qr.bitIdx += nCountBits;
+
+	      for (i = 0; i < n; i++) {
+	        a = extract(qr, bytes, qr.bitIdx, 8);
+	        data += String.fromCharCode(a);
+	        qr.bitIdx += 8;
+	      }
+
+	      return QRBase.utf8Tounicode(data);
+	    }
+
+	    function extractAlphanum(qr, bytes) {
+	      var nCountBits = QRBase.nCountBits(QRBase.MODE.AlphaNumeric, qr.version),
+	          n = extract(qr, bytes, qr.bitIdx, nCountBits),
+	          data = '',
+	          i,
+	          x;
+
+	      qr.bitIdx += nCountBits;
+
+	      for (i = 0; i < Math.floor(n / 2); i++) {
+	        x = extract(qr, bytes, qr.bitIdx, 11);
+	        data += qr.alphanum[Math.floor(x / 45)];
+	        data += qr.alphanum[x % 45];
+	        qr.bitIdx += 11;
+	      }
+
+	      if (n % 2) {
+	        data += qr.alphanum[extract(qr, bytes, qr.bitIdx, 6)];
+	        qr.bitIdx += 6;
+	      }
+
+	      return data;
+	    }
+
+	    function extractNumeric(qr, bytes) {
+	      var nCountBits = QRBase.nCountBits(QRBase.MODE.Numeric, qr.version),
+	          n = extract(qr, bytes, qr.bitIdx, nCountBits),
+	          data = '',
+	          x,
+	          c1,
+	          c2,
+	          c3,
+	          i;
+
+	      qr.bitIdx += nCountBits;
+
+	      for (i = 0; i < Math.floor(n / 3); i++) {
+	        x = extract(qr, bytes, qr.bitIdx, 10);
+	        qr.bitIdx += 10;
+	        c1 = Math.floor(x / 100);
+	        c2 = Math.floor(x % 100 / 10);
+	        c3 = x % 10;
+	        data += String.fromCharCode(48 + c1, 48 + c2, 48 + c3);
+	      }
+
+	      if (n % 3 === 1) {
+	        x = extract(qr, bytes, qr.bitIdx, 4);
+	        qr.bitIdx += 4;
+	        data += String.fromCharCode(48 + x);
+	      } else if (n % 3 === 2) {
+	        x = extract(qr, bytes, qr.bitIdx, 7);
+	        qr.bitIdx += 7;
+	        c1 = Math.floor(x / 10);
+	        c2 = x % 10;
+	        data += String.fromCharCode(48 + c1, 48 + c2);
+	      }
+
+	      return data;
+	    }
+
+	    // extractData
+	    var bytes = this.bytes,
+	        nBits = bytes.length * 8,
+	        i,
+	        mode;
+
+	    for (i = 0; i < 4; i++) {
+	      bytes.push(0);
+	    }
+
+	    this.data = '';
+	    this.bitIdx = 0;
+
+	    while (this.bitIdx < nBits - 4) {
+	      mode = extract(this, bytes, this.bitIdx, 4);
+	      this.bitIdx += 4;
+
+	      if (mode === QRBase.MODE.Terminator) {
+	        break;
+	      } else if (mode === QRBase.MODE.AlphaNumeric) {
+	        this.data += extractAlphanum(this, bytes);
+	      } else if (mode === QRBase.MODE.EightBit) {
+	        this.data += extract8bit(this, bytes);
+	      } else if (mode === QRBase.MODE.Numeric) {
+	        this.data += extractNumeric(this, bytes);
+	      } else {
+	        throw new QRBase.QRError('Unsupported ECI mode: ' + mode, 1, mode);
+	      }
+	    }
+	  },
+	  correctErrors: function correctErrors() {
+	    var rs = new ReedSolomon(this.nBlockEcWords),
+	        errors = [],
+	        bytes = [],
+	        b,
+	        bytesIn,
+	        bytesOut,
+	        i;
+
+	    for (b = 0; b < this.blockIndices.length; b++) {
+	      bytesIn = [];
+
+	      for (i = 0; i < this.blockIndices[b].length; i++) {
+	        bytesIn.push(this.codewords[this.blockIndices[b][i]]);
+	      }
+
+	      bytesOut = rs.decode(bytesIn);
+
+	      if (!rs.corrected) {
+	        this.errorGrade = 0;
+	        throw new QRBase.QRError('Unable to correct errors (' + rs.uncorrected_reason + ')', 6, rs.uncorrected_reason);
+	      }
+
+	      bytes = bytes.concat(bytesOut);
+	      errors.push(rs.n_errors);
+	    }
+
+	    this.errors = errors;
+	    this.bytes = bytes;
+	    this.errorGrade = this.gradeErrors(errors);
+	  },
+	  gradeErrors: function gradeErrors(errors) {
+	    var ecw = this.nBlockEcWords,
+	        max = 0,
+	        grade = 4,
+	        i;
+
+	    for (i = 0; i < errors.length; i++) {
+	      if (errors[i] > max) {
+	        max = errors[i];
+	      }
+	    }
+
+	    if (max > ecw / 2 - 1) {
+	      grade = 0;
+	    } else if (max > ecw / 2 - 2) {
+	      grade = 1;
+	    } else if (max > ecw / 2 - 3) {
+	      grade = 2;
+	    } else if (max > ecw / 2 - 4) {
+	      grade = 3;
+	    }
+
+	    return grade;
+	  },
+	  hammingDistance: function hammingDistance(a, b) {
+	    function nBits(n) {
+	      var c;
+
+	      for (c = 0; n; c++) {
+	        n &= n - 1; // clear the least significant bit set
+	      }
+
+	      return c;
+	    }
+
+	    var d = a ^ b;
+
+	    return nBits(d);
+	  },
+	  /**
+	   * QRCodeDecode IMAGE FUNCTIONS
+	   */
+	  isDarkWithSize: function isDarkWithSize(x, y, moduleSize) {
+	    return this.image.isDark(Math.round(this.imageLeft + x * moduleSize), Math.round(this.imageTop + y * moduleSize), Math.round(moduleSize));
+	  },
+	  isDark: function isDark(x, y) {
+	    return this.isDarkWithSize(x, y, this.moduleSize);
+	  },
+	  /**
+	   * QRCode decode constants
+	   */
+	  alphanum: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', '$', '%', '*', '+', '-', '.', '/', ':']
+	};
 
 /***/ }
 /******/ ]);

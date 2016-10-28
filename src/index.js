@@ -1,5 +1,6 @@
 'use strict';
 
-import { QRBase } from './lib/base';
+import QREncode from './encode';
+import QRDecode from './decode';
 
-console.log(QRBase);
+export { QREncode, QRDecode }
