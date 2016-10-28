@@ -3,9 +3,9 @@
 module.exports = {
   // 页面入口文件配置
   entry: {
-    'qrcode.all': './src/index.es6',
-    'qrcode.encode': './src/encode/qrcode.js',
-    'qrcode.decode': './src/decode/qrdecode.js'
+    'qrcode.all': './src/index',
+    'qrcode.encode': './src/encode/qrcode',
+    'qrcode.decode': './src/decode/qrdecode'
   },
   // 入口文件输出配置
   output: {
@@ -15,7 +15,7 @@ module.exports = {
   // 模块配置
   module: {
     loaders: [{
-      test: /\.es6$/,
+      test: /\.js$/,
       loader: 'babel-loader',
       query: {
         presets: [

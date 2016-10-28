@@ -49,19 +49,19 @@
 	 */
 	'use strict';
 
-	(function ($, window, document, undefined){
+	(function ($, window, document, undefined) {
 	  /**
 	   * 二维码解码
 	   * @param canvas
 	   * @param error
 	   * @constructor
 	   */
-	  function Decode(canvas, error){
+	  function Decode(canvas, error) {
 	    this.text = this._init(this.getImageData(canvas), error);
 	  }
 
 	  Decode.prototype = {
-	    _init: function (imageData, error){
+	    _init: function _init(imageData, error) {
 	      var text = '';
 	      var qr = new QRDecode();
 
@@ -73,7 +73,7 @@
 
 	      return text;
 	    },
-	    getImageData: function (canvas){
+	    getImageData: function getImageData(canvas) {
 	      var ctx;
 
 	      if (canvas.nodeName.toLowerCase() !== 'canvas') {
@@ -96,17 +96,16 @@
 	   * @returns {string}
 	   * @constructor
 	   */
-	  $.fn.QRDecode = function (error){
+	  $.fn.QRDecode = function (error) {
 	    var text = '';
 
 	    if (this.length) {
-	      text = (new Decode(this[0], error)).text;
+	      text = new Decode(this[0], error).text;
 	    }
 
 	    return text;
 	  };
 	})(jQuery, window, document);
-
 
 /***/ }
 /******/ ]);

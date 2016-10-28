@@ -49,7 +49,7 @@
 	 */
 	'use strict';
 
-	(function ($, window, document, undefined){
+	(function ($, window, document, undefined) {
 	  $.QREncode = {
 	    /**
 	     * 配置
@@ -76,7 +76,7 @@
 	   * @returns {*}
 	   * @constructor
 	   */
-	  function Encode(config, callback){
+	  function Encode(config, callback) {
 	    this.config = config;
 
 	    // 初始化
@@ -84,7 +84,7 @@
 	  }
 
 	  Encode.prototype = {
-	    _init: function (callback){
+	    _init: function _init(callback) {
 	      var config = this.config;
 
 	      this.qr = new QREncode();
@@ -110,11 +110,11 @@
 	   * @param cfg
 	   * @constructor
 	   */
-	  $.fn.QREncode = function (cfg){
+	  $.fn.QREncode = function (cfg) {
 	    var that = this;
 	    var config = {};
 
-	    if (typeof(cfg) === 'string') {
+	    if (typeof cfg === 'string') {
 	      config.text = cfg;
 	    } else {
 	      config = $.extend({}, $.QREncode.config, cfg);
@@ -125,14 +125,13 @@
 	    config.moduleSize = config.moduleSize > 0 ? config.moduleSize : $.QREncode.config.moduleSize;
 	    config.margin = config.margin < 0 ? $.QREncode.config.margin : config.margin;
 
-	    new Encode(config, function (qrdom){
-	      that.each(function (i, item){
+	    new Encode(config, function (qrdom) {
+	      that.each(function (i, item) {
 	        $(item).empty().append(qrdom);
 	      });
 	    });
 	  };
 	})(jQuery, window, document);
-
 
 /***/ }
 /******/ ]);

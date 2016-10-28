@@ -42,12 +42,20 @@
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	exports.__esModule = true;
+	exports.qrcode = undefined;
 	exports['default'] = Qrcode;
+
+	var _en = __webpack_require__(1);
+
+	var _en2 = _interopRequireDefault(_en);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
 	var qrcode = exports.qrcode = {
 	  encode: 'encode',
 	  decode: 'decode'
@@ -56,6 +64,19 @@
 	function Qrcode(params) {
 	  // qrcode
 	}
+
+	console.log(_en2['default']);
+
+/***/ },
+/* 1 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	exports.__esModule = true;
+	exports['default'] = {
+	  a: 'aads'
+	};
 
 /***/ }
 /******/ ]);
