@@ -3,9 +3,7 @@
  */
 'use strict';
 
-import EN from '../i18n/en';
-
-export const QRBase = {
+var QRBase = {
   /**
    * 编码格式
    */
@@ -22,28 +20,30 @@ export const QRBase = {
     L: 1, //  7%
     M: 0, // 15%
     Q: 3, // 25%
-    H: 2 // 30%
+    H: 2  // 30%
   },
   /**
    * 二维码异常
-   * @param code 错误码
    * @param message 错误消息
+   * @param errorCode 错误码
+   * @param errorData 错误数据
    * @constructor QRError
    */
-  QRError: function(code, message) {
-    this.code = code;
+  QRError: function (message, errorCode, errorData){
     this.message = message;
+    this.errorCode = errorCode;
+    this.errorData = errorData;
   },
-  setBlocks: function(qr) {
-    var nCodewords = this.nCodewords[qr.version];
-    var nECCodewords = this.nECCodewords[qr.version][qr.ECLevel];
-    var ECBlocks = this.ECBlocks[qr.version][qr.ECLevel];
-    var nBlocks;
-    var nBlocksFirst;
-    var nBlocksSecond;
-    var nBlockWordsFirst;
-    var nBlockWordsSecond;
-    var i, b, w = 0;
+  setBlocks: function (qr){
+    var nCodewords = this.nCodewords[qr.version],
+      nECCodewords = this.nECCodewords[qr.version][qr.ECLevel],
+      ECBlocks = this.ECBlocks[qr.version][qr.ECLevel],
+      nBlocks,
+      nBlocksFirst,
+      nBlocksSecond,
+      nBlockWordsFirst,
+      nBlockWordsSecond,
+      i, b, w = 0;
 
     qr.nDataCodewords = nCodewords - nECCodewords;
 
@@ -81,29 +81,26 @@ export const QRBase = {
     for (i = 0; i < nBlockWordsFirst; i++) {
       for (b = 0; b < nBlocks; b++) {
         qr.blockIndices[b].push(w);
-
         w++;
       }
     }
 
     for (b = nBlocksFirst; b < nBlocks; b++) {
       qr.blockIndices[b].push(w);
-
       w++;
     }
 
     for (i = 0; i < qr.nBlockEcWords; i++) {
       for (b = 0; b < nBlocks; b++) {
         qr.blockIndices[b].push(w);
-
         w++;
       }
     }
   },
-  setFunctionalPattern: function(qr) {
+  setFunctionalPattern: function (qr){
     var x, y;
 
-    function markSquare(qr, x, y, w, h) {
+    function markSquare(qr, x, y, w, h){
       var i, j;
       for (i = x; i < x + w; i++) {
         for (j = y; j < y + h; j++) {
@@ -112,23 +109,19 @@ export const QRBase = {
       }
     }
 
-    function markAlignment(qr, qrbase) {
-      var n = qrbase.alignmentPatterns[qr.version].length;
-      var i, j;
-
+    function markAlignment(qr, qrbase){
+      var n = qrbase.alignmentPatterns[qr.version].length,
+        i, j;
       for (i = 0; i < n; i++) {
         for (j = 0; j < n; j++) {
           if (((i === 0) && (j === 0)) || ((i === 0) && (j === n - 1)) || ((i === n - 1) && (j === 0))) {
             continue;
           }
 
-          markSquare(
-            qr,
+          markSquare(qr,
             qrbase.alignmentPatterns[qr.version][i] - 2,
             qrbase.alignmentPatterns[qr.version][j] - 2,
-            5,
-            5
-          );
+            5, 5);
         }
       }
     }
@@ -165,7 +158,7 @@ export const QRBase = {
   /**
    * 计算数据长度的编码字节数
    */
-  nCountBits: function(mode, version) {
+  nCountBits: function (mode, version){
     if (mode === this.MODE.EightBit) {
       if (version < 10) {
         return 8;
@@ -195,16 +188,16 @@ export const QRBase = {
   /**
    * 从版本计算二维码宽度
    */
-  nModulesFromVersion: function(version) {
+  nModulesFromVersion: function (version){
     return 17 + 4 * version;
   },
   /**
    * UTF-8 和 Unicode 的相互转换
    */
-  unicodeToUtf8: function(string) {
-    var out = '';
-    var len = string.length;
-    var i, c;
+  unicodeToUtf8: function (string){
+    var out = '',
+      len = string.length,
+      i, c;
 
     for (i = 0; i < len; i++) {
       c = string.charCodeAt(i);
@@ -223,11 +216,11 @@ export const QRBase = {
 
     return out;
   },
-  utf8Tounicode: function(string) {
-    var out = '';
-    var len = string.length;
-    var i = 0;
-    var mark, char1, char2, char3;
+  utf8Tounicode: function (string){
+    var out = '',
+      len = string.length,
+      i = 0,
+      mark, char1, char2, char3;
 
     while (i < len) {
       char1 = string.charCodeAt(i++);
@@ -420,7 +413,8 @@ export const QRBase = {
     3706
   ],
   nECCodewords: [
-    null, [10, 7, 17, 13],
+    null,
+    [10, 7, 17, 13],
     [16, 10, 28, 22],
     [26, 15, 44, 36],
     [36, 20, 64, 52],

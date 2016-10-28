@@ -78,5 +78,15 @@
 	  a: 'aads'
 	};
 
+
+	{
+	  QRError = function QRError(message, errorCode, errorData) {
+
+	    undefined.message = message;
+	    undefined.errorCode = errorCode;
+	    undefined.errorData = errorData;
+	  };
+	}
+
 /***/ }
 /******/ ]);
