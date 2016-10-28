@@ -1,7 +1,5 @@
 'use strict';
 
-const es3 = require('es3ify-loader');
-
 module.exports = {
   // 页面入口文件配置
   entry: {
