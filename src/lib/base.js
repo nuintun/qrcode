@@ -4,6 +4,7 @@
 'use strict';
 
 import EN from '../i18n/en';
+import QRError from './error';
 
 export const QRBase = {
   /**
@@ -30,10 +31,7 @@ export const QRBase = {
    * @param message 错误消息
    * @constructor QRError
    */
-  QRError: function(code, message) {
-    this.code = code;
-    this.message = message;
-  },
+  QRError: QRError,
   setBlocks: function(qr) {
     var nCodewords = this.nCodewords[qr.version];
     var nECCodewords = this.nECCodewords[qr.version][qr.ECLevel];

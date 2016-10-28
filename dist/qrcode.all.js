@@ -46,9 +46,9 @@
 
 	'use strict';
 
-	var _qrbase = __webpack_require__(1);
+	var _base = __webpack_require__(1);
 
-	console.log(_qrbase.QRBase);
+	console.log(_base.QRBase);
 
 /***/ },
 /* 1 */
@@ -65,6 +65,10 @@
 	var _en = __webpack_require__(2);
 
 	var _en2 = _interopRequireDefault(_en);
+
+	var _error = __webpack_require__(3);
+
+	var _error2 = _interopRequireDefault(_error);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
@@ -93,10 +97,7 @@
 	   * @param message 错误消息
 	   * @constructor QRError
 	   */
-	  QRError: function QRError(code, message) {
-	    this.code = code;
-	    this.message = message;
-	  },
+	  QRError: _error2['default'],
 	  setBlocks: function setBlocks(qr) {
 	    var nCodewords = this.nCodewords[qr.version];
 	    var nECCodewords = this.nECCodewords[qr.version][qr.ECLevel];
@@ -338,6 +339,39 @@
 	exports['default'] = {
 	  a: 'aads'
 	};
+
+/***/ },
+/* 3 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	exports.__esModule = true;
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var QRError = exports.QRError = function (_Error) {
+	  _inherits(QRError, _Error);
+
+	  function QRError(code) {
+	    _classCallCheck(this, QRError);
+
+	    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+	      args[_key - 1] = arguments[_key];
+	    }
+
+	    var _this = _possibleConstructorReturn(this, _Error.call.apply(_Error, [this].concat(args)));
+
+	    _this.code = code;
+	    return _this;
+	  }
+
+	  return QRError;
+	}(Error);
 
 /***/ }
 /******/ ]);

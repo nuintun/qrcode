@@ -1,5 +1,5 @@
 'use strict';
 
-import { QRBase } from './lib/qrbase';
+import { QRBase } from './lib/base';
 
 console.log(QRBase);
