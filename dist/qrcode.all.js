@@ -44,7 +44,18 @@
 /* 0 */
 /***/ function(module, exports) {
 
-	
+	'use strict';
+
+	exports.__esModule = true;
+	exports['default'] = Qrcode;
+	var qrcode = exports.qrcode = {
+	  encode: 'encode',
+	  decode: 'decode'
+	};
+
+	function Qrcode(params) {
+	  // qrcode
+	}
 
 /***/ }
 /******/ ]);

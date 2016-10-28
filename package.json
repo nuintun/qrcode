@@ -7,7 +7,11 @@
     "build": "webpack --display-error-details"
   },
   "devDependencies": {
+    "es3ify-loader": "^0.2.0",
+    "babel-core": "^6.17.0",
     "babel-loader": "^6.2.6",
-    "babel-preset-es2015": "^6.18.0"
+    "babel-preset-es2015": "^6.18.0",
+    "babel-plugin-transform-es3-property-literals": "^6.8.0",
+    "babel-plugin-transform-es3-member-expression-literals": "^6.8.0"
   }
 }
