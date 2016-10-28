@@ -49,5 +49,5 @@
 ##### 二维码解码（*$.fn.QRDecode*）
 >######使用 `$('canvas').QRDecode(error)`，选择器取到的是绘有二维码的 canvas 元素。
 
-[david-image]: http://img.shields.io/david/nuintun/fengine.svg?style=flat-square
-[david-url]: https://david-dm.org/nuintun/fengine
+[david-image]: http://img.shields.io/david/nuintun/qrcode.svg?style=flat-square
+[david-url]: https://david-dm.org/nuintun/qrcode
