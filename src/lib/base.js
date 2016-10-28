@@ -703,8 +703,3 @@ export const QRBase = {
     ]
   ]
 };
-
-// 二维码异常
-QRBase.QRError.prototype = new Error();
-QRBase.QRError.prototype.name = 'QRError';
-QRBase.QRError.prototype.constructor = QRBase.QRError;
