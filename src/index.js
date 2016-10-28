@@ -1,14 +1,5 @@
 'use strict';
 
-import ERROR from './i18n/en';
+import { QRBase } from './lib/qrbase';
 
-export const qrcode = {
-  encode: 'encode',
-  decode: 'decode'
-};
-
-export default function Qrcode(params) {
-  // qrcode
-}
-
-console.log(ERROR);
+console.log(QRBase);
