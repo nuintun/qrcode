@@ -4,7 +4,7 @@
 import EN from './i18n/en';
 import QRError from './error';
 
-var QRBase = {
+export default {
   /**
    * 编码格式
    */
@@ -694,5 +694,3 @@ var QRBase = {
     ]
   ]
 };
-
-export default QRBase;
