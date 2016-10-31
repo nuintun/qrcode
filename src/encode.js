@@ -1,26 +1,25 @@
 /**
  * QRCode Encode
  */
-'use strict';
-
 import QRBase from './base';
+import QRError from './error';
 import ReedSolomon from './reedsolomon';
 
-export class QREncode {
-  constructor() {
-    this.image = null; // 二维码画布
-    this.nModules = 0; // 二维码大小
-    this.version = 0; // 二维码版本
-    this.functionalGrade = 0;
-    this.ECLevel = 0; // 二维码错误等级
-    this.mask = 0; // 掩码图片类型
-    this.maskPattern = []; // 掩码图片画布
-    this.nDataCodewords = 0; // 数据区
-    this.nBlockEcWords = 0;
-    this.blockIndices = []; // 纠错码转换 Map
-    this.blockDataLengths = [];
-  }
+export default function QREncode() {
+  this.image = null; // 二维码画布
+  this.nModules = 0; // 二维码大小
+  this.version = 0; // 二维码版本
+  this.functionalGrade = 0;
+  this.ECLevel = 0; // 二维码错误等级
+  this.mask = 0; // 掩码图片类型
+  this.maskPattern = []; // 掩码图片画布
+  this.nDataCodewords = 0; // 数据区
+  this.nBlockEcWords = 0;
+  this.blockIndices = []; // 纠错码转换 Map
+  this.blockDataLengths = [];
+}
 
+QREncode.prototype = {
   /**
    * 调用入口文件
    * Encode text into a QR Code in a pixel array
@@ -29,10 +28,10 @@ export class QREncode {
    * @param version   Version according to ISO/IEC 18004:2006(E) Section 5.3.1
    * @param ECLevel  Error correction level according to ISO/IEC 18004:2006(E) Section 6.5.1
    */
-  encodeToPix(mode, text, version, ECLevel) {
-    var nModules = QRBase.nModulesFromVersion(version);
-    var pix = {};
-    var i;
+  encodeToPix: function(mode, text, version, ECLevel) {
+    var nModules = QRBase.nModulesFromVersion(version),
+      pix = {},
+      i;
 
     this.nModules = nModules;
     pix.width = nModules;
@@ -74,15 +73,14 @@ export class QREncode {
     this.encode();
 
     return pix.arr;
-  }
-
+  },
   /**
    * Prepare for encoding text to QR Code
    * @param version       Version according to ISO/IEC 18004:2006(E) Section 5.3.1
    * @param ECLevel      Error correction level according to ISO/IEC 18004:2006(E) Section 6.5.1
    * @param canvas        Canvas or pixel array
    */
-  encodeInit(version, ECLevel, canvas) {
+  encodeInit: function(version, ECLevel, canvas) {
     var i;
 
     this.version = version;
@@ -104,37 +102,34 @@ export class QREncode {
     for (i = 0; i < this.nModules; i++) {
       this.pixels[i] = [];
     }
-  }
-
+  },
   /**
    * Add text to a QR code
    * @param mode  Mode according to ISO/IEC 18004:2006(E) Section 6.3
    * @param text  The text to be encoded
    */
-  encodeAddText(mode, text) {
+  encodeAddText: function(mode, text) {
     this.addTextImplementation(mode, text);
-  }
-
+  },
   /**
    * Encode this class to an image/canvas.
    */
-  encode() {
+  encode: function() {
     this.addTextImplementation(QRBase.MODE.Terminator, null); // 添加结束符
     this.appendPadding();
     this.addErrorCorrection();
     this.encodeBestMask();
     this.pixelsToImage();
-  }
-
+  },
   /**
    * QRCode internal encoding functions
    */
-  addTextImplementation(mode, text) {
+  addTextImplementation: function(mode, text) {
     // 字符编码
     function appendBits(bytes, pos, len, value) {
-      var byteIndex = pos >>> 3;
-      var shift = 24 - (pos & 7) - len;
-      var v = value << shift;
+      var byteIndex = pos >>> 3,
+        shift = 24 - (pos & 7) - len,
+        v = value << shift;
 
       bytes[byteIndex + 2] = v & 0xFF;
       v = v >>> 8;
@@ -154,53 +149,46 @@ export class QREncode {
     }
 
     function addAlphaNum(qr, text) {
-      var n = text.length;
-      var nCountBits = QRBase.nCountBits(QRBase.MODE.AlphaNumeric, qr.version);
-      var i, val;
+      var n = text.length,
+        nCountBits = QRBase.nCountBits(QRBase.MODE.AlphaNumeric, qr.version),
+        i, val;
 
       appendBits(qr.data, qr.bitIdx, nCountBits, n);
-
       qr.bitIdx += nCountBits;
 
       for (i = 0; i < n - 1; i += 2) {
         val = 45 * getAlphaNum(qr, text.charAt(i)) + getAlphaNum(qr, text.charAt(i + 1));
-
         appendBits(qr.data, qr.bitIdx, 11, val);
-
         qr.bitIdx += 11;
       }
 
       if (n % 2) {
         appendBits(qr.data, qr.bitIdx, 6, getAlphaNum(qr, text.charAt(n - 1)));
-
         qr.bitIdx += 6;
       }
     }
 
     function add8bit(qr, text) {
-      var nCountBits = QRBase.nCountBits(QRBase.MODE.EightBit, qr.version);
-      var i;
+      var nCountBits = QRBase.nCountBits(QRBase.MODE.EightBit, qr.version),
+        i;
 
       appendBits(qr.data, qr.bitIdx, nCountBits, text.length);
-
       qr.bitIdx += nCountBits;
 
       for (i = 0; i < text.length; i++) {
         appendBits(qr.data, qr.bitIdx, 8, text.charCodeAt(i));
-
         qr.bitIdx += 8;
       }
     }
 
     function addNumeric(qr, text) {
-      var item;
-      var n = text.length;
-      var nCountBits = QRBase.nCountBits(QRBase.MODE.Numeric, qr.version);
-      var num = [];
-      var val, i, ch;
+      var item,
+        n = text.length,
+        nCountBits = QRBase.nCountBits(QRBase.MODE.Numeric, qr.version),
+        num = [],
+        val, i, ch;
 
       appendBits(qr.data, qr.bitIdx, nCountBits, n);
-
       qr.bitIdx += nCountBits;
 
       for (i = 0; i < n; i++) {
@@ -216,48 +204,33 @@ export class QREncode {
 
       for (i = 0; i < n - 2; i += 3) {
         val = 100 * num[i] + 10 * num[i + 1] + num[i + 2];
-
         appendBits(qr.data, qr.bitIdx, 10, val);
-
         qr.bitIdx += 10;
+
       }
 
       if (n % 3 === 1) {
         val = num[n - 1];
-
         appendBits(qr.data, qr.bitIdx, 4, val);
-
         qr.bitIdx += 4;
       } else if (n % 3 === 2) {
         val = 10 * num[n - 2] + num[n - 1];
-
         appendBits(qr.data, qr.bitIdx, 7, val);
-
         qr.bitIdx += 7;
       }
     }
 
     // addTextImplementation
     appendBits(this.data, this.bitIdx, 4, mode);
-
     this.bitIdx += 4;
 
-    if (mode === QRBase.MODE.AlphaNumeric) {
-      addAlphaNum(this, text);
-    } else if (mode === QRBase.MODE.EightBit) {
-      add8bit(this, QRBase.unicodeToUtf8(text));
-    } else if (mode === QRBase.MODE.Numeric) {
-      addNumeric(this, text);
-    } else if (mode === QRBase.MODE.Terminator) { return; } else {
-      throw new QRBase.QRError('Unsupported ECI mode: ' + mode, 1, mode);
-    }
+    if (mode === QRBase.MODE.AlphaNumeric) { addAlphaNum(this, text); } else if (mode === QRBase.MODE.EightBit) { add8bit(this, QRBase.unicodeToUtf8(text)); } else if (mode === QRBase.MODE.Numeric) { addNumeric(this, text); } else if (mode === QRBase.MODE.Terminator) { return; } else { throw new QRBase.QRError('Unsupported ECI mode: ' + mode, 1, mode); }
 
     if (this.bitIdx / 8 > this.nDataCodewords) {
       throw new QRBase.QRError('Text too long for this EC version', 5);
     }
-  }
-
-  appendPadding() {
+  },
+  appendPadding: function() {
     // 添加补齐码
     var i;
 
@@ -265,14 +238,13 @@ export class QREncode {
       this.data[i] = 0xEC;
       this.data[i + 1] = 0x11;
     }
-  }
-
-  addErrorCorrection() {
+  },
+  addErrorCorrection: function() {
     // 添加纠错码
-    var rs = new ReedSolomon(this.nBlockEcWords);
-    var bytes = [];
-    var n = 0;
-    var b, i, m, bytesIn, bytesOut;
+    var rs = new ReedSolomon(this.nBlockEcWords),
+      bytes = [],
+      n = 0,
+      b, i, m, bytesIn, bytesOut;
 
     for (b = 0; b < this.blockDataLengths.length; b++) {
       m = this.blockDataLengths[b];
@@ -291,13 +263,12 @@ export class QREncode {
     }
 
     this.bytes = bytes;
-  }
-
-  calculatePenalty() {
+  },
+  calculatePenalty: function() {
     // TODO: Verify all penalty calculations
     function penaltyAdjacent(qr) {
-      var p = 0;
-      var i, j, nDark, nLight, rc;
+      var p = 0,
+        i, j, nDark, nLight, rc;
 
       for (i = 0; i < qr.nModules; i++) {
         nDark = [0, 0];
@@ -338,8 +309,8 @@ export class QREncode {
     function penaltyBlocks(qr) {
       // Not clear from ISO standard, if blocks have to be rectangular?
       // Here we give 3 penalty to every 2x2 block, so odd shaped areas will have penalties as well as rectangles
-      var p = 0;
-      var i, j, b;
+      var p = 0,
+        i, j, b;
 
       for (i = 0; i < qr.nModules - 1; i++) {
         for (j = 0; j < qr.nModules - 1; j++) {
@@ -372,12 +343,12 @@ export class QREncode {
 
     function penaltyDarkLight(qr) {
       // we shift bits in one by one, and see if the resulting pattern match the bad one
-      var p = 0;
-      var bad = (128 - 1 - 2 - 32) << 4; // 4_ : 1D : 1L : 3D : 1L : 1D : 4x
-      var badmask1 = 2048 - 1; // 4_ : 1D : 1L : 3D : 1L : 1D : 4L
-      var badmask2 = badmask1 << 4; // 4L : 1D : 1L : 3D : 1L : 1D : 4_
-      var patmask = 32768 - 1; // 4  +           7            + 4
-      var i, j, pat, rc;
+      var p = 0,
+        bad = (128 - 1 - 2 - 32) << 4, // 4_ : 1D : 1L : 3D : 1L : 1D : 4x
+        badmask1 = 2048 - 1, // 4_ : 1D : 1L : 3D : 1L : 1D : 4L
+        badmask2 = badmask1 << 4, // 4L : 1D : 1L : 3D : 1L : 1D : 4_
+        patmask = 32768 - 1, // 4  +           7            + 4
+        i, j, pat, rc;
 
       for (i = 0; i < qr.nModules - 1; i++) {
         pat = [0, 0];
@@ -409,8 +380,8 @@ export class QREncode {
     }
 
     function penaltyDark(qr) {
-      var dark = 0;
-      var i, j;
+      var dark = 0,
+        i, j;
 
       for (i = 0; i < qr.nModules - 1; i++) {
         for (j = 0; j < qr.nModules - 1; j++) {
@@ -424,18 +395,17 @@ export class QREncode {
     }
 
     // calculatePenalty
-    var pAdjacent = penaltyAdjacent(this);
-    var pBlocks = penaltyBlocks(this);
-    var pDarkLight = penaltyDarkLight(this);
-    var pDark = penaltyDark(this);
+    var pAdjacent = penaltyAdjacent(this),
+      pBlocks = penaltyBlocks(this),
+      pDarkLight = penaltyDarkLight(this),
+      pDark = penaltyDark(this);
 
     return pAdjacent + pBlocks + pDarkLight + pDark;
-  }
-
-  encodeBestMask() {
-    var bestMask = 0;
-    var bestPenalty = 999999;
-    var mask, i, j, penalty;
+  },
+  encodeBestMask: function() {
+    var bestMask = 0,
+      bestPenalty = 999999,
+      mask, i, j, penalty;
 
     QRBase.setFunctionalPattern(this);
 
@@ -468,12 +438,11 @@ export class QREncode {
       this.encodeFunctionalPatterns(this.mask);
       this.encodeData(this.mask);
     }
-  }
-
+  },
   /**
    * 定位
    */
-  encodeFunctionalPatterns(mask) {
+  encodeFunctionalPatterns: function(mask) {
     function encodeFinderPattern(qr, x, y) {
       var i, j;
 
@@ -494,8 +463,8 @@ export class QREncode {
     }
 
     function encodeVersionTopright(qr) {
-      var pattern = QRBase.versionInfo[qr.version];
-      var x, y;
+      var pattern = QRBase.versionInfo[qr.version],
+        x, y;
 
       for (y = 0; y < 6; y++) {
         for (x = qr.nModules - 11; x < qr.nModules - 11 + 3; x++) {
@@ -509,8 +478,8 @@ export class QREncode {
     }
 
     function encodeVersionBottomleft(qr) {
-      var pattern = QRBase.versionInfo[qr.version];
-      var x, y;
+      var pattern = QRBase.versionInfo[qr.version],
+        x, y;
 
       for (x = 0; x < 6; x++) {
         for (y = qr.nModules - 11; y < qr.nModules - 11 + 3; y++) {
@@ -552,8 +521,8 @@ export class QREncode {
     }
 
     function encodeAlignmentPatterns(qr) {
-      var n = QRBase.alignmentPatterns[qr.version].length;
-      var i, j;
+      var n = QRBase.alignmentPatterns[qr.version].length,
+        i, j;
 
       for (i = 0; i < n; i++) {
         for (j = 0; j < n; j++) {
@@ -571,8 +540,8 @@ export class QREncode {
     }
 
     function encodeFormatNW(qr, code) {
-      var x = 8;
-      var y;
+      var x = 8,
+        y;
 
       for (y = 0; y <= 5; y++) {
         if (code & 1) {
@@ -611,8 +580,8 @@ export class QREncode {
     }
 
     function encodeFormatNESW(qr, code) {
-      var y = 8;
-      var x;
+      var y = 8,
+        x;
 
       for (x = qr.nModules - 1; x > qr.nModules - 1 - 8; x--) {
         if (code & 1) {
@@ -651,12 +620,10 @@ export class QREncode {
     }
 
     var code = QRBase.formatInfo[mask + 8 * this.ECLevel];
-
     encodeFormatNW(this, code); // 版本信息
     encodeFormatNESW(this, code);
-  }
-
-  encodeData(qrmask) {
+  },
+  encodeData: function(qrmask) {
     function setMasked(pixels, mask, j, i, f) {
       var m;
 
@@ -695,14 +662,14 @@ export class QREncode {
     }
 
     // encodeData
-    var writingUp = true;
-    var n = 0;
-    var v = this.bytes[n];
-    var bitsWritten = 0;
-    var mask = (1 << 7);
-    var i, j;
-    var count;
-    var col;
+    var writingUp = true,
+      n = 0,
+      v = this.bytes[n],
+      bitsWritten = 0,
+      mask = (1 << 7),
+      i, j,
+      count,
+      col;
 
     // Write columns in pairs, from right to left
     for (j = this.nModules - 1; j > 0; j -= 2) {
@@ -715,12 +682,10 @@ export class QREncode {
       // Read alternatingly from bottom to top then top to bottom
       for (count = 0; count < this.nModules; count++) {
         i = writingUp ? this.nModules - 1 - count : count;
-
         for (col = 0; col < 2; col++) {
           // Ignore bits covered by the function pattern
           if (!this.functionalPattern[j - col][i]) {
             setMasked(this.pixels, qrmask, j - col, i, v & mask);
-
             mask = (mask >>> 1);
             bitsWritten++;
 
@@ -736,9 +701,9 @@ export class QREncode {
 
       writingUp ^= true; // switch directions, or can use: writingUp = !writingUp;
     }
-  }
 
-  pixelsToImage() {
+  },
+  pixelsToImage: function() {
     var i, j;
 
     for (i = 0; i < this.nModules; i++) {
@@ -746,14 +711,13 @@ export class QREncode {
         if (this.pixels[i][j]) { this.setDark(i, j); }
       }
     }
-  }
-
-  getDataCapacity(version, ECLevel, mode) {
-    var nCodewords = QRBase.nCodewords[version];
-    var nECCodewords = QRBase.nECCodewords[version][ECLevel];
-    var nDataCodewords = nCodewords - nECCodewords;
-    var bits = 8 * nDataCodewords;
-    var cap = 0;
+  },
+  getDataCapacity: function(version, ECLevel, mode) {
+    var nCodewords = QRBase.nCodewords[version],
+      nECCodewords = QRBase.nECCodewords[version][ECLevel],
+      nDataCodewords = nCodewords - nECCodewords,
+      bits = 8 * nDataCodewords,
+      cap = 0;
 
     bits -= 4; // mode
     bits -= QRBase.nCountBits(mode, version);
@@ -761,19 +725,14 @@ export class QREncode {
     if (mode === QRBase.MODE.AlphaNumeric) {
       cap = Math.floor(bits / 11) * 2;
 
-      if (bits >= (cap / 2) * 11 + 6) {
-        cap++;
-      }
+      if (bits >= (cap / 2) * 11 + 6) { cap++; }
     } else if (mode === QRBase.MODE.EightBit) {
       cap = Math.floor(bits / 8);
     } else if (mode === QRBase.MODE.Numeric) {
       cap = Math.floor(bits / 10) * 3;
 
       if (bits >= (cap / 3) * 10 + 4) {
-        if (bits >= (cap / 3) * 10 + 7) {
-          cap++;
-        }
-
+        if (bits >= (cap / 3) * 10 + 7) { cap++; }
         cap++;
       }
     } else {
@@ -781,11 +740,10 @@ export class QREncode {
     }
 
     return cap;
-  }
-
-  getVersionFromLength(ECLevel, mode, text) {
-    var v;
-    var length = QRBase.unicodeToUtf8(text).length;
+  },
+  getVersionFromLength: function(ECLevel, mode, text) {
+    var v,
+      length = QRBase.unicodeToUtf8(text).length;
 
     for (v = 1; v <= 40; v++) {
       if (this.getDataCapacity(v, ECLevel, mode) >= length) {
@@ -794,62 +752,58 @@ export class QREncode {
     }
 
     throw new QRBase.QRError('Text is too long, even for a version 40 QR Code', 2);
-  }
-
-  setDark(x, y) {
+  },
+  setDark: function(x, y) {
     this.image.setDark(x, y);
-  }
-
+  },
   /**
    * QRCode encode constants
    */
-  get alphanumRev() {
-    return {
-      '0': 0,
-      '1': 1,
-      '2': 2,
-      '3': 3,
-      '4': 4,
-      '5': 5,
-      '6': 6,
-      '7': 7,
-      '8': 8,
-      '9': 9,
-      'A': 10,
-      'B': 11,
-      'C': 12,
-      'D': 13,
-      'E': 14,
-      'F': 15,
-      'G': 16,
-      'H': 17,
-      'I': 18,
-      'J': 19,
-      'K': 20,
-      'L': 21,
-      'M': 22,
-      'N': 23,
-      'O': 24,
-      'P': 25,
-      'Q': 26,
-      'R': 27,
-      'S': 28,
-      'T': 29,
-      'U': 30,
-      'V': 31,
-      'W': 32,
-      'X': 33,
-      'Y': 34,
-      'Z': 35,
-      ' ': 36,
-      '$': 37,
-      '%': 38,
-      '*': 39,
-      '+': 40,
-      '-': 41,
-      '.': 42,
-      '/': 43,
-      ':': 44
-    }
+  alphanumRev: {
+    '0': 0,
+    '1': 1,
+    '2': 2,
+    '3': 3,
+    '4': 4,
+    '5': 5,
+    '6': 6,
+    '7': 7,
+    '8': 8,
+    '9': 9,
+    'A': 10,
+    'B': 11,
+    'C': 12,
+    'D': 13,
+    'E': 14,
+    'F': 15,
+    'G': 16,
+    'H': 17,
+    'I': 18,
+    'J': 19,
+    'K': 20,
+    'L': 21,
+    'M': 22,
+    'N': 23,
+    'O': 24,
+    'P': 25,
+    'Q': 26,
+    'R': 27,
+    'S': 28,
+    'T': 29,
+    'U': 30,
+    'V': 31,
+    'W': 32,
+    'X': 33,
+    'Y': 34,
+    'Z': 35,
+    ' ': 36,
+    '$': 37,
+    '%': 38,
+    '*': 39,
+    '+': 40,
+    '-': 41,
+    '.': 42,
+    '/': 43,
+    ':': 44
   }
-}
+};

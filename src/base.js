@@ -1,12 +1,10 @@
 /**
  * QRCode Base
  */
-'use strict';
-
 import EN from './i18n/en';
 import QRError from './error';
 
-export const QRBase = {
+var QRBase = {
   /**
    * 编码格式
    */
@@ -25,13 +23,6 @@ export const QRBase = {
     Q: 3, // 25%
     H: 2 // 30%
   },
-  /**
-   * 二维码异常
-   * @param code 错误码
-   * @param message 错误消息
-   * @constructor QRError
-   */
-  QRError: QRError,
   setBlocks: function(qr) {
     var nCodewords = this.nCodewords[qr.version];
     var nECCodewords = this.nECCodewords[qr.version][qr.ECLevel];
@@ -188,7 +179,7 @@ export const QRBase = {
       }
     }
 
-    throw new this.QRError('Internal error: Unknown mode: ' + mode, 0, mode);
+    throw new QRError('Internal error: Unknown mode: ' + mode, 0, mode);
   },
   /**
    * 从版本计算二维码宽度
@@ -703,3 +694,5 @@ export const QRBase = {
     ]
   ]
 };
+
+export default QRBase;
