@@ -29,9 +29,9 @@ QREncode.prototype = {
    * @param ECLevel  Error correction level according to ISO/IEC 18004:2006(E) Section 6.5.1
    */
   encodeToPix: function(mode, text, version, ECLevel) {
-    var nModules = QRBase.nModulesFromVersion(version),
-      pix = {},
-      i;
+    var nModules = QRBase.nModulesFromVersion(version);
+    var pix = {};
+    var i;
 
     this.nModules = nModules;
     pix.width = nModules;
@@ -86,7 +86,9 @@ QREncode.prototype = {
     this.version = version;
     this.ECLevel = ECLevel;
     this.image = canvas;
+
     this.image.setBackground();
+
     this.bitIdx = 0;
 
     QRBase.setBlocks(this);
@@ -127,9 +129,9 @@ QREncode.prototype = {
   addTextImplementation: function(mode, text) {
     // 字符编码
     function appendBits(bytes, pos, len, value) {
-      var byteIndex = pos >>> 3,
-        shift = 24 - (pos & 7) - len,
-        v = value << shift;
+      var byteIndex = pos >>> 3;
+      var shift = 24 - (pos & 7) - len;
+      var v = value << shift;
 
       bytes[byteIndex + 2] = v & 0xFF;
       v = v >>> 8;
@@ -149,46 +151,53 @@ QREncode.prototype = {
     }
 
     function addAlphaNum(qr, text) {
-      var n = text.length,
-        nCountBits = QRBase.nCountBits(QRBase.MODE.AlphaNumeric, qr.version),
-        i, val;
+      var n = text.length;
+      var nCountBits = QRBase.nCountBits(QRBase.MODE.AlphaNumeric, qr.version);
+      var i, val;
 
       appendBits(qr.data, qr.bitIdx, nCountBits, n);
+
       qr.bitIdx += nCountBits;
 
       for (i = 0; i < n - 1; i += 2) {
         val = 45 * getAlphaNum(qr, text.charAt(i)) + getAlphaNum(qr, text.charAt(i + 1));
+
         appendBits(qr.data, qr.bitIdx, 11, val);
+
         qr.bitIdx += 11;
       }
 
       if (n % 2) {
         appendBits(qr.data, qr.bitIdx, 6, getAlphaNum(qr, text.charAt(n - 1)));
+
         qr.bitIdx += 6;
       }
     }
 
     function add8bit(qr, text) {
-      var nCountBits = QRBase.nCountBits(QRBase.MODE.EightBit, qr.version),
-        i;
+      var nCountBits = QRBase.nCountBits(QRBase.MODE.EightBit, qr.version);
+      var i;
 
       appendBits(qr.data, qr.bitIdx, nCountBits, text.length);
+
       qr.bitIdx += nCountBits;
 
       for (i = 0; i < text.length; i++) {
         appendBits(qr.data, qr.bitIdx, 8, text.charCodeAt(i));
+
         qr.bitIdx += 8;
       }
     }
 
     function addNumeric(qr, text) {
-      var item,
-        n = text.length,
-        nCountBits = QRBase.nCountBits(QRBase.MODE.Numeric, qr.version),
-        num = [],
-        val, i, ch;
+      var item;
+      var n = text.length;
+      var nCountBits = QRBase.nCountBits(QRBase.MODE.Numeric, qr.version);
+      var num = [];
+      var val, i, ch;
 
       appendBits(qr.data, qr.bitIdx, nCountBits, n);
+
       qr.bitIdx += nCountBits;
 
       for (i = 0; i < n; i++) {
@@ -204,27 +213,43 @@ QREncode.prototype = {
 
       for (i = 0; i < n - 2; i += 3) {
         val = 100 * num[i] + 10 * num[i + 1] + num[i + 2];
-        appendBits(qr.data, qr.bitIdx, 10, val);
-        qr.bitIdx += 10;
 
+        appendBits(qr.data, qr.bitIdx, 10, val);
+
+        qr.bitIdx += 10;
       }
 
       if (n % 3 === 1) {
         val = num[n - 1];
+
         appendBits(qr.data, qr.bitIdx, 4, val);
+
         qr.bitIdx += 4;
       } else if (n % 3 === 2) {
         val = 10 * num[n - 2] + num[n - 1];
+
         appendBits(qr.data, qr.bitIdx, 7, val);
+
         qr.bitIdx += 7;
       }
     }
 
     // addTextImplementation
     appendBits(this.data, this.bitIdx, 4, mode);
+
     this.bitIdx += 4;
 
-    if (mode === QRBase.MODE.AlphaNumeric) { addAlphaNum(this, text); } else if (mode === QRBase.MODE.EightBit) { add8bit(this, QRBase.unicodeToUtf8(text)); } else if (mode === QRBase.MODE.Numeric) { addNumeric(this, text); } else if (mode === QRBase.MODE.Terminator) { return; } else { throw new QRBase.QRError('Unsupported ECI mode: ' + mode, 1, mode); }
+    if (mode === QRBase.MODE.AlphaNumeric) {
+      addAlphaNum(this, text);
+    } else if (mode === QRBase.MODE.EightBit) {
+      add8bit(this, QRBase.unicodeToUtf8(text));
+    } else if (mode === QRBase.MODE.Numeric) {
+      addNumeric(this, text);
+    } else if (mode === QRBase.MODE.Terminator) {
+      return;
+    } else {
+      throw new QRBase.QRError('Unsupported ECI mode: ' + mode, 1, mode);
+    }
 
     if (this.bitIdx / 8 > this.nDataCodewords) {
       throw new QRBase.QRError('Text too long for this EC version', 5);
@@ -241,10 +266,10 @@ QREncode.prototype = {
   },
   addErrorCorrection: function() {
     // 添加纠错码
-    var rs = new ReedSolomon(this.nBlockEcWords),
-      bytes = [],
-      n = 0,
-      b, i, m, bytesIn, bytesOut;
+    var rs = new ReedSolomon(this.nBlockEcWords);
+    var bytes = [];
+    var n = 0;
+    var b, i, m, bytesIn, bytesOut;
 
     for (b = 0; b < this.blockDataLengths.length; b++) {
       m = this.blockDataLengths[b];
@@ -267,8 +292,8 @@ QREncode.prototype = {
   calculatePenalty: function() {
     // TODO: Verify all penalty calculations
     function penaltyAdjacent(qr) {
-      var p = 0,
-        i, j, nDark, nLight, rc;
+      var p = 0;
+      var i, j, nDark, nLight, rc;
 
       for (i = 0; i < qr.nModules; i++) {
         nDark = [0, 0];
@@ -309,8 +334,8 @@ QREncode.prototype = {
     function penaltyBlocks(qr) {
       // Not clear from ISO standard, if blocks have to be rectangular?
       // Here we give 3 penalty to every 2x2 block, so odd shaped areas will have penalties as well as rectangles
-      var p = 0,
-        i, j, b;
+      var p = 0;
+      var i, j, b;
 
       for (i = 0; i < qr.nModules - 1; i++) {
         for (j = 0; j < qr.nModules - 1; j++) {
@@ -343,12 +368,12 @@ QREncode.prototype = {
 
     function penaltyDarkLight(qr) {
       // we shift bits in one by one, and see if the resulting pattern match the bad one
-      var p = 0,
-        bad = (128 - 1 - 2 - 32) << 4, // 4_ : 1D : 1L : 3D : 1L : 1D : 4x
-        badmask1 = 2048 - 1, // 4_ : 1D : 1L : 3D : 1L : 1D : 4L
-        badmask2 = badmask1 << 4, // 4L : 1D : 1L : 3D : 1L : 1D : 4_
-        patmask = 32768 - 1, // 4  +           7            + 4
-        i, j, pat, rc;
+      var p = 0;
+      var bad = (128 - 1 - 2 - 32) << 4; // 4_ : 1D : 1L : 3D : 1L : 1D : 4x
+      var badmask1 = 2048 - 1; // 4_ : 1D : 1L : 3D : 1L : 1D : 4L
+      var badmask2 = badmask1 << 4; // 4L : 1D : 1L : 3D : 1L : 1D : 4_
+      var patmask = 32768 - 1; // 4  +           7            + 4
+      var i, j, pat, rc;
 
       for (i = 0; i < qr.nModules - 1; i++) {
         pat = [0, 0];
@@ -380,8 +405,8 @@ QREncode.prototype = {
     }
 
     function penaltyDark(qr) {
-      var dark = 0,
-        i, j;
+      var dark = 0;
+      var i, j;
 
       for (i = 0; i < qr.nModules - 1; i++) {
         for (j = 0; j < qr.nModules - 1; j++) {
@@ -395,17 +420,17 @@ QREncode.prototype = {
     }
 
     // calculatePenalty
-    var pAdjacent = penaltyAdjacent(this),
-      pBlocks = penaltyBlocks(this),
-      pDarkLight = penaltyDarkLight(this),
-      pDark = penaltyDark(this);
+    var pAdjacent = penaltyAdjacent(this);
+    var pBlocks = penaltyBlocks(this);
+    var pDarkLight = penaltyDarkLight(this);
+    var pDark = penaltyDark(this);
 
     return pAdjacent + pBlocks + pDarkLight + pDark;
   },
   encodeBestMask: function() {
-    var bestMask = 0,
-      bestPenalty = 999999,
-      mask, i, j, penalty;
+    var bestMask = 0;
+    var bestPenalty = 999999;
+    var mask, i, j, penalty;
 
     QRBase.setFunctionalPattern(this);
 
@@ -418,6 +443,7 @@ QREncode.prototype = {
 
       this.encodeFunctionalPatterns(mask);
       this.encodeData(mask);
+
       penalty = this.calculatePenalty(mask);
 
       if (penalty < bestPenalty) {
@@ -478,8 +504,8 @@ QREncode.prototype = {
     }
 
     function encodeVersionBottomleft(qr) {
-      var pattern = QRBase.versionInfo[qr.version],
-        x, y;
+      var pattern = QRBase.versionInfo[qr.version];
+      var x, y;
 
       for (x = 0; x < 6; x++) {
         for (y = qr.nModules - 11; y < qr.nModules - 11 + 3; y++) {
@@ -521,8 +547,8 @@ QREncode.prototype = {
     }
 
     function encodeAlignmentPatterns(qr) {
-      var n = QRBase.alignmentPatterns[qr.version].length,
-        i, j;
+      var n = QRBase.alignmentPatterns[qr.version].length;
+      var i, j;
 
       for (i = 0; i < n; i++) {
         for (j = 0; j < n; j++) {
@@ -540,8 +566,8 @@ QREncode.prototype = {
     }
 
     function encodeFormatNW(qr, code) {
-      var x = 8,
-        y;
+      var x = 8;
+      var y;
 
       for (y = 0; y <= 5; y++) {
         if (code & 1) {
@@ -580,8 +606,8 @@ QREncode.prototype = {
     }
 
     function encodeFormatNESW(qr, code) {
-      var y = 8,
-        x;
+      var y = 8;
+      var x;
 
       for (x = qr.nModules - 1; x > qr.nModules - 1 - 8; x--) {
         if (code & 1) {
@@ -662,14 +688,14 @@ QREncode.prototype = {
     }
 
     // encodeData
-    var writingUp = true,
-      n = 0,
-      v = this.bytes[n],
-      bitsWritten = 0,
-      mask = (1 << 7),
-      i, j,
-      count,
-      col;
+    var writingUp = true;
+    var n = 0;
+    var v = this.bytes[n];
+    var bitsWritten = 0;
+    var mask = (1 << 7);
+    var i, j;
+    var count;
+    var col;
 
     // Write columns in pairs, from right to left
     for (j = this.nModules - 1; j > 0; j -= 2) {
@@ -682,6 +708,7 @@ QREncode.prototype = {
       // Read alternatingly from bottom to top then top to bottom
       for (count = 0; count < this.nModules; count++) {
         i = writingUp ? this.nModules - 1 - count : count;
+
         for (col = 0; col < 2; col++) {
           // Ignore bits covered by the function pattern
           if (!this.functionalPattern[j - col][i]) {
@@ -713,11 +740,11 @@ QREncode.prototype = {
     }
   },
   getDataCapacity: function(version, ECLevel, mode) {
-    var nCodewords = QRBase.nCodewords[version],
-      nECCodewords = QRBase.nECCodewords[version][ECLevel],
-      nDataCodewords = nCodewords - nECCodewords,
-      bits = 8 * nDataCodewords,
-      cap = 0;
+    var nCodewords = QRBase.nCodewords[version];
+    var nECCodewords = QRBase.nECCodewords[version][ECLevel];
+    var nDataCodewords = nCodewords - nECCodewords;
+    var bits = 8 * nDataCodewords;
+    var cap = 0;
 
     bits -= 4; // mode
     bits -= QRBase.nCountBits(mode, version);

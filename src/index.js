@@ -1,3 +1,5 @@
 import QREncode from './encode';
 
-export default { QREncode }
+export default {
+  Encode: QREncode
+}

@@ -2,7 +2,7 @@ const rollup = require('rollup');
 
 rollup.rollup({
   entry: 'src/index.js',
-  legacy: false
+  legacy: true
 }).then(function(bundle) {
   bundle.write({
     format: 'umd',
