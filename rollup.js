@@ -5,8 +5,11 @@ rollup.rollup({
   legacy: false
 }).then(function(bundle) {
   bundle.write({
-    format: 'cjs',
+    format: 'umd',
+    indent: true,
     useStrict: true,
+    moduleId: 'qrcode',
+    moduleName: 'QRCode',
     dest: 'dist/bundle.js'
   });
 }).catch(function(error) {
