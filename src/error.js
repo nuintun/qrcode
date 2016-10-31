@@ -1,5 +1,9 @@
+// slice
 var slice = [].slice;
 
+/**
+ * QRError
+ */
 export default function QRError() {
   this.code = arguments[0];
 
@@ -8,4 +12,4 @@ export default function QRError() {
 
 QRError.prototype.name = 'QRError';
 QRError.prototype = Error.prototype;
-QRError.prototype.constructor = QRBase.QRError;
+QRError.prototype.constructor = QRError;

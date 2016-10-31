@@ -4,8 +4,12 @@
   (global.QRCode = factory());
 }(this, (function () { 'use strict';
 
+  // slice
   var slice = [].slice;
 
+  /**
+   * QRError
+   */
   function QRError() {
     this.code = arguments[0];
 
@@ -14,13 +18,13 @@
 
   QRError.prototype.name = 'QRError';
   QRError.prototype = Error.prototype;
-  QRError.prototype.constructor = QRBase.QRError;
+  QRError.prototype.constructor = QRError;
 
   /**
    * QRCode Base
    */
 
-  var QRBase$1 = {
+  var QRBase = {
     /*
      * 编码格式
      */
@@ -1011,7 +1015,7 @@
   QREncode.prototype = {
     // 调用入口文件
     encodeToPix: function(mode, text, version, ECLevel) {
-      var nModules = QRBase$1.nModulesFromVersion(version);
+      var nModules = QRBase.nModulesFromVersion(version);
       var pix = {};
       var i;
 
@@ -1055,7 +1059,7 @@
 
       return pix.arr;
     },
-    setErrorThrow: QRBase$1.setErrorThrow,
+    setErrorThrow: QRBase.setErrorThrow,
     encodeInit: function(version, ECLevel, canvas) {
       this.version = version;
       this.ECLevel = ECLevel;
@@ -1063,7 +1067,7 @@
       this.image.setBackground();
       this.bitIdx = 0;
 
-      QRBase$1.setBlocks(this);
+      QRBase.setBlocks(this);
 
       this.data = [];
 
@@ -1084,7 +1088,7 @@
     },
     encode: function() {
       // 添加结束符
-      this.addTextImplementation(QRBase$1.MODE.Terminator, null);
+      this.addTextImplementation(QRBase.MODE.Terminator, null);
       this.appendPadding();
       this.addErrorCorrection();
       this.encodeBestMask();
@@ -1108,7 +1112,7 @@
         ch = ch.toUpperCase();
 
         if (!qr.alphanumRev.hasOwnProperty(ch)) {
-          QRBase$1.errorThrow("Invalid character for Alphanumeric encoding [" + ch + "]");
+          QRBase.errorThrow("Invalid character for Alphanumeric encoding [" + ch + "]");
         }
 
         return qr.alphanumRev[ch];
@@ -1116,7 +1120,7 @@
 
       function addAlphaNum(qr, text) {
         var n = text.length;
-        var nCountBits = QRBase$1.nCountBits(QRBase$1.MODE.AlphaNumeric, qr.version);
+        var nCountBits = QRBase.nCountBits(QRBase.MODE.AlphaNumeric, qr.version);
         var i, val;
 
         appendBits(qr.data, qr.bitIdx, nCountBits, n);
@@ -1139,7 +1143,7 @@
       }
 
       function add8bit(qr, text) {
-        var nCountBits = QRBase$1.nCountBits(QRBase$1.MODE.EightBit, qr.version);
+        var nCountBits = QRBase.nCountBits(QRBase.MODE.EightBit, qr.version);
         var i;
 
         appendBits(qr.data, qr.bitIdx, nCountBits, text.length);
@@ -1155,7 +1159,7 @@
 
       function addNumeric(qr, text) {
         var n = text.length;
-        var nCountBits = QRBase$1.nCountBits(QRBase$1.MODE.Numeric, qr.version);
+        var nCountBits = QRBase.nCountBits(QRBase.MODE.Numeric, qr.version);
         var num = [];
         var val, i, ch;
 
@@ -1167,7 +1171,7 @@
           ch = text.charCodeAt(i) - 48;
 
           if ((ch < 0) || (ch > 9)) {
-            QRBase$1.errorThrow("Invalid character for Numeric encoding [" + text[i] + "]");
+            QRBase.errorThrow("Invalid character for Numeric encoding [" + text[i] + "]");
           }
 
           num.push(ch);
@@ -1200,18 +1204,18 @@
 
       this.bitIdx += 4;
 
-      if (mode === QRBase$1.MODE.AlphaNumeric) {
+      if (mode === QRBase.MODE.AlphaNumeric) {
         addAlphaNum(this, text);
-      } else if (mode === QRBase$1.MODE.EightBit) {
-        add8bit(this, QRBase$1.unicodeToUtf8(text));
-      } else if (mode === QRBase$1.MODE.Numeric) {
+      } else if (mode === QRBase.MODE.EightBit) {
+        add8bit(this, QRBase.unicodeToUtf8(text));
+      } else if (mode === QRBase.MODE.Numeric) {
         addNumeric(this, text);
-      } else if (mode === QRBase$1.MODE.Terminator) { return; } else {
-        QRBase$1.errorThrow("Unsupported ECI mode: " + mode);
+      } else if (mode === QRBase.MODE.Terminator) { return; } else {
+        QRBase.errorThrow("Unsupported ECI mode: " + mode);
       }
 
       if (this.bitIdx / 8 > this.nDataCodewords) {
-        QRBase$1.errorThrow("Text too long for this EC version");
+        QRBase.errorThrow("Text too long for this EC version");
       }
     },
     appendPadding: function() {
@@ -1393,7 +1397,7 @@
       var bestPenalty = 999999;
       var mask, i, j, penalty;
 
-      QRBase$1.setFunctionalPattern(this);
+      QRBase.setFunctionalPattern(this);
 
       for (mask = 0; mask < 8; mask++) {
         for (i = 0; i < this.nModules; i++) {
@@ -1451,7 +1455,7 @@
       }
 
       function encodeVersionTopright(qr) {
-        var pattern = QRBase$1.versionInfo[qr.version];
+        var pattern = QRBase.versionInfo[qr.version];
         var x, y;
 
         for (y = 0; y < 6; y++) {
@@ -1466,7 +1470,7 @@
       }
 
       function encodeVersionBottomleft(qr) {
-        var pattern = QRBase$1.versionInfo[qr.version];
+        var pattern = QRBase.versionInfo[qr.version];
         var x, y;
 
         for (x = 0; x < 6; x++) {
@@ -1509,7 +1513,7 @@
       }
 
       function encodeAlignmentPatterns(qr) {
-        var n = QRBase$1.alignmentPatterns[qr.version].length;
+        var n = QRBase.alignmentPatterns[qr.version].length;
         var i, j;
 
         for (i = 0; i < n; i++) {
@@ -1520,8 +1524,8 @@
 
             encodeOneAlignmentPattern(
               qr,
-              QRBase$1.alignmentPatterns[qr.version][i] - 2,
-              QRBase$1.alignmentPatterns[qr.version][j] - 2
+              QRBase.alignmentPatterns[qr.version][i] - 2,
+              QRBase.alignmentPatterns[qr.version][j] - 2
             );
           }
         }
@@ -1607,7 +1611,7 @@
         encodeAlignmentPatterns(this);
       }
 
-      var code = QRBase$1.formatInfo[mask + 8 * this.ECLevel];
+      var code = QRBase.formatInfo[mask + 8 * this.ECLevel];
 
       // 版本信息
       encodeFormatNW(this, code);
@@ -1705,25 +1709,25 @@
       }
     },
     getDataCapacity: function(version, ECLevel, mode) {
-      var nCodewords = QRBase$1.nCodewords[version];
-      var nECCodewords = QRBase$1.nECCodewords[version][ECLevel];
+      var nCodewords = QRBase.nCodewords[version];
+      var nECCodewords = QRBase.nECCodewords[version][ECLevel];
       var nDataCodewords = nCodewords - nECCodewords;
       var bits = 8 * nDataCodewords;
       var cap = 0;
 
       // mode
       bits -= 4;
-      bits -= QRBase$1.nCountBits(mode, version);
+      bits -= QRBase.nCountBits(mode, version);
 
-      if (mode === QRBase$1.MODE.AlphaNumeric) {
+      if (mode === QRBase.MODE.AlphaNumeric) {
         cap = Math.floor(bits / 11) * 2;
 
         if (bits >= (cap / 2) * 11 + 6) {
           cap++;
         }
-      } else if (mode === QRBase$1.MODE.EightBit) {
+      } else if (mode === QRBase.MODE.EightBit) {
         cap = Math.floor(bits / 8);
-      } else if (mode === QRBase$1.MODE.Numeric) {
+      } else if (mode === QRBase.MODE.Numeric) {
         cap = Math.floor(bits / 10) * 3;
         if (bits >= (cap / 3) * 10 + 4) {
           if (bits >= (cap / 3) * 10 + 7) {
@@ -1733,7 +1737,7 @@
           cap++;
         }
       } else {
-        QRBase$1.errorThrow("Unsupported ECI mode: " + mode);
+        QRBase.errorThrow("Unsupported ECI mode: " + mode);
       }
 
       return cap;
@@ -1741,7 +1745,7 @@
 
     getVersionFromLength: function(ECLevel, mode, text) {
       var v;
-      var length = QRBase$1.unicodeToUtf8(text).length;
+      var length = QRBase.unicodeToUtf8(text).length;
 
       for (v = 1; v <= 40; v++) {
         if (this.getDataCapacity(v, ECLevel, mode) >= length) {
@@ -1749,7 +1753,7 @@
         }
       }
 
-      QRBase$1.errorThrow("Text is too long, even for a version 40 QR Code");
+      QRBase.errorThrow("Text is too long, even for a version 40 QR Code");
     },
     setDark: function(x, y) {
       this.image.setDark(x, y);
@@ -1876,7 +1880,7 @@
       }
 
       if (imageData.maxCol - imageData.minCol < 255 / 10) {
-        QRBase$1.errorThrow("Image does not have enough contrast (this.image_data.min_col=" + imageData.minCol + " this.image_data.max_col=" + imageData.maxCol + ")");
+        QRBase.errorThrow("Image does not have enough contrast (this.image_data.min_col=" + imageData.minCol + " this.image_data.max_col=" + imageData.maxCol + ")");
       }
 
       imageData.threshold = total / (imageWidth * imageHeight);
@@ -1917,11 +1921,11 @@
     decodeInsideBordersWithMaxVersion: function() {
       this.findModuleSize();
 
-      QRBase$1.setFunctionalPattern(this);
+      QRBase.setFunctionalPattern(this);
 
       this.extractCodewords();
 
-      QRBase$1.setBlocks(this);
+      QRBase.setBlocks(this);
 
       this.correctErrors();
       this.extractData();
@@ -1990,11 +1994,11 @@
       this.imageBottom = j;
 
       if ((this.imageRight - this.imageLeft + 1 < 21) || (this.imageBottom - this.imageTop + 1 < 21)) {
-        QRBase$1.errorThrow("Found no image data to decode");
+        QRBase.errorThrow("Found no image data to decode");
       }
 
       if (Math.abs((this.imageRight - this.imageLeft) - (this.imageBottom - this.imageTop)) > skewLimit) {
-        QRBase$1.errorThrow("Image data is not rectangular");
+        QRBase.errorThrow("Image data is not rectangular");
       }
 
       this.imageSize = ((this.imageRight - this.imageLeft + 1) + (this.imageBottom - this.imageTop + 1)) / 2.0;
@@ -2179,7 +2183,7 @@
 
       function matchAlignmentPatterns(qr, version, moduleSize) {
         var a = 0;
-        var n = QRBase$1.alignmentPatterns[version].length;
+        var n = QRBase.alignmentPatterns[version].length;
         var i, j, na;
 
         for (i = 0; i < n; i++) {
@@ -2190,8 +2194,8 @@
 
             na = matchOneAlignmentPattern(
               qr,
-              QRBase$1.alignmentPatterns[version][i] - 2,
-              QRBase$1.alignmentPatterns[version][j] - 2,
+              QRBase.alignmentPatterns[version][i] - 2,
+              QRBase.alignmentPatterns[version][j] - 2,
               moduleSize
             );
 
@@ -2208,7 +2212,7 @@
         var v, hd;
 
         for (v = 7; v <= 40; v++) {
-          hd = qr.hammingDistance(pattern, QRBase$1.versionInfo[v]);
+          hd = qr.hammingDistance(pattern, QRBase.versionInfo[v]);
 
           if (hd <= 3) {
             return [v, hd];
@@ -2258,7 +2262,7 @@
         var f, hd;
 
         for (f = 0; f < 32; f++) {
-          hd = qr.hammingDistance(pattern, QRBase$1.formatInfo[f]);
+          hd = qr.hammingDistance(pattern, QRBase.formatInfo[f]);
 
           if (hd <= 3) {
             return [f, hd];
@@ -2405,7 +2409,7 @@
       function matchVersion(qr, version) {
         var g;
         var grades = [];
-        var nModules = QRBase$1.nModulesFromVersion(version);
+        var nModules = QRBase.nModulesFromVersion(version);
         var moduleSize = qr.imageSize / nModules;
         var finderPattern = [0, 0, 0];
         var versionTopright = [0, 0];
@@ -2455,7 +2459,7 @@
             version = v1;
           }
 
-          nModules = QRBase$1.nModulesFromVersion(version);
+          nModules = QRBase.nModulesFromVersion(version);
           moduleSize = qr.imageSize / nModules;
           g = Math.round(((4 - versionTopright[1]) + (4 - versionBottomleft[1])) / 2);
 
@@ -2480,7 +2484,7 @@
           alignmentPatterns = matchAlignmentPatterns(qr, version, moduleSize);
         }
 
-        g = gradeAlignmentPatterns(alignmentPatterns, QRBase$1.alignmentPatterns[version].length * QRBase$1.alignmentPatterns[version].length - 3);
+        g = gradeAlignmentPatterns(alignmentPatterns, QRBase.alignmentPatterns[version].length * QRBase.alignmentPatterns[version].length - 3);
 
         if (g < 1) {
           return [version, 0];
@@ -2533,14 +2537,14 @@
       }
 
       this.version = bestMatchSoFar[0];
-      this.nModules = QRBase$1.nModulesFromVersion(this.version);
+      this.nModules = QRBase.nModulesFromVersion(this.version);
       this.moduleSize = this.imageSize / this.nModules;
       this.functionalGrade = bestMatchSoFar[1];
       this.ECLevel = bestMatchSoFar[2];
       this.mask = bestMatchSoFar[3];
 
       if (this.functionalGrade < 1) {
-        QRBase$1.errorThrow("Unable to decode a function pattern");
+        QRBase.errorThrow("Unable to decode a function pattern");
       }
     },
 
@@ -2649,7 +2653,7 @@
 
       function extract8bit(qr, bytes) {
 
-        var nCountBits = QRBase$1.nCountBits(QRBase$1.MODE.EightBit, qr.version);
+        var nCountBits = QRBase.nCountBits(QRBase.MODE.EightBit, qr.version);
         var n = extract(qr, bytes, qr.bitIdx, nCountBits);
         var data = "";
         var i, a;
@@ -2662,11 +2666,11 @@
           qr.bitIdx += 8;
         }
 
-        return QRBase$1.utf8Tounicode(data);
+        return QRBase.utf8Tounicode(data);
       }
 
       function extractAlphanum(qr, bytes) {
-        var nCountBits = QRBase$1.nCountBits(QRBase$1.MODE.AlphaNumeric, qr.version);
+        var nCountBits = QRBase.nCountBits(QRBase.MODE.AlphaNumeric, qr.version);
         var n = extract(qr, bytes, qr.bitIdx, nCountBits);
         var data = "";
         var i, x;
@@ -2689,7 +2693,7 @@
       }
 
       function extractNumeric(qr, bytes) {
-        var nCountBits = QRBase$1.nCountBits(QRBase$1.MODE.Numeric, qr.version);
+        var nCountBits = QRBase.nCountBits(QRBase.MODE.Numeric, qr.version);
         var n = extract(qr, bytes, qr.bitIdx, nCountBits);
         var data = "";
         var x, c1, c2, c3;
@@ -2737,16 +2741,16 @@
         mode = extract(this, bytes, this.bitIdx, 4);
         this.bitIdx += 4;
 
-        if (mode === QRBase$1.MODE.Terminator) {
+        if (mode === QRBase.MODE.Terminator) {
           break;
-        } else if (mode === QRBase$1.MODE.AlphaNumeric) {
+        } else if (mode === QRBase.MODE.AlphaNumeric) {
           this.data += extractAlphanum(this, bytes);
-        } else if (mode === QRBase$1.MODE.EightBit) {
+        } else if (mode === QRBase.MODE.EightBit) {
           this.data += extract8bit(this, bytes);
-        } else if (mode === QRBase$1.MODE.Numeric) {
+        } else if (mode === QRBase.MODE.Numeric) {
           this.data += extractNumeric(this, bytes);
         } else {
-          QRBase$1.errorThrow("Unsupported ECI mode: " + mode);
+          QRBase.errorThrow("Unsupported ECI mode: " + mode);
         }
       }
     },
@@ -2772,7 +2776,7 @@
         if (!rs.corrected) {
           this.errorGrade = 0;
 
-          QRBase$1.errorThrow("Unable to correct errors (" + rs.uncorrected_reason + ")");
+          QRBase.errorThrow("Unable to correct errors (" + rs.uncorrected_reason + ")");
         }
 
         bytes = bytes.concat(bytesOut);
