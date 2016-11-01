@@ -8,7 +8,7 @@ import ReedSolomon from './reedsolomon';
 /**
  * QREncode
  */
-export default function QREncode() {
+function QREncode() {
   this.logger = null; // 调试接口
   this.image = null; // 二维码画布
   this.nModules = 0; // 二维码大小
@@ -73,7 +73,6 @@ QREncode.prototype = {
 
     return pix.arr;
   },
-  setErrorThrow: QRBase.setErrorThrow,
   encodeInit: function(version, ECLevel, canvas) {
     this.version = version;
     this.ECLevel = ECLevel;
@@ -820,3 +819,5 @@ QREncode.prototype = {
     ':': 44
   }
 };
+
+export default { Encode: QREncode }

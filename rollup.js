@@ -1,21 +1,18 @@
-const extend = require('extend');
 const rollup = require('rollup');
 
-function build(entry, dest, options) {
-  options = extend(true, {
+function build(entry, dest) {
+  rollup.rollup({
     legacy: true,
-    format: 'umd',
-    indent: true,
-    useStrict: true,
-    moduleId: options.moduleId,
-    moduleName: options.moduleName
-  }, options);
-
-  options.entry = entry;
-  options.dest = dest;
-
-  rollup.rollup(options).then(function(bundle) {
-    bundle.write(options);
+    entry: entry
+  }).then(function(bundle) {
+    bundle.write({
+      dest: dest,
+      format: 'umd',
+      indent: true,
+      useStrict: true,
+      moduleId: 'qrcode',
+      moduleName: 'QRCode'
+    });
 
     console.log(`  Build ${dest} success!`);
   }).catch(function(error) {
@@ -23,17 +20,6 @@ function build(entry, dest, options) {
   });
 }
 
-build('src/index.js', 'dist/qrcode.all.js', {
-  moduleId: 'qrcode',
-  moduleName: 'QRCode'
-});
-
-build('src/encode.js', 'dist/qrcode.encode.js', {
-  moduleId: 'qrencode',
-  moduleName: 'QREncode'
-});
-
-build('src/decode.js', 'dist/qrcode.decode.js', {
-  moduleId: 'qrdecode',
-  moduleName: 'QRDecode'
-});
+build('src/index.js', 'dist/qrcode.all.js');
+build('src/encode.js', 'dist/qrcode.encode.js');
+build('src/decode.js', 'dist/qrcode.decode.js');

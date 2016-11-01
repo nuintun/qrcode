@@ -1,7 +1,7 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define('qrencode', factory) :
-  (global.QREncode = factory());
+  typeof define === 'function' && define.amd ? define('qrcode', factory) :
+  (global.QRCode = factory());
 }(this, (function () { 'use strict';
 
   // slice
@@ -1059,7 +1059,6 @@
 
       return pix.arr;
     },
-    setErrorThrow: QRBase.setErrorThrow,
     encodeInit: function(version, ECLevel, canvas) {
       this.version = version;
       this.ECLevel = ECLevel;
@@ -1807,6 +1806,8 @@
     }
   };
 
-  return QREncode;
+  var encode = { Encode: QREncode };
+
+  return encode;
 
 })));

@@ -8,7 +8,7 @@ import ReedSolomon from './reedsolomon';
 /**
  * QRDecode
  */
-export default function QRDecode() {
+function QRDecode() {
   this.logger = null;
   this.image = null;
   this.imageTop = 0;
@@ -1076,3 +1076,5 @@ QRDecode.prototype = {
     ':'
   ]
 };
+
+export default { Decode: QRDecode };

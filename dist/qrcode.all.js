@@ -1059,7 +1059,6 @@
 
       return pix.arr;
     },
-    setErrorThrow: QRBase.setErrorThrow,
     encodeInit: function(version, ECLevel, canvas) {
       this.version = version;
       this.ECLevel = ECLevel;
@@ -1806,6 +1805,8 @@
       ':': 44
     }
   };
+
+  var Encode = { Encode: QREncode };
 
   /**
    *QRCode Decode
@@ -2883,9 +2884,14 @@
     ]
   };
 
+  var Decode = { Decode: QRDecode };
+
   var index = {
-    Encode: QREncode,
-    Decode: QRDecode
+    MODE: QRBase.MODE,
+    Encode: Encode.Encode,
+    Decode: Decode.Decode,
+    catch: QRBase.setErrorThrow,
+    ECLEVEL: QRBase.ERROR_CORRECTION_LEVEL
   };
 
   return index;

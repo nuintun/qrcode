@@ -1,7 +1,7 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define('qrdecode', factory) :
-  (global.QRDecode = factory());
+  typeof define === 'function' && define.amd ? define('qrcode', factory) :
+  (global.QRCode = factory());
 }(this, (function () { 'use strict';
 
   // slice
@@ -2063,6 +2063,8 @@
     ]
   };
 
-  return QRDecode;
+  var decode = { Decode: QRDecode };
+
+  return decode;
 
 })));

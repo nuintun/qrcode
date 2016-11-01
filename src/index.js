@@ -1,7 +1,11 @@
-import QREncode from './encode';
-import QRDecode from './decode';
+import QRBase from './base';
+import Encode from './encode';
+import Decode from './decode';
 
 export default {
-  Encode: QREncode,
-  Decode: QRDecode
+  MODE: QRBase.MODE,
+  Encode: Encode.Encode,
+  Decode: Decode.Decode,
+  catch: QRBase.setErrorThrow,
+  ECLEVEL: QRBase.ERROR_CORRECTION_LEVEL
 }
