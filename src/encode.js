@@ -223,7 +223,9 @@ QREncode.prototype = {
       add8bit(this, QRBase.unicodeToUtf8(text));
     } else if (mode === QRBase.MODE.Numeric) {
       addNumeric(this, text);
-    } else if (mode === QRBase.MODE.Terminator) { return; } else {
+    } else if (mode === QRBase.MODE.Terminator) {
+      return;
+    } else {
       QRBase.errorThrow('Unsupported ECI mode: ' + mode);
     }
 
