@@ -3,6 +3,9 @@
  */
 
 import QRError from './error';
+import Locales from './locales';
+
+var i18n = new Locales();
 
 var QRBase = {
   /*
@@ -23,6 +26,7 @@ var QRBase = {
     Q: 3, // 25%
     H: 2 // 30%
   },
+  i18n: i18n,
   errorThrow: function(code) {
     var error = '';
 

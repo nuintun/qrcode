@@ -20,9 +20,62 @@
   QRError.prototype = Error.prototype;
   QRError.prototype.constructor = QRError;
 
+  var EN = {
+    a: 'aads'
+  };
+
+  function isString(value) {
+    return toString.call(value) === '[object String]';
+  }
+
+  function Locales(name, locale) {
+    var locales = {};
+
+    name = name || 'en';
+    locale = locale || EN;
+
+    locales[name] = locale;
+
+    this.active = name;
+    this.locales = locales;
+  }
+
+  Locales.prototype = {
+    locale: function(name, locale) {
+      if (arguments.length === 0) {
+        return this;
+      }
+
+      if (arguments.length >= 2) {
+        if (locale) {
+          for (var key in EN) {
+            if (!isString(locale[key])) {
+              locale[key] = EN[key];
+            }
+          }
+        } else {
+          locale = EN;
+        }
+
+        this.locales[name] = locale;
+      }
+
+      if (this.locales[name]) {
+        this.active = name;
+      }
+
+      return this;
+    },
+    render: function(code, data) {
+
+    }
+  };
+
   /**
    * QRCode Base
    */
+
+  var i18n = new Locales();
 
   var QRBase = {
     /*
@@ -43,6 +96,7 @@
       Q: 3, // 25%
       H: 2 // 30%
     },
+    i18n: i18n,
     errorThrow: function(code) {
       var error = '';
 
