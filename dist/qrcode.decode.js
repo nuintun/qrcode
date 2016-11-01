@@ -21,7 +21,12 @@
   QRError.prototype.constructor = QRError;
 
   var EN = {
-    a: 'aads'
+    'QRBase.UnknownMode': 'Internal error: Unknown mode: %mode',
+    'QREncode.InvalidChar4Alphanumeric': 'Invalid character for Alphanumeric encoding [%char]',
+    'QREncode.InvalidChar4Numeric': 'Invalid character for Numeric encoding [%char]',
+    'QREncode.UnsupportedECI': 'Unsupported ECI mode: %mode',
+    'QREncode.TextTooLong4TargetVersion': 'Text too long for this EC version',
+    'QREncode.TextTooLong4AllVersion': 'Text is too long, even for a version 40 QR Code'
   };
 
   function isString(value) {
@@ -1114,7 +1119,7 @@
       }
 
       if (imageData.maxCol - imageData.minCol < 255 / 10) {
-        QRBase.errorThrow("Image does not have enough contrast (this.image_data.min_col=" + imageData.minCol + " this.image_data.max_col=" + imageData.maxCol + ")");
+        QRBase.errorThrow('Image does not have enough contrast (this.image_data.min_col=' + imageData.minCol + ' this.image_data.max_col=' + imageData.maxCol + ')');
       }
 
       imageData.threshold = total / (imageWidth * imageHeight);
@@ -1228,11 +1233,11 @@
       this.imageBottom = j;
 
       if ((this.imageRight - this.imageLeft + 1 < 21) || (this.imageBottom - this.imageTop + 1 < 21)) {
-        QRBase.errorThrow("Found no image data to decode");
+        QRBase.errorThrow('Found no image data to decode');
       }
 
       if (Math.abs((this.imageRight - this.imageLeft) - (this.imageBottom - this.imageTop)) > skewLimit) {
-        QRBase.errorThrow("Image data is not rectangular");
+        QRBase.errorThrow('Image data is not rectangular');
       }
 
       this.imageSize = ((this.imageRight - this.imageLeft + 1) + (this.imageBottom - this.imageTop + 1)) / 2.0;
@@ -1778,7 +1783,7 @@
       this.mask = bestMatchSoFar[3];
 
       if (this.functionalGrade < 1) {
-        QRBase.errorThrow("Unable to decode a function pattern");
+        QRBase.errorThrow('Unable to decode a function pattern');
       }
     },
 
@@ -1889,7 +1894,7 @@
 
         var nCountBits = QRBase.nCountBits(QRBase.MODE.EightBit, qr.version);
         var n = extract(qr, bytes, qr.bitIdx, nCountBits);
-        var data = "";
+        var data = '';
         var i, a;
 
         qr.bitIdx += nCountBits;
@@ -1906,7 +1911,7 @@
       function extractAlphanum(qr, bytes) {
         var nCountBits = QRBase.nCountBits(QRBase.MODE.AlphaNumeric, qr.version);
         var n = extract(qr, bytes, qr.bitIdx, nCountBits);
-        var data = "";
+        var data = '';
         var i, x;
 
         qr.bitIdx += nCountBits;
@@ -1929,7 +1934,7 @@
       function extractNumeric(qr, bytes) {
         var nCountBits = QRBase.nCountBits(QRBase.MODE.Numeric, qr.version);
         var n = extract(qr, bytes, qr.bitIdx, nCountBits);
-        var data = "";
+        var data = '';
         var x, c1, c2, c3;
         var i;
 
@@ -1968,7 +1973,7 @@
         bytes.push(0);
       }
 
-      this.data = "";
+      this.data = '';
       this.bitIdx = 0;
 
       while (this.bitIdx < nBits - 4) {
@@ -1984,7 +1989,7 @@
         } else if (mode === QRBase.MODE.Numeric) {
           this.data += extractNumeric(this, bytes);
         } else {
-          QRBase.errorThrow("Unsupported ECI mode: " + mode);
+          QRBase.errorThrow('Unsupported ECI mode: ' + mode);
         }
       }
     },
@@ -2010,7 +2015,7 @@
         if (!rs.corrected) {
           this.errorGrade = 0;
 
-          QRBase.errorThrow("Unable to correct errors (" + rs.uncorrected_reason + ")");
+          QRBase.errorThrow('Unable to correct errors (' + rs.uncorrected_reason + ')');
         }
 
         bytes = bytes.concat(bytesOut);
