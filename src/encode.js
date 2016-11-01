@@ -125,7 +125,7 @@ QREncode.prototype = {
       ch = ch.toUpperCase();
 
       if (!qr.alphanumRev.hasOwnProperty(ch)) {
-        QRBase.errorThrow("Invalid character for Alphanumeric encoding [" + ch + "]");
+        QRBase.errorThrow('Invalid character for Alphanumeric encoding [' + ch + ']');
       }
 
       return qr.alphanumRev[ch];
@@ -184,7 +184,7 @@ QREncode.prototype = {
         ch = text.charCodeAt(i) - 48;
 
         if ((ch < 0) || (ch > 9)) {
-          QRBase.errorThrow("Invalid character for Numeric encoding [" + text[i] + "]");
+          QRBase.errorThrow('Invalid character for Numeric encoding [' + text[i] + ']');
         }
 
         num.push(ch);
@@ -224,11 +224,11 @@ QREncode.prototype = {
     } else if (mode === QRBase.MODE.Numeric) {
       addNumeric(this, text);
     } else if (mode === QRBase.MODE.Terminator) { return; } else {
-      QRBase.errorThrow("Unsupported ECI mode: " + mode);
+      QRBase.errorThrow('Unsupported ECI mode: ' + mode);
     }
 
     if (this.bitIdx / 8 > this.nDataCodewords) {
-      QRBase.errorThrow("Text too long for this EC version");
+      QRBase.errorThrow('Text too long for this EC version');
     }
   },
   appendPadding: function() {
@@ -750,7 +750,7 @@ QREncode.prototype = {
         cap++;
       }
     } else {
-      QRBase.errorThrow("Unsupported ECI mode: " + mode);
+      QRBase.errorThrow('Unsupported ECI mode: ' + mode);
     }
 
     return cap;
@@ -766,7 +766,7 @@ QREncode.prototype = {
       }
     }
 
-    QRBase.errorThrow("Text is too long, even for a version 40 QR Code");
+    QRBase.errorThrow('Text is too long, even for a version 40 QR Code');
   },
   setDark: function(x, y) {
     this.image.setDark(x, y);
