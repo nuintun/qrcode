@@ -2944,9 +2944,11 @@
     MODE: QRBase.MODE,
     Encode: Encode.Encode,
     Decode: Decode.Decode,
-    locale: QRBase.i18n.locale,
     catch: QRBase.setErrorThrow,
-    ECLEVEL: QRBase.ERROR_CORRECTION_LEVEL
+    ECLEVEL: QRBase.ERROR_CORRECTION_LEVEL,
+    locale: function() {
+      return QRBase.i18n.locale.apply(QRBase.i18n, arguments);
+    }
   };
 
   return index;
