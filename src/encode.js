@@ -346,7 +346,7 @@ QREncode.prototype = {
     }
 
     function penaltyDarkLight(qr) {
-      // we shift bits in one by one, and see if the resulting pattern match the bad one
+      // We shift bits in one by one, and see if the resulting pattern match the bad one
       var p = 0;
       var bad = (128 - 1 - 2 - 32) << 4; // 4_ : 1D : 1L : 3D : 1L : 1D : 4x
       var badmask1 = 2048 - 1; // 4_ : 1D : 1L : 3D : 1L : 1D : 4L
@@ -395,17 +395,16 @@ QREncode.prototype = {
         }
       }
 
-      return 10 * Math.floor(Math.abs(dark / (qr.nModule * qr.nModules) - 0.5) / 0.05);
+      return 10 * Math.floor(Math.abs(dark / (qr.nModules * qr.nModules) - 0.5) / 0.05);
     }
 
-    // calculatePenalty
+    // Calculate penalty
     var pAdjacent = penaltyAdjacent(this);
     var pBlocks = penaltyBlocks(this);
     var pDarkLight = penaltyDarkLight(this);
     var pDark = penaltyDark(this);
-    var pTotal = pAdjacent + pBlocks + pDarkLight + pDark;
 
-    return pTotal;
+    return pAdjacent + pBlocks + pDarkLight + pDark;
   },
   encodeBestMask: function() {
     var bestMask = 0;
@@ -523,7 +522,7 @@ QREncode.prototype = {
         qr.pixels[x][y + 4 - i] = true;
       }
 
-      // center black
+      // Center black
       qr.pixels[x + 2][y + 2] = true;
     }
 
@@ -609,7 +608,7 @@ QREncode.prototype = {
       }
     }
 
-    // encodeFunctionalPatterns
+    // Encode functional patterns
     encodeFinderPattern(this, 0, 0);
     encodeFinderPattern(this, 0, this.nModules - 7);
     encodeFinderPattern(this, this.nModules - 7, 0);
@@ -670,7 +669,7 @@ QREncode.prototype = {
       }
     }
 
-    // encodeData
+    // Encode data
     var writingUp = true;
     var n = 0;
     var v = this.bytes[n];
@@ -684,7 +683,7 @@ QREncode.prototype = {
     for (j = this.nModules - 1; j > 0; j -= 2) {
       if (j === 6) {
         // Skip whole column with vertical alignment pattern;
-        // saves time and makes the other code proceed more cleanly
+        // Saves time and makes the other code proceed more cleanly
         j--;
       }
 
@@ -730,7 +729,7 @@ QREncode.prototype = {
     var bits = 8 * nDataCodewords;
     var cap = 0;
 
-    // mode
+    // Mode
     bits -= 4;
     bits -= QRBase.nCountBits(mode, version);
 

@@ -209,7 +209,7 @@ QRDecode.prototype = {
   },
   findModuleSize: function() {
     /**
-     * returns number of matches found
+     * Returns number of matches found
      * perferct is 8*8 = 64
      */
     function matchFinderPattern(qr, x, y, quietX, quietY, moduleSize) {
@@ -263,7 +263,7 @@ QRDecode.prototype = {
         }
       }
 
-      // quiet area
+      // Quiet area
       for (i = 0; i <= 6; i++) {
         if (!qr.isDarkWithSize(x + quietX, y + i, moduleSize)) {
           n = n + 1;
@@ -377,7 +377,7 @@ QRDecode.prototype = {
         }
       }
 
-      // center black
+      // Center black
       if (qr.isDarkWithSize(x + 2, y + 2, moduleSize)) {
         n = n + 1;
       }
@@ -628,14 +628,14 @@ QRDecode.prototype = {
       finderPattern[0] = matchFinderPattern(qr, 0, 0, 7, 7, moduleSize);
 
       if (finderPattern[0] < 64 - 3) {
-        // performance hack!
+        // Performance hack!
         return [version, 0];
       }
 
       finderPattern[1] = matchFinderPattern(qr, 0, nModules - 7, 7, -1, moduleSize);
 
       if (finderPattern[0] + finderPattern[1] < 64 + 64 - 3) {
-        // performance hack!
+        // Performance hack!
         return [version, 0];
       }
 
@@ -724,7 +724,7 @@ QRDecode.prototype = {
       return [version, grade, ECLevel, mask];
     }
 
-    // findModuleSize
+    // Find module size
     var bestMatchSoFar = [0, 0];
     var version, match;
 
@@ -792,7 +792,7 @@ QRDecode.prototype = {
     }
 
     /**
-     * extractCodewords
+     * Extract codewords
      * Original Java version by Sean Owen
      * Copyright 2007 ZXing authors
      */
@@ -808,7 +808,7 @@ QRDecode.prototype = {
     for (j = this.nModules - 1; j > 0; j -= 2) {
       if (j === 6) {
         // Skip whole column with vertical alignment pattern;
-        // saves time and makes the other code proceed more cleanly
+        // Saves time and makes the other code proceed more cleanly
         j--;
       }
 
@@ -925,7 +925,7 @@ QRDecode.prototype = {
       return data;
     }
 
-    // extractData
+    // Extract data
     var bytes = this.bytes;
     var nBits = bytes.length * 8;
     var i, mode;
@@ -1012,7 +1012,7 @@ QRDecode.prototype = {
       var c;
 
       for (c = 0; n; c++) {
-        // clear the least significant bit set
+        // Clear the least significant bit set
         n &= n - 1;
       }
 
@@ -1025,6 +1025,9 @@ QRDecode.prototype = {
   },
   /**
    * QRCodeDecode IMAGE FUNCTIONS
+   * @param x
+   * @param y
+   * @param moduleSize
    */
   isDarkWithSize: function(x, y, moduleSize) {
     return this.image.isDark(Math.round(this.imageLeft + x * moduleSize), Math.round(this.imageTop + y * moduleSize), Math.round(moduleSize));
