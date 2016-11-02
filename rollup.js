@@ -13,19 +13,20 @@ function unique(array) {
 }
 
 const I18N = {
-  ENCODE: [
+  COMMON: ['QRBase.UnknownMode']
+}
+
+I18N.ENCODE = unique(I18N.COMMON.concat([
     'QRBase.UnknownMode',
     'QREncode.InvalidChar4Alphanumeric',
     'QREncode.InvalidChar4Numeric',
     'QREncode.UnsupportedECI',
     'QREncode.TextTooLong4TargetVersion',
     'QREncode.TextTooLong4AllVersion'
-  ],
-  DECODE: [
-    'QRBase.UnknownMode'
-  ]
-}
-
+]));
+I18N.DECODE = unique(I18N.COMMON.concat([
+  // DECODE
+]));
 I18N.ALL = unique(I18N.ENCODE.concat(I18N.DECODE))
 
 function isI18N(id) {
