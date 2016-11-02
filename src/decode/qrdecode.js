@@ -17,7 +17,7 @@
   Decode.prototype = {
     _init: function (imageData, error){
       var text = '';
-      var qr = new QRDecode();
+      var qr = new QRCode.Decode();
 
       try {
         text = qr.decodeImageData(imageData, this.width, this.height);

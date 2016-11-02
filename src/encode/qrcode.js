@@ -41,7 +41,7 @@
     _init: function (callback){
       var config = this.config;
 
-      this.qr = new QREncode();
+      this.qr = new QRCode.Encode();
 
       // 含有 Logo，使用最大容错
       if (config.logo) {
