@@ -143,6 +143,60 @@
       return ret;
     }
 
+    function getGray(imageData, imageWidth, imageHeight) {
+      imageData.minCol = 255;
+      imageData.maxCol = 0;
+
+      var total = 0;
+      var x, y, p, v;
+
+      for (x = 0; x < imageWidth; x++) {
+        for (y = 0; y < imageHeight; y++) {
+          p = x * 4 + y * imageWidth * 4;
+          v = 0.30 * imageData.data[p] + 0.59 * imageData.data[p + 1] + 0.11 * imageData.data[p + 2];
+          total += v;
+
+          if (v < imageData.minCol) {
+            imageData.minCol = v;
+          }
+
+          if (v > imageData.maxCol) {
+            imageData.maxCol = v;
+          }
+        }
+      }
+
+      if (imageData.maxCol - imageData.minCol < 255 / 10) {
+        QRBase.errorThrow('Image does not have enough contrast (this.image_data.min_col=' + imageData.minCol + ' this.image_data.max_col=' + imageData.maxCol + ')');
+      }
+
+      imageData.threshold = total / (imageWidth * imageHeight);
+
+      imageData.getGray = function(x, y, d) {
+        var n = 0;
+        var i, j, p;
+
+        for (i = x; i < x + d; i++) {
+          for (j = y; j < y + d; j++) {
+            p = i * 4 + j * this.width * 4;
+            n = n + 0.30 * this.data[p] + 0.59 * this.data[p + 1] + 0.11 * this.data[p + 2];
+          }
+        }
+
+        return n / d / d;
+      };
+
+      imageData.isDark = function(x, y, d) {
+        var g = this.getGray(x, y, d);
+
+        return g < this.threshold;
+      };
+
+      this.image = imageData;
+
+      return imageData;
+    }
+
     // 二维码加载
     $('#decode-file').on('change', function(e) {
       var file = e.target.files[0];
@@ -169,6 +223,8 @@
       qrcode.width = canvas.width;
       qrcode.height = canvas.height;
       qrcode.imagedata = imageData;
+
+      console.log(getGray(imageData, canvas.width, canvas.height).getGray());
 
       imageData = qrcode.grayScaleToBitmap(qrcode.grayscale());
 
