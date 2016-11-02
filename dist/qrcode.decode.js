@@ -55,8 +55,10 @@
       if (arguments.length >= 2) {
         if (locale) {
           for (var key in EN) {
-            if (!isString(locale[key])) {
-              locale[key] = EN[key];
+            if (EN.hasOwnProperty(key)) {
+              if (!isString(locale[key])) {
+                locale[key] = EN[key];
+              }
             }
           }
         } else {
@@ -84,7 +86,7 @@
   var i18n = new Locales();
 
   var QRBase = {
-    /*
+    /**
      * 编码格式
      */
     MODE: {
@@ -93,7 +95,7 @@
       EightBit: 4,
       Terminator: 0
     },
-    /*
+    /**
      * 纠错等级
      */
     ERROR_CORRECTION_LEVEL: {
@@ -118,7 +120,7 @@
       var ECBlocks = this.ECBlocks[qr.version][qr.ECLevel];
       var nBlocks;
       var nBlocksFirst;
-      var nBlocksSecond;
+      var nBlocksSecond = 0;
       var nBlockWordsFirst;
       var nBlockWordsSecond;
       var i, b, w = 0;
@@ -127,7 +129,7 @@
 
       if (ECBlocks.length === 1) {
         nBlocksFirst = ECBlocks[0];
-        nBlocksSecond = 0;
+        // set nBlocksSecond = 0;
         nBlocks = nBlocksFirst;
         nBlockWordsFirst = qr.nDataCodewords / nBlocks;
         nBlockWordsSecond = 0;
@@ -241,8 +243,11 @@
         markSquare(qr, qr.nModules - 11, 0, 3, 6);
       }
     },
-    /*
+    /**
      * 计算数据长度的编码字节数
+     * @param mode
+     * @param version
+     * @returns {number}
      */
     nCountBits: function(mode, version) {
       if (mode === this.MODE.EightBit) {
@@ -271,14 +276,18 @@
 
       this.errorThrow("Internal error: Unknown mode: " + mode);
     },
-    /*
+    /**
      * 从版本计算二维码宽度
+     * @param {number} version
+     * @returns {number}
      */
     nModulesFromVersion: function(version) {
       return 17 + 4 * version;
     },
-    /*
+    /**
      * UTF-8 和 Unicode 的相互转换
+     * @param {string} string
+     * @returns {string}
      */
     unicodeToUtf8: function(string) {
       var out = '';
@@ -302,6 +311,11 @@
 
       return out;
     },
+    /**
+     * UTF-8 和 Unicode 的相互转换
+     * @param {string} string
+     * @returns {string}
+     */
     utf8Tounicode: function(string) {
       var out = '';
       var len = string.length;
@@ -311,6 +325,7 @@
       while (i < len) {
         char1 = string.charCodeAt(i++);
         mark = char1 >> 4;
+
         if (mark <= 7) {
           // 0xxxxxxx
           out += string.charAt(i - 1);
@@ -588,35 +603,34 @@
   };
 
   /**
-    QR-Logo: http://qrlogo.kaarposoft.dk
+   QR-Logo: http://qrlogo.kaarposoft.dk
 
-    Copyright (C) 2011 Henrik Kaare Poulsen
+   Copyright (C) 2011 Henrik Kaare Poulsen
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-      http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-  */
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+   */
 
   /**
-    Parts of the Reed Solomon decoding algorithms have been inspired by
-    http://rscode.sourceforge.net
-    Original version Copyright (C) by Henry Minsky
-  */
+   Parts of the Reed Solomon decoding algorithms have been inspired by
+   http://rscode.sourceforge.net
+   Original version Copyright (C) by Henry Minsky
+   */
 
   /**
    * ReedSolomon CONSTRUCTOR
-   * @param {any} n_ec_bytes
+   * @param {*} n_ec_bytes
    */
   function ReedSolomon(n_ec_bytes) {
-    this.logger = null;
     this.n_ec_bytes = n_ec_bytes;
     this.n_degree_max = 2 * n_ec_bytes;
     this.syndroms = [];
@@ -701,10 +715,6 @@
         tp1 = this.copyPoly(genpoly);
       }
 
-      if (this.logger) {
-        this.logger.debug('RS genPoly: ' + genpoly.join(','));
-      }
-
       return genpoly;
     },
     calculateSyndroms: function() {
@@ -728,14 +738,6 @@
         }
       }
 
-      if (this.logger) {
-        if (n_err > 0) {
-          this.logger.debug('RS calculateSyndroms: <b>Errors found!</b> syndroms = ' + this.syndroms.join(','));
-        } else {
-          this.logger.debug('RS calculateSyndroms: <b>No errors</b>');
-        }
-      }
-
       return n_err;
     },
     correctErrors: function() {
@@ -747,10 +749,6 @@
       if (2 * this.n_errors > this.n_ec_bytes) {
         this.uncorrected_reason = 'too many errors';
 
-        if (this.logger) {
-          this.logger.debug('RS correctErrors: <b>' + this.uncorrected_reason + '</b>');
-        }
-
         return;
       }
 
@@ -760,20 +758,12 @@
         if (this.error_locs[e] >= this.bytes_in.length) {
           this.uncorrected_reason = 'corrections out of scope';
 
-          if (this.logger) {
-            this.logger.debug('RS correctErrors: <b>' + this.uncorrected_reason + '</b>');
-          }
-
           return;
         }
       }
 
       if (this.n_errors === 0) {
         this.uncorrected_reason = 'could not identify errors';
-
-        if (this.logger) {
-          this.logger.debug('RS correctErrors: <b>' + this.uncorrected_reason + '</b>');
-        }
 
         return;
       }
@@ -797,24 +787,18 @@
           denom ^= this.gmult(this.psi[j], this.gexp[((255 - i) * (j)) % 255]);
         }
 
-        var err = this.gmult(num, this.ginv(denom));
-
-        if (this.logger) {
-          this.logger.debug('RS correctErrors: loc=' + (this.bytes_out.length - i - 1) + '  err = 0x0' + err.toString(16) + ' = bin ' + err.toString(2));
-        }
-
-        this.bytes_out[this.bytes_out.length - i - 1] ^= err;
+        this.bytes_out[this.bytes_out.length - i - 1] ^= this.gmult(num, this.ginv(denom));
       }
 
       this.corrected = true;
     },
     berlekampMassey: function() {
-      /* initialize Gamma, the erasure locator polynomial */
+      // initialize Gamma, the erasure locator polynomial
       var gamma = this.zeroPoly();
 
       gamma[0] = 1;
 
-      /* initialize to z */
+      // initialize to z
       var D = this.copyPoly(gamma);
 
       this.mulZPoly(D);
@@ -830,7 +814,7 @@
         var d = this.computeDiscrepancy(this.psi, this.syndroms, L, n);
 
         if (d !== 0) {
-          /* psi2 = psi - d*D */
+          // psi2 = psi - d*D
           for (i = 0; i < this.n_degree_max; i++) {
             psi2[i] = this.psi[i] ^ this.gmult(d, D[i]);
           }
@@ -840,7 +824,7 @@
 
             k = n - L;
 
-            /* D = scale_poly(ginv(d), psi); */
+            // D = scale_poly(ginv(d), psi);
             for (i = 0; i < this.n_degree_max; i++) {
               D[i] = this.gmult(this.psi[i], this.ginv(d));
             }
@@ -848,29 +832,21 @@
             L = L2;
           }
 
-          /* psi = psi2 */
-          //for (i = 0; i < this.n_degree_max; i++) this.psi[i] = psi2[i];
+          // psi = psi2
+          // for (i = 0; i < this.n_degree_max; i++) this.psi[i] = psi2[i];
           this.psi = this.copyPoly(psi2);
         }
 
         this.mulZPoly(D);
       }
 
-      if (this.logger) {
-        this.logger.debug('RS berlekampMassey: psi = ' + this.psi.join(','));
-      }
-
-      /* omega */
+      // omega
       var om = this.multPolys(this.psi, this.syndroms);
 
       this.omega = this.zeroPoly();
 
       for (i = 0; i < this.n_ec_bytes; i++) {
         this.omega[i] = om[i];
-      }
-
-      if (this.logger) {
-        this.logger.debug('RS berlekampMassey: omega = ' + this.omega.join(','));
       }
     },
     findRoots: function() {
@@ -883,7 +859,7 @@
       for (r = 1; r < 256; r++) {
         sum = 0;
 
-        /* evaluate psi at r */
+        // evaluate psi at r
         var k;
 
         for (k = 0; k < this.n_ec_bytes + 1; k++) {
@@ -895,13 +871,14 @@
           this.n_errors++;
         }
       }
-
-      if (this.logger) {
-        this.logger.debug('RS findRoots: errors=<b>' + this.n_errors + '</b> locations = ' + this.error_locs.join(','));
-      }
     },
     /**
      * Polynome functions
+     * @param lambda
+     * @param S
+     * @param L
+     * @param n
+     * @returns {number}
      */
     computeDiscrepancy: function(lambda, S, L, n) {
       var sum = 0;
@@ -944,6 +921,9 @@
     },
     /**
      * polynomial multiplication
+     * @param p1
+     * @param p2
+     * @returns {Array}
      */
     multPolys: function(p1, p2) {
       var dst = new Array(this.n_degree_max);
@@ -962,12 +942,12 @@
           tmp1[j] = 0;
         }
 
-        /* scale tmp1 by p1[i] */
+        // scale tmp1 by p1[i]
         for (j = 0; j < this.n_degree_max; j++) {
           tmp1[j] = this.gmult(p2[j], p1[i]);
         }
 
-        /* and mult (shift) tmp1 right by i */
+        // and mult (shift) tmp1 right by i
         for (j = (this.n_degree_max * 2) - 1; j >= i; j--) {
           tmp1[j] = tmp1[j - i];
         }
@@ -976,7 +956,7 @@
           tmp1[j] = 0;
         }
 
-        /* add into partial product */
+        // add into partial product
         for (j = 0; j < (this.n_degree_max * 2); j++) {
           dst[j] ^= tmp1[j];
         }
@@ -1067,7 +1047,7 @@
     this.functionalGrade = 0;
     this.ECLevel = 0;
     this.mask = 0;
-    this.maskPattern = [];
+    // this.maskPattern = []; // 掩码图片画布
     this.nBlockEcWords = 0;
     this.blockIndices = [];
     this.blockDataLengths = [];
@@ -1077,9 +1057,23 @@
    * QRDecode prototype
    */
   QRDecode.prototype = {
-    decodePix: function(pix) {
-      return this.decodeImage(pix);
+    /**
+     * 像素解码
+     * @param pixel
+     * @returns {*}
+     */
+    decodePixel: function(pixel) {
+      this.image = pixel;
+
+      return this.decode();
     },
+    /**
+     * 图片解码
+     * @param imageData
+     * @param imageWidth
+     * @param imageHeight
+     * @returns {*}
+     */
     decodeImageData: function(imageData, imageWidth, imageHeight) {
       this.setImageData(imageData, imageWidth, imageHeight);
 
@@ -1141,15 +1135,11 @@
 
       imageData.isDark = function(x, y, d) {
         var g = this.getGray(x, y, d);
+
         return g < this.threshold;
       };
 
       this.image = imageData;
-    },
-    decodeImage: function(image) {
-      this.image = image;
-
-      return this.decode();
     },
     decode: function() {
       this.findImageBorders();
@@ -1245,7 +1235,7 @@
     },
     findModuleSize: function() {
       /**
-       * returns number of matches found
+       * Returns number of matches found
        * perferct is 8*8 = 64
        */
       function matchFinderPattern(qr, x, y, quietX, quietY, moduleSize) {
@@ -1299,7 +1289,7 @@
           }
         }
 
-        // quiet area
+        // Quiet area
         for (i = 0; i <= 6; i++) {
           if (!qr.isDarkWithSize(x + quietX, y + i, moduleSize)) {
             n = n + 1;
@@ -1413,7 +1403,7 @@
           }
         }
 
-        // center black
+        // Center black
         if (qr.isDarkWithSize(x + 2, y + 2, moduleSize)) {
           n = n + 1;
         }
@@ -1512,7 +1502,7 @@
         return [0, 4];
       }
 
-      function matchFormatNW(qr, nModules, moduleSize) {
+      function matchFormatNW(qr, moduleSize) {
         var factor = 1;
         var pattern = 0;
         var x = 8;
@@ -1664,14 +1654,14 @@
         finderPattern[0] = matchFinderPattern(qr, 0, 0, 7, 7, moduleSize);
 
         if (finderPattern[0] < 64 - 3) {
-          // performance hack!
+          // Performance hack!
           return [version, 0];
         }
 
         finderPattern[1] = matchFinderPattern(qr, 0, nModules - 7, 7, -1, moduleSize);
 
         if (finderPattern[0] + finderPattern[1] < 64 + 64 - 3) {
-          // performance hack!
+          // Performance hack!
           return [version, 0];
         }
 
@@ -1732,7 +1722,7 @@
           grades.push(g);
         }
 
-        formatNW = matchFormatNW(qr, nModules, moduleSize);
+        formatNW = matchFormatNW(qr, moduleSize);
         formatNESW = matchFormatNESW(qr, nModules, moduleSize);
 
         if (formatNW[1] < formatNESW[1]) {
@@ -1760,7 +1750,7 @@
         return [version, grade, ECLevel, mask];
       }
 
-      // findModuleSize
+      // Find module size
       var bestMatchSoFar = [0, 0];
       var version, match;
 
@@ -1787,8 +1777,6 @@
         QRBase.errorThrow('Unable to decode a function pattern');
       }
     },
-
-    /* ************************************************************ */
     extractCodewords: function() {
       function getUnmasked(qr, j, i) {
         var m, u;
@@ -1830,7 +1818,7 @@
       }
 
       /**
-       * extractCodewords
+       * Extract codewords
        * Original Java version by Sean Owen
        * Copyright 2007 ZXing authors
        */
@@ -1846,7 +1834,7 @@
       for (j = this.nModules - 1; j > 0; j -= 2) {
         if (j === 6) {
           // Skip whole column with vertical alignment pattern;
-          // saves time and makes the other code proceed more cleanly
+          // Saves time and makes the other code proceed more cleanly
           j--;
         }
 
@@ -1881,8 +1869,7 @@
       }
     },
     extractData: function() {
-
-      function extract(qr, bytes, pos, len) {
+      function extract(bytes, pos, len) {
         // http://stackoverflow.com/questions/3846711/extract-bit-sequences-of-arbitrary-length-from-byte-array-efficiently
         var shift = 24 - (pos & 7) - len;
         var mask = (1 << len) - 1;
@@ -1892,16 +1879,15 @@
       }
 
       function extract8bit(qr, bytes) {
-
         var nCountBits = QRBase.nCountBits(QRBase.MODE.EightBit, qr.version);
-        var n = extract(qr, bytes, qr.bitIdx, nCountBits);
+        var n = extract(bytes, qr.bitIdx, nCountBits);
         var data = '';
         var i, a;
 
         qr.bitIdx += nCountBits;
 
         for (i = 0; i < n; i++) {
-          a = extract(qr, bytes, qr.bitIdx, 8);
+          a = extract(bytes, qr.bitIdx, 8);
           data += String.fromCharCode(a);
           qr.bitIdx += 8;
         }
@@ -1911,21 +1897,21 @@
 
       function extractAlphanum(qr, bytes) {
         var nCountBits = QRBase.nCountBits(QRBase.MODE.AlphaNumeric, qr.version);
-        var n = extract(qr, bytes, qr.bitIdx, nCountBits);
+        var n = extract(bytes, qr.bitIdx, nCountBits);
         var data = '';
         var i, x;
 
         qr.bitIdx += nCountBits;
 
         for (i = 0; i < Math.floor(n / 2); i++) {
-          x = extract(qr, bytes, qr.bitIdx, 11);
+          x = extract(bytes, qr.bitIdx, 11);
           data += qr.alphanum[Math.floor(x / 45)];
           data += qr.alphanum[x % 45];
           qr.bitIdx += 11;
         }
 
         if (n % 2) {
-          data += qr.alphanum[extract(qr, bytes, qr.bitIdx, 6)];
+          data += qr.alphanum[extract(bytes, qr.bitIdx, 6)];
           qr.bitIdx += 6;
         }
 
@@ -1934,7 +1920,7 @@
 
       function extractNumeric(qr, bytes) {
         var nCountBits = QRBase.nCountBits(QRBase.MODE.Numeric, qr.version);
-        var n = extract(qr, bytes, qr.bitIdx, nCountBits);
+        var n = extract(bytes, qr.bitIdx, nCountBits);
         var data = '';
         var x, c1, c2, c3;
         var i;
@@ -1942,7 +1928,7 @@
         qr.bitIdx += nCountBits;
 
         for (i = 0; i < Math.floor(n / 3); i++) {
-          x = extract(qr, bytes, qr.bitIdx, 10);
+          x = extract(bytes, qr.bitIdx, 10);
           qr.bitIdx += 10;
           c1 = Math.floor(x / 100);
           c2 = Math.floor((x % 100) / 10);
@@ -1951,11 +1937,11 @@
         }
 
         if (n % 3 === 1) {
-          x = extract(qr, bytes, qr.bitIdx, 4);
+          x = extract(bytes, qr.bitIdx, 4);
           qr.bitIdx += 4;
           data += String.fromCharCode(48 + x);
         } else if (n % 3 === 2) {
-          x = extract(qr, bytes, qr.bitIdx, 7);
+          x = extract(bytes, qr.bitIdx, 7);
           qr.bitIdx += 7;
           c1 = Math.floor(x / 10);
           c2 = x % 10;
@@ -1965,7 +1951,7 @@
         return data;
       }
 
-      // extractData
+      // Extract data
       var bytes = this.bytes;
       var nBits = bytes.length * 8;
       var i, mode;
@@ -1978,7 +1964,7 @@
       this.bitIdx = 0;
 
       while (this.bitIdx < nBits - 4) {
-        mode = extract(this, bytes, this.bitIdx, 4);
+        mode = extract(bytes, this.bitIdx, 4);
         this.bitIdx += 4;
 
         if (mode === QRBase.MODE.Terminator) {
@@ -2014,8 +2000,6 @@
         bytesOut = rs.decode(bytesIn);
 
         if (!rs.corrected) {
-          this.errorGrade = 0;
-
           QRBase.errorThrow('Unable to correct errors (' + rs.uncorrected_reason + ')');
         }
 
@@ -2023,9 +2007,9 @@
         errors.push(rs.n_errors);
       }
 
-      this.errors = errors;
       this.bytes = bytes;
-      this.errorGrade = this.gradeErrors(errors);
+
+      this.gradeErrors(errors);
     },
     gradeErrors: function(errors) {
       var ecw = this.nBlockEcWords;
@@ -2054,7 +2038,7 @@
         var c;
 
         for (c = 0; n; c++) {
-          // clear the least significant bit set
+          // Clear the least significant bit set
           n &= n - 1;
         }
 
@@ -2067,6 +2051,9 @@
     },
     /**
      * QRCodeDecode IMAGE FUNCTIONS
+     * @param x
+     * @param y
+     * @param moduleSize
      */
     isDarkWithSize: function(x, y, moduleSize) {
       return this.image.isDark(Math.round(this.imageLeft + x * moduleSize), Math.round(this.imageTop + y * moduleSize), Math.round(moduleSize));

@@ -54,8 +54,10 @@
       if (arguments.length >= 2) {
         if (locale) {
           for (var key in EN) {
-            if (!isString(locale[key])) {
-              locale[key] = EN[key];
+            if (EN.hasOwnProperty(key)) {
+              if (!isString(locale[key])) {
+                locale[key] = EN[key];
+              }
             }
           }
         } else {
@@ -83,7 +85,7 @@
   var i18n = new Locales();
 
   var QRBase = {
-    /*
+    /**
      * 编码格式
      */
     MODE: {
@@ -92,7 +94,7 @@
       EightBit: 4,
       Terminator: 0
     },
-    /*
+    /**
      * 纠错等级
      */
     ERROR_CORRECTION_LEVEL: {
@@ -117,7 +119,7 @@
       var ECBlocks = this.ECBlocks[qr.version][qr.ECLevel];
       var nBlocks;
       var nBlocksFirst;
-      var nBlocksSecond;
+      var nBlocksSecond = 0;
       var nBlockWordsFirst;
       var nBlockWordsSecond;
       var i, b, w = 0;
@@ -126,7 +128,7 @@
 
       if (ECBlocks.length === 1) {
         nBlocksFirst = ECBlocks[0];
-        nBlocksSecond = 0;
+        // set nBlocksSecond = 0;
         nBlocks = nBlocksFirst;
         nBlockWordsFirst = qr.nDataCodewords / nBlocks;
         nBlockWordsSecond = 0;
@@ -240,8 +242,11 @@
         markSquare(qr, qr.nModules - 11, 0, 3, 6);
       }
     },
-    /*
+    /**
      * 计算数据长度的编码字节数
+     * @param mode
+     * @param version
+     * @returns {number}
      */
     nCountBits: function(mode, version) {
       if (mode === this.MODE.EightBit) {
@@ -270,14 +275,18 @@
 
       this.errorThrow("Internal error: Unknown mode: " + mode);
     },
-    /*
+    /**
      * 从版本计算二维码宽度
+     * @param {number} version
+     * @returns {number}
      */
     nModulesFromVersion: function(version) {
       return 17 + 4 * version;
     },
-    /*
+    /**
      * UTF-8 和 Unicode 的相互转换
+     * @param {string} string
+     * @returns {string}
      */
     unicodeToUtf8: function(string) {
       var out = '';
@@ -301,6 +310,11 @@
 
       return out;
     },
+    /**
+     * UTF-8 和 Unicode 的相互转换
+     * @param {string} string
+     * @returns {string}
+     */
     utf8Tounicode: function(string) {
       var out = '';
       var len = string.length;
@@ -310,6 +324,7 @@
       while (i < len) {
         char1 = string.charCodeAt(i++);
         mark = char1 >> 4;
+
         if (mark <= 7) {
           // 0xxxxxxx
           out += string.charAt(i - 1);
@@ -587,35 +602,34 @@
   };
 
   /**
-    QR-Logo: http://qrlogo.kaarposoft.dk
+   QR-Logo: http://qrlogo.kaarposoft.dk
 
-    Copyright (C) 2011 Henrik Kaare Poulsen
+   Copyright (C) 2011 Henrik Kaare Poulsen
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-      http://www.apache.org/licenses/LICENSE-2.0
+   http://www.apache.org/licenses/LICENSE-2.0
 
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-  */
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+   */
 
   /**
-    Parts of the Reed Solomon decoding algorithms have been inspired by
-    http://rscode.sourceforge.net
-    Original version Copyright (C) by Henry Minsky
-  */
+   Parts of the Reed Solomon decoding algorithms have been inspired by
+   http://rscode.sourceforge.net
+   Original version Copyright (C) by Henry Minsky
+   */
 
   /**
    * ReedSolomon CONSTRUCTOR
-   * @param {any} n_ec_bytes
+   * @param {*} n_ec_bytes
    */
   function ReedSolomon(n_ec_bytes) {
-    this.logger = null;
     this.n_ec_bytes = n_ec_bytes;
     this.n_degree_max = 2 * n_ec_bytes;
     this.syndroms = [];
@@ -700,10 +714,6 @@
         tp1 = this.copyPoly(genpoly);
       }
 
-      if (this.logger) {
-        this.logger.debug('RS genPoly: ' + genpoly.join(','));
-      }
-
       return genpoly;
     },
     calculateSyndroms: function() {
@@ -727,14 +737,6 @@
         }
       }
 
-      if (this.logger) {
-        if (n_err > 0) {
-          this.logger.debug('RS calculateSyndroms: <b>Errors found!</b> syndroms = ' + this.syndroms.join(','));
-        } else {
-          this.logger.debug('RS calculateSyndroms: <b>No errors</b>');
-        }
-      }
-
       return n_err;
     },
     correctErrors: function() {
@@ -746,10 +748,6 @@
       if (2 * this.n_errors > this.n_ec_bytes) {
         this.uncorrected_reason = 'too many errors';
 
-        if (this.logger) {
-          this.logger.debug('RS correctErrors: <b>' + this.uncorrected_reason + '</b>');
-        }
-
         return;
       }
 
@@ -759,20 +757,12 @@
         if (this.error_locs[e] >= this.bytes_in.length) {
           this.uncorrected_reason = 'corrections out of scope';
 
-          if (this.logger) {
-            this.logger.debug('RS correctErrors: <b>' + this.uncorrected_reason + '</b>');
-          }
-
           return;
         }
       }
 
       if (this.n_errors === 0) {
         this.uncorrected_reason = 'could not identify errors';
-
-        if (this.logger) {
-          this.logger.debug('RS correctErrors: <b>' + this.uncorrected_reason + '</b>');
-        }
 
         return;
       }
@@ -796,24 +786,18 @@
           denom ^= this.gmult(this.psi[j], this.gexp[((255 - i) * (j)) % 255]);
         }
 
-        var err = this.gmult(num, this.ginv(denom));
-
-        if (this.logger) {
-          this.logger.debug('RS correctErrors: loc=' + (this.bytes_out.length - i - 1) + '  err = 0x0' + err.toString(16) + ' = bin ' + err.toString(2));
-        }
-
-        this.bytes_out[this.bytes_out.length - i - 1] ^= err;
+        this.bytes_out[this.bytes_out.length - i - 1] ^= this.gmult(num, this.ginv(denom));
       }
 
       this.corrected = true;
     },
     berlekampMassey: function() {
-      /* initialize Gamma, the erasure locator polynomial */
+      // initialize Gamma, the erasure locator polynomial
       var gamma = this.zeroPoly();
 
       gamma[0] = 1;
 
-      /* initialize to z */
+      // initialize to z
       var D = this.copyPoly(gamma);
 
       this.mulZPoly(D);
@@ -829,7 +813,7 @@
         var d = this.computeDiscrepancy(this.psi, this.syndroms, L, n);
 
         if (d !== 0) {
-          /* psi2 = psi - d*D */
+          // psi2 = psi - d*D
           for (i = 0; i < this.n_degree_max; i++) {
             psi2[i] = this.psi[i] ^ this.gmult(d, D[i]);
           }
@@ -839,7 +823,7 @@
 
             k = n - L;
 
-            /* D = scale_poly(ginv(d), psi); */
+            // D = scale_poly(ginv(d), psi);
             for (i = 0; i < this.n_degree_max; i++) {
               D[i] = this.gmult(this.psi[i], this.ginv(d));
             }
@@ -847,29 +831,21 @@
             L = L2;
           }
 
-          /* psi = psi2 */
-          //for (i = 0; i < this.n_degree_max; i++) this.psi[i] = psi2[i];
+          // psi = psi2
+          // for (i = 0; i < this.n_degree_max; i++) this.psi[i] = psi2[i];
           this.psi = this.copyPoly(psi2);
         }
 
         this.mulZPoly(D);
       }
 
-      if (this.logger) {
-        this.logger.debug('RS berlekampMassey: psi = ' + this.psi.join(','));
-      }
-
-      /* omega */
+      // omega
       var om = this.multPolys(this.psi, this.syndroms);
 
       this.omega = this.zeroPoly();
 
       for (i = 0; i < this.n_ec_bytes; i++) {
         this.omega[i] = om[i];
-      }
-
-      if (this.logger) {
-        this.logger.debug('RS berlekampMassey: omega = ' + this.omega.join(','));
       }
     },
     findRoots: function() {
@@ -882,7 +858,7 @@
       for (r = 1; r < 256; r++) {
         sum = 0;
 
-        /* evaluate psi at r */
+        // evaluate psi at r
         var k;
 
         for (k = 0; k < this.n_ec_bytes + 1; k++) {
@@ -894,13 +870,14 @@
           this.n_errors++;
         }
       }
-
-      if (this.logger) {
-        this.logger.debug('RS findRoots: errors=<b>' + this.n_errors + '</b> locations = ' + this.error_locs.join(','));
-      }
     },
     /**
      * Polynome functions
+     * @param lambda
+     * @param S
+     * @param L
+     * @param n
+     * @returns {number}
      */
     computeDiscrepancy: function(lambda, S, L, n) {
       var sum = 0;
@@ -943,6 +920,9 @@
     },
     /**
      * polynomial multiplication
+     * @param p1
+     * @param p2
+     * @returns {Array}
      */
     multPolys: function(p1, p2) {
       var dst = new Array(this.n_degree_max);
@@ -961,12 +941,12 @@
           tmp1[j] = 0;
         }
 
-        /* scale tmp1 by p1[i] */
+        // scale tmp1 by p1[i]
         for (j = 0; j < this.n_degree_max; j++) {
           tmp1[j] = this.gmult(p2[j], p1[i]);
         }
 
-        /* and mult (shift) tmp1 right by i */
+        // and mult (shift) tmp1 right by i
         for (j = (this.n_degree_max * 2) - 1; j >= i; j--) {
           tmp1[j] = tmp1[j - i];
         }
@@ -975,7 +955,7 @@
           tmp1[j] = 0;
         }
 
-        /* add into partial product */
+        // add into partial product
         for (j = 0; j < (this.n_degree_max * 2); j++) {
           dst[j] ^= tmp1[j];
         }
@@ -1061,7 +1041,7 @@
     this.functionalGrade = 0;
     this.ECLevel = 0; // 二维码错误等级
     this.mask = 0; // 掩码图片类型
-    this.maskPattern = []; // 掩码图片画布
+    // this.maskPattern = []; // 掩码图片画布
     this.nDataCodewords = 0; // 数据区
     this.nBlockEcWords = 0; // 不知道怎么命名
     this.blockIndices = []; // 纠错码转换 Map
@@ -1391,7 +1371,7 @@
       }
 
       function penaltyDarkLight(qr) {
-        // we shift bits in one by one, and see if the resulting pattern match the bad one
+        // We shift bits in one by one, and see if the resulting pattern match the bad one
         var p = 0;
         var bad = (128 - 1 - 2 - 32) << 4; // 4_ : 1D : 1L : 3D : 1L : 1D : 4x
         var badmask1 = 2048 - 1; // 4_ : 1D : 1L : 3D : 1L : 1D : 4L
@@ -1440,17 +1420,16 @@
           }
         }
 
-        return 10 * Math.floor(Math.abs(dark / (qr.nModule * qr.nModules) - 0.5) / 0.05);
+        return 10 * Math.floor(Math.abs(dark / (qr.nModules * qr.nModules) - 0.5) / 0.05);
       }
 
-      // calculatePenalty
+      // Calculate penalty
       var pAdjacent = penaltyAdjacent(this);
       var pBlocks = penaltyBlocks(this);
       var pDarkLight = penaltyDarkLight(this);
       var pDark = penaltyDark(this);
-      var pTotal = pAdjacent + pBlocks + pDarkLight + pDark;
 
-      return pTotal;
+      return pAdjacent + pBlocks + pDarkLight + pDark;
     },
     encodeBestMask: function() {
       var bestMask = 0;
@@ -1568,7 +1547,7 @@
           qr.pixels[x][y + 4 - i] = true;
         }
 
-        // center black
+        // Center black
         qr.pixels[x + 2][y + 2] = true;
       }
 
@@ -1654,7 +1633,7 @@
         }
       }
 
-      // encodeFunctionalPatterns
+      // Encode functional patterns
       encodeFinderPattern(this, 0, 0);
       encodeFinderPattern(this, 0, this.nModules - 7);
       encodeFinderPattern(this, this.nModules - 7, 0);
@@ -1715,7 +1694,7 @@
         }
       }
 
-      // encodeData
+      // Encode data
       var writingUp = true;
       var n = 0;
       var v = this.bytes[n];
@@ -1729,7 +1708,7 @@
       for (j = this.nModules - 1; j > 0; j -= 2) {
         if (j === 6) {
           // Skip whole column with vertical alignment pattern;
-          // saves time and makes the other code proceed more cleanly
+          // Saves time and makes the other code proceed more cleanly
           j--;
         }
 
@@ -1775,7 +1754,7 @@
       var bits = 8 * nDataCodewords;
       var cap = 0;
 
-      // mode
+      // Mode
       bits -= 4;
       bits -= QRBase.nCountBits(mode, version);
 
