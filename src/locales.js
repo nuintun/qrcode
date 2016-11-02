@@ -1,4 +1,4 @@
-import EN from './i18n/en';
+import EN from './i18n/en.json';
 
 var toSrting = {}.toString;
 
