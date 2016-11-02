@@ -31,8 +31,10 @@ function QRDecode() {
  * QRDecode prototype
  */
 QRDecode.prototype = {
-  decodePix: function(pix) {
-    return this.decodeImage(pix);
+  decodePixel: function(pixel) {
+    this.image = pixel;
+
+    return this.decode();
   },
   decodeImageData: function(imageData, imageWidth, imageHeight) {
     this.setImageData(imageData, imageWidth, imageHeight);
@@ -100,11 +102,6 @@ QRDecode.prototype = {
     };
 
     this.image = imageData;
-  },
-  decodeImage: function(image) {
-    this.image = image;
-
-    return this.decode();
   },
   decode: function() {
     this.findImageBorders();
