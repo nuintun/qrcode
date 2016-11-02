@@ -215,7 +215,7 @@ pip-log.txt
 .mr.developer.cfg
 
 # WebStorm
-# .idea
+.idea
 
 # node
 node_modules

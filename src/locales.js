@@ -47,4 +47,4 @@ Locales.prototype = {
   render: function(code, data) {
 
   }
-}
+};

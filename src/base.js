@@ -235,6 +235,7 @@ var QRBase = {
     while (i < len) {
       char1 = string.charCodeAt(i++);
       mark = char1 >> 4;
+
       if (mark <= 7) {
         // 0xxxxxxx
         out += string.charAt(i - 1);
