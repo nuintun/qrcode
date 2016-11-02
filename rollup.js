@@ -32,7 +32,7 @@ I18N.DECODE = unique(I18N.COMMON.concat([
   "QRDecode.UnableDecodePattern",
   "QRDecode.UnableCorrectErrors"
 ]));
-I18N.ALL = unique(I18N.ENCODE.concat(I18N.DECODE))
+I18N.ALL = unique(I18N.ENCODE.concat(I18N.DECODE));
 
 function isI18N(id) {
   return /[/\\]i18n[/\\]/i.test(id);
