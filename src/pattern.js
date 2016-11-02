@@ -1,9 +1,9 @@
 /*
-  Ported to JavaScript by Lazar Laszlo 2011
+ Ported to JavaScript by Lazar Laszlo 2011
 
-  lazarsoft@gmail.com, www.lazarsoft.info
+ lazarsoft@gmail.com, www.lazarsoft.info
 
-*/
+ */
 
 /*
  *
@@ -29,13 +29,13 @@ var CENTER_QUORUM = 2;
 
 function orderBestPatterns(patterns) {
   function distance(pattern1, pattern2) {
-    xDiff = pattern1.x - pattern2.x;
-    yDiff = pattern1.y - pattern2.y;
+    var xDiff = pattern1.x - pattern2.x;
+    var yDiff = pattern1.y - pattern2.y;
 
     return Math.sqrt((xDiff * xDiff + yDiff * yDiff));
   }
 
-  /// <summary> Returns the z component of the cross product between vectors BC and BA.</summary>
+  // <summary> Returns the z component of the cross product between vectors BC and BA.</summary>
   function crossProductZ(pointA, pointB, pointC) {
     var bX = pointB.x;
     var bY = pointB.y;
@@ -47,7 +47,6 @@ function orderBestPatterns(patterns) {
   var zeroOneDistance = distance(patterns[0], patterns[1]);
   var oneTwoDistance = distance(patterns[1], patterns[2]);
   var zeroTwoDistance = distance(patterns[0], patterns[2]);
-
   var pointA, pointB, pointC;
 
   // Assume one closest to other two is B; A and C will just be guesses at first
@@ -86,12 +85,13 @@ function FinderPattern(posX, posY, estimatedModuleSize) {
   this.y = posY;
   this.count = 1;
   this.estimatedModuleSize = estimatedModuleSize;
+}
 
-  this.incrementCount = function() {
+FinderPattern.prototype = {
+  incrementCount: function() {
     this.count++;
-  }
-
-  this.aboutEquals = function(moduleSize, i, j) {
+  },
+  aboutEquals: function(moduleSize, i, j) {
     if (Math.abs(i - this.y) <= moduleSize && Math.abs(j - this.x) <= moduleSize) {
       var moduleSizeDiff = Math.abs(moduleSize - this.estimatedModuleSize);
 
@@ -100,13 +100,7 @@ function FinderPattern(posX, posY, estimatedModuleSize) {
 
     return false;
   }
-}
-
-function FinderPatternInfo(patternCenters) {
-  this.bottomLeft = patternCenters[0];
-  this.topLeft = patternCenters[1];
-  this.topRight = patternCenters[2];
-}
+};
 
 function FinderPatternFinder() {
   this.image = null;
@@ -114,8 +108,10 @@ function FinderPatternFinder() {
   this.hasSkipped = false;
   this.crossCheckStateCount = [0, 0, 0, 0, 0];
   this.resultPointCallback = null;
+}
 
-  this.foundPatternCross = function(stateCount) {
+FinderPatternFinder.prototype = {
+  foundPatternCross: function(stateCount) {
     var totalModuleSize = 0;
 
     for (var i = 0; i < 5; i++) {
@@ -141,13 +137,11 @@ function FinderPatternFinder() {
       Math.abs(3 * moduleSize - (stateCount[2] << INTEGER_MATH_SHIFT)) < 3 * maxVariance &&
       Math.abs(moduleSize - (stateCount[3] << INTEGER_MATH_SHIFT)) < maxVariance &&
       Math.abs(moduleSize - (stateCount[4] << INTEGER_MATH_SHIFT)) < maxVariance;
-  }
-
-  this.centerFromEnd = function(stateCount, end) {
+  },
+  centerFromEnd: function(stateCount, end) {
     return (end - stateCount[4] - stateCount[3]) - stateCount[2] / 2.0;
-  }
-
-  this.crossCheckVertical = function(startI, centerJ, maxCount, originalStateCountTotal) {
+  },
+  crossCheckVertical: function(startI, centerJ, maxCount, originalStateCountTotal) {
     var image = this.image;
     var maxI = qrcode.height;
     var stateCount = this.crossCheckStateCount;
@@ -221,9 +215,8 @@ function FinderPatternFinder() {
     }
 
     return this.foundPatternCross(stateCount) ? this.centerFromEnd(stateCount, i) : NaN;
-  }
-
-  this.crossCheckHorizontal = function(startJ, centerI, maxCount, originalStateCountTotal) {
+  },
+  crossCheckHorizontal: function(startJ, centerI, maxCount, originalStateCountTotal) {
     var image = this.image;
     var maxJ = qrcode.width;
     var stateCount = this.crossCheckStateCount;
@@ -294,9 +287,8 @@ function FinderPatternFinder() {
     }
 
     return this.foundPatternCross(stateCount) ? this.centerFromEnd(stateCount, j) : NaN;
-  }
-
-  this.handlePossibleCenter = function(stateCount, i, j) {
+  },
+  handlePossibleCenter: function(stateCount, i, j) {
     var stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] + stateCount[4];
     var centerJ = this.centerFromEnd(stateCount, j); //float
     var centerI = this.crossCheckVertical(i, Math.floor(centerJ), stateCount[2], stateCountTotal); //float
@@ -326,10 +318,6 @@ function FinderPatternFinder() {
           var point = new FinderPattern(centerJ, centerI, estimatedModuleSize);
 
           this.possibleCenters.push(point);
-
-          if (this.resultPointCallback != null) {
-            this.resultPointCallback.foundPossibleResultPoint(point);
-          }
         }
 
         return true;
@@ -337,9 +325,9 @@ function FinderPatternFinder() {
     }
 
     return false;
-  }
-
-  this.selectBestPatterns = function() {
+  },
+  selectBestPatterns: function() {
+    var i;
     var startSize = this.possibleCenters.length;
 
     if (startSize < 3) {
@@ -353,7 +341,7 @@ function FinderPatternFinder() {
       var totalModuleSize = 0.0;
       var square = 0.0;
 
-      for (var i = 0; i < startSize; i++) {
+      for (i = 0; i < startSize; i++) {
         //totalModuleSize +=  this.possibleCenters[i].estimatedModuleSize;
         var centerValue = this.possibleCenters[i].estimatedModuleSize;
 
@@ -379,7 +367,7 @@ function FinderPatternFinder() {
       var stdDev = Math.sqrt(square / startSize - average * average);
       var limit = Math.max(0.2 * average, stdDev);
 
-      for (var i = this.possibleCenters.length - 1; i >= 0; i--) {
+      for (i = this.possibleCenters.length - 1; i >= 0; i--) {
         var pattern = this.possibleCenters[i];
 
         //if (Math.abs(pattern.estimatedModuleSize - average) > 0.2 * average)
@@ -400,9 +388,8 @@ function FinderPatternFinder() {
     }
 
     return [this.possibleCenters[0], this.possibleCenters[1], this.possibleCenters[2]];
-  }
-
-  this.findRowSkip = function() {
+  },
+  findRowSkip: function() {
     var max = this.possibleCenters.length;
 
     if (max <= 1) {
@@ -431,14 +418,14 @@ function FinderPatternFinder() {
     }
 
     return 0;
-  }
-
-  this.haveMultiplyConfirmedCenters = function() {
+  },
+  haveMultiplyConfirmedCenters: function() {
+    var i;
     var confirmedCount = 0;
     var totalModuleSize = 0.0;
     var max = this.possibleCenters.length;
 
-    for (var i = 0; i < max; i++) {
+    for (i = 0; i < max; i++) {
       var pattern = this.possibleCenters[i];
 
       if (pattern.count >= CENTER_QUORUM) {
@@ -458,15 +445,15 @@ function FinderPatternFinder() {
     var average = totalModuleSize / max;
     var totalDeviation = 0.0;
 
-    for (var i = 0; i < max; i++) {
+    for (i = 0; i < max; i++) {
       pattern = this.possibleCenters[i];
       totalDeviation += Math.abs(pattern.estimatedModuleSize - average);
     }
 
     return totalDeviation <= 0.05 * totalModuleSize;
-  }
-
-  this.findFinderPattern = function(image) {
+  },
+  findFinderPattern: function(image) {
+    var confirmed;
     var tryHarder = false;
 
     this.image = image;
@@ -508,7 +495,7 @@ function FinderPatternFinder() {
               // A winner?
               if (this.foundPatternCross(stateCount)) {
                 // Yes
-                var confirmed = this.handlePossibleCenter(stateCount, i, j);
+                confirmed = this.handlePossibleCenter(stateCount, i, j);
 
                 if (confirmed) {
                   // Start examining every other line. Checking each line turned out to be too
@@ -568,7 +555,7 @@ function FinderPatternFinder() {
       }
 
       if (this.foundPatternCross(stateCount)) {
-        var confirmed = this.handlePossibleCenter(stateCount, i, maxJ);
+        confirmed = this.handlePossibleCenter(stateCount, i, maxJ);
 
         if (confirmed) {
           iSkip = stateCount[0];
@@ -585,6 +572,6 @@ function FinderPatternFinder() {
 
     orderBestPatterns(patternInfo);
 
-    return new FinderPatternInfo(patternInfo);
-  };
-}
+    return patternInfo;
+  }
+};
