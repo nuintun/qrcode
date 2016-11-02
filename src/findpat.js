@@ -546,6 +546,7 @@ function FinderPatternFinder() {
 
                   j--; // back up to that last white pixel
                 }
+
                 // Clear state to start looking again
                 currentState = 0;
                 stateCount[0] = 0;
@@ -571,6 +572,7 @@ function FinderPatternFinder() {
           }
         }
       }
+
       if (this.foundPatternCross(stateCount)) {
         var confirmed = this.handlePossibleCenter(stateCount, i, maxJ);
 
