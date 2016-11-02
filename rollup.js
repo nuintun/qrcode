@@ -38,7 +38,6 @@ function build(entry, dest, i18n) {
           var code = JSON.parse(code);
 
           i18n.forEach(function(key) {
-            console.log(key)
             lang[key] = code[key] || `Locales error: ${ key } no localization.`;
           });
 
