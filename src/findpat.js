@@ -152,7 +152,7 @@ FinderPatternFinder.prototype = {
   crossCheckVertical: function(startI, centerJ, maxCount, originalStateCountTotal) {
     var image = this.image;
     var maxI = this.height;
-    var stateCount = this.CrossCheckStateCount;
+    var stateCount = this.crossCheckStateCount;
     // Start counting up from center
     var i = startI;
 
@@ -227,7 +227,7 @@ FinderPatternFinder.prototype = {
   crossCheckHorizontal: function(startJ, centerI, maxCount, originalStateCountTotal) {
     var image = this.image;
     var maxJ = this.width;
-    var stateCount = this.CrossCheckStateCount;
+    var stateCount = this.crossCheckStateCount;
     var j = startJ;
 
     while (j >= 0 && image[j + centerI * this.width]) {
