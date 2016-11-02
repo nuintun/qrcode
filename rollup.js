@@ -1,14 +1,18 @@
 const rollup = require('rollup');
 
+function unique(array) {
+  var cache = {};
+
+  array.forEach(function(item) {
+    if (cache[item]) return;
+
+    cache[item] = true;
+  });
+
+  return Object.keys(cache);
+}
+
 const I18N = {
-  ALL: [
-    'QRBase.UnknownMode',
-    'QREncode.InvalidChar4Alphanumeric',
-    'QREncode.InvalidChar4Numeric',
-    'QREncode.UnsupportedECI',
-    'QREncode.TextTooLong4TargetVersion',
-    'QREncode.TextTooLong4AllVersion'
-  ],
   ENCODE: [
     'QRBase.UnknownMode',
     'QREncode.InvalidChar4Alphanumeric',
@@ -21,6 +25,8 @@ const I18N = {
     'QRBase.UnknownMode'
   ]
 }
+
+I18N.ALL = unique(I18N.ENCODE.concat(I18N.DECODE))
 
 function isI18N(id) {
   return /[/\\]i18n[/\\]/i.test(id);
