@@ -16,7 +16,7 @@ function QREncode() {
   this.functionalGrade = 0;
   this.ECLevel = 0; // 二维码错误等级
   this.mask = 0; // 掩码图片类型
-  this.maskPattern = []; // 掩码图片画布
+  // this.maskPattern = []; // 掩码图片画布
   this.nDataCodewords = 0; // 数据区
   this.nBlockEcWords = 0; // 不知道怎么命名
   this.blockIndices = []; // 纠错码转换 Map

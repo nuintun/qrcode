@@ -21,7 +21,7 @@ function QRDecode() {
   this.functionalGrade = 0;
   this.ECLevel = 0;
   this.mask = 0;
-  this.maskPattern = [];
+  // this.maskPattern = []; // 掩码图片画布
   this.nBlockEcWords = 0;
   this.blockIndices = [];
   this.blockDataLengths = [];
@@ -31,11 +31,23 @@ function QRDecode() {
  * QRDecode prototype
  */
 QRDecode.prototype = {
+  /**
+   * 像素解码
+   * @param pixel
+   * @returns {*}
+   */
   decodePixel: function(pixel) {
     this.image = pixel;
 
     return this.decode();
   },
+  /**
+   * 图片解码
+   * @param imageData
+   * @param imageWidth
+   * @param imageHeight
+   * @returns {*}
+   */
   decodeImageData: function(imageData, imageWidth, imageHeight) {
     this.setImageData(imageData, imageWidth, imageHeight);
 
@@ -464,7 +476,7 @@ QRDecode.prototype = {
       return [0, 4];
     }
 
-    function matchFormatNW(qr, nModules, moduleSize) {
+    function matchFormatNW(qr, moduleSize) {
       var factor = 1;
       var pattern = 0;
       var x = 8;
@@ -684,7 +696,7 @@ QRDecode.prototype = {
         grades.push(g);
       }
 
-      formatNW = matchFormatNW(qr, nModules, moduleSize);
+      formatNW = matchFormatNW(qr, moduleSize);
       formatNESW = matchFormatNESW(qr, nModules, moduleSize);
 
       if (formatNW[1] < formatNESW[1]) {
@@ -739,8 +751,6 @@ QRDecode.prototype = {
       QRBase.errorThrow('Unable to decode a function pattern');
     }
   },
-
-  /* ************************************************************ */
   extractCodewords: function() {
     function getUnmasked(qr, j, i) {
       var m, u;
@@ -833,7 +843,7 @@ QRDecode.prototype = {
     }
   },
   extractData: function() {
-    function extract(qr, bytes, pos, len) {
+    function extract(bytes, pos, len) {
       // http://stackoverflow.com/questions/3846711/extract-bit-sequences-of-arbitrary-length-from-byte-array-efficiently
       var shift = 24 - (pos & 7) - len;
       var mask = (1 << len) - 1;
@@ -844,14 +854,14 @@ QRDecode.prototype = {
 
     function extract8bit(qr, bytes) {
       var nCountBits = QRBase.nCountBits(QRBase.MODE.EightBit, qr.version);
-      var n = extract(qr, bytes, qr.bitIdx, nCountBits);
+      var n = extract(bytes, qr.bitIdx, nCountBits);
       var data = '';
       var i, a;
 
       qr.bitIdx += nCountBits;
 
       for (i = 0; i < n; i++) {
-        a = extract(qr, bytes, qr.bitIdx, 8);
+        a = extract(bytes, qr.bitIdx, 8);
         data += String.fromCharCode(a);
         qr.bitIdx += 8;
       }
@@ -861,21 +871,21 @@ QRDecode.prototype = {
 
     function extractAlphanum(qr, bytes) {
       var nCountBits = QRBase.nCountBits(QRBase.MODE.AlphaNumeric, qr.version);
-      var n = extract(qr, bytes, qr.bitIdx, nCountBits);
+      var n = extract(bytes, qr.bitIdx, nCountBits);
       var data = '';
       var i, x;
 
       qr.bitIdx += nCountBits;
 
       for (i = 0; i < Math.floor(n / 2); i++) {
-        x = extract(qr, bytes, qr.bitIdx, 11);
+        x = extract(bytes, qr.bitIdx, 11);
         data += qr.alphanum[Math.floor(x / 45)];
         data += qr.alphanum[x % 45];
         qr.bitIdx += 11;
       }
 
       if (n % 2) {
-        data += qr.alphanum[extract(qr, bytes, qr.bitIdx, 6)];
+        data += qr.alphanum[extract(bytes, qr.bitIdx, 6)];
         qr.bitIdx += 6;
       }
 
@@ -884,7 +894,7 @@ QRDecode.prototype = {
 
     function extractNumeric(qr, bytes) {
       var nCountBits = QRBase.nCountBits(QRBase.MODE.Numeric, qr.version);
-      var n = extract(qr, bytes, qr.bitIdx, nCountBits);
+      var n = extract(bytes, qr.bitIdx, nCountBits);
       var data = '';
       var x, c1, c2, c3;
       var i;
@@ -892,7 +902,7 @@ QRDecode.prototype = {
       qr.bitIdx += nCountBits;
 
       for (i = 0; i < Math.floor(n / 3); i++) {
-        x = extract(qr, bytes, qr.bitIdx, 10);
+        x = extract(bytes, qr.bitIdx, 10);
         qr.bitIdx += 10;
         c1 = Math.floor(x / 100);
         c2 = Math.floor((x % 100) / 10);
@@ -901,11 +911,11 @@ QRDecode.prototype = {
       }
 
       if (n % 3 === 1) {
-        x = extract(qr, bytes, qr.bitIdx, 4);
+        x = extract(bytes, qr.bitIdx, 4);
         qr.bitIdx += 4;
         data += String.fromCharCode(48 + x);
       } else if (n % 3 === 2) {
-        x = extract(qr, bytes, qr.bitIdx, 7);
+        x = extract(bytes, qr.bitIdx, 7);
         qr.bitIdx += 7;
         c1 = Math.floor(x / 10);
         c2 = x % 10;
@@ -928,7 +938,7 @@ QRDecode.prototype = {
     this.bitIdx = 0;
 
     while (this.bitIdx < nBits - 4) {
-      mode = extract(this, bytes, this.bitIdx, 4);
+      mode = extract(bytes, this.bitIdx, 4);
       this.bitIdx += 4;
 
       if (mode === QRBase.MODE.Terminator) {
@@ -964,8 +974,6 @@ QRDecode.prototype = {
       bytesOut = rs.decode(bytesIn);
 
       if (!rs.corrected) {
-        this.errorGrade = 0;
-
         QRBase.errorThrow('Unable to correct errors (' + rs.uncorrected_reason + ')');
       }
 
@@ -973,9 +981,9 @@ QRDecode.prototype = {
       errors.push(rs.n_errors);
     }
 
-    this.errors = errors;
     this.bytes = bytes;
-    this.errorGrade = this.gradeErrors(errors);
+
+    this.gradeErrors(errors);
   },
   gradeErrors: function(errors) {
     var ecw = this.nBlockEcWords;

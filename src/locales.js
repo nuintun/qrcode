@@ -27,8 +27,10 @@ Locales.prototype = {
     if (arguments.length >= 2) {
       if (locale) {
         for (var key in EN) {
-          if (!isString(locale[key])) {
-            locale[key] = EN[key];
+          if (EN.hasOwnProperty(key)) {
+            if (!isString(locale[key])) {
+              locale[key] = EN[key];
+            }
           }
         }
       } else {

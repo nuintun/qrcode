@@ -1,33 +1,32 @@
 /**
-  QR-Logo: http://qrlogo.kaarposoft.dk
+ QR-Logo: http://qrlogo.kaarposoft.dk
 
-  Copyright (C) 2011 Henrik Kaare Poulsen
+ Copyright (C) 2011 Henrik Kaare Poulsen
 
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+ http://www.apache.org/licenses/LICENSE-2.0
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-*/
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
 
 /**
-  Parts of the Reed Solomon decoding algorithms have been inspired by
-  http://rscode.sourceforge.net
-  Original version Copyright (C) by Henry Minsky
-*/
+ Parts of the Reed Solomon decoding algorithms have been inspired by
+ http://rscode.sourceforge.net
+ Original version Copyright (C) by Henry Minsky
+ */
 
 /**
  * ReedSolomon CONSTRUCTOR
- * @param {any} n_ec_bytes
+ * @param {*} n_ec_bytes
  */
 export default function ReedSolomon(n_ec_bytes) {
-  this.logger = null;
   this.n_ec_bytes = n_ec_bytes;
   this.n_degree_max = 2 * n_ec_bytes;
   this.syndroms = [];
@@ -112,10 +111,6 @@ ReedSolomon.prototype = {
       tp1 = this.copyPoly(genpoly);
     }
 
-    if (this.logger) {
-      this.logger.debug('RS genPoly: ' + genpoly.join(','));
-    }
-
     return genpoly;
   },
   calculateSyndroms: function() {
@@ -139,14 +134,6 @@ ReedSolomon.prototype = {
       }
     }
 
-    if (this.logger) {
-      if (n_err > 0) {
-        this.logger.debug('RS calculateSyndroms: <b>Errors found!</b> syndroms = ' + this.syndroms.join(','));
-      } else {
-        this.logger.debug('RS calculateSyndroms: <b>No errors</b>');
-      }
-    }
-
     return n_err;
   },
   correctErrors: function() {
@@ -158,10 +145,6 @@ ReedSolomon.prototype = {
     if (2 * this.n_errors > this.n_ec_bytes) {
       this.uncorrected_reason = 'too many errors';
 
-      if (this.logger) {
-        this.logger.debug('RS correctErrors: <b>' + this.uncorrected_reason + '</b>');
-      }
-
       return;
     }
 
@@ -171,20 +154,12 @@ ReedSolomon.prototype = {
       if (this.error_locs[e] >= this.bytes_in.length) {
         this.uncorrected_reason = 'corrections out of scope';
 
-        if (this.logger) {
-          this.logger.debug('RS correctErrors: <b>' + this.uncorrected_reason + '</b>');
-        }
-
         return;
       }
     }
 
     if (this.n_errors === 0) {
       this.uncorrected_reason = 'could not identify errors';
-
-      if (this.logger) {
-        this.logger.debug('RS correctErrors: <b>' + this.uncorrected_reason + '</b>');
-      }
 
       return;
     }
@@ -208,24 +183,18 @@ ReedSolomon.prototype = {
         denom ^= this.gmult(this.psi[j], this.gexp[((255 - i) * (j)) % 255]);
       }
 
-      var err = this.gmult(num, this.ginv(denom));
-
-      if (this.logger) {
-        this.logger.debug('RS correctErrors: loc=' + (this.bytes_out.length - i - 1) + '  err = 0x0' + err.toString(16) + ' = bin ' + err.toString(2));
-      }
-
-      this.bytes_out[this.bytes_out.length - i - 1] ^= err;
+      this.bytes_out[this.bytes_out.length - i - 1] ^= this.gmult(num, this.ginv(denom));
     }
 
     this.corrected = true;
   },
   berlekampMassey: function() {
-    /* initialize Gamma, the erasure locator polynomial */
+    // initialize Gamma, the erasure locator polynomial
     var gamma = this.zeroPoly();
 
     gamma[0] = 1;
 
-    /* initialize to z */
+    // initialize to z
     var D = this.copyPoly(gamma);
 
     this.mulZPoly(D);
@@ -241,7 +210,7 @@ ReedSolomon.prototype = {
       var d = this.computeDiscrepancy(this.psi, this.syndroms, L, n);
 
       if (d !== 0) {
-        /* psi2 = psi - d*D */
+        // psi2 = psi - d*D
         for (i = 0; i < this.n_degree_max; i++) {
           psi2[i] = this.psi[i] ^ this.gmult(d, D[i]);
         }
@@ -251,7 +220,7 @@ ReedSolomon.prototype = {
 
           k = n - L;
 
-          /* D = scale_poly(ginv(d), psi); */
+          // D = scale_poly(ginv(d), psi);
           for (i = 0; i < this.n_degree_max; i++) {
             D[i] = this.gmult(this.psi[i], this.ginv(d));
           }
@@ -259,29 +228,21 @@ ReedSolomon.prototype = {
           L = L2;
         }
 
-        /* psi = psi2 */
-        //for (i = 0; i < this.n_degree_max; i++) this.psi[i] = psi2[i];
+        // psi = psi2
+        // for (i = 0; i < this.n_degree_max; i++) this.psi[i] = psi2[i];
         this.psi = this.copyPoly(psi2);
       }
 
       this.mulZPoly(D);
     }
 
-    if (this.logger) {
-      this.logger.debug('RS berlekampMassey: psi = ' + this.psi.join(','));
-    }
-
-    /* omega */
+    // omega
     var om = this.multPolys(this.psi, this.syndroms);
 
     this.omega = this.zeroPoly();
 
     for (i = 0; i < this.n_ec_bytes; i++) {
       this.omega[i] = om[i];
-    }
-
-    if (this.logger) {
-      this.logger.debug('RS berlekampMassey: omega = ' + this.omega.join(','));
     }
   },
   findRoots: function() {
@@ -294,7 +255,7 @@ ReedSolomon.prototype = {
     for (r = 1; r < 256; r++) {
       sum = 0;
 
-      /* evaluate psi at r */
+      // evaluate psi at r
       var k;
 
       for (k = 0; k < this.n_ec_bytes + 1; k++) {
@@ -306,13 +267,14 @@ ReedSolomon.prototype = {
         this.n_errors++;
       }
     }
-
-    if (this.logger) {
-      this.logger.debug('RS findRoots: errors=<b>' + this.n_errors + '</b> locations = ' + this.error_locs.join(','));
-    }
   },
   /**
    * Polynome functions
+   * @param lambda
+   * @param S
+   * @param L
+   * @param n
+   * @returns {number}
    */
   computeDiscrepancy: function(lambda, S, L, n) {
     var sum = 0;
@@ -355,6 +317,9 @@ ReedSolomon.prototype = {
   },
   /**
    * polynomial multiplication
+   * @param p1
+   * @param p2
+   * @returns {Array}
    */
   multPolys: function(p1, p2) {
     var dst = new Array(this.n_degree_max);
@@ -373,12 +338,12 @@ ReedSolomon.prototype = {
         tmp1[j] = 0;
       }
 
-      /* scale tmp1 by p1[i] */
+      // scale tmp1 by p1[i]
       for (j = 0; j < this.n_degree_max; j++) {
         tmp1[j] = this.gmult(p2[j], p1[i]);
       }
 
-      /* and mult (shift) tmp1 right by i */
+      // and mult (shift) tmp1 right by i
       for (j = (this.n_degree_max * 2) - 1; j >= i; j--) {
         tmp1[j] = tmp1[j - i];
       }
@@ -387,7 +352,7 @@ ReedSolomon.prototype = {
         tmp1[j] = 0;
       }
 
-      /* add into partial product */
+      // add into partial product
       for (j = 0; j < (this.n_degree_max * 2); j++) {
         dst[j] ^= tmp1[j];
       }

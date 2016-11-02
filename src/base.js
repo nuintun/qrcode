@@ -8,7 +8,7 @@ import Locales from './locales';
 var i18n = new Locales();
 
 var QRBase = {
-  /*
+  /**
    * 编码格式
    */
   MODE: {
@@ -17,7 +17,7 @@ var QRBase = {
     EightBit: 4,
     Terminator: 0
   },
-  /*
+  /**
    * 纠错等级
    */
   ERROR_CORRECTION_LEVEL: {
@@ -42,7 +42,7 @@ var QRBase = {
     var ECBlocks = this.ECBlocks[qr.version][qr.ECLevel];
     var nBlocks;
     var nBlocksFirst;
-    var nBlocksSecond;
+    var nBlocksSecond = 0;
     var nBlockWordsFirst;
     var nBlockWordsSecond;
     var i, b, w = 0;
@@ -51,7 +51,7 @@ var QRBase = {
 
     if (ECBlocks.length === 1) {
       nBlocksFirst = ECBlocks[0];
-      nBlocksSecond = 0;
+      // set nBlocksSecond = 0;
       nBlocks = nBlocksFirst;
       nBlockWordsFirst = qr.nDataCodewords / nBlocks;
       nBlockWordsSecond = 0;
@@ -165,8 +165,11 @@ var QRBase = {
       markSquare(qr, qr.nModules - 11, 0, 3, 6);
     }
   },
-  /*
+  /**
    * 计算数据长度的编码字节数
+   * @param mode
+   * @param version
+   * @returns {number}
    */
   nCountBits: function(mode, version) {
     if (mode === this.MODE.EightBit) {
@@ -195,14 +198,18 @@ var QRBase = {
 
     this.errorThrow("Internal error: Unknown mode: " + mode);
   },
-  /*
+  /**
    * 从版本计算二维码宽度
+   * @param {number} version
+   * @returns {number}
    */
   nModulesFromVersion: function(version) {
     return 17 + 4 * version;
   },
-  /*
+  /**
    * UTF-8 和 Unicode 的相互转换
+   * @param {string} string
+   * @returns {string}
    */
   unicodeToUtf8: function(string) {
     var out = '';
@@ -226,6 +233,11 @@ var QRBase = {
 
     return out;
   },
+  /**
+   * UTF-8 和 Unicode 的相互转换
+   * @param {string} string
+   * @returns {string}
+   */
   utf8Tounicode: function(string) {
     var out = '';
     var len = string.length;
