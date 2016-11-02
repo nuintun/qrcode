@@ -13,19 +13,24 @@ function unique(array) {
 }
 
 const I18N = {
-  COMMON: ['QRBase.UnknownMode']
+  COMMON: [
+    'QRCode.UnknownMode',
+    'QRCode.UnsupportedECI',
+  ]
 }
 
 I18N.ENCODE = unique(I18N.COMMON.concat([
-    'QRBase.UnknownMode',
-    'QREncode.InvalidChar4Alphanumeric',
-    'QREncode.InvalidChar4Numeric',
-    'QREncode.UnsupportedECI',
-    'QREncode.TextTooLong4TargetVersion',
-    'QREncode.TextTooLong4AllVersion'
+  'QREncode.InvalidChar4Alphanumeric',
+  'QREncode.InvalidChar4Numeric',
+  'QREncode.TextTooLong4TargetVersion',
+  'QREncode.TextTooLong4AllVersion'
 ]));
 I18N.DECODE = unique(I18N.COMMON.concat([
-  // DECODE
+  "QRDecode.ImageNoEnoughContrast",
+  "QRDecode.NoImage",
+  "QRDecode.InvalidImage",
+  "QRDecode.UnableDecodePattern",
+  "QRDecode.UnableCorrectErrors"
 ]));
 I18N.ALL = unique(I18N.ENCODE.concat(I18N.DECODE))
 

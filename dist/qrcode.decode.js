@@ -21,7 +21,13 @@
   QRError.prototype.constructor = QRError;
 
   var EN = {
-    'QRBase.UnknownMode': 'Internal error: Unknown mode: %mode.'
+    'QRCode.UnknownMode': 'Internal error: Unknown mode: %mode.',
+    'QRCode.UnsupportedECI': 'Unsupported ECI mode: %mode.',
+    'QRDecode.ImageNoEnoughContrast': 'Image does not have enough contrast (this.image_data.min_col=%min this.image_data.max_col=%max).',
+    'QRDecode.NoImage': 'Found no image data to decode.',
+    'QRDecode.InvalidImage': 'Image data is not rectangular.',
+    'QRDecode.UnableDecodePattern': 'Unable to decode a function pattern.',
+    'QRDecode.UnableCorrectErrors': 'Unable to correct errors (%reason).'
   };
 
   function isString(value) {
