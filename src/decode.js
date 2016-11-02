@@ -95,6 +95,7 @@ QRDecode.prototype = {
 
     imageData.isDark = function(x, y, d) {
       var g = this.getGray(x, y, d);
+
       return g < this.threshold;
     };
 

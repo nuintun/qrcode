@@ -85,12 +85,13 @@ function FinderPattern(posX, posY, estimatedModuleSize) {
   this.y = posY;
   this.count = 1;
   this.estimatedModuleSize = estimatedModuleSize;
+}
 
-  this.incrementCount = function() {
+FinderPattern.prototype = {
+  incrementCount: function() {
     this.count++;
-  }
-
-  this.aboutEquals = function(moduleSize, i, j) {
+  },
+  aboutEquals: function(moduleSize, i, j) {
     if (Math.abs(i - this.y) <= moduleSize && Math.abs(j - this.x) <= moduleSize) {
       var moduleSizeDiff = Math.abs(moduleSize - this.estimatedModuleSize);
 
@@ -99,8 +100,7 @@ function FinderPattern(posX, posY, estimatedModuleSize) {
 
     return false;
   }
-
-}
+};
 
 function FinderPatternInfo(patternCenters) {
   this.bottomLeft = patternCenters[0];
@@ -116,11 +116,15 @@ function FinderPatternFinder() {
   this.hasSkipped = false;
   this.crossCheckStateCount = [0, 0, 0, 0, 0];
   this.resultPointCallback = null;
+}
 
-  this.foundPatternCross = function(stateCount) {
+FinderPatternFinder.prototype = {
+  foundPatternCross: function(stateCount) {
     var totalModuleSize = 0;
+
     for (var i = 0; i < 5; i++) {
       var count = stateCount[i];
+
       if (count == 0) {
         return false;
       }
@@ -141,13 +145,11 @@ function FinderPatternFinder() {
       Math.abs(3 * moduleSize - (stateCount[2] << INTEGER_MATH_SHIFT)) < 3 * maxVariance &&
       Math.abs(moduleSize - (stateCount[3] << INTEGER_MATH_SHIFT)) < maxVariance &&
       Math.abs(moduleSize - (stateCount[4] << INTEGER_MATH_SHIFT)) < maxVariance;
-  }
-
-  this.centerFromEnd = function(stateCount, end) {
+  },
+  centerFromEnd: function(stateCount, end) {
     return (end - stateCount[4] - stateCount[3]) - stateCount[2] / 2.0;
-  }
-
-  this.crossCheckVertical = function(startI, centerJ, maxCount, originalStateCountTotal) {
+  },
+  crossCheckVertical: function(startI, centerJ, maxCount, originalStateCountTotal) {
     var image = this.image;
     var maxI = this.height;
     var stateCount = this.CrossCheckStateCount;
@@ -221,9 +223,8 @@ function FinderPatternFinder() {
     }
 
     return this.foundPatternCross(stateCount) ? this.centerFromEnd(stateCount, i) : NaN;
-  }
-
-  this.crossCheckHorizontal = function(startJ, centerI, maxCount, originalStateCountTotal) {
+  },
+  crossCheckHorizontal: function(startJ, centerI, maxCount, originalStateCountTotal) {
     var image = this.image;
     var maxJ = this.width;
     var stateCount = this.CrossCheckStateCount;
@@ -294,9 +295,8 @@ function FinderPatternFinder() {
     }
 
     return this.foundPatternCross(stateCount) ? this.centerFromEnd(stateCount, j) : NaN;
-  }
-
-  this.handlePossibleCenter = function(stateCount, i, j) {
+  },
+  handlePossibleCenter: function(stateCount, i, j) {
     var stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] + stateCount[4];
     var centerJ = this.centerFromEnd(stateCount, j); //float
     var centerI = this.crossCheckVertical(i, Math.floor(centerJ), stateCount[2], stateCountTotal); //float
@@ -336,9 +336,8 @@ function FinderPatternFinder() {
     }
 
     return false;
-  }
-
-  this.selectBestPatterns = function() {
+  },
+  selectBestPatterns: function() {
     var startSize = this.possibleCenters.length;
 
     if (startSize < 3) {
@@ -402,9 +401,8 @@ function FinderPatternFinder() {
     }
 
     return new Array(this.possibleCenters[0], this.possibleCenters[1], this.possibleCenters[2]);
-  }
-
-  this.findRowSkip = function() {
+  },
+  findRowSkip: function() {
     var max = this.possibleCenters.length;
 
     if (max <= 1) {
@@ -433,9 +431,8 @@ function FinderPatternFinder() {
     }
 
     return 0;
-  }
-
-  this.haveMultiplyConfirmedCenters = function() {
+  },
+  haveMultiplyConfirmedCenters: function() {
     var confirmedCount = 0;
     var totalModuleSize = 0.0;
     var max = this.possibleCenters.length;
@@ -466,9 +463,8 @@ function FinderPatternFinder() {
     }
 
     return totalDeviation <= 0.05 * totalModuleSize;
-  }
-
-  this.findFinderPattern = function(image, width, height) {
+  },
+  findFinderPattern: function(image, width, height) {
     var tryHarder = false;
 
     this.image = image;
@@ -485,6 +481,7 @@ function FinderPatternFinder() {
 
     var done = false;
     var stateCount = new Array(5);
+
 
     for (var i = iSkip - 1; i < maxI && !done; i += iSkip) {
       // Get a row of black/white values
@@ -581,7 +578,7 @@ function FinderPatternFinder() {
 
           if (this.hasSkipped) {
             // Found a third one
-            done = haveMultiplyConfirmedCenters();
+            done = this.haveMultiplyConfirmedCenters();
           }
         }
       }
@@ -592,5 +589,5 @@ function FinderPatternFinder() {
     orderBestPatterns(patternInfo);
 
     return new FinderPatternInfo(patternInfo);
-  };
-}
+  }
+};
