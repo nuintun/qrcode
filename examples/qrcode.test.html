@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="StyleSheet" type="text/css" href="default.test.css">
+  <title>QRCode</title>
+  <style type="text/css">
+    body {
+      overflow-y: scroll;
+    }
+
+    html *,
+    body * {
+      font-family: MICROSOFT YAHEI, serif;
+    }
+
+    textarea {
+      resize: none;
+      width: 100%;
+    }
+
+    button {
+      margin: 0;
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="main">
+    <ul class="tabs clearfix">
+      <li class="selected">编码</li>
+    </ul>
+    <ul class="content clearfix">
+      <li class="decode">
+        <p><label>选择二维码图片：</label><input type="file" name="files[]" id="decode-file" /></p>
+
+        <div>
+          <canvas id="decode-canvas"></canvas>
+        </div>
+        <p>
+          <button id="decode-btn">解码</button>
+        </p>
+        <p id="decode-text" class="hide">解码值为：<br/><br/><textarea></textarea></p>
+      </li>
+    </ul>
+  </div>
+
+  <script src="jquery-1.11.3.js"></script>
+  <script type="text/javascript" src="../src/findpat.js"></script>
+  <script type="text/javascript" src="../src/grid.js"></script>
+  <script type="text/javascript" src="../src/detector.js"></script>
+  <script type="text/javascript">
+    var canvas = $('#decode-canvas')[0];
+    var ctx = canvas.getContext('2d');
+    // 二维码加载
+    $('#decode-file').on('change', function(e) {
+      var file = e.target.files[0];
+      var reader = new FileReader();
+
+      reader.onload = (function(e) {
+        var img = new Image();
+
+        img.onload = function() {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+        };
+
+        img.src = e.target.result;
+      });
+
+      file && reader.readAsDataURL(file);
+    });
+
+    $('#decode-btn').on('click', function() {
+      var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+      window.DecodeTest = new Detector(imageData, canvas.width, canvas.height);
+
+      console.log(DecodeTest.detect());
+    });
+
+  </script>
+</body>
+
+</html>

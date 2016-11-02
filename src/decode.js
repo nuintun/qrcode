@@ -835,7 +835,6 @@ QRDecode.prototype = {
     }
   },
   extractData: function() {
-
     function extract(qr, bytes, pos, len) {
       // http://stackoverflow.com/questions/3846711/extract-bit-sequences-of-arbitrary-length-from-byte-array-efficiently
       var shift = 24 - (pos & 7) - len;
@@ -846,7 +845,6 @@ QRDecode.prototype = {
     }
 
     function extract8bit(qr, bytes) {
-
       var nCountBits = QRBase.nCountBits(QRBase.MODE.EightBit, qr.version);
       var n = extract(qr, bytes, qr.bitIdx, nCountBits);
       var data = '';
