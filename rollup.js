@@ -47,7 +47,8 @@ function build(entry, dest, i18n) {
       transform: function transform(code, id) {
         if (isI18N(id)) {
           var lang = {};
-          var code = JSON.parse(code);
+
+          code = JSON.parse(code);
 
           i18n.forEach(function(key) {
             lang[key] = code[key] || `Locales error: ${ key } no localization.`;
