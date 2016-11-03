@@ -139,8 +139,9 @@ export function countBits(mode, version){
       return 9;
     } else if (version < 27) {
       return 11;
+    } else {
+      return 13;
     }
-    else { return 13; }
   } else if (mode === this.MODE.Numeric) {
     if (version < 10) {
       return 10;
