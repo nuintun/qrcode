@@ -949,6 +949,7 @@
       this.image_left = 4 * module_size;
       this.image.width = (4 + 4 + this.modules) * module_size;
       this.image.height = (4 + 4 + this.modules) * module_size;
+      
       this.image.setBackground();
 
       this.bit_idx = 0;
