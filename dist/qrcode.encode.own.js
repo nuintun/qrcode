@@ -583,7 +583,6 @@
    * @constructor
    */
   function ReedSolomon(n_ec_bytes){
-    this.logger = null;
     this.n_ec_bytes = n_ec_bytes;
     this.n_degree_max = 2 * n_ec_bytes;
     this.syndroms = [];
