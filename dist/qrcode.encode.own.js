@@ -554,8 +554,9 @@
         return 9;
       } else if (version < 27) {
         return 11;
+      } else {
+        return 13;
       }
-      else { return 13; }
     } else if (mode === this.MODE.Numeric) {
       if (version < 10) {
         return 10;
@@ -585,8 +586,25 @@
     return this.image.isDark.apply(this.image, arguments);
   }
 
-  function Pixels(version){
+  function mapping(table){
+    var map = {};
+
+    for (var key in table) {
+      if (table.hasOwnProperty(key)) {
+        map[table[key]] = key;
+      }
+    }
+
+    return map;
+  }
+
+  var MODE_MAP = mapping(MODE);
+  var EC_LEVEL_MAP = mapping(ERROR_CORRECTION_LEVEL);
+
+  function Pixels(mode, version, ec_level){
+    this.mode = MODE_MAP[mode];
     this.version = version;
+    this.level = EC_LEVEL_MAP[ec_level];
   }
 
   inherits(Pixels, Array, {
@@ -599,6 +617,8 @@
           this[i][j] = false;
         }
       }
+
+      return true;
     },
     setDark: function (x, y){
       var modules = this.length;
@@ -1157,8 +1177,8 @@
      */
     encodeToPixArray: function (mode, text, version, ec_level){
       var i;
-      var pixels = new Pixels(version);
-      var modules = this.modulesFromVersion(version);
+      var pixels = new Pixels(mode, version, ec_level);
+      var modules = this.modulesFromVersion(mode, version, ec_level);
 
       for (i = 0; i < modules; i++) {
         pixels.push([]);

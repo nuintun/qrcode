@@ -53,10 +53,9 @@
       try {
         this.version = this.qr.getVersionFromLength(config.mode, config.text, config.ECLevel);
         this.pixArr = this.qr.encodeToPixArray(config.mode, config.text, this.version, config.ECLevel);
-      } catch (e) {
-        console.dir(e);
-        console.log(e.stack);
 
+        console.log(this.pixArr);
+      } catch (e) {
         $.isFunction(config.error) && config.error(e);
       }
 

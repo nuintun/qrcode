@@ -1,7 +1,25 @@
 import * as util from './util';
+import * as QRCONST from './const';
 
-export default function Pixels(version){
+function mapping(table){
+  var map = {};
+
+  for (var key in table) {
+    if (table.hasOwnProperty(key)) {
+      map[table[key]] = key;
+    }
+  }
+
+  return map;
+}
+
+var MODE_MAP = mapping(QRCONST.MODE);
+var EC_LEVEL_MAP = mapping(QRCONST.ERROR_CORRECTION_LEVEL);
+
+export default function Pixels(mode, version, ec_level){
+  this.mode = MODE_MAP[mode];
   this.version = version;
+  this.level = EC_LEVEL_MAP[ec_level];
 }
 
 util.inherits(Pixels, Array, {

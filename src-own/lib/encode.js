@@ -48,8 +48,8 @@ QREncode.prototype = {
    */
   encodeToPixArray: function (mode, text, version, ec_level){
     var i;
-    var pixels = new Pixels(version);
-    var modules = this.modulesFromVersion(version);
+    var pixels = new Pixels(mode, version, ec_level);
+    var modules = this.modulesFromVersion(mode, version, ec_level);
 
     for (i = 0; i < modules; i++) {
       pixels.push([]);
