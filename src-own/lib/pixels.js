@@ -14,6 +14,8 @@ util.inherits(Pixels, Array, {
         this[i][j] = false;
       }
     }
+
+    return true;
   },
   setDark: function (x, y){
     var modules = this.length;
