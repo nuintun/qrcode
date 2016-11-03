@@ -41,12 +41,14 @@
     _init: function (callback){
       var config = this.config;
 
-      this.qr = new QRCode();
+      this.qr = new QRCode.Encode();
 
       // 含有 Logo，使用最大容错
       if (config.logo) {
         config.ECLevel = 2;
       }
+
+      config.text = QRCode.toUTF8(config.text);
 
       try {
         this.version = this.qr.getVersionFromLength(config.mode, config.text, config.ECLevel);

@@ -1,26 +1,10 @@
-var array = [];
-var slice = array.slice;
-var concat = array.concat;
-var push = array.push;
-var indexOf = array.indexOf;
-var sort = array.sort;
-var splice = array.splice;
+import * as util from './util';
 
 export default function Pixels(version){
   this.version = version;
 }
 
-Pixels.prototype = {
-  length: 0,
-  slice: slice,
-  push: push,
-  concat: concat,
-  indexOf: indexOf,
-  sort: sort,
-  splice: splice,
-  toArray: function (){
-    return slice.call(this);
-  },
+util.inherits(Pixels, Array, {
   setBackground: function (){
     var i, j;
     var modules = this.length;
@@ -53,4 +37,4 @@ Pixels.prototype = {
 
     return this[x][y];
   }
-};
+});
