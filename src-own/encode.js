@@ -1,5 +1,5 @@
-import QRConst from './const';
-import QRCommon from './common';
+import * as QRConst from './const';
+import * as QRCommon from './common';
 import ReedSolomon from './reedsolomon';
 
 export default function QREncode(){
@@ -108,6 +108,7 @@ QREncode.prototype = {
     this.image_left = 4 * module_size;
     this.image.width = (4 + 4 + this.modules) * module_size;
     this.image.height = (4 + 4 + this.modules) * module_size;
+    
     this.image.setBackground();
 
     this.bit_idx = 0;
@@ -169,7 +170,7 @@ QREncode.prototype = {
       if (!qr.ALPHANUM_REV.hasOwnProperty(ch)) {
         throw ("Invalid character for Alphanumeric encoding [" + ch + "]");
       }
-      
+
       return qr.ALPHANUM_REV[ch];
     }
 
