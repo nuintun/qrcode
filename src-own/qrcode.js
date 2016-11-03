@@ -1802,7 +1802,7 @@ QRCodeDecode.prototype = {
   },
 
   /* ************************************************************
-   * QRCodeDecode INTERNAL ENCODING / DECODING HELPER FUNCTIONS
+   * QRCodeDecode internal encoding / decoding helper functions
    * ************************************************************
    */
 
@@ -2044,7 +2044,7 @@ QRCodeDecode.prototype = {
   },
 
   /* ************************************************************
-   * QRCodeDecode IMAGE FUNCTIONS
+   * QRCodeDecode image functions
    * ************************************************************
    */
 

@@ -41,7 +41,7 @@
     _init: function (callback){
       var config = this.config;
 
-      this.qr = new QRCode.Encode();
+      this.qr = new QRCode();
 
       // 含有 Logo，使用最大容错
       if (config.logo) {
@@ -49,9 +49,12 @@
       }
 
       try {
-        this.version = this.qr.getVersionFromLength(config.ECLevel, config.mode, config.text);
-        this.pixArr = this.qr.encodeToPix(config.mode, config.text, this.version, config.ECLevel);
+        this.version = this.qr.getVersionFromLength(config.mode, config.text, config.ECLevel);
+        this.pixArr = this.qr.encodeToPixArray(config.mode, config.text, this.version, config.ECLevel);
       } catch (e) {
+        console.dir(e);
+        console.log(e.stack);
+
         $.isFunction(config.error) && config.error(e);
       }
 

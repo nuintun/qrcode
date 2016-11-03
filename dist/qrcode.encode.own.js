@@ -146,6 +146,138 @@
     0x2BED
   ];
 
+  var CODEWORDS = [
+    0,
+    26,
+    44,
+    70,
+    100,
+    134,
+    172,
+    196,
+    242,
+    292,
+    346,
+    404,
+    466,
+    532,
+    581,
+    655,
+    733,
+    815,
+    901,
+    991,
+    1085,
+    1156,
+    1258,
+    1364,
+    1474,
+    1588,
+    1706,
+    1828,
+    1921,
+    2051,
+    2185,
+    2323,
+    2465,
+    2611,
+    2761,
+    2876,
+    3034,
+    3196,
+    3362,
+    3532,
+    3706
+  ];
+
+  var EC_CODEWORDS = [
+    null,
+    [10, 7, 17, 13],
+    [16, 10, 28, 22],
+    [26, 15, 44, 36],
+    [36, 20, 64, 52],
+    [48, 26, 88, 72],
+    [64, 36, 112, 96],
+    [72, 40, 130, 108],
+    [88, 48, 156, 132],
+    [110, 60, 192, 160],
+    [130, 72, 224, 192],
+    [150, 80, 264, 224],
+    [176, 96, 308, 260],
+    [198, 104, 352, 288],
+    [216, 120, 384, 320],
+    [240, 132, 432, 360],
+    [280, 144, 480, 408],
+    [308, 168, 532, 448],
+    [338, 180, 588, 504],
+    [364, 196, 650, 546],
+    [416, 224, 700, 600],
+    [442, 224, 750, 644],
+    [476, 252, 816, 690],
+    [504, 270, 900, 750],
+    [560, 300, 960, 810],
+    [588, 312, 1050, 870],
+    [644, 336, 1110, 952],
+    [700, 360, 1200, 1020],
+    [728, 390, 1260, 1050],
+    [784, 420, 1350, 1140],
+    [812, 450, 1440, 1200],
+    [868, 480, 1530, 1290],
+    [924, 510, 1620, 1350],
+    [980, 540, 1710, 1440],
+    [1036, 570, 1800, 1530],
+    [1064, 570, 1890, 1590],
+    [1120, 600, 1980, 1680],
+    [1204, 630, 2100, 1770],
+    [1260, 660, 2220, 1860],
+    [1316, 720, 2310, 1950],
+    [1372, 750, 2430, 2040]
+  ];
+
+  var EC_BLOCKS = [
+    [],
+    [[1], [1], [1], [1]],
+    [[1], [1], [1], [1]],
+    [[1], [1], [2], [2]],
+    [[2], [1], [4], [2]],
+    [[2], [1], [2, 2], [2, 2]],
+    [[4], [2], [4], [4]],
+    [[4], [2], [4, 1], [2, 4]],
+    [[2, 2], [2], [4, 2], [4, 2]],
+    [[3, 2], [2], [4, 4], [4, 4]],
+    [[4, 1], [2, 2], [6, 2], [6, 2]],
+    [[1, 4], [4], [3, 8], [4, 4]],
+    [[6, 2], [2, 2], [7, 4], [4, 6]],
+    [[8, 1], [4], [12, 4], [8, 4]],
+    [[4, 5], [3, 1], [11, 5], [11, 5]],
+    [[5, 5], [5, 1], [11, 7], [5, 7]],
+    [[7, 3], [5, 1], [3, 13], [15, 2]],
+    [[10, 1], [1, 5], [2, 17], [1, 15]],
+    [[9, 4], [5, 1], [2, 19], [17, 1]],
+    [[3, 11], [3, 4], [9, 16], [17, 4]],
+    [[3, 13], [3, 5], [15, 10], [15, 5]],
+    [[17], [4, 4], [19, 6], [17, 6]],
+    [[17], [2, 7], [34], [7, 16]],
+    [[4, 14], [4, 5], [16, 14], [11, 14]],
+    [[6, 14], [6, 4], [30, 2], [11, 16]],
+    [[8, 13], [8, 4], [22, 13], [7, 22]],
+    [[19, 4], [10, 2], [33, 4], [28, 6]],
+    [[22, 3], [8, 4], [12, 28], [8, 26]],
+    [[3, 23], [3, 10], [11, 31], [4, 31]],
+    [[21, 7], [7, 7], [19, 26], [1, 37]],
+    [[19, 10], [5, 10], [23, 25], [15, 25]],
+    [[2, 29], [13, 3], [23, 28], [42, 1]],
+    [[10, 23], [17], [19, 35], [10, 35]],
+    [[14, 21], [17, 1], [11, 46], [29, 19]],
+    [[14, 23], [13, 6], [59, 1], [44, 7]],
+    [[12, 26], [12, 7], [22, 41], [39, 14]],
+    [[6, 34], [6, 14], [2, 64], [46, 10]],
+    [[29, 14], [17, 4], [24, 46], [49, 10]],
+    [[13, 32], [4, 18], [42, 32], [48, 14]],
+    [[40, 7], [20, 4], [10, 67], [43, 22]],
+    [[18, 31], [19, 6], [20, 61], [34, 34]]
+  ];
+
   var ALPHANUM_REV = {
     '0': 0,
     '1': 1,
@@ -353,6 +485,75 @@
   function modulesFromVersion(version){
     return 17 + 4 * version;
   }
+
+  function setBackground(){
+    return this.image.setBackground.apply(this.image, arguments);
+  }
+
+  function setDark(){
+    return this.image.setDark.apply(this.image, arguments);
+  }
+
+  function isDark(){
+    return this.image.isDark.apply(this.image, arguments);
+  }
+
+  var array = [];
+  var slice = array.slice;
+  var concat = array.concat;
+  var push = array.push;
+  var indexOf = array.indexOf;
+  var sort = array.sort;
+  var splice = array.splice;
+
+  function Pixels(version){
+    this.version = version;
+  }
+
+  Pixels.prototype = {
+    length: 0,
+    slice: slice,
+    push: push,
+    concat: concat,
+    indexOf: indexOf,
+    sort: sort,
+    splice: splice,
+    toArray: function (){
+      return slice.call(this);
+    },
+    setBackground: function (){
+      var i, j;
+      var modules = this.length;
+
+      for (i = 0; i < modules; i++) {
+        for (j = 0; j < modules; j++) {
+          this[i][j] = false;
+        }
+      }
+    },
+    setDark: function (x, y){
+      var modules = this.length;
+
+      // Ignoring d, since a pixel array has d=1
+      if (x > modules - 1 || y > modules - 1) {
+        return false;
+      }
+
+      this[x][y] = true;
+
+      return true;
+    },
+    isDark: function (x, y){
+      var modules = this.length;
+
+      // Ignoring d, since a pixel array has d=1
+      if (x > modules - 1 || y > modules - 1) {
+        return false;
+      }
+
+      return this[x][y];
+    }
+  };
 
   /*!
    * QR-Logo: http://qrlogo.kaarposoft.dk
@@ -845,10 +1046,6 @@
 
   function QREncode(){
     this.image = null;
-    this.image_top = 0;
-    this.image_bottom = 0;
-    this.image_left = 0;
-    this.image_right = 0;
 
     this.mask = 0;
     this.version = 0;
@@ -867,12 +1064,18 @@
     ERROR_CORRECTION_LEVEL: ERROR_CORRECTION_LEVEL,
     ALIGNMENT_PATTERNS: ALIGNMENT_PATTERNS,
     VERSION_INFO: VERSION_INFO,
-    ALPHANUM_REV: ALPHANUM_REV,
     FORMAT_INFO: FORMAT_INFO,
+    CODEWORDS: CODEWORDS,
+    EC_CODEWORDS: EC_CODEWORDS,
+    EC_BLOCKS: EC_BLOCKS,
+    ALPHANUM_REV: ALPHANUM_REV,
     setBlocks: setBlocks,
     setFunctionalPattern: setFunctionalPattern,
     countBits: countBits,
     modulesFromVersion: modulesFromVersion,
+    setBackground: setBackground,
+    setDark: setDark,
+    isDark: isDark,
     //
     // QRCodeDecode main encode functions to be called by clients
     //
@@ -884,76 +1087,39 @@
      *  @param ec_level  Error correction level according to ISO/IEC 18004:2006(E) Section 6.5.1
      */
     encodeToPixArray: function (mode, text, version, ec_level){
-      var pix = {};
-      var modules = this.modulesFromVersion(version) + 4 + 4;
-
-      pix.width = modules;
-      pix.height = modules;
-      pix.arr = [];
-
       var i;
+      var pixels = new Pixels(version);
+      var modules = this.modulesFromVersion(version);
 
       for (i = 0; i < modules; i++) {
-        pix.arr[i] = [];
+        pixels.push([]);
       }
 
-      pix.setBackground = function (){
-        for (i = 0; i < modules; i++) {
-          var j;
-
-          for (j = 0; j < modules; j++) {
-            this.arr[i][j] = false;
-          }
-        }
-      };
-
-      pix.setDark = function (x, y, d){
-        // Ignoring d, since a pixel array has d=1
-        if (x > modules - 1) {
-          return;
-        }
-
-        this.arr[x][y] = true;
-      };
-
-      pix.isDark = function (x, y, d){
-        // Ignoring d, since a pixel array has d=1
-        if (x > this.modules - 1) {
-          return false;
-        }
-
-        return pix.arr[x][y];
-      };
-
-      this.encodeInit(version, ec_level, 1, pix);
+      this.encodeInit(ec_level, pixels);
       this.encodeAddText(mode, text);
       this.encode();
 
-      return pix;
+      return pixels;
     },
     /** Prepare for encoding text to QR Code
      *
-     *  @param version       Version according to ISO/IEC 18004:2006(E) Section 5.3.1
      *  @param ec_level      Error correction level according to ISO/IEC 18004:2006(E) Section 6.5.1
-     *  @param module_size   Number of pixels per module
-     *  @param canvas        Canvas or pixel array
+     *  @param pix           pixel object
      */
-    encodeInit: function (version, ec_level, module_size, canvas){
-      this.version = version;
+    encodeInit: function (ec_level, pix){
+      this.image = pix;
+      // Version according to ISO/IEC 18004:2006(E) Section 5.3.1
+      this.version = pix.version;
+      this.module_size = pix.size;
       this.error_correction_level = ec_level;
-      this.module_size = module_size;
-      this.modules = this.modulesFromVersion(version);
+      this.modules = this.modulesFromVersion(pix.version);
 
-      this.image = canvas;
-      this.image_top = 4 * module_size;
-      this.image_left = 4 * module_size;
-      this.image.width = (4 + 4 + this.modules) * module_size;
-      this.image.height = (4 + 4 + this.modules) * module_size;
-      
-      this.image.setBackground();
+      this.setBackground();
 
       this.bit_idx = 0;
+
       this.setBlocks();
+
       this.data = [];
 
       var i;
@@ -1009,7 +1175,7 @@
 
       function getAlphaNum(qr, ch){
         if (!qr.ALPHANUM_REV.hasOwnProperty(ch)) {
-          throw ("Invalid character for Alphanumeric encoding [" + ch + "]");
+          throw ('Invalid character for Alphanumeric encoding [' + ch + ']');
         }
 
         return qr.ALPHANUM_REV[ch];
@@ -1072,7 +1238,7 @@
           var ch = text[i].charCodeAt() - 48;
 
           if ((ch < 0) || (ch > 9)) {
-            throw ("Invalid character for Numeric encoding [" + text[i] + "]");
+            throw ('Invalid character for Numeric encoding [' + text[i] + ']');
           }
 
           num.push(ch);
@@ -1109,17 +1275,17 @@
       if (mode === this.MODE.AlphaNumeric) {
         addAlphaNum(this, text);
       } else if (mode === this.MODE.EightBit) {
-        add8bit(this, text);
+        add8bit(this, this.unicodeToUTF8(text));
       } else if (mode === this.MODE.Numeric) {
         addNumeric(this, text);
       } else if (mode === this.MODE.Terminator) {
         return;
       } else {
-        throw ("Unsupported ECI mode: " + mode);
+        throw ('Unsupported ECI mode: ' + mode);
       }
 
       if (this.bit_idx / 8 > this.data_codewords) {
-        throw ("Text too long for this EC version");
+        throw ('Text too long for this EC version');
       }
     },
     appendPadding: function (){
@@ -1598,6 +1764,82 @@
           }
         }
       }
+    },
+    /**
+     * UTF-8 和 Unicode 的相互转换
+     * @param {string} string
+     * @returns {string}
+     */
+    unicodeToUTF8: function (string){
+      var out = '';
+      var len = string.length;
+      var i, c;
+
+      for (i = 0; i < len; i++) {
+        c = string.charCodeAt(i);
+
+        if ((c >= 0x0001) && (c <= 0x007F)) {
+          out += string.charAt(i);
+        } else if (c > 0x07FF) {
+          out += String.fromCharCode(0xE0 | ((c >> 12) & 0x0F));
+          out += String.fromCharCode(0x80 | ((c >> 6) & 0x3F));
+          out += String.fromCharCode(0x80 | ((c >> 0) & 0x3F));
+        } else {
+          out += String.fromCharCode(0xC0 | ((c >> 6) & 0x1F));
+          out += String.fromCharCode(0x80 | ((c >> 0) & 0x3F));
+        }
+      }
+
+      return out;
+    },
+    getDataCapacity: function (mode, version, ec_level){
+      var codewords = this.CODEWORDS[version];
+      var ec_codewords = this.EC_CODEWORDS[version][ec_level];
+      var data_codewords = codewords - ec_codewords;
+      var bits = 8 * data_codewords;
+
+      bits -= 4;	// mode
+      bits -= this.countBits(mode, version);
+
+      var cap = 0;
+
+      if (mode === this.MODE.AlphaNumeric) {
+        cap = Math.floor(bits / 11) * 2;
+
+        if (bits >= (cap / 2) * 11 + 6) {
+          cap++;
+        }
+      } else if (mode === this.MODE.EightBit) {
+        cap = Math.floor(bits / 8);
+      } else if (mode === this.MODE.Numeric) {
+        cap = Math.floor(bits / 10) * 3;
+
+        if (bits >= (cap / 3) * 10 + 4) {
+          if (bits >= (cap / 3) * 10 + 7) {
+            cap++;
+          }
+
+          cap++;
+        }
+      } else {
+        throw ('Unsupported ECI mode: ' + mode);
+      }
+
+      return cap;
+    },
+    getVersionFromLength: function (mode, text, ec_level){
+      var v;
+      var length = this
+        .unicodeToUTF8(text)
+        .length;
+
+      for (v = 1; v <= 40; v++) {
+        if (this.getDataCapacity(mode, v, ec_level) >= length) {
+          return v;
+        }
+      }
+
+      throw('Text is too long, even for a version 40 QR Code');
     }
   };
 

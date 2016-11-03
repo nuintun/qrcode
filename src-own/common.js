@@ -157,3 +157,15 @@ export function countBits(mode, version){
 export function modulesFromVersion(version){
   return 17 + 4 * version;
 }
+
+export function setBackground(){
+  return this.image.setBackground.apply(this.image, arguments);
+}
+
+export function setDark(){
+  return this.image.setDark.apply(this.image, arguments);
+}
+
+export function isDark(){
+  return this.image.isDark.apply(this.image, arguments);
+}
