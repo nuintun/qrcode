@@ -13,6 +13,7 @@ export default function QREncode(){
   this.functional_grade = 0;
   this.error_correction_level = 0;
 
+  this.data_codewords = 0;
   this.block_ec_words = 0;
   this.block_indices = [];
   this.block_data_lengths = [];
