@@ -651,15 +651,15 @@
   }
 
   function setBackground(){
-    return this.image.setBackground.apply(this.image, arguments);
+    return this.pixels.setBackground.apply(this.pixels, arguments);
   }
 
   function setDark(){
-    return this.image.setDark.apply(this.image, arguments);
+    return this.pixels.setDark.apply(this.pixels, arguments);
   }
 
   function isDark(){
-    return this.image.isDark.apply(this.image, arguments);
+    return this.pixels.isDark.apply(this.pixels, arguments);
   }
 
   /*!
@@ -1151,7 +1151,7 @@
   };
 
   function QREncode(){
-    this.image = null;
+    this.pixels = null;
 
     this.mask = 0;
     this.version = 0;
@@ -1211,34 +1211,33 @@
     /** Prepare for encoding text to QR Code
      *
      *  @param ec_level      Error correction level according to ISO/IEC 18004:2006(E) Section 6.5.1
-     *  @param pix           pixel object
+     *  @param pixels           pixel object
      */
-    encodeInit: function (ec_level, pix){
-      this.image = pix;
-      // Version according to ISO/IEC 18004:2006(E) Section 5.3.1
-      this.version = pix.version;
-      this.module_size = pix.size;
-      this.error_correction_level = ec_level;
-      this.modules = this.modulesFromVersion(pix.version);
+    encodeInit: function (ec_level, pixels){
+      var i;
 
+      // set pixels
+      this.pixels = pixels;
+      // Version according to ISO/IEC 18004:2006(E) Section 5.3.1
+      this.version = pixels.version;
+      this.modules = pixels.length;
+      this.module_size = pixels.size;
+      this.error_correction_level = ec_level;
+
+      // set background
       this.setBackground();
 
+      // set bit idx
       this.bit_idx = 0;
 
+      // set blocks
       this.setBlocks();
 
+      // set data
       this.data = [];
-
-      var i;
 
       for (i = 0; i < this.data_codewords; i++) {
         this.data[i] = 0;
-      }
-
-      this.pixels = [];
-
-      for (i = 0; i < this.modules; i++) {
-        this.pixels[i] = [];
       }
     },
     /** Add text to a QR code

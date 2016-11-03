@@ -162,13 +162,13 @@ export function modulesFromVersion(version){
 }
 
 export function setBackground(){
-  return this.image.setBackground.apply(this.image, arguments);
+  return this.pixels.setBackground.apply(this.pixels, arguments);
 }
 
 export function setDark(){
-  return this.image.setDark.apply(this.image, arguments);
+  return this.pixels.setDark.apply(this.pixels, arguments);
 }
 
 export function isDark(){
-  return this.image.isDark.apply(this.image, arguments);
+  return this.pixels.isDark.apply(this.pixels, arguments);
 }
