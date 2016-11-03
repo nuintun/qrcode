@@ -1,3 +1,5 @@
+import QRError from './error';
+
 export function setBlocks(){
   var codewords = this.CODEWORDS[this.version];
   var ec_codewords = this.EC_CODEWORDS[this.version][this.error_correction_level];
@@ -152,7 +154,7 @@ export function countBits(mode, version){
     }
   }
 
-  throw 'Internal error: Unknown mode: ' + mode;
+  throw new QRError('QRCode.UnknownMode', { mode: mode }, 'Internal error: Unknown mode: ' + mode + '.');
 }
 
 export function modulesFromVersion(version){

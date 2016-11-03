@@ -1,17 +1,19 @@
 import * as util from './util';
 
-// slice
-var slice = [].slice;
-
 /**
  * QRError
+ * @param type
+ * @param data
+ * @param message
+ * @constructor
  */
-export default function QRError(){
-  this.code = arguments[0];
-
-  Error.apply(this, slice.call(arguments, 1));
+export default function QRError(type, data, message){
+  this.type = type;
+  this.data = data;
+  this.message = message;
 }
 
+// inherits
 util.inherits(QRError, Error, {
   name: 'QRError'
 });

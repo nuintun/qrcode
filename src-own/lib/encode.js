@@ -1,6 +1,7 @@
+import QRError from './error';
+import Pixels from  './pixels';
 import * as QRCONST from './const';
 import * as QRCommon from './common';
-import Pixels from  './pixels';
 import ReedSolomon from './reedsolomon';
 
 export default function QREncode(){
@@ -48,8 +49,8 @@ QREncode.prototype = {
    */
   encodeToPixArray: function (mode, text, version, ec_level){
     var i;
+    var modules = this.modulesFromVersion(version);
     var pixels = new Pixels(mode, version, ec_level);
-    var modules = this.modulesFromVersion(mode, version, ec_level);
 
     for (i = 0; i < modules; i++) {
       pixels.push([]);
@@ -135,7 +136,7 @@ QREncode.prototype = {
 
     function getAlphaNum(qr, ch){
       if (!qr.ALPHANUM_REV.hasOwnProperty(ch)) {
-        throw ('Invalid character for Alphanumeric encoding [' + ch + ']');
+        throw new QRError('QREncode.InvalidChar4Alphanumeric', { char: ch }, 'Invalid character for Alphanumeric encoding [' + ch + '].');
       }
 
       return qr.ALPHANUM_REV[ch];
@@ -198,7 +199,7 @@ QREncode.prototype = {
         var ch = text[i].charCodeAt() - 48;
 
         if ((ch < 0) || (ch > 9)) {
-          throw ('Invalid character for Numeric encoding [' + text[i] + ']');
+          throw new QRError('QREncode.InvalidChar4Numeric', { char: text[i] }, 'Invalid character for Numeric encoding [' + text[i] + '].');
         }
 
         num.push(ch);
@@ -241,11 +242,11 @@ QREncode.prototype = {
     } else if (mode === this.MODE.Terminator) {
       return;
     } else {
-      throw ('Unsupported ECI mode: ' + mode);
+      throw new QRError('QRCode.UnsupportedECI', { mode: mode }, 'Unsupported ECI mode: ' + mode + '.');
     }
 
     if (this.bit_idx / 8 > this.data_codewords) {
-      throw ('Text too long for this EC version');
+      throw new QRError('QREncode.TextTooLong4TargetVersion', null, 'Text too long for this EC version.');
     }
   },
   appendPadding: function (){
@@ -281,7 +282,7 @@ QREncode.prototype = {
 
     this.bytes = bytes;
   },
-  calculatePenalty: function (mask){
+  calculatePenalty: function (){
     function penaltyAdjacent(qr){
       var i, j;
       var rc, p = 0;
@@ -439,7 +440,7 @@ QREncode.prototype = {
       this.encodeFunctionalPatterns(mask);
       this.encodeData(mask);
 
-      penalty = this.calculatePenalty(mask);
+      penalty = this.calculatePenalty();
 
       if (penalty < best_penalty) {
         best_penalty = penalty;
@@ -755,7 +756,7 @@ QREncode.prototype = {
         cap++;
       }
     } else {
-      throw ('Unsupported ECI mode: ' + mode);
+      throw new QRError('QRCode.UnsupportedECI', { mode: mode }, 'Unsupported ECI mode: ' + mode + '.');
     }
 
     return cap;
@@ -770,6 +771,6 @@ QREncode.prototype = {
       }
     }
 
-    throw('Text is too long, even for a version 40 QR Code');
+    throw new QRError('QREncode.TextTooLong4AllVersion', null, 'Text is too long, even for a version 40 QR Code.');
   }
 };

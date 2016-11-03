@@ -91,6 +91,24 @@
     return out;
   }
 
+  /**
+   * QRError
+   * @param type
+   * @param data
+   * @param message
+   * @constructor
+   */
+  function QRError(type, data, message){
+    this.type = type;
+    this.data = data;
+    this.message = message;
+  }
+
+  // inherits
+  inherits(QRError, Error, {
+    name: 'QRError'
+  });
+
   /*!
    * QRCode constants
    */
@@ -413,6 +431,64 @@
     ':': 44
   };
 
+  function mapping(table){
+    var map = {};
+
+    for (var key in table) {
+      if (table.hasOwnProperty(key)) {
+        map[table[key]] = key;
+      }
+    }
+
+    return map;
+  }
+
+  var MODE_MAP = mapping(MODE);
+  var EC_LEVEL_MAP = mapping(ERROR_CORRECTION_LEVEL);
+
+  function Pixels(mode, version, ec_level){
+    this.mode = MODE_MAP[mode];
+    this.version = version;
+    this.level = EC_LEVEL_MAP[ec_level];
+  }
+
+  inherits(Pixels, Array, {
+    setBackground: function (){
+      var i, j;
+      var modules = this.length;
+
+      for (i = 0; i < modules; i++) {
+        for (j = 0; j < modules; j++) {
+          this[i][j] = false;
+        }
+      }
+
+      return true;
+    },
+    setDark: function (x, y){
+      var modules = this.length;
+
+      // Ignoring d, since a pixel array has d=1
+      if (x > modules - 1 || y > modules - 1) {
+        return false;
+      }
+
+      this[x][y] = true;
+
+      return true;
+    },
+    isDark: function (x, y){
+      var modules = this.length;
+
+      // Ignoring d, since a pixel array has d=1
+      if (x > modules - 1 || y > modules - 1) {
+        return false;
+      }
+
+      return this[x][y];
+    }
+  });
+
   function setBlocks(){
     var codewords = this.CODEWORDS[this.version];
     var ec_codewords = this.EC_CODEWORDS[this.version][this.error_correction_level];
@@ -567,7 +643,7 @@
       }
     }
 
-    throw 'Internal error: Unknown mode: ' + mode;
+    throw new QRError('QRCode.UnknownMode', { mode: mode }, 'Internal error: Unknown mode: ' + mode + '.');
   }
 
   function modulesFromVersion(version){
@@ -585,64 +661,6 @@
   function isDark(){
     return this.image.isDark.apply(this.image, arguments);
   }
-
-  function mapping(table){
-    var map = {};
-
-    for (var key in table) {
-      if (table.hasOwnProperty(key)) {
-        map[table[key]] = key;
-      }
-    }
-
-    return map;
-  }
-
-  var MODE_MAP = mapping(MODE);
-  var EC_LEVEL_MAP = mapping(ERROR_CORRECTION_LEVEL);
-
-  function Pixels(mode, version, ec_level){
-    this.mode = MODE_MAP[mode];
-    this.version = version;
-    this.level = EC_LEVEL_MAP[ec_level];
-  }
-
-  inherits(Pixels, Array, {
-    setBackground: function (){
-      var i, j;
-      var modules = this.length;
-
-      for (i = 0; i < modules; i++) {
-        for (j = 0; j < modules; j++) {
-          this[i][j] = false;
-        }
-      }
-
-      return true;
-    },
-    setDark: function (x, y){
-      var modules = this.length;
-
-      // Ignoring d, since a pixel array has d=1
-      if (x > modules - 1 || y > modules - 1) {
-        return false;
-      }
-
-      this[x][y] = true;
-
-      return true;
-    },
-    isDark: function (x, y){
-      var modules = this.length;
-
-      // Ignoring d, since a pixel array has d=1
-      if (x > modules - 1 || y > modules - 1) {
-        return false;
-      }
-
-      return this[x][y];
-    }
-  });
 
   /*!
    * QR-Logo: http://qrlogo.kaarposoft.dk
@@ -1177,8 +1195,8 @@
      */
     encodeToPixArray: function (mode, text, version, ec_level){
       var i;
+      var modules = this.modulesFromVersion(version);
       var pixels = new Pixels(mode, version, ec_level);
-      var modules = this.modulesFromVersion(mode, version, ec_level);
 
       for (i = 0; i < modules; i++) {
         pixels.push([]);
@@ -1264,7 +1282,7 @@
 
       function getAlphaNum(qr, ch){
         if (!qr.ALPHANUM_REV.hasOwnProperty(ch)) {
-          throw ('Invalid character for Alphanumeric encoding [' + ch + ']');
+          throw new QRError('QREncode.InvalidChar4Alphanumeric', { char: ch }, 'Invalid character for Alphanumeric encoding [' + ch + '].');
         }
 
         return qr.ALPHANUM_REV[ch];
@@ -1327,7 +1345,7 @@
           var ch = text[i].charCodeAt() - 48;
 
           if ((ch < 0) || (ch > 9)) {
-            throw ('Invalid character for Numeric encoding [' + text[i] + ']');
+            throw new QRError('QREncode.InvalidChar4Numeric', { char: text[i] }, 'Invalid character for Numeric encoding [' + text[i] + '].');
           }
 
           num.push(ch);
@@ -1370,11 +1388,11 @@
       } else if (mode === this.MODE.Terminator) {
         return;
       } else {
-        throw ('Unsupported ECI mode: ' + mode);
+        throw new QRError('QRCode.UnsupportedECI', { mode: mode }, 'Unsupported ECI mode: ' + mode + '.');
       }
 
       if (this.bit_idx / 8 > this.data_codewords) {
-        throw ('Text too long for this EC version');
+        throw new QRError('QREncode.TextTooLong4TargetVersion', null, 'Text too long for this EC version.');
       }
     },
     appendPadding: function (){
@@ -1410,7 +1428,7 @@
 
       this.bytes = bytes;
     },
-    calculatePenalty: function (mask){
+    calculatePenalty: function (){
       function penaltyAdjacent(qr){
         var i, j;
         var rc, p = 0;
@@ -1568,7 +1586,7 @@
         this.encodeFunctionalPatterns(mask);
         this.encodeData(mask);
 
-        penalty = this.calculatePenalty(mask);
+        penalty = this.calculatePenalty();
 
         if (penalty < best_penalty) {
           best_penalty = penalty;
@@ -1884,7 +1902,7 @@
           cap++;
         }
       } else {
-        throw ('Unsupported ECI mode: ' + mode);
+        throw new QRError('QRCode.UnsupportedECI', { mode: mode }, 'Unsupported ECI mode: ' + mode + '.');
       }
 
       return cap;
@@ -1899,7 +1917,7 @@
         }
       }
 
-      throw('Text is too long, even for a version 40 QR Code');
+      throw new QRError('QREncode.TextTooLong4AllVersion', null, 'Text is too long, even for a version 40 QR Code.');
     }
   };
 
