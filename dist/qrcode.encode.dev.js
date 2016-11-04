@@ -938,8 +938,6 @@
   var PAD0 = 0xEC;
   var PAD1 = 0x11;
 
-  QRCode.getMaxLength = getMaxLength;
-
   QRCode.createData = function(version, level, dataArray) {
     var i;
     var data;
@@ -1402,7 +1400,10 @@
   var encode = {
     MODE: Mode,
     ECLEVEL: ErrorCorrectLevel,
-    Encode: QRCode
+    Encode: QRCode,
+    autoVersion: function() {
+      getMaxLength;
+    }
   };
 
   return encode;
