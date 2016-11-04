@@ -1201,7 +1201,7 @@
     }
   };
 
-  function QREncode() {
+  function QREncode(){
     var context = this;
 
     context.pixels = null;
@@ -1246,7 +1246,7 @@
      *  @param version   Version according to ISO/IEC 18004:2006(E) Section 5.3.1
      *  @param ec_level  Error correction level according to ISO/IEC 18004:2006(E) Section 6.5.1
      */
-    encodeToPixArray: function(mode, text, version, ec_level) {
+    encodeToPixArray: function (mode, text, version, ec_level){
       var i;
       var context = this;
       var modules = context.modulesFromVersion(version);
@@ -1267,7 +1267,7 @@
      *  @param ec_level      Error correction level according to ISO/IEC 18004:2006(E) Section 6.5.1
      *  @param pixels           pixel object
      */
-    encodeInit: function(ec_level, pixels) {
+    encodeInit: function (ec_level, pixels){
       var i;
       var context = this;
 
@@ -1300,13 +1300,13 @@
      *  @param mode  Mode according to ISO/IEC 18004:2006(E) Section 6.3
      *  @param text  The text to be encoded
      */
-    encodeAddText: function(mode, text) {
+    encodeAddText: function (mode, text){
       this.addTextImplementation(mode, text);
     },
     /**
      * Encode this class to an image/canvas.
      */
-    encode: function() {
+    encode: function (){
       var context = this;
 
       context.addTextImplementation(context.MODE.Terminator, null);
@@ -1323,10 +1323,17 @@
      * @param mode
      * @param text
      */
-    addTextImplementation: function(mode, text) {
+    addTextImplementation: function (mode, text){
       var context = this;
 
-      function appendBits(bytes, pos, len, value) {
+      /**
+       * append bits
+       * @param bytes
+       * @param pos
+       * @param len
+       * @param value
+       */
+      function appendBits(bytes, pos, len, value){
         var byteIndex = pos >>> 3;
         var shift = 24 - (pos & 7) - len;
         var v = value << shift;
@@ -1338,7 +1345,13 @@
         bytes[byteIndex] += v & 0xFF;
       }
 
-      function getAlphaNum(context, ch) {
+      /**
+       * get alphanum
+       * @param context
+       * @param ch
+       * @returns {*}
+       */
+      function getAlphaNum(context, ch){
         if (!context.ALPHANUM_REV.hasOwnProperty(ch)) {
           throw new QRError('QREncode.InvalidChar4Alphanumeric', { char: ch });
         }
@@ -1346,7 +1359,12 @@
         return context.ALPHANUM_REV[ch];
       }
 
-      function addAlphaNum(context, text) {
+      /**
+       * add alphanum
+       * @param context
+       * @param text
+       */
+      function addAlphaNum(context, text){
         var n = text.length;
         var count_bits = context.countBits(context.MODE.AlphaNumeric, context.version);
 
@@ -1371,7 +1389,12 @@
         }
       }
 
-      function add8bit(context, text) {
+      /**
+       * add 8 bit
+       * @param context
+       * @param text
+       */
+      function add8bit(context, text){
         var count_bits = context.countBits(context.MODE.EightBit, context.version);
 
         appendBits(context.data, context.bit_idx, count_bits, text.length);
@@ -1381,13 +1404,18 @@
         var i;
 
         for (i = 0; i < text.length; i++) {
-          appendBits(context.data, context.bit_idx, 8, text[i].charCodeAt());
+          appendBits(context.data, context.bit_idx, 8, text.charCodeAt(i));
 
           context.bit_idx += 8;
         }
       }
 
-      function addNumeric(context, text) {
+      /**
+       * add numeric
+       * @param context
+       * @param text
+       */
+      function addNumeric(context, text){
         var n = text.length;
         var count_bits = context.countBits(context.MODE.Numeric, context.version);
 
@@ -1395,12 +1423,12 @@
 
         context.bit_idx += count_bits;
 
-        var num = [];
-        var val;
         var i;
+        var val;
+        var num = [];
 
         for (i = 0; i < n; i++) {
-          var ch = text[i].charCodeAt() - 48;
+          var ch = text.charCodeAt(i) - 48;
 
           if ((ch < 0) || (ch > 9)) {
             throw new QRError('QREncode.InvalidChar4Numeric', { char: text[i] });
@@ -1453,7 +1481,7 @@
         throw new QRError('QREncode.TextTooLong4TargetVersion');
       }
     },
-    appendPadding: function() {
+    appendPadding: function (){
       var i;
       var context = this;
 
@@ -1462,7 +1490,7 @@
         context.data[i + 1] = 0x11;
       }
     },
-    addErrorCorrection: function() {
+    addErrorCorrection: function (){
       var b, i;
       var n = 0;
       var bytes = [];
@@ -1488,10 +1516,10 @@
 
       context.bytes = bytes;
     },
-    calculatePenalty: function() {
+    calculatePenalty: function (){
       var context = this;
 
-      function penaltyAdjacent(context) {
+      function penaltyAdjacent(context){
         var i, j;
         var rc, p = 0;
         var dark, light;
@@ -1532,7 +1560,7 @@
         return p;
       }
 
-      function penaltyBlocks(context) {
+      function penaltyBlocks(context){
         // Not clear from ISO standard, if blocks have to be rectangular?
         // Here we give 3 penalty to every 2x2 block, so odd shaped areas will have penalties as well as rectangles
         var p = 0;
@@ -1567,7 +1595,7 @@
         return p;
       }
 
-      function penaltyDarkLight(context) {
+      function penaltyDarkLight(context){
         // we shift bits in one by one, and see if the resulting pattern match the bad one
         var p = 0;
         var i, j;
@@ -1605,7 +1633,7 @@
         return p;
       }
 
-      function penaltyDark(context) {
+      function penaltyDark(context){
         var i, j;
         var dark = 0;
 
@@ -1628,7 +1656,7 @@
 
       return p_adjacent + p_blocks + p_darkLight + p_dark;
     },
-    encodeBestMask: function() {
+    encodeBestMask: function (){
       var best_mask = 0;
       var context = this;
       var best_penalty = 999999;
@@ -1670,10 +1698,10 @@
         context.encodeData(context.mask);
       }
     },
-    encodeFunctionalPatterns: function(mask) {
+    encodeFunctionalPatterns: function (mask){
       var context = this;
 
-      function encodeFinderPattern(context, x, y) {
+      function encodeFinderPattern(context, x, y){
         var i, j;
 
         // Outer 7x7 black boundary
@@ -1692,7 +1720,7 @@
         }
       }
 
-      function encodeVersionTopright(context) {
+      function encodeVersionTopright(context){
         var x, y;
         var pattern = context.VERSION_INFO[context.version];
 
@@ -1707,7 +1735,7 @@
         }
       }
 
-      function encodeVersionBottomleft(context) {
+      function encodeVersionBottomleft(context){
         var x, y;
         var pattern = context.VERSION_INFO[context.version];
 
@@ -1722,7 +1750,7 @@
         }
       }
 
-      function encodeTimingPattern(context, horizontal) {
+      function encodeTimingPattern(context, horizontal){
         var i;
 
         for (i = 8; i < context.modules - 8; i += 2) {
@@ -1735,7 +1763,7 @@
 
       }
 
-      function encodeOneAlignmentPattern(context, x, y) {
+      function encodeOneAlignmentPattern(context, x, y){
         // Outer 5x5 black boundary
         var i;
 
@@ -1750,7 +1778,7 @@
         context.pixels[x + 2][y + 2] = true;
       }
 
-      function encodeAlignmentPatterns(context) {
+      function encodeAlignmentPatterns(context){
         var i, j;
         var n = context.ALIGNMENT_PATTERNS[context.version].length;
 
@@ -1765,7 +1793,7 @@
         }
       }
 
-      function encodeFormatNW(context, code) {
+      function encodeFormatNW(context, code){
         var x, y;
 
         for (y = 0; y <= 5; y++) {
@@ -1803,7 +1831,7 @@
         }
       }
 
-      function encodeFormatNESW(context, code) {
+      function encodeFormatNESW(context, code){
         var x, y;
 
         for (x = context.modules - 1; x > context.modules - 1 - 8; x--) {
@@ -1845,10 +1873,10 @@
       encodeFormatNW(context, code);
       encodeFormatNESW(context, code);
     },
-    encodeData: function(qrmask) {
+    encodeData: function (qrmask){
       var context = this;
 
-      function setMasked(pixels, mask, j, i, f) {
+      function setMasked(pixels, mask, j, i, f){
         var m;
 
         switch (mask) {
@@ -1928,7 +1956,7 @@
         writingUp ^= true; // writingUp = !writingUp; // switch directions
       }
     },
-    pixelsToImage: function() {
+    pixelsToImage: function (){
       var i, j;
       var context = this;
 
@@ -1940,7 +1968,7 @@
         }
       }
     },
-    getDataCapacity: function(mode, version, ec_level) {
+    getDataCapacity: function (mode, version, ec_level){
       var context = this;
       var codewords = context.CODEWORDS[version];
       var ec_codewords = context.EC_CODEWORDS[version][ec_level];
@@ -1976,7 +2004,7 @@
 
       return cap;
     },
-    getVersionFromLength: function(mode, text, ec_level) {
+    getVersionFromLength: function (mode, text, ec_level){
       var v;
       var length = text.length;
 
