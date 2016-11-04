@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *Parts of the Reed Solomon decoding algorithms have been inspired by
- *http://rscode.sourceforge.net
+ * Parts of the Reed Solomon decoding algorithms have been inspired by
+ * http://rscode.sourceforge.net
  * Original version Copyright (C) by Henry Minsky
  */
 

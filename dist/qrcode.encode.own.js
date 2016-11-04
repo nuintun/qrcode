@@ -49,12 +49,16 @@
       if ((c >= 0x0001) && (c <= 0x007F)) {
         out += string.charAt(i);
       } else if (c > 0x07FF) {
-        out += String.fromCharCode(0xE0 | ((c >> 12) & 0x0F));
-        out += String.fromCharCode(0x80 | ((c >> 6) & 0x3F));
-        out += String.fromCharCode(0x80 | ((c >> 0) & 0x3F));
+        out += String.fromCharCode(
+          0xE0 | ((c >> 12) & 0x0F),
+          0x80 | ((c >> 6) & 0x3F),
+          0x80 | ((c >> 0) & 0x3F)
+        );
       } else {
-        out += String.fromCharCode(0xC0 | ((c >> 6) & 0x1F));
-        out += String.fromCharCode(0x80 | ((c >> 0) & 0x3F));
+        out += String.fromCharCode(
+          0xC0 | ((c >> 6) & 0x1F),
+          0x80 | ((c >> 0) & 0x3F)
+        );
       }
     }
 
@@ -717,8 +721,8 @@
    * See the License for the specific language governing permissions and
    * limitations under the License.
    *
-   *Parts of the Reed Solomon decoding algorithms have been inspired by
-   *http://rscode.sourceforge.net
+   * Parts of the Reed Solomon decoding algorithms have been inspired by
+   * http://rscode.sourceforge.net
    * Original version Copyright (C) by Henry Minsky
    */
 

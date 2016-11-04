@@ -43,12 +43,16 @@ export function toUTF8(string) {
     if ((c >= 0x0001) && (c <= 0x007F)) {
       out += string.charAt(i);
     } else if (c > 0x07FF) {
-      out += String.fromCharCode(0xE0 | ((c >> 12) & 0x0F));
-      out += String.fromCharCode(0x80 | ((c >> 6) & 0x3F));
-      out += String.fromCharCode(0x80 | ((c >> 0) & 0x3F));
+      out += String.fromCharCode(
+        0xE0 | ((c >> 12) & 0x0F),
+        0x80 | ((c >> 6) & 0x3F),
+        0x80 | ((c >> 0) & 0x3F)
+      );
     } else {
-      out += String.fromCharCode(0xC0 | ((c >> 6) & 0x1F));
-      out += String.fromCharCode(0x80 | ((c >> 0) & 0x3F));
+      out += String.fromCharCode(
+        0xC0 | ((c >> 6) & 0x1F),
+        0x80 | ((c >> 0) & 0x3F)
+      );
     }
   }
 
