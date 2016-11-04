@@ -6,7 +6,7 @@
     var j;
     var cfg = self.config;
     var mSize = cfg.moduleSize;
-    var size = self.pixArr.length;
+    var size = self.pixels.length;
     var outSize = 2 * cfg.margin + size;
     var canvas = document.createElement('canvas');
     var ctx = canvas.getContext('2d');
@@ -87,7 +87,7 @@
 
     for (i = cfg.margin; i < size + cfg.margin; i++) {
       for (j = cfg.margin; j < size + cfg.margin; j++) {
-        if (self.pixArr[i - cfg.margin][j - cfg.margin]) {
+        if (self.pixels.isDark(i - cfg.margin, j - cfg.margin)) {
           setBlock(i, j, getRGB(cfg.moduleColor));
         }
       }

@@ -1,3 +1,6 @@
+var TMPLRE = /{{(.+?)}}/g;
+var toSting = Object.prototype.toString;
+
 /**
  * inherits
  * @param ctor
@@ -30,9 +33,9 @@ export function inherits(ctor, super_ctor, proto){
  * @returns {string}
  */
 export function toUTF8(string){
+  var i, c;
   var out = '';
   var len = string.length;
-  var i, c;
 
   for (i = 0; i < len; i++) {
     c = string.charCodeAt(i);
@@ -83,4 +86,29 @@ export function toUnicode(string){
   }
 
   return out;
+}
+
+/**
+ * Sting judge
+ * @param value
+ * @returns {boolean}
+ */
+export function isString(value){
+  return toSting.call(value) === '[object String]';
+}
+
+/**
+ * Simple template engine
+ * @param tmpl
+ * @param data
+ * @returns {*}
+ */
+export function template(tmpl, data){
+  if (data) {
+    return tmpl.replace(TMPLRE, function (matched, key){
+      return isString(data[key]) ? data[key] : matched;
+    });
+  } else {
+    return tmpl;
+  }
 }

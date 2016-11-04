@@ -8,7 +8,7 @@
     var modules = '';
     var mSize = cfg.moduleSize;
     var margin = cfg.margin * mSize;
-    var size = self.pixArr.length;
+    var size = self.pixels.length;
     var outSize = 2 * cfg.margin + size;
     var panel = $('<div style="position:relative;display:inline-block;*zoom:1;margin:0;padding:0;border:0;"></div>');
 
@@ -46,7 +46,7 @@
 
     for (i = 0; i < size; i++) {
       for (j = 0; j < size; j++) {
-        if (self.pixArr[i][j]) {
+        if (self.pixels.isDark(i, j)) {
           modules += '<em style="position:absolute;'
             + 'width:' + mSize + 'px;height:' + mSize + 'px;'
             + 'top:' + (j * mSize + margin) + 'px;'

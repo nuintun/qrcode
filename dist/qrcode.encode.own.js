@@ -4,6 +4,9 @@
   (global.QRCode = factory());
 }(this, (function () { 'use strict';
 
+  var TMPLRE = /{{(.+?)}}/g;
+  var toSting = Object.prototype.toString;
+
   /**
    * inherits
    * @param ctor
@@ -36,9 +39,9 @@
    * @returns {string}
    */
   function toUTF8(string){
+    var i, c;
     var out = '';
     var len = string.length;
-    var i, c;
 
     for (i = 0; i < len; i++) {
       c = string.charCodeAt(i);
@@ -63,45 +66,7 @@
    * @param {string} string
    * @returns {string}
    */
-  function toUnicode(string){
-    var i = 0;
-    var out = '';
-    var len = string.length;
-    var mark, char1, char2, char3;
 
-    while (i < len) {
-      char1 = string.charCodeAt(i++);
-      mark = char1 >> 4;
-
-      if (mark <= 7) {
-        // 0xxxxxxx
-        out += string.charAt(i - 1);
-      } else if (mark === 12 || mark === 13) {
-        // 110x xxxx   10xx xxxx
-        char2 = string.charCodeAt(i++);
-        out += String.fromCharCode(((char1 & 0x1F) << 6) | (char2 & 0x3F));
-      } else if (mark === 14) {
-        // 1110 xxxx  10xx xxxx  10xx xxxx
-        char2 = string.charCodeAt(i++);
-        char3 = string.charCodeAt(i++);
-        out += String.fromCharCode(((char1 & 0x0F) << 12) | ((char2 & 0x3F) << 6) | ((char3 & 0x3F) << 0));
-      }
-    }
-
-    return out;
-  }
-
-  var EN = {
-    'QRCode.UnknownMode': 'Internal error: Unknown mode: {{mode}}.',
-    'QRCode.UnsupportedECI': 'Unsupported ECI mode: {{mode}}.',
-    'QREncode.InvalidChar4Alphanumeric': 'Invalid character for Alphanumeric encoding [{{char}}].',
-    'QREncode.InvalidChar4Numeric': 'Invalid character for Numeric encoding [{{char}}].',
-    'QREncode.TextTooLong4TargetVersion': 'Text too long for this EC version.',
-    'QREncode.TextTooLong4AllVersion': 'Text is too long, even for a version 40 QR Code.'
-  };
-
-  var TMPLRE = /{{(.+?)}}/g;
-  var toSting = Object.prototype.toString;
 
   /**
    * Sting judge
@@ -127,38 +92,6 @@
       return tmpl;
     }
   }
-
-  /**
-   * QRError
-   * @param type
-   * @param data
-   * @constructor
-   */
-  function QRError(type, data){
-    var context = this;
-
-    context.type = type;
-    context.data = data || null;
-
-    context.localize(EN);
-  }
-
-  // inherits
-  inherits(QRError, Error, {
-    name: 'QRError',
-    /**
-     * localize
-     * @param local
-     * @returns {*}
-     */
-    localize: function (local){
-      var context = this;
-      var type = context.type;
-      var tmpl = isString(local[type]) ? local[type] : EN[type];
-
-      return context.message = template(tmpl, context.data);
-    }
-  });
 
   /*!
    * QRCode constants
@@ -482,25 +415,46 @@
     ':': 44
   };
 
+  var EN = {
+    'QRCode.UnknownMode': 'Internal error: Unknown mode: {{mode}}.',
+    'QRCode.UnsupportedECI': 'Unsupported ECI mode: {{mode}}.',
+    'QREncode.InvalidChar4Alphanumeric': 'Invalid character for Alphanumeric encoding [{{char}}].',
+    'QREncode.InvalidChar4Numeric': 'Invalid character for Numeric encoding [{{char}}].',
+    'QREncode.TextTooLong4TargetVersion': 'Text too long for this EC version.',
+    'QREncode.TextTooLong4AllVersion': 'Text is too long, even for a version 40 QR Code.'
+  };
+
   /**
-   * mapping
-   * @param table
-   * @returns {{}}
+   * QRError
+   * @param type
+   * @param data
+   * @constructor
    */
-  function mapping(table){
-    var map = {};
+  function QRError(type, data){
+    var context = this;
 
-    for (var key in table) {
-      if (table.hasOwnProperty(key)) {
-        map[table[key]] = key;
-      }
-    }
+    context.type = type;
+    context.data = data || null;
 
-    return map;
+    context.localize(EN);
   }
 
-  var MODE_MAP = mapping(MODE);
-  var EC_LEVEL_MAP = mapping(ERROR_CORRECTION_LEVEL);
+  // inherits
+  inherits(QRError, Error, {
+    name: 'QRError',
+    /**
+     * localize
+     * @param local
+     * @returns {*}
+     */
+    localize: function (local){
+      var context = this;
+      var type = context.type;
+      var tmpl = isString(local[type]) ? local[type] : EN[type];
+
+      return context.message = template(tmpl, context.data);
+    }
+  });
 
   /**
    * Pixels
@@ -512,9 +466,9 @@
   function Pixels(mode, version, ec_level){
     var context = this;
 
-    context.mode = MODE_MAP[mode];
+    context.mode = mode;
     context.version = version;
-    context.level = EC_LEVEL_MAP[ec_level];
+    context.level = ec_level;
   }
 
   inherits(Pixels, Array, {
@@ -2037,9 +1991,22 @@
   };
 
   var encode = {
-    toUTF8: toUTF8,
-    toUnicode: toUnicode,
-    Encode: QREncode
+    MODE: MODE,
+    ECLEVEL: ERROR_CORRECTION_LEVEL,
+    Encode: function (mode, text, version, ec_level){
+      text += '';
+      text = mode === MODE.EightBit ? toUTF8(text) : text;
+
+      var qrcode = new QREncode();
+
+      version = isNaN(version) ? 0 : version;
+
+      if (version <= 0 || version > 40) {
+        version = qrcode.getVersionFromLength(mode, text, ec_level);
+      }
+
+      return qrcode.encodeToPixArray(mode, text, version, ec_level);
+    }
   };
 
   return encode;

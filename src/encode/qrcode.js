@@ -41,25 +41,20 @@
     _init: function (callback){
       var config = this.config;
 
-      this.qr = new QRCode.Encode();
-
       // 含有 Logo，使用最大容错
       if (config.logo) {
         config.ECLevel = 2;
       }
 
-      config.text = QRCode.toUTF8(config.text);
-
       try {
-        this.version = this.qr.getVersionFromLength(config.mode, config.text, config.ECLevel);
-        this.pixArr = this.qr.encodeToPixArray(config.mode, config.text, this.version, config.ECLevel);
+        this.pixels = new QRCode.Encode(config.mode, config.text, 0, config.ECLevel);
 
-        console.log(this.pixArr);
+        console.log(this.pixels);
       } catch (e) {
         $.isFunction(config.error) && config.error(e);
       }
 
-      this.pixArr && $.QREncode.Render[config.render](this, callback);
+      this.pixels && $.QREncode.Render[config.render](this, callback);
     }
   };
 

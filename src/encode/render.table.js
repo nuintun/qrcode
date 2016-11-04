@@ -8,7 +8,7 @@
     var cfg = self.config;
     var mSize = cfg.moduleSize;
     var margin = cfg.margin * mSize;
-    var size = self.pixArr.length;
+    var size = self.pixels.length;
     var outSize = 2 * cfg.margin + size;
     var panel = $('<div style="position:relative;display:inline-block;*zoom:1;margin:0;padding:0;border:0;"></div>');
 
@@ -51,7 +51,7 @@
       table += '<tr>';
 
       for (j = 0; j < size; j++) {
-        if (self.pixArr[j][i]) {
+        if (self.pixels.isDark(i, j)) {
           table += '<td style="background-color:' + cfg.moduleColor + ';margin:0;padding:0;border:0;">&nbsp;</td>';
         } else {
           table += '<td style="background-color:transparent;margin:0;padding:0;border:0;">&nbsp;</td>';
