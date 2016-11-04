@@ -266,7 +266,7 @@ function getRsBlockTable(version, level) {
       break;
   }
 
-  throw 'invalid version: ' + version + '/level:' + level;
+  throw 'illegal version: ' + version + '/level:' + level;
 };
 
 RSBlock.getRSBlocks = function(version, level) {

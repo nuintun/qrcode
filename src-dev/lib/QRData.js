@@ -33,7 +33,7 @@ QRData.prototype = {
         case Mode.MODE_KANJI:
           return 8;
         default:
-          throw 'invalid mode: ' + mode;
+          throw 'illegal mode: ' + mode;
       }
     } else if (version < 27) {
       // 10 - 26
@@ -47,7 +47,7 @@ QRData.prototype = {
         case Mode.MODE_KANJI:
           return 10;
         default:
-          throw 'invalid mode: ' + mode;
+          throw 'illegal mode: ' + mode;
       }
     } else if (version < 41) {
       // 27 - 40
@@ -61,10 +61,10 @@ QRData.prototype = {
         case Mode.MODE_KANJI:
           return 12;
         default:
-          throw 'invalid mode: ' + mode;
+          throw 'illegal mode: ' + mode;
       }
     } else {
-      throw 'version: ' + version;
+      throw 'illegal version: ' + version;
     }
   }
 };

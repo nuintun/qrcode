@@ -284,7 +284,7 @@
         break;
     }
 
-    throw 'invalid version: ' + version + '/level:' + level;
+    throw 'illegal version: ' + version + '/level:' + level;
   }
 
   RSBlock.getRSBlocks = function(version, level) {
@@ -825,7 +825,7 @@
           case Mode.MODE_KANJI:
             return 8;
           default:
-            throw 'invalid mode: ' + mode;
+            throw 'illegal mode: ' + mode;
         }
       } else if (version < 27) {
         // 10 - 26
@@ -839,7 +839,7 @@
           case Mode.MODE_KANJI:
             return 10;
           default:
-            throw 'invalid mode: ' + mode;
+            throw 'illegal mode: ' + mode;
         }
       } else if (version < 41) {
         // 27 - 40
@@ -853,10 +853,10 @@
           case Mode.MODE_KANJI:
             return 12;
           default:
-            throw 'invalid mode: ' + mode;
+            throw 'illegal mode: ' + mode;
         }
       } else {
-        throw 'version: ' + version;
+        throw 'illegal version: ' + version;
       }
     }
   };
