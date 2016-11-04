@@ -3,20 +3,6 @@
  */
 'use strict';
 
-var zh_cn = {
-  "QRCode.UnknownMode": "Internal error: Unknown mode: {{mode}}.",
-  "QRCode.UnsupportedECI": "Internal error: Unsupported ECI mode: {{mode}}.",
-  "QREncode.InvalidChar4Alphanumeric": "Invalid character for Alphanumeric encoding [{{char}}].",
-  "QREncode.InvalidChar4Numeric": "Invalid character for Numeric encoding [{{char}}].",
-  "QREncode.TextTooLong4TargetVersion": "Text too long for this EC version.",
-  "QREncode.TextTooLong4AllVersion": "Text is too long, even for a version 40 QR Code.",
-  "QRDecode.ImageNoEnoughContrast": "Image does not have enough contrast (this.image_data.min_col={{min}} this.image_data.max_col={{max}}).",
-  "QRDecode.NoImage": "Found no image data to decode.",
-  "QRDecode.InvalidImage": "Image data is not rectangular.",
-  "QRDecode.UnableDecodePattern": "Unable to decode a function pattern.",
-  "QRDecode.UnableCorrectErrors": "Unable to correct errors ({{reason}})."
-};
-
 (function ($, window, document, undefined){
   $.QREncode = {
     /**
@@ -61,12 +47,12 @@ var zh_cn = {
       }
 
       try {
-        this.pixels = new QRCode.Encode(config.mode, config.text, 0, config.ECLevel);
+        this.pixels = new QRCode.Encode(config.mode, config.ECLevel);
+        this.pixels.addData(config.text);
+        this.pixels.make();
 
         console.log(this.pixels);
       } catch (e) {
-        e.localize(zh_cn);
-
         $.isFunction(config.error) && config.error(e);
       }
 

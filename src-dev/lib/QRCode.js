@@ -15,8 +15,8 @@ export default function QRCode(typeNumber, errorCorrectLevel) {
   context.moduleCount = 0;
 }
 
-QRCode.PAD0 = 0xEC;
-QRCode.PAD1 = 0x11;
+var PAD0 = 0xEC;
+var PAD1 = 0x11;
 QRCode.getMaxLength = QRUtil.getMaxLength;
 
 QRCode.createData = function(typeNumber, errorCorrectLevel, dataArray) {
@@ -64,13 +64,13 @@ QRCode.createData = function(typeNumber, errorCorrectLevel, dataArray) {
       break;
     }
 
-    buffer.put(QRCode.PAD0, 8);
+    buffer.put(PAD0, 8);
 
     if (buffer.getLengthInBits() >= totalDataCount * 8) {
       break;
     }
 
-    buffer.put(QRCode.PAD1, 8);
+    buffer.put(PAD1, 8);
   }
 
   return QRCode.createBytes(buffer, rsBlocks);
