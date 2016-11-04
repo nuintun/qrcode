@@ -284,7 +284,7 @@
         break;
     }
 
-    throw 'illegal version: ' + version + '/level:' + level;
+    throw 'illegal error correct level: ' + level;
   }
 
   RSBlock.getRSBlocks = function(version, level) {
@@ -603,6 +603,10 @@
   }
 
   function getPatternPosition(version) {
+    if (version < 1 || version > PATTERN_POSITION_TABLE.length) {
+      throw 'illegal version: ' + version;
+    }
+
     return PATTERN_POSITION_TABLE[version - 1];
   }
 

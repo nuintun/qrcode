@@ -91,6 +91,10 @@ export function inherits(ctor, superCtor, proto) {
 }
 
 export function getPatternPosition(version) {
+  if (version < 1 || version > PATTERN_POSITION_TABLE.length) {
+    throw 'illegal version: ' + version;
+  }
+
   return PATTERN_POSITION_TABLE[version - 1];
 }
 
