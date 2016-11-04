@@ -1130,10 +1130,10 @@
     setVersion: function(version) {
       this.version = version;
     },
-    getLevel: function() {
+    getErrorLevel: function() {
       return this.level;
     },
-    setLevel: function(level) {
+    setErrorLevel: function(level) {
       this.level = level;
     },
     clearData: function() {
@@ -1164,6 +1164,9 @@
       } else {
         return false;
       }
+    },
+    getModules: function() {
+      return this.modules;
     },
     getModuleCount: function() {
       return this.count;
