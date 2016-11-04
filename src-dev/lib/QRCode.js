@@ -17,6 +17,7 @@ export default function QRCode(typeNumber, errorCorrectLevel) {
 
 var PAD0 = 0xEC;
 var PAD1 = 0x11;
+
 QRCode.getMaxLength = QRUtil.getMaxLength;
 
 QRCode.createData = function(typeNumber, errorCorrectLevel, dataArray) {
