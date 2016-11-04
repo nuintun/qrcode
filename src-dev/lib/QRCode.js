@@ -10,7 +10,7 @@ export default function QRCode(typeNumber, errorCorrectLevel) {
 
   context.typeNumber = typeNumber;
   context.errorCorrectLevel = errorCorrectLevel;
-  context.qrDataList = [];
+  context.dataList = [];
   context.modules = [];
   context.moduleCount = 0;
 }
@@ -217,24 +217,24 @@ QRCode.prototype = {
     this.errorCorrectLevel = errorCorrectLevel;
   },
   clearData: function() {
-    this.qrDataList = [];
+    this.dataList = [];
   },
   addData: function(qrData) {
-    var qrDataList = this.qrDataList;
+    var dataList = this.dataList;
 
     if (qrData instanceof QRData) {
-      qrDataList.push(qrData);
+      dataList.push(qrData);
     } else if (typeof qrData === 'string') {
-      qrDataList.push(new QR8BitByte(qrData));
+      dataList.push(new QR8BitByte(qrData));
     } else {
       throw typeof qrData;
     }
   },
   getDataCount: function() {
-    return this.qrDataList.length;
+    return this.dataList.length;
   },
   getData: function(index) {
-    return this.qrDataList[index];
+    return this.dataList[index];
   },
   isDark: function(row, col) {
     var modules = this.modules;
@@ -306,7 +306,7 @@ QRCode.prototype = {
     var data = QRCode.createData(
       context.typeNumber,
       context.errorCorrectLevel,
-      context.qrDataList
+      context.dataList
     );
 
     context.mapData(data, maskPattern);
