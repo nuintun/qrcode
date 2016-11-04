@@ -1137,15 +1137,15 @@
     clearData: function() {
       this.data = [];
     },
-    addData: function(qrData) {
+    addData: function(data) {
       var dataList = this.data;
 
-      if (qrData instanceof QRData) {
-        dataList.push(qrData);
-      } else if (typeof qrData === 'string') {
-        dataList.push(new QR8BitByte(qrData));
+      if (data instanceof QRData) {
+        dataList.push(data);
+      } else if (typeof data === 'string') {
+        dataList.push(new QR8BitByte(data));
       } else {
-        throw typeof qrData;
+        throw typeof data;
       }
     },
     getDataCount: function() {
