@@ -1,4 +1,4 @@
-import ErrorCorrectLevel from './ErrorCorrectLevel';
+import { ErrorCorrectLevel } from './ErrorCorrectLevel';
 
 export default function RSBlock(totalCount, dataCount) {
   this.totalCount = totalCount;
@@ -262,7 +262,7 @@ RSBlock.getRSBlocks = function(typeNumber, errorCorrectLevel) {
   var j;
 
   for (var i = 0; i < length; i += 1) {
-    count = rsBlock[i * 3 + 0];
+    count = rsBlock[i * 3];
     totalCount = rsBlock[i * 3 + 1];
     dataCount = rsBlock[i * 3 + 2];
 
@@ -277,7 +277,7 @@ RSBlock.getRSBlocks = function(typeNumber, errorCorrectLevel) {
 RSBlock.getRsBlockTable = function(typeNumber, errorCorrectLevel) {
   switch (errorCorrectLevel) {
     case ErrorCorrectLevel.L:
-      return RSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+      return RSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4];
     case ErrorCorrectLevel.M:
       return RSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
     case ErrorCorrectLevel.Q:

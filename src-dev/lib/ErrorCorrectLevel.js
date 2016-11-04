@@ -3,4 +3,4 @@ export var ErrorCorrectLevel = {
   M: 0, // 15%
   Q: 3, // 25%
   H: 2 // 30%
-}
+};

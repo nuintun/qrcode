@@ -11,69 +11,6 @@
     MODE_KANJI: 1 << 3 // KANJI
   };
 
-  function QRData(mode, data) {
-    this.mode = mode;
-    this.data = data;
-  }
-
-  QRData.prototype = {
-    getMode: function() {
-      return this.mode;
-    },
-    getData: function() {
-      return this.data;
-    },
-    getLengthInBits: function(typeNumber) {
-      var mode = this.mode;
-
-      if (1 <= typeNumber && typeNumber < 10) {
-        // 1 - 9
-        switch (mode) {
-          case Mode.MODE_NUMBER:
-            return 10;
-          case Mode.MODE_ALPHA_NUM:
-            return 9;
-          case Mode.MODE_8BIT_BYTE:
-            return 8;
-          case Mode.MODE_KANJI:
-            return 8;
-          default:
-            throw 'mode:' + mode;
-        }
-      } else if (typeNumber < 27) {
-        // 10 - 26
-        switch (mode) {
-          case Mode.MODE_NUMBER:
-            return 12;
-          case Mode.MODE_ALPHA_NUM:
-            return 11;
-          case Mode.MODE_8BIT_BYTE:
-            return 16;
-          case Mode.MODE_KANJI:
-            return 10;
-          default:
-            throw 'mode:' + mode;
-        }
-      } else if (typeNumber < 41) {
-        // 27 - 40
-        switch (mode) {
-          case Mode.MODE_NUMBER:
-            return 14;
-          case Mode.MODE_ALPHA_NUM:
-            return 13;
-          case Mode.MODE_8BIT_BYTE:
-            return 16;
-          case Mode.MODE_KANJI:
-            return 12;
-          default:
-            throw 'mode:' + mode;
-        }
-      } else {
-        throw 'typeNumber:' + typeNumber;
-      }
-    }
-  };
-
   var ErrorCorrectLevel = {
     L: 1, // 7%
     M: 0, // 15%
@@ -81,11 +18,362 @@
     H: 2 // 30%
   };
 
+  function RSBlock(totalCount, dataCount) {
+    this.totalCount = totalCount;
+    this.dataCount = dataCount;
+  }
+
+  RSBlock.RS_BLOCK_TABLE = [
+    // L
+    // M
+    // Q
+    // H
+
+    // 1
+    [1, 26, 19],
+    [1, 26, 16],
+    [1, 26, 13],
+    [1, 26, 9],
+
+    // 2
+    [1, 44, 34],
+    [1, 44, 28],
+    [1, 44, 22],
+    [1, 44, 16],
+
+    // 3
+    [1, 70, 55],
+    [1, 70, 44],
+    [2, 35, 17],
+    [2, 35, 13],
+
+    // 4
+    [1, 100, 80],
+    [2, 50, 32],
+    [2, 50, 24],
+    [4, 25, 9],
+
+    // 5
+    [1, 134, 108],
+    [2, 67, 43],
+    [2, 33, 15, 2, 34, 16],
+    [2, 33, 11, 2, 34, 12],
+
+    // 6
+    [2, 86, 68],
+    [4, 43, 27],
+    [4, 43, 19],
+    [4, 43, 15],
+
+    // 7
+    [2, 98, 78],
+    [4, 49, 31],
+    [2, 32, 14, 4, 33, 15],
+    [4, 39, 13, 1, 40, 14],
+
+    // 8
+    [2, 121, 97],
+    [2, 60, 38, 2, 61, 39],
+    [4, 40, 18, 2, 41, 19],
+    [4, 40, 14, 2, 41, 15],
+
+    // 9
+    [2, 146, 116],
+    [3, 58, 36, 2, 59, 37],
+    [4, 36, 16, 4, 37, 17],
+    [4, 36, 12, 4, 37, 13],
+
+    // 10
+    [2, 86, 68, 2, 87, 69],
+    [4, 69, 43, 1, 70, 44],
+    [6, 43, 19, 2, 44, 20],
+    [6, 43, 15, 2, 44, 16],
+
+    // 11
+    [4, 101, 81],
+    [1, 80, 50, 4, 81, 51],
+    [4, 50, 22, 4, 51, 23],
+    [3, 36, 12, 8, 37, 13],
+
+    // 12
+    [2, 116, 92, 2, 117, 93],
+    [6, 58, 36, 2, 59, 37],
+    [4, 46, 20, 6, 47, 21],
+    [7, 42, 14, 4, 43, 15],
+
+    // 13
+    [4, 133, 107],
+    [8, 59, 37, 1, 60, 38],
+    [8, 44, 20, 4, 45, 21],
+    [12, 33, 11, 4, 34, 12],
+
+    // 14
+    [3, 145, 115, 1, 146, 116],
+    [4, 64, 40, 5, 65, 41],
+    [11, 36, 16, 5, 37, 17],
+    [11, 36, 12, 5, 37, 13],
+
+    // 15
+    [5, 109, 87, 1, 110, 88],
+    [5, 65, 41, 5, 66, 42],
+    [5, 54, 24, 7, 55, 25],
+    [11, 36, 12, 7, 37, 13],
+
+    // 16
+    [5, 122, 98, 1, 123, 99],
+    [7, 73, 45, 3, 74, 46],
+    [15, 43, 19, 2, 44, 20],
+    [3, 45, 15, 13, 46, 16],
+
+    // 17
+    [1, 135, 107, 5, 136, 108],
+    [10, 74, 46, 1, 75, 47],
+    [1, 50, 22, 15, 51, 23],
+    [2, 42, 14, 17, 43, 15],
+
+    // 18
+    [5, 150, 120, 1, 151, 121],
+    [9, 69, 43, 4, 70, 44],
+    [17, 50, 22, 1, 51, 23],
+    [2, 42, 14, 19, 43, 15],
+
+    // 19
+    [3, 141, 113, 4, 142, 114],
+    [3, 70, 44, 11, 71, 45],
+    [17, 47, 21, 4, 48, 22],
+    [9, 39, 13, 16, 40, 14],
+
+    // 20
+    [3, 135, 107, 5, 136, 108],
+    [3, 67, 41, 13, 68, 42],
+    [15, 54, 24, 5, 55, 25],
+    [15, 43, 15, 10, 44, 16],
+
+    // 21
+    [4, 144, 116, 4, 145, 117],
+    [17, 68, 42],
+    [17, 50, 22, 6, 51, 23],
+    [19, 46, 16, 6, 47, 17],
+
+    // 22
+    [2, 139, 111, 7, 140, 112],
+    [17, 74, 46],
+    [7, 54, 24, 16, 55, 25],
+    [34, 37, 13],
+
+    // 23
+    [4, 151, 121, 5, 152, 122],
+    [4, 75, 47, 14, 76, 48],
+    [11, 54, 24, 14, 55, 25],
+    [16, 45, 15, 14, 46, 16],
+
+    // 24
+    [6, 147, 117, 4, 148, 118],
+    [6, 73, 45, 14, 74, 46],
+    [11, 54, 24, 16, 55, 25],
+    [30, 46, 16, 2, 47, 17],
+
+    // 25
+    [8, 132, 106, 4, 133, 107],
+    [8, 75, 47, 13, 76, 48],
+    [7, 54, 24, 22, 55, 25],
+    [22, 45, 15, 13, 46, 16],
+
+    // 26
+    [10, 142, 114, 2, 143, 115],
+    [19, 74, 46, 4, 75, 47],
+    [28, 50, 22, 6, 51, 23],
+    [33, 46, 16, 4, 47, 17],
+
+    // 27
+    [8, 152, 122, 4, 153, 123],
+    [22, 73, 45, 3, 74, 46],
+    [8, 53, 23, 26, 54, 24],
+    [12, 45, 15, 28, 46, 16],
+
+    // 28
+    [3, 147, 117, 10, 148, 118],
+    [3, 73, 45, 23, 74, 46],
+    [4, 54, 24, 31, 55, 25],
+    [11, 45, 15, 31, 46, 16],
+
+    // 29
+    [7, 146, 116, 7, 147, 117],
+    [21, 73, 45, 7, 74, 46],
+    [1, 53, 23, 37, 54, 24],
+    [19, 45, 15, 26, 46, 16],
+
+    // 30
+    [5, 145, 115, 10, 146, 116],
+    [19, 75, 47, 10, 76, 48],
+    [15, 54, 24, 25, 55, 25],
+    [23, 45, 15, 25, 46, 16],
+
+    // 31
+    [13, 145, 115, 3, 146, 116],
+    [2, 74, 46, 29, 75, 47],
+    [42, 54, 24, 1, 55, 25],
+    [23, 45, 15, 28, 46, 16],
+
+    // 32
+    [17, 145, 115],
+    [10, 74, 46, 23, 75, 47],
+    [10, 54, 24, 35, 55, 25],
+    [19, 45, 15, 35, 46, 16],
+
+    // 33
+    [17, 145, 115, 1, 146, 116],
+    [14, 74, 46, 21, 75, 47],
+    [29, 54, 24, 19, 55, 25],
+    [11, 45, 15, 46, 46, 16],
+
+    // 34
+    [13, 145, 115, 6, 146, 116],
+    [14, 74, 46, 23, 75, 47],
+    [44, 54, 24, 7, 55, 25],
+    [59, 46, 16, 1, 47, 17],
+
+    // 35
+    [12, 151, 121, 7, 152, 122],
+    [12, 75, 47, 26, 76, 48],
+    [39, 54, 24, 14, 55, 25],
+    [22, 45, 15, 41, 46, 16],
+
+    // 36
+    [6, 151, 121, 14, 152, 122],
+    [6, 75, 47, 34, 76, 48],
+    [46, 54, 24, 10, 55, 25],
+    [2, 45, 15, 64, 46, 16],
+
+    // 37
+    [17, 152, 122, 4, 153, 123],
+    [29, 74, 46, 14, 75, 47],
+    [49, 54, 24, 10, 55, 25],
+    [24, 45, 15, 46, 46, 16],
+
+    // 38
+    [4, 152, 122, 18, 153, 123],
+    [13, 74, 46, 32, 75, 47],
+    [48, 54, 24, 14, 55, 25],
+    [42, 45, 15, 32, 46, 16],
+
+    // 39
+    [20, 147, 117, 4, 148, 118],
+    [40, 75, 47, 7, 76, 48],
+    [43, 54, 24, 22, 55, 25],
+    [10, 45, 15, 67, 46, 16],
+
+    // 40
+    [19, 148, 118, 6, 149, 119],
+    [18, 75, 47, 31, 76, 48],
+    [34, 54, 24, 34, 55, 25],
+    [20, 45, 15, 61, 46, 16]
+  ];
+
+  RSBlock.getRSBlocks = function(typeNumber, errorCorrectLevel) {
+    var rsBlock = RSBlock.getRsBlockTable(typeNumber, errorCorrectLevel);
+    var length = rsBlock.length / 3;
+    var list = [];
+    var count;
+    var totalCount;
+    var dataCount;
+    var j;
+
+    for (var i = 0; i < length; i += 1) {
+      count = rsBlock[i * 3];
+      totalCount = rsBlock[i * 3 + 1];
+      dataCount = rsBlock[i * 3 + 2];
+
+      for (j = 0; j < count; j += 1) {
+        list.push(new RSBlock(totalCount, dataCount));
+      }
+    }
+
+    return list;
+  };
+
+  RSBlock.getRsBlockTable = function(typeNumber, errorCorrectLevel) {
+    switch (errorCorrectLevel) {
+      case ErrorCorrectLevel.L:
+        return RSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4];
+      case ErrorCorrectLevel.M:
+        return RSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+      case ErrorCorrectLevel.Q:
+        return RSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+      case ErrorCorrectLevel.H:
+        return RSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+      default:
+        break;
+    }
+
+    throw 'tn:' + typeNumber + '/ecl:' + errorCorrectLevel;
+  };
+
+  RSBlock.prototype = {
+    getDataCount: function() {
+      return this.dataCount;
+    },
+    getTotalCount: function() {
+      return this.totalCount;
+    }
+  };
+
+  function BitBuffer() {
+    var context = this;
+
+    context.buffer = [];
+    context.length = 0;
+  }
+
+  BitBuffer.prototype = {
+    getBuffer: function() {
+      return this.buffer;
+    },
+    getLengthInBits: function() {
+      return this.length;
+    },
+    toString: function() {
+      var buffer = '';
+      var context = this;
+      var length = context.getLengthInBits();
+
+      for (var i = 0; i < length; i += 1) {
+        buffer += context.getBit(i) ? '1' : '0';
+      }
+
+      return buffer;
+    },
+    getBit: function(index) {
+      return ((this.buffer[~~(index / 8)] >>> (7 - index % 8)) & 1) == 1;
+    },
+    put: function(num, length) {
+      for (var i = 0; i < length; i += 1) {
+        this.putBit(((num >>> (length - i - 1)) & 1) == 1);
+      }
+    },
+    putBit: function(bit) {
+      var context = this;
+      var length = context.getLengthInBits();
+
+      if (length == context.buffer.length * 8) {
+        context.buffer.push(0);
+      }
+
+      if (bit) {
+        context.buffer[~~(length / 8)] |= (0x80 >>> (length % 8));
+      }
+
+      context.length += 1;
+    }
+  };
+
   var EXP_TABLE = [];
   var LOG_TABLE = [];
 
   (function() {
-    for (var i = 0; i < 256; i += 1) {
+    var i;
+
+    for (i = 0; i < 256; i += 1) {
       EXP_TABLE.push(
         i < 8 ? 1 << i :
         EXP_TABLE[i - 4] ^
@@ -96,7 +384,7 @@
       LOG_TABLE.push(0);
     }
 
-    for (var i = 0; i < 255; i += 1) {
+    for (i = 0; i < 255; i += 1) {
       LOG_TABLE[EXP_TABLE[i]] = i;
     }
   }());
@@ -106,7 +394,7 @@
       throw 'log(' + n + ')';
     }
 
-    return QRMath.LOG_TABLE[n];
+    return LOG_TABLE[n];
   }
 
   function gexp(n) {
@@ -118,7 +406,7 @@
       n -= 255;
     }
 
-    return QRMath.EXP_TABLE[n];
+    return EXP_TABLE[n];
   }
 
   function Polynomial(num, shift) {
@@ -133,13 +421,14 @@
 
     context.num = [];
 
+    var i;
     var len = num.length - offset;
 
-    for (var i = 0; i < len; i += 1) {
+    for (i = 0; i < len; i += 1) {
       context.num.push(num[offset + i]);
     }
 
-    for (var i = 0; i < shift; i += 1) {
+    for (i = 0; i < shift; i += 1) {
       context.num.push(0);
     }
   }
@@ -186,17 +475,46 @@
       var context = this;
       var len = context.getLength() + e.getLength() - 1;
 
-      for (var i = 0; i < len; i += 1) {
+      var i;
+
+      for (i = 0; i < len; i += 1) {
         num.push(0);
       }
 
-      for (var i = 0; i < context.getLength(); i += 1) {
-        for (var j = 0; j < e.getLength(); j += 1) {
+      var j;
+
+      for (i = 0; i < context.getLength(); i += 1) {
+        for (j = 0; j < e.getLength(); j += 1) {
           num[i + j] ^= gexp(glog(context.getAt(i)) + glog(e.getAt(j)));
         }
       }
 
       return new Polynomial(num);
+    },
+    mod: function(e) {
+      var context = this;
+
+      if (context.getLength() - e.getLength() < 0) {
+        return context;
+      }
+
+      var ratio = glog(context.getAt(0)) - glog(e.getAt(0));
+
+      // create copy
+      var i;
+      var num = [];
+
+      for (i = 0; i < context.getLength(); i += 1) {
+        num.push(context.getAt(i));
+      }
+
+      // subtract and calc rest.
+      for (i = 0; i < e.getLength(); i += 1) {
+        num[i] ^= gexp(glog(e.getAt(i)) + ratio);
+      }
+
+      // call recursively
+      return new Polynomial(num).mod(e);
     }
   };
 
@@ -254,7 +572,18 @@
     [6, 30, 58, 86, 114, 142, 170]
   ];
 
-
+  var MAX_LENGTH = [
+    [[41, 25, 17, 10], [34, 20, 14, 8], [27, 16, 11, 7], [17, 10, 7, 4]],
+    [[77, 47, 32, 20], [63, 38, 26, 16], [48, 29, 20, 12], [34, 20, 14, 8]],
+    [[127, 77, 53, 32], [101, 61, 42, 26], [77, 47, 32, 20], [58, 35, 24, 15]],
+    [[187, 114, 78, 48], [149, 90, 62, 38], [111, 67, 46, 28], [82, 50, 34, 21]],
+    [[255, 154, 106, 65], [202, 122, 84, 52], [144, 87, 60, 37], [106, 64, 44, 27]],
+    [[322, 195, 134, 82], [255, 154, 106, 65], [178, 108, 74, 45], [139, 84, 58, 36]],
+    [[370, 224, 154, 95], [293, 178, 122, 75], [207, 125, 86, 53], [154, 93, 64, 39]],
+    [[461, 279, 192, 118], [365, 221, 152, 93], [259, 157, 108, 66], [202, 122, 84, 52]],
+    [[552, 335, 230, 141], [432, 262, 180, 111], [312, 189, 130, 80], [235, 143, 98, 60]],
+    [[652, 395, 271, 167], [513, 311, 213, 131], [364, 221, 151, 93], [288, 174, 119, 74]]
+  ];
 
   var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
   var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
@@ -266,13 +595,71 @@
    * @param superCtor
    * @param proto
    */
+  function inherits(ctor, superCtor, proto) {
+    function F() {
+      // constructor
+    }
 
+    // prototype
+    F.prototype = superCtor.prototype;
+
+    ctor.prototype = new F();
+    ctor.prototype.constructor = ctor;
+
+    if (proto) {
+      for (var key in proto) {
+        if (proto.hasOwnProperty(key)) {
+          ctor.prototype[key] = proto[key];
+        }
+      }
+    }
+  }
 
   function getPatternPosition(typeNumber) {
     return PATTERN_POSITION_TABLE[typeNumber - 1];
   }
 
+  function getMaxLength(typeNumber, mode, errorCorrectLevel) {
+    var t = typeNumber - 1;
+    var e = 0;
+    var m = 0;
 
+    switch (errorCorrectLevel) {
+      case ErrorCorrectLevel.L:
+        e = 0;
+        break;
+      case ErrorCorrectLevel.M:
+        e = 1;
+        break;
+      case ErrorCorrectLevel.Q:
+        e = 2;
+        break;
+      case ErrorCorrectLevel.H:
+        e = 3;
+        break;
+      default:
+        throw 'e:' + errorCorrectLevel;
+    }
+
+    switch (mode) {
+      case Mode.MODE_NUMBER:
+        m = 0;
+        break;
+      case Mode.MODE_ALPHA_NUM:
+        m = 1;
+        break;
+      case Mode.MODE_8BIT_BYTE:
+        m = 2;
+        break;
+      case Mode.MODE_KANJI:
+        m = 3;
+        break;
+      default:
+        throw 'm:' + mode;
+    }
+
+    return MAX_LENGTH[t][e][m];
+  }
 
   function getErrorCorrectPolynomial(errorCorrectLength) {
     var a = new Polynomial([1]);
@@ -289,7 +676,7 @@
       case MaskPattern.PATTERN000:
         return function(i, j) { return (i + j) % 2 == 0; };
       case MaskPattern.PATTERN001:
-        return function(i, j) { return i % 2 == 0; };
+        return function(i) { return i % 2 == 0; };
       case MaskPattern.PATTERN010:
         return function(i, j) { return j % 3 == 0; };
       case MaskPattern.PATTERN011:
@@ -309,7 +696,7 @@
 
   function getLostPoint(qrCode) {
     var row;
-    var rol;
+    var col;
     var sameCount;
     var dark;
     var r;
@@ -350,6 +737,8 @@
         }
       }
     }
+
+    var count;
 
     // LEVEL2
     for (row = 0; row < moduleCount - 1; row += 1) {
@@ -456,11 +845,91 @@
     return (data << 12) | d;
   }
 
-  function QRCode() {
+  function QRData(mode, data) {
+    this.mode = mode;
+    this.data = data;
+  }
+
+  QRData.prototype = {
+    getMode: function() {
+      return this.mode;
+    },
+    getData: function() {
+      return this.data;
+    },
+    getLengthInBits: function(typeNumber) {
+      var mode = this.mode;
+
+      if (1 <= typeNumber && typeNumber < 10) {
+        // 1 - 9
+        switch (mode) {
+          case Mode.MODE_NUMBER:
+            return 10;
+          case Mode.MODE_ALPHA_NUM:
+            return 9;
+          case Mode.MODE_8BIT_BYTE:
+            return 8;
+          case Mode.MODE_KANJI:
+            return 8;
+          default:
+            throw 'mode:' + mode;
+        }
+      } else if (typeNumber < 27) {
+        // 10 - 26
+        switch (mode) {
+          case Mode.MODE_NUMBER:
+            return 12;
+          case Mode.MODE_ALPHA_NUM:
+            return 11;
+          case Mode.MODE_8BIT_BYTE:
+            return 16;
+          case Mode.MODE_KANJI:
+            return 10;
+          default:
+            throw 'mode:' + mode;
+        }
+      } else if (typeNumber < 41) {
+        // 27 - 40
+        switch (mode) {
+          case Mode.MODE_NUMBER:
+            return 14;
+          case Mode.MODE_ALPHA_NUM:
+            return 13;
+          case Mode.MODE_8BIT_BYTE:
+            return 16;
+          case Mode.MODE_KANJI:
+            return 12;
+          default:
+            throw 'mode:' + mode;
+        }
+      } else {
+        throw 'typeNumber:' + typeNumber;
+      }
+    }
+  };
+
+  function QR8BitByte(data) {
+    QRData.call(this, Mode.MODE_8BIT_BYTE, data);
+  }
+
+  inherits(QR8BitByte, QRData, {
+    write: function(buffer) {
+      var data = QRCode.stringToBytes(this.getData());
+
+      for (var i = 0; i < data.length; i += 1) {
+        buffer.put(data[i], 8);
+      }
+    },
+    getLength: function() {
+      return QRCode.stringToBytes(this.getData()).length;
+    }
+  });
+
+  function QRCode(typeNumber, errorCorrectLevel) {
     var context = this;
 
-    context.typeNumber = 1;
-    context.errorCorrectLevel = ErrorCorrectLevel;
+    context.typeNumber = typeNumber;
+    context.errorCorrectLevel = errorCorrectLevel;
     context.qrDataList = [];
     context.modules = [];
     context.moduleCount = 0;
@@ -468,13 +937,15 @@
 
   QRCode.PAD0 = 0xEC;
   QRCode.PAD1 = 0x11;
+  QRCode.getMaxLength = getMaxLength;
 
   QRCode.createData = function(typeNumber, errorCorrectLevel, dataArray) {
+    var i;
     var data;
     var buffer = new BitBuffer();
     var rsBlocks = RSBlock.getRSBlocks(typeNumber, errorCorrectLevel);
 
-    for (var i = 0; i < dataArray.length; i += 1) {
+    for (i = 0; i < dataArray.length; i += 1) {
       data = dataArray[i];
 
       buffer.put(data.getMode(), 4);
@@ -485,7 +956,7 @@
     // calc max data count
     var totalDataCount = 0;
 
-    for (var i = 0; i < rsBlocks.length; i += 1) {
+    for (i = 0; i < rsBlocks.length; i += 1) {
       totalDataCount += rsBlocks[i].getDataCount();
     }
 
@@ -542,7 +1013,7 @@
     var dcData = [];
     var ecData = [];
 
-    for (var r = 0; r < rsBlocks.length; r += 1) {
+    for (r = 0; r < rsBlocks.length; r += 1) {
       dcData.push([]);
       ecData.push([]);
     }
@@ -557,7 +1028,7 @@
       return a;
     }
 
-    for (var r = 0; r < rsBlocks.length; r += 1) {
+    for (r = 0; r < rsBlocks.length; r += 1) {
       dcCount = rsBlocks[r].getDataCount();
       ecCount = rsBlocks[r].getTotalCount() - dcCount;
 
@@ -614,7 +1085,7 @@
     return data;
   };
 
-  QRCode.stringToBytes = function() {
+  QRCode.stringToBytes = function(str) {
     var charcode;
     var utf8 = [];
 
@@ -697,7 +1168,11 @@
       return this.moduleCount;
     },
     make: function() {
-      this.makeImpl(false, this.getBestMaskPattern());
+      var context = this;
+
+      context.makeImpl(false, context.getBestMaskPattern());
+
+      return context.modules;
     },
     getBestMaskPattern: function() {
       var lostPoint;
@@ -823,14 +1298,8 @@
           }
 
           for (r = -2; r <= 2; r += 1) {
-
             for (c = -2; c <= 2; c += 1) {
-
-              if (r == -2 || r == 2 || c == -2 || c == 2 || (r == 0 && c == 0)) {
-                context.modules[row + r][col + c] = true;
-              } else {
-                context.modules[row + r][col + c] = false;
-              }
+              context.modules[row + r][col + c] = !!(r == -2 || r == 2 || c == -2 || c == 2 || (r == 0 && c == 0));
             }
           }
         }
@@ -847,13 +1316,9 @@
             continue;
           }
 
-          if ((0 <= r && r <= 6 && (c == 0 || c == 6)) ||
+          context.modules[row + r][col + c] = !!((0 <= r && r <= 6 && (c == 0 || c == 6)) ||
             (0 <= c && c <= 6 && (r == 0 || r == 6)) ||
-            (2 <= r && r <= 4 && 2 <= c && c <= 4)) {
-            context.modules[row + r][col + c] = true;
-          } else {
-            context.modules[row + r][col + c] = false;
-          }
+            (2 <= r && r <= 4 && 2 <= c && c <= 4));
         }
       }
     },
@@ -876,25 +1341,27 @@
       }
     },
     setupTypeNumber: function(test) {
+      var i;
       var context = this;
       var bits = getBCHTypeNumber(context.typeNumber);
 
-      for (var i = 0; i < 18; i += 1) {
+      for (i = 0; i < 18; i += 1) {
         context.modules[~~(i / 3)][i % 3 + context.moduleCount - 8 - 3] = !test && ((bits >> i) & 1) == 1;
       }
 
-      for (var i = 0; i < 18; i += 1) {
+      for (i = 0; i < 18; i += 1) {
         context.modules[i % 3 + context.moduleCount - 8 - 3][~~(i / 3)] = !test && ((bits >> i) & 1) == 1;
       }
     },
     setupTypeInfo: function(test, maskPattern) {
+      var i;
       var mod;
       var context = this;
       var data = (context.errorCorrectLevel << 3) | maskPattern;
       var bits = getBCHTypeInfo(data);
 
       // vertical
-      for (var i = 0; i < 15; i += 1) {
+      for (i = 0; i < 15; i += 1) {
         mod = !test && ((bits >> i) & 1) == 1;
 
         if (i < 6) {
@@ -907,7 +1374,7 @@
       }
 
       // horizontal
-      for (var i = 0; i < 15; i += 1) {
+      for (i = 0; i < 15; i += 1) {
         mod = !test && ((bits >> i) & 1) == 1;
 
         if (i < 8) {
@@ -921,35 +1388,12 @@
 
       // fixed
       context.modules[context.moduleCount - 8][8] = !test;
-    },
-    toDataURL: function(cellSize, margin) {
-      cellSize = cellSize || 2;
-      margin = margin || 4;
-
-      var context = this;
-      var mods = context.getModuleCount();
-      var size = cellSize * mods + margin * 2;
-      var gif = new com.d_project.image.GIFImage(size, size);
-
-      var x;
-
-      for (var y = 0; y < size; y += 1) {
-        for (x = 0; x < size; x += 1) {
-          if (margin <= x && x < size - margin &&
-            margin <= y && y < size - margin &&
-            context.isDark(~~((y - margin) / cellSize), ~~((x - margin) / cellSize))) {
-            gif.setPixel(x, y, 0);
-          } else {
-            gif.setPixel(x, y, 1);
-          }
-        }
-      }
-
-      return gif.toDataURL();
     }
   };
 
   var encode = {
+    MODE: Mode,
+    ECLEVEL: ErrorCorrectLevel,
     Encode: QRCode
   };
 

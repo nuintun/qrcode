@@ -7,4 +7,4 @@ export var MaskPattern = {
   PATTERN101: 0b101, // mask pattern 101
   PATTERN110: 0b110, // mask pattern 110
   PATTERN111: 0b111 // mask pattern 111
-}
+};

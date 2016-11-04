@@ -12,13 +12,14 @@ export default function Polynomial(num, shift) {
 
   context.num = [];
 
+  var i;
   var len = num.length - offset;
 
-  for (var i = 0; i < len; i += 1) {
+  for (i = 0; i < len; i += 1) {
     context.num.push(num[offset + i]);
   }
 
-  for (var i = 0; i < shift; i += 1) {
+  for (i = 0; i < shift; i += 1) {
     context.num.push(0);
   }
 }
@@ -65,16 +66,45 @@ Polynomial.prototype = {
     var context = this;
     var len = context.getLength() + e.getLength() - 1;
 
-    for (var i = 0; i < len; i += 1) {
+    var i;
+
+    for (i = 0; i < len; i += 1) {
       num.push(0);
     }
 
-    for (var i = 0; i < context.getLength(); i += 1) {
-      for (var j = 0; j < e.getLength(); j += 1) {
+    var j;
+
+    for (i = 0; i < context.getLength(); i += 1) {
+      for (j = 0; j < e.getLength(); j += 1) {
         num[i + j] ^= QRMath.gexp(QRMath.glog(context.getAt(i)) + QRMath.glog(e.getAt(j)));
       }
     }
 
     return new Polynomial(num);
+  },
+  mod: function(e) {
+    var context = this;
+
+    if (context.getLength() - e.getLength() < 0) {
+      return context;
+    }
+
+    var ratio = QRMath.glog(context.getAt(0)) - QRMath.glog(e.getAt(0));
+
+    // create copy
+    var i;
+    var num = [];
+
+    for (i = 0; i < context.getLength(); i += 1) {
+      num.push(context.getAt(i));
+    }
+
+    // subtract and calc rest.
+    for (i = 0; i < e.getLength(); i += 1) {
+      num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i)) + ratio);
+    }
+
+    // call recursively
+    return new Polynomial(num).mod(e);
   }
 };

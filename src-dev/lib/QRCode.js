@@ -1,13 +1,15 @@
+import RSBlock from './RSBlock';
+import BitBuffer from './BitBuffer';
+import QR8BitByte from './QR8BitByte';
 import QRData from './QRData';
 import * as QRUtil from './QRUtil';
 import Polynomial from './Polynomial';
-import { ErrorCorrectLevel } from './ErrorCorrectLevel';
 
-export default function QRCode() {
+export default function QRCode(typeNumber, errorCorrectLevel) {
   var context = this;
 
-  context.typeNumber = 1;
-  context.errorCorrectLevel = ErrorCorrectLevel;
+  context.typeNumber = typeNumber;
+  context.errorCorrectLevel = errorCorrectLevel;
   context.qrDataList = [];
   context.modules = [];
   context.moduleCount = 0;
@@ -15,13 +17,15 @@ export default function QRCode() {
 
 QRCode.PAD0 = 0xEC;
 QRCode.PAD1 = 0x11;
+QRCode.getMaxLength = QRUtil.getMaxLength;
 
 QRCode.createData = function(typeNumber, errorCorrectLevel, dataArray) {
+  var i;
   var data;
   var buffer = new BitBuffer();
   var rsBlocks = RSBlock.getRSBlocks(typeNumber, errorCorrectLevel);
 
-  for (var i = 0; i < dataArray.length; i += 1) {
+  for (i = 0; i < dataArray.length; i += 1) {
     data = dataArray[i];
 
     buffer.put(data.getMode(), 4);
@@ -32,7 +36,7 @@ QRCode.createData = function(typeNumber, errorCorrectLevel, dataArray) {
   // calc max data count
   var totalDataCount = 0;
 
-  for (var i = 0; i < rsBlocks.length; i += 1) {
+  for (i = 0; i < rsBlocks.length; i += 1) {
     totalDataCount += rsBlocks[i].getDataCount();
   }
 
@@ -89,7 +93,7 @@ QRCode.createBytes = function(buffer, rsBlocks) {
   var dcData = [];
   var ecData = [];
 
-  for (var r = 0; r < rsBlocks.length; r += 1) {
+  for (r = 0; r < rsBlocks.length; r += 1) {
     dcData.push([]);
     ecData.push([]);
   }
@@ -104,7 +108,7 @@ QRCode.createBytes = function(buffer, rsBlocks) {
     return a;
   }
 
-  for (var r = 0; r < rsBlocks.length; r += 1) {
+  for (r = 0; r < rsBlocks.length; r += 1) {
     dcCount = rsBlocks[r].getDataCount();
     ecCount = rsBlocks[r].getTotalCount() - dcCount;
 
@@ -161,7 +165,7 @@ QRCode.createBytes = function(buffer, rsBlocks) {
   return data;
 };
 
-QRCode.stringToBytes = function() {
+QRCode.stringToBytes = function(str) {
   var charcode;
   var utf8 = [];
 
@@ -244,7 +248,11 @@ QRCode.prototype = {
     return this.moduleCount;
   },
   make: function() {
-    this.makeImpl(false, this.getBestMaskPattern());
+    var context = this;
+
+    context.makeImpl(false, context.getBestMaskPattern());
+
+    return context.modules;
   },
   getBestMaskPattern: function() {
     var lostPoint;
@@ -370,14 +378,8 @@ QRCode.prototype = {
         }
 
         for (r = -2; r <= 2; r += 1) {
-
           for (c = -2; c <= 2; c += 1) {
-
-            if (r == -2 || r == 2 || c == -2 || c == 2 || (r == 0 && c == 0)) {
-              context.modules[row + r][col + c] = true;
-            } else {
-              context.modules[row + r][col + c] = false;
-            }
+            context.modules[row + r][col + c] = !!(r == -2 || r == 2 || c == -2 || c == 2 || (r == 0 && c == 0));
           }
         }
       }
@@ -394,13 +396,9 @@ QRCode.prototype = {
           continue;
         }
 
-        if ((0 <= r && r <= 6 && (c == 0 || c == 6)) ||
+        context.modules[row + r][col + c] = !!((0 <= r && r <= 6 && (c == 0 || c == 6)) ||
           (0 <= c && c <= 6 && (r == 0 || r == 6)) ||
-          (2 <= r && r <= 4 && 2 <= c && c <= 4)) {
-          context.modules[row + r][col + c] = true;
-        } else {
-          context.modules[row + r][col + c] = false;
-        }
+          (2 <= r && r <= 4 && 2 <= c && c <= 4));
       }
     }
   },
@@ -423,25 +421,27 @@ QRCode.prototype = {
     }
   },
   setupTypeNumber: function(test) {
+    var i;
     var context = this;
     var bits = QRUtil.getBCHTypeNumber(context.typeNumber);
 
-    for (var i = 0; i < 18; i += 1) {
+    for (i = 0; i < 18; i += 1) {
       context.modules[~~(i / 3)][i % 3 + context.moduleCount - 8 - 3] = !test && ((bits >> i) & 1) == 1;
     }
 
-    for (var i = 0; i < 18; i += 1) {
+    for (i = 0; i < 18; i += 1) {
       context.modules[i % 3 + context.moduleCount - 8 - 3][~~(i / 3)] = !test && ((bits >> i) & 1) == 1;
     }
   },
   setupTypeInfo: function(test, maskPattern) {
+    var i;
     var mod;
     var context = this;
     var data = (context.errorCorrectLevel << 3) | maskPattern;
     var bits = QRUtil.getBCHTypeInfo(data);
 
     // vertical
-    for (var i = 0; i < 15; i += 1) {
+    for (i = 0; i < 15; i += 1) {
       mod = !test && ((bits >> i) & 1) == 1;
 
       if (i < 6) {
@@ -454,7 +454,7 @@ QRCode.prototype = {
     }
 
     // horizontal
-    for (var i = 0; i < 15; i += 1) {
+    for (i = 0; i < 15; i += 1) {
       mod = !test && ((bits >> i) & 1) == 1;
 
       if (i < 8) {
@@ -468,30 +468,5 @@ QRCode.prototype = {
 
     // fixed
     context.modules[context.moduleCount - 8][8] = !test;
-  },
-  toDataURL: function(cellSize, margin) {
-    cellSize = cellSize || 2;
-    margin = margin || 4;
-
-    var context = this;
-    var mods = context.getModuleCount();
-    var size = cellSize * mods + margin * 2;
-    var gif = new com.d_project.image.GIFImage(size, size);
-
-    var x;
-
-    for (var y = 0; y < size; y += 1) {
-      for (x = 0; x < size; x += 1) {
-        if (margin <= x && x < size - margin &&
-          margin <= y && y < size - margin &&
-          context.isDark(~~((y - margin) / cellSize), ~~((x - margin) / cellSize))) {
-          gif.setPixel(x, y, 0);
-        } else {
-          gif.setPixel(x, y, 1);
-        }
-      }
-    }
-
-    return gif.toDataURL();
   }
 };

@@ -2,7 +2,9 @@ export var EXP_TABLE = [];
 export var LOG_TABLE = [];
 
 (function() {
-  for (var i = 0; i < 256; i += 1) {
+  var i;
+
+  for (i = 0; i < 256; i += 1) {
     EXP_TABLE.push(
       i < 8 ? 1 << i :
       EXP_TABLE[i - 4] ^
@@ -13,7 +15,7 @@ export var LOG_TABLE = [];
     LOG_TABLE.push(0);
   }
 
-  for (var i = 0; i < 255; i += 1) {
+  for (i = 0; i < 255; i += 1) {
     LOG_TABLE[EXP_TABLE[i]] = i;
   }
 }());
@@ -23,8 +25,8 @@ export function glog(n) {
     throw 'log(' + n + ')';
   }
 
-  return QRMath.LOG_TABLE[n];
-};
+  return LOG_TABLE[n];
+}
 
 export function gexp(n) {
   while (n < 0) {
@@ -35,5 +37,5 @@ export function gexp(n) {
     n -= 255;
   }
 
-  return QRMath.EXP_TABLE[n];
-};
+  return EXP_TABLE[n];
+}
