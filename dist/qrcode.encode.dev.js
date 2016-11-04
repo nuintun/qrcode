@@ -1177,12 +1177,13 @@
     getBestMaskPattern: function() {
       var lostPoint;
       var pattern = 0;
+      var context = this;
       var minLostPoint = 0;
 
       for (var i = 0; i < 8; i += 1) {
-        this.makeImpl(true, i);
+        context.makeImpl(true, i);
 
-        lostPoint = getLostPoint(this);
+        lostPoint = getLostPoint(context);
 
         if (i == 0 || minLostPoint > lostPoint) {
           pattern = i;
@@ -1199,9 +1200,11 @@
       context.moduleCount = context.typeNumber * 4 + 17;
       context.modules = [];
 
+      var j;
+
       for (var i = 0; i < context.moduleCount; i += 1) {
         context.modules.push([]);
-        for (var j = 0; j < context.moduleCount; j += 1) {
+        for (j = 0; j < context.moduleCount; j += 1) {
           context.modules[i].push(null);
         }
       }
@@ -1286,10 +1289,10 @@
       var context = this;
       var pos = getPatternPosition(context.typeNumber);
 
+      var j;
+
       for (var i = 0; i < pos.length; i += 1) {
-
-        for (var j = 0; j < pos.length; j += 1) {
-
+        for (j = 0; j < pos.length; j += 1) {
           row = pos[i];
           col = pos[j];
 
@@ -1332,6 +1335,7 @@
 
         context.modules[r][6] = r % 2 == 0;
       }
+
       for (var c = 8; c < context.moduleCount - 8; c += 1) {
         if (context.modules[6][c] != null) {
           continue;
