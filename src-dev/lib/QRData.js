@@ -12,6 +12,12 @@ QRData.prototype = {
   getData: function() {
     return this.data;
   },
+  getLength: function() {
+    return this.getData().length;
+  },
+  write: function() {
+    throw 'abstract interface must be implemented.'
+  },
   getLengthInBits: function(version) {
     var mode = this.mode;
 
@@ -27,7 +33,7 @@ QRData.prototype = {
         case Mode.MODE_KANJI:
           return 8;
         default:
-          throw 'invalid mode:' + mode;
+          throw 'invalid mode: ' + mode;
       }
     } else if (version < 27) {
       // 10 - 26
@@ -41,7 +47,7 @@ QRData.prototype = {
         case Mode.MODE_KANJI:
           return 10;
         default:
-          throw 'invalid mode:' + mode;
+          throw 'invalid mode: ' + mode;
       }
     } else if (version < 41) {
       // 27 - 40
@@ -55,10 +61,10 @@ QRData.prototype = {
         case Mode.MODE_KANJI:
           return 12;
         default:
-          throw 'invalid mode:' + mode;
+          throw 'invalid mode: ' + mode;
       }
     } else {
-      throw 'version:' + version;
+      throw 'version: ' + version;
     }
   }
 };

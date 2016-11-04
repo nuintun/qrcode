@@ -40,7 +40,7 @@ QRCode.createData = function(version, level, dataArray) {
   }
 
   if (buffer.getLengthInBits() > totalDataCount * 8) {
-    throw 'code length overflow. (' + buffer.getLengthInBits() + '>' + totalDataCount * 8 + ')';
+    throw 'code length overflow: ' + buffer.getLengthInBits() + '>' + totalDataCount * 8;
   }
 
   // end

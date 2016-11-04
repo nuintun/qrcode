@@ -284,7 +284,7 @@
         break;
     }
 
-    throw 'invalid version:' + version + '/level:' + level;
+    throw 'invalid version: ' + version + '/level:' + level;
   }
 
   RSBlock.getRSBlocks = function(version, level) {
@@ -391,7 +391,7 @@
 
   function glog(n) {
     if (n < 1) {
-      throw 'log(' + n + ')';
+      throw 'log: ' + n;
     }
 
     return LOG_TABLE[n];
@@ -804,6 +804,12 @@
     getData: function() {
       return this.data;
     },
+    getLength: function() {
+      return this.getData().length;
+    },
+    write: function() {
+      throw 'abstract interface must be implemented.'
+    },
     getLengthInBits: function(version) {
       var mode = this.mode;
 
@@ -819,7 +825,7 @@
           case Mode.MODE_KANJI:
             return 8;
           default:
-            throw 'invalid mode:' + mode;
+            throw 'invalid mode: ' + mode;
         }
       } else if (version < 27) {
         // 10 - 26
@@ -833,7 +839,7 @@
           case Mode.MODE_KANJI:
             return 10;
           default:
-            throw 'invalid mode:' + mode;
+            throw 'invalid mode: ' + mode;
         }
       } else if (version < 41) {
         // 27 - 40
@@ -847,10 +853,10 @@
           case Mode.MODE_KANJI:
             return 12;
           default:
-            throw 'invalid mode:' + mode;
+            throw 'invalid mode: ' + mode;
         }
       } else {
-        throw 'version:' + version;
+        throw 'version: ' + version;
       }
     }
   };
@@ -907,7 +913,7 @@
     }
 
     if (buffer.getLengthInBits() > totalDataCount * 8) {
-      throw 'code length overflow. (' + buffer.getLengthInBits() + '>' + totalDataCount * 8 + ')';
+      throw 'code length overflow: ' + buffer.getLengthInBits() + '>' + totalDataCount * 8;
     }
 
     // end
@@ -1358,7 +1364,7 @@
         } else if (0xE040 <= c && c <= 0xEBBF) {
           c -= 0xC140;
         } else {
-          throw 'illegal char at ' + (i + 1) + '/' + c;
+          throw 'illegal char at: ' + (i + 1) + '/' + c;
         }
 
         c = ((c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
@@ -1369,7 +1375,7 @@
       }
 
       if (i < data.length) {
-        throw 'illegal char at ' + (i + 1);
+        throw 'illegal char at: ' + (i + 1);
       }
     },
     getLength: function() {
@@ -1381,6 +1387,24 @@
     QRData.call(this, Mode.MODE_NUMBER, data);
   }
 
+  function strToNum(s) {
+    var num = 0;
+
+    for (var i = 0; i < s.length; i += 1) {
+      num = num * 10 + chatToNum(s.charAt(i));
+    }
+
+    return num;
+  }
+
+  function chatToNum(c) {
+    if ('0' <= c && c <= '9') {
+      return c.charCodeAt(0) - '0'.charCodeAt(0);
+    }
+
+    throw 'illegal char: ' + c;
+  }
+
   inherits(QRNumber, QRData, {
     write: function(buffer) {
       var data = this.getData();
@@ -1388,44 +1412,26 @@
       var i = 0;
 
       while (i + 2 < data.length) {
-        buffer.put(QRNumber.strToNum(data.substring(i, i + 3)), 10);
+        buffer.put(strToNum(data.substring(i, i + 3)), 10);
 
         i += 3;
       }
 
       if (i < data.length) {
         if (data.length - i == 1) {
-          buffer.put(QRNumber.strToNum(data.substring(i, i + 1)), 4);
+          buffer.put(strToNum(data.substring(i, i + 1)), 4);
         } else if (data.length - i == 2) {
-          buffer.put(QRNumber.strToNum(data.substring(i, i + 2)), 7);
+          buffer.put(strToNum(data.substring(i, i + 2)), 7);
         }
       }
     }
   });
 
-  QRNumber.strToNum = function(s) {
-    var num = 0;
-
-    for (var i = 0; i < s.length; i += 1) {
-      num = num * 10 + QRNumber.chatToNum(s.charAt(i));
-    }
-
-    return num;
-  };
-
-  QRNumber.chatToNum = function(c) {
-    if ('0' <= c && c <= '9') {
-      return c.charCodeAt(0) - '0'.charCodeAt(0);
-    }
-
-    throw 'illegal char :' + c;
-  };
-
   function QRAlphaNum(data) {
     QRData.call(this, Mode.MODE_8BIT_BYTE, data);
   }
 
-  QRAlphaNum.getCode = function(c) {
+  function getCode(c) {
     if ('0' <= c && c <= '9') {
       return c.charCodeAt(0) - '0'.charCodeAt(0);
     } else if ('A' <= c && c <= 'Z') {
@@ -1451,10 +1457,10 @@
         case ':':
           return 44;
         default:
-          throw 'illegal char :' + c;
+          throw 'illegal char: ' + c;
       }
     }
-  };
+  }
 
   inherits(QRAlphaNum, QRData, {
     write: function(buffer) {
@@ -1463,22 +1469,29 @@
 
       while (i + 1 < s.length) {
         buffer.put(
-          QRAlphaNum.getCode(s.charAt(i)) * 45 + QRAlphaNum.getCode(s.charAt(i + 1)), 11);
+          getCode(s.charAt(i)) * 45 + getCode(s.charAt(i + 1)), 11);
         i += 2;
       }
 
       if (i < s.length) {
-        buffer.put(QRAlphaNum.getCode(s.charAt(i)), 6);
+        buffer.put(getCode(s.charAt(i)), 6);
       }
-    },
-    getLength: function() {
-      return this.getData().length;
     }
   });
 
   var encode = {
-    MODE: Mode,
-    ECLEVEL: ErrorCorrectLevel,
+    MODE: {
+      NUMBER: Mode.MODE_NUMBER,
+      ALPHANUM: Mode.ALPHA_NUM,
+      EIGHTBIT: Mode.MODE_8BIT_BYTE,
+      KANJI: Mode.MODE_KANJI
+    },
+    ECLEVEL: {
+      L: ErrorCorrectLevel.L,
+      M: ErrorCorrectLevel.M,
+      Q: ErrorCorrectLevel.Q,
+      H: ErrorCorrectLevel.H
+    },
     Encode: QRCode,
     QRKanji: QRKanji,
     QRNumber: QRNumber,

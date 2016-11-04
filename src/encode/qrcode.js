@@ -49,6 +49,22 @@
       try {
         console.time('QRCode');
         this.pixels = new QRCode.Encode(40, config.ECLevel);
+
+        switch (config.mode) {
+          case QRCode.MODE.NUMBER:
+            config.text = new QRCode.QRNumber(config.text);
+            break;
+          case QRCode.MODE.ALPHANUM:
+            config.text = new QRCode.QRAlphaNum(config.text);
+            break;
+          case QRCode.MODE.EIGHTBIT:
+            config.text = new QRCode.QR8BitByte(config.text);
+            break;
+          case QRCode.MODE.KANJI:
+            config.text = new QRCode.QRKanji(config.text);
+            break;
+        }
+
         this.pixels.addData(config.text);
         this.pixels.make();
         console.timeEnd('QRCode');

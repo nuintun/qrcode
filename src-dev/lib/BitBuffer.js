@@ -2,7 +2,7 @@ export default function BitBuffer() {
   var context = this;
 
   context.buffer = [];
-  context.length = 0
+  context.length = 0;
 }
 
 BitBuffer.prototype = {

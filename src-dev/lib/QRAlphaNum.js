@@ -6,7 +6,7 @@ export default function QRAlphaNum(data) {
   QRData.call(this, Mode.MODE_8BIT_BYTE, data);
 }
 
-QRAlphaNum.getCode = function(c) {
+function getCode(c) {
   if ('0' <= c && c <= '9') {
     return c.charCodeAt(0) - '0'.charCodeAt(0);
   } else if ('A' <= c && c <= 'Z') {
@@ -32,7 +32,7 @@ QRAlphaNum.getCode = function(c) {
       case ':':
         return 44;
       default:
-        throw 'illegal char :' + c;
+        throw 'illegal char: ' + c;
     }
   }
 };
@@ -44,15 +44,12 @@ QRUtil.inherits(QRAlphaNum, QRData, {
 
     while (i + 1 < s.length) {
       buffer.put(
-        QRAlphaNum.getCode(s.charAt(i)) * 45 + QRAlphaNum.getCode(s.charAt(i + 1)), 11);
+        getCode(s.charAt(i)) * 45 + getCode(s.charAt(i + 1)), 11);
       i += 2;
     }
 
     if (i < s.length) {
-      buffer.put(QRAlphaNum.getCode(s.charAt(i)), 6);
+      buffer.put(getCode(s.charAt(i)), 6);
     }
-  },
-  getLength: function() {
-    return this.getData().length;
   }
 });
