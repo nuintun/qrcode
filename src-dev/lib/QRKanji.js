@@ -3,7 +3,7 @@ import QRCode from './QRCode';
 import QRData from './QRData';
 import * as QRUtil from './QRUtil';
 
-export default function QRKanji() {
+export default function QRKanji(data) {
   QRData.call(this, Mode.MODE_KANJI, data);
 }
 

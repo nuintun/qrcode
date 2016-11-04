@@ -1348,7 +1348,7 @@
     }
   };
 
-  function QRKanji() {
+  function QRKanji(data) {
     QRData.call(this, Mode.MODE_KANJI, data);
   }
 
