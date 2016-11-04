@@ -23,7 +23,7 @@
     this.dataCount = dataCount;
   }
 
-  RSBlock.RS_BLOCK_TABLE = [
+  var RS_BLOCK_TABLE = [
     // L
     // M
     // Q
@@ -295,13 +295,13 @@
   RSBlock.getRsBlockTable = function(typeNumber, errorCorrectLevel) {
     switch (errorCorrectLevel) {
       case ErrorCorrectLevel.L:
-        return RSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4];
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4];
       case ErrorCorrectLevel.M:
-        return RSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
       case ErrorCorrectLevel.Q:
-        return RSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
       case ErrorCorrectLevel.H:
-        return RSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
       default:
         break;
     }
