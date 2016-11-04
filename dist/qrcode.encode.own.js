@@ -84,9 +84,6 @@
    * @returns {*}
    */
   function template(tmpl, data) {
-    tmpl.replace(TMPLRE, function(matched, key) {
-      return data.hasOwnProperty(key) ? data[key] : matched;
-    });
     if (data) {
       return tmpl.replace(TMPLRE, function(matched, key) {
         return data.hasOwnProperty(key) ? data[key] : matched;
