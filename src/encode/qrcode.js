@@ -47,7 +47,7 @@
       }
 
       try {
-        this.pixels = new QRCode.Encode(config.mode, config.ECLevel);
+        this.pixels = new QRCode.Encode(40, config.ECLevel);
         this.pixels.addData(config.text);
         this.pixels.make();
 

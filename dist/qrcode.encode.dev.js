@@ -270,8 +270,8 @@
     [20, 45, 15, 61, 46, 16]
   ];
 
-  RSBlock.getRSBlocks = function(typeNumber, errorCorrectLevel) {
-    var rsBlock = RSBlock.getRsBlockTable(typeNumber, errorCorrectLevel);
+  RSBlock.getRSBlocks = function(version, errorCorrectLevel) {
+    var rsBlock = RSBlock.getRsBlockTable(version, errorCorrectLevel);
     var length = rsBlock.length / 3;
     var list = [];
     var count;
@@ -292,21 +292,21 @@
     return list;
   };
 
-  RSBlock.getRsBlockTable = function(typeNumber, errorCorrectLevel) {
+  RSBlock.getRsBlockTable = function(version, errorCorrectLevel) {
     switch (errorCorrectLevel) {
       case ErrorCorrectLevel.L:
-        return RS_BLOCK_TABLE[(typeNumber - 1) * 4];
+        return RS_BLOCK_TABLE[(version - 1) * 4];
       case ErrorCorrectLevel.M:
-        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+        return RS_BLOCK_TABLE[(version - 1) * 4 + 1];
       case ErrorCorrectLevel.Q:
-        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+        return RS_BLOCK_TABLE[(version - 1) * 4 + 2];
       case ErrorCorrectLevel.H:
-        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+        return RS_BLOCK_TABLE[(version - 1) * 4 + 3];
       default:
         break;
     }
 
-    throw 'tn:' + typeNumber + '/ecl:' + errorCorrectLevel;
+    throw 'tn:' + version + '/ecl:' + errorCorrectLevel;
   };
 
   RSBlock.prototype = {
@@ -615,12 +615,12 @@
     }
   }
 
-  function getPatternPosition(typeNumber) {
-    return PATTERN_POSITION_TABLE[typeNumber - 1];
+  function getPatternPosition(version) {
+    return PATTERN_POSITION_TABLE[version - 1];
   }
 
-  function getMaxLength(typeNumber, mode, errorCorrectLevel) {
-    var t = typeNumber - 1;
+  function getMaxLength(version, mode, errorCorrectLevel) {
+    var t = version - 1;
     var e = 0;
     var m = 0;
 
@@ -835,7 +835,7 @@
     return ((data << 10) | d) ^ G15_MASK;
   }
 
-  function getBCHTypeNumber(data) {
+  function getBCHVersion(data) {
     var d = data << 12;
 
     while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
@@ -857,10 +857,10 @@
     getData: function() {
       return this.data;
     },
-    getLengthInBits: function(typeNumber) {
+    getLengthInBits: function(version) {
       var mode = this.mode;
 
-      if (1 <= typeNumber && typeNumber < 10) {
+      if (1 <= version && version < 10) {
         // 1 - 9
         switch (mode) {
           case Mode.MODE_NUMBER:
@@ -874,7 +874,7 @@
           default:
             throw 'mode:' + mode;
         }
-      } else if (typeNumber < 27) {
+      } else if (version < 27) {
         // 10 - 26
         switch (mode) {
           case Mode.MODE_NUMBER:
@@ -888,7 +888,7 @@
           default:
             throw 'mode:' + mode;
         }
-      } else if (typeNumber < 41) {
+      } else if (version < 41) {
         // 27 - 40
         switch (mode) {
           case Mode.MODE_NUMBER:
@@ -903,7 +903,7 @@
             throw 'mode:' + mode;
         }
       } else {
-        throw 'typeNumber:' + typeNumber;
+        throw 'version:' + version;
       }
     }
   };
@@ -925,12 +925,12 @@
     }
   });
 
-  function QRCode(typeNumber, errorCorrectLevel) {
+  function QRCode(version, errorCorrectLevel) {
     var context = this;
 
-    context.typeNumber = typeNumber;
-    context.errorCorrectLevel = errorCorrectLevel;
-    context.dataList = [];
+    context.version = version;
+    context.level = errorCorrectLevel;
+    context.data = [];
     context.modules = [];
     context.moduleCount = 0;
   }
@@ -940,17 +940,17 @@
 
   QRCode.getMaxLength = getMaxLength;
 
-  QRCode.createData = function(typeNumber, errorCorrectLevel, dataArray) {
+  QRCode.createData = function(version, errorCorrectLevel, dataArray) {
     var i;
     var data;
     var buffer = new BitBuffer();
-    var rsBlocks = RSBlock.getRSBlocks(typeNumber, errorCorrectLevel);
+    var rsBlocks = RSBlock.getRSBlocks(version, errorCorrectLevel);
 
     for (i = 0; i < dataArray.length; i += 1) {
       data = dataArray[i];
 
       buffer.put(data.getMode(), 4);
-      buffer.put(data.getLength(), data.getLengthInBits(typeNumber));
+      buffer.put(data.getLength(), data.getLengthInBits(version));
       data.write(buffer);
     }
 
@@ -1124,23 +1124,23 @@
   };
 
   QRCode.prototype = {
-    getTypeNumber: function() {
-      return this.typeNumber;
+    getVersion: function() {
+      return this.version;
     },
-    setTypeNumber: function(typeNumber) {
-      this.typeNumber = typeNumber;
+    setVersion: function(version) {
+      this.version = version;
     },
     getErrorCorrectLevel: function() {
-      return this.errorCorrectLevel;
+      return this.level;
     },
     setErrorCorrectLevel: function(errorCorrectLevel) {
-      this.errorCorrectLevel = errorCorrectLevel;
+      this.level = errorCorrectLevel;
     },
     clearData: function() {
-      this.dataList = [];
+      this.data = [];
     },
     addData: function(qrData) {
-      var dataList = this.dataList;
+      var dataList = this.data;
 
       if (qrData instanceof QRData) {
         dataList.push(qrData);
@@ -1151,10 +1151,10 @@
       }
     },
     getDataCount: function() {
-      return this.dataList.length;
+      return this.data.length;
     },
     getData: function(index) {
-      return this.dataList[index];
+      return this.data[index];
     },
     isDark: function(row, col) {
       var modules = this.modules;
@@ -1198,7 +1198,7 @@
       var context = this;
 
       // initialize modules
-      context.moduleCount = context.typeNumber * 4 + 17;
+      context.moduleCount = context.version * 4 + 17;
       context.modules = [];
 
       var j;
@@ -1219,14 +1219,14 @@
 
       context.setupTypeInfo(test, maskPattern);
 
-      if (context.typeNumber >= 7) {
-        context.setupTypeNumber(test);
+      if (context.version >= 7) {
+        context.setupVersion(test);
       }
 
       var data = QRCode.createData(
-        context.typeNumber,
-        context.errorCorrectLevel,
-        context.dataList
+        context.version,
+        context.level,
+        context.data
       );
 
       context.mapData(data, maskPattern);
@@ -1288,7 +1288,7 @@
       var row;
       var col;
       var context = this;
-      var pos = getPatternPosition(context.typeNumber);
+      var pos = getPatternPosition(context.version);
 
       var j;
 
@@ -1345,10 +1345,10 @@
         context.modules[6][c] = c % 2 == 0;
       }
     },
-    setupTypeNumber: function(test) {
+    setupVersion: function(test) {
       var i;
       var context = this;
-      var bits = getBCHTypeNumber(context.typeNumber);
+      var bits = getBCHVersion(context.version);
 
       for (i = 0; i < 18; i += 1) {
         context.modules[~~(i / 3)][i % 3 + context.moduleCount - 8 - 3] = !test && ((bits >> i) & 1) == 1;
@@ -1362,7 +1362,7 @@
       var i;
       var mod;
       var context = this;
-      var data = (context.errorCorrectLevel << 3) | maskPattern;
+      var data = (context.level << 3) | maskPattern;
       var bits = getBCHTypeInfo(data);
 
       // vertical

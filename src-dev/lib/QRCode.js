@@ -5,12 +5,12 @@ import QRData from './QRData';
 import * as QRUtil from './QRUtil';
 import Polynomial from './Polynomial';
 
-export default function QRCode(typeNumber, errorCorrectLevel) {
+export default function QRCode(version, errorCorrectLevel) {
   var context = this;
 
-  context.typeNumber = typeNumber;
-  context.errorCorrectLevel = errorCorrectLevel;
-  context.dataList = [];
+  context.version = version;
+  context.level = errorCorrectLevel;
+  context.data = [];
   context.modules = [];
   context.moduleCount = 0;
 }
@@ -20,17 +20,17 @@ var PAD1 = 0x11;
 
 QRCode.getMaxLength = QRUtil.getMaxLength;
 
-QRCode.createData = function(typeNumber, errorCorrectLevel, dataArray) {
+QRCode.createData = function(version, errorCorrectLevel, dataArray) {
   var i;
   var data;
   var buffer = new BitBuffer();
-  var rsBlocks = RSBlock.getRSBlocks(typeNumber, errorCorrectLevel);
+  var rsBlocks = RSBlock.getRSBlocks(version, errorCorrectLevel);
 
   for (i = 0; i < dataArray.length; i += 1) {
     data = dataArray[i];
 
     buffer.put(data.getMode(), 4);
-    buffer.put(data.getLength(), data.getLengthInBits(typeNumber));
+    buffer.put(data.getLength(), data.getLengthInBits(version));
     data.write(buffer);
   }
 
@@ -204,23 +204,23 @@ QRCode.stringToBytes = function(str) {
 };
 
 QRCode.prototype = {
-  getTypeNumber: function() {
-    return this.typeNumber;
+  getVersion: function() {
+    return this.version;
   },
-  setTypeNumber: function(typeNumber) {
-    this.typeNumber = typeNumber;
+  setVersion: function(version) {
+    this.version = version;
   },
   getErrorCorrectLevel: function() {
-    return this.errorCorrectLevel;
+    return this.level;
   },
   setErrorCorrectLevel: function(errorCorrectLevel) {
-    this.errorCorrectLevel = errorCorrectLevel;
+    this.level = errorCorrectLevel;
   },
   clearData: function() {
-    this.dataList = [];
+    this.data = [];
   },
   addData: function(qrData) {
-    var dataList = this.dataList;
+    var dataList = this.data;
 
     if (qrData instanceof QRData) {
       dataList.push(qrData);
@@ -231,10 +231,10 @@ QRCode.prototype = {
     }
   },
   getDataCount: function() {
-    return this.dataList.length;
+    return this.data.length;
   },
   getData: function(index) {
-    return this.dataList[index];
+    return this.data[index];
   },
   isDark: function(row, col) {
     var modules = this.modules;
@@ -278,7 +278,7 @@ QRCode.prototype = {
     var context = this;
 
     // initialize modules
-    context.moduleCount = context.typeNumber * 4 + 17;
+    context.moduleCount = context.version * 4 + 17;
     context.modules = [];
 
     var j;
@@ -299,14 +299,14 @@ QRCode.prototype = {
 
     context.setupTypeInfo(test, maskPattern);
 
-    if (context.typeNumber >= 7) {
-      context.setupTypeNumber(test);
+    if (context.version >= 7) {
+      context.setupVersion(test);
     }
 
     var data = QRCode.createData(
-      context.typeNumber,
-      context.errorCorrectLevel,
-      context.dataList
+      context.version,
+      context.level,
+      context.data
     );
 
     context.mapData(data, maskPattern);
@@ -368,7 +368,7 @@ QRCode.prototype = {
     var row;
     var col;
     var context = this;
-    var pos = QRUtil.getPatternPosition(context.typeNumber);
+    var pos = QRUtil.getPatternPosition(context.version);
 
     var j;
 
@@ -425,10 +425,10 @@ QRCode.prototype = {
       context.modules[6][c] = c % 2 == 0;
     }
   },
-  setupTypeNumber: function(test) {
+  setupVersion: function(test) {
     var i;
     var context = this;
-    var bits = QRUtil.getBCHTypeNumber(context.typeNumber);
+    var bits = QRUtil.getBCHVersion(context.version);
 
     for (i = 0; i < 18; i += 1) {
       context.modules[~~(i / 3)][i % 3 + context.moduleCount - 8 - 3] = !test && ((bits >> i) & 1) == 1;
@@ -442,7 +442,7 @@ QRCode.prototype = {
     var i;
     var mod;
     var context = this;
-    var data = (context.errorCorrectLevel << 3) | maskPattern;
+    var data = (context.level << 3) | maskPattern;
     var bits = QRUtil.getBCHTypeInfo(data);
 
     // vertical

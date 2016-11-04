@@ -90,12 +90,12 @@ export function inherits(ctor, superCtor, proto) {
   }
 }
 
-export function getPatternPosition(typeNumber) {
-  return PATTERN_POSITION_TABLE[typeNumber - 1];
+export function getPatternPosition(version) {
+  return PATTERN_POSITION_TABLE[version - 1];
 }
 
-export function getMaxLength(typeNumber, mode, errorCorrectLevel) {
-  var t = typeNumber - 1;
+export function getMaxLength(version, mode, errorCorrectLevel) {
+  var t = version - 1;
   var e = 0;
   var m = 0;
 
@@ -310,7 +310,7 @@ export function getBCHTypeInfo(data) {
   return ((data << 10) | d) ^ G15_MASK;
 }
 
-export function getBCHTypeNumber(data) {
+export function getBCHVersion(data) {
   var d = data << 12;
 
   while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
