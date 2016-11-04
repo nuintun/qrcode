@@ -1,6 +1,11 @@
 import * as util from './util';
 import * as QRCONST from './const';
 
+/**
+ * mapping
+ * @param table
+ * @returns {{}}
+ */
 function mapping(table){
   var map = {};
 
@@ -16,6 +21,13 @@ function mapping(table){
 var MODE_MAP = mapping(QRCONST.MODE);
 var EC_LEVEL_MAP = mapping(QRCONST.ERROR_CORRECTION_LEVEL);
 
+/**
+ * Pixels
+ * @param mode
+ * @param version
+ * @param ec_level
+ * @constructor
+ */
 export default function Pixels(mode, version, ec_level){
   var context = this;
 

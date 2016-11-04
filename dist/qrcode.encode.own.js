@@ -103,10 +103,21 @@
   var TMPLRE = /{{(.+?)}}/g;
   var toSting = Object.prototype.toString;
 
+  /**
+   * Sting judge
+   * @param value
+   * @returns {boolean}
+   */
   function isString(value){
     return toSting.call(value) === '[object String]';
   }
 
+  /**
+   * Simple template engine
+   * @param tmpl
+   * @param data
+   * @returns {*}
+   */
   function template(tmpl, data){
     if (data) {
       return tmpl.replace(TMPLRE, function (matched, key){
@@ -135,6 +146,11 @@
   // inherits
   inherits(QRError, Error, {
     name: 'QRError',
+    /**
+     * localize
+     * @param local
+     * @returns {*}
+     */
     localize: function (local){
       var context = this;
       var type = context.type;
@@ -466,6 +482,11 @@
     ':': 44
   };
 
+  /**
+   * mapping
+   * @param table
+   * @returns {{}}
+   */
   function mapping(table){
     var map = {};
 
@@ -481,6 +502,13 @@
   var MODE_MAP = mapping(MODE);
   var EC_LEVEL_MAP = mapping(ERROR_CORRECTION_LEVEL);
 
+  /**
+   * Pixels
+   * @param mode
+   * @param version
+   * @param ec_level
+   * @constructor
+   */
   function Pixels(mode, version, ec_level){
     var context = this;
 
