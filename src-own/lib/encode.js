@@ -141,62 +141,62 @@ QREncode.prototype = {
       bytes[byteIndex] += v & 0xFF;
     }
 
-    function getAlphaNum(qr, ch){
-      if (!qr.ALPHANUM_REV.hasOwnProperty(ch)) {
+    function getAlphaNum(context, ch){
+      if (!context.ALPHANUM_REV.hasOwnProperty(ch)) {
         throw new QRError('QREncode.InvalidChar4Alphanumeric', { char: ch }, 'Invalid character for Alphanumeric encoding [' + ch + '].');
       }
 
-      return qr.ALPHANUM_REV[ch];
+      return context.ALPHANUM_REV[ch];
     }
 
-    function addAlphaNum(qr, text){
+    function addAlphaNum(context, text){
       var n = text.length;
-      var count_bits = qr.countBits(qr.MODE.AlphaNumeric, qr.version);
+      var count_bits = context.countBits(context.MODE.AlphaNumeric, context.version);
 
-      appendBits(qr.data, qr.bit_idx, count_bits, n);
+      appendBits(context.data, context.bit_idx, count_bits, n);
 
-      qr.bit_idx += count_bits;
+      context.bit_idx += count_bits;
 
       var i;
 
       for (i = 0; i < n - 1; i += 2) {
-        var val = 45 * getAlphaNum(qr, text[i]) + getAlphaNum(qr, text[i + 1]);
+        var val = 45 * getAlphaNum(context, text[i]) + getAlphaNum(context, text[i + 1]);
 
-        appendBits(qr.data, qr.bit_idx, 11, val);
+        appendBits(context.data, context.bit_idx, 11, val);
 
-        qr.bit_idx += 11;
+        context.bit_idx += 11;
       }
 
       if (n % 2) {
-        appendBits(qr.data, qr.bit_idx, 6, getAlphaNum(qr, text[n - 1]));
+        appendBits(context.data, context.bit_idx, 6, getAlphaNum(context, text[n - 1]));
 
-        qr.bit_idx += 6;
+        context.bit_idx += 6;
       }
     }
 
-    function add8bit(qr, text){
-      var count_bits = qr.countBits(qr.MODE.EightBit, qr.version);
+    function add8bit(context, text){
+      var count_bits = context.countBits(context.MODE.EightBit, context.version);
 
-      appendBits(qr.data, qr.bit_idx, count_bits, text.length);
+      appendBits(context.data, context.bit_idx, count_bits, text.length);
 
-      qr.bit_idx += count_bits;
+      context.bit_idx += count_bits;
 
       var i;
 
       for (i = 0; i < text.length; i++) {
-        appendBits(qr.data, qr.bit_idx, 8, text[i].charCodeAt());
+        appendBits(context.data, context.bit_idx, 8, text[i].charCodeAt());
 
-        qr.bit_idx += 8;
+        context.bit_idx += 8;
       }
     }
 
-    function addNumeric(qr, text){
+    function addNumeric(context, text){
       var n = text.length;
-      var count_bits = qr.countBits(qr.MODE.Numeric, qr.version);
+      var count_bits = context.countBits(context.MODE.Numeric, context.version);
 
-      appendBits(qr.data, qr.bit_idx, count_bits, n);
+      appendBits(context.data, context.bit_idx, count_bits, n);
 
-      qr.bit_idx += count_bits;
+      context.bit_idx += count_bits;
 
       var num = [];
       var val;
@@ -215,24 +215,24 @@ QREncode.prototype = {
       for (i = 0; i < n - 2; i += 3) {
         val = 100 * num[i] + 10 * num[i + 1] + num[i + 2];
 
-        appendBits(qr.data, qr.bit_idx, 10, val);
+        appendBits(context.data, context.bit_idx, 10, val);
 
-        qr.bit_idx += 10;
+        context.bit_idx += 10;
 
       }
 
       if (n % 3 === 1) {
         val = num[n - 1];
 
-        appendBits(qr.data, qr.bit_idx, 4, val);
+        appendBits(context.data, context.bit_idx, 4, val);
 
-        qr.bit_idx += 4;
+        context.bit_idx += 4;
       } else if (n % 3 === 2) {
         val = 10 * num[n - 2] + num[n - 1];
 
-        appendBits(qr.data, qr.bit_idx, 7, val);
+        appendBits(context.data, context.bit_idx, 7, val);
 
-        qr.bit_idx += 7;
+        context.bit_idx += 7;
       }
     }
 
@@ -294,18 +294,18 @@ QREncode.prototype = {
   calculatePenalty: function (){
     var context = this;
 
-    function penaltyAdjacent(qr){
+    function penaltyAdjacent(context){
       var i, j;
       var rc, p = 0;
       var dark, light;
 
-      for (i = 0; i < qr.modules; i++) {
+      for (i = 0; i < context.modules; i++) {
         dark = [0, 0];
         light = [0, 0];
 
         for (rc = 0; rc <= 1; rc++) {
-          for (j = 0; j < qr.modules; j++) {
-            if (qr.pixels[rc * i + (1 - rc) * j][(1 - rc) * i + rc * j]) {
+          for (j = 0; j < context.modules; j++) {
+            if (context.pixels[rc * i + (1 - rc) * j][(1 - rc) * i + rc * j]) {
               if (light[rc] > 5) {
                 p += (3 + light[rc] - 5);
               }
@@ -335,29 +335,29 @@ QREncode.prototype = {
       return p;
     }
 
-    function penaltyBlocks(qr){
+    function penaltyBlocks(context){
       // Not clear from ISO standard, if blocks have to be rectangular?
       // Here we give 3 penalty to every 2x2 block, so odd shaped areas will have penalties as well as rectangles
       var p = 0;
       var i, j, b;
 
-      for (i = 0; i < qr.modules - 1; i++) {
-        for (j = 0; j < qr.modules - 1; j++) {
+      for (i = 0; i < context.modules - 1; i++) {
+        for (j = 0; j < context.modules - 1; j++) {
           b = 0;
 
-          if (qr.pixels[i]  [j]) {
+          if (context.pixels[i]  [j]) {
             b++;
           }
 
-          if (qr.pixels[i + 1][j]) {
+          if (context.pixels[i + 1][j]) {
             b++;
           }
 
-          if (qr.pixels[i]  [j + 1]) {
+          if (context.pixels[i]  [j + 1]) {
             b++;
           }
 
-          if (qr.pixels[i + 1][j + 1]) {
+          if (context.pixels[i + 1][j + 1]) {
             b++;
           }
 
@@ -370,7 +370,7 @@ QREncode.prototype = {
       return p;
     }
 
-    function penaltyDarkLight(qr){
+    function penaltyDarkLight(context){
       // we shift bits in one by one, and see if the resulting pattern match the bad one
       var p = 0;
       var i, j;
@@ -379,14 +379,14 @@ QREncode.prototype = {
       var badmask1 = 2048 - 1;		// 4_ : 1D : 1L : 3D : 1L : 1D : 4L
       var badmask2 = badmask1 << 4;		// 4L : 1D : 1L : 3D : 1L : 1D : 4_
       var patmask = 32768 - 1;		// 4  +           7            + 4
-      for (i = 0; i < qr.modules - 1; i++) {
+      for (i = 0; i < context.modules - 1; i++) {
         pat = [0, 0];
 
-        for (j = 0; j < qr.modules - 1; j++) {
+        for (j = 0; j < context.modules - 1; j++) {
           for (rc = 0; rc <= 1; rc++) {
             pat[rc] = (pat[rc] << 1) & patmask;
 
-            if (qr.pixels[rc * i + (1 - rc) * j][(1 - rc) * i + rc * j]) {
+            if (context.pixels[rc * i + (1 - rc) * j][(1 - rc) * i + rc * j]) {
               pat[rc]++;
             }
 
@@ -394,7 +394,7 @@ QREncode.prototype = {
               if ((pat[rc] & badmask1) === bad) {
                 p += 40;
               } else {
-                if (j < qr.modules - 4 - 7) {
+                if (j < context.modules - 4 - 7) {
                   if ((pat[rc] & badmask2) === bad) {
                     p += 40;
                   }
@@ -408,19 +408,19 @@ QREncode.prototype = {
       return p;
     }
 
-    function penaltyDark(qr){
+    function penaltyDark(context){
       var i, j;
       var dark = 0;
 
-      for (i = 0; i < qr.modules - 1; i++) {
-        for (j = 0; j < qr.modules - 1; j++) {
-          if (qr.pixels[i][j]) {
+      for (i = 0; i < context.modules - 1; i++) {
+        for (j = 0; j < context.modules - 1; j++) {
+          if (context.pixels[i][j]) {
             dark++;
           }
         }
       }
 
-      return 10 * Math.floor(Math.abs(dark / (qr.modules * qr.modules) - 0.5) / 0.05);
+      return 10 * Math.floor(Math.abs(dark / (context.modules * context.modules) - 0.5) / 0.05);
     }
 
     // calculate penalty
@@ -476,33 +476,33 @@ QREncode.prototype = {
   encodeFunctionalPatterns: function (mask){
     var context = this;
 
-    function encodeFinderPattern(qr, x, y){
+    function encodeFinderPattern(context, x, y){
       var i, j;
 
       // Outer 7x7 black boundary
       for (i = 0; i <= 5; i++) {
-        qr.pixels[x + i][y] = true;
-        qr.pixels[x + 6][y + i] = true;
-        qr.pixels[x + 6 - i][y + 6] = true;
-        qr.pixels[x][y + 6 - i] = true;
+        context.pixels[x + i][y] = true;
+        context.pixels[x + 6][y + i] = true;
+        context.pixels[x + 6 - i][y + 6] = true;
+        context.pixels[x][y + 6 - i] = true;
       }
 
       // Inner 3*3 black box
       for (i = 2; i <= 4; i++) {
         for (j = 2; j <= 4; j++) {
-          qr.pixels[x + i][y + j] = true;
+          context.pixels[x + i][y + j] = true;
         }
       }
     }
 
-    function encodeVersionTopright(qr){
+    function encodeVersionTopright(context){
       var x, y;
-      var pattern = qr.VERSION_INFO[qr.version];
+      var pattern = context.VERSION_INFO[context.version];
 
       for (y = 0; y < 6; y++) {
-        for (x = qr.modules - 11; x < qr.modules - 11 + 3; x++) {
+        for (x = context.modules - 11; x < context.modules - 11 + 3; x++) {
           if (pattern & 1) {
-            qr.pixels[x][y] = true;
+            context.pixels[x][y] = true;
           }
 
           pattern /= 2;
@@ -510,14 +510,14 @@ QREncode.prototype = {
       }
     }
 
-    function encodeVersionBottomleft(qr){
+    function encodeVersionBottomleft(context){
       var x, y;
-      var pattern = qr.VERSION_INFO[qr.version];
+      var pattern = context.VERSION_INFO[context.version];
 
       for (x = 0; x < 6; x++) {
-        for (y = qr.modules - 11; y < qr.modules - 11 + 3; y++) {
+        for (y = context.modules - 11; y < context.modules - 11 + 3; y++) {
           if (pattern & 1) {
-            qr.pixels[x][y] = true;
+            context.pixels[x][y] = true;
           }
 
           pattern /= 2;
@@ -525,37 +525,37 @@ QREncode.prototype = {
       }
     }
 
-    function encodeTimingPattern(qr, horizontal){
+    function encodeTimingPattern(context, horizontal){
       var i;
 
-      for (i = 8; i < qr.modules - 8; i += 2) {
+      for (i = 8; i < context.modules - 8; i += 2) {
         if (horizontal) {
-          qr.pixels[i][6] = true;
+          context.pixels[i][6] = true;
         } else {
-          qr.pixels[6][i] = true;
+          context.pixels[6][i] = true;
         }
       }
 
     }
 
-    function encodeOneAlignmentPattern(qr, x, y){
+    function encodeOneAlignmentPattern(context, x, y){
       // Outer 5x5 black boundary
       var i;
 
       for (i = 0; i <= 3; i++) {
-        qr.pixels[x + i][y] = true;
-        qr.pixels[x + 4][y + i] = true;
-        qr.pixels[x + 4 - i][y + 4] = true;
-        qr.pixels[x][y + 4 - i] = true;
+        context.pixels[x + i][y] = true;
+        context.pixels[x + 4][y + i] = true;
+        context.pixels[x + 4 - i][y + 4] = true;
+        context.pixels[x][y + 4 - i] = true;
       }
 
       // center black
-      qr.pixels[x + 2][y + 2] = true;
+      context.pixels[x + 2][y + 2] = true;
     }
 
-    function encodeAlignmentPatterns(qr){
+    function encodeAlignmentPatterns(context){
       var i, j;
-      var n = qr.ALIGNMENT_PATTERNS[qr.version].length;
+      var n = context.ALIGNMENT_PATTERNS[context.version].length;
 
       for (i = 0; i < n; i++) {
         for (j = 0; j < n; j++) {
@@ -563,63 +563,63 @@ QREncode.prototype = {
             continue;
           }
 
-          encodeOneAlignmentPattern(qr, qr.ALIGNMENT_PATTERNS[qr.version][i] - 2, qr.ALIGNMENT_PATTERNS[qr.version][j] - 2);
+          encodeOneAlignmentPattern(context, context.ALIGNMENT_PATTERNS[context.version][i] - 2, context.ALIGNMENT_PATTERNS[context.version][j] - 2);
         }
       }
     }
 
-    function encodeFormatNW(qr, code){
+    function encodeFormatNW(context, code){
       var x, y;
 
       for (y = 0; y <= 5; y++) {
         if (code & 1) {
-          qr.pixels[8][y] = true;
+          context.pixels[8][y] = true;
         }
 
         code /= 2;
       }
 
       if (code & 1) {
-        qr.pixels[8][7] = true;
+        context.pixels[8][7] = true;
       }
 
       code /= 2;
 
       if (code & 1) {
-        qr.pixels[8][8] = true;
+        context.pixels[8][8] = true;
       }
 
       code /= 2;
 
       if (code & 1) {
-        qr.pixels[7][8] = true;
+        context.pixels[7][8] = true;
       }
 
       code /= 2;
 
       for (x = 5; x >= 0; x--) {
         if (code & 1) {
-          qr.pixels[x][8] = true;
+          context.pixels[x][8] = true;
         }
 
         code /= 2;
       }
     }
 
-    function encodeFormatNESW(qr, code){
+    function encodeFormatNESW(context, code){
       var x, y;
 
-      for (x = qr.modules - 1; x > qr.modules - 1 - 8; x--) {
+      for (x = context.modules - 1; x > context.modules - 1 - 8; x--) {
         if (code & 1) {
-          qr.pixels[x][8] = true;
+          context.pixels[x][8] = true;
         }
 
         code /= 2;
       }
 
-      for (y = qr.modules - 7; y < qr.modules - 1; y++) {
+      for (y = context.modules - 7; y < context.modules - 1; y++) {
         if (code & 1) {
-          qr.pixels[8][y] = true;
+          context.pixels[8][y] = true;
         }
 
         code /= 2;
