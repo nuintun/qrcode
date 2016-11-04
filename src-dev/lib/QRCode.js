@@ -294,10 +294,8 @@ QRCode.prototype = {
     context.setupPositionProbePattern(0, 0);
     context.setupPositionProbePattern(context.count - 7, 0);
     context.setupPositionProbePattern(0, context.count - 7);
-
     context.setupPositionAdjustPattern();
     context.setupTimingPattern();
-
     context.setupVersionInfo(test, maskPattern);
 
     if (context.version >= 7) {
