@@ -572,19 +572,6 @@
     [6, 30, 58, 86, 114, 142, 170]
   ];
 
-  var MAX_LENGTH = [
-    [[41, 25, 17, 10], [34, 20, 14, 8], [27, 16, 11, 7], [17, 10, 7, 4]],
-    [[77, 47, 32, 20], [63, 38, 26, 16], [48, 29, 20, 12], [34, 20, 14, 8]],
-    [[127, 77, 53, 32], [101, 61, 42, 26], [77, 47, 32, 20], [58, 35, 24, 15]],
-    [[187, 114, 78, 48], [149, 90, 62, 38], [111, 67, 46, 28], [82, 50, 34, 21]],
-    [[255, 154, 106, 65], [202, 122, 84, 52], [144, 87, 60, 37], [106, 64, 44, 27]],
-    [[322, 195, 134, 82], [255, 154, 106, 65], [178, 108, 74, 45], [139, 84, 58, 36]],
-    [[370, 224, 154, 95], [293, 178, 122, 75], [207, 125, 86, 53], [154, 93, 64, 39]],
-    [[461, 279, 192, 118], [365, 221, 152, 93], [259, 157, 108, 66], [202, 122, 84, 52]],
-    [[552, 335, 230, 141], [432, 262, 180, 111], [312, 189, 130, 80], [235, 143, 98, 60]],
-    [[652, 395, 271, 167], [513, 311, 213, 131], [364, 221, 151, 93], [288, 174, 119, 74]]
-  ];
-
   var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
   var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
   var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
@@ -619,47 +606,7 @@
     return PATTERN_POSITION_TABLE[version - 1];
   }
 
-  function getMaxLength(version, mode, level) {
-    var t = version - 1;
-    var e = 0;
-    var m = 0;
 
-    switch (level) {
-      case ErrorCorrectLevel.L:
-        e = 0;
-        break;
-      case ErrorCorrectLevel.M:
-        e = 1;
-        break;
-      case ErrorCorrectLevel.Q:
-        e = 2;
-        break;
-      case ErrorCorrectLevel.H:
-        e = 3;
-        break;
-      default:
-        throw 'invalid level:' + level;
-    }
-
-    switch (mode) {
-      case Mode.MODE_NUMBER:
-        m = 0;
-        break;
-      case Mode.MODE_ALPHA_NUM:
-        m = 1;
-        break;
-      case Mode.MODE_8BIT_BYTE:
-        m = 2;
-        break;
-      case Mode.MODE_KANJI:
-        m = 3;
-        break;
-      default:
-        throw 'invalid mode:' + mode;
-    }
-
-    return MAX_LENGTH[t][e][m];
-  }
 
   function getErrorCorrectPolynomial(errorCorrectLength) {
     var a = new Polynomial([1]);
@@ -1395,13 +1342,152 @@
     }
   };
 
+  function QRKanji() {
+    QRData.call(this, Mode.MODE_KANJI, data);
+  }
+
+  inherits(QRKanji, QRData, {
+    write: function(buffer) {
+      var context = this;
+      var data = QRCode.stringToBytes(context.getData());
+
+      var c;
+      var i = 0;
+
+      while (i + 1 < data.length) {
+        c = ((0xff & data[i]) << 8) | (0xff & data[i + 1]);
+
+        if (0x8140 <= c && c <= 0x9FFC) {
+          c -= 0x8140;
+        } else if (0xE040 <= c && c <= 0xEBBF) {
+          c -= 0xC140;
+        } else {
+          throw 'illegal char at ' + (i + 1) + '/' + c;
+        }
+
+        c = ((c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
+
+        buffer.put(c, 13);
+
+        i += 2;
+      }
+
+      if (i < data.length) {
+        throw 'illegal char at ' + (i + 1);
+      }
+    },
+    getLength: function() {
+      return QRCode.stringToBytes(this.getData()).length / 2;
+    }
+  });
+
+  function QRNumber(data) {
+    QRData.call(this, Mode.MODE_NUMBER, data);
+  }
+
+  inherits(QRNumber, QRData, {
+    write: function(buffer) {
+      var data = this.getData();
+
+      var i = 0;
+
+      while (i + 2 < data.length) {
+        buffer.put(QRNumber.strToNum(data.substring(i, i + 3)), 10);
+
+        i += 3;
+      }
+
+      if (i < data.length) {
+        if (data.length - i == 1) {
+          buffer.put(QRNumber.strToNum(data.substring(i, i + 1)), 4);
+        } else if (data.length - i == 2) {
+          buffer.put(QRNumber.strToNum(data.substring(i, i + 2)), 7);
+        }
+      }
+    }
+  });
+
+  QRNumber.strToNum = function(s) {
+    var num = 0;
+
+    for (var i = 0; i < s.length; i += 1) {
+      num = num * 10 + QRNumber.chatToNum(s.charAt(i));
+    }
+
+    return num;
+  };
+
+  QRNumber.chatToNum = function(c) {
+    if ('0' <= c && c <= '9') {
+      return c.charCodeAt(0) - '0'.charCodeAt(0);
+    }
+
+    throw 'illegal char :' + c;
+  };
+
+  function QRAlphaNum(data) {
+    QRData.call(this, Mode.MODE_8BIT_BYTE, data);
+  }
+
+  QRAlphaNum.getCode = function(c) {
+    if ('0' <= c && c <= '9') {
+      return c.charCodeAt(0) - '0'.charCodeAt(0);
+    } else if ('A' <= c && c <= 'Z') {
+      return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+    } else {
+      switch (c) {
+        case ' ':
+          return 36;
+        case '$':
+          return 37;
+        case '%':
+          return 38;
+        case '*':
+          return 39;
+        case '+':
+          return 40;
+        case '-':
+          return 41;
+        case '.':
+          return 42;
+        case '/':
+          return 43;
+        case ':':
+          return 44;
+        default:
+          throw 'illegal char :' + c;
+      }
+    }
+  };
+
+  inherits(QRAlphaNum, QRData, {
+    write: function(buffer) {
+      var i = 0;
+      var s = this.getData();
+
+      while (i + 1 < s.length) {
+        buffer.put(
+          QRAlphaNum.getCode(s.charAt(i)) * 45 + QRAlphaNum.getCode(s.charAt(i + 1)), 11);
+        i += 2;
+      }
+
+      if (i < s.length) {
+        buffer.put(QRAlphaNum.getCode(s.charAt(i)), 6);
+      }
+    },
+    getLength: function() {
+      return this.getData().length;
+    }
+  });
+
   var encode = {
     MODE: Mode,
     ECLEVEL: ErrorCorrectLevel,
     Encode: QRCode,
-    autoVersion: function() {
-      getMaxLength;
-    }
+    QRKanji: QRKanji,
+    QRNumber: QRNumber,
+    QRAlphaNum: QRAlphaNum,
+    QR8BitByte: QR8BitByte
   };
 
   return encode;
