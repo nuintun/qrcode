@@ -62,6 +62,8 @@ var zh_cn = {
 
       try {
         this.pixels = new QRCode.Encode(config.mode, config.text, 0, config.ECLevel);
+
+        console.log(this.pixels);
       } catch (e) {
         e.localize(zh_cn);
 
