@@ -417,7 +417,7 @@
 
   var EN = {
     'QRCode.UnknownMode': 'Internal error: Unknown mode: {{mode}}.',
-    'QRCode.UnsupportedECI': 'Unsupported ECI mode: {{mode}}.',
+    'QRCode.UnsupportedECI': 'Internal error: Unsupported ECI mode: {{mode}}.',
     'QREncode.InvalidChar4Alphanumeric': 'Invalid character for Alphanumeric encoding [{{char}}].',
     'QREncode.InvalidChar4Numeric': 'Invalid character for Numeric encoding [{{char}}].',
     'QREncode.TextTooLong4TargetVersion': 'Text too long for this EC version.',
