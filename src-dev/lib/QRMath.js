@@ -1,5 +1,5 @@
-export var EXP_TABLE = [];
-export var LOG_TABLE = [];
+var EXP_TABLE = [];
+var LOG_TABLE = [];
 
 (function() {
   var i;
