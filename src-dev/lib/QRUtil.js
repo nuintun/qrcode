@@ -94,12 +94,12 @@ export function getPatternPosition(version) {
   return PATTERN_POSITION_TABLE[version - 1];
 }
 
-export function getMaxLength(version, mode, errorCorrectLevel) {
+export function getMaxLength(version, mode, level) {
   var t = version - 1;
   var e = 0;
   var m = 0;
 
-  switch (errorCorrectLevel) {
+  switch (level) {
     case ErrorCorrectLevel.L:
       e = 0;
       break;
@@ -113,7 +113,7 @@ export function getMaxLength(version, mode, errorCorrectLevel) {
       e = 3;
       break;
     default:
-      throw 'e:' + errorCorrectLevel;
+      throw 'invalid level:' + level;
   }
 
   switch (mode) {
@@ -130,7 +130,7 @@ export function getMaxLength(version, mode, errorCorrectLevel) {
       m = 3;
       break;
     default:
-      throw 'm:' + mode;
+      throw 'invalid mode:' + mode;
   }
 
   return MAX_LENGTH[t][e][m];
@@ -165,7 +165,7 @@ export function getMaskFunc(maskPattern) {
     case MaskPattern.PATTERN111:
       return function(i, j) { return ((i * j) % 3 + (i + j) % 2) % 2 == 0; };
     default:
-      throw 'mask:' + maskPattern;
+      throw 'invalid mask:' + maskPattern;
   }
 }
 

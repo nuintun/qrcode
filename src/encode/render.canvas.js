@@ -6,7 +6,7 @@
     var j;
     var cfg = self.config;
     var mSize = cfg.moduleSize;
-    var size = self.pixels.moduleCount;
+    var size = self.pixels.getModuleCount();
     var outSize = 2 * cfg.margin + size;
     var canvas = document.createElement('canvas');
     var ctx = canvas.getContext('2d');

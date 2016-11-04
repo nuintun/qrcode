@@ -270,8 +270,8 @@
     [20, 45, 15, 61, 46, 16]
   ];
 
-  RSBlock.getRSBlocks = function(version, errorCorrectLevel) {
-    var rsBlock = RSBlock.getRsBlockTable(version, errorCorrectLevel);
+  RSBlock.getRSBlocks = function(version, level) {
+    var rsBlock = RSBlock.getRsBlockTable(version, level);
     var length = rsBlock.length / 3;
     var list = [];
     var count;
@@ -292,8 +292,8 @@
     return list;
   };
 
-  RSBlock.getRsBlockTable = function(version, errorCorrectLevel) {
-    switch (errorCorrectLevel) {
+  RSBlock.getRsBlockTable = function(version, level) {
+    switch (level) {
       case ErrorCorrectLevel.L:
         return RS_BLOCK_TABLE[(version - 1) * 4];
       case ErrorCorrectLevel.M:
@@ -306,7 +306,7 @@
         break;
     }
 
-    throw 'tn:' + version + '/ecl:' + errorCorrectLevel;
+    throw 'invalid version:' + version + '/level:' + level;
   };
 
   RSBlock.prototype = {
@@ -619,12 +619,12 @@
     return PATTERN_POSITION_TABLE[version - 1];
   }
 
-  function getMaxLength(version, mode, errorCorrectLevel) {
+  function getMaxLength(version, mode, level) {
     var t = version - 1;
     var e = 0;
     var m = 0;
 
-    switch (errorCorrectLevel) {
+    switch (level) {
       case ErrorCorrectLevel.L:
         e = 0;
         break;
@@ -638,7 +638,7 @@
         e = 3;
         break;
       default:
-        throw 'e:' + errorCorrectLevel;
+        throw 'invalid level:' + level;
     }
 
     switch (mode) {
@@ -655,7 +655,7 @@
         m = 3;
         break;
       default:
-        throw 'm:' + mode;
+        throw 'invalid mode:' + mode;
     }
 
     return MAX_LENGTH[t][e][m];
@@ -690,7 +690,7 @@
       case MaskPattern.PATTERN111:
         return function(i, j) { return ((i * j) % 3 + (i + j) % 2) % 2 == 0; };
       default:
-        throw 'mask:' + maskPattern;
+        throw 'invalid mask:' + maskPattern;
     }
   }
 
@@ -872,7 +872,7 @@
           case Mode.MODE_KANJI:
             return 8;
           default:
-            throw 'mode:' + mode;
+            throw 'invalid mode:' + mode;
         }
       } else if (version < 27) {
         // 10 - 26
@@ -886,7 +886,7 @@
           case Mode.MODE_KANJI:
             return 10;
           default:
-            throw 'mode:' + mode;
+            throw 'invalid mode:' + mode;
         }
       } else if (version < 41) {
         // 27 - 40
@@ -900,7 +900,7 @@
           case Mode.MODE_KANJI:
             return 12;
           default:
-            throw 'mode:' + mode;
+            throw 'invalid mode:' + mode;
         }
       } else {
         throw 'version:' + version;
@@ -925,14 +925,14 @@
     }
   });
 
-  function QRCode(version, errorCorrectLevel) {
+  function QRCode(version, level) {
     var context = this;
 
     context.version = version;
-    context.level = errorCorrectLevel;
+    context.level = level;
     context.data = [];
     context.modules = [];
-    context.moduleCount = 0;
+    context.count = 0;
   }
 
   var PAD0 = 0xEC;
@@ -940,11 +940,11 @@
 
   QRCode.getMaxLength = getMaxLength;
 
-  QRCode.createData = function(version, errorCorrectLevel, dataArray) {
+  QRCode.createData = function(version, level, dataArray) {
     var i;
     var data;
     var buffer = new BitBuffer();
-    var rsBlocks = RSBlock.getRSBlocks(version, errorCorrectLevel);
+    var rsBlocks = RSBlock.getRSBlocks(version, level);
 
     for (i = 0; i < dataArray.length; i += 1) {
       data = dataArray[i];
@@ -1130,11 +1130,11 @@
     setVersion: function(version) {
       this.version = version;
     },
-    getErrorCorrectLevel: function() {
+    getLevel: function() {
       return this.level;
     },
-    setErrorCorrectLevel: function(errorCorrectLevel) {
-      this.level = errorCorrectLevel;
+    setLevel: function(level) {
+      this.level = level;
     },
     clearData: function() {
       this.data = [];
@@ -1166,7 +1166,7 @@
       }
     },
     getModuleCount: function() {
-      return this.moduleCount;
+      return this.count;
     },
     make: function() {
       var context = this;
@@ -1198,26 +1198,26 @@
       var context = this;
 
       // initialize modules
-      context.moduleCount = context.version * 4 + 17;
+      context.count = context.version * 4 + 17;
       context.modules = [];
 
       var j;
 
-      for (var i = 0; i < context.moduleCount; i += 1) {
+      for (var i = 0; i < context.count; i += 1) {
         context.modules.push([]);
-        for (j = 0; j < context.moduleCount; j += 1) {
+        for (j = 0; j < context.count; j += 1) {
           context.modules[i].push(null);
         }
       }
 
       context.setupPositionProbePattern(0, 0);
-      context.setupPositionProbePattern(context.moduleCount - 7, 0);
-      context.setupPositionProbePattern(0, context.moduleCount - 7);
+      context.setupPositionProbePattern(context.count - 7, 0);
+      context.setupPositionProbePattern(0, context.count - 7);
 
       context.setupPositionAdjustPattern();
       context.setupTimingPattern();
 
-      context.setupTypeInfo(test, maskPattern);
+      context.setupVersionInfo(test, maskPattern);
 
       if (context.version >= 7) {
         context.setupVersion(test);
@@ -1237,12 +1237,12 @@
       var mask;
       var inc = -1;
       var context = this;
-      var row = context.moduleCount - 1;
+      var row = context.count - 1;
       var bitIndex = 7;
       var byteIndex = 0;
       var maskFunc = getMaskFunc(maskPattern);
 
-      for (var col = context.moduleCount - 1; col > 0; col -= 2) {
+      for (var col = context.count - 1; col > 0; col -= 2) {
         if (col == 6) {
           col -= 1;
         }
@@ -1274,7 +1274,7 @@
 
           row += inc;
 
-          if (row < 0 || context.moduleCount <= row) {
+          if (row < 0 || context.count <= row) {
             row -= inc;
             inc = -inc;
             break;
@@ -1315,8 +1315,8 @@
 
       for (var r = -1; r <= 7; r += 1) {
         for (c = -1; c <= 7; c += 1) {
-          if (row + r <= -1 || context.moduleCount <= row + r ||
-            col + c <= -1 || context.moduleCount <= col + c) {
+          if (row + r <= -1 || context.count <= row + r ||
+            col + c <= -1 || context.count <= col + c) {
             continue;
           }
 
@@ -1329,7 +1329,7 @@
     setupTimingPattern: function() {
       var context = this;
 
-      for (var r = 8; r < context.moduleCount - 8; r += 1) {
+      for (var r = 8; r < context.count - 8; r += 1) {
         if (context.modules[r][6] != null) {
           continue;
         }
@@ -1337,7 +1337,7 @@
         context.modules[r][6] = r % 2 == 0;
       }
 
-      for (var c = 8; c < context.moduleCount - 8; c += 1) {
+      for (var c = 8; c < context.count - 8; c += 1) {
         if (context.modules[6][c] != null) {
           continue;
         }
@@ -1351,14 +1351,14 @@
       var bits = getBCHVersion(context.version);
 
       for (i = 0; i < 18; i += 1) {
-        context.modules[~~(i / 3)][i % 3 + context.moduleCount - 8 - 3] = !test && ((bits >> i) & 1) == 1;
+        context.modules[~~(i / 3)][i % 3 + context.count - 8 - 3] = !test && ((bits >> i) & 1) == 1;
       }
 
       for (i = 0; i < 18; i += 1) {
-        context.modules[i % 3 + context.moduleCount - 8 - 3][~~(i / 3)] = !test && ((bits >> i) & 1) == 1;
+        context.modules[i % 3 + context.count - 8 - 3][~~(i / 3)] = !test && ((bits >> i) & 1) == 1;
       }
     },
-    setupTypeInfo: function(test, maskPattern) {
+    setupVersionInfo: function(test, maskPattern) {
       var i;
       var mod;
       var context = this;
@@ -1374,7 +1374,7 @@
         } else if (i < 8) {
           context.modules[i + 1][8] = mod;
         } else {
-          context.modules[context.moduleCount - 15 + i][8] = mod;
+          context.modules[context.count - 15 + i][8] = mod;
         }
       }
 
@@ -1383,7 +1383,7 @@
         mod = !test && ((bits >> i) & 1) == 1;
 
         if (i < 8) {
-          context.modules[8][context.moduleCount - i - 1] = mod;
+          context.modules[8][context.count - i - 1] = mod;
         } else if (i < 9) {
           context.modules[8][15 - i - 1 + 1] = mod;
         } else {
@@ -1392,7 +1392,7 @@
       }
 
       // fixed
-      context.modules[context.moduleCount - 8][8] = !test;
+      context.modules[context.count - 8][8] = !test;
     }
   };
 

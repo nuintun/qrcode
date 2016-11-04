@@ -252,8 +252,8 @@ var RS_BLOCK_TABLE = [
   [20, 45, 15, 61, 46, 16]
 ];
 
-RSBlock.getRSBlocks = function(version, errorCorrectLevel) {
-  var rsBlock = RSBlock.getRsBlockTable(version, errorCorrectLevel);
+RSBlock.getRSBlocks = function(version, level) {
+  var rsBlock = RSBlock.getRsBlockTable(version, level);
   var length = rsBlock.length / 3;
   var list = [];
   var count;
@@ -274,8 +274,8 @@ RSBlock.getRSBlocks = function(version, errorCorrectLevel) {
   return list;
 };
 
-RSBlock.getRsBlockTable = function(version, errorCorrectLevel) {
-  switch (errorCorrectLevel) {
+RSBlock.getRsBlockTable = function(version, level) {
+  switch (level) {
     case ErrorCorrectLevel.L:
       return RS_BLOCK_TABLE[(version - 1) * 4];
     case ErrorCorrectLevel.M:
@@ -288,7 +288,7 @@ RSBlock.getRsBlockTable = function(version, errorCorrectLevel) {
       break;
   }
 
-  throw 'tn:' + version + '/ecl:' + errorCorrectLevel;
+  throw 'invalid version:' + version + '/level:' + level;
 };
 
 RSBlock.prototype = {
