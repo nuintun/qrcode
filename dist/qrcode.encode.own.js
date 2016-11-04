@@ -1452,7 +1452,6 @@
           appendBits(context.data, context.bit_idx, 10, val);
 
           context.bit_idx += 10;
-
         }
 
         if (n % 3 === 1) {
