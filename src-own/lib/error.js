@@ -8,9 +8,11 @@ import * as util from './util';
  * @constructor
  */
 export default function QRError(type, data, message){
-  this.type = type;
-  this.data = data;
-  this.message = message;
+  var context = this;
+
+  context.type = type;
+  context.data = data;
+  context.message = message;
 }
 
 // inherits

@@ -99,9 +99,11 @@
    * @constructor
    */
   function QRError(type, data, message){
-    this.type = type;
-    this.data = data;
-    this.message = message;
+    var context = this;
+
+    context.type = type;
+    context.data = data;
+    context.message = message;
   }
 
   // inherits
@@ -447,45 +449,50 @@
   var EC_LEVEL_MAP = mapping(ERROR_CORRECTION_LEVEL);
 
   function Pixels(mode, version, ec_level){
-    this.mode = MODE_MAP[mode];
-    this.version = version;
-    this.level = EC_LEVEL_MAP[ec_level];
+    var context = this;
+
+    context.mode = MODE_MAP[mode];
+    context.version = version;
+    context.level = EC_LEVEL_MAP[ec_level];
   }
 
   inherits(Pixels, Array, {
     setBackground: function (){
       var i, j;
-      var modules = this.length;
+      var context = this;
+      var modules = context.length;
 
       for (i = 0; i < modules; i++) {
         for (j = 0; j < modules; j++) {
-          this[i][j] = false;
+          context[i][j] = false;
         }
       }
 
       return true;
     },
     setDark: function (x, y){
-      var modules = this.length;
+      var context = this;
+      var modules = context.length;
 
       // Ignoring d, since a pixel array has d=1
       if (x > modules - 1 || y > modules - 1) {
         return false;
       }
 
-      this[x][y] = true;
+      context[x][y] = true;
 
       return true;
     },
     isDark: function (x, y){
-      var modules = this.length;
+      var context = this;
+      var modules = context.length;
 
       // Ignoring d, since a pixel array has d=1
       if (x > modules - 1 || y > modules - 1) {
         return false;
       }
 
-      return this[x][y];
+      return context[x][y];
     }
   });
 
@@ -701,12 +708,14 @@
    * @constructor
    */
   function ReedSolomon(n_ec_bytes){
-    this.n_ec_bytes = n_ec_bytes;
-    this.n_degree_max = 2 * n_ec_bytes;
-    this.syndroms = [];
-    this.gen_poly = null;
+    var context = this;
 
-    this.initGaloisTables();
+    context.n_ec_bytes = n_ec_bytes;
+    context.n_degree_max = 2 * n_ec_bytes;
+    context.syndroms = [];
+    context.gen_poly = null;
+
+    context.initGaloisTables();
   }
 
   /**
@@ -722,33 +731,35 @@
      * @returns {Array}
      */
     encode: function (msg){
+      var context = this;
+
       // Return parity bytes
       // Simulate a LFSR with generator polynomial for n byte RS code.
-      if (this.gen_poly == null) {
-        this.gen_poly = this.genPoly(this.n_ec_bytes);
+      if (context.gen_poly == null) {
+        context.gen_poly = context.genPoly(context.n_ec_bytes);
       }
 
       var i;
-      var LFSR = new Array(this.n_ec_bytes + 1);
+      var LFSR = new Array(context.n_ec_bytes + 1);
 
-      for (i = 0; i < this.n_ec_bytes + 1; i++) {
+      for (i = 0; i < context.n_ec_bytes + 1; i++) {
         LFSR[i] = 0;
       }
 
       for (i = 0; i < msg.length; i++) {
         var j;
-        var dbyte = msg[i] ^ LFSR[this.n_ec_bytes - 1];
+        var dbyte = msg[i] ^ LFSR[context.n_ec_bytes - 1];
 
-        for (j = this.n_ec_bytes - 1; j > 0; j--) {
-          LFSR[j] = LFSR[j - 1] ^ this.gmult(this.gen_poly[j], dbyte);
+        for (j = context.n_ec_bytes - 1; j > 0; j--) {
+          LFSR[j] = LFSR[j - 1] ^ context.gmult(context.gen_poly[j], dbyte);
         }
 
-        LFSR[0] = this.gmult(this.gen_poly[0], dbyte);
+        LFSR[0] = context.gmult(context.gen_poly[0], dbyte);
       }
 
       var parity = [];
 
-      for (i = this.n_ec_bytes - 1; i >= 0; i--) {
+      for (i = context.n_ec_bytes - 1; i >= 0; i--) {
         parity.push(LFSR[i]);
       }
 
@@ -760,18 +771,20 @@
      * @returns {Blob|string|ArrayBuffer}
      */
     decode: function (bytes_in){
-      this.bytes_in = bytes_in;
-      this.bytes_out = bytes_in.slice();
+      var context = this;
 
-      var n_err = this.calculateSyndroms();
+      context.bytes_in = bytes_in;
+      context.bytes_out = bytes_in.slice();
+
+      var n_err = context.calculateSyndroms();
 
       if (n_err > 0) {
-        this.correctErrors();
+        context.correctErrors();
       } else {
-        this.corrected = true;
+        context.corrected = true;
       }
 
-      return this.bytes_out.slice(0, this.bytes_out.length - this.n_ec_bytes);
+      return context.bytes_out.slice(0, context.bytes_out.length - context.n_ec_bytes);
     },
     //
     // ReedSolomon implementation
@@ -786,19 +799,20 @@
       var tp;
       var tp1;
       var genpoly;
+      var context = this;
 
       // multiply (x + a^n) for n = 1 to nbytes
-      tp1 = this.zeroPoly();
+      tp1 = context.zeroPoly();
       tp1[0] = 1;
 
       var i;
 
       for (i = 0; i < nbytes; i++) {
-        tp = this.zeroPoly();
-        tp[0] = this.gexp[i];		// set up x+a^n
+        tp = context.zeroPoly();
+        tp[0] = context.gexp[i];		// set up x+a^n
         tp[1] = 1;
-        genpoly = this.multPolys(tp, tp1);
-        tp1 = this.copyPoly(genpoly);
+        genpoly = context.multPolys(tp, tp1);
+        tp1 = context.copyPoly(genpoly);
       }
 
       return genpoly;
@@ -811,17 +825,18 @@
       var sum;
       var n_err = 0;
       var i, j;
+      var context = this;
 
-      this.syndroms = [];
+      context.syndroms = [];
 
-      for (j = 0; j < this.n_ec_bytes; j++) {
+      for (j = 0; j < context.n_ec_bytes; j++) {
         sum = 0;
 
-        for (i = 0; i < this.bytes_in.length; i++) {
-          sum = this.bytes_in[i] ^ this.gmult(this.gexp[j], sum);
+        for (i = 0; i < context.bytes_in.length; i++) {
+          sum = context.bytes_in[i] ^ context.gmult(context.gexp[j], sum);
         }
 
-        this.syndroms.push(sum);
+        context.syndroms.push(sum);
 
         if (sum > 0) {
           n_err++;
@@ -834,88 +849,90 @@
      * correctErrors
      */
     correctErrors: function (){
-      this.berlekampMassey();
-      this.findRoots();
+      var context = this;
 
-      this.corrected = false;
+      context.berlekampMassey();
+      context.findRoots();
 
-      if (2 * this.n_errors > this.n_ec_bytes) {
-        this.uncorrected_reason = "too many errors";
+      context.corrected = false;
+
+      if (2 * context.n_errors > context.n_ec_bytes) {
+        context.uncorrected_reason = "too many errors";
 
         return;
       }
 
       var e;
 
-      for (e = 0; e < this.n_errors; e++) {
-        if (this.error_locs[e] >= this.bytes_in.length) {
-          this.uncorrected_reason = "corrections out of scope";
+      for (e = 0; e < context.n_errors; e++) {
+        if (context.error_locs[e] >= context.bytes_in.length) {
+          context.uncorrected_reason = "corrections out of scope";
 
           return;
         }
       }
 
-      if (this.n_errors === 0) {
-        this.uncorrected_reason = "could not identify errors";
+      if (context.n_errors === 0) {
+        context.uncorrected_reason = "could not identify errors";
 
         return;
       }
 
       var r;
 
-      for (r = 0; r < this.n_errors; r++) {
-        var i = this.error_locs[r];
+      for (r = 0; r < context.n_errors; r++) {
+        var i = context.error_locs[r];
 
         // evaluate omega at alpha^(-i)
         var j;
         var num = 0;
 
-        for (j = 0; j < this.n_degree_max; j++) {
-          num ^= this.gmult(this.omega[j], this.gexp[((255 - i) * j) % 255]);
+        for (j = 0; j < context.n_degree_max; j++) {
+          num ^= context.gmult(context.omega[j], context.gexp[((255 - i) * j) % 255]);
         }
 
         // evaluate psi' (derivative) at alpha^(-i) ; all odd powers disappear
         var denom = 0;
 
-        for (j = 0; j < this.n_degree_max; j += 2) {
-          denom ^= this.gmult(this.psi[j], this.gexp[((255 - i) * (j)) % 255]);
+        for (j = 0; j < context.n_degree_max; j += 2) {
+          denom ^= context.gmult(context.psi[j], context.gexp[((255 - i) * (j)) % 255]);
         }
 
-        this.bytes_out[this.bytes_out.length - i - 1] ^= this.gmult(num, this.ginv(denom));
+        context.bytes_out[context.bytes_out.length - i - 1] ^= context.gmult(num, context.ginv(denom));
       }
 
-      this.corrected = true;
+      context.corrected = true;
     },
     /**
      * berlekampMassey
      */
     berlekampMassey: function (){
-
+      var context = this;
       // initialize Gamma, the erasure locator polynomial
-      var gamma = this.zeroPoly();
+      var gamma = context.zeroPoly();
 
       gamma[0] = 1;
 
       // initialize to z
-      var D = this.copyPoly(gamma);
+      var D = context.copyPoly(gamma);
 
-      this.mulZPoly(D);
+      context.mulZPoly(D);
 
-      this.psi = this.copyPoly(gamma);
+      context.psi = context.copyPoly(gamma);
 
-      var psi2 = new Array(this.n_degree_max);
+      var psi2 = new Array(context.n_degree_max);
       var k = -1;
       var L = 0;
       var i;
       var n;
 
-      for (n = 0; n < this.n_ec_bytes; n++) {
-        var d = this.computeDiscrepancy(this.psi, this.syndroms, L, n);
+      for (n = 0; n < context.n_ec_bytes; n++) {
+        var d = context.computeDiscrepancy(context.psi, context.syndroms, L, n);
 
         if (d !== 0) {
           // psi2 = psi - d*D
-          for (i = 0; i < this.n_degree_max; i++) {
-            psi2[i] = this.psi[i] ^ this.gmult(d, D[i]);
+          for (i = 0; i < context.n_degree_max; i++) {
+            psi2[i] = context.psi[i] ^ context.gmult(d, D[i]);
           }
 
           if (L < (n - k)) {
@@ -923,35 +940,37 @@
 
             k = n - L;
             // D = scale_poly(ginv(d), psi);
-            for (i = 0; i < this.n_degree_max; i++) {
-              D[i] = this.gmult(this.psi[i], this.ginv(d));
+            for (i = 0; i < context.n_degree_max; i++) {
+              D[i] = context.gmult(context.psi[i], context.ginv(d));
             }
 
             L = L2;
           }
 
           // psi = psi2
-          this.psi = this.copyPoly(psi2);
+          context.psi = context.copyPoly(psi2);
         }
 
-        this.mulZPoly(D);
+        context.mulZPoly(D);
       }
 
       // omega
-      var om = this.multPolys(this.psi, this.syndroms);
+      var om = context.multPolys(context.psi, context.syndroms);
 
-      this.omega = this.zeroPoly();
+      context.omega = context.zeroPoly();
 
-      for (i = 0; i < this.n_ec_bytes; i++) {
-        this.omega[i] = om[i];
+      for (i = 0; i < context.n_ec_bytes; i++) {
+        context.omega[i] = om[i];
       }
     },
     /**
      * findRoots
      */
     findRoots: function (){
-      this.n_errors = 0;
-      this.error_locs = [];
+      var context = this;
+
+      context.n_errors = 0;
+      context.error_locs = [];
 
       var r;
       var sum;
@@ -962,13 +981,13 @@
         // evaluate psi at r
         var k;
 
-        for (k = 0; k < this.n_ec_bytes + 1; k++) {
-          sum ^= this.gmult(this.gexp[(k * r) % 255], this.psi[k]);
+        for (k = 0; k < context.n_ec_bytes + 1; k++) {
+          sum ^= context.gmult(context.gexp[(k * r) % 255], context.psi[k]);
         }
 
         if (sum === 0) {
-          this.error_locs.push(255 - r);
-          this.n_errors++;
+          context.error_locs.push(255 - r);
+          context.n_errors++;
         }
       }
     },
@@ -1000,9 +1019,10 @@
      */
     copyPoly: function (src){
       var i;
-      var dst = new Array(this.n_degree_max);
+      var context = this;
+      var dst = new Array(context.n_degree_max);
 
-      for (i = 0; i < this.n_degree_max; i++) {
+      for (i = 0; i < context.n_degree_max; i++) {
         dst[i] = src[i];
       }
 
@@ -1014,9 +1034,10 @@
      */
     zeroPoly: function (){
       var i;
-      var poly = new Array(this.n_degree_max);
+      var context = this;
+      var poly = new Array(context.n_degree_max);
 
-      for (i = 0; i < this.n_degree_max; i++) {
+      for (i = 0; i < context.n_degree_max; i++) {
         poly[i] = 0;
       }
 
@@ -1046,27 +1067,28 @@
      */
     multPolys: function (p1, p2){
       var i;
-      var dst = new Array(this.n_degree_max);
-      var tmp1 = new Array(this.n_degree_max * 2);
+      var context = this;
+      var dst = new Array(context.n_degree_max);
+      var tmp1 = new Array(context.n_degree_max * 2);
 
-      for (i = 0; i < (this.n_degree_max * 2); i++) {
+      for (i = 0; i < (context.n_degree_max * 2); i++) {
         dst[i] = 0;
       }
 
-      for (i = 0; i < this.n_degree_max; i++) {
+      for (i = 0; i < context.n_degree_max; i++) {
         var j;
 
-        for (j = this.n_degree_max; j < (this.n_degree_max * 2); j++) {
+        for (j = context.n_degree_max; j < (context.n_degree_max * 2); j++) {
           tmp1[j] = 0;
         }
 
         // scale tmp1 by p1[i]
-        for (j = 0; j < this.n_degree_max; j++) {
-          tmp1[j] = this.gmult(p2[j], p1[i]);
+        for (j = 0; j < context.n_degree_max; j++) {
+          tmp1[j] = context.gmult(p2[j], p1[i]);
         }
 
         // and mult (shift) tmp1 right by i
-        for (j = (this.n_degree_max * 2) - 1; j >= i; j--) {
+        for (j = (context.n_degree_max * 2) - 1; j >= i; j--) {
           tmp1[j] = tmp1[j - i];
         }
 
@@ -1075,7 +1097,7 @@
         }
 
         // add into partial product
-        for (j = 0; j < (this.n_degree_max * 2); j++) {
+        for (j = 0; j < (context.n_degree_max * 2); j++) {
           dst[j] ^= tmp1[j];
         }
       }
@@ -1098,13 +1120,14 @@
       var p6 = 0;
       var p7 = 0;
       var p8 = 0;
+      var context = this;
 
-      this.gexp = new Array(512);
-      this.glog = new Array(256);
+      context.gexp = new Array(512);
+      context.glog = new Array(256);
 
-      this.gexp[0] = 1;
-      this.gexp[255] = this.gexp[0];
-      this.glog[0] = 0;
+      context.gexp[0] = 1;
+      context.gexp[255] = context.gexp[0];
+      context.glog[0] = 0;
 
       var i;
 
@@ -1119,16 +1142,16 @@
         p2 = p1;
         p1 = pinit;
 
-        this.gexp[i] = p1 + p2 * 2 + p3 * 4 + p4 * 8 + p5 * 16 + p6 * 32 + p7 * 64 + p8 * 128;
-        this.gexp[i + 255] = this.gexp[i];
+        context.gexp[i] = p1 + p2 * 2 + p3 * 4 + p4 * 8 + p5 * 16 + p6 * 32 + p7 * 64 + p8 * 128;
+        context.gexp[i + 255] = context.gexp[i];
       }
 
       for (i = 1; i < 256; i++) {
         var z;
 
         for (z = 0; z < 256; z++) {
-          if (this.gexp[z] === i) {
-            this.glog[i] = z;
+          if (context.gexp[z] === i) {
+            context.glog[i] = z;
             break;
           }
         }
@@ -1142,14 +1165,16 @@
      * @returns {*}
      */
     gmult: function (a, b){
+      var context = this;
+
       if (a === 0 || b === 0) {
         return (0);
       }
 
-      var i = this.glog[a];
-      var j = this.glog[b];
+      var i = context.glog[a];
+      var j = context.glog[b];
 
-      return this.gexp[i + j];
+      return context.gexp[i + j];
     },
     /**
      * ginv
@@ -1162,19 +1187,21 @@
   };
 
   function QREncode(){
-    this.pixels = null;
+    var context = this;
 
-    this.mask = 0;
-    this.version = 0;
-    this.modules = 0;
-    this.module_size = 0;
-    this.functional_grade = 0;
-    this.error_correction_level = 0;
+    context.pixels = null;
 
-    this.data_codewords = 0;
-    this.block_ec_words = 0;
-    this.block_indices = [];
-    this.block_data_lengths = [];
+    context.mask = 0;
+    context.version = 0;
+    context.modules = 0;
+    context.module_size = 0;
+    context.functional_grade = 0;
+    context.error_correction_level = 0;
+
+    context.data_codewords = 0;
+    context.block_ec_words = 0;
+    context.block_indices = [];
+    context.block_data_lengths = [];
   }
 
   QREncode.prototype = {
@@ -1206,16 +1233,17 @@
      */
     encodeToPixArray: function (mode, text, version, ec_level){
       var i;
-      var modules = this.modulesFromVersion(version);
+      var context = this;
+      var modules = context.modulesFromVersion(version);
       var pixels = new Pixels(mode, version, ec_level);
 
       for (i = 0; i < modules; i++) {
         pixels.push([]);
       }
 
-      this.encodeInit(ec_level, pixels);
-      this.encodeAddText(mode, text);
-      this.encode();
+      context.encodeInit(ec_level, pixels);
+      context.encodeAddText(mode, text);
+      context.encode();
 
       return pixels;
     },
@@ -1226,29 +1254,30 @@
      */
     encodeInit: function (ec_level, pixels){
       var i;
+      var context = this;
 
       // set pixels
-      this.pixels = pixels;
+      context.pixels = pixels;
       // Version according to ISO/IEC 18004:2006(E) Section 5.3.1
-      this.version = pixels.version;
-      this.modules = pixels.length;
-      this.module_size = pixels.size;
-      this.error_correction_level = ec_level;
+      context.version = pixels.version;
+      context.modules = pixels.length;
+      context.module_size = pixels.size;
+      context.error_correction_level = ec_level;
 
       // set background
-      this.setBackground();
+      context.setBackground();
 
       // set bit idx
-      this.bit_idx = 0;
+      context.bit_idx = 0;
 
       // set blocks
-      this.setBlocks();
+      context.setBlocks();
 
       // set data
-      this.data = [];
+      context.data = [];
 
-      for (i = 0; i < this.data_codewords; i++) {
-        this.data[i] = 0;
+      for (i = 0; i < context.data_codewords; i++) {
+        context.data[i] = 0;
       }
     },
     /** Add text to a QR code
@@ -1263,11 +1292,13 @@
      * Encode this class to an image/canvas.
      */
     encode: function (){
-      this.addTextImplementation(this.MODE.Terminator, null);
-      this.appendPadding();
-      this.addErrorCorrection();
-      this.encodeBestMask();
-      this.pixelsToImage();
+      var context = this;
+
+      context.addTextImplementation(context.MODE.Terminator, null);
+      context.appendPadding();
+      context.addErrorCorrection();
+      context.encodeBestMask();
+      context.pixelsToImage();
     },
     //
     // QRCodeDecode internal encoding functions
@@ -1278,6 +1309,8 @@
      * @param text
      */
     addTextImplementation: function (mode, text){
+      var context = this;
+
       function appendBits(bytes, pos, len, value){
         var byteIndex = pos >>> 3;
         var shift = 24 - (pos & 7) - len;
@@ -1385,60 +1418,64 @@
         }
       }
 
-      appendBits(this.data, this.bit_idx, 4, mode);
+      appendBits(context.data, context.bit_idx, 4, mode);
 
-      this.bit_idx += 4;
+      context.bit_idx += 4;
 
-      if (mode === this.MODE.AlphaNumeric) {
-        addAlphaNum(this, text);
-      } else if (mode === this.MODE.EightBit) {
-        add8bit(this, text);
-      } else if (mode === this.MODE.Numeric) {
-        addNumeric(this, text);
-      } else if (mode === this.MODE.Terminator) {
+      if (mode === context.MODE.AlphaNumeric) {
+        addAlphaNum(context, text);
+      } else if (mode === context.MODE.EightBit) {
+        add8bit(context, text);
+      } else if (mode === context.MODE.Numeric) {
+        addNumeric(context, text);
+      } else if (mode === context.MODE.Terminator) {
         return;
       } else {
         throw new QRError('QRCode.UnsupportedECI', { mode: mode }, 'Unsupported ECI mode: ' + mode + '.');
       }
 
-      if (this.bit_idx / 8 > this.data_codewords) {
+      if (context.bit_idx / 8 > context.data_codewords) {
         throw new QRError('QREncode.TextTooLong4TargetVersion', null, 'Text too long for this EC version.');
       }
     },
     appendPadding: function (){
       var i;
+      var context = this;
 
-      for (i = Math.floor((this.bit_idx - 1) / 8) + 1; i < this.data_codewords; i += 2) {
-        this.data[i] = 0xEC;
-        this.data[i + 1] = 0x11;
+      for (i = Math.floor((context.bit_idx - 1) / 8) + 1; i < context.data_codewords; i += 2) {
+        context.data[i] = 0xEC;
+        context.data[i + 1] = 0x11;
       }
     },
     addErrorCorrection: function (){
       var b, i;
       var n = 0;
       var bytes = [];
-      var rs = new ReedSolomon(this.block_ec_words);
+      var context = this;
+      var rs = new ReedSolomon(context.block_ec_words);
 
-      for (b = 0; b < this.block_data_lengths.length; b++) {
-        var m = this.block_data_lengths[b];
-        var bytes_in = this.data.slice(n, n + m);
+      for (b = 0; b < context.block_data_lengths.length; b++) {
+        var m = context.block_data_lengths[b];
+        var bytes_in = context.data.slice(n, n + m);
 
         n += m;
 
         for (i = 0; i < m; i++) {
-          bytes[this.block_indices[b][i]] = bytes_in[i];
+          bytes[context.block_indices[b][i]] = bytes_in[i];
         }
 
         var bytes_out = rs.encode(bytes_in);
 
         for (i = 0; i < bytes_out.length; i++) {
-          bytes[this.block_indices[b][m + i]] = bytes_out[i];
+          bytes[context.block_indices[b][m + i]] = bytes_out[i];
         }
       }
 
-      this.bytes = bytes;
+      context.bytes = bytes;
     },
     calculatePenalty: function (){
+      var context = this;
+
       function penaltyAdjacent(qr){
         var i, j;
         var rc, p = 0;
@@ -1569,34 +1606,35 @@
       }
 
       // calculate penalty
-      var p_adjacent = penaltyAdjacent(this);
-      var p_blocks = penaltyBlocks(this);
-      var p_darkLight = penaltyDarkLight(this);
-      var p_dark = penaltyDark(this);
+      var p_adjacent = penaltyAdjacent(context);
+      var p_blocks = penaltyBlocks(context);
+      var p_darkLight = penaltyDarkLight(context);
+      var p_dark = penaltyDark(context);
 
       return p_adjacent + p_blocks + p_darkLight + p_dark;
     },
     encodeBestMask: function (){
       var best_mask = 0;
+      var context = this;
       var best_penalty = 999999;
 
-      this.setFunctionalPattern();
+      context.setFunctionalPattern();
 
       var i, j;
       var mask;
       var penalty;
 
       for (mask = 0; mask < 8; mask++) {
-        for (i = 0; i < this.modules; i++) {
-          for (j = 0; j < this.modules; j++) {
-            this.pixels[i][j] = false;
+        for (i = 0; i < context.modules; i++) {
+          for (j = 0; j < context.modules; j++) {
+            context.pixels[i][j] = false;
           }
         }
 
-        this.encodeFunctionalPatterns(mask);
-        this.encodeData(mask);
+        context.encodeFunctionalPatterns(mask);
+        context.encodeData(mask);
 
-        penalty = this.calculatePenalty();
+        penalty = context.calculatePenalty();
 
         if (penalty < best_penalty) {
           best_penalty = penalty;
@@ -1604,20 +1642,22 @@
         }
       }
 
-      this.mask = best_mask;
+      context.mask = best_mask;
 
-      if (this.mask !== 7) {
-        for (i = 0; i < this.modules; i++) {
-          for (j = 0; j < this.modules; j++) {
-            this.pixels[i][j] = false;
+      if (context.mask !== 7) {
+        for (i = 0; i < context.modules; i++) {
+          for (j = 0; j < context.modules; j++) {
+            context.pixels[i][j] = false;
           }
         }
 
-        this.encodeFunctionalPatterns(this.mask);
-        this.encodeData(this.mask);
+        context.encodeFunctionalPatterns(context.mask);
+        context.encodeData(context.mask);
       }
     },
     encodeFunctionalPatterns: function (mask){
+      var context = this;
+
       function encodeFinderPattern(qr, x, y){
         var i, j;
 
@@ -1769,28 +1809,30 @@
       }
 
       // encode functional patterns
-      encodeFinderPattern(this, 0, 0);
-      encodeFinderPattern(this, 0, this.modules - 7);
-      encodeFinderPattern(this, this.modules - 7, 0);
+      encodeFinderPattern(context, 0, 0);
+      encodeFinderPattern(context, 0, context.modules - 7);
+      encodeFinderPattern(context, context.modules - 7, 0);
 
-      if (this.version >= 7) {
-        encodeVersionTopright(this);
-        encodeVersionBottomleft(this);
+      if (context.version >= 7) {
+        encodeVersionTopright(context);
+        encodeVersionBottomleft(context);
       }
 
-      encodeTimingPattern(this, true);
-      encodeTimingPattern(this, false);
+      encodeTimingPattern(context, true);
+      encodeTimingPattern(context, false);
 
-      if (this.version > 1) {
-        encodeAlignmentPatterns(this);
+      if (context.version > 1) {
+        encodeAlignmentPatterns(context);
       }
 
-      var code = this.FORMAT_INFO[mask + 8 * this.error_correction_level];
+      var code = context.FORMAT_INFO[mask + 8 * context.error_correction_level];
 
-      encodeFormatNW(this, code);
-      encodeFormatNESW(this, code);
+      encodeFormatNW(context, code);
+      encodeFormatNESW(context, code);
     },
     encodeData: function (qrmask){
+      var context = this;
+
       function setMasked(pixels, mask, j, i, f){
         var m;
 
@@ -1833,13 +1875,13 @@
       var col;
       var count;
       var n = 0;
-      var v = this.bytes[n];
+      var v = context.bytes[n];
       var bitsWritten = 0;
       var mask = (1 << 7);
       var writingUp = true;
 
       // Write columns in pairs, from right to left
-      for (j = this.modules - 1; j > 0; j -= 2) {
+      for (j = context.modules - 1; j > 0; j -= 2) {
         if (j === 6) {
           // Skip whole column with vertical alignment pattern;
           // saves time and makes the other code proceed more cleanly
@@ -1847,13 +1889,13 @@
         }
 
         // Read alternatingly from bottom to top then top to bottom
-        for (count = 0; count < this.modules; count++) {
-          i = writingUp ? this.modules - 1 - count : count;
+        for (count = 0; count < context.modules; count++) {
+          i = writingUp ? context.modules - 1 - count : count;
 
           for (col = 0; col < 2; col++) {
             // Ignore bits covered by the function pattern
-            if (!this.functional_pattern[j - col][i]) {
-              setMasked(this.pixels, qrmask, j - col, i, v & mask);
+            if (!context.functional_pattern[j - col][i]) {
+              setMasked(context.pixels, qrmask, j - col, i, v & mask);
 
               mask = (mask >>> 1);
               bitsWritten++;
@@ -1862,7 +1904,7 @@
                 bitsWritten = 0;
                 mask = (1 << 7);
                 n++;
-                v = this.bytes[n];
+                v = context.bytes[n];
               }
             }
           }
@@ -1873,35 +1915,37 @@
     },
     pixelsToImage: function (){
       var i, j;
+      var context = this;
 
-      for (i = 0; i < this.modules; i++) {
-        for (j = 0; j < this.modules; j++) {
-          if (this.pixels[i][j]) {
-            this.setDark(i, j);
+      for (i = 0; i < context.modules; i++) {
+        for (j = 0; j < context.modules; j++) {
+          if (context.pixels[i][j]) {
+            context.setDark(i, j);
           }
         }
       }
     },
     getDataCapacity: function (mode, version, ec_level){
-      var codewords = this.CODEWORDS[version];
-      var ec_codewords = this.EC_CODEWORDS[version][ec_level];
+      var context = this;
+      var codewords = context.CODEWORDS[version];
+      var ec_codewords = context.EC_CODEWORDS[version][ec_level];
       var data_codewords = codewords - ec_codewords;
       var bits = 8 * data_codewords;
 
       bits -= 4;	// mode
-      bits -= this.countBits(mode, version);
+      bits -= context.countBits(mode, version);
 
       var cap = 0;
 
-      if (mode === this.MODE.AlphaNumeric) {
+      if (mode === context.MODE.AlphaNumeric) {
         cap = Math.floor(bits / 11) * 2;
 
         if (bits >= (cap / 2) * 11 + 6) {
           cap++;
         }
-      } else if (mode === this.MODE.EightBit) {
+      } else if (mode === context.MODE.EightBit) {
         cap = Math.floor(bits / 8);
-      } else if (mode === this.MODE.Numeric) {
+      } else if (mode === context.MODE.Numeric) {
         cap = Math.floor(bits / 10) * 3;
 
         if (bits >= (cap / 3) * 10 + 4) {

@@ -5,19 +5,21 @@ import * as QRCommon from './common';
 import ReedSolomon from './reedsolomon';
 
 export default function QREncode(){
-  this.pixels = null;
+  var context = this;
 
-  this.mask = 0;
-  this.version = 0;
-  this.modules = 0;
-  this.module_size = 0;
-  this.functional_grade = 0;
-  this.error_correction_level = 0;
+  context.pixels = null;
 
-  this.data_codewords = 0;
-  this.block_ec_words = 0;
-  this.block_indices = [];
-  this.block_data_lengths = [];
+  context.mask = 0;
+  context.version = 0;
+  context.modules = 0;
+  context.module_size = 0;
+  context.functional_grade = 0;
+  context.error_correction_level = 0;
+
+  context.data_codewords = 0;
+  context.block_ec_words = 0;
+  context.block_indices = [];
+  context.block_data_lengths = [];
 }
 
 QREncode.prototype = {
@@ -49,16 +51,17 @@ QREncode.prototype = {
    */
   encodeToPixArray: function (mode, text, version, ec_level){
     var i;
-    var modules = this.modulesFromVersion(version);
+    var context = this;
+    var modules = context.modulesFromVersion(version);
     var pixels = new Pixels(mode, version, ec_level);
 
     for (i = 0; i < modules; i++) {
       pixels.push([]);
     }
 
-    this.encodeInit(ec_level, pixels);
-    this.encodeAddText(mode, text);
-    this.encode();
+    context.encodeInit(ec_level, pixels);
+    context.encodeAddText(mode, text);
+    context.encode();
 
     return pixels;
   },
@@ -69,29 +72,30 @@ QREncode.prototype = {
    */
   encodeInit: function (ec_level, pixels){
     var i;
+    var context = this;
 
     // set pixels
-    this.pixels = pixels;
+    context.pixels = pixels;
     // Version according to ISO/IEC 18004:2006(E) Section 5.3.1
-    this.version = pixels.version;
-    this.modules = pixels.length;
-    this.module_size = pixels.size;
-    this.error_correction_level = ec_level;
+    context.version = pixels.version;
+    context.modules = pixels.length;
+    context.module_size = pixels.size;
+    context.error_correction_level = ec_level;
 
     // set background
-    this.setBackground();
+    context.setBackground();
 
     // set bit idx
-    this.bit_idx = 0;
+    context.bit_idx = 0;
 
     // set blocks
-    this.setBlocks();
+    context.setBlocks();
 
     // set data
-    this.data = [];
+    context.data = [];
 
-    for (i = 0; i < this.data_codewords; i++) {
-      this.data[i] = 0;
+    for (i = 0; i < context.data_codewords; i++) {
+      context.data[i] = 0;
     }
   },
   /** Add text to a QR code
@@ -106,11 +110,13 @@ QREncode.prototype = {
    * Encode this class to an image/canvas.
    */
   encode: function (){
-    this.addTextImplementation(this.MODE.Terminator, null);
-    this.appendPadding();
-    this.addErrorCorrection();
-    this.encodeBestMask();
-    this.pixelsToImage();
+    var context = this;
+
+    context.addTextImplementation(context.MODE.Terminator, null);
+    context.appendPadding();
+    context.addErrorCorrection();
+    context.encodeBestMask();
+    context.pixelsToImage();
   },
   //
   // QRCodeDecode internal encoding functions
@@ -121,6 +127,8 @@ QREncode.prototype = {
    * @param text
    */
   addTextImplementation: function (mode, text){
+    var context = this;
+
     function appendBits(bytes, pos, len, value){
       var byteIndex = pos >>> 3;
       var shift = 24 - (pos & 7) - len;
@@ -228,60 +236,64 @@ QREncode.prototype = {
       }
     }
 
-    appendBits(this.data, this.bit_idx, 4, mode);
+    appendBits(context.data, context.bit_idx, 4, mode);
 
-    this.bit_idx += 4;
+    context.bit_idx += 4;
 
-    if (mode === this.MODE.AlphaNumeric) {
-      addAlphaNum(this, text);
-    } else if (mode === this.MODE.EightBit) {
-      add8bit(this, text);
-    } else if (mode === this.MODE.Numeric) {
-      addNumeric(this, text);
-    } else if (mode === this.MODE.Terminator) {
+    if (mode === context.MODE.AlphaNumeric) {
+      addAlphaNum(context, text);
+    } else if (mode === context.MODE.EightBit) {
+      add8bit(context, text);
+    } else if (mode === context.MODE.Numeric) {
+      addNumeric(context, text);
+    } else if (mode === context.MODE.Terminator) {
       return;
     } else {
       throw new QRError('QRCode.UnsupportedECI', { mode: mode }, 'Unsupported ECI mode: ' + mode + '.');
     }
 
-    if (this.bit_idx / 8 > this.data_codewords) {
+    if (context.bit_idx / 8 > context.data_codewords) {
       throw new QRError('QREncode.TextTooLong4TargetVersion', null, 'Text too long for this EC version.');
     }
   },
   appendPadding: function (){
     var i;
+    var context = this;
 
-    for (i = Math.floor((this.bit_idx - 1) / 8) + 1; i < this.data_codewords; i += 2) {
-      this.data[i] = 0xEC;
-      this.data[i + 1] = 0x11;
+    for (i = Math.floor((context.bit_idx - 1) / 8) + 1; i < context.data_codewords; i += 2) {
+      context.data[i] = 0xEC;
+      context.data[i + 1] = 0x11;
     }
   },
   addErrorCorrection: function (){
     var b, i;
     var n = 0;
     var bytes = [];
-    var rs = new ReedSolomon(this.block_ec_words);
+    var context = this;
+    var rs = new ReedSolomon(context.block_ec_words);
 
-    for (b = 0; b < this.block_data_lengths.length; b++) {
-      var m = this.block_data_lengths[b];
-      var bytes_in = this.data.slice(n, n + m);
+    for (b = 0; b < context.block_data_lengths.length; b++) {
+      var m = context.block_data_lengths[b];
+      var bytes_in = context.data.slice(n, n + m);
 
       n += m;
 
       for (i = 0; i < m; i++) {
-        bytes[this.block_indices[b][i]] = bytes_in[i];
+        bytes[context.block_indices[b][i]] = bytes_in[i];
       }
 
       var bytes_out = rs.encode(bytes_in);
 
       for (i = 0; i < bytes_out.length; i++) {
-        bytes[this.block_indices[b][m + i]] = bytes_out[i];
+        bytes[context.block_indices[b][m + i]] = bytes_out[i];
       }
     }
 
-    this.bytes = bytes;
+    context.bytes = bytes;
   },
   calculatePenalty: function (){
+    var context = this;
+
     function penaltyAdjacent(qr){
       var i, j;
       var rc, p = 0;
@@ -412,34 +424,35 @@ QREncode.prototype = {
     }
 
     // calculate penalty
-    var p_adjacent = penaltyAdjacent(this);
-    var p_blocks = penaltyBlocks(this);
-    var p_darkLight = penaltyDarkLight(this);
-    var p_dark = penaltyDark(this);
+    var p_adjacent = penaltyAdjacent(context);
+    var p_blocks = penaltyBlocks(context);
+    var p_darkLight = penaltyDarkLight(context);
+    var p_dark = penaltyDark(context);
 
     return p_adjacent + p_blocks + p_darkLight + p_dark;
   },
   encodeBestMask: function (){
     var best_mask = 0;
+    var context = this;
     var best_penalty = 999999;
 
-    this.setFunctionalPattern();
+    context.setFunctionalPattern();
 
     var i, j;
     var mask;
     var penalty;
 
     for (mask = 0; mask < 8; mask++) {
-      for (i = 0; i < this.modules; i++) {
-        for (j = 0; j < this.modules; j++) {
-          this.pixels[i][j] = false;
+      for (i = 0; i < context.modules; i++) {
+        for (j = 0; j < context.modules; j++) {
+          context.pixels[i][j] = false;
         }
       }
 
-      this.encodeFunctionalPatterns(mask);
-      this.encodeData(mask);
+      context.encodeFunctionalPatterns(mask);
+      context.encodeData(mask);
 
-      penalty = this.calculatePenalty();
+      penalty = context.calculatePenalty();
 
       if (penalty < best_penalty) {
         best_penalty = penalty;
@@ -447,20 +460,22 @@ QREncode.prototype = {
       }
     }
 
-    this.mask = best_mask;
+    context.mask = best_mask;
 
-    if (this.mask !== 7) {
-      for (i = 0; i < this.modules; i++) {
-        for (j = 0; j < this.modules; j++) {
-          this.pixels[i][j] = false;
+    if (context.mask !== 7) {
+      for (i = 0; i < context.modules; i++) {
+        for (j = 0; j < context.modules; j++) {
+          context.pixels[i][j] = false;
         }
       }
 
-      this.encodeFunctionalPatterns(this.mask);
-      this.encodeData(this.mask);
+      context.encodeFunctionalPatterns(context.mask);
+      context.encodeData(context.mask);
     }
   },
   encodeFunctionalPatterns: function (mask){
+    var context = this;
+
     function encodeFinderPattern(qr, x, y){
       var i, j;
 
@@ -612,28 +627,30 @@ QREncode.prototype = {
     }
 
     // encode functional patterns
-    encodeFinderPattern(this, 0, 0);
-    encodeFinderPattern(this, 0, this.modules - 7);
-    encodeFinderPattern(this, this.modules - 7, 0);
+    encodeFinderPattern(context, 0, 0);
+    encodeFinderPattern(context, 0, context.modules - 7);
+    encodeFinderPattern(context, context.modules - 7, 0);
 
-    if (this.version >= 7) {
-      encodeVersionTopright(this);
-      encodeVersionBottomleft(this);
+    if (context.version >= 7) {
+      encodeVersionTopright(context);
+      encodeVersionBottomleft(context);
     }
 
-    encodeTimingPattern(this, true);
-    encodeTimingPattern(this, false);
+    encodeTimingPattern(context, true);
+    encodeTimingPattern(context, false);
 
-    if (this.version > 1) {
-      encodeAlignmentPatterns(this);
+    if (context.version > 1) {
+      encodeAlignmentPatterns(context);
     }
 
-    var code = this.FORMAT_INFO[mask + 8 * this.error_correction_level];
+    var code = context.FORMAT_INFO[mask + 8 * context.error_correction_level];
 
-    encodeFormatNW(this, code);
-    encodeFormatNESW(this, code);
+    encodeFormatNW(context, code);
+    encodeFormatNESW(context, code);
   },
   encodeData: function (qrmask){
+    var context = this;
+
     function setMasked(pixels, mask, j, i, f){
       var m;
 
@@ -676,13 +693,13 @@ QREncode.prototype = {
     var col;
     var count;
     var n = 0;
-    var v = this.bytes[n];
+    var v = context.bytes[n];
     var bitsWritten = 0;
     var mask = (1 << 7);
     var writingUp = true;
 
     // Write columns in pairs, from right to left
-    for (j = this.modules - 1; j > 0; j -= 2) {
+    for (j = context.modules - 1; j > 0; j -= 2) {
       if (j === 6) {
         // Skip whole column with vertical alignment pattern;
         // saves time and makes the other code proceed more cleanly
@@ -690,13 +707,13 @@ QREncode.prototype = {
       }
 
       // Read alternatingly from bottom to top then top to bottom
-      for (count = 0; count < this.modules; count++) {
-        i = writingUp ? this.modules - 1 - count : count;
+      for (count = 0; count < context.modules; count++) {
+        i = writingUp ? context.modules - 1 - count : count;
 
         for (col = 0; col < 2; col++) {
           // Ignore bits covered by the function pattern
-          if (!this.functional_pattern[j - col][i]) {
-            setMasked(this.pixels, qrmask, j - col, i, v & mask);
+          if (!context.functional_pattern[j - col][i]) {
+            setMasked(context.pixels, qrmask, j - col, i, v & mask);
 
             mask = (mask >>> 1);
             bitsWritten++;
@@ -705,7 +722,7 @@ QREncode.prototype = {
               bitsWritten = 0;
               mask = (1 << 7);
               n++;
-              v = this.bytes[n];
+              v = context.bytes[n];
             }
           }
         }
@@ -716,35 +733,37 @@ QREncode.prototype = {
   },
   pixelsToImage: function (){
     var i, j;
+    var context = this;
 
-    for (i = 0; i < this.modules; i++) {
-      for (j = 0; j < this.modules; j++) {
-        if (this.pixels[i][j]) {
-          this.setDark(i, j);
+    for (i = 0; i < context.modules; i++) {
+      for (j = 0; j < context.modules; j++) {
+        if (context.pixels[i][j]) {
+          context.setDark(i, j);
         }
       }
     }
   },
   getDataCapacity: function (mode, version, ec_level){
-    var codewords = this.CODEWORDS[version];
-    var ec_codewords = this.EC_CODEWORDS[version][ec_level];
+    var context = this;
+    var codewords = context.CODEWORDS[version];
+    var ec_codewords = context.EC_CODEWORDS[version][ec_level];
     var data_codewords = codewords - ec_codewords;
     var bits = 8 * data_codewords;
 
     bits -= 4;	// mode
-    bits -= this.countBits(mode, version);
+    bits -= context.countBits(mode, version);
 
     var cap = 0;
 
-    if (mode === this.MODE.AlphaNumeric) {
+    if (mode === context.MODE.AlphaNumeric) {
       cap = Math.floor(bits / 11) * 2;
 
       if (bits >= (cap / 2) * 11 + 6) {
         cap++;
       }
-    } else if (mode === this.MODE.EightBit) {
+    } else if (mode === context.MODE.EightBit) {
       cap = Math.floor(bits / 8);
-    } else if (mode === this.MODE.Numeric) {
+    } else if (mode === context.MODE.Numeric) {
       cap = Math.floor(bits / 10) * 3;
 
       if (bits >= (cap / 3) * 10 + 4) {
