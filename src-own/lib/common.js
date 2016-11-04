@@ -163,6 +163,10 @@ export function countBits(mode, version) {
 }
 
 export function modulesFromVersion(version) {
+  if (version < 1 || version > 40) {
+    throw new QRError('QRCode.InvalidVersion', { version: version });
+  }
+
   return 17 + 4 * version;
 }
 

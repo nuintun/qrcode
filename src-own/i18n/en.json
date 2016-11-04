@@ -1,5 +1,6 @@
 {
   "QRCode.UnknownMode": "Internal error: Unknown mode: {{mode}}.",
+  "QRCode.InvalidVersion": "Internal error: Invalid version: {{version}}.",
   "QRCode.UnsupportedECI": "Internal error: Unsupported ECI mode: {{mode}}.",
   "QREncode.InvalidChar4Alphanumeric": "Invalid character for Alphanumeric encoding [{{char}}].",
   "QREncode.InvalidChar4Numeric": "Invalid character for Numeric encoding [{{char}}].",

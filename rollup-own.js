@@ -16,6 +16,7 @@ const I18N = {
   COMMON: [
     'QRCode.UnknownMode',
     'QRCode.UnsupportedECI',
+    'QRCode.InvalidVersion'
   ]
 };
 
