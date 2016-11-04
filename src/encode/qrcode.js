@@ -41,8 +41,6 @@
     _init: function (callback){
       var config = this.config;
 
-      config.mode = 0;
-
       // 含有 Logo，使用最大容错
       if (config.logo) {
         config.ECLevel = 2;
