@@ -91,24 +91,57 @@
     return out;
   }
 
+  var EN = {
+    'QRCode.UnknownMode': 'Internal error: Unknown mode: {{mode}}.',
+    'QRCode.UnsupportedECI': 'Unsupported ECI mode: {{mode}}.',
+    'QREncode.InvalidChar4Alphanumeric': 'Invalid character for Alphanumeric encoding [{{char}}].',
+    'QREncode.InvalidChar4Numeric': 'Invalid character for Numeric encoding [{{char}}].',
+    'QREncode.TextTooLong4TargetVersion': 'Text too long for this EC version.',
+    'QREncode.TextTooLong4AllVersion': 'Text is too long, even for a version 40 QR Code.'
+  };
+
+  var TMPLRE = /{{(.+?)}}/g;
+  var toSting = Object.prototype.toString;
+
+  function isString(value){
+    return toSting.call(value) === '[object String]';
+  }
+
+  function template(tmpl, data){
+    if (data) {
+      return tmpl.replace(TMPLRE, function (matched, key){
+        return isString(data[key]) ? data[key] : matched;
+      });
+    } else {
+      return tmpl;
+    }
+  }
+
   /**
    * QRError
    * @param type
    * @param data
-   * @param message
    * @constructor
    */
-  function QRError(type, data, message){
+  function QRError(type, data){
     var context = this;
 
     context.type = type;
-    context.data = data;
-    context.message = message;
+    context.data = data || null;
+
+    context.localize(EN);
   }
 
   // inherits
   inherits(QRError, Error, {
-    name: 'QRError'
+    name: 'QRError',
+    localize: function (local){
+      var context = this;
+      var type = context.type;
+      var tmpl = isString(local[type]) ? local[type] : EN[type];
+
+      return context.message = template(tmpl, context.data);
+    }
   });
 
   /*!
@@ -655,7 +688,7 @@
       }
     }
 
-    throw new QRError('QRCode.UnknownMode', { mode: mode }, 'Internal error: Unknown mode: ' + mode + '.');
+    throw new QRError('QRCode.UnknownMode', { mode: mode });
   }
 
   function modulesFromVersion(version){
@@ -1325,7 +1358,7 @@
 
       function getAlphaNum(context, ch){
         if (!context.ALPHANUM_REV.hasOwnProperty(ch)) {
-          throw new QRError('QREncode.InvalidChar4Alphanumeric', { char: ch }, 'Invalid character for Alphanumeric encoding [' + ch + '].');
+          throw new QRError('QREncode.InvalidChar4Alphanumeric', { char: ch });
         }
 
         return context.ALPHANUM_REV[ch];
@@ -1388,7 +1421,7 @@
           var ch = text[i].charCodeAt() - 48;
 
           if ((ch < 0) || (ch > 9)) {
-            throw new QRError('QREncode.InvalidChar4Numeric', { char: text[i] }, 'Invalid character for Numeric encoding [' + text[i] + '].');
+            throw new QRError('QREncode.InvalidChar4Numeric', { char: text[i] });
           }
 
           num.push(ch);
@@ -1431,11 +1464,11 @@
       } else if (mode === context.MODE.Terminator) {
         return;
       } else {
-        throw new QRError('QRCode.UnsupportedECI', { mode: mode }, 'Unsupported ECI mode: ' + mode + '.');
+        throw new QRError('QRCode.UnsupportedECI', { mode: mode });
       }
 
       if (context.bit_idx / 8 > context.data_codewords) {
-        throw new QRError('QREncode.TextTooLong4TargetVersion', null, 'Text too long for this EC version.');
+        throw new QRError('QREncode.TextTooLong4TargetVersion');
       }
     },
     appendPadding: function (){
@@ -1956,7 +1989,7 @@
           cap++;
         }
       } else {
-        throw new QRError('QRCode.UnsupportedECI', { mode: mode }, 'Unsupported ECI mode: ' + mode + '.');
+        throw new QRError('QRCode.UnsupportedECI', { mode: mode });
       }
 
       return cap;
@@ -1971,7 +2004,7 @@
         }
       }
 
-      throw new QRError('QREncode.TextTooLong4AllVersion', null, 'Text is too long, even for a version 40 QR Code.');
+      throw new QRError('QREncode.TextTooLong4AllVersion');
     }
   };
 

@@ -17,7 +17,7 @@ const I18N = {
     'QRCode.UnknownMode',
     'QRCode.UnsupportedECI',
   ]
-}
+};
 
 I18N.ENCODE = unique(I18N.COMMON.concat([
   'QREncode.InvalidChar4Alphanumeric',
@@ -81,4 +81,4 @@ function build(entry, dest, i18n){
   });
 }
 
-build('src-own/encode.js', 'dist/qrcode.encode.own.js', I18N.ALL);
+build('src-own/encode.js', 'dist/qrcode.encode.own.js', I18N.ENCODE);

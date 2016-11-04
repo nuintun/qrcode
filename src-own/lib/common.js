@@ -159,7 +159,7 @@ export function countBits(mode, version){
     }
   }
 
-  throw new QRError('QRCode.UnknownMode', { mode: mode }, 'Internal error: Unknown mode: ' + mode + '.');
+  throw new QRError('QRCode.UnknownMode', { mode: mode });
 }
 
 export function modulesFromVersion(version){
