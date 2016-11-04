@@ -17,7 +17,6 @@
  limitations under the License.
  */
 
-
 /* ************************************************************ */
 /* Settings for http://www.jslint.com/
  */
@@ -30,7 +29,6 @@
 /*jslint continue: true */
 /*global alert: true */
 /*global ReedSolomon: true */
-
 
 /* ************************************************************ */
 /* JavaScript STRICT mode
@@ -46,7 +44,7 @@
  *  Encode or decode QR Code
  */
 
-function QRCodeDecode(){
+function QRCodeDecode() {
 
   this.logger = null;
 
@@ -101,10 +99,10 @@ QRCodeDecode.prototype = {
 
   /** Error correction level according to ISO/IEC 18004:2006(E) Section 6.5.1 */
   ERROR_CORRECTION_LEVEL: {
-    L: 1,	//  7%
-    M: 0,	// 15%
-    Q: 3,	// 25%
-    H: 2	// 30%
+    L: 1, //  7%
+    M: 0, // 15%
+    Q: 3, // 25%
+    H: 2 // 30%
   },
 
   /* ************************************************************
@@ -123,20 +121,20 @@ QRCodeDecode.prototype = {
    * @param bg_rgb        Array [r, g, b] where 0<=color<=255
    * @param module_rgb    Array [r, g, b] where 0<=color<=255
    */
-  encodeToCanvas: function (mode, text, version, ec_level, module_size, canvas, bg_rgb, module_rgb){
+  encodeToCanvas: function(mode, text, version, ec_level, module_size, canvas, bg_rgb, module_rgb) {
 
     if (!bg_rgb) { bg_rgb = [0.98, 0.98, 1.0]; }
     if (!module_rgb) { module_rgb = [0.3, 0.05, 0.05]; }
 
     var ctx = canvas.getContext('2d');
 
-    canvas.setBackground = function (){
+    canvas.setBackground = function() {
       ctx.fillStyle = "rgb(" + Math.round(bg_rgb[0] * 255) + "," + Math.round(bg_rgb[1] * 255) + "," + Math.round(bg_rgb[2] * 255) + ")";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "rgb(" + Math.round(module_rgb[0] * 255) + "," + Math.round(module_rgb[1] * 255) + "," + Math.round(module_rgb[2] * 255) + ")";
     };
 
-    canvas.setDark = function (x, y, d){
+    canvas.setDark = function(x, y, d) {
       ctx.fillRect(x, y, d, d);
     };
 
@@ -154,7 +152,7 @@ QRCodeDecode.prototype = {
    *  @param ec_level  Error correction level according to ISO/IEC 18004:2006(E) Section 6.5.1
    */
 
-  encodeToPixarray: function (mode, text, version, ec_level){
+  encodeToPixarray: function(mode, text, version, ec_level) {
 
     var modules = this.modulesFromVersion(version) + 4 + 4;
 
@@ -167,7 +165,7 @@ QRCodeDecode.prototype = {
       pix.arr[i] = [];
     }
 
-    pix.setBackground = function (){
+    pix.setBackground = function() {
       for (i = 0; i < modules; i++) {
         var j;
         for (j = 0; j < modules; j++) {
@@ -176,13 +174,13 @@ QRCodeDecode.prototype = {
       }
     };
 
-    pix.setDark = function (x, y, d){
+    pix.setDark = function(x, y, d) {
       // Ignoring d, since a pixel array has d=1
       if (x > modules - 1) { return; }
       this.arr[x][y] = true;
     };
 
-    pix.isDark = function (x, y, d){
+    pix.isDark = function(x, y, d) {
       // Ignoring d, since a pixel array has d=1
 
       if (x > this.modules - 1) { return false; }
@@ -205,7 +203,7 @@ QRCodeDecode.prototype = {
    *  @param module_size   Number of pixels per module
    *  @param canvas        Canvas or pixel array
    */
-  encodeInit: function (version, ec_level, module_size, canvas){
+  encodeInit: function(version, ec_level, module_size, canvas) {
 
     this.version = version;
     this.error_correction_level = ec_level;
@@ -237,14 +235,14 @@ QRCodeDecode.prototype = {
    *  @param mode  Mode according to ISO/IEC 18004:2006(E) Section 6.3
    *  @param text  The text to be encoded
    */
-  encodeAddText: function (mode, text){
+  encodeAddText: function(mode, text) {
     this.addTextImplementation(mode, text);
   },
 
   /*  ************************************************************ */
   /** Encode this class to an image/canvas.
    */
-  encode: function (){
+  encode: function() {
     this.addTextImplementation(this.MODE.Terminator, null);
     this.appendPadding();
     this.addErrorCorrection();
@@ -258,7 +256,7 @@ QRCodeDecode.prototype = {
    */
 
   /**  Decode a pixel array */
-  decodePixarray: function (pix){
+  decodePixarray: function(pix) {
     return this.decodeImage(pix);
   },
 
@@ -269,7 +267,7 @@ QRCodeDecode.prototype = {
    *  @param image_width   The pixel width of the image
    *  @param image_height  The pixel height of the image
    */
-  decodeImageData: function (image_data, image_width, image_height){
+  decodeImageData: function(image_data, image_width, image_height) {
     this.setImageData(image_data, image_width, image_height);
     return this.decode();
   },
@@ -286,13 +284,13 @@ QRCodeDecode.prototype = {
    *  @param bottom        Bottom pixel of image
    *  @param max_version   Do not try to decode with version higher than this
    */
-  decodeImageDataInsideBordersWithMaxVersion: function (image_data, image_width, image_height, left, right, top, bottom, max_version){
+  decodeImageDataInsideBordersWithMaxVersion: function(image_data, image_width, image_height, left, right, top, bottom, max_version) {
     this.setImageData(image_data, image_width, image_height);
     this.image_left = left;
     this.image_right = right;
     this.image_top = top;
     this.image_bottom = bottom;
-    this.image_size = ( (this.image_right - this.image_left + 1) + (this.image_bottom - this.image_top + 1) ) / 2.0;
+    this.image_size = ((this.image_right - this.image_left + 1) + (this.image_bottom - this.image_top + 1)) / 2.0;
     this.max_version = max_version;
     return this.decodeInsideBordersWithMaxVersion();
   },
@@ -305,7 +303,7 @@ QRCodeDecode.prototype = {
    *  @param image_height  The pixel height of the image
    */
 
-  setImageData: function (image_data, image_width, image_height){
+  setImageData: function(image_data, image_width, image_height) {
 
     image_data.min_col = 255;
     image_data.max_col = 0;
@@ -327,7 +325,7 @@ QRCodeDecode.prototype = {
     image_data.threshold = total / (image_width * image_height);
     //image_data.threshold = (image_data.max_col+image_data.min_col)/2;
 
-    image_data.getGray = function (x, y, d){
+    image_data.getGray = function(x, y, d) {
       var n = 0;
       var i;
       for (i = x; i < x + d; i++) {
@@ -340,7 +338,7 @@ QRCodeDecode.prototype = {
       return n / d / d;
     };
 
-    image_data.isDark = function (x, y, d){
+    image_data.isDark = function(x, y, d) {
       var g = this.getGray(x, y, d);
       return g < this.threshold;
     };
@@ -352,7 +350,7 @@ QRCodeDecode.prototype = {
   /** Decode a QR Code in an image.
    *  The image MUST already have .getGray set
    */
-  decodeImage: function (image){
+  decodeImage: function(image) {
     this.image = image;
     return this.decode();
   },
@@ -360,7 +358,7 @@ QRCodeDecode.prototype = {
   /*  ************************************************************ */
   /** Decode a QR Code in an image which has already been set.
    */
-  decode: function (){
+  decode: function() {
     this.findImageBorders();
     this.max_version = 40;
     this.decodeInsideBordersWithMaxVersion();
@@ -371,7 +369,7 @@ QRCodeDecode.prototype = {
   /** Decode a QR Code in an image which has already been set -
    *  inside borders already defined
    */
-  decodeInsideBordersWithMaxVersion: function (){
+  decodeInsideBordersWithMaxVersion: function() {
     this.findModuleSize();
     this.setFunctionalPattern();
     this.extractCodewords();
@@ -386,9 +384,9 @@ QRCodeDecode.prototype = {
    * ************************************************************
    */
 
-  addTextImplementation: function (mode, text){
+  addTextImplementation: function(mode, text) {
 
-    function appendBits(bytes, pos, len, value){
+    function appendBits(bytes, pos, len, value) {
       var byteIndex = pos >>> 3;
       var shift = 24 - (pos & 7) - len;
 
@@ -402,7 +400,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function getAlphaNum(qr, ch){
+    function getAlphaNum(qr, ch) {
       if (!qr.ALPHANUM_REV.hasOwnProperty(ch)) {
         throw ("Invalid character for Alphanumeric encoding [" + ch + "]");
       }
@@ -410,7 +408,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function addAlphaNum(qr, text){
+    function addAlphaNum(qr, text) {
       var n = text.length;
       var count_bits = qr.countBits(qr.MODE.AlphaNumeric, qr.version);
       appendBits(qr.data, qr.bit_idx, count_bits, n);
@@ -429,7 +427,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function add8bit(qr, text){
+    function add8bit(qr, text) {
 
       var count_bits = qr.countBits(qr.MODE.EightBit, qr.version);
 
@@ -444,7 +442,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function addNumeric(qr, text){
+    function addNumeric(qr, text) {
       var n = text.length;
       var count_bits = qr.countBits(qr.MODE.Numeric, qr.version);
       appendBits(qr.data, qr.bit_idx, count_bits, n);
@@ -485,11 +483,7 @@ QRCodeDecode.prototype = {
     appendBits(this.data, this.bit_idx, 4, mode);
     this.bit_idx += 4;
 
-    if (mode === this.MODE.AlphaNumeric) { addAlphaNum(this, text); }
-    else if (mode === this.MODE.EightBit) { add8bit(this, text); }
-    else if (mode === this.MODE.Numeric) { addNumeric(this, text); }
-    else if (mode === this.MODE.Terminator) { return; }
-    else { throw ("Unsupported ECI mode: " + mode); }
+    if (mode === this.MODE.AlphaNumeric) { addAlphaNum(this, text); } else if (mode === this.MODE.EightBit) { add8bit(this, text); } else if (mode === this.MODE.Numeric) { addNumeric(this, text); } else if (mode === this.MODE.Terminator) { return; } else { throw ("Unsupported ECI mode: " + mode); }
 
     if (this.debug_addText) {
       if (this.logger) {
@@ -510,7 +504,7 @@ QRCodeDecode.prototype = {
   },
 
   /* ************************************************************ */
-  appendPadding: function (){
+  appendPadding: function() {
     var i;
     for (i = Math.floor((this.bit_idx - 1) / 8) + 1; i < this.data_codewords; i += 2) {
       this.data[i] = 0xEC;
@@ -519,7 +513,7 @@ QRCodeDecode.prototype = {
   },
 
   /* ************************************************************ */
-  addErrorCorrection: function (){
+  addErrorCorrection: function() {
     if (this.debug_addText) {
       if (this.logger) {
         this.logger.debug("addErrorCorrection data = " + this.data.join(","));
@@ -563,9 +557,9 @@ QRCodeDecode.prototype = {
   },
 
   /* ************************************************************ */
-  calculatePenalty: function (mask){
+  calculatePenalty: function(mask) {
     /* ************************************************************ */
-    function penaltyAdjacent(qr){
+    function penaltyAdjacent(qr) {
       var p = 0;
       var i;
       for (i = 0; i < qr.modules; i++) {
@@ -593,7 +587,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function penaltyBlocks(qr){
+    function penaltyBlocks(qr) {
       // Not clear from ISO standard, if blocks have to be rectangular?
       // Here we give 3 penalty to every 2x2 block, so odd shaped areas will have penalties as well as rectangles
       var p = 0;
@@ -602,9 +596,9 @@ QRCodeDecode.prototype = {
         var j;
         for (j = 0; j < qr.modules - 1; j++) {
           var b = 0;
-          if (qr.pixels[i]  [j]) { b++; }
+          if (qr.pixels[i][j]) { b++; }
           if (qr.pixels[i + 1][j]) { b++; }
-          if (qr.pixels[i]  [j + 1]) { b++; }
+          if (qr.pixels[i][j + 1]) { b++; }
           if (qr.pixels[i + 1][j + 1]) { b++; }
           if ((b === 0) || (b === 4)) { p += 3; }
         }
@@ -613,18 +607,18 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function binFormat(b){
+    function binFormat(b) {
       return ("00000000000000" + b.toString(2)).slice(-15);
     }
 
     /* ************************************************************ */
-    function penaltyDarkLight(qr){
+    function penaltyDarkLight(qr) {
       // we shift bits in one by one, and see if the resulting pattern match the bad one
       var p = 0;
-      var bad = ( 128 - 1 - 2 - 32 ) << 4;	// 4_ : 1D : 1L : 3D : 1L : 1D : 4x
-      var badmask1 = 2048 - 1;		// 4_ : 1D : 1L : 3D : 1L : 1D : 4L
-      var badmask2 = badmask1 << 4;		// 4L : 1D : 1L : 3D : 1L : 1D : 4_
-      var patmask = 32768 - 1;		// 4  +           7            + 4
+      var bad = (128 - 1 - 2 - 32) << 4; // 4_ : 1D : 1L : 3D : 1L : 1D : 4x
+      var badmask1 = 2048 - 1; // 4_ : 1D : 1L : 3D : 1L : 1D : 4L
+      var badmask2 = badmask1 << 4; // 4L : 1D : 1L : 3D : 1L : 1D : 4_
+      var patmask = 32768 - 1; // 4  +           7            + 4
       var i;
       for (i = 0; i < qr.modules - 1; i++) {
         var pat = [0, 0];
@@ -660,7 +654,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function penaltyDark(qr){
+    function penaltyDark(qr) {
       var dark = 0;
       var i;
       for (i = 0; i < qr.modules - 1; i++) {
@@ -692,7 +686,7 @@ QRCodeDecode.prototype = {
   },
 
   /* ************************************************************ */
-  encodeBestMask: function (){
+  encodeBestMask: function() {
     var best_mask = 0;
     var best_penalty = 999999;
 
@@ -734,9 +728,9 @@ QRCodeDecode.prototype = {
   },
 
   /* ************************************************************ */
-  encodeFunctionalPatterns: function (mask){
+  encodeFunctionalPatterns: function(mask) {
 
-    function encodeFinderPattern(qr, x, y){
+    function encodeFinderPattern(qr, x, y) {
 
       var i, j;
 
@@ -757,7 +751,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function encodeVersionTopright(qr){
+    function encodeVersionTopright(qr) {
       var pattern = qr.VERSION_INFO[qr.version];
       var y;
       for (y = 0; y < 6; y++) {
@@ -770,7 +764,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function encodeVersionBottomleft(qr){
+    function encodeVersionBottomleft(qr) {
       var pattern = qr.VERSION_INFO[qr.version];
       var x;
       for (x = 0; x < 6; x++) {
@@ -783,7 +777,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function encodeTimingPattern(qr, horizontal){
+    function encodeTimingPattern(qr, horizontal) {
       var i;
       for (i = 8; i < qr.modules - 8; i += 2) {
         if (horizontal) {
@@ -796,7 +790,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function encodeOneAlignmentPattern(qr, x, y){
+    function encodeOneAlignmentPattern(qr, x, y) {
 
       // Outer 5x5 black boundary
       var i;
@@ -812,7 +806,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function encodeAlignmentPatterns(qr){
+    function encodeAlignmentPatterns(qr) {
       var n = qr.ALIGNMENT_PATTERNS[qr.version].length;
       var i;
       for (i = 0; i < n; i++) {
@@ -825,7 +819,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function encodeFormatNW(qr, code){
+    function encodeFormatNW(qr, code) {
       var x = 8;
       var y;
       for (y = 0; y <= 5; y++) {
@@ -847,7 +841,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function encodeFormatNESW(qr, code){
+    function encodeFormatNESW(qr, code) {
       var y = 8;
       var x;
       for (x = qr.modules - 1; x > qr.modules - 1 - 8; x--) {
@@ -882,9 +876,9 @@ QRCodeDecode.prototype = {
   },
 
   /* ************************************************************ */
-  encodeData: function (qrmask){
+  encodeData: function(qrmask) {
 
-    function setMasked(pixels, mask, j, i, f){
+    function setMasked(pixels, mask, j, i, f) {
 
       var m;
       switch (mask) {
@@ -964,7 +958,7 @@ QRCodeDecode.prototype = {
   },
 
   /* ************************************************************ */
-  pixelsToImage: function (){
+  pixelsToImage: function() {
     var i, j;
     for (i = 0; i < this.modules; i++) {
       for (j = 0; j < this.modules; j++) {
@@ -978,7 +972,7 @@ QRCodeDecode.prototype = {
    * ************************************************************
    */
 
-  findImageBorders: function (){
+  findImageBorders: function() {
     var i, j, n;
     var limit = 7;
     var skew_limit = 2;
@@ -1031,19 +1025,19 @@ QRCodeDecode.prototype = {
       throw ("Image data is not rectangular");
     }
 
-    this.image_size = ( (this.image_right - this.image_left + 1) + (this.image_bottom - this.image_top + 1) ) / 2.0;
+    this.image_size = ((this.image_right - this.image_left + 1) + (this.image_bottom - this.image_top + 1)) / 2.0;
     if (this.logger) {
       this.logger.debug("size=" + this.image_size);
     }
   },
 
   /* ************************************************************ */
-  findModuleSize: function (){
+  findModuleSize: function() {
 
     /* returns number of matches found
      * perferct is 8*8 = 64
      */
-    function matchFinderPattern(qr, x, y, quiet_x, quiet_y, module_size){
+    function matchFinderPattern(qr, x, y, quiet_x, quiet_y, module_size) {
       var i, j;
       var n = 0;
 
@@ -1083,7 +1077,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function matchTimingPattern(qr, horizontal, modules, module_size){
+    function matchTimingPattern(qr, horizontal, modules, module_size) {
       var n = 0;
       var x0 = 6;
       var y0 = 8;
@@ -1125,7 +1119,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function matchOneAlignmentPattern(qr, x, y, module_size){
+    function matchOneAlignmentPattern(qr, x, y, module_size) {
       var n = 0;
       var i;
 
@@ -1152,7 +1146,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function matchAlignmentPatterns(qr, version, module_size){
+    function matchAlignmentPatterns(qr, version, module_size) {
       var a = 0;
       var n = qr.ALIGNMENT_PATTERNS[version].length;
       var i, j;
@@ -1167,7 +1161,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function matchVersionCode(qr, pattern){
+    function matchVersionCode(qr, pattern) {
       var v;
       for (v = 7; v <= 40; v++) {
         var hd = qr.hammingDistance(pattern, qr.VERSION_INFO[v]);
@@ -1177,7 +1171,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function matchVersionTopright(qr, modules, module_size){
+    function matchVersionTopright(qr, modules, module_size) {
       var factor = 1;
       var pattern = 0;
       var x, y;
@@ -1191,7 +1185,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function matchVersionBottomleft(qr, modules, module_size){
+    function matchVersionBottomleft(qr, modules, module_size) {
       var factor = 1;
       var pattern = 0;
       var x, y;
@@ -1205,7 +1199,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function matchFormatCode(qr, pattern){
+    function matchFormatCode(qr, pattern) {
       var f;
       for (f = 0; f < 32; f++) {
         var hd = qr.hammingDistance(pattern, qr.FORMAT_INFO[f]);
@@ -1215,7 +1209,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function matchFormatNW(qr, modules, module_size){
+    function matchFormatNW(qr, modules, module_size) {
       var factor = 1;
       var pattern = 0;
       var x = 8;
@@ -1239,7 +1233,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function matchFormatNESW(qr, modules, module_size){
+    function matchFormatNESW(qr, modules, module_size) {
       var factor = 1;
       var pattern = 0;
       var x;
@@ -1257,7 +1251,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function gradeFinderPatterns(finder_pattern){
+    function gradeFinderPatterns(finder_pattern) {
       var g = 4;
       var i;
       for (i = 0; i < 3; i++) {
@@ -1268,7 +1262,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function gradeTimingPatterns(timing_pattern, n){
+    function gradeTimingPatterns(timing_pattern, n) {
       var t = (timing_pattern[0] + timing_pattern[1]) / (2 * n);
       t = 1 - t;
       if (t >= 0.14) { return 0; }
@@ -1279,7 +1273,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function gradeTimingPatterns(alignment_patterns, n){
+    function gradeTimingPatterns(alignment_patterns, n) {
       var a = alignment_patterns / n;
       a = 1 - a;
       if (a >= 0.30) { return 0; }
@@ -1290,7 +1284,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function matchVersion(qr, version){
+    function matchVersion(qr, version) {
       var g;
       var grades = [];
       var modules = qr.modulesFromVersion(version);
@@ -1360,7 +1354,7 @@ QRCodeDecode.prototype = {
         modules = qr.modulesFromVersion(version);
         module_size = qr.image_size / modules;
 
-        g = Math.round(( (4 - version_topright[1]) + (4 - version_bottomleft[1]) ) / 2);
+        g = Math.round(((4 - version_topright[1]) + (4 - version_bottomleft[1])) / 2);
         if (g < 1) {
           return [version, 0];
         } else {
@@ -1430,7 +1424,7 @@ QRCodeDecode.prototype = {
         }
       }
 
-      g = Math.round(( (4 - format_NW[1]) + (4 - format_NESW[1]) ) / 2);
+      g = Math.round(((4 - format_NW[1]) + (4 - format_NESW[1])) / 2);
       if (g < 1) {
         return [version, 0];
       } else {
@@ -1489,9 +1483,9 @@ QRCodeDecode.prototype = {
   },
 
   /* ************************************************************ */
-  extractCodewords: function (){
+  extractCodewords: function() {
 
-    function getUnmasked(qr, j, i){
+    function getUnmasked(qr, j, i) {
 
       var m;
       switch (qr.mask) {
@@ -1591,24 +1585,24 @@ QRCodeDecode.prototype = {
   },
 
   /* ************************************************************ */
-  extractData: function (){
+  extractData: function() {
 
     var bits;
 
-    function extract(qr, bytes, pos, len){
+    function extract(qr, bytes, pos, len) {
       // http://stackoverflow.com/questions/3846711/extract-bit-sequences-of-arbitrary-length-from-byte-array-efficiently
       var shift = 24 - (pos & 7) - len;
       var mask = (1 << len) - 1;
       var byteIndex = pos >>> 3;
 
-      return ((  (bytes[byteIndex] << 16) |
-          (bytes[++byteIndex] << 8) |
-          bytes[++byteIndex]
-        ) >> shift) & mask;
+      return (((bytes[byteIndex] << 16) |
+        (bytes[++byteIndex] << 8) |
+        bytes[++byteIndex]
+      ) >> shift) & mask;
     }
 
     /* ************************************************************ */
-    function extract8bit(qr, bytes){
+    function extract8bit(qr, bytes) {
 
       var count_bits = qr.countBits(qr.MODE.EightBit, qr.version);
 
@@ -1631,7 +1625,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function extractAlphanum(qr, bytes){
+    function extractAlphanum(qr, bytes) {
       var count_bits = qr.countBits(qr.MODE.AlphaNumeric, qr.version);
       var n = extract(qr, bytes, qr.bit_idx, count_bits);
       qr.bit_idx += count_bits;
@@ -1658,7 +1652,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function extractNumeric(qr, bytes){
+    function extractNumeric(qr, bytes) {
       var count_bits = qr.countBits(qr.MODE.Numeric, qr.version);
       var n = extract(qr, bytes, qr.bit_idx, count_bits);
       qr.bit_idx += count_bits;
@@ -1723,11 +1717,7 @@ QRCodeDecode.prototype = {
         }
       }
 
-      if (mode === this.MODE.Terminator) { break; }
-      else if (mode === this.MODE.AlphaNumeric) { this.data += extractAlphanum(this, bytes); }
-      else if (mode === this.MODE.EightBit) { this.data += extract8bit(this, bytes); }
-      else if (mode === this.MODE.Numeric) { this.data += extractNumeric(this, bytes); }
-      else { throw ("Unsupported ECI mode: " + mode); }
+      if (mode === this.MODE.Terminator) { break; } else if (mode === this.MODE.AlphaNumeric) { this.data += extractAlphanum(this, bytes); } else if (mode === this.MODE.EightBit) { this.data += extract8bit(this, bytes); } else if (mode === this.MODE.Numeric) { this.data += extractNumeric(this, bytes); } else { throw ("Unsupported ECI mode: " + mode); }
     }
 
     if (this.debug_extractData) {
@@ -1743,7 +1733,7 @@ QRCodeDecode.prototype = {
   },
 
   /* ************************************************************ */
-  correctErrors: function (){
+  correctErrors: function() {
 
     var rs = new ReedSolomon(this.block_ec_words);
     if (this.debug_correctErrors) { rs.logger = this.logger; }
@@ -1768,7 +1758,7 @@ QRCodeDecode.prototype = {
       }
       if (!rs.corrected) {
         this.error_grade = 0;
-        throw("Unable to correct errors (" + rs.uncorrected_reason + ")");
+        throw ("Unable to correct errors (" + rs.uncorrected_reason + ")");
       }
       bytes = bytes.concat(bytes_out);
       errors.push(rs.n_errors);
@@ -1783,7 +1773,7 @@ QRCodeDecode.prototype = {
   },
 
   /* ************************************************************ */
-  gradeErrors: function (errors){
+  gradeErrors: function(errors) {
     var ecw = this.block_ec_words;
 
     var max = 0;
@@ -1793,10 +1783,7 @@ QRCodeDecode.prototype = {
     }
 
     var grade = 4;
-    if (max > ecw / 2 - 1) { grade = 0; }
-    else if (max > ecw / 2 - 2) { grade = 1; }
-    else if (max > ecw / 2 - 3) { grade = 2; }
-    else if (max > ecw / 2 - 4) { grade = 3; }
+    if (max > ecw / 2 - 1) { grade = 0; } else if (max > ecw / 2 - 2) { grade = 1; } else if (max > ecw / 2 - 3) { grade = 2; } else if (max > ecw / 2 - 4) { grade = 3; }
 
     return grade;
   },
@@ -1806,14 +1793,14 @@ QRCodeDecode.prototype = {
    * ************************************************************
    */
 
-  getDataCapacity: function (version, error_correction_level, mode){
+  getDataCapacity: function(version, error_correction_level, mode) {
 
     var codewords = this.CODEWORDS[version];
     var ec_codewords = this.EC_CODEWORDS[version][error_correction_level];
     var data_codewords = codewords - ec_codewords;
 
     var bits = 8 * data_codewords;
-    bits -= 4;	// mode
+    bits -= 4; // mode
     bits -= this.countBits(mode, version);
 
     var cap = 0;
@@ -1836,18 +1823,18 @@ QRCodeDecode.prototype = {
   },
 
   /* ************************************************************ */
-  getVersionFromLength: function (error_correction_level, mode, length){
+  getVersionFromLength: function(error_correction_level, mode, length) {
     var v;
     for (v = 1; v <= 40; v++) {
       if (this.getDataCapacity(v, error_correction_level, mode) >= length) {
         return v;
       }
     }
-    throw("Text is too long, even for a version 40 QR Code");
+    throw ("Text is too long, even for a version 40 QR Code");
   },
 
   /* ************************************************************ */
-  setBlocks: function (){
+  setBlocks: function() {
 
     var codewords = this.CODEWORDS[this.version];
     var ec_codewords = this.EC_CODEWORDS[this.version][this.error_correction_level];
@@ -1935,9 +1922,9 @@ QRCodeDecode.prototype = {
   },
 
   /* ************************************************************ */
-  setFunctionalPattern: function (){
+  setFunctionalPattern: function() {
 
-    function markSquare(qr, x, y, w, h){
+    function markSquare(qr, x, y, w, h) {
       var i, j;
       for (i = x; i < x + w; i++) {
         for (j = y; j < y + h; j++) {
@@ -1947,7 +1934,7 @@ QRCodeDecode.prototype = {
     }
 
     /* ************************************************************ */
-    function markAlignment(qr){
+    function markAlignment(qr) {
       var n = qr.ALIGNMENT_PATTERNS[qr.version].length;
       var i, j;
       for (i = 0; i < n; i++) {
@@ -2007,31 +1994,26 @@ QRCodeDecode.prototype = {
   },
 
   /* ************************************************************ */
-  countBits: function (mode, version){
+  countBits: function(mode, version) {
     if (mode === this.MODE.EightBit) {
-      if (version < 10) { return 8; }
-      else { return 16; }
+      if (version < 10) { return 8; } else { return 16; }
     } else if (mode === this.MODE.AlphaNumeric) {
-      if (version < 10) { return 9; }
-      else if (version < 27) { return 11; }
-      else { return 13; }
+      if (version < 10) { return 9; } else if (version < 27) { return 11; } else { return 13; }
     } else if (mode === this.MODE.Numeric) {
-      if (version < 10) { return 10; }
-      else if (version < 27) { return 12; }
-      else { return 14; }
+      if (version < 10) { return 10; } else if (version < 27) { return 12; } else { return 14; }
     }
     throw ("Internal error: Unknown mode: " + mode);
   },
 
   /* ************************************************************ */
-  modulesFromVersion: function (version){
+  modulesFromVersion: function(version) {
     return 17 + 4 * version;
   },
 
   /* ************************************************************ */
-  hammingDistance: function (a, b){
+  hammingDistance: function(a, b) {
 
-    function nBits(n){
+    function nBits(n) {
       var c;
       for (c = 0; n; c++) {
         n &= n - 1; // clear the least significant bit set
@@ -2048,18 +2030,18 @@ QRCodeDecode.prototype = {
    * ************************************************************
    */
 
-  isDarkWithSize: function (x, y, module_size){
+  isDarkWithSize: function(x, y, module_size) {
     return this.image.isDark(Math.round(this.image_left + x * module_size), Math.round(this.image_top + y * module_size), Math.round(module_size));
   },
 
   /* ************************************************************ */
-  isDark: function (x, y){
+  isDark: function(x, y) {
     return this.isDarkWithSize(x, y, this.module_size);
 
   },
 
   /* ************************************************************ */
-  setDark: function (x, y){
+  setDark: function(x, y) {
     this.image.setDark(this.image_left + x * this.module_size, this.image_top + y * this.module_size, this.module_size);
 
   }

@@ -84,9 +84,12 @@
    * @returns {*}
    */
   function template(tmpl, data) {
+    tmpl.replace(TMPLRE, function(matched, key) {
+      return data.hasOwnProperty(key) ? data[key] : matched;
+    });
     if (data) {
       return tmpl.replace(TMPLRE, function(matched, key) {
-        return isString(data[key]) ? data[key] : matched;
+        return data.hasOwnProperty(key) ? data[key] : matched;
       });
     } else {
       return tmpl;
@@ -1991,9 +1994,18 @@
   };
 
   var encode = {
-    MODE: MODE,
-    ECLEVEL: ERROR_CORRECTION_LEVEL,
-    Encode: function(mode, text, version, ec_level) {
+    MODE: {
+      Numeric: MODE.Numeric,
+      EightBit: MODE.EightBit,
+      AlphaNumeric: MODE.AlphaNumeric
+    },
+    ECLEVEL: {
+      L: ERROR_CORRECTION_LEVEL.L,
+      M: ERROR_CORRECTION_LEVEL.M,
+      Q: ERROR_CORRECTION_LEVEL.Q,
+      H: ERROR_CORRECTION_LEVEL.H
+    },
+    Encode: function (mode, text, version, ec_level){
       text += '';
       text = mode === MODE.EightBit ? toUTF8(text) : text;
 

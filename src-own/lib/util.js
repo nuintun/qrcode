@@ -106,7 +106,7 @@ export function isString(value) {
 export function template(tmpl, data) {
   if (data) {
     return tmpl.replace(TMPLRE, function(matched, key) {
-      return isString(data[key]) ? data[key] : matched;
+      return data.hasOwnProperty(key) ? data[key] : matched;
     });
   } else {
     return tmpl;
