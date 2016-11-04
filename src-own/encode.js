@@ -5,7 +5,7 @@ import QREncode from './lib/encode';
 export default {
   MODE: QRCONST.MODE,
   ECLEVEL: QRCONST.ERROR_CORRECTION_LEVEL,
-  Encode: function (mode, text, version, ec_level){
+  Encode: function(mode, text, version, ec_level) {
     text += '';
     text = mode === QRCONST.MODE.EightBit ? util.toUTF8(text) : text;
 

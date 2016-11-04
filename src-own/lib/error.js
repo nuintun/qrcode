@@ -7,7 +7,7 @@ import EN from '../i18n/en.json';
  * @param data
  * @constructor
  */
-export default function QRError(type, data){
+export default function QRError(type, data) {
   var context = this;
 
   context.type = type;
@@ -24,7 +24,7 @@ util.inherits(QRError, Error, {
    * @param local
    * @returns {*}
    */
-  localize: function (local){
+  localize: function(local) {
     var context = this;
     var type = context.type;
     var tmpl = util.isString(local[type]) ? local[type] : EN[type];

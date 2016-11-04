@@ -25,7 +25,7 @@
  * @param n_ec_bytes
  * @constructor
  */
-export default function ReedSolomon(n_ec_bytes){
+export default function ReedSolomon(n_ec_bytes) {
   var context = this;
 
   context.n_ec_bytes = n_ec_bytes;
@@ -48,7 +48,7 @@ ReedSolomon.prototype = {
    * @param msg
    * @returns {Array}
    */
-  encode: function (msg){
+  encode: function(msg) {
     var context = this;
 
     // Return parity bytes
@@ -88,7 +88,7 @@ ReedSolomon.prototype = {
    * @param bytes_in
    * @returns {Blob|string|ArrayBuffer}
    */
-  decode: function (bytes_in){
+  decode: function(bytes_in) {
     var context = this;
 
     context.bytes_in = bytes_in;
@@ -113,7 +113,7 @@ ReedSolomon.prototype = {
    * @param nbytes
    * @returns {*}
    */
-  genPoly: function (nbytes){
+  genPoly: function(nbytes) {
     var tp;
     var tp1;
     var genpoly;
@@ -127,7 +127,7 @@ ReedSolomon.prototype = {
 
     for (i = 0; i < nbytes; i++) {
       tp = context.zeroPoly();
-      tp[0] = context.gexp[i];		// set up x+a^n
+      tp[0] = context.gexp[i]; // set up x+a^n
       tp[1] = 1;
       genpoly = context.multPolys(tp, tp1);
       tp1 = context.copyPoly(genpoly);
@@ -139,7 +139,7 @@ ReedSolomon.prototype = {
    * calculateSyndroms
    * @returns {number}
    */
-  calculateSyndroms: function (){
+  calculateSyndroms: function() {
     var sum;
     var n_err = 0;
     var i, j;
@@ -166,7 +166,7 @@ ReedSolomon.prototype = {
   /**
    * correctErrors
    */
-  correctErrors: function (){
+  correctErrors: function() {
     var context = this;
 
     context.berlekampMassey();
@@ -224,7 +224,7 @@ ReedSolomon.prototype = {
   /**
    * berlekampMassey
    */
-  berlekampMassey: function (){
+  berlekampMassey: function() {
     var context = this;
     // initialize Gamma, the erasure locator polynomial
     var gamma = context.zeroPoly();
@@ -284,7 +284,7 @@ ReedSolomon.prototype = {
   /**
    * findRoots
    */
-  findRoots: function (){
+  findRoots: function() {
     var context = this;
 
     context.n_errors = 0;
@@ -320,7 +320,7 @@ ReedSolomon.prototype = {
    * @param n
    * @returns {number}
    */
-  computeDiscrepancy: function (lambda, S, L, n){
+  computeDiscrepancy: function(lambda, S, L, n) {
     var i;
     var sum = 0;
 
@@ -335,7 +335,7 @@ ReedSolomon.prototype = {
    * @param src
    * @returns {Array}
    */
-  copyPoly: function (src){
+  copyPoly: function(src) {
     var i;
     var context = this;
     var dst = new Array(context.n_degree_max);
@@ -350,7 +350,7 @@ ReedSolomon.prototype = {
    * zeroPoly
    * @returns {Array}
    */
-  zeroPoly: function (){
+  zeroPoly: function() {
     var i;
     var context = this;
     var poly = new Array(context.n_degree_max);
@@ -365,7 +365,7 @@ ReedSolomon.prototype = {
    * mulZPoly
    * @param poly
    */
-  mulZPoly: function (poly){
+  mulZPoly: function(poly) {
     var i;
 
     for (i = this.n_degree_max - 1; i > 0; i--) {
@@ -383,7 +383,7 @@ ReedSolomon.prototype = {
    * @param p2
    * @returns {Array}
    */
-  multPolys: function (p1, p2){
+  multPolys: function(p1, p2) {
     var i;
     var context = this;
     var dst = new Array(context.n_degree_max);
@@ -428,7 +428,7 @@ ReedSolomon.prototype = {
   /**
    * initGaloisTables
    */
-  initGaloisTables: function (){
+  initGaloisTables: function() {
     var pinit = 0;
     var p1 = 1;
     var p2 = 0;
@@ -482,7 +482,7 @@ ReedSolomon.prototype = {
    * @param b
    * @returns {*}
    */
-  gmult: function (a, b){
+  gmult: function(a, b) {
     var context = this;
 
     if (a === 0 || b === 0) {
@@ -499,8 +499,7 @@ ReedSolomon.prototype = {
    * @param elt
    * @returns {*}
    */
-  ginv: function (elt){
+  ginv: function(elt) {
     return (this.gexp[255 - this.glog[elt]]);
   }
 };
-

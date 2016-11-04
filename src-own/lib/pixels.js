@@ -7,7 +7,7 @@ import * as util from './util';
  * @param ec_level
  * @constructor
  */
-export default function Pixels(mode, version, ec_level){
+export default function Pixels(mode, version, ec_level) {
   var context = this;
 
   context.mode = mode;
@@ -16,7 +16,7 @@ export default function Pixels(mode, version, ec_level){
 }
 
 util.inherits(Pixels, Array, {
-  setBackground: function (){
+  setBackground: function() {
     var i, j;
     var context = this;
     var modules = context.length;
@@ -29,7 +29,7 @@ util.inherits(Pixels, Array, {
 
     return true;
   },
-  setDark: function (x, y){
+  setDark: function(x, y) {
     var context = this;
     var modules = context.length;
 
@@ -42,7 +42,7 @@ util.inherits(Pixels, Array, {
 
     return true;
   },
-  isDark: function (x, y){
+  isDark: function(x, y) {
     var context = this;
     var modules = context.length;
 

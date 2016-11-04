@@ -1,10 +1,10 @@
 import QRError from './error';
-import Pixels from  './pixels';
+import Pixels from './pixels';
 import * as QRCONST from './const';
 import * as QRCommon from './common';
 import ReedSolomon from './reedsolomon';
 
-export default function QREncode(){
+export default function QREncode() {
   var context = this;
 
   context.pixels = null;
@@ -49,7 +49,7 @@ QREncode.prototype = {
    *  @param version   Version according to ISO/IEC 18004:2006(E) Section 5.3.1
    *  @param ec_level  Error correction level according to ISO/IEC 18004:2006(E) Section 6.5.1
    */
-  encodeToPixArray: function (mode, text, version, ec_level){
+  encodeToPixArray: function(mode, text, version, ec_level) {
     var i;
     var context = this;
     var modules = context.modulesFromVersion(version);
@@ -70,7 +70,7 @@ QREncode.prototype = {
    *  @param ec_level      Error correction level according to ISO/IEC 18004:2006(E) Section 6.5.1
    *  @param pixels           pixel object
    */
-  encodeInit: function (ec_level, pixels){
+  encodeInit: function(ec_level, pixels) {
     var i;
     var context = this;
 
@@ -103,13 +103,13 @@ QREncode.prototype = {
    *  @param mode  Mode according to ISO/IEC 18004:2006(E) Section 6.3
    *  @param text  The text to be encoded
    */
-  encodeAddText: function (mode, text){
+  encodeAddText: function(mode, text) {
     this.addTextImplementation(mode, text);
   },
   /**
    * Encode this class to an image/canvas.
    */
-  encode: function (){
+  encode: function() {
     var context = this;
 
     context.addTextImplementation(context.MODE.Terminator, null);
@@ -126,10 +126,10 @@ QREncode.prototype = {
    * @param mode
    * @param text
    */
-  addTextImplementation: function (mode, text){
+  addTextImplementation: function(mode, text) {
     var context = this;
 
-    function appendBits(bytes, pos, len, value){
+    function appendBits(bytes, pos, len, value) {
       var byteIndex = pos >>> 3;
       var shift = 24 - (pos & 7) - len;
       var v = value << shift;
@@ -141,7 +141,7 @@ QREncode.prototype = {
       bytes[byteIndex] += v & 0xFF;
     }
 
-    function getAlphaNum(context, ch){
+    function getAlphaNum(context, ch) {
       if (!context.ALPHANUM_REV.hasOwnProperty(ch)) {
         throw new QRError('QREncode.InvalidChar4Alphanumeric', { char: ch });
       }
@@ -149,7 +149,7 @@ QREncode.prototype = {
       return context.ALPHANUM_REV[ch];
     }
 
-    function addAlphaNum(context, text){
+    function addAlphaNum(context, text) {
       var n = text.length;
       var count_bits = context.countBits(context.MODE.AlphaNumeric, context.version);
 
@@ -174,7 +174,7 @@ QREncode.prototype = {
       }
     }
 
-    function add8bit(context, text){
+    function add8bit(context, text) {
       var count_bits = context.countBits(context.MODE.EightBit, context.version);
 
       appendBits(context.data, context.bit_idx, count_bits, text.length);
@@ -190,7 +190,7 @@ QREncode.prototype = {
       }
     }
 
-    function addNumeric(context, text){
+    function addNumeric(context, text) {
       var n = text.length;
       var count_bits = context.countBits(context.MODE.Numeric, context.version);
 
@@ -256,7 +256,7 @@ QREncode.prototype = {
       throw new QRError('QREncode.TextTooLong4TargetVersion');
     }
   },
-  appendPadding: function (){
+  appendPadding: function() {
     var i;
     var context = this;
 
@@ -265,7 +265,7 @@ QREncode.prototype = {
       context.data[i + 1] = 0x11;
     }
   },
-  addErrorCorrection: function (){
+  addErrorCorrection: function() {
     var b, i;
     var n = 0;
     var bytes = [];
@@ -291,10 +291,10 @@ QREncode.prototype = {
 
     context.bytes = bytes;
   },
-  calculatePenalty: function (){
+  calculatePenalty: function() {
     var context = this;
 
-    function penaltyAdjacent(context){
+    function penaltyAdjacent(context) {
       var i, j;
       var rc, p = 0;
       var dark, light;
@@ -335,7 +335,7 @@ QREncode.prototype = {
       return p;
     }
 
-    function penaltyBlocks(context){
+    function penaltyBlocks(context) {
       // Not clear from ISO standard, if blocks have to be rectangular?
       // Here we give 3 penalty to every 2x2 block, so odd shaped areas will have penalties as well as rectangles
       var p = 0;
@@ -345,7 +345,7 @@ QREncode.prototype = {
         for (j = 0; j < context.modules - 1; j++) {
           b = 0;
 
-          if (context.pixels[i]  [j]) {
+          if (context.pixels[i][j]) {
             b++;
           }
 
@@ -353,7 +353,7 @@ QREncode.prototype = {
             b++;
           }
 
-          if (context.pixels[i]  [j + 1]) {
+          if (context.pixels[i][j + 1]) {
             b++;
           }
 
@@ -370,15 +370,15 @@ QREncode.prototype = {
       return p;
     }
 
-    function penaltyDarkLight(context){
+    function penaltyDarkLight(context) {
       // we shift bits in one by one, and see if the resulting pattern match the bad one
       var p = 0;
       var i, j;
       var rc, pat;
-      var bad = ( 128 - 1 - 2 - 32 ) << 4;	// 4_ : 1D : 1L : 3D : 1L : 1D : 4x
-      var badmask1 = 2048 - 1;		// 4_ : 1D : 1L : 3D : 1L : 1D : 4L
-      var badmask2 = badmask1 << 4;		// 4L : 1D : 1L : 3D : 1L : 1D : 4_
-      var patmask = 32768 - 1;		// 4  +           7            + 4
+      var bad = (128 - 1 - 2 - 32) << 4; // 4_ : 1D : 1L : 3D : 1L : 1D : 4x
+      var badmask1 = 2048 - 1; // 4_ : 1D : 1L : 3D : 1L : 1D : 4L
+      var badmask2 = badmask1 << 4; // 4L : 1D : 1L : 3D : 1L : 1D : 4_
+      var patmask = 32768 - 1; // 4  +           7            + 4
       for (i = 0; i < context.modules - 1; i++) {
         pat = [0, 0];
 
@@ -408,7 +408,7 @@ QREncode.prototype = {
       return p;
     }
 
-    function penaltyDark(context){
+    function penaltyDark(context) {
       var i, j;
       var dark = 0;
 
@@ -431,7 +431,7 @@ QREncode.prototype = {
 
     return p_adjacent + p_blocks + p_darkLight + p_dark;
   },
-  encodeBestMask: function (){
+  encodeBestMask: function() {
     var best_mask = 0;
     var context = this;
     var best_penalty = 999999;
@@ -473,10 +473,10 @@ QREncode.prototype = {
       context.encodeData(context.mask);
     }
   },
-  encodeFunctionalPatterns: function (mask){
+  encodeFunctionalPatterns: function(mask) {
     var context = this;
 
-    function encodeFinderPattern(context, x, y){
+    function encodeFinderPattern(context, x, y) {
       var i, j;
 
       // Outer 7x7 black boundary
@@ -495,7 +495,7 @@ QREncode.prototype = {
       }
     }
 
-    function encodeVersionTopright(context){
+    function encodeVersionTopright(context) {
       var x, y;
       var pattern = context.VERSION_INFO[context.version];
 
@@ -510,7 +510,7 @@ QREncode.prototype = {
       }
     }
 
-    function encodeVersionBottomleft(context){
+    function encodeVersionBottomleft(context) {
       var x, y;
       var pattern = context.VERSION_INFO[context.version];
 
@@ -525,7 +525,7 @@ QREncode.prototype = {
       }
     }
 
-    function encodeTimingPattern(context, horizontal){
+    function encodeTimingPattern(context, horizontal) {
       var i;
 
       for (i = 8; i < context.modules - 8; i += 2) {
@@ -538,7 +538,7 @@ QREncode.prototype = {
 
     }
 
-    function encodeOneAlignmentPattern(context, x, y){
+    function encodeOneAlignmentPattern(context, x, y) {
       // Outer 5x5 black boundary
       var i;
 
@@ -553,7 +553,7 @@ QREncode.prototype = {
       context.pixels[x + 2][y + 2] = true;
     }
 
-    function encodeAlignmentPatterns(context){
+    function encodeAlignmentPatterns(context) {
       var i, j;
       var n = context.ALIGNMENT_PATTERNS[context.version].length;
 
@@ -568,7 +568,7 @@ QREncode.prototype = {
       }
     }
 
-    function encodeFormatNW(context, code){
+    function encodeFormatNW(context, code) {
       var x, y;
 
       for (y = 0; y <= 5; y++) {
@@ -606,7 +606,7 @@ QREncode.prototype = {
       }
     }
 
-    function encodeFormatNESW(context, code){
+    function encodeFormatNESW(context, code) {
       var x, y;
 
       for (x = context.modules - 1; x > context.modules - 1 - 8; x--) {
@@ -648,10 +648,10 @@ QREncode.prototype = {
     encodeFormatNW(context, code);
     encodeFormatNESW(context, code);
   },
-  encodeData: function (qrmask){
+  encodeData: function(qrmask) {
     var context = this;
 
-    function setMasked(pixels, mask, j, i, f){
+    function setMasked(pixels, mask, j, i, f) {
       var m;
 
       switch (mask) {
@@ -731,7 +731,7 @@ QREncode.prototype = {
       writingUp ^= true; // writingUp = !writingUp; // switch directions
     }
   },
-  pixelsToImage: function (){
+  pixelsToImage: function() {
     var i, j;
     var context = this;
 
@@ -743,14 +743,14 @@ QREncode.prototype = {
       }
     }
   },
-  getDataCapacity: function (mode, version, ec_level){
+  getDataCapacity: function(mode, version, ec_level) {
     var context = this;
     var codewords = context.CODEWORDS[version];
     var ec_codewords = context.EC_CODEWORDS[version][ec_level];
     var data_codewords = codewords - ec_codewords;
     var bits = 8 * data_codewords;
 
-    bits -= 4;	// mode
+    bits -= 4; // mode
     bits -= context.countBits(mode, version);
 
     var cap = 0;
@@ -779,7 +779,7 @@ QREncode.prototype = {
 
     return cap;
   },
-  getVersionFromLength: function (mode, text, ec_level){
+  getVersionFromLength: function(mode, text, ec_level) {
     var v;
     var length = text.length;
 

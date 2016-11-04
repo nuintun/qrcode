@@ -11,10 +11,10 @@ var MODE = {
 
 // Error correction level according to ISO/IEC 18004:2006(E) Section 6.5.1
 var ERROR_CORRECTION_LEVEL = {
-  L: 1,	//  7%
-  M: 0,	// 15%
-  Q: 3,	// 25%
-  H: 2	// 30%
+  L: 1, //  7%
+  M: 0, // 15%
+  Q: 3, // 25%
+  H: 2 // 30%
 };
 
 var ALIGNMENT_PATTERNS = [

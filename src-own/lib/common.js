@@ -1,6 +1,6 @@
 import QRError from './error';
 
-export function setBlocks(){
+export function setBlocks() {
   var context = this;
   var codewords = context.CODEWORDS[context.version];
   var ec_codewords = context.EC_CODEWORDS[context.version][context.error_correction_level];
@@ -67,10 +67,10 @@ export function setBlocks(){
   }
 }
 
-export function setFunctionalPattern(){
+export function setFunctionalPattern() {
   var context = this;
 
-  function markSquare(context, x, y, w, h){
+  function markSquare(context, x, y, w, h) {
     var i, j;
 
     for (i = x; i < x + w; i++) {
@@ -80,7 +80,7 @@ export function setFunctionalPattern(){
     }
   }
 
-  function markAlignment(context){
+  function markAlignment(context) {
     var i, j;
     var n = context.ALIGNMENT_PATTERNS[context.version].length;
 
@@ -132,7 +132,7 @@ export function setFunctionalPattern(){
   }
 }
 
-export function countBits(mode, version){
+export function countBits(mode, version) {
   var context = this;
 
   if (mode === context.MODE.EightBit) {
@@ -162,23 +162,23 @@ export function countBits(mode, version){
   throw new QRError('QRCode.UnknownMode', { mode: mode });
 }
 
-export function modulesFromVersion(version){
+export function modulesFromVersion(version) {
   return 17 + 4 * version;
 }
 
-export function setBackground(){
+export function setBackground() {
   var context = this;
 
   return context.pixels.setBackground.apply(context.pixels, arguments);
 }
 
-export function setDark(){
+export function setDark() {
   var context = this;
 
   return context.pixels.setDark.apply(context.pixels, arguments);
 }
 
-export function isDark(){
+export function isDark() {
   var context = this;
 
   return context.pixels.isDark.apply(context.pixels, arguments);

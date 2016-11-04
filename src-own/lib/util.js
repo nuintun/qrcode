@@ -7,8 +7,8 @@ var toSting = Object.prototype.toString;
  * @param super_ctor
  * @param proto
  */
-export function inherits(ctor, super_ctor, proto){
-  function F(){
+export function inherits(ctor, super_ctor, proto) {
+  function F() {
     // constructor
   }
 
@@ -32,7 +32,7 @@ export function inherits(ctor, super_ctor, proto){
  * @param {string} string
  * @returns {string}
  */
-export function toUTF8(string){
+export function toUTF8(string) {
   var i, c;
   var out = '';
   var len = string.length;
@@ -60,7 +60,7 @@ export function toUTF8(string){
  * @param {string} string
  * @returns {string}
  */
-export function toUnicode(string){
+export function toUnicode(string) {
   var i = 0;
   var out = '';
   var len = string.length;
@@ -93,7 +93,7 @@ export function toUnicode(string){
  * @param value
  * @returns {boolean}
  */
-export function isString(value){
+export function isString(value) {
   return toSting.call(value) === '[object String]';
 }
 
@@ -103,9 +103,9 @@ export function isString(value){
  * @param data
  * @returns {*}
  */
-export function template(tmpl, data){
+export function template(tmpl, data) {
   if (data) {
-    return tmpl.replace(TMPLRE, function (matched, key){
+    return tmpl.replace(TMPLRE, function(matched, key) {
       return isString(data[key]) ? data[key] : matched;
     });
   } else {
