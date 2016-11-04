@@ -252,8 +252,25 @@ var RS_BLOCK_TABLE = [
   [20, 45, 15, 61, 46, 16]
 ];
 
+function getRsBlockTable(version, level) {
+  switch (level) {
+    case ErrorCorrectLevel.L:
+      return RS_BLOCK_TABLE[(version - 1) * 4];
+    case ErrorCorrectLevel.M:
+      return RS_BLOCK_TABLE[(version - 1) * 4 + 1];
+    case ErrorCorrectLevel.Q:
+      return RS_BLOCK_TABLE[(version - 1) * 4 + 2];
+    case ErrorCorrectLevel.H:
+      return RS_BLOCK_TABLE[(version - 1) * 4 + 3];
+    default:
+      break;
+  }
+
+  throw 'invalid version:' + version + '/level:' + level;
+};
+
 RSBlock.getRSBlocks = function(version, level) {
-  var rsBlock = RSBlock.getRsBlockTable(version, level);
+  var rsBlock = getRsBlockTable(version, level);
   var length = rsBlock.length / 3;
   var list = [];
   var count;
@@ -272,23 +289,6 @@ RSBlock.getRSBlocks = function(version, level) {
   }
 
   return list;
-};
-
-RSBlock.getRsBlockTable = function(version, level) {
-  switch (level) {
-    case ErrorCorrectLevel.L:
-      return RS_BLOCK_TABLE[(version - 1) * 4];
-    case ErrorCorrectLevel.M:
-      return RS_BLOCK_TABLE[(version - 1) * 4 + 1];
-    case ErrorCorrectLevel.Q:
-      return RS_BLOCK_TABLE[(version - 1) * 4 + 2];
-    case ErrorCorrectLevel.H:
-      return RS_BLOCK_TABLE[(version - 1) * 4 + 3];
-    default:
-      break;
-  }
-
-  throw 'invalid version:' + version + '/level:' + level;
 };
 
 RSBlock.prototype = {
