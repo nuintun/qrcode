@@ -10,8 +10,9 @@ export default function QR8BitByte(data) {
 QRUtil.inherits(QR8BitByte, QRData, {
   write: function(buffer) {
     var data = QRCode.stringToBytes(this.getData());
+    var length = data.length;
 
-    for (var i = 0; i < data.length; i += 1) {
+    for (var i = 0; i < length; i += 1) {
       buffer.put(data[i], 8);
     }
   },

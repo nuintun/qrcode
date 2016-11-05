@@ -41,14 +41,15 @@ QRUtil.inherits(QRAlphaNum, QRData, {
   write: function(buffer) {
     var i = 0;
     var s = this.getData();
+    var length = s.length;
 
-    while (i + 1 < s.length) {
+    while (i + 1 < length) {
       buffer.put(getCode(s.charAt(i)) * 45 + getCode(s.charAt(i + 1)), 11);
 
       i += 2;
     }
 
-    if (i < s.length) {
+    if (i < length) {
       buffer.put(getCode(s.charAt(i)), 6);
     }
   }

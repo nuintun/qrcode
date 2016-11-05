@@ -772,7 +772,7 @@
   function getBCHDigit(data) {
     var digit = 0;
 
-    while (data != 0) {
+    while (data !== 0) {
       digit += 1;
       data >>>= 1;
     }
@@ -876,8 +876,9 @@
   inherits(QR8BitByte, QRData, {
     write: function(buffer) {
       var data = QRCode.stringToBytes(this.getData());
+      var length = data.length;
 
-      for (var i = 0; i < data.length; i += 1) {
+      for (var i = 0; i < length; i += 1) {
         buffer.put(data[i], 8);
       }
     },
@@ -915,8 +916,9 @@
 
     // calc max data count
     var totalDataCount = 0;
+    var rsLength = rsBlocks.length;
 
-    for (i = 0; i < rsBlocks.length; i += 1) {
+    for (i = 0; i < rsLength; i += 1) {
       totalDataCount += rsBlocks[i].getDataCount();
     }
 
@@ -968,8 +970,9 @@
     var ecCount;
     var dcData = [];
     var ecData = [];
+    var rsLength = rsBlocks.length;
 
-    for (r = 0; r < rsBlocks.length; r += 1) {
+    for (r = 0; r < rsLength; r += 1) {
       dcData.push([]);
       ecData.push([]);
     }
@@ -984,7 +987,10 @@
       return a;
     }
 
-    for (r = 0; r < rsBlocks.length; r += 1) {
+    var dcLength;
+    var ecLength;
+
+    for (r = 0; r < rsLength; r += 1) {
       dcCount = rsBlocks[r].getDataCount();
       ecCount = rsBlocks[r].getTotalCount() - dcCount;
 
@@ -993,7 +999,9 @@
 
       dcData[r] = createNumArray(dcCount);
 
-      for (i = 0; i < dcData[r].length; i += 1) {
+      dcLength = dcData[r].length;
+
+      for (i = 0; i < dcLength; i += 1) {
         dcData[r][i] = 0xff & buffer.getBuffer()[i + offset];
       }
 
@@ -1005,15 +1013,17 @@
       modPoly = rawPoly.mod(rsPoly);
       ecData[r] = createNumArray(rsPoly.getLength() - 1);
 
-      for (i = 0; i < ecData[r].length; i += 1) {
-        modIndex = i + modPoly.getLength() - ecData[r].length;
+      ecLength = ecData[r].length;
+
+      for (i = 0; i < ecLength; i += 1) {
+        modIndex = i + modPoly.getLength() - ecLength;
         ecData[r][i] = (modIndex >= 0) ? modPoly.getAt(modIndex) : 0;
       }
     }
 
     var totalCodeCount = 0;
 
-    for (i = 0; i < rsBlocks.length; i += 1) {
+    for (i = 0; i < rsLength; i += 1) {
       totalCodeCount += rsBlocks[i].getTotalCount();
     }
 
@@ -1021,7 +1031,7 @@
     var index = 0;
 
     for (i = 0; i < maxDcCount; i += 1) {
-      for (r = 0; r < rsBlocks.length; r += 1) {
+      for (r = 0; r < rsLength; r += 1) {
         if (i < dcData[r].length) {
           data[index] = dcData[r][i];
           index += 1;
@@ -1030,7 +1040,7 @@
     }
 
     for (i = 0; i < maxEcCount; i += 1) {
-      for (r = 0; r < rsBlocks.length; r += 1) {
+      for (r = 0; r < rsLength; r += 1) {
         if (i < ecData[r].length) {
           data[index] = ecData[r][i];
           index += 1;
@@ -1044,8 +1054,9 @@
   QRCode.stringToBytes = function(str) {
     var charcode;
     var utf8 = [];
+    var length = str.length;
 
-    for (var i = 0; i < str.length; i++) {
+    for (var i = 0; i < length; i++) {
       charcode = str.charCodeAt(i);
 
       if (charcode < 0x80) {
@@ -1163,6 +1174,7 @@
 
       for (var i = 0; i < context.count; i += 1) {
         context.modules.push([]);
+
         for (j = 0; j < context.count; j += 1) {
           context.modules[i].push(null);
         }
@@ -1363,8 +1375,9 @@
 
       var c;
       var i = 0;
+      var length = data.length;
 
-      while (i + 1 < data.length) {
+      while (i + 1 < length) {
         c = ((0xff & data[i]) << 8) | (0xff & data[i + 1]);
 
         if (0x8140 <= c && c <= 0x9FFC) {
@@ -1382,7 +1395,7 @@
         i += 2;
       }
 
-      if (i < data.length) {
+      if (i < length) {
         throw 'illegal char at: ' + (i + 1);
       }
     },
@@ -1418,17 +1431,18 @@
       var data = this.getData();
 
       var i = 0;
+      var length = data.length;
 
-      while (i + 2 < data.length) {
+      while (i + 2 < length) {
         buffer.put(strToNum(data.substring(i, i + 3)), 10);
 
         i += 3;
       }
 
-      if (i < data.length) {
-        if (data.length - i == 1) {
+      if (i < length) {
+        if (length - i == 1) {
           buffer.put(strToNum(data.substring(i, i + 1)), 4);
-        } else if (data.length - i == 2) {
+        } else if (length - i == 2) {
           buffer.put(strToNum(data.substring(i, i + 2)), 7);
         }
       }
@@ -1474,14 +1488,15 @@
     write: function(buffer) {
       var i = 0;
       var s = this.getData();
+      var length = s.length;
 
-      while (i + 1 < s.length) {
+      while (i + 1 < length) {
         buffer.put(getCode(s.charAt(i)) * 45 + getCode(s.charAt(i + 1)), 11);
 
         i += 2;
       }
 
-      if (i < s.length) {
+      if (i < length) {
         buffer.put(getCode(s.charAt(i)), 6);
       }
     }

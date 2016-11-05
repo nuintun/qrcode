@@ -296,7 +296,7 @@ export function getLostPoint(qrCode) {
 export function getBCHDigit(data) {
   var digit = 0;
 
-  while (data != 0) {
+  while (data !== 0) {
     digit += 1;
     data >>>= 1;
   }

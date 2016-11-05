@@ -14,8 +14,9 @@ QRUtil.inherits(QRKanji, QRData, {
 
     var c;
     var i = 0;
+    var length = data.length;
 
-    while (i + 1 < data.length) {
+    while (i + 1 < length) {
       c = ((0xff & data[i]) << 8) | (0xff & data[i + 1]);
 
       if (0x8140 <= c && c <= 0x9FFC) {
@@ -33,7 +34,7 @@ QRUtil.inherits(QRKanji, QRData, {
       i += 2;
     }
 
-    if (i < data.length) {
+    if (i < length) {
       throw 'illegal char at: ' + (i + 1);
     }
   },

@@ -29,17 +29,18 @@ QRUtil.inherits(QRNumber, QRData, {
     var data = this.getData();
 
     var i = 0;
+    var length = data.length;
 
-    while (i + 2 < data.length) {
+    while (i + 2 < length) {
       buffer.put(strToNum(data.substring(i, i + 3)), 10);
 
       i += 3;
     }
 
-    if (i < data.length) {
-      if (data.length - i == 1) {
+    if (i < length) {
+      if (length - i == 1) {
         buffer.put(strToNum(data.substring(i, i + 1)), 4);
-      } else if (data.length - i == 2) {
+      } else if (length - i == 2) {
         buffer.put(strToNum(data.substring(i, i + 2)), 7);
       }
     }

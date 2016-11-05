@@ -34,8 +34,9 @@ QRCode.createData = function(version, level, dataArray) {
 
   // calc max data count
   var totalDataCount = 0;
+  var rsLength = rsBlocks.length;
 
-  for (i = 0; i < rsBlocks.length; i += 1) {
+  for (i = 0; i < rsLength; i += 1) {
     totalDataCount += rsBlocks[i].getDataCount();
   }
 
@@ -87,8 +88,9 @@ QRCode.createBytes = function(buffer, rsBlocks) {
   var ecCount;
   var dcData = [];
   var ecData = [];
+  var rsLength = rsBlocks.length;
 
-  for (r = 0; r < rsBlocks.length; r += 1) {
+  for (r = 0; r < rsLength; r += 1) {
     dcData.push([]);
     ecData.push([]);
   }
@@ -103,7 +105,10 @@ QRCode.createBytes = function(buffer, rsBlocks) {
     return a;
   }
 
-  for (r = 0; r < rsBlocks.length; r += 1) {
+  var dcLength;
+  var ecLength;
+
+  for (r = 0; r < rsLength; r += 1) {
     dcCount = rsBlocks[r].getDataCount();
     ecCount = rsBlocks[r].getTotalCount() - dcCount;
 
@@ -112,7 +117,9 @@ QRCode.createBytes = function(buffer, rsBlocks) {
 
     dcData[r] = createNumArray(dcCount);
 
-    for (i = 0; i < dcData[r].length; i += 1) {
+    dcLength = dcData[r].length;
+
+    for (i = 0; i < dcLength; i += 1) {
       dcData[r][i] = 0xff & buffer.getBuffer()[i + offset];
     }
 
@@ -124,15 +131,17 @@ QRCode.createBytes = function(buffer, rsBlocks) {
     modPoly = rawPoly.mod(rsPoly);
     ecData[r] = createNumArray(rsPoly.getLength() - 1);
 
-    for (i = 0; i < ecData[r].length; i += 1) {
-      modIndex = i + modPoly.getLength() - ecData[r].length;
+    ecLength = ecData[r].length;
+
+    for (i = 0; i < ecLength; i += 1) {
+      modIndex = i + modPoly.getLength() - ecLength;
       ecData[r][i] = (modIndex >= 0) ? modPoly.getAt(modIndex) : 0;
     }
   }
 
   var totalCodeCount = 0;
 
-  for (i = 0; i < rsBlocks.length; i += 1) {
+  for (i = 0; i < rsLength; i += 1) {
     totalCodeCount += rsBlocks[i].getTotalCount();
   }
 
@@ -140,7 +149,7 @@ QRCode.createBytes = function(buffer, rsBlocks) {
   var index = 0;
 
   for (i = 0; i < maxDcCount; i += 1) {
-    for (r = 0; r < rsBlocks.length; r += 1) {
+    for (r = 0; r < rsLength; r += 1) {
       if (i < dcData[r].length) {
         data[index] = dcData[r][i];
         index += 1;
@@ -149,7 +158,7 @@ QRCode.createBytes = function(buffer, rsBlocks) {
   }
 
   for (i = 0; i < maxEcCount; i += 1) {
-    for (r = 0; r < rsBlocks.length; r += 1) {
+    for (r = 0; r < rsLength; r += 1) {
       if (i < ecData[r].length) {
         data[index] = ecData[r][i];
         index += 1;
@@ -163,8 +172,9 @@ QRCode.createBytes = function(buffer, rsBlocks) {
 QRCode.stringToBytes = function(str) {
   var charcode;
   var utf8 = [];
+  var length = str.length;
 
-  for (var i = 0; i < str.length; i++) {
+  for (var i = 0; i < length; i++) {
     charcode = str.charCodeAt(i);
 
     if (charcode < 0x80) {
@@ -282,6 +292,7 @@ QRCode.prototype = {
 
     for (var i = 0; i < context.count; i += 1) {
       context.modules.push([]);
+
       for (j = 0; j < context.count; j += 1) {
         context.modules[i].push(null);
       }
