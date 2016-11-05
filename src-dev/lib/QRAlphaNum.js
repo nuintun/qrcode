@@ -3,6 +3,8 @@ import { Mode } from './Mode';
 import QRData from './QRData';
 
 export default function QRAlphaNum(data) {
+  this.source = data;
+
   QRData.call(this, Mode.MODE_8BIT_BYTE, data);
 }
 

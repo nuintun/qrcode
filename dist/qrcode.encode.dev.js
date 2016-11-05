@@ -1131,20 +1131,19 @@
   }
 
   function QR8BitByte(data) {
-    QRData.call(this, Mode.MODE_8BIT_BYTE, data);
+    this.source = data;
+
+    QRData.call(this, Mode.MODE_8BIT_BYTE, stringToUtf8ByteArray(data));
   }
 
   inherits(QR8BitByte, QRData, {
     write: function(buffer) {
-      var data = stringToUtf8ByteArray(this.getData());
+      var data = this.getData();
       var length = data.length;
 
       for (var i = 0; i < length; i += 1) {
         buffer.put(data[i], 8);
       }
-    },
-    getLength: function() {
-      return stringToUtf8ByteArray(this.getData()).length;
     }
   });
 
@@ -1434,13 +1433,15 @@
   };
 
   function QRKanji(data) {
-    QRData.call(this, Mode.MODE_KANJI, data);
+    this.source = data;
+
+    QRData.call(this, Mode.MODE_KANJI, stringToUtf8ByteArray(data));
   }
 
   inherits(QRKanji, QRData, {
     write: function(buffer) {
       var context = this;
-      var data = stringToUtf8ByteArray(context.getData());
+      var data = context.getData();
 
       var c;
       var i = 0;
@@ -1469,11 +1470,13 @@
       }
     },
     getLength: function() {
-      return stringToUtf8ByteArray(this.getData()).length / 2;
+      return this.getData().length / 2;
     }
   });
 
   function QRNumber(data) {
+    this.source = data;
+
     QRData.call(this, Mode.MODE_NUMBER, data);
   }
 
@@ -1519,6 +1522,8 @@
   });
 
   function QRAlphaNum(data) {
+    this.source = data;
+
     QRData.call(this, Mode.MODE_8BIT_BYTE, data);
   }
 

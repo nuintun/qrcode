@@ -3,6 +3,8 @@ import * as QRUtil from './QRUtil';
 import { Mode } from './Mode';
 
 export default function QRNumber(data) {
+  this.source = data;
+
   QRData.call(this, Mode.MODE_NUMBER, data);
 }
 

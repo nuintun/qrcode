@@ -3,13 +3,15 @@ import QRData from './QRData';
 import * as QRUtil from './QRUtil';
 
 export default function QRKanji(data) {
-  QRData.call(this, Mode.MODE_KANJI, data);
+  this.source = data;
+
+  QRData.call(this, Mode.MODE_KANJI, QRUtil.stringToUtf8ByteArray(data));
 }
 
 QRUtil.inherits(QRKanji, QRData, {
   write: function(buffer) {
     var context = this;
-    var data = QRUtil.stringToUtf8ByteArray(context.getData());
+    var data = context.getData();
 
     var c;
     var i = 0;
@@ -38,6 +40,6 @@ QRUtil.inherits(QRKanji, QRData, {
     }
   },
   getLength: function() {
-    return QRUtil.stringToUtf8ByteArray(this.getData()).length / 2;
+    return this.getData().length / 2;
   }
 });
