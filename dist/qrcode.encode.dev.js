@@ -367,6 +367,75 @@
     }
   };
 
+  function QRData(mode, data) {
+    this.mode = mode;
+    this.data = data;
+  }
+
+  QRData.prototype = {
+    getMode: function() {
+      return this.mode;
+    },
+    getData: function() {
+      return this.data;
+    },
+    getLength: function() {
+      return this.getData().length;
+    },
+    write: function() {
+      throw 'abstract interface must be implemented.'
+    },
+    getLengthInBits: function(version) {
+      var mode = this.mode;
+
+      if (1 <= version && version < 10) {
+        // 1 - 9
+        switch (mode) {
+          case Mode.MODE_NUMBER:
+            return 10;
+          case Mode.MODE_ALPHA_NUM:
+            return 9;
+          case Mode.MODE_8BIT_BYTE:
+            return 8;
+          case Mode.MODE_KANJI:
+            return 8;
+          default:
+            throw 'illegal mode: ' + mode;
+        }
+      } else if (version < 27) {
+        // 10 - 26
+        switch (mode) {
+          case Mode.MODE_NUMBER:
+            return 12;
+          case Mode.MODE_ALPHA_NUM:
+            return 11;
+          case Mode.MODE_8BIT_BYTE:
+            return 16;
+          case Mode.MODE_KANJI:
+            return 10;
+          default:
+            throw 'illegal mode: ' + mode;
+        }
+      } else if (version < 41) {
+        // 27 - 40
+        switch (mode) {
+          case Mode.MODE_NUMBER:
+            return 14;
+          case Mode.MODE_ALPHA_NUM:
+            return 13;
+          case Mode.MODE_8BIT_BYTE:
+            return 16;
+          case Mode.MODE_KANJI:
+            return 12;
+          default:
+            throw 'illegal mode: ' + mode;
+        }
+      } else {
+        throw 'illegal version: ' + version;
+      }
+    }
+  };
+
   var EXP_TABLE = [];
   var LOG_TABLE = [];
 
@@ -816,74 +885,43 @@
     return (data << 12) | d;
   }
 
-  function QRData(mode, data) {
-    this.mode = mode;
-    this.data = data;
-  }
+  function stringToBytes(str) {
+    var charcode;
+    var utf8 = [];
+    var length = str.length;
 
-  QRData.prototype = {
-    getMode: function() {
-      return this.mode;
-    },
-    getData: function() {
-      return this.data;
-    },
-    getLength: function() {
-      return this.getData().length;
-    },
-    write: function() {
-      throw 'abstract interface must be implemented.'
-    },
-    getLengthInBits: function(version) {
-      var mode = this.mode;
+    for (var i = 0; i < length; i++) {
+      charcode = str.charCodeAt(i);
 
-      if (1 <= version && version < 10) {
-        // 1 - 9
-        switch (mode) {
-          case Mode.MODE_NUMBER:
-            return 10;
-          case Mode.MODE_ALPHA_NUM:
-            return 9;
-          case Mode.MODE_8BIT_BYTE:
-            return 8;
-          case Mode.MODE_KANJI:
-            return 8;
-          default:
-            throw 'illegal mode: ' + mode;
-        }
-      } else if (version < 27) {
-        // 10 - 26
-        switch (mode) {
-          case Mode.MODE_NUMBER:
-            return 12;
-          case Mode.MODE_ALPHA_NUM:
-            return 11;
-          case Mode.MODE_8BIT_BYTE:
-            return 16;
-          case Mode.MODE_KANJI:
-            return 10;
-          default:
-            throw 'illegal mode: ' + mode;
-        }
-      } else if (version < 41) {
-        // 27 - 40
-        switch (mode) {
-          case Mode.MODE_NUMBER:
-            return 14;
-          case Mode.MODE_ALPHA_NUM:
-            return 13;
-          case Mode.MODE_8BIT_BYTE:
-            return 16;
-          case Mode.MODE_KANJI:
-            return 12;
-          default:
-            throw 'illegal mode: ' + mode;
-        }
+      if (charcode < 0x80) {
+        utf8.push(charcode);
+      } else if (charcode < 0x800) {
+        utf8.push(0xc0 | (charcode >> 6), 0x80 | (charcode & 0x3f));
+      } else if (charcode < 0xd800 || charcode >= 0xe000) {
+        utf8.push(
+          0xe0 | (charcode >> 12),
+          0x80 | ((charcode >> 6) & 0x3f),
+          0x80 | (charcode & 0x3f)
+        );
       } else {
-        throw 'illegal version: ' + version;
+        // surrogate pair
+        i++;
+        // UTF-16 encodes 0x10000-0x10FFFF by
+        // subtracting 0x10000 and splitting the
+        // 20 bits of 0x0-0xFFFFF into two halves
+        charcode = 0x10000 + (((charcode & 0x3ff) << 10) | (str.charCodeAt(i) & 0x3ff));
+
+        utf8.push(
+          0xf0 | (charcode >> 18),
+          0x80 | ((charcode >> 12) & 0x3f),
+          0x80 | ((charcode >> 6) & 0x3f),
+          0x80 | (charcode & 0x3f)
+        );
       }
     }
-  };
+
+    return utf8;
+  }
 
   function QR8BitByte(data) {
     QRData.call(this, Mode.MODE_8BIT_BYTE, data);
@@ -891,7 +929,7 @@
 
   inherits(QR8BitByte, QRData, {
     write: function(buffer) {
-      var data = QRCode.stringToBytes(this.getData());
+      var data = stringToBytes(this.getData());
       var length = data.length;
 
       for (var i = 0; i < length; i += 1) {
@@ -899,7 +937,7 @@
       }
     },
     getLength: function() {
-      return QRCode.stringToBytes(this.getData()).length;
+      return stringToBytes(this.getData()).length;
     }
   });
 
@@ -916,61 +954,7 @@
   var PAD0 = 0xEC;
   var PAD1 = 0x11;
 
-  QRCode.createData = function(version, level, dataArray) {
-    var i;
-    var data;
-    var buffer = new BitBuffer();
-    var rsBlocks = RSBlock.getRSBlocks(version, level);
-
-    for (i = 0; i < dataArray.length; i += 1) {
-      data = dataArray[i];
-
-      buffer.put(data.getMode(), 4);
-      buffer.put(data.getLength(), data.getLengthInBits(version));
-      data.write(buffer);
-    }
-
-    // calc max data count
-    var totalDataCount = 0;
-    var rsLength = rsBlocks.length;
-
-    for (i = 0; i < rsLength; i += 1) {
-      totalDataCount += rsBlocks[i].getDataCount();
-    }
-
-    if (buffer.getLengthInBits() > totalDataCount * 8) {
-      throw 'code length overflow: ' + buffer.getLengthInBits() + '>' + totalDataCount * 8;
-    }
-
-    // end
-    if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
-      buffer.put(0, 4);
-    }
-
-    // padding
-    while (buffer.getLengthInBits() % 8 != 0) {
-      buffer.putBit(false);
-    }
-
-    // padding
-    while (true) {
-      if (buffer.getLengthInBits() >= totalDataCount * 8) {
-        break;
-      }
-
-      buffer.put(PAD0, 8);
-
-      if (buffer.getLengthInBits() >= totalDataCount * 8) {
-        break;
-      }
-
-      buffer.put(PAD1, 8);
-    }
-
-    return QRCode.createBytes(buffer, rsBlocks);
-  };
-
-  QRCode.createBytes = function(buffer, rsBlocks) {
+  function createBytes(buffer, rsBlocks) {
     var offset = 0;
 
     var maxDcCount = 0;
@@ -1065,7 +1049,61 @@
     }
 
     return data;
-  };
+  }
+
+  function createData(version, level, dataArray) {
+    var i;
+    var data;
+    var buffer = new BitBuffer();
+    var rsBlocks = RSBlock.getRSBlocks(version, level);
+
+    for (i = 0; i < dataArray.length; i += 1) {
+      data = dataArray[i];
+
+      buffer.put(data.getMode(), 4);
+      buffer.put(data.getLength(), data.getLengthInBits(version));
+      data.write(buffer);
+    }
+
+    // calc max data count
+    var totalDataCount = 0;
+    var rsLength = rsBlocks.length;
+
+    for (i = 0; i < rsLength; i += 1) {
+      totalDataCount += rsBlocks[i].getDataCount();
+    }
+
+    if (buffer.getLengthInBits() > totalDataCount * 8) {
+      throw 'code length overflow: ' + buffer.getLengthInBits() + '>' + totalDataCount * 8;
+    }
+
+    // end
+    if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+      buffer.put(0, 4);
+    }
+
+    // padding
+    while (buffer.getLengthInBits() % 8 != 0) {
+      buffer.putBit(false);
+    }
+
+    // padding
+    while (true) {
+      if (buffer.getLengthInBits() >= totalDataCount * 8) {
+        break;
+      }
+
+      buffer.put(PAD0, 8);
+
+      if (buffer.getLengthInBits() >= totalDataCount * 8) {
+        break;
+      }
+
+      buffer.put(PAD1, 8);
+    }
+
+    return createBytes(buffer, rsBlocks);
+  }
 
   QRCode.stringToBytes = function(str) {
     var charcode;
@@ -1207,7 +1245,7 @@
         context.setupVersion(test);
       }
 
-      var data = QRCode.createData(
+      var data = createData(
         context.version,
         context.level,
         context.data
@@ -1387,7 +1425,7 @@
   inherits(QRKanji, QRData, {
     write: function(buffer) {
       var context = this;
-      var data = QRCode.stringToBytes(context.getData());
+      var data = stringToBytes(context.getData());
 
       var c;
       var i = 0;
@@ -1416,7 +1454,7 @@
       }
     },
     getLength: function() {
-      return QRCode.stringToBytes(this.getData()).length / 2;
+      return stringToBytes(this.getData()).length / 2;
     }
   });
 

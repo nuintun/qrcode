@@ -1,5 +1,4 @@
 import { Mode } from './Mode';
-import QRCode from './QRCode';
 import QRData from './QRData';
 import * as QRUtil from './QRUtil';
 
@@ -10,7 +9,7 @@ export default function QRKanji(data) {
 QRUtil.inherits(QRKanji, QRData, {
   write: function(buffer) {
     var context = this;
-    var data = QRCode.stringToBytes(context.getData());
+    var data = QRUtil.stringToBytes(context.getData());
 
     var c;
     var i = 0;
@@ -39,6 +38,6 @@ QRUtil.inherits(QRKanji, QRData, {
     }
   },
   getLength: function() {
-    return QRCode.stringToBytes(this.getData()).length / 2;
+    return QRUtil.stringToBytes(this.getData()).length / 2;
   }
 });

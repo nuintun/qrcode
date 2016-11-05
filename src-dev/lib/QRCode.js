@@ -18,61 +18,7 @@ export default function QRCode(version, level) {
 var PAD0 = 0xEC;
 var PAD1 = 0x11;
 
-QRCode.createData = function(version, level, dataArray) {
-  var i;
-  var data;
-  var buffer = new BitBuffer();
-  var rsBlocks = RSBlock.getRSBlocks(version, level);
-
-  for (i = 0; i < dataArray.length; i += 1) {
-    data = dataArray[i];
-
-    buffer.put(data.getMode(), 4);
-    buffer.put(data.getLength(), data.getLengthInBits(version));
-    data.write(buffer);
-  }
-
-  // calc max data count
-  var totalDataCount = 0;
-  var rsLength = rsBlocks.length;
-
-  for (i = 0; i < rsLength; i += 1) {
-    totalDataCount += rsBlocks[i].getDataCount();
-  }
-
-  if (buffer.getLengthInBits() > totalDataCount * 8) {
-    throw 'code length overflow: ' + buffer.getLengthInBits() + '>' + totalDataCount * 8;
-  }
-
-  // end
-  if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
-    buffer.put(0, 4);
-  }
-
-  // padding
-  while (buffer.getLengthInBits() % 8 != 0) {
-    buffer.putBit(false);
-  }
-
-  // padding
-  while (true) {
-    if (buffer.getLengthInBits() >= totalDataCount * 8) {
-      break;
-    }
-
-    buffer.put(PAD0, 8);
-
-    if (buffer.getLengthInBits() >= totalDataCount * 8) {
-      break;
-    }
-
-    buffer.put(PAD1, 8);
-  }
-
-  return QRCode.createBytes(buffer, rsBlocks);
-};
-
-QRCode.createBytes = function(buffer, rsBlocks) {
+function createBytes(buffer, rsBlocks) {
   var offset = 0;
 
   var maxDcCount = 0;
@@ -167,6 +113,60 @@ QRCode.createBytes = function(buffer, rsBlocks) {
   }
 
   return data;
+};
+
+function createData(version, level, dataArray) {
+  var i;
+  var data;
+  var buffer = new BitBuffer();
+  var rsBlocks = RSBlock.getRSBlocks(version, level);
+
+  for (i = 0; i < dataArray.length; i += 1) {
+    data = dataArray[i];
+
+    buffer.put(data.getMode(), 4);
+    buffer.put(data.getLength(), data.getLengthInBits(version));
+    data.write(buffer);
+  }
+
+  // calc max data count
+  var totalDataCount = 0;
+  var rsLength = rsBlocks.length;
+
+  for (i = 0; i < rsLength; i += 1) {
+    totalDataCount += rsBlocks[i].getDataCount();
+  }
+
+  if (buffer.getLengthInBits() > totalDataCount * 8) {
+    throw 'code length overflow: ' + buffer.getLengthInBits() + '>' + totalDataCount * 8;
+  }
+
+  // end
+  if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+    buffer.put(0, 4);
+  }
+
+  // padding
+  while (buffer.getLengthInBits() % 8 != 0) {
+    buffer.putBit(false);
+  }
+
+  // padding
+  while (true) {
+    if (buffer.getLengthInBits() >= totalDataCount * 8) {
+      break;
+    }
+
+    buffer.put(PAD0, 8);
+
+    if (buffer.getLengthInBits() >= totalDataCount * 8) {
+      break;
+    }
+
+    buffer.put(PAD1, 8);
+  }
+
+  return createBytes(buffer, rsBlocks);
 };
 
 QRCode.stringToBytes = function(str) {
@@ -309,7 +309,7 @@ QRCode.prototype = {
       context.setupVersion(test);
     }
 
-    var data = QRCode.createData(
+    var data = createData(
       context.version,
       context.level,
       context.data
