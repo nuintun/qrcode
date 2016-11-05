@@ -22,7 +22,7 @@ var LOG_TABLE = [];
 
 export function glog(n) {
   if (n < 1) {
-    throw 'log: ' + n;
+    throw 'illegal mode log table: ' + n;
   }
 
   return LOG_TABLE[n];
