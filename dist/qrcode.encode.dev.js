@@ -629,21 +629,37 @@
   function getMaskFunc(maskPattern) {
     switch (maskPattern) {
       case MaskPattern.PATTERN000:
-        return function(i, j) { return (i + j) % 2 == 0; };
+        return function(x, y) {
+          return (x + y) % 2 === 0;
+        };
       case MaskPattern.PATTERN001:
-        return function(i) { return i % 2 == 0; };
+        return function(x, y) {
+          return x % 2 === 0;
+        };
       case MaskPattern.PATTERN010:
-        return function(i, j) { return j % 3 == 0; };
+        return function(x, y) {
+          return y % 3 === 0;
+        };
       case MaskPattern.PATTERN011:
-        return function(i, j) { return (i + j) % 3 == 0; };
+        return function(x, y) {
+          return (x + y) % 3 === 0;
+        };
       case MaskPattern.PATTERN100:
-        return function(i, j) { return (~~(i / 2) + ~~(j / 3)) % 2 == 0; };
+        return function(x, y) {
+          return (x / 2 + y / 3) % 2 === 0;
+        };
       case MaskPattern.PATTERN101:
-        return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
+        return function(x, y) {
+          return x * y % 2 + x * y % 3 === 0;
+        };
       case MaskPattern.PATTERN110:
-        return function(i, j) { return ((i * j) % 2 + (i * j) % 3) % 2 == 0; };
+        return function(x, y) {
+          return (x * y % 2 + x * y % 3) % 2 === 0;
+        };
       case MaskPattern.PATTERN111:
-        return function(i, j) { return ((i * j) % 3 + (i + j) % 2) % 2 == 0; };
+        return function(x, y) {
+          return (x * y % 3 + (x + y) % 2) % 2 === 0;
+        };
       default:
         throw 'invalid mask:' + maskPattern;
     }
