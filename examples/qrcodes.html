@@ -35,6 +35,7 @@
               <option value="4" selected>8bit</option>
               <option value="2">Alphanumeric</option>
               <option value="1">Numeric</option>
+              <option value="8">Kanji</option>
             </select>
           </p>
           <p>
@@ -189,7 +190,7 @@
         config.logo = $('#logo-canvas').data('logo');
         config.error = function (e){
           encodeCanvas.html('');
-          alert(e.message);
+          alert(e);
           throw (e);
         };
 
