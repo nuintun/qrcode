@@ -64,19 +64,19 @@ Polynomial.prototype = {
   multiply: function(e) {
     var num = [];
     var context = this;
-    var len = context.getLength() + e.getLength() - 1;
+    var length = context.getLength() + e.getLength() - 1;
 
     var i;
 
-    for (i = 0; i < len; i += 1) {
+    for (i = 0; i < length; i += 1) {
       num.push(0);
     }
 
     var j;
 
-    len = context.getLength();
+    length = context.getLength();
 
-    for (i = 0; i < len; i += 1) {
+    for (i = 0; i < length; i += 1) {
       for (j = 0; j < e.getLength(); j += 1) {
         num[i + j] ^= QRMath.gexp(QRMath.glog(context.getAt(i)) + QRMath.glog(e.getAt(j)));
       }
@@ -86,9 +86,10 @@ Polynomial.prototype = {
   },
   mod: function(e) {
     var context = this;
-    var len = context.getLength();
+    var length = context.getLength();
+    var eLength = e.getLength();
 
-    if (len - e.getLength() < 0) {
+    if (length - eLength < 0) {
       return context;
     }
 
@@ -98,12 +99,12 @@ Polynomial.prototype = {
     var i;
     var num = [];
 
-    for (i = 0; i < len; i += 1) {
+    for (i = 0; i < length; i += 1) {
       num.push(context.getAt(i));
     }
 
     // subtract and calc rest.
-    for (i = 0; i < e.getLength(); i += 1) {
+    for (i = 0; i < eLength; i += 1) {
       num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i)) + ratio);
     }
 
