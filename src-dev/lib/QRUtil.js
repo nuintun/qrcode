@@ -100,7 +100,7 @@ export function getPatternPosition(version) {
   return PATTERN_POSITION_TABLE[version - 1];
 }
 
-export function getMaxLength(version, mode, level) {
+export function getMaxLength(mode, version, level) {
   var t = version - 1;
   var e = 0;
   var m = 0;

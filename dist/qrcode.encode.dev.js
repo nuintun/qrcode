@@ -696,7 +696,7 @@
     return PATTERN_POSITION_TABLE[version - 1];
   }
 
-  function getMaxLength(version, mode, level) {
+  function getMaxLength(mode, version, level) {
     var t = version - 1;
     var e = 0;
     var m = 0;
