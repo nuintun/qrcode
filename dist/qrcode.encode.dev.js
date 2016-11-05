@@ -715,7 +715,7 @@
         };
       case MaskPattern.PATTERN100:
         return function(x, y) {
-          return (x / 2 + y / 3) % 2 === 0;
+          return (~~(x / 2) + ~~(y / 3)) % 2 === 0;
         };
       case MaskPattern.PATTERN101:
         return function(x, y) {
@@ -1425,7 +1425,7 @@
   inherits(QRKanji, QRData, {
     write: function(buffer) {
       var context = this;
-      var data = context.encoding(context.getData());
+      var data = stringToUtf8ByteArray(context.getData());
 
       var c;
       var i = 0;
@@ -1454,7 +1454,7 @@
       }
     },
     getLength: function() {
-      return this.encoding(this.getData()).length / 2;
+      return stringToUtf8ByteArray(this.getData()).length / 2;
     }
   });
 

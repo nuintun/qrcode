@@ -9,7 +9,7 @@ export default function QRKanji(data) {
 QRUtil.inherits(QRKanji, QRData, {
   write: function(buffer) {
     var context = this;
-    var data = context.encoding(context.getData());
+    var data = QRUtil.stringToUtf8ByteArray(context.getData());
 
     var c;
     var i = 0;
@@ -38,6 +38,6 @@ QRUtil.inherits(QRKanji, QRData, {
     }
   },
   getLength: function() {
-    return this.encoding(this.getData()).length / 2;
+    return QRUtil.stringToUtf8ByteArray(this.getData()).length / 2;
   }
 });

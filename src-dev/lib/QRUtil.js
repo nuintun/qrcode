@@ -170,7 +170,7 @@ export function getMaskFunc(maskPattern) {
       };
     case MaskPattern.PATTERN100:
       return function(x, y) {
-        return (x / 2 + y / 3) % 2 === 0;
+        return (~~(x / 2) + ~~(y / 3)) % 2 === 0;
       };
     case MaskPattern.PATTERN101:
       return function(x, y) {
