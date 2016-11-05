@@ -1472,8 +1472,8 @@
       var s = this.getData();
 
       while (i + 1 < s.length) {
-        buffer.put(
-          getCode(s.charAt(i)) * 45 + getCode(s.charAt(i + 1)), 11);
+        buffer.put(getCode(s.charAt(i)) * 45 + getCode(s.charAt(i + 1)), 11);
+
         i += 2;
       }
 
