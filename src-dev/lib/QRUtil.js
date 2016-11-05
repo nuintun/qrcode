@@ -1,8 +1,10 @@
-import { ErrorCorrectLevel } from './ErrorCorrectLevel';
-import Polynomial from './Polynomial';
-import * as QRMath from './QRMath';
 import { Mode } from './Mode';
+import RSBlock from './RSBlock';
+import * as QRMath from './QRMath';
+import BitBuffer from './BitBuffer';
+import Polynomial from './Polynomial';
 import { MaskPattern } from './MaskPattern';
+import { ErrorCorrectLevel } from './ErrorCorrectLevel';
 
 var PATTERN_POSITION_TABLE = [
   [],
@@ -138,16 +140,6 @@ export function getMaxLength(version, mode, level) {
   }
 
   return MAX_LENGTH[t][e][m];
-}
-
-export function getErrorCorrectPolynomial(errorCorrectLength) {
-  var a = new Polynomial([1]);
-
-  for (var i = 0; i < errorCorrectLength; i += 1) {
-    a = a.multiply(new Polynomial([1, QRMath.gexp(i)]));
-  }
-
-  return a;
 }
 
 export function getMaskFunc(maskPattern) {
@@ -309,7 +301,7 @@ export function getLostPoint(qrCode) {
   return lostPoint;
 }
 
-export function getBCHDigit(data) {
+function getBCHDigit(data) {
   var digit = 0;
 
   while (data !== 0) {
@@ -339,6 +331,170 @@ export function getBCHVersion(data) {
 
   return (data << 12) | d;
 }
+
+var PAD0 = 0xEC;
+var PAD1 = 0x11;
+
+function getErrorCorrectPolynomial(errorCorrectLength) {
+  var a = new Polynomial([1]);
+
+  for (var i = 0; i < errorCorrectLength; i += 1) {
+    a = a.multiply(new Polynomial([1, QRMath.gexp(i)]));
+  }
+
+  return a;
+}
+
+function createBytes(buffer, rsBlocks) {
+  var offset = 0;
+
+  var maxDcCount = 0;
+  var maxEcCount = 0;
+
+  var i;
+  var r;
+  var modIndex;
+  var modPoly;
+  var rsPoly;
+  var rawPoly;
+  var dcCount;
+  var ecCount;
+  var dcData = [];
+  var ecData = [];
+  var rsLength = rsBlocks.length;
+
+  for (r = 0; r < rsLength; r += 1) {
+    dcData.push([]);
+    ecData.push([]);
+  }
+
+  function createNumArray(len) {
+    var a = [];
+
+    for (var i = 0; i < len; i += 1) {
+      a.push(0);
+    }
+
+    return a;
+  }
+
+  var dcLength;
+  var ecLength;
+
+  for (r = 0; r < rsLength; r += 1) {
+    dcCount = rsBlocks[r].getDataCount();
+    ecCount = rsBlocks[r].getTotalCount() - dcCount;
+
+    maxDcCount = Math.max(maxDcCount, dcCount);
+    maxEcCount = Math.max(maxEcCount, ecCount);
+
+    dcData[r] = createNumArray(dcCount);
+
+    dcLength = dcData[r].length;
+
+    for (i = 0; i < dcLength; i += 1) {
+      dcData[r][i] = 0xff & buffer.getBuffer()[i + offset];
+    }
+
+    offset += dcCount;
+
+    rsPoly = getErrorCorrectPolynomial(ecCount);
+    rawPoly = new Polynomial(dcData[r], rsPoly.getLength() - 1);
+
+    modPoly = rawPoly.mod(rsPoly);
+    ecData[r] = createNumArray(rsPoly.getLength() - 1);
+
+    ecLength = ecData[r].length;
+
+    for (i = 0; i < ecLength; i += 1) {
+      modIndex = i + modPoly.getLength() - ecLength;
+      ecData[r][i] = (modIndex >= 0) ? modPoly.getAt(modIndex) : 0;
+    }
+  }
+
+  var totalCodeCount = 0;
+
+  for (i = 0; i < rsLength; i += 1) {
+    totalCodeCount += rsBlocks[i].getTotalCount();
+  }
+
+  var data = createNumArray(totalCodeCount);
+  var index = 0;
+
+  for (i = 0; i < maxDcCount; i += 1) {
+    for (r = 0; r < rsLength; r += 1) {
+      if (i < dcData[r].length) {
+        data[index] = dcData[r][i];
+        index += 1;
+      }
+    }
+  }
+
+  for (i = 0; i < maxEcCount; i += 1) {
+    for (r = 0; r < rsLength; r += 1) {
+      if (i < ecData[r].length) {
+        data[index] = ecData[r][i];
+        index += 1;
+      }
+    }
+  }
+
+  return data;
+};
+
+export function createData(version, level, dataArray) {
+  var i;
+  var data;
+  var buffer = new BitBuffer();
+  var rsBlocks = RSBlock.getRSBlocks(version, level);
+
+  for (i = 0; i < dataArray.length; i += 1) {
+    data = dataArray[i];
+
+    buffer.put(data.getMode(), 4);
+    buffer.put(data.getLength(), data.getLengthInBits(version));
+    data.write(buffer);
+  }
+
+  // calc max data count
+  var totalDataCount = 0;
+  var rsLength = rsBlocks.length;
+
+  for (i = 0; i < rsLength; i += 1) {
+    totalDataCount += rsBlocks[i].getDataCount();
+  }
+
+  if (buffer.getLengthInBits() > totalDataCount * 8) {
+    throw new Error('data length overflow: ' + buffer.getLengthInBits() + '>' + totalDataCount * 8);
+  }
+
+  // end
+  if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+    buffer.put(0, 4);
+  }
+
+  // padding
+  while (buffer.getLengthInBits() % 8 != 0) {
+    buffer.putBit(false);
+  }
+
+  // padding
+  while (true) {
+    if (buffer.getLengthInBits() >= totalDataCount * 8) {
+      break;
+    }
+
+    buffer.put(PAD0, 8);
+
+    if (buffer.getLengthInBits() >= totalDataCount * 8) {
+      break;
+    }
+
+    buffer.put(PAD1, 8);
+  }
+
+  return createBytes(buffer, rsBlocks);
+};
 
 export function stringToUtf8ByteArray(str) {
   var charcode;

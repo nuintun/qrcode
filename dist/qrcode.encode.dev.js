@@ -11,6 +11,75 @@
     MODE_KANJI: 1 << 3 // KANJI
   };
 
+  function QRData(mode, data) {
+    this.mode = mode;
+    this.data = data;
+  }
+
+  QRData.prototype = {
+    getMode: function() {
+      return this.mode;
+    },
+    getData: function() {
+      return this.data;
+    },
+    getLength: function() {
+      return this.getData().length;
+    },
+    write: function() {
+      throw new Error('abstract interface write must be implemented.');
+    },
+    getLengthInBits: function(version) {
+      var mode = this.mode;
+
+      if (1 <= version && version < 10) {
+        // 1 - 9
+        switch (mode) {
+          case Mode.MODE_NUMBER:
+            return 10;
+          case Mode.MODE_ALPHA_NUM:
+            return 9;
+          case Mode.MODE_8BIT_BYTE:
+            return 8;
+          case Mode.MODE_KANJI:
+            return 8;
+          default:
+            throw new Error('illegal mode: ' + mode);
+        }
+      } else if (version < 27) {
+        // 10 - 26
+        switch (mode) {
+          case Mode.MODE_NUMBER:
+            return 12;
+          case Mode.MODE_ALPHA_NUM:
+            return 11;
+          case Mode.MODE_8BIT_BYTE:
+            return 16;
+          case Mode.MODE_KANJI:
+            return 10;
+          default:
+            throw new Error('illegal mode: ' + mode);
+        }
+      } else if (version < 41) {
+        // 27 - 40
+        switch (mode) {
+          case Mode.MODE_NUMBER:
+            return 14;
+          case Mode.MODE_ALPHA_NUM:
+            return 13;
+          case Mode.MODE_8BIT_BYTE:
+            return 16;
+          case Mode.MODE_KANJI:
+            return 12;
+          default:
+            throw new Error('illegal mode: ' + mode);
+        }
+      } else {
+        throw new Error('illegal version: ' + version);
+      }
+    }
+  };
+
   var ErrorCorrectLevel = {
     L: 1, // 7%
     M: 0, // 15%
@@ -318,6 +387,48 @@
     }
   };
 
+  var EXP_TABLE = [];
+  var LOG_TABLE = [];
+
+  (function() {
+    var i;
+
+    for (i = 0; i < 256; i += 1) {
+      EXP_TABLE.push(
+        i < 8 ? 1 << i :
+        EXP_TABLE[i - 4] ^
+        EXP_TABLE[i - 5] ^
+        EXP_TABLE[i - 6] ^
+        EXP_TABLE[i - 8]
+      );
+      LOG_TABLE.push(0);
+    }
+
+    for (i = 0; i < 255; i += 1) {
+      LOG_TABLE[EXP_TABLE[i]] = i;
+    }
+  }());
+
+  function glog(n) {
+    if (n < 1) {
+      throw new Error('illegal mode log table: ' + n);
+    }
+
+    return LOG_TABLE[n];
+  }
+
+  function gexp(n) {
+    while (n < 0) {
+      n += 255;
+    }
+
+    while (n >= 256) {
+      n -= 255;
+    }
+
+    return EXP_TABLE[n];
+  }
+
   function BitBuffer() {
     var context = this;
 
@@ -366,117 +477,6 @@
       context.length += 1;
     }
   };
-
-  function QRData(mode, data) {
-    this.mode = mode;
-    this.data = data;
-  }
-
-  QRData.prototype = {
-    getMode: function() {
-      return this.mode;
-    },
-    getData: function() {
-      return this.data;
-    },
-    getLength: function() {
-      return this.getData().length;
-    },
-    write: function() {
-      throw new Error('abstract interface write must be implemented.');
-    },
-    getLengthInBits: function(version) {
-      var mode = this.mode;
-
-      if (1 <= version && version < 10) {
-        // 1 - 9
-        switch (mode) {
-          case Mode.MODE_NUMBER:
-            return 10;
-          case Mode.MODE_ALPHA_NUM:
-            return 9;
-          case Mode.MODE_8BIT_BYTE:
-            return 8;
-          case Mode.MODE_KANJI:
-            return 8;
-          default:
-            throw new Error('illegal mode: ' + mode);
-        }
-      } else if (version < 27) {
-        // 10 - 26
-        switch (mode) {
-          case Mode.MODE_NUMBER:
-            return 12;
-          case Mode.MODE_ALPHA_NUM:
-            return 11;
-          case Mode.MODE_8BIT_BYTE:
-            return 16;
-          case Mode.MODE_KANJI:
-            return 10;
-          default:
-            throw new Error('illegal mode: ' + mode);
-        }
-      } else if (version < 41) {
-        // 27 - 40
-        switch (mode) {
-          case Mode.MODE_NUMBER:
-            return 14;
-          case Mode.MODE_ALPHA_NUM:
-            return 13;
-          case Mode.MODE_8BIT_BYTE:
-            return 16;
-          case Mode.MODE_KANJI:
-            return 12;
-          default:
-            throw new Error('illegal mode: ' + mode);
-        }
-      } else {
-        throw new Error('illegal version: ' + version);
-      }
-    }
-  };
-
-  var EXP_TABLE = [];
-  var LOG_TABLE = [];
-
-  (function() {
-    var i;
-
-    for (i = 0; i < 256; i += 1) {
-      EXP_TABLE.push(
-        i < 8 ? 1 << i :
-        EXP_TABLE[i - 4] ^
-        EXP_TABLE[i - 5] ^
-        EXP_TABLE[i - 6] ^
-        EXP_TABLE[i - 8]
-      );
-      LOG_TABLE.push(0);
-    }
-
-    for (i = 0; i < 255; i += 1) {
-      LOG_TABLE[EXP_TABLE[i]] = i;
-    }
-  }());
-
-  function glog(n) {
-    if (n < 1) {
-      throw new Error('illegal mode log table: ' + n);
-    }
-
-    return LOG_TABLE[n];
-  }
-
-  function gexp(n) {
-    while (n < 0) {
-      n += 255;
-    }
-
-    while (n >= 256) {
-      n -= 255;
-    }
-
-    return EXP_TABLE[n];
-  }
 
   function Polynomial(num, shift) {
     shift = shift || 0;
@@ -645,6 +645,19 @@
     [6, 30, 58, 86, 114, 142, 170]
   ];
 
+  var MAX_LENGTH = [
+    [[41, 25, 17, 10], [34, 20, 14, 8], [27, 16, 11, 7], [17, 10, 7, 4]],
+    [[77, 47, 32, 20], [63, 38, 26, 16], [48, 29, 20, 12], [34, 20, 14, 8]],
+    [[127, 77, 53, 32], [101, 61, 42, 26], [77, 47, 32, 20], [58, 35, 24, 15]],
+    [[187, 114, 78, 48], [149, 90, 62, 38], [111, 67, 46, 28], [82, 50, 34, 21]],
+    [[255, 154, 106, 65], [202, 122, 84, 52], [144, 87, 60, 37], [106, 64, 44, 27]],
+    [[322, 195, 134, 82], [255, 154, 106, 65], [178, 108, 74, 45], [139, 84, 58, 36]],
+    [[370, 224, 154, 95], [293, 178, 122, 75], [207, 125, 86, 53], [154, 93, 64, 39]],
+    [[461, 279, 192, 118], [365, 221, 152, 93], [259, 157, 108, 66], [202, 122, 84, 52]],
+    [[552, 335, 230, 141], [432, 262, 180, 111], [312, 189, 130, 80], [235, 143, 98, 60]],
+    [[652, 395, 271, 167], [513, 311, 213, 131], [364, 221, 151, 93], [288, 174, 119, 74]]
+  ];
+
   var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
   var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
   var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
@@ -683,16 +696,46 @@
     return PATTERN_POSITION_TABLE[version - 1];
   }
 
+  function getMaxLength(version, mode, level) {
+    var t = version - 1;
+    var e = 0;
+    var m = 0;
 
-
-  function getErrorCorrectPolynomial(errorCorrectLength) {
-    var a = new Polynomial([1]);
-
-    for (var i = 0; i < errorCorrectLength; i += 1) {
-      a = a.multiply(new Polynomial([1, gexp(i)]));
+    switch (level) {
+      case ErrorCorrectLevel.L:
+        e = 0;
+        break;
+      case ErrorCorrectLevel.M:
+        e = 1;
+        break;
+      case ErrorCorrectLevel.Q:
+        e = 2;
+        break;
+      case ErrorCorrectLevel.H:
+        e = 3;
+        break;
+      default:
+        throw new Error('invalid level:' + level);
     }
 
-    return a;
+    switch (mode) {
+      case Mode.MODE_NUMBER:
+        m = 0;
+        break;
+      case Mode.MODE_ALPHA_NUM:
+        m = 1;
+        break;
+      case Mode.MODE_8BIT_BYTE:
+        m = 2;
+        break;
+      case Mode.MODE_KANJI:
+        m = 3;
+        break;
+      default:
+        throw new Error('invalid mode:' + mode);
+    }
+
+    return MAX_LENGTH[t][e][m];
   }
 
   function getMaskFunc(maskPattern) {
@@ -885,74 +928,18 @@
     return (data << 12) | d;
   }
 
-  function stringToUtf8ByteArray(str) {
-    var charcode;
-    var utf8 = [];
-    var length = str.length;
-
-    for (var i = 0; i < length; i++) {
-      charcode = str.charCodeAt(i);
-
-      if (charcode < 0x80) {
-        utf8.push(charcode);
-      } else if (charcode < 0x800) {
-        utf8.push(0xc0 | (charcode >> 6), 0x80 | (charcode & 0x3f));
-      } else if (charcode < 0xd800 || charcode >= 0xe000) {
-        utf8.push(
-          0xe0 | (charcode >> 12),
-          0x80 | ((charcode >> 6) & 0x3f),
-          0x80 | (charcode & 0x3f)
-        );
-      } else {
-        // surrogate pair
-        i++;
-        // UTF-16 encodes 0x10000-0x10FFFF by
-        // subtracting 0x10000 and splitting the
-        // 20 bits of 0x0-0xFFFFF into two halves
-        charcode = 0x10000 + (((charcode & 0x3ff) << 10) | (str.charCodeAt(i) & 0x3ff));
-
-        utf8.push(
-          0xf0 | (charcode >> 18),
-          0x80 | ((charcode >> 12) & 0x3f),
-          0x80 | ((charcode >> 6) & 0x3f),
-          0x80 | (charcode & 0x3f)
-        );
-      }
-    }
-
-    return utf8;
-  }
-
-  function QR8BitByte(data) {
-    QRData.call(this, Mode.MODE_8BIT_BYTE, data);
-  }
-
-  inherits(QR8BitByte, QRData, {
-    write: function(buffer) {
-      var data = stringToUtf8ByteArray(this.getData());
-      var length = data.length;
-
-      for (var i = 0; i < length; i += 1) {
-        buffer.put(data[i], 8);
-      }
-    },
-    getLength: function() {
-      return stringToUtf8ByteArray(this.getData()).length;
-    }
-  });
-
-  function QRCode(version, level) {
-    var context = this;
-
-    context.version = version;
-    context.level = level;
-    context.data = [];
-    context.modules = [];
-    context.count = 0;
-  }
-
   var PAD0 = 0xEC;
   var PAD1 = 0x11;
+
+  function getErrorCorrectPolynomial(errorCorrectLength) {
+    var a = new Polynomial([1]);
+
+    for (var i = 0; i < errorCorrectLength; i += 1) {
+      a = a.multiply(new Polynomial([1, gexp(i)]));
+    }
+
+    return a;
+  }
 
   function createBytes(buffer, rsBlocks) {
     var offset = 0;
@@ -1105,7 +1092,7 @@
     return createBytes(buffer, rsBlocks);
   }
 
-  QRCode.stringToBytes = function(str) {
+  function stringToUtf8ByteArray(str) {
     var charcode;
     var utf8 = [];
     var length = str.length;
@@ -1141,7 +1128,35 @@
     }
 
     return utf8;
-  };
+  }
+
+  function QR8BitByte(data) {
+    QRData.call(this, Mode.MODE_8BIT_BYTE, data);
+  }
+
+  inherits(QR8BitByte, QRData, {
+    write: function(buffer) {
+      var data = stringToUtf8ByteArray(this.getData());
+      var length = data.length;
+
+      for (var i = 0; i < length; i += 1) {
+        buffer.put(data[i], 8);
+      }
+    },
+    getLength: function() {
+      return stringToUtf8ByteArray(this.getData()).length;
+    }
+  });
+
+  function QRCode(version, level) {
+    var context = this;
+
+    context.version = version;
+    context.level = level;
+    context.data = [];
+    context.modules = [];
+    context.count = 0;
+  }
 
   QRCode.prototype = {
     getVersion: function() {
@@ -1573,7 +1588,8 @@
     QRKanji: QRKanji,
     QRNumber: QRNumber,
     QRAlphaNum: QRAlphaNum,
-    QR8BitByte: QR8BitByte
+    QR8BitByte: QR8BitByte,
+    getMaxLength: getMaxLength
   };
 
   return encode;
