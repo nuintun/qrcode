@@ -16,6 +16,7 @@
       moduleSize: 5, // 模块大小
       mode: 4, // 编码格式，默认8字节编码
       ECLevel: 2, // 纠错码等级，默认30%
+      version: 20,
       margin: 4, // 留白
       logo: '', // logo;
       error: $.noop
@@ -48,7 +49,7 @@
 
       try {
         console.time('QRCode');
-        this.pixels = new QRCode.Encode(40, config.ECLevel);
+        this.pixels = new QRCode.Encode(config.version, config.ECLevel);
 
         switch (config.mode) {
           case QRCode.MODE.NUMBER:
