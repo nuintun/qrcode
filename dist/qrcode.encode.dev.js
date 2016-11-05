@@ -715,7 +715,7 @@
         e = 3;
         break;
       default:
-        throw new Error('invalid level:' + level);
+        throw new Error('illegal level:' + level);
     }
 
     switch (mode) {
@@ -732,7 +732,7 @@
         m = 3;
         break;
       default:
-        throw new Error('invalid mode:' + mode);
+        throw new Error('illegal mode:' + mode);
     }
 
     return MAX_LENGTH[t][e][m];
@@ -773,7 +773,7 @@
           return (x * y % 3 + (x + y) % 2) % 2 === 0;
         };
       default:
-        throw new Error('invalid mask:' + maskPattern);
+        throw new Error('illegal mask:' + maskPattern);
     }
   }
 
@@ -1061,7 +1061,7 @@
     }
 
     if (buffer.getLengthInBits() > totalDataCount * 8) {
-      throw new Error('data length overflow: ' + buffer.getLengthInBits() + '>' + totalDataCount * 8);
+      throw new Error('data length overflow: ' + buffer.getLengthInBits() + ' > ' + totalDataCount * 8);
     }
 
     // end
@@ -1182,7 +1182,7 @@
       } else if (typeof data === 'string') {
         dataList.push(new QR8BitByte(data));
       } else {
-        throw new Error(typeof data);
+        throw new Error('illegal type of data.');
       }
     },
     getDataCount: function() {

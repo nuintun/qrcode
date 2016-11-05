@@ -37,7 +37,7 @@ QRCode.prototype = {
     } else if (typeof data === 'string') {
       dataList.push(new QR8BitByte(data));
     } else {
-      throw new Error(typeof data);
+      throw new Error('illegal type of data.');
     }
   },
   getDataCount: function() {

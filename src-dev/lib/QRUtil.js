@@ -119,7 +119,7 @@ export function getMaxLength(version, mode, level) {
       e = 3;
       break;
     default:
-      throw new Error('invalid level:' + level);
+      throw new Error('illegal level:' + level);
   }
 
   switch (mode) {
@@ -136,7 +136,7 @@ export function getMaxLength(version, mode, level) {
       m = 3;
       break;
     default:
-      throw new Error('invalid mode:' + mode);
+      throw new Error('illegal mode:' + mode);
   }
 
   return MAX_LENGTH[t][e][m];
@@ -177,7 +177,7 @@ export function getMaskFunc(maskPattern) {
         return (x * y % 3 + (x + y) % 2) % 2 === 0;
       };
     default:
-      throw new Error('invalid mask:' + maskPattern);
+      throw new Error('illegal mask:' + maskPattern);
   }
 }
 
@@ -465,7 +465,7 @@ export function createData(version, level, dataArray) {
   }
 
   if (buffer.getLengthInBits() > totalDataCount * 8) {
-    throw new Error('data length overflow: ' + buffer.getLengthInBits() + '>' + totalDataCount * 8);
+    throw new Error('data length overflow: ' + buffer.getLengthInBits() + ' > ' + totalDataCount * 8);
   }
 
   // end
