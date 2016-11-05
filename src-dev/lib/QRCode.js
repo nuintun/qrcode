@@ -138,7 +138,7 @@ function createData(version, level, dataArray) {
   }
 
   if (buffer.getLengthInBits() > totalDataCount * 8) {
-    throw new Error('code length overflow: ' + buffer.getLengthInBits() + '>' + totalDataCount * 8);
+    throw new Error('data length overflow: ' + buffer.getLengthInBits() + '>' + totalDataCount * 8);
   }
 
   // end
