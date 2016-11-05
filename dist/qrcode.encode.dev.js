@@ -455,7 +455,7 @@
       return buffer;
     },
     getBit: function(index) {
-      return ((this.buffer[~~(index / 8)] >>> (7 - index % 8)) & 1) == 1;
+      return (this.buffer[~~(index / 8)] >>> (7 - index % 8)) & 1 === 1;
     },
     put: function(num, length) {
       for (var i = 0; i < length; i += 1) {
