@@ -284,7 +284,7 @@
         break;
     }
 
-    throw 'illegal error correct level: ' + level;
+    throw new Error('illegal error correct level: ' + level);
   }
 
   RSBlock.getRSBlocks = function(version, level) {
@@ -383,7 +383,7 @@
       return this.getData().length;
     },
     write: function() {
-      throw 'abstract interface must be implemented.'
+      throw new Error('abstract interface write must be implemented.');
     },
     getLengthInBits: function(version) {
       var mode = this.mode;
@@ -400,7 +400,7 @@
           case Mode.MODE_KANJI:
             return 8;
           default:
-            throw 'illegal mode: ' + mode;
+            throw new Error('illegal mode: ' + mode);
         }
       } else if (version < 27) {
         // 10 - 26
@@ -414,7 +414,7 @@
           case Mode.MODE_KANJI:
             return 10;
           default:
-            throw 'illegal mode: ' + mode;
+            throw new Error('illegal mode: ' + mode);
         }
       } else if (version < 41) {
         // 27 - 40
@@ -428,10 +428,10 @@
           case Mode.MODE_KANJI:
             return 12;
           default:
-            throw 'illegal mode: ' + mode;
+            throw new Error('illegal mode: ' + mode);
         }
       } else {
-        throw 'illegal version: ' + version;
+        throw new Error('illegal version: ' + version);
       }
     }
   };
@@ -460,7 +460,7 @@
 
   function glog(n) {
     if (n < 1) {
-      throw 'illegal mode log table: ' + n;
+      throw new Error('illegal mode log table: ' + n);
     }
 
     return LOG_TABLE[n];
@@ -677,7 +677,7 @@
 
   function getPatternPosition(version) {
     if (version < 1 || version > PATTERN_POSITION_TABLE.length) {
-      throw 'illegal version: ' + version;
+      throw new Error('illegal version: ' + version);
     }
 
     return PATTERN_POSITION_TABLE[version - 1];
@@ -730,7 +730,7 @@
           return (x * y % 3 + (x + y) % 2) % 2 === 0;
         };
       default:
-        throw 'invalid mask:' + maskPattern;
+        throw new Error('invalid mask:' + maskPattern);
     }
   }
 
@@ -885,7 +885,7 @@
     return (data << 12) | d;
   }
 
-  function stringToBytes(str) {
+  function stringToUtf8ByteArray(str) {
     var charcode;
     var utf8 = [];
     var length = str.length;
@@ -929,7 +929,7 @@
 
   inherits(QR8BitByte, QRData, {
     write: function(buffer) {
-      var data = stringToBytes(this.getData());
+      var data = stringToUtf8ByteArray(this.getData());
       var length = data.length;
 
       for (var i = 0; i < length; i += 1) {
@@ -937,7 +937,7 @@
       }
     },
     getLength: function() {
-      return stringToBytes(this.getData()).length;
+      return stringToUtf8ByteArray(this.getData()).length;
     }
   });
 
@@ -1074,7 +1074,7 @@
     }
 
     if (buffer.getLengthInBits() > totalDataCount * 8) {
-      throw 'code length overflow: ' + buffer.getLengthInBits() + '>' + totalDataCount * 8;
+      throw new Error('code length overflow: ' + buffer.getLengthInBits() + '>' + totalDataCount * 8);
     }
 
     // end
@@ -1167,7 +1167,7 @@
       } else if (typeof data === 'string') {
         dataList.push(new QR8BitByte(data));
       } else {
-        throw typeof data;
+        throw new Error(typeof data);
       }
     },
     getDataCount: function() {
@@ -1425,7 +1425,7 @@
   inherits(QRKanji, QRData, {
     write: function(buffer) {
       var context = this;
-      var data = stringToBytes(context.getData());
+      var data = context.encoding(context.getData());
 
       var c;
       var i = 0;
@@ -1439,7 +1439,7 @@
         } else if (0xE040 <= c && c <= 0xEBBF) {
           c -= 0xC140;
         } else {
-          throw 'illegal char at: ' + (i + 1) + '/' + c;
+          throw new Error('illegal char at: ' + (i + 1) + '/' + c);
         }
 
         c = ((c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
@@ -1450,11 +1450,11 @@
       }
 
       if (i < length) {
-        throw 'illegal char at: ' + (i + 1);
+        throw new Error('illegal char at: ' + (i + 1));
       }
     },
     getLength: function() {
-      return stringToBytes(this.getData()).length / 2;
+      return this.encoding(this.getData()).length / 2;
     }
   });
 
@@ -1477,7 +1477,7 @@
       return c.charCodeAt(0) - '0'.charCodeAt(0);
     }
 
-    throw 'illegal char: ' + c;
+    throw new Error('illegal char: ' + c);
   }
 
   inherits(QRNumber, QRData, {
@@ -1533,7 +1533,7 @@
         case ':':
           return 44;
         default:
-          throw 'illegal char: ' + c;
+          throw new Error('illegal char: ' + c);
       }
     }
   }

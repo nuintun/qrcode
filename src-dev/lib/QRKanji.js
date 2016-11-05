@@ -9,7 +9,7 @@ export default function QRKanji(data) {
 QRUtil.inherits(QRKanji, QRData, {
   write: function(buffer) {
     var context = this;
-    var data = QRUtil.stringToBytes(context.getData());
+    var data = context.encoding(context.getData());
 
     var c;
     var i = 0;
@@ -23,7 +23,7 @@ QRUtil.inherits(QRKanji, QRData, {
       } else if (0xE040 <= c && c <= 0xEBBF) {
         c -= 0xC140;
       } else {
-        throw 'illegal char at: ' + (i + 1) + '/' + c;
+        throw new Error('illegal char at: ' + (i + 1) + '/' + c);
       }
 
       c = ((c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
@@ -34,10 +34,10 @@ QRUtil.inherits(QRKanji, QRData, {
     }
 
     if (i < length) {
-      throw 'illegal char at: ' + (i + 1);
+      throw new Error('illegal char at: ' + (i + 1));
     }
   },
   getLength: function() {
-    return QRUtil.stringToBytes(this.getData()).length / 2;
+    return this.encoding(this.getData()).length / 2;
   }
 });

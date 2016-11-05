@@ -21,7 +21,7 @@ function chatToNum(c) {
     return c.charCodeAt(0) - '0'.charCodeAt(0);
   }
 
-  throw 'illegal char: ' + c;
+  throw new Error('illegal char: ' + c);
 }
 
 QRUtil.inherits(QRNumber, QRData, {

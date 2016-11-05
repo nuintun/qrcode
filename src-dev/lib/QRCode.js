@@ -138,7 +138,7 @@ function createData(version, level, dataArray) {
   }
 
   if (buffer.getLengthInBits() > totalDataCount * 8) {
-    throw 'code length overflow: ' + buffer.getLengthInBits() + '>' + totalDataCount * 8;
+    throw new Error('code length overflow: ' + buffer.getLengthInBits() + '>' + totalDataCount * 8);
   }
 
   // end
@@ -231,7 +231,7 @@ QRCode.prototype = {
     } else if (typeof data === 'string') {
       dataList.push(new QR8BitByte(data));
     } else {
-      throw typeof data;
+      throw new Error(typeof data);
     }
   },
   getDataCount: function() {

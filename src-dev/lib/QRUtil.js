@@ -92,7 +92,7 @@ export function inherits(ctor, superCtor, proto) {
 
 export function getPatternPosition(version) {
   if (version < 1 || version > PATTERN_POSITION_TABLE.length) {
-    throw 'illegal version: ' + version;
+    throw new Error('illegal version: ' + version);
   }
 
   return PATTERN_POSITION_TABLE[version - 1];
@@ -117,7 +117,7 @@ export function getMaxLength(version, mode, level) {
       e = 3;
       break;
     default:
-      throw 'invalid level:' + level;
+      throw new Error('invalid level:' + level);
   }
 
   switch (mode) {
@@ -134,7 +134,7 @@ export function getMaxLength(version, mode, level) {
       m = 3;
       break;
     default:
-      throw 'invalid mode:' + mode;
+      throw new Error('invalid mode:' + mode);
   }
 
   return MAX_LENGTH[t][e][m];
@@ -185,7 +185,7 @@ export function getMaskFunc(maskPattern) {
         return (x * y % 3 + (x + y) % 2) % 2 === 0;
       };
     default:
-      throw 'invalid mask:' + maskPattern;
+      throw new Error('invalid mask:' + maskPattern);
   }
 }
 
@@ -340,7 +340,7 @@ export function getBCHVersion(data) {
   return (data << 12) | d;
 }
 
-export function stringToBytes(str) {
+export function stringToUtf8ByteArray(str) {
   var charcode;
   var utf8 = [];
   var length = str.length;

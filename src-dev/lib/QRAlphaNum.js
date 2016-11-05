@@ -32,7 +32,7 @@ function getCode(c) {
       case ':':
         return 44;
       default:
-        throw 'illegal char: ' + c;
+        throw new Error('illegal char: ' + c);
     }
   }
 };

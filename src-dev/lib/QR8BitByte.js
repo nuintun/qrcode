@@ -8,7 +8,7 @@ export default function QR8BitByte(data) {
 
 QRUtil.inherits(QR8BitByte, QRData, {
   write: function(buffer) {
-    var data = QRUtil.stringToBytes(this.getData());
+    var data = QRUtil.stringToUtf8ByteArray(this.getData());
     var length = data.length;
 
     for (var i = 0; i < length; i += 1) {
@@ -16,6 +16,6 @@ QRUtil.inherits(QR8BitByte, QRData, {
     }
   },
   getLength: function() {
-    return QRUtil.stringToBytes(this.getData()).length;
+    return QRUtil.stringToUtf8ByteArray(this.getData()).length;
   }
 });
