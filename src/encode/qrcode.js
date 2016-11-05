@@ -65,6 +65,8 @@
             break;
         }
 
+        console.log(config.text);
+
         this.pixels.addData(config.text);
         // this.pixels.addData(new QRCode.QRAlphaNum('12'));
         this.pixels.make();

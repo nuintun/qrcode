@@ -9,7 +9,7 @@ import { ErrorCorrectLevel } from './lib/ErrorCorrectLevel';
 export default {
   MODE: {
     NUMBER: Mode.MODE_NUMBER,
-    ALPHANUM: Mode.ALPHA_NUM,
+    ALPHANUM: Mode.MODE_ALPHA_NUM,
     EIGHTBIT: Mode.MODE_8BIT_BYTE,
     KANJI: Mode.MODE_KANJI
   },
