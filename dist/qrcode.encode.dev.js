@@ -483,7 +483,9 @@
 
       var j;
 
-      for (i = 0; i < context.getLength(); i += 1) {
+      len = context.getLength();
+
+      for (i = 0; i < len; i += 1) {
         for (j = 0; j < e.getLength(); j += 1) {
           num[i + j] ^= gexp(glog(context.getAt(i)) + glog(e.getAt(j)));
         }
@@ -493,8 +495,9 @@
     },
     mod: function(e) {
       var context = this;
+      var len = context.getLength();
 
-      if (context.getLength() - e.getLength() < 0) {
+      if (len - e.getLength() < 0) {
         return context;
       }
 
@@ -504,7 +507,7 @@
       var i;
       var num = [];
 
-      for (i = 0; i < context.getLength(); i += 1) {
+      for (i = 0; i < len; i += 1) {
         num.push(context.getAt(i));
       }
 
