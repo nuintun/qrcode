@@ -13,7 +13,7 @@ QRUtil.inherits(QR8BitByte, QRData, {
     var data = this.getData();
     var length = data.length;
 
-    for (var i = 0; i < length; i += 1) {
+    for (var i = 0; i < length; i++) {
       buffer.put(data[i], 8);
     }
   }

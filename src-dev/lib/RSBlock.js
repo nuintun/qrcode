@@ -278,12 +278,12 @@ RSBlock.getRSBlocks = function(version, level) {
   var dataCount;
   var j;
 
-  for (var i = 0; i < length; i += 1) {
+  for (var i = 0; i < length; i++) {
     count = rsBlock[i * 3];
     totalCount = rsBlock[i * 3 + 1];
     dataCount = rsBlock[i * 3 + 2];
 
-    for (j = 0; j < count; j += 1) {
+    for (j = 0; j < count; j++) {
       list.push(new RSBlock(totalCount, dataCount));
     }
   }

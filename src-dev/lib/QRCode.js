@@ -74,12 +74,12 @@ QRCode.prototype = {
     var context = this;
     var minLostPoint = 0;
 
-    for (var i = 0; i < 8; i += 1) {
+    for (var i = 0; i < 8; i++) {
       context.makeImpl(true, i);
 
       lostPoint = QRUtil.getLostPoint(context);
 
-      if (i == 0 || minLostPoint > lostPoint) {
+      if (i === 0 || minLostPoint > lostPoint) {
         pattern = i;
         minLostPoint = lostPoint;
       }
@@ -96,10 +96,10 @@ QRCode.prototype = {
 
     var j;
 
-    for (var i = 0; i < context.count; i += 1) {
+    for (var i = 0; i < context.count; i++) {
       context.modules.push([]);
 
-      for (j = 0; j < context.count; j += 1) {
+      for (j = 0; j < context.count; j++) {
         context.modules[i].push(null);
       }
     }
@@ -135,17 +135,17 @@ QRCode.prototype = {
     var maskFunc = QRUtil.getMaskFunc(maskPattern);
 
     for (var col = context.count - 1; col > 0; col -= 2) {
-      if (col == 6) {
+      if (col === 6) {
         col -= 1;
       }
 
       while (true) {
-        for (c = 0; c < 2; c += 1) {
-          if (context.modules[row][col - c] == null) {
+        for (c = 0; c < 2; c++) {
+          if (context.modules[row][col - c] === null) {
             dark = false;
 
             if (byteIndex < data.length) {
-              dark = (((data[byteIndex] >>> bitIndex) & 1) == 1);
+              dark = (((data[byteIndex] >>> bitIndex) & 1) === 1);
             }
 
             mask = maskFunc(row, col - c);
@@ -158,7 +158,7 @@ QRCode.prototype = {
             bitIndex -= 1;
 
             if (bitIndex == -1) {
-              byteIndex += 1;
+              byteIndex++;
               bitIndex = 7;
             }
           }
@@ -184,18 +184,18 @@ QRCode.prototype = {
 
     var j;
 
-    for (var i = 0; i < pos.length; i += 1) {
-      for (j = 0; j < pos.length; j += 1) {
+    for (var i = 0; i < pos.length; i++) {
+      for (j = 0; j < pos.length; j++) {
         row = pos[i];
         col = pos[j];
 
-        if (context.modules[row][col] != null) {
+        if (context.modules[row][col] !== null) {
           continue;
         }
 
-        for (r = -2; r <= 2; r += 1) {
-          for (c = -2; c <= 2; c += 1) {
-            context.modules[row + r][col + c] = !!(r == -2 || r == 2 || c == -2 || c == 2 || (r == 0 && c == 0));
+        for (r = -2; r <= 2; r++) {
+          for (c = -2; c <= 2; c++) {
+            context.modules[row + r][col + c] = !!(r == -2 || r === 2 || c == -2 || c === 2 || (r === 0 && c === 0));
           }
         }
       }
@@ -205,15 +205,15 @@ QRCode.prototype = {
     var c;
     var context = this;
 
-    for (var r = -1; r <= 7; r += 1) {
-      for (c = -1; c <= 7; c += 1) {
+    for (var r = -1; r <= 7; r++) {
+      for (c = -1; c <= 7; c++) {
         if (row + r <= -1 || context.count <= row + r ||
           col + c <= -1 || context.count <= col + c) {
           continue;
         }
 
-        context.modules[row + r][col + c] = !!((0 <= r && r <= 6 && (c == 0 || c == 6)) ||
-          (0 <= c && c <= 6 && (r == 0 || r == 6)) ||
+        context.modules[row + r][col + c] = !!((0 <= r && r <= 6 && (c === 0 || c === 6)) ||
+          (0 <= c && c <= 6 && (r === 0 || r === 6)) ||
           (2 <= r && r <= 4 && 2 <= c && c <= 4));
       }
     }
@@ -221,20 +221,20 @@ QRCode.prototype = {
   setupTimingPattern: function() {
     var context = this;
 
-    for (var r = 8; r < context.count - 8; r += 1) {
-      if (context.modules[r][6] != null) {
+    for (var r = 8; r < context.count - 8; r++) {
+      if (context.modules[r][6] !== null) {
         continue;
       }
 
-      context.modules[r][6] = r % 2 == 0;
+      context.modules[r][6] = r % 2 === 0;
     }
 
-    for (var c = 8; c < context.count - 8; c += 1) {
-      if (context.modules[6][c] != null) {
+    for (var c = 8; c < context.count - 8; c++) {
+      if (context.modules[6][c] !== null) {
         continue;
       }
 
-      context.modules[6][c] = c % 2 == 0;
+      context.modules[6][c] = c % 2 === 0;
     }
   },
   setupVersion: function(test) {
@@ -242,12 +242,12 @@ QRCode.prototype = {
     var context = this;
     var bits = QRUtil.getBCHVersion(context.version);
 
-    for (i = 0; i < 18; i += 1) {
-      context.modules[~~(i / 3)][i % 3 + context.count - 8 - 3] = !test && ((bits >> i) & 1) == 1;
+    for (i = 0; i < 18; i++) {
+      context.modules[~~(i / 3)][i % 3 + context.count - 8 - 3] = !test && ((bits >> i) & 1) === 1;
     }
 
-    for (i = 0; i < 18; i += 1) {
-      context.modules[i % 3 + context.count - 8 - 3][~~(i / 3)] = !test && ((bits >> i) & 1) == 1;
+    for (i = 0; i < 18; i++) {
+      context.modules[i % 3 + context.count - 8 - 3][~~(i / 3)] = !test && ((bits >> i) & 1) === 1;
     }
   },
   setupVersionInfo: function(test, maskPattern) {
@@ -258,8 +258,8 @@ QRCode.prototype = {
     var bits = QRUtil.getBCHTypeInfo(data);
 
     // vertical
-    for (i = 0; i < 15; i += 1) {
-      mod = !test && ((bits >> i) & 1) == 1;
+    for (i = 0; i < 15; i++) {
+      mod = !test && ((bits >> i) & 1) === 1;
 
       if (i < 6) {
         context.modules[i][8] = mod;
@@ -271,8 +271,8 @@ QRCode.prototype = {
     }
 
     // horizontal
-    for (i = 0; i < 15; i += 1) {
-      mod = !test && ((bits >> i) & 1) == 1;
+    for (i = 0; i < 15; i++) {
+      mod = !test && ((bits >> i) & 1) === 1;
 
       if (i < 8) {
         context.modules[8][context.count - i - 1] = mod;

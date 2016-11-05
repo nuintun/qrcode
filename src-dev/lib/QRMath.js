@@ -4,7 +4,7 @@ var LOG_TABLE = [];
 (function() {
   var i;
 
-  for (i = 0; i < 256; i += 1) {
+  for (i = 0; i < 256; i++) {
     EXP_TABLE.push(
       i < 8 ? 1 << i :
       EXP_TABLE[i - 4] ^
@@ -15,7 +15,7 @@ var LOG_TABLE = [];
     LOG_TABLE.push(0);
   }
 
-  for (i = 0; i < 255; i += 1) {
+  for (i = 0; i < 255; i++) {
     LOG_TABLE[EXP_TABLE[i]] = i;
   }
 }());

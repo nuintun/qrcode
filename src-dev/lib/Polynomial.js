@@ -6,8 +6,8 @@ export default function Polynomial(num, shift) {
   var offset = 0;
   var context = this;
 
-  while (offset < num.length && num[offset] == 0) {
-    offset += 1;
+  while (offset < num.length && num[offset] === 0) {
+    offset++;
   }
 
   context.num = [];
@@ -15,11 +15,11 @@ export default function Polynomial(num, shift) {
   var i;
   var len = num.length - offset;
 
-  for (i = 0; i < len; i += 1) {
+  for (i = 0; i < len; i++) {
     context.num.push(num[offset + i]);
   }
 
-  for (i = 0; i < shift; i += 1) {
+  for (i = 0; i < shift; i++) {
     context.num.push(0);
   }
 }
@@ -36,7 +36,7 @@ Polynomial.prototype = {
     var context = this;
     var length = context.getLength();
 
-    for (var i = 0; i < length; i += 1) {
+    for (var i = 0; i < length; i++) {
       if (i > 0) {
         buffer += ',';
       }
@@ -51,7 +51,7 @@ Polynomial.prototype = {
     var context = this;
     var length = context.getLength();
 
-    for (var i = 0; i < length; i += 1) {
+    for (var i = 0; i < length; i++) {
       if (i > 0) {
         buffer += ',';
       }
@@ -68,7 +68,7 @@ Polynomial.prototype = {
 
     var i;
 
-    for (i = 0; i < length; i += 1) {
+    for (i = 0; i < length; i++) {
       num.push(0);
     }
 
@@ -76,8 +76,8 @@ Polynomial.prototype = {
 
     length = context.getLength();
 
-    for (i = 0; i < length; i += 1) {
-      for (j = 0; j < e.getLength(); j += 1) {
+    for (i = 0; i < length; i++) {
+      for (j = 0; j < e.getLength(); j++) {
         num[i + j] ^= QRMath.gexp(QRMath.glog(context.getAt(i)) + QRMath.glog(e.getAt(j)));
       }
     }
@@ -99,12 +99,12 @@ Polynomial.prototype = {
     var i;
     var num = [];
 
-    for (i = 0; i < length; i += 1) {
+    for (i = 0; i < length; i++) {
       num.push(context.getAt(i));
     }
 
     // subtract and calc rest.
-    for (i = 0; i < eLength; i += 1) {
+    for (i = 0; i < eLength; i++) {
       num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i)) + ratio);
     }
 

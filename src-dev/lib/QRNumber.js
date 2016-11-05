@@ -11,7 +11,7 @@ export default function QRNumber(data) {
 function strToNum(s) {
   var num = 0;
 
-  for (var i = 0; i < s.length; i += 1) {
+  for (var i = 0; i < s.length; i++) {
     num = num * 10 + chatToNum(s.charAt(i));
   }
 
@@ -40,9 +40,9 @@ QRUtil.inherits(QRNumber, QRData, {
     }
 
     if (i < length) {
-      if (length - i == 1) {
+      if (length - i === 1) {
         buffer.put(strToNum(data.substring(i, i + 1)), 4);
-      } else if (length - i == 2) {
+      } else if (length - i === 2) {
         buffer.put(strToNum(data.substring(i, i + 2)), 7);
       }
     }

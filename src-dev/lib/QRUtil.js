@@ -192,29 +192,29 @@ export function getLostPoint(qrCode) {
   var moduleCount = qrCode.getModuleCount();
 
   // LEVEL1
-  for (row = 0; row < moduleCount; row += 1) {
-    for (col = 0; col < moduleCount; col += 1) {
+  for (row = 0; row < moduleCount; row++) {
+    for (col = 0; col < moduleCount; col++) {
       sameCount = 0;
       dark = qrCode.isDark(row, col);
 
-      for (r = -1; r <= 1; r += 1) {
+      for (r = -1; r <= 1; r++) {
 
         if (row + r < 0 || moduleCount <= row + r) {
           continue;
         }
 
-        for (c = -1; c <= 1; c += 1) {
+        for (c = -1; c <= 1; c++) {
 
           if (col + c < 0 || moduleCount <= col + c) {
             continue;
           }
 
-          if (r == 0 && c == 0) {
+          if (r === 0 && c === 0) {
             continue;
           }
 
-          if (dark == qrCode.isDark(row + r, col + c)) {
-            sameCount += 1;
+          if (dark === qrCode.isDark(row + r, col + c)) {
+            sameCount++;
           }
         }
       }
@@ -228,35 +228,35 @@ export function getLostPoint(qrCode) {
   var count;
 
   // LEVEL2
-  for (row = 0; row < moduleCount - 1; row += 1) {
-    for (col = 0; col < moduleCount - 1; col += 1) {
+  for (row = 0; row < moduleCount - 1; row++) {
+    for (col = 0; col < moduleCount - 1; col++) {
       count = 0;
 
       if (qrCode.isDark(row, col)) {
-        count += 1;
+        count++;
       }
 
       if (qrCode.isDark(row + 1, col)) {
-        count += 1;
+        count++;
       }
 
       if (qrCode.isDark(row, col + 1)) {
-        count += 1;
+        count++;
       }
 
       if (qrCode.isDark(row + 1, col + 1)) {
-        count += 1;
+        count++;
       }
 
-      if (count == 0 || count == 4) {
+      if (count === 0 || count === 4) {
         lostPoint += 3;
       }
     }
   }
 
   // LEVEL3
-  for (row = 0; row < moduleCount; row += 1) {
-    for (col = 0; col < moduleCount - 6; col += 1) {
+  for (row = 0; row < moduleCount; row++) {
+    for (col = 0; col < moduleCount - 6; col++) {
       if (qrCode.isDark(row, col) &&
         !qrCode.isDark(row, col + 1) &&
         qrCode.isDark(row, col + 2) &&
@@ -269,8 +269,8 @@ export function getLostPoint(qrCode) {
     }
   }
 
-  for (col = 0; col < moduleCount; col += 1) {
-    for (row = 0; row < moduleCount - 6; row += 1) {
+  for (col = 0; col < moduleCount; col++) {
+    for (row = 0; row < moduleCount - 6; row++) {
       if (qrCode.isDark(row, col) &&
         !qrCode.isDark(row + 1, col) &&
         qrCode.isDark(row + 2, col) &&
@@ -286,10 +286,10 @@ export function getLostPoint(qrCode) {
   // LEVEL4
   var darkCount = 0;
 
-  for (col = 0; col < moduleCount; col += 1) {
-    for (row = 0; row < moduleCount; row += 1) {
+  for (col = 0; col < moduleCount; col++) {
+    for (row = 0; row < moduleCount; row++) {
       if (qrCode.isDark(row, col)) {
-        darkCount += 1;
+        darkCount++;
       }
     }
   }
@@ -305,7 +305,7 @@ function getBCHDigit(data) {
   var digit = 0;
 
   while (data !== 0) {
-    digit += 1;
+    digit++;
     data >>>= 1;
   }
 
@@ -338,7 +338,7 @@ var PAD1 = 0x11;
 function getErrorCorrectPolynomial(errorCorrectLength) {
   var a = new Polynomial([1]);
 
-  for (var i = 0; i < errorCorrectLength; i += 1) {
+  for (var i = 0; i < errorCorrectLength; i++) {
     a = a.multiply(new Polynomial([1, QRMath.gexp(i)]));
   }
 
@@ -363,7 +363,7 @@ function createBytes(buffer, rsBlocks) {
   var ecData = [];
   var rsLength = rsBlocks.length;
 
-  for (r = 0; r < rsLength; r += 1) {
+  for (r = 0; r < rsLength; r++) {
     dcData.push([]);
     ecData.push([]);
   }
@@ -371,7 +371,7 @@ function createBytes(buffer, rsBlocks) {
   function createNumArray(len) {
     var a = [];
 
-    for (var i = 0; i < len; i += 1) {
+    for (var i = 0; i < len; i++) {
       a.push(0);
     }
 
@@ -381,7 +381,7 @@ function createBytes(buffer, rsBlocks) {
   var dcLength;
   var ecLength;
 
-  for (r = 0; r < rsLength; r += 1) {
+  for (r = 0; r < rsLength; r++) {
     dcCount = rsBlocks[r].getDataCount();
     ecCount = rsBlocks[r].getTotalCount() - dcCount;
 
@@ -392,7 +392,7 @@ function createBytes(buffer, rsBlocks) {
 
     dcLength = dcData[r].length;
 
-    for (i = 0; i < dcLength; i += 1) {
+    for (i = 0; i < dcLength; i++) {
       dcData[r][i] = 0xff & buffer.getBuffer()[i + offset];
     }
 
@@ -406,7 +406,7 @@ function createBytes(buffer, rsBlocks) {
 
     ecLength = ecData[r].length;
 
-    for (i = 0; i < ecLength; i += 1) {
+    for (i = 0; i < ecLength; i++) {
       modIndex = i + modPoly.getLength() - ecLength;
       ecData[r][i] = (modIndex >= 0) ? modPoly.getAt(modIndex) : 0;
     }
@@ -414,27 +414,27 @@ function createBytes(buffer, rsBlocks) {
 
   var totalCodeCount = 0;
 
-  for (i = 0; i < rsLength; i += 1) {
+  for (i = 0; i < rsLength; i++) {
     totalCodeCount += rsBlocks[i].getTotalCount();
   }
 
   var data = createNumArray(totalCodeCount);
   var index = 0;
 
-  for (i = 0; i < maxDcCount; i += 1) {
-    for (r = 0; r < rsLength; r += 1) {
+  for (i = 0; i < maxDcCount; i++) {
+    for (r = 0; r < rsLength; r++) {
       if (i < dcData[r].length) {
         data[index] = dcData[r][i];
-        index += 1;
+        index++;
       }
     }
   }
 
-  for (i = 0; i < maxEcCount; i += 1) {
-    for (r = 0; r < rsLength; r += 1) {
+  for (i = 0; i < maxEcCount; i++) {
+    for (r = 0; r < rsLength; r++) {
       if (i < ecData[r].length) {
         data[index] = ecData[r][i];
-        index += 1;
+        index++;
       }
     }
   }
@@ -448,7 +448,7 @@ export function createData(version, level, dataArray) {
   var buffer = new BitBuffer();
   var rsBlocks = RSBlock.getRSBlocks(version, level);
 
-  for (i = 0; i < dataArray.length; i += 1) {
+  for (i = 0; i < dataArray.length; i++) {
     data = dataArray[i];
 
     buffer.put(data.getMode(), 4);
@@ -460,7 +460,7 @@ export function createData(version, level, dataArray) {
   var totalDataCount = 0;
   var rsLength = rsBlocks.length;
 
-  for (i = 0; i < rsLength; i += 1) {
+  for (i = 0; i < rsLength; i++) {
     totalDataCount += rsBlocks[i].getDataCount();
   }
 
@@ -474,7 +474,7 @@ export function createData(version, level, dataArray) {
   }
 
   // padding
-  while (buffer.getLengthInBits() % 8 != 0) {
+  while (buffer.getLengthInBits() % 8 !== 0) {
     buffer.putBit(false);
   }
 

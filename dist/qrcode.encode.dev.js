@@ -365,12 +365,12 @@
     var dataCount;
     var j;
 
-    for (var i = 0; i < length; i += 1) {
+    for (var i = 0; i < length; i++) {
       count = rsBlock[i * 3];
       totalCount = rsBlock[i * 3 + 1];
       dataCount = rsBlock[i * 3 + 2];
 
-      for (j = 0; j < count; j += 1) {
+      for (j = 0; j < count; j++) {
         list.push(new RSBlock(totalCount, dataCount));
       }
     }
@@ -393,7 +393,7 @@
   (function() {
     var i;
 
-    for (i = 0; i < 256; i += 1) {
+    for (i = 0; i < 256; i++) {
       EXP_TABLE.push(
         i < 8 ? 1 << i :
         EXP_TABLE[i - 4] ^
@@ -404,7 +404,7 @@
       LOG_TABLE.push(0);
     }
 
-    for (i = 0; i < 255; i += 1) {
+    for (i = 0; i < 255; i++) {
       LOG_TABLE[EXP_TABLE[i]] = i;
     }
   }());
@@ -448,7 +448,7 @@
       var context = this;
       var length = context.getLengthInBits();
 
-      for (var i = 0; i < length; i += 1) {
+      for (var i = 0; i < length; i++) {
         buffer += context.getBit(i) ? '1' : '0';
       }
 
@@ -458,15 +458,15 @@
       return (this.buffer[~~(index / 8)] >>> (7 - index % 8)) & 1 === 1;
     },
     put: function(num, length) {
-      for (var i = 0; i < length; i += 1) {
-        this.putBit(((num >>> (length - i - 1)) & 1) == 1);
+      for (var i = 0; i < length; i++) {
+        this.putBit((num >>> (length - i - 1)) & 1 === 1);
       }
     },
     putBit: function(bit) {
       var context = this;
       var length = context.getLengthInBits();
 
-      if (length == context.buffer.length * 8) {
+      if (length === context.buffer.length * 8) {
         context.buffer.push(0);
       }
 
@@ -474,7 +474,7 @@
         context.buffer[~~(length / 8)] |= (0x80 >>> (length % 8));
       }
 
-      context.length += 1;
+      context.length++;
     }
   };
 
@@ -484,8 +484,8 @@
     var offset = 0;
     var context = this;
 
-    while (offset < num.length && num[offset] == 0) {
-      offset += 1;
+    while (offset < num.length && num[offset] === 0) {
+      offset++;
     }
 
     context.num = [];
@@ -493,11 +493,11 @@
     var i;
     var len = num.length - offset;
 
-    for (i = 0; i < len; i += 1) {
+    for (i = 0; i < len; i++) {
       context.num.push(num[offset + i]);
     }
 
-    for (i = 0; i < shift; i += 1) {
+    for (i = 0; i < shift; i++) {
       context.num.push(0);
     }
   }
@@ -514,7 +514,7 @@
       var context = this;
       var length = context.getLength();
 
-      for (var i = 0; i < length; i += 1) {
+      for (var i = 0; i < length; i++) {
         if (i > 0) {
           buffer += ',';
         }
@@ -529,7 +529,7 @@
       var context = this;
       var length = context.getLength();
 
-      for (var i = 0; i < length; i += 1) {
+      for (var i = 0; i < length; i++) {
         if (i > 0) {
           buffer += ',';
         }
@@ -546,7 +546,7 @@
 
       var i;
 
-      for (i = 0; i < length; i += 1) {
+      for (i = 0; i < length; i++) {
         num.push(0);
       }
 
@@ -554,8 +554,8 @@
 
       length = context.getLength();
 
-      for (i = 0; i < length; i += 1) {
-        for (j = 0; j < e.getLength(); j += 1) {
+      for (i = 0; i < length; i++) {
+        for (j = 0; j < e.getLength(); j++) {
           num[i + j] ^= gexp(glog(context.getAt(i)) + glog(e.getAt(j)));
         }
       }
@@ -577,12 +577,12 @@
       var i;
       var num = [];
 
-      for (i = 0; i < length; i += 1) {
+      for (i = 0; i < length; i++) {
         num.push(context.getAt(i));
       }
 
       // subtract and calc rest.
-      for (i = 0; i < eLength; i += 1) {
+      for (i = 0; i < eLength; i++) {
         num[i] ^= gexp(glog(e.getAt(i)) + ratio);
       }
 
@@ -788,29 +788,29 @@
     var moduleCount = qrCode.getModuleCount();
 
     // LEVEL1
-    for (row = 0; row < moduleCount; row += 1) {
-      for (col = 0; col < moduleCount; col += 1) {
+    for (row = 0; row < moduleCount; row++) {
+      for (col = 0; col < moduleCount; col++) {
         sameCount = 0;
         dark = qrCode.isDark(row, col);
 
-        for (r = -1; r <= 1; r += 1) {
+        for (r = -1; r <= 1; r++) {
 
           if (row + r < 0 || moduleCount <= row + r) {
             continue;
           }
 
-          for (c = -1; c <= 1; c += 1) {
+          for (c = -1; c <= 1; c++) {
 
             if (col + c < 0 || moduleCount <= col + c) {
               continue;
             }
 
-            if (r == 0 && c == 0) {
+            if (r === 0 && c === 0) {
               continue;
             }
 
-            if (dark == qrCode.isDark(row + r, col + c)) {
-              sameCount += 1;
+            if (dark === qrCode.isDark(row + r, col + c)) {
+              sameCount++;
             }
           }
         }
@@ -824,35 +824,35 @@
     var count;
 
     // LEVEL2
-    for (row = 0; row < moduleCount - 1; row += 1) {
-      for (col = 0; col < moduleCount - 1; col += 1) {
+    for (row = 0; row < moduleCount - 1; row++) {
+      for (col = 0; col < moduleCount - 1; col++) {
         count = 0;
 
         if (qrCode.isDark(row, col)) {
-          count += 1;
+          count++;
         }
 
         if (qrCode.isDark(row + 1, col)) {
-          count += 1;
+          count++;
         }
 
         if (qrCode.isDark(row, col + 1)) {
-          count += 1;
+          count++;
         }
 
         if (qrCode.isDark(row + 1, col + 1)) {
-          count += 1;
+          count++;
         }
 
-        if (count == 0 || count == 4) {
+        if (count === 0 || count === 4) {
           lostPoint += 3;
         }
       }
     }
 
     // LEVEL3
-    for (row = 0; row < moduleCount; row += 1) {
-      for (col = 0; col < moduleCount - 6; col += 1) {
+    for (row = 0; row < moduleCount; row++) {
+      for (col = 0; col < moduleCount - 6; col++) {
         if (qrCode.isDark(row, col) &&
           !qrCode.isDark(row, col + 1) &&
           qrCode.isDark(row, col + 2) &&
@@ -865,8 +865,8 @@
       }
     }
 
-    for (col = 0; col < moduleCount; col += 1) {
-      for (row = 0; row < moduleCount - 6; row += 1) {
+    for (col = 0; col < moduleCount; col++) {
+      for (row = 0; row < moduleCount - 6; row++) {
         if (qrCode.isDark(row, col) &&
           !qrCode.isDark(row + 1, col) &&
           qrCode.isDark(row + 2, col) &&
@@ -882,10 +882,10 @@
     // LEVEL4
     var darkCount = 0;
 
-    for (col = 0; col < moduleCount; col += 1) {
-      for (row = 0; row < moduleCount; row += 1) {
+    for (col = 0; col < moduleCount; col++) {
+      for (row = 0; row < moduleCount; row++) {
         if (qrCode.isDark(row, col)) {
-          darkCount += 1;
+          darkCount++;
         }
       }
     }
@@ -901,7 +901,7 @@
     var digit = 0;
 
     while (data !== 0) {
-      digit += 1;
+      digit++;
       data >>>= 1;
     }
 
@@ -934,7 +934,7 @@
   function getErrorCorrectPolynomial(errorCorrectLength) {
     var a = new Polynomial([1]);
 
-    for (var i = 0; i < errorCorrectLength; i += 1) {
+    for (var i = 0; i < errorCorrectLength; i++) {
       a = a.multiply(new Polynomial([1, gexp(i)]));
     }
 
@@ -959,7 +959,7 @@
     var ecData = [];
     var rsLength = rsBlocks.length;
 
-    for (r = 0; r < rsLength; r += 1) {
+    for (r = 0; r < rsLength; r++) {
       dcData.push([]);
       ecData.push([]);
     }
@@ -967,7 +967,7 @@
     function createNumArray(len) {
       var a = [];
 
-      for (var i = 0; i < len; i += 1) {
+      for (var i = 0; i < len; i++) {
         a.push(0);
       }
 
@@ -977,7 +977,7 @@
     var dcLength;
     var ecLength;
 
-    for (r = 0; r < rsLength; r += 1) {
+    for (r = 0; r < rsLength; r++) {
       dcCount = rsBlocks[r].getDataCount();
       ecCount = rsBlocks[r].getTotalCount() - dcCount;
 
@@ -988,7 +988,7 @@
 
       dcLength = dcData[r].length;
 
-      for (i = 0; i < dcLength; i += 1) {
+      for (i = 0; i < dcLength; i++) {
         dcData[r][i] = 0xff & buffer.getBuffer()[i + offset];
       }
 
@@ -1002,7 +1002,7 @@
 
       ecLength = ecData[r].length;
 
-      for (i = 0; i < ecLength; i += 1) {
+      for (i = 0; i < ecLength; i++) {
         modIndex = i + modPoly.getLength() - ecLength;
         ecData[r][i] = (modIndex >= 0) ? modPoly.getAt(modIndex) : 0;
       }
@@ -1010,27 +1010,27 @@
 
     var totalCodeCount = 0;
 
-    for (i = 0; i < rsLength; i += 1) {
+    for (i = 0; i < rsLength; i++) {
       totalCodeCount += rsBlocks[i].getTotalCount();
     }
 
     var data = createNumArray(totalCodeCount);
     var index = 0;
 
-    for (i = 0; i < maxDcCount; i += 1) {
-      for (r = 0; r < rsLength; r += 1) {
+    for (i = 0; i < maxDcCount; i++) {
+      for (r = 0; r < rsLength; r++) {
         if (i < dcData[r].length) {
           data[index] = dcData[r][i];
-          index += 1;
+          index++;
         }
       }
     }
 
-    for (i = 0; i < maxEcCount; i += 1) {
-      for (r = 0; r < rsLength; r += 1) {
+    for (i = 0; i < maxEcCount; i++) {
+      for (r = 0; r < rsLength; r++) {
         if (i < ecData[r].length) {
           data[index] = ecData[r][i];
-          index += 1;
+          index++;
         }
       }
     }
@@ -1044,7 +1044,7 @@
     var buffer = new BitBuffer();
     var rsBlocks = RSBlock.getRSBlocks(version, level);
 
-    for (i = 0; i < dataArray.length; i += 1) {
+    for (i = 0; i < dataArray.length; i++) {
       data = dataArray[i];
 
       buffer.put(data.getMode(), 4);
@@ -1056,7 +1056,7 @@
     var totalDataCount = 0;
     var rsLength = rsBlocks.length;
 
-    for (i = 0; i < rsLength; i += 1) {
+    for (i = 0; i < rsLength; i++) {
       totalDataCount += rsBlocks[i].getDataCount();
     }
 
@@ -1070,7 +1070,7 @@
     }
 
     // padding
-    while (buffer.getLengthInBits() % 8 != 0) {
+    while (buffer.getLengthInBits() % 8 !== 0) {
       buffer.putBit(false);
     }
 
@@ -1141,7 +1141,7 @@
       var data = this.getData();
       var length = data.length;
 
-      for (var i = 0; i < length; i += 1) {
+      for (var i = 0; i < length; i++) {
         buffer.put(data[i], 8);
       }
     }
@@ -1218,12 +1218,12 @@
       var context = this;
       var minLostPoint = 0;
 
-      for (var i = 0; i < 8; i += 1) {
+      for (var i = 0; i < 8; i++) {
         context.makeImpl(true, i);
 
         lostPoint = getLostPoint(context);
 
-        if (i == 0 || minLostPoint > lostPoint) {
+        if (i === 0 || minLostPoint > lostPoint) {
           pattern = i;
           minLostPoint = lostPoint;
         }
@@ -1240,10 +1240,10 @@
 
       var j;
 
-      for (var i = 0; i < context.count; i += 1) {
+      for (var i = 0; i < context.count; i++) {
         context.modules.push([]);
 
-        for (j = 0; j < context.count; j += 1) {
+        for (j = 0; j < context.count; j++) {
           context.modules[i].push(null);
         }
       }
@@ -1279,17 +1279,17 @@
       var maskFunc = getMaskFunc(maskPattern);
 
       for (var col = context.count - 1; col > 0; col -= 2) {
-        if (col == 6) {
+        if (col === 6) {
           col -= 1;
         }
 
         while (true) {
-          for (c = 0; c < 2; c += 1) {
-            if (context.modules[row][col - c] == null) {
+          for (c = 0; c < 2; c++) {
+            if (context.modules[row][col - c] === null) {
               dark = false;
 
               if (byteIndex < data.length) {
-                dark = (((data[byteIndex] >>> bitIndex) & 1) == 1);
+                dark = (((data[byteIndex] >>> bitIndex) & 1) === 1);
               }
 
               mask = maskFunc(row, col - c);
@@ -1302,7 +1302,7 @@
               bitIndex -= 1;
 
               if (bitIndex == -1) {
-                byteIndex += 1;
+                byteIndex++;
                 bitIndex = 7;
               }
             }
@@ -1328,18 +1328,18 @@
 
       var j;
 
-      for (var i = 0; i < pos.length; i += 1) {
-        for (j = 0; j < pos.length; j += 1) {
+      for (var i = 0; i < pos.length; i++) {
+        for (j = 0; j < pos.length; j++) {
           row = pos[i];
           col = pos[j];
 
-          if (context.modules[row][col] != null) {
+          if (context.modules[row][col] !== null) {
             continue;
           }
 
-          for (r = -2; r <= 2; r += 1) {
-            for (c = -2; c <= 2; c += 1) {
-              context.modules[row + r][col + c] = !!(r == -2 || r == 2 || c == -2 || c == 2 || (r == 0 && c == 0));
+          for (r = -2; r <= 2; r++) {
+            for (c = -2; c <= 2; c++) {
+              context.modules[row + r][col + c] = !!(r == -2 || r === 2 || c == -2 || c === 2 || (r === 0 && c === 0));
             }
           }
         }
@@ -1349,15 +1349,15 @@
       var c;
       var context = this;
 
-      for (var r = -1; r <= 7; r += 1) {
-        for (c = -1; c <= 7; c += 1) {
+      for (var r = -1; r <= 7; r++) {
+        for (c = -1; c <= 7; c++) {
           if (row + r <= -1 || context.count <= row + r ||
             col + c <= -1 || context.count <= col + c) {
             continue;
           }
 
-          context.modules[row + r][col + c] = !!((0 <= r && r <= 6 && (c == 0 || c == 6)) ||
-            (0 <= c && c <= 6 && (r == 0 || r == 6)) ||
+          context.modules[row + r][col + c] = !!((0 <= r && r <= 6 && (c === 0 || c === 6)) ||
+            (0 <= c && c <= 6 && (r === 0 || r === 6)) ||
             (2 <= r && r <= 4 && 2 <= c && c <= 4));
         }
       }
@@ -1365,20 +1365,20 @@
     setupTimingPattern: function() {
       var context = this;
 
-      for (var r = 8; r < context.count - 8; r += 1) {
-        if (context.modules[r][6] != null) {
+      for (var r = 8; r < context.count - 8; r++) {
+        if (context.modules[r][6] !== null) {
           continue;
         }
 
-        context.modules[r][6] = r % 2 == 0;
+        context.modules[r][6] = r % 2 === 0;
       }
 
-      for (var c = 8; c < context.count - 8; c += 1) {
-        if (context.modules[6][c] != null) {
+      for (var c = 8; c < context.count - 8; c++) {
+        if (context.modules[6][c] !== null) {
           continue;
         }
 
-        context.modules[6][c] = c % 2 == 0;
+        context.modules[6][c] = c % 2 === 0;
       }
     },
     setupVersion: function(test) {
@@ -1386,12 +1386,12 @@
       var context = this;
       var bits = getBCHVersion(context.version);
 
-      for (i = 0; i < 18; i += 1) {
-        context.modules[~~(i / 3)][i % 3 + context.count - 8 - 3] = !test && ((bits >> i) & 1) == 1;
+      for (i = 0; i < 18; i++) {
+        context.modules[~~(i / 3)][i % 3 + context.count - 8 - 3] = !test && ((bits >> i) & 1) === 1;
       }
 
-      for (i = 0; i < 18; i += 1) {
-        context.modules[i % 3 + context.count - 8 - 3][~~(i / 3)] = !test && ((bits >> i) & 1) == 1;
+      for (i = 0; i < 18; i++) {
+        context.modules[i % 3 + context.count - 8 - 3][~~(i / 3)] = !test && ((bits >> i) & 1) === 1;
       }
     },
     setupVersionInfo: function(test, maskPattern) {
@@ -1402,8 +1402,8 @@
       var bits = getBCHTypeInfo(data);
 
       // vertical
-      for (i = 0; i < 15; i += 1) {
-        mod = !test && ((bits >> i) & 1) == 1;
+      for (i = 0; i < 15; i++) {
+        mod = !test && ((bits >> i) & 1) === 1;
 
         if (i < 6) {
           context.modules[i][8] = mod;
@@ -1415,8 +1415,8 @@
       }
 
       // horizontal
-      for (i = 0; i < 15; i += 1) {
-        mod = !test && ((bits >> i) & 1) == 1;
+      for (i = 0; i < 15; i++) {
+        mod = !test && ((bits >> i) & 1) === 1;
 
         if (i < 8) {
           context.modules[8][context.count - i - 1] = mod;
@@ -1483,7 +1483,7 @@
   function strToNum(s) {
     var num = 0;
 
-    for (var i = 0; i < s.length; i += 1) {
+    for (var i = 0; i < s.length; i++) {
       num = num * 10 + chatToNum(s.charAt(i));
     }
 
@@ -1512,9 +1512,9 @@
       }
 
       if (i < length) {
-        if (length - i == 1) {
+        if (length - i === 1) {
           buffer.put(strToNum(data.substring(i, i + 1)), 4);
-        } else if (length - i == 2) {
+        } else if (length - i === 2) {
           buffer.put(strToNum(data.substring(i, i + 2)), 7);
         }
       }
