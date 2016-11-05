@@ -48,7 +48,7 @@
 
       try {
         console.time('QRCode');
-        this.pixels = new QRCode.Encode(20, config.ECLevel);
+        this.pixels = new QRCode.Encode(40, config.ECLevel);
 
         switch (config.mode) {
           case QRCode.MODE.NUMBER:
@@ -65,13 +65,12 @@
             break;
         }
 
-        console.log(config.text);
-
         this.pixels.addData(config.text);
         // this.pixels.addData(new QRCode.QRAlphaNum('12'));
         this.pixels.make();
         console.timeEnd('QRCode');
 
+        console.log(config.text);
         console.log(this.pixels);
       } catch (e) {
         $.isFunction(config.error) && config.error(e);
