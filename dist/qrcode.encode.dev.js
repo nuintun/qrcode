@@ -701,23 +701,6 @@
     var e = 0;
     var m = 0;
 
-    switch (level) {
-      case ErrorCorrectLevel.L:
-        e = 0;
-        break;
-      case ErrorCorrectLevel.M:
-        e = 1;
-        break;
-      case ErrorCorrectLevel.Q:
-        e = 2;
-        break;
-      case ErrorCorrectLevel.H:
-        e = 3;
-        break;
-      default:
-        throw new Error('illegal level:' + level);
-    }
-
     switch (mode) {
       case Mode.MODE_NUMBER:
         m = 0;
@@ -733,6 +716,23 @@
         break;
       default:
         throw new Error('illegal mode:' + mode);
+    }
+
+    switch (level) {
+      case ErrorCorrectLevel.L:
+        e = 0;
+        break;
+      case ErrorCorrectLevel.M:
+        e = 1;
+        break;
+      case ErrorCorrectLevel.Q:
+        e = 2;
+        break;
+      case ErrorCorrectLevel.H:
+        e = 3;
+        break;
+      default:
+        throw new Error('illegal level:' + level);
     }
 
     return MAX_LENGTH[t][e][m];
@@ -777,7 +777,7 @@
     }
   }
 
-  function getLostPoint(qrCode) {
+  function getLostPoint(qrcode) {
     var row;
     var col;
     var sameCount;
@@ -785,22 +785,20 @@
     var r;
     var c;
     var lostPoint = 0;
-    var moduleCount = qrCode.getModuleCount();
+    var moduleCount = qrcode.getModuleCount();
 
     // LEVEL1
     for (row = 0; row < moduleCount; row++) {
       for (col = 0; col < moduleCount; col++) {
         sameCount = 0;
-        dark = qrCode.isDark(row, col);
+        dark = qrcode.isDark(row, col);
 
         for (r = -1; r <= 1; r++) {
-
           if (row + r < 0 || moduleCount <= row + r) {
             continue;
           }
 
           for (c = -1; c <= 1; c++) {
-
             if (col + c < 0 || moduleCount <= col + c) {
               continue;
             }
@@ -809,7 +807,7 @@
               continue;
             }
 
-            if (dark === qrCode.isDark(row + r, col + c)) {
+            if (dark === qrcode.isDark(row + r, col + c)) {
               sameCount++;
             }
           }
@@ -828,19 +826,19 @@
       for (col = 0; col < moduleCount - 1; col++) {
         count = 0;
 
-        if (qrCode.isDark(row, col)) {
+        if (qrcode.isDark(row, col)) {
           count++;
         }
 
-        if (qrCode.isDark(row + 1, col)) {
+        if (qrcode.isDark(row + 1, col)) {
           count++;
         }
 
-        if (qrCode.isDark(row, col + 1)) {
+        if (qrcode.isDark(row, col + 1)) {
           count++;
         }
 
-        if (qrCode.isDark(row + 1, col + 1)) {
+        if (qrcode.isDark(row + 1, col + 1)) {
           count++;
         }
 
@@ -853,13 +851,13 @@
     // LEVEL3
     for (row = 0; row < moduleCount; row++) {
       for (col = 0; col < moduleCount - 6; col++) {
-        if (qrCode.isDark(row, col) &&
-          !qrCode.isDark(row, col + 1) &&
-          qrCode.isDark(row, col + 2) &&
-          qrCode.isDark(row, col + 3) &&
-          qrCode.isDark(row, col + 4) &&
-          !qrCode.isDark(row, col + 5) &&
-          qrCode.isDark(row, col + 6)) {
+        if (qrcode.isDark(row, col) &&
+          !qrcode.isDark(row, col + 1) &&
+          qrcode.isDark(row, col + 2) &&
+          qrcode.isDark(row, col + 3) &&
+          qrcode.isDark(row, col + 4) &&
+          !qrcode.isDark(row, col + 5) &&
+          qrcode.isDark(row, col + 6)) {
           lostPoint += 40;
         }
       }
@@ -867,13 +865,13 @@
 
     for (col = 0; col < moduleCount; col++) {
       for (row = 0; row < moduleCount - 6; row++) {
-        if (qrCode.isDark(row, col) &&
-          !qrCode.isDark(row + 1, col) &&
-          qrCode.isDark(row + 2, col) &&
-          qrCode.isDark(row + 3, col) &&
-          qrCode.isDark(row + 4, col) &&
-          !qrCode.isDark(row + 5, col) &&
-          qrCode.isDark(row + 6, col)) {
+        if (qrcode.isDark(row, col) &&
+          !qrcode.isDark(row + 1, col) &&
+          qrcode.isDark(row + 2, col) &&
+          qrcode.isDark(row + 3, col) &&
+          qrcode.isDark(row + 4, col) &&
+          !qrcode.isDark(row + 5, col) &&
+          qrcode.isDark(row + 6, col)) {
           lostPoint += 40;
         }
       }
@@ -884,7 +882,7 @@
 
     for (col = 0; col < moduleCount; col++) {
       for (row = 0; row < moduleCount; row++) {
-        if (qrCode.isDark(row, col)) {
+        if (qrcode.isDark(row, col)) {
           darkCount++;
         }
       }
