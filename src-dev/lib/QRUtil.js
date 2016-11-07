@@ -397,14 +397,13 @@ function createBytes(buffer, rsBlocks) {
     totalCodeCount += rsBlocks[i].getTotalCount();
   }
 
-  var data = createNumArray(totalCodeCount);
   var index = 0;
+  var data = createNumArray(totalCodeCount);
 
   for (i = 0; i < maxDcCount; i++) {
     for (r = 0; r < rsLength; r++) {
       if (i < dcData[r].length) {
-        data[index] = dcData[r][i];
-        index++;
+        data[index++] = dcData[r][i];
       }
     }
   }
@@ -412,14 +411,13 @@ function createBytes(buffer, rsBlocks) {
   for (i = 0; i < maxEcCount; i++) {
     for (r = 0; r < rsLength; r++) {
       if (i < ecData[r].length) {
-        data[index] = ecData[r][i];
-        index++;
+        data[index++] = ecData[r][i];
       }
     }
   }
 
   return data;
-};
+}
 
 export function createData(version, level, dataArray) {
   var i;
@@ -467,7 +465,7 @@ export function createData(version, level, dataArray) {
   }
 
   return createBytes(buffer, rsBlocks);
-};
+}
 
 export function stringToUtf8ByteArray(str) {
   var charcode;
