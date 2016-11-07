@@ -112,6 +112,12 @@ QRCode.prototype = {
       }
     }
 
+    var data = QRUtil.createData(
+      context.version,
+      context.level,
+      context.data
+    );
+
     context.setupPositionProbePattern(0, 0);
     context.setupPositionProbePattern(context.count - 7, 0);
     context.setupPositionProbePattern(0, context.count - 7);
@@ -122,12 +128,6 @@ QRCode.prototype = {
     if (context.version >= 7) {
       context.setupVersion(test);
     }
-
-    var data = QRUtil.createData(
-      context.version,
-      context.level,
-      context.data
-    );
 
     context.mapData(data, maskPattern);
   },
