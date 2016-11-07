@@ -49,7 +49,8 @@ var PATTERN_POSITION_TABLE = [
 ];
 
 var MAX_LENGTH = (function() {
-  var i, j;
+  var i;
+  var j;
   var level;
   var buffer;
   var version;
