@@ -635,6 +635,7 @@
     this.n_degree_max = 2 * n_ec_bytes;
     this.syndroms = [];
     this.gen_poly = null;
+
     this.initGaloisTables();
   }
 
