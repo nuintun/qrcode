@@ -1,4 +1,3 @@
-import { Mode } from './Mode';
 import RSBlock from './RSBlock';
 import * as QRMath from './QRMath';
 import BitBuffer from './BitBuffer';
