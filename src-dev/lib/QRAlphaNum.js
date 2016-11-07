@@ -37,7 +37,7 @@ function getCode(c) {
         throw new Error('illegal char: ' + c);
     }
   }
-};
+}
 
 QRUtil.inherits(QRAlphaNum, QRData, {
   write: function(buffer) {

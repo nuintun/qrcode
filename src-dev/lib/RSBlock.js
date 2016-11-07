@@ -262,7 +262,7 @@ function getRsBlockTable(version, level) {
   }
 
   throw new Error('illegal error correct level: ' + level);
-};
+}
 
 export default function RSBlock(totalCount, dataCount) {
   this.totalCount = totalCount;

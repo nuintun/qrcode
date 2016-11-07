@@ -1,7 +1,6 @@
 import QR8BitByte from './QR8BitByte';
 import QRData from './QRData';
 import * as QRUtil from './QRUtil';
-import Polynomial from './Polynomial';
 
 export default function QRCode(version, level) {
   var context = this;
