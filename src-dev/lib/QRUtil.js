@@ -49,7 +49,6 @@ var PATTERN_POSITION_TABLE = [
 ];
 
 var MAX_LENGTH = (function() {
-  var i;
   var j;
   var level;
   var buffer;
@@ -60,7 +59,7 @@ var MAX_LENGTH = (function() {
   var maps = [];
   var vLength = PATTERN_POSITION_TABLE.length;
 
-  for (i = 0; i < vLength; i++) {
+  for (var i = 0; i < vLength; i++) {
     maps[i] = {};
     version = i + 1;
     buffer = new BitBuffer();
@@ -86,6 +85,17 @@ var MAX_LENGTH = (function() {
 var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
 var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
 var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+
+var toString = Object.prototype.toString;
+
+/**
+ * string judge
+ * @param string
+ * @returns {boolean}
+ */
+export function isString(string) {
+  return toString.call(string) === '[object String]';
+}
 
 /**
  * inherits
@@ -113,6 +123,11 @@ export function inherits(ctor, superCtor, proto) {
   }
 }
 
+/**
+ * get pattern position
+ * @param version
+ * @returns {*}
+ */
 export function getPatternPosition(version) {
   if (version < 1 || version > PATTERN_POSITION_TABLE.length) {
     throw new Error('illegal version: ' + version);
@@ -121,10 +136,50 @@ export function getPatternPosition(version) {
   return PATTERN_POSITION_TABLE[version - 1];
 }
 
+/**
+ * get max length from version and level
+ * @param version
+ * @param level
+ */
 export function getMaxLength(version, level) {
   return MAX_LENGTH[version - 1][level];
 }
 
+export function getBestVersion(dataList, level) {
+  var j;
+  var data;
+  var buffer;
+  var version;
+  var totalCount = 0;
+  var dataLength = dataList.length;
+  var vLength = PATTERN_POSITION_TABLE.length;
+
+
+
+  for (var i = 0; i < vLength; i++) {
+    version = i + 1;
+    buffer = new BitBuffer();
+
+    for (j = 0; j < dataLength; j++) {
+      data = dataList[j];
+      totalCount += data.getLength() * data.getLengthInBits(version);
+    }
+
+    if (totalCount <= getMaxLength(version, level)) {
+      console.log(version);
+
+      return version;
+    }
+  }
+
+  return vLength;
+}
+
+/**
+ * get best mask function
+ * @param maskPattern
+ * @returns {Function}
+ */
 export function getMaskFunc(maskPattern) {
   switch (maskPattern) {
     case MaskPattern.PATTERN000:
@@ -164,6 +219,11 @@ export function getMaskFunc(maskPattern) {
   }
 }
 
+/**
+ * get lost point
+ * @param qrcode
+ * @returns {number}
+ */
 export function getLostPoint(qrcode) {
   var row;
   var col;
@@ -282,6 +342,11 @@ export function getLostPoint(qrcode) {
   return lostPoint;
 }
 
+/**
+ * get BCH digit
+ * @param data
+ * @returns {number}
+ */
 function getBCHDigit(data) {
   var digit = 0;
 
@@ -293,6 +358,11 @@ function getBCHDigit(data) {
   return digit;
 }
 
+/**
+ * get BCH type info
+ * @param data
+ * @returns {number}
+ */
 export function getBCHTypeInfo(data) {
   var d = data << 10;
 
@@ -303,6 +373,11 @@ export function getBCHTypeInfo(data) {
   return ((data << 10) | d) ^ G15_MASK;
 }
 
+/**
+ * get BCH version
+ * @param data
+ * @returns {number}
+ */
 export function getBCHVersion(data) {
   var d = data << 12;
 
@@ -316,6 +391,11 @@ export function getBCHVersion(data) {
 var PAD0 = 0xEC;
 var PAD1 = 0x11;
 
+/**
+ * get error correct polynomial
+ * @param errorCorrectLength
+ * @returns {Polynomial}
+ */
 function getErrorCorrectPolynomial(errorCorrectLength) {
   var a = new Polynomial([1]);
 
@@ -326,6 +406,12 @@ function getErrorCorrectPolynomial(errorCorrectLength) {
   return a;
 }
 
+/**
+ * create bytes
+ * @param buffer
+ * @param rsBlocks
+ * @returns {*}
+ */
 function createBytes(buffer, rsBlocks) {
   var offset = 0;
 
@@ -421,6 +507,13 @@ function createBytes(buffer, rsBlocks) {
   return data;
 }
 
+/**
+ * create data
+ * @param version
+ * @param level
+ * @param dataArray
+ * @returns {*}
+ */
 export function createData(version, level, dataArray) {
   var i;
   var data;
@@ -469,6 +562,11 @@ export function createData(version, level, dataArray) {
   return createBytes(buffer, rsBlocks);
 }
 
+/**
+ * string to utf8 byte array
+ * @param str
+ * @returns {Array}
+ */
 export function stringToUtf8ByteArray(str) {
   var charcode;
   var utf8 = [];

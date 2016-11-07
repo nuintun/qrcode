@@ -646,7 +646,6 @@
   ];
 
   var MAX_LENGTH = (function() {
-    var i;
     var j;
     var level;
     var buffer;
@@ -657,7 +656,7 @@
     var maps = [];
     var vLength = PATTERN_POSITION_TABLE.length;
 
-    for (i = 0; i < vLength; i++) {
+    for (var i = 0; i < vLength; i++) {
       maps[i] = {};
       version = i + 1;
       buffer = new BitBuffer();
@@ -683,6 +682,15 @@
   var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
   var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
   var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+
+  var toString = Object.prototype.toString;
+
+  /**
+   * string judge
+   * @param string
+   * @returns {boolean}
+   */
+
 
   /**
    * inherits
@@ -710,6 +718,11 @@
     }
   }
 
+  /**
+   * get pattern position
+   * @param version
+   * @returns {*}
+   */
   function getPatternPosition(version) {
     if (version < 1 || version > PATTERN_POSITION_TABLE.length) {
       throw new Error('illegal version: ' + version);
@@ -718,10 +731,22 @@
     return PATTERN_POSITION_TABLE[version - 1];
   }
 
+  /**
+   * get max length from version and level
+   * @param version
+   * @param level
+   */
   function getMaxLength(version, level) {
     return MAX_LENGTH[version - 1][level];
   }
 
+
+
+  /**
+   * get best mask function
+   * @param maskPattern
+   * @returns {Function}
+   */
   function getMaskFunc(maskPattern) {
     switch (maskPattern) {
       case MaskPattern.PATTERN000:
@@ -761,6 +786,11 @@
     }
   }
 
+  /**
+   * get lost point
+   * @param qrcode
+   * @returns {number}
+   */
   function getLostPoint(qrcode) {
     var row;
     var col;
@@ -879,6 +909,11 @@
     return lostPoint;
   }
 
+  /**
+   * get BCH digit
+   * @param data
+   * @returns {number}
+   */
   function getBCHDigit(data) {
     var digit = 0;
 
@@ -890,6 +925,11 @@
     return digit;
   }
 
+  /**
+   * get BCH type info
+   * @param data
+   * @returns {number}
+   */
   function getBCHTypeInfo(data) {
     var d = data << 10;
 
@@ -900,6 +940,11 @@
     return ((data << 10) | d) ^ G15_MASK;
   }
 
+  /**
+   * get BCH version
+   * @param data
+   * @returns {number}
+   */
   function getBCHVersion(data) {
     var d = data << 12;
 
@@ -913,6 +958,11 @@
   var PAD0 = 0xEC;
   var PAD1 = 0x11;
 
+  /**
+   * get error correct polynomial
+   * @param errorCorrectLength
+   * @returns {Polynomial}
+   */
   function getErrorCorrectPolynomial(errorCorrectLength) {
     var a = new Polynomial([1]);
 
@@ -923,6 +973,12 @@
     return a;
   }
 
+  /**
+   * create bytes
+   * @param buffer
+   * @param rsBlocks
+   * @returns {*}
+   */
   function createBytes(buffer, rsBlocks) {
     var offset = 0;
 
@@ -1018,6 +1074,13 @@
     return data;
   }
 
+  /**
+   * create data
+   * @param version
+   * @param level
+   * @param dataArray
+   * @returns {*}
+   */
   function createData(version, level, dataArray) {
     var i;
     var data;
@@ -1066,6 +1129,11 @@
     return createBytes(buffer, rsBlocks);
   }
 
+  /**
+   * string to utf8 byte array
+   * @param str
+   * @returns {Array}
+   */
   function stringToUtf8ByteArray(str) {
     var charcode;
     var utf8 = [];
@@ -1209,8 +1277,8 @@
       var context = this;
 
       // initialize modules
-      context.count = context.version * 4 + 17;
       context.modules = [];
+      context.count = context.version * 4 + 17;
 
       var j;
 

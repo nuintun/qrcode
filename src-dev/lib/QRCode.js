@@ -90,8 +90,8 @@ QRCode.prototype = {
     var context = this;
 
     // initialize modules
-    context.count = context.version * 4 + 17;
     context.modules = [];
+    context.count = context.version * 4 + 17;
 
     var j;
 
