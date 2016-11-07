@@ -33,7 +33,7 @@ QRCode.prototype = {
 
     if (data instanceof QRData) {
       dataList.push(data);
-    } else if (typeof data === 'string') {
+    } else if (QRUtil.isString(data)) {
       dataList.push(new QR8BitByte(data));
     } else {
       throw new Error('illegal type of data.');
@@ -62,6 +62,10 @@ QRCode.prototype = {
   },
   make: function() {
     var context = this;
+
+    if (context.version === 0) {
+      context.version = QRUtil.getBestVersion(context.data, context.level);
+    }
 
     context.makeImpl(false, context.getBestMaskPattern());
 

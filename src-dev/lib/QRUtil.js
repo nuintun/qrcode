@@ -145,16 +145,19 @@ export function getMaxLength(version, level) {
   return MAX_LENGTH[version - 1][level];
 }
 
+/**
+ * get best version
+ * @param dataList
+ * @param level
+ * @returns {*}
+ */
 export function getBestVersion(dataList, level) {
   var j;
   var data;
   var buffer;
   var version;
-  var totalCount = 0;
   var dataLength = dataList.length;
   var vLength = PATTERN_POSITION_TABLE.length;
-
-
 
   for (var i = 0; i < vLength; i++) {
     version = i + 1;
@@ -162,12 +165,13 @@ export function getBestVersion(dataList, level) {
 
     for (j = 0; j < dataLength; j++) {
       data = dataList[j];
-      totalCount += data.getLength() * data.getLengthInBits(version);
+
+      buffer.put(data.getMode(), 4);
+      buffer.put(data.getLength(), data.getLengthInBits(version));
+      data.write(buffer);
     }
 
-    if (totalCount <= getMaxLength(version, level)) {
-      console.log(version);
-
+    if (buffer.getLengthInBits() <= getMaxLength(version, level)) {
       return version;
     }
   }

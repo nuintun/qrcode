@@ -690,7 +690,9 @@
    * @param string
    * @returns {boolean}
    */
-
+  function isString(string) {
+    return toString.call(string) === '[object String]';
+  }
 
   /**
    * inherits
@@ -740,7 +742,39 @@
     return MAX_LENGTH[version - 1][level];
   }
 
+  /**
+   * get best version
+   * @param dataList
+   * @param level
+   * @returns {*}
+   */
+  function getBestVersion(dataList, level) {
+    var j;
+    var data;
+    var buffer;
+    var version;
+    var dataLength = dataList.length;
+    var vLength = PATTERN_POSITION_TABLE.length;
 
+    for (var i = 0; i < vLength; i++) {
+      version = i + 1;
+      buffer = new BitBuffer();
+
+      for (j = 0; j < dataLength; j++) {
+        data = dataList[j];
+
+        buffer.put(data.getMode(), 4);
+        buffer.put(data.getLength(), data.getLengthInBits(version));
+        data.write(buffer);
+      }
+
+      if (buffer.getLengthInBits() <= getMaxLength(version, level)) {
+        return version;
+      }
+    }
+
+    return vLength;
+  }
 
   /**
    * get best mask function
@@ -1220,7 +1254,7 @@
 
       if (data instanceof QRData) {
         dataList.push(data);
-      } else if (typeof data === 'string') {
+      } else if (isString(data)) {
         dataList.push(new QR8BitByte(data));
       } else {
         throw new Error('illegal type of data.');
@@ -1249,6 +1283,10 @@
     },
     make: function() {
       var context = this;
+
+      if (context.version === 0) {
+        context.version = getBestVersion(context.data, context.level);
+      }
 
       context.makeImpl(false, context.getBestMaskPattern());
 
