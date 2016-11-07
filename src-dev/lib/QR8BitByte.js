@@ -1,11 +1,12 @@
 import { Mode } from './Mode';
 import QRData from './QRData';
 import * as QRUtil from './QRUtil';
+import UTF8 from './encoding/UTF8';
 
 export default function QR8BitByte(data) {
   this.source = data;
 
-  QRData.call(this, Mode.MODE_8BIT_BYTE, QRUtil.stringToUtf8ByteArray(data));
+  QRData.call(this, Mode.MODE_8BIT_BYTE, UTF8(data));
 }
 
 QRUtil.inherits(QR8BitByte, QRData, {

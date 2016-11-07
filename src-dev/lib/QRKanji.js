@@ -5,7 +5,7 @@ import * as QRUtil from './QRUtil';
 export default function QRKanji(data) {
   this.source = data;
 
-  QRData.call(this, Mode.MODE_KANJI, QRUtil.stringToUtf8ByteArray(data));
+  QRData.call(this, Mode.MODE_KANJI, data);
 }
 
 QRUtil.inherits(QRKanji, QRData, {

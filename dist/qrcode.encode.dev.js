@@ -1515,7 +1515,7 @@
   function QRKanji(data) {
     this.source = data;
 
-    QRData.call(this, Mode.MODE_KANJI, stringToUtf8ByteArray(data));
+    QRData.call(this, Mode.MODE_KANJI, data);
   }
 
   inherits(QRKanji, QRData, {
