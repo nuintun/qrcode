@@ -71,6 +71,8 @@
         this.pixels.make();
         console.timeEnd('QRCode');
 
+        window.qrcode = this.pixels;
+
         console.log(config.text);
         console.log(this.pixels);
       } catch (e) {
