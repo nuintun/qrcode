@@ -29,12 +29,12 @@ QRCode.prototype = {
     this.data = [];
   },
   addData: function(data) {
-    var dataList = this.data;
+    var dataArray = this.data;
 
     if (data instanceof QRData) {
-      dataList.push(data);
+      dataArray.push(data);
     } else if (QRUtil.isString(data)) {
-      dataList.push(new QR8BitByte(data));
+      dataArray.push(new QR8BitByte(data));
     } else {
       throw new Error('illegal type of data.');
     }
@@ -62,9 +62,10 @@ QRCode.prototype = {
   },
   make: function() {
     var context = this;
+    var version = context.version;
 
-    if (context.version === 0) {
-      context.version = QRUtil.getBestVersion(context.data, context.level);
+    if (version === 0) {
+      context.version = QRUtil.getBestVersion(version, context.level, context.data);
     }
 
     context.makeImpl(false, context.getBestMaskPattern());

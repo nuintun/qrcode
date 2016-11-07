@@ -686,6 +686,27 @@
   var toString = Object.prototype.toString;
 
   /**
+   * create buffer
+   * @param version
+   * @param dataArray
+   * @returns {BitBuffer}
+   */
+  function createBuffer(version, dataArray) {
+    var data;
+    var buffer = new BitBuffer();
+
+    for (var i = 0; i < dataArray.length; i++) {
+      data = dataArray[i];
+
+      buffer.put(data.getMode(), 4);
+      buffer.put(data.getLength(), data.getLengthInBits(version));
+      data.write(buffer);
+    }
+
+    return buffer;
+  }
+
+  /**
    * string judge
    * @param string
    * @returns {boolean}
@@ -744,31 +765,19 @@
 
   /**
    * get best version
-   * @param dataList
+   * @param version
    * @param level
+   * @param dataArray
    * @returns {*}
    */
-  function getBestVersion(dataList, level) {
-    var j;
-    var data;
-    var buffer;
-    var version;
-    var dataLength = dataList.length;
+  function getBestVersion(version, level, dataArray) {
     var vLength = PATTERN_POSITION_TABLE.length;
+    var dataCount = createBuffer(version, dataArray).getLengthInBits();
 
     for (var i = 0; i < vLength; i++) {
       version = i + 1;
-      buffer = new BitBuffer();
 
-      for (j = 0; j < dataLength; j++) {
-        data = dataList[j];
-
-        buffer.put(data.getMode(), 4);
-        buffer.put(data.getLength(), data.getLengthInBits(version));
-        data.write(buffer);
-      }
-
-      if (buffer.getLengthInBits() <= getMaxLength(version, level)) {
+      if (dataCount <= getMaxLength(version, level)) {
         return version;
       }
     }
@@ -1116,27 +1125,15 @@
    * @returns {*}
    */
   function createData(version, level, dataArray) {
-    var i;
-    var data;
-    var buffer = new BitBuffer();
-    var rsBlocks = RSBlock.getRSBlocks(version, level);
+    var buffer = createBuffer(version, dataArray);
+    var maxDataCount = getMaxLength(version, level);
 
-    for (i = 0; i < dataArray.length; i++) {
-      data = dataArray[i];
-
-      buffer.put(data.getMode(), 4);
-      buffer.put(data.getLength(), data.getLengthInBits(version));
-      data.write(buffer);
-    }
-
-    var totalDataCount = getMaxLength(version, level);
-
-    if (buffer.getLengthInBits() > totalDataCount) {
-      throw new Error('data length overflow: ' + buffer.getLengthInBits() + ' > ' + totalDataCount);
+    if (buffer.getLengthInBits() > maxDataCount) {
+      throw new Error('data length overflow: ' + buffer.getLengthInBits() + ' > ' + maxDataCount);
     }
 
     // end
-    if (buffer.getLengthInBits() + 4 <= totalDataCount) {
+    if (buffer.getLengthInBits() + 4 <= maxDataCount) {
       buffer.put(0, 4);
     }
 
@@ -1147,20 +1144,20 @@
 
     // padding
     while (true) {
-      if (buffer.getLengthInBits() >= totalDataCount * 8) {
+      if (buffer.getLengthInBits() >= maxDataCount) {
         break;
       }
 
       buffer.put(PAD0, 8);
 
-      if (buffer.getLengthInBits() >= totalDataCount * 8) {
+      if (buffer.getLengthInBits() >= maxDataCount) {
         break;
       }
 
       buffer.put(PAD1, 8);
     }
 
-    return createBytes(buffer, rsBlocks);
+    return createBytes(buffer, RSBlock.getRSBlocks(version, level));
   }
 
   /**
@@ -1250,12 +1247,12 @@
       this.data = [];
     },
     addData: function(data) {
-      var dataList = this.data;
+      var dataArray = this.data;
 
       if (data instanceof QRData) {
-        dataList.push(data);
+        dataArray.push(data);
       } else if (isString(data)) {
-        dataList.push(new QR8BitByte(data));
+        dataArray.push(new QR8BitByte(data));
       } else {
         throw new Error('illegal type of data.');
       }
@@ -1283,9 +1280,10 @@
     },
     make: function() {
       var context = this;
+      var version = context.version;
 
-      if (context.version === 0) {
-        context.version = getBestVersion(context.data, context.level);
+      if (version === 0) {
+        context.version = getBestVersion(version, context.level, context.data);
       }
 
       context.makeImpl(false, context.getBestMaskPattern());
