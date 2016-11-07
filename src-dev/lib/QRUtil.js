@@ -49,18 +49,37 @@ var PATTERN_POSITION_TABLE = [
   [6, 30, 58, 86, 114, 142, 170]
 ];
 
-var MAX_LENGTH = [
-  [[41, 25, 17, 10], [34, 20, 14, 8], [27, 16, 11, 7], [17, 10, 7, 4]],
-  [[77, 47, 32, 20], [63, 38, 26, 16], [48, 29, 20, 12], [34, 20, 14, 8]],
-  [[127, 77, 53, 32], [101, 61, 42, 26], [77, 47, 32, 20], [58, 35, 24, 15]],
-  [[187, 114, 78, 48], [149, 90, 62, 38], [111, 67, 46, 28], [82, 50, 34, 21]],
-  [[255, 154, 106, 65], [202, 122, 84, 52], [144, 87, 60, 37], [106, 64, 44, 27]],
-  [[322, 195, 134, 82], [255, 154, 106, 65], [178, 108, 74, 45], [139, 84, 58, 36]],
-  [[370, 224, 154, 95], [293, 178, 122, 75], [207, 125, 86, 53], [154, 93, 64, 39]],
-  [[461, 279, 192, 118], [365, 221, 152, 93], [259, 157, 108, 66], [202, 122, 84, 52]],
-  [[552, 335, 230, 141], [432, 262, 180, 111], [312, 189, 130, 80], [235, 143, 98, 60]],
-  [[652, 395, 271, 167], [513, 311, 213, 131], [364, 221, 151, 93], [288, 174, 119, 74]]
-];
+var MAX_LENGTH = (function() {
+  var i;
+  var level;
+  var buffer;
+  var rsLength;
+  var rsBlocks;
+  var dataCount;
+  var maps = [];
+  var vLength = PATTERN_POSITION_TABLE.length;
+
+  for (var version = 1; version < vLength; version++) {
+    maps[version] = {};
+    buffer = new BitBuffer();
+
+    for (level in ErrorCorrectLevel) {
+      if (ErrorCorrectLevel.hasOwnProperty(level)) {
+        dataCount = 0;
+        rsBlocks = RSBlock.getRSBlocks(version, ErrorCorrectLevel[level]);
+        rsLength = rsBlocks.length;
+
+        for (i = 0; i < rsLength; i++) {
+          dataCount += rsBlocks[i].getDataCount() * 8;
+        }
+
+        maps[version][ErrorCorrectLevel[level]] = dataCount;
+      }
+    }
+  }
+
+  return maps;
+}());
 
 var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
 var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
@@ -100,46 +119,8 @@ export function getPatternPosition(version) {
   return PATTERN_POSITION_TABLE[version - 1];
 }
 
-export function getMaxLength(mode, version, level) {
-  var t = version - 1;
-  var e = 0;
-  var m = 0;
-
-  switch (mode) {
-    case Mode.MODE_NUMBER:
-      m = 0;
-      break;
-    case Mode.MODE_ALPHA_NUM:
-      m = 1;
-      break;
-    case Mode.MODE_8BIT_BYTE:
-      m = 2;
-      break;
-    case Mode.MODE_KANJI:
-      m = 3;
-      break;
-    default:
-      throw new Error('illegal mode:' + mode);
-  }
-
-  switch (level) {
-    case ErrorCorrectLevel.L:
-      e = 0;
-      break;
-    case ErrorCorrectLevel.M:
-      e = 1;
-      break;
-    case ErrorCorrectLevel.Q:
-      e = 2;
-      break;
-    case ErrorCorrectLevel.H:
-      e = 3;
-      break;
-    default:
-      throw new Error('illegal level:' + level);
-  }
-
-  return MAX_LENGTH[t][e][m];
+export function getMaxLength(version, level) {
+  return MAX_LENGTH[version][level];
 }
 
 export function getMaskFunc(maskPattern) {
@@ -454,20 +435,14 @@ export function createData(version, level, dataArray) {
     data.write(buffer);
   }
 
-  // calc max data count
-  var totalDataCount = 0;
-  var rsLength = rsBlocks.length;
+  var totalDataCount = getMaxLength(version, level);
 
-  for (i = 0; i < rsLength; i++) {
-    totalDataCount += rsBlocks[i].getDataCount();
-  }
-
-  if (buffer.getLengthInBits() > totalDataCount * 8) {
-    throw new Error('data length overflow: ' + buffer.getLengthInBits() + ' > ' + totalDataCount * 8);
+  if (buffer.getLengthInBits() > totalDataCount) {
+    throw new Error('data length overflow: ' + buffer.getLengthInBits() + ' > ' + totalDataCount);
   }
 
   // end
-  if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+  if (buffer.getLengthInBits() + 4 <= totalDataCount) {
     buffer.put(0, 4);
   }
 
