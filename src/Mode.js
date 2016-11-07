@@ -38,6 +38,11 @@ var FNC1_FIRST_POSITION = new Mode(0x05, [0, 0, 0]);
 var FNC1_SECOND_POSITION = new Mode(0x09, [0, 0, 0]);
 var HANZI = new Mode(0x0D, [8, 10, 12]); // See GBT 18284-2000; "Hanzi" is a transliteration of this mode name.
 
+/**
+ * @param bits four bits encoding a QR Code data mode
+ * @return Mode encoded by these bits
+ * @throws IllegalArgumentException if bits do not correspond to a known mode
+ */
 function forBits(bits) {
   switch (bits) {
     case 0x0:
