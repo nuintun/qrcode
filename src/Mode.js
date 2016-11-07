@@ -38,6 +38,34 @@ var FNC1_FIRST_POSITION = new Mode(0x05, [0, 0, 0]);
 var FNC1_SECOND_POSITION = new Mode(0x09, [0, 0, 0]);
 var HANZI = new Mode(0x0D, [8, 10, 12]); // See GBT 18284-2000; "Hanzi" is a transliteration of this mode name.
 
+function forBits(bits) {
+  switch (bits) {
+    case 0x0:
+      return TERMINATOR;
+    case 0x1:
+      return NUMERIC;
+    case 0x2:
+      return ALPHANUMERIC;
+    case 0x3:
+      return STRUCTURED_APPEND;
+    case 0x4:
+      return BYTE;
+    case 0x5:
+      return FNC1_FIRST_POSITION;
+    case 0x7:
+      return ECI;
+    case 0x8:
+      return KANJI;
+    case 0x9:
+      return FNC1_SECOND_POSITION;
+    case 0xD:
+      // 0xD is defined in GBT 18284-2000, may not be supported in foreign country
+      return HANZI;
+    default:
+      throw new TypeError('IllegalArgumentException: unknow mode');
+  }
+}
+
 export {
   TERMINATOR,
   NUMERIC,
@@ -48,5 +76,6 @@ export {
   KANJI,
   FNC1_FIRST_POSITION,
   FNC1_SECOND_POSITION,
-  HANZI
+  HANZI,
+  forBits
 };
