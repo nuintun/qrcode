@@ -1564,8 +1564,7 @@
     QRKanji: QRKanji,
     QRNumber: QRNumber,
     QRAlphaNum: QRAlphaNum,
-    QR8BitByte: QR8BitByte,
-    getMaxLength: getMaxLength
+    QR8BitByte: QR8BitByte
   };
 
   return encode;
