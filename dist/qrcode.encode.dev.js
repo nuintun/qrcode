@@ -646,17 +646,19 @@
   ];
 
   var MAX_LENGTH = (function() {
-    var i;
+    var i, j;
     var level;
     var buffer;
+    var version;
     var rsLength;
     var rsBlocks;
     var dataCount;
     var maps = [];
     var vLength = PATTERN_POSITION_TABLE.length;
 
-    for (var version = 1; version < vLength; version++) {
-      maps[version] = {};
+    for (i = 0; i < vLength; i++) {
+      maps[i] = {};
+      version = i + 1;
       buffer = new BitBuffer();
 
       for (level in ErrorCorrectLevel) {
@@ -665,14 +667,16 @@
           rsBlocks = RSBlock.getRSBlocks(version, ErrorCorrectLevel[level]);
           rsLength = rsBlocks.length;
 
-          for (i = 0; i < rsLength; i++) {
-            dataCount += rsBlocks[i].getDataCount() * 8;
+          for (j = 0; j < rsLength; j++) {
+            dataCount += rsBlocks[j].getDataCount() * 8;
           }
 
-          maps[version][ErrorCorrectLevel[level]] = dataCount;
+          maps[i][ErrorCorrectLevel[level]] = dataCount;
         }
       }
     }
+
+    console.log(maps.length);
 
     return maps;
   }());
@@ -716,7 +720,7 @@
   }
 
   function getMaxLength(version, level) {
-    return MAX_LENGTH[version][level];
+    return MAX_LENGTH[version - 1][level];
   }
 
   function getMaskFunc(maskPattern) {
