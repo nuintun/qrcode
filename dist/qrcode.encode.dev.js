@@ -677,8 +677,6 @@
       }
     }
 
-    console.log(maps.length);
-
     return maps;
   }());
 

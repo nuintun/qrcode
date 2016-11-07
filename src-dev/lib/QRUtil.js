@@ -80,8 +80,6 @@ var MAX_LENGTH = (function() {
     }
   }
 
-  console.log(maps.length);
-
   return maps;
 }());
 
