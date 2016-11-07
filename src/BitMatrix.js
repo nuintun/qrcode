@@ -359,6 +359,27 @@ BitMatrix.prototype = {
     var rowSize = context.rowSize;
 
     return width === o.width && height === o.height && rowSize === o.rowSize && arrayEquals(bits, o.bits);
+  },
+  hashCode: function() {
+    var context = this;
+    var hash = context.width;
+
+    hash = 31 * hash + context.width;
+    hash = 31 * hash + context.height;
+    hash = 31 * hash + context.rowSize;
+    // TODO javascript hashCode
+    // hash = 31 * hash + Arrays.hashCode(context.bits);
+
+    return hash;
+  },
+  toString: function() {
+    // TODO javascript toString
+    // return toString('X ', '  ');
+  },
+  clone: function() {
+    var context = this;
+
+    return new BitMatrix(context.width, context.height, context.rowSize, context.bits.slice());
   }
 };
 
