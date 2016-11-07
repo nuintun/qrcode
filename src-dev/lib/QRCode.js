@@ -65,7 +65,11 @@ QRCode.prototype = {
     var version = context.version;
 
     if (version === 0) {
-      context.version = QRUtil.getBestVersion(version, context.level, context.data);
+      context.version = QRUtil.getBestVersion(
+        version,
+        context.level,
+        context.data
+      );
     }
 
     context.makeImpl(false, context.getBestMaskPattern());

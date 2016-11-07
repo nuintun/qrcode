@@ -1283,7 +1283,11 @@
       var version = context.version;
 
       if (version === 0) {
-        context.version = getBestVersion(version, context.level, context.data);
+        context.version = getBestVersion(
+          version,
+          context.level,
+          context.data
+        );
       }
 
       context.makeImpl(false, context.getBestMaskPattern());
