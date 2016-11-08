@@ -195,8 +195,8 @@ BitMatrix.prototype = {
    */
   rotate180: function() {
     var context = this;
-    var width = context.getWidth();
-    var height = context.getHeight();
+    var width = context.width;
+    var height = context.height;
     var topRow = new BitArray(width);
     var bottomRow = new BitArray(width);
 
@@ -345,7 +345,7 @@ BitMatrix.prototype = {
    * @return The row size of the matrix
    */
   getRowSize: function() {
-    return rowSize;
+    return this.rowSize;
   },
   equals: function(o) {
     if (!(o instanceof BitMatrix)) {
@@ -362,19 +362,34 @@ BitMatrix.prototype = {
   },
   hashCode: function() {
     var context = this;
+    var bits = context.bits;
     var hash = context.width;
 
     hash = 31 * hash + context.width;
     hash = 31 * hash + context.height;
     hash = 31 * hash + context.rowSize;
-    // TODO javascript hashCode
-    // hash = 31 * hash + Arrays.hashCode(context.bits);
+
+    for (var i = 0, length = bits.length; i < length; i++) {
+      hash = 31 * hash + bits[i];
+    }
 
     return hash;
   },
   toString: function() {
-    // TODO javascript toString
-    // return toString('X ', '  ');
+    var result = '';
+    var context = this;
+    var width = context.width;
+    var height = context.height;
+
+    for (var y = 0; y < height; y++) {
+      for (var x = 0; x < width; x++) {
+        result += context.get(x, y) ? 'X ' : '  ';
+      }
+
+      result += '\n';
+    }
+
+    return result;
   },
   clone: function() {
     var context = this;
