@@ -29,6 +29,7 @@ QRCode.prototype = {
   },
   toString: function() {
     var result = '';
+
     result += '<<\n';
     result += ' mode: ';
     result += mode;
