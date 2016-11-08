@@ -11,6 +11,9 @@
  * meaning they represent lower x values. This is compatible with BitArray's implementation.</p>
  */
 
+import * as Utils from './Utils';
+import BitArray from './BitArray';
+
 /**
  * BitMatrix
  * BitMatrix(dimension)
@@ -184,11 +187,8 @@ BitMatrix.prototype = {
     var context = this;
     var bits = context.bits;
     var rowSize = context.rowSize;
-    var srcArray = row.getBitArray();
 
-    for (var i = 0; i < rowSize; i++) {
-      bits[y * rowSize + i] = srcArray[i];
-    }
+    Utils.arrayCopy(row.getBitArray(), 0, bits, y * rowSize, rowSize);
   },
   /**
    * Modifies this {@code BitMatrix} to represent the same but rotated 180 degrees
@@ -358,7 +358,7 @@ BitMatrix.prototype = {
     var height = context.height;
     var rowSize = context.rowSize;
 
-    return width === o.width && height === o.height && rowSize === o.rowSize && arrayEquals(bits, o.bits);
+    return width === o.width && height === o.height && rowSize === o.rowSize && Utils.arrayEquals(bits, o.bits);
   },
   hashCode: function() {
     var context = this;
@@ -368,10 +368,7 @@ BitMatrix.prototype = {
     hash = 31 * hash + context.width;
     hash = 31 * hash + context.height;
     hash = 31 * hash + context.rowSize;
-
-    for (var i = 0, length = bits.length; i < length; i++) {
-      hash = 31 * hash + bits[i];
-    }
+    hash = 31 * hash + Utils.hashCode(bits);
 
     return hash;
   },
@@ -397,17 +394,3 @@ BitMatrix.prototype = {
     return new BitMatrix(context.width, context.height, context.rowSize, context.bits.slice());
   }
 };
-
-function arrayEquals(origin, target) {
-  if (origin.length !== target.length) {
-    return false;
-  }
-
-  for (var i = 0, length = origin.length; i < length; i++) {
-    if (origin[i] !== target[i]) {
-      return false;
-    }
-  }
-
-  return true;
-}
