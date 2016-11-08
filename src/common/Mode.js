@@ -2,6 +2,13 @@
  * <p>See ISO 18004:2006, 6.4.1, Tables 2 and 3. This enum encapsulates the various modes in which
  * data can be encoded to bits in the QR code standard.</p>
  */
+import IllegalArgumentException from '../exception/IllegalArgumentException';
+
+/**
+ * Mode
+ * @param {any} bits
+ * @param {any} characterCountBitsForVersions
+ */
 function Mode(bits, characterCountBitsForVersions) {
   this.bits = bits;
   this.characterCountBitsForVersions = characterCountBitsForVersions;
@@ -67,7 +74,7 @@ function forBits(bits) {
       // 0xD is defined in GBT 18284-2000, may not be supported in foreign country
       return HANZI;
     default:
-      throw new TypeError('IllegalArgumentException: unknow mode');
+      throw new IllegalArgumentException('Unknow mode');
   }
 }
 

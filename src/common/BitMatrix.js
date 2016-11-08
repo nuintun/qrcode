@@ -13,6 +13,7 @@
 
 import * as Utils from './Utils';
 import BitArray from './BitArray';
+import IllegalArgumentException from '../exception/IllegalArgumentException';
 
 /**
  * BitMatrix
@@ -30,7 +31,7 @@ export default function BitMatrix(width, height, rowSize, bits) {
   }
 
   if (width < 1 || height < 1) {
-    throw new RangeError('IllegalArgumentException: both dimensions must be greater than 0');
+    throw new IllegalArgumentException('Both dimensions must be greater than 0');
   }
 
   var context = this;
@@ -99,7 +100,7 @@ BitMatrix.prototype = {
     var rowSize = context.rowSize;
 
     if (width !== mask.getWidth() || height !== mask.getHeight() || rowSize !== mask.getRowSize()) {
-      throw new RangeError('IllegalArgumentException: input matrix dimensions do not match');
+      throw new IllegalArgumentException('Input matrix dimensions do not match');
     }
 
     var rowArray = new BitArray(width / 32 + 1);
@@ -134,18 +135,18 @@ BitMatrix.prototype = {
    */
   setRegion: function(left, top, width, height) {
     if (top < 0 || left < 0) {
-      throw new RangeError('IllegalArgumentException: left and top must be nonnegative');
+      throw new IllegalArgumentException('Left and top must be nonnegative');
     }
 
     if (height < 1 || width < 1) {
-      throw new RangeError("IllegalArgumentException: height and width must be at least 1");
+      throw new IllegalArgumentException("Height and width must be at least 1");
     }
 
     var right = left + width;
     var bottom = top + height;
 
     if (bottom > this.height || right > this.width) {
-      throw new RangeError("IllegalArgumentException: the region must fit inside the matrix");
+      throw new IllegalArgumentException("The region must fit inside the matrix");
     }
 
     for (var y = top; y < bottom; y++) {

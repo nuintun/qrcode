@@ -3,6 +3,7 @@
  */
 
 import * as Utils from './Utils';
+import IllegalArgumentException from '../exception/IllegalArgumentException';
 
 /**
  * BitArray
@@ -155,7 +156,7 @@ BitArray.prototype = {
    */
   setRange: function(start, end) {
     if (end < start || start < 0 || end > size) {
-      throw new RangeError('IllegalArgumentException: start and end range error');
+      throw new IllegalArgumentException('Params start and end range error');
     }
 
     if (end === start) {
@@ -199,7 +200,7 @@ BitArray.prototype = {
    */
   isRange: function(start, end, value) {
     if (end < start || start < 0 || end > size) {
-      throw new RangeError('IllegalArgumentException: start and end range error');
+      throw new IllegalArgumentException('Params start and end range error');
     }
 
     if (end == start) {
@@ -252,7 +253,7 @@ BitArray.prototype = {
    */
   appendBits: function(value, numBits) {
     if (numBits < 0 || numBits > 32) {
-      throw new RangeError('IllegalArgumentException: num bits must be between 0 and 32');
+      throw new IllegalArgumentException('Num bits must be between 0 and 32');
     }
 
     var context = this;
@@ -278,7 +279,7 @@ BitArray.prototype = {
     var size = context.size;
 
     if (size != other.size) {
-      throw new RangeError('IllegalArgumentException: sizes don\'t match');
+      throw new IllegalArgumentException('Sizes don\'t match');
     }
 
     var bits = context.bits;

@@ -1,6 +1,8 @@
 import ECB from './ECB';
 import ECBlocks from './ECBlocks';
 import BitMatrix from './BitMatrix';
+import FormatException from '../exception/FormatException';
+import IllegalArgumentException from '../exception/IllegalArgumentException';
 
 /**
  * See ISO 18004:2006 Annex D.
@@ -115,7 +117,7 @@ Version.prototype = {
  * @throws FormatException if dimension is not 1 mod 4
  */
 function getProvisionalVersionForDimension(dimension) {
-  var error = new RangeError('FormatException: dimension must be 1 mod 4');
+  var error = new FormatException('Dimension must be 1 mod 4');
 
   if (dimension % 4 !== 1) {
     throw error;
@@ -130,7 +132,7 @@ function getProvisionalVersionForDimension(dimension) {
 
 function getVersionForNumber(versionNumber) {
   if (versionNumber < 1 || versionNumber > 40) {
-    throw new TypeError('IllegalArgumentException: version must be 1 to 40');
+    throw new IllegalArgumentException('Version must be 1 to 40');
   }
 
   return VERSIONS[versionNumber - 1];
