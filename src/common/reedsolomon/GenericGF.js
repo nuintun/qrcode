@@ -86,5 +86,75 @@ GenericGF.prototype = {
     coefficients[0] = coefficient;
 
     return new GenericGFPoly(context, coefficients);
+  },
+  /**
+   * @return 2 to the power of a in GF(size)
+   */
+  exp: function(a) {
+    return this.expTable[a];
+  },
+  /**
+   * @return base 2 log of a in GF(size)
+   */
+  log: function(a) {
+    if (a == 0) {
+      throw new IllegalArgumentException();
+    }
+
+    return this.logTable[a];
+  },
+  /**
+   * @return multiplicative inverse of a
+   */
+  inverse: function(a) {
+    if (a == 0) {
+      throw new ArithmeticException();
+    }
+
+    return this.expTable[size - this.logTable[a] - 1];
+  },
+  /**
+   * @return product of a and b in GF(size)
+   */
+  multiply: function(a, b) {
+    if (a == 0 || b == 0) {
+      return 0;
+    }
+
+    var context = this;
+    var size = context.size;
+    var expTable = context.expTable;
+    var logTable = context.logTable;
+
+    return expTable[(logTable[a] + logTable[b]) % (size - 1)];
+  },
+  getSize: function() {
+    return this.size;
+  },
+  getGeneratorBase: function() {
+    return this.generatorBase;
+  },
+  toString: function() {
+    return "GF(0x" + this.primitive.toString(16) + ',' + this.size + ')';
   }
 }
+
+/**
+ * Implements both addition and subtraction -- they are the same in GF(size).
+ *
+ * @return sum/difference of a and b
+ */
+function addOrSubtract(a, b) {
+  return a ^ b;
+}
+
+GenericGF.addOrSubtract = addOrSubtract;
+
+GenericGF.AZTEC_DATA_12 = AZTEC_DATA_12; // x^12 + x^6 + x^5 + x^3 + 1
+GenericGF.AZTEC_DATA_10 = AZTEC_DATA_10; // x^10 + x^3 + 1
+GenericGF.AZTEC_DATA_6 = AZTEC_DATA_6; // x^6 + x + 1
+GenericGF.AZTEC_PARAM = AZTEC_PARAM; // x^4 + x + 1
+GenericGF.QR_CODE_FIELD_256 = QR_CODE_FIELD_256; // x^8 + x^4 + x^3 + x^2 + 1
+GenericGF.DATA_MATRIX_FIELD_256 = DATA_MATRIX_FIELD_256; // x^8 + x^5 + x^3 + x^2 + 1
+GenericGF.AZTEC_DATA_8 = AZTEC_DATA_8;
+GenericGF.MAXICODE_FIELD_64 = MAXICODE_FIELD_64;
