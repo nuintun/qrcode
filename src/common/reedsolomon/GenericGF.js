@@ -33,6 +33,7 @@ export default function GenericGF(primitive, size, generatorBase) {
   context.size = size;
   context.generatorBase = generatorBase;
 
+  // TODO new int[size]
   context.expTable = new Array(size);
   context.logTable = new Array(size);
 

@@ -121,7 +121,9 @@ function shl(a, b) {
 }
 
 function Buffer(bigEndian, buffer) {
-  this.bigEndian = bigEndian || 0, this.buffer = [], this.setBuffer(buffer);
+  this.bigEndian = bigEndian || 0;
+  this.buffer = [];
+  this.setBuffer(buffer);
 }
 
 Buffer.prototype = {
