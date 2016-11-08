@@ -1,4 +1,30 @@
 /**
+ * inherits
+ * @param ctor
+ * @param superCtor
+ * @param proto
+ */
+export function inherits(ctor, superCtor, proto) {
+  function F() {
+    // constructor
+  }
+
+  // prototype
+  F.prototype = superCtor.prototype;
+
+  ctor.prototype = new F();
+  ctor.prototype.constructor = ctor;
+
+  if (proto) {
+    for (var key in proto) {
+      if (proto.hasOwnProperty(key)) {
+        ctor.prototype[key] = proto[key];
+      }
+    }
+  }
+}
+
+/**
  * copy array
  *
  * @param {any} src
