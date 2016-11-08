@@ -9,8 +9,8 @@
  * @returns { Array }
  */
 export function arrayCopy(src, srcPos, dest, destPos, length) {
-  for (var i = srcPos; i < length; i++) {
-    dest[destPos++] = src[i];
+  for (var i = 0; i < length; i++) {
+    dest[destPos + 1] = src[i + 1];
   }
 
   return dest;
@@ -23,9 +23,16 @@ export function arrayCopy(src, srcPos, dest, destPos, length) {
  * @returns
  */
 export function numberOfTrailingZeros(number) {
-  var zeros = number.toString(2).match(/0+$/);
+  var lookup = [
+    32, 0, 1, 26, 2, 23,
+    27, 0, 3, 16, 24, 30,
+    28, 11, 0, 13, 4, 7,
+    17, 0, 25, 22, 31, 15,
+    29, 10, 12, 6, 0, 21,
+    14, 9, 5, 20, 8, 19, 18
+  ];
 
-  return zeros === null ? 0 : zeros[0].length;
+  return lookup[(number & -number) % 37];
 }
 
 /**
