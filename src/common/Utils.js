@@ -108,3 +108,29 @@ export function hashCode(value) {
 
   return h;
 }
+
+/**
+ * int to byte array
+ * @param {Number} number
+ * @returns
+ */
+export function intToByteArray(number) {
+  return [
+    (number >> 24) & 0xFF,
+    (number >> 16) & 0xFF,
+    (number >> 8) & 0xFF,
+    number & 0xFF
+  ];
+}
+
+/**
+ * byteArray to int
+ * @param {Array} bits
+ * @returns
+ */
+export function byteArrayToInt(bits) {
+  return bits[3] & 0xFF |
+    (bits[2] & 0xFF) << 8 |
+    (bits[1] & 0xFF) << 16 |
+    (bits[0] & 0xFF) << 24;
+}
