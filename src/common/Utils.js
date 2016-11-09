@@ -191,3 +191,32 @@ export var Uint32Array = Uint32Array || function() {
 
   return array;
 };
+
+/**
+ * string to bytes
+ * @export
+ * @param {any} str
+ * @returns
+ */
+export function stringToBytes(str) {
+  var ch;
+  var st;
+  var re = [];
+
+  for (var i = 0; i < str.length; i++) {
+    st = []; // set up "stack"
+    ch = str.charCodeAt(i); // get char
+
+    do {
+      st.push(ch & 0xFF); // push byte to stack
+      ch = ch >> 8; // shift value down by 1 byte
+    } while (ch);
+
+    // add stack contents to result
+    // done because chars have "wrong" endianness
+    re = re.concat(st.reverse());
+  }
+
+  // return an array of bytes
+  return re;
+}
