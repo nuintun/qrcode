@@ -176,17 +176,18 @@ export function toBinary(number) {
  * @param {Number | Array} length | array
  */
 export var Uint32Array = Uint32Array || function() {
+  var array;
   var length = arguments[0];
 
   if (type(length) === 'number') {
-    var array = [];
+    array = [];
 
     while (length--) {
       array[length] = 0;
     }
-
-    return array;
   } else {
-    return length;
+    array = length;
   }
+
+  return array;
 };
