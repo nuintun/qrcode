@@ -123,11 +123,11 @@ export function hashCode(value) {
 }
 
 /**
- * int to byte array
+ * int to bytes
  * @param {Number} number
  * @returns
  */
-export function intToByteArray(number) {
+export function intToBytes(number) {
   return [
     (number >> 24) & 0xFF,
     (number >> 16) & 0xFF,
@@ -137,11 +137,11 @@ export function intToByteArray(number) {
 }
 
 /**
- * byteArray to int
+ * bytes to int
  * @param {Array} bits
  * @returns
  */
-export function byteArrayToInt(bits) {
+export function bytesToInt(bits) {
   return bits[3] & 0xFF |
     (bits[2] & 0xFF) << 8 |
     (bits[1] & 0xFF) << 16 |
