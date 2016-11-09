@@ -1,3 +1,16 @@
+// toString
+var toString = Object.prototype.toString;
+
+/**
+ * type
+ * @export
+ * @param {any} value
+ * @returns
+ */
+export function type(value) {
+  return toString.call(value).slice(8, -1).toLowerCase();
+}
+
 /**
  * inherits
  * @param ctor
@@ -134,3 +147,46 @@ export function byteArrayToInt(bits) {
     (bits[1] & 0xFF) << 16 |
     (bits[0] & 0xFF) << 24;
 }
+
+/**
+ * to binary
+ * @param {any} number
+ * @returns
+ */
+export function toBinary(number) {
+  var i = 0;
+  var bits = new Array(32);
+
+  while (number) {
+    bits[i++] = (number & 1) == 1 ? '1' : '0';
+    number >>= 1;
+  }
+
+  var rv = '';
+
+  for (var idx = 0; idx < i; idx++) {
+    rv += bits[idx];
+  }
+
+  return rv;
+}
+
+/**
+ * Uint32Array
+ * @param {Number | Array} length | array
+ */
+export var Uint32Array = Uint32Array || function() {
+  var length = arguments[0];
+
+  if (type(length) === 'number') {
+    var array = [];
+
+    while (length--) {
+      array[length] = 0;
+    }
+
+    return array;
+  } else {
+    return length;
+  }
+};
