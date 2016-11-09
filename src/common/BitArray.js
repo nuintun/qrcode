@@ -15,7 +15,7 @@ export default function BitArray(bits, size) {
   switch (arguments.length) {
     case 0:
       size = 0;
-      bits = new Array(1);
+      bits = new Utils.Uint32Array(1);
       break;
     case 1:
       size = bits;
@@ -327,7 +327,7 @@ BitArray.prototype = {
     var context = this;
     var size = context.size;
     var bits = context.bits;
-    var newBits = new Array[bits.length];
+    var newBits = new Utils.Uint32Array(bits.length);
     // reverse all int's first
     var len = (size - 1) / 32;
     var oldBitsLen = len + 1;
@@ -399,5 +399,5 @@ BitArray.prototype = {
 };
 
 function makeArray(size) {
-  return new Array((size + 31) / 32);
+  return new Utils.Uint32Array((size + 31) / 32);
 }
