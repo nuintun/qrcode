@@ -21,6 +21,6 @@
   "end_with_newline": true,
   "indent-scripts": "keep",
   "indent-inner-html": true,
-  "comma-first": true,
+  "comma-first": false,
   "e4x": true
 }
