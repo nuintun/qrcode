@@ -16,6 +16,6 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "rollup": "^0.36.3"
+    "rollup": "^0.36.4"
   }
 }
