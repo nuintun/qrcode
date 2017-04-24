@@ -214,8 +214,11 @@ pip-log.txt
 #Mr Developer
 .mr.developer.cfg
 
-# WebStorm
+#node modules
+node_modules
+
+#WebStorm
 .idea
 
-# node
-node_modules
+# test mdb
+test/node-adodb.mdb
