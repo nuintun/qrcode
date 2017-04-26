@@ -1,0 +1,21 @@
+{
+  "name": "qrcode",
+  "version": "0.0.1",
+  "description": "A javascript qrcode encode and decode library.",
+  "author": {
+    "name": "nuintun",
+    "email": "nuintun@qq.com"
+  },
+  "homepage": "https://nuintun.github.io/qrcode",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nuintun/qrcode.git"
+  },
+  "scripts": {
+    "build": "webpack --display-error-details"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "rollup": "^0.36.3"
+  }
+}
