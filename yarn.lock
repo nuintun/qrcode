@@ -554,7 +554,7 @@ rollup-pluginutils@2.4.1:
     estree-walker "^0.6.0"
     micromatch "^3.1.10"
 
-rollup@^1.9.0:
+rollup@^1.9.3:
   version "1.9.2"
   resolved "https://registry.yarnpkg.com/rollup/-/rollup-1.9.2.tgz#9b4cd2f04ca2052e38a54994a6977c492b7abd10"
   integrity sha512-qgAdFJ3Latpw2teP0ByEJcyIYkGgT192hXl42Q7tfyMiexvUqsOEOGVCPZOeHT/HJ9QZMDOfTq0W5a4ET3A6UA==
@@ -686,7 +686,7 @@ ts-custom-error@^3.0.0:
   resolved "https://registry.yarnpkg.com/ts-custom-error/-/ts-custom-error-3.0.0.tgz#f8bf787806b840aff7fd229e59348a33e3878bea"
   integrity sha512-5Y3iiC9/e2EtGy+fxRPuNEYYexU+hw4ejxi6EXxwt3vV4DYTLwDBJrU1MTTRCh4JhswObsnmYJrfmejpznk09w==
 
-tslib@1.9.3:
+tslib@1.9.3, tslib@^1.9.3:
   version "1.9.3"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.9.3.tgz#d7e4dd79245d85428c4d7e4822a79917954ca286"
   integrity sha512-4krF8scpejhaOgqzBEcGM7yDIEfi0/8+8zDRZhNZZ2kjmHJ4hv3zCbQWxoJGz1iw5U0Jl0nma13xzHXcncMavQ==

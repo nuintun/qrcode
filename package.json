@@ -2,7 +2,9 @@
   "name": "@nuintun/qrcode",
   "version": "1.0.0",
   "description": "QRCode encode and decode library.",
-  "main": "index.js",
+  "main": "es5/index.js",
+  "module": "esnext/index.js",
+  "types": "types/index.d.ts",
   "directories": {
     "example": "examples"
   },
@@ -19,11 +21,18 @@
   "bugs": {
     "url": "https://github.com/nuintun/qrcode/issues"
   },
+  "scripts": {
+    "prepublishOnly": "npm run build",
+    "build": "npm run build:es5 && npm run build:es6",
+    "build:es5": "tsc --pretty --module commonjs --outDir es5",
+    "build:es6": "tsc --pretty --module esnext --outDir esnext"
+  },
   "dependencies": {
+    "tslib": "^1.9.3",
     "ts-custom-error": "^3.0.0"
   },
   "devDependencies": {
-    "rollup": "^1.9.0",
+    "rollup": "^1.9.3",
     "typescript": "^3.4.3",
     "rollup-plugin-typescript2": "^0.20.1"
   },

@@ -60,13 +60,39 @@ typings/
 # next.js build output
 .next
 
-# vscode
+# git ignore configuration
+.gitignore
+
+# npm ignore configuration
+.npmignore
+
+# travis configuration
+.travis.yml
+
+# appveyor configuration
+appveyor.yml
+
+# tests directories
+tests
+test
+
+# npm configuration
+.npmrc
+
+# vscode configuration
 .vscode
+
+# yarn lock file
+yarn.lock
 
 # npm lock file
 package-lock.json
 
-# build file
-/es5/
-/esnext/
-/types/
+# yarn lock file
+yarn.lock
+
+# typescript configuration
+tsconfig.json
+
+# src file
+/src/

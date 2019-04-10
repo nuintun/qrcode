@@ -1,16 +1,17 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "newLine": "LF",
-    "pretty": true,
     "target": "es5",
     "module": "es6",
-    "sourceMap": false,
+    "newLine": "LF",
     "declaration": true,
-    "noUnusedLocals": true,
-    "listEmittedFiles": true,
+    "alwaysStrict": true,
+    "importHelpers": true,
+    "declarationDir": "types",
     "moduleResolution": "node",
-    "noUnusedParameters": true,
-    "allowSyntheticDefaultImports": true
-  }
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["es5", "esnext", "dom", "scripthost"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
 }
