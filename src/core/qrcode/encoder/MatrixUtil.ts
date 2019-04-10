@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.qrcode.encoder {*/
-
 import BitArray from '../../common/BitArray';
 import ErrorCorrectionLevel from '../decoder/ErrorCorrectionLevel';
 import Version from '../decoder/Version';

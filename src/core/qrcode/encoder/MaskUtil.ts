@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.qrcode.encoder {*/
-
 import ByteMatrix from './ByteMatrix';
 import IllegalArgumentException from '../../IllegalArgumentException';
 

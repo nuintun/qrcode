@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.qrcode.decoder {*/
-
 import DecodeHintType from '../../DecodeHintType';
 import BitSource from '../../common/BitSource';
 import CharacterSetECI from '../../common/CharacterSetECI';
@@ -27,12 +25,6 @@ import Mode from './Mode';
 import StringBuilder from '../../util/StringBuilder';
 import StringEncoding from '../../util/StringEncoding';
 import FormatException from '../../FormatException';
-
-/*import java.io.UnsupportedEncodingException;*/
-/*import java.util.ArrayList;*/
-/*import java.util.Collection;*/
-/*import java.util.List;*/
-/*import java.util.Map;*/
 
 /**
  * <p>QR Codes can encode text as bits in one of several modes, and can use multiple modes

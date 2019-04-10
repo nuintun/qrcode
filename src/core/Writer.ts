@@ -14,15 +14,11 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing {*/
-
 import BitMatrix from './common/BitMatrix';
 import BarcodeFormat from './BarcodeFormat';
 import EncodeHintType from './EncodeHintType';
 
 export default Writer;
-
-/*import java.util.Map;*/
 
 /**
  * The base class for all objects which encode/generate a barcode image.

@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.qrcode.decoder {*/
-
 import BitMatrix from '../../common/BitMatrix';
 import ErrorCorrectionLevel from './ErrorCorrectionLevel';
 import FormatInformation from './FormatInformation';

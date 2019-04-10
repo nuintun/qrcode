@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.qrcode.encoder {*/
-
 import EncodeHintType from '../../EncodeHintType';
 import BitArray from '../../common/BitArray';
 import CharacterSetECI from '../../common/CharacterSetECI';
@@ -32,11 +30,6 @@ import MatrixUtil from './MatrixUtil';
 import StringEncoding from '../../util/StringEncoding';
 import BlockPair from './BlockPair';
 import WriterException from '../../WriterException';
-
-/*import java.io.UnsupportedEncodingException;*/
-/*import java.util.ArrayList;*/
-/*import java.util.Collection;*/
-/*import java.util.Map;*/
 
 /**
  * @author satorux@google.com (Satoru Takabayashi) - creator

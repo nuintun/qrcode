@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing {*/
-
 import LuminanceSource from './LuminanceSource';
 import BitArray from './common/BitArray';
 import BitMatrix from './common/BitMatrix';

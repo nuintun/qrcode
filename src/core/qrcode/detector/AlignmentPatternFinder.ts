@@ -14,15 +14,10 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.qrcode.detector {*/
-
 import ResultPointCallback from '../../ResultPointCallback';
 import BitMatrix from '../../common/BitMatrix';
 import AlignmentPattern from './AlignmentPattern';
 import NotFoundException from '../../NotFoundException';
-
-/*import java.util.ArrayList;*/
-/*import java.util.List;*/
 
 /**
  * <p>This class attempts to find alignment patterns in a QR Code. Alignment patterns look like finder

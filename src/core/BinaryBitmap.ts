@@ -21,8 +21,6 @@
  * @author dswitkin@google.com (Daniel Switkin)
  */
 
-/*namespace com.google.zxing {*/
-
 import Binarizer from './Binarizer';
 import BitArray from './common/BitArray';
 import BitMatrix from './common/BitMatrix';

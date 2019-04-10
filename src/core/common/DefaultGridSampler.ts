@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.common {*/
-
 import GridSampler from './GridSampler';
 import BitMatrix from './BitMatrix';
 import PerspectiveTransform from './PerspectiveTransform';

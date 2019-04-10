@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.qrcode.decoder {*/
-
 import ErrorCorrectionLevel from './ErrorCorrectionLevel';
 import Integer from '../../util/Integer';
 

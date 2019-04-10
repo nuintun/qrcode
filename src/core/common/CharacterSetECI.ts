@@ -14,12 +14,7 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.common {*/
-
 import FormatException from '../FormatException';
-
-/*import java.util.HashMap;*/
-/*import java.util.Map;*/
 
 export enum CharacterSetValueIdentifiers {
   Cp437,

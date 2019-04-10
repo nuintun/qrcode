@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.common {*/
-
-/*import java.util.Arrays;*/
-
 import BitArray from './BitArray';
 import System from '../util/System';
 import Arrays from '../util/Arrays';
@@ -40,15 +36,6 @@ import IllegalArgumentException from '../IllegalArgumentException';
  * @author dswitkin@google.com (Daniel Switkin)
  */
 export default class BitMatrix /*implements Cloneable*/ {
-  /**
-   * Creates an empty square {@link BitMatrix}.
-   *
-   * @param dimension height and width
-   */
-  // public constructor(dimension: number /*int*/) {
-  //   this(dimension, dimension)
-  // }
-
   /**
    * Creates an empty {@link BitMatrix}.
    *

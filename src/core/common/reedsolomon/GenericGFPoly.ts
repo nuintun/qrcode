@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.common.reedsolomon {*/
-
 import GenericGF from './GenericGF';
 import System from '../../util/System';
 import IllegalArgumentException from '../../IllegalArgumentException';
@@ -105,6 +103,7 @@ export default class GenericGFPoly {
     }
 
     const coefficients = this.coefficients;
+
     let result: number;
 
     if (a === 1) {
@@ -113,6 +112,7 @@ export default class GenericGFPoly {
 
       for (let i = 0, length = coefficients.length; i !== length; i++) {
         const coefficient = coefficients[i];
+
         result = GenericGF.addOrSubtract(result, coefficient);
       }
 

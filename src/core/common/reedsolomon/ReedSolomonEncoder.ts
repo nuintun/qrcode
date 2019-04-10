@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.common.reedsolomon {*/
-
-/*import java.util.ArrayList;*/
-/*import java.util.List;*/
-
 import GenericGF from './GenericGF';
 import GenericGFPoly from './GenericGFPoly';
 import System from '../../util/System';

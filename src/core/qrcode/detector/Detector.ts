@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.qrcode.detector {*/
-
 import DecodeHintType from '../../DecodeHintType';
 import ResultPoint from '../../ResultPoint';
 import ResultPointCallback from '../../ResultPointCallback';
@@ -31,8 +29,6 @@ import FinderPattern from './FinderPattern';
 import AlignmentPattern from './AlignmentPattern';
 import AlignmentPatternFinder from './AlignmentPatternFinder';
 import NotFoundException from '../../NotFoundException';
-
-/*import java.util.Map;*/
 
 /**
  * <p>Encapsulates logic that can detect a QR Code in an image, even if the QR Code

@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.common.reedsolomon {*/
-
 import GenericGF from './GenericGF';
 import GenericGFPoly from './GenericGFPoly';
 import ReedSolomonException from '../../ReedSolomonException';

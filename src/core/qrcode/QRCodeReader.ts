@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.qrcode {*/
-
 import BarcodeFormat from '../BarcodeFormat';
 import BinaryBitmap from '../BinaryBitmap';
 import DecodeHintType from '../DecodeHintType';
@@ -29,9 +27,6 @@ import Decoder from './decoder/Decoder';
 import QRCodeDecoderMetaData from './decoder/QRCodeDecoderMetaData';
 import Detector from './detector/Detector';
 import NotFoundException from '../NotFoundException';
-
-/*import java.util.List;*/
-/*import java.util.Map;*/
 
 /**
  * This implementation can detect and decode QR Codes in an image.

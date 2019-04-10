@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.common.detector {*/
-
 /**
  * General math-related and numeric utility functions.
  */
@@ -58,19 +56,6 @@ export default class MathUtils {
 
     return /*(float) */ Math.sqrt(xDiff * xDiff + yDiff * yDiff);
   }
-
-  /**
-   * @param aX point A x coordinate
-   * @param aY point A y coordinate
-   * @param bX point B x coordinate
-   * @param bY point B y coordinate
-   * @return Euclidean distance between points A and B
-   */
-  // public static distance(aX: number /*int*/, aY: number /*int*/, bX: number /*int*/, bY: number /*int*/): float {
-  //   const xDiff = aX - bX
-  //   const yDiff = aY - bY
-  //   return (float) Math.sqrt(xDiff * xDiff + yDiff * yDiff);
-  // }
 
   /**
    * @param array values to sum

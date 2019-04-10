@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.common {*/
-
-/*import java.util.Arrays;*/
-
 import System from '../util/System';
 import Integer from '../util/Integer';
 import Arrays from '../util/Arrays';

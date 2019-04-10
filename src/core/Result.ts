@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing {*/
-
-/*import java.util.EnumMap;*/
-/*import java.util.Map;*/
 import ResultPoint from './ResultPoint';
 import BarcodeFormat from './BarcodeFormat';
 import System from './util/System';

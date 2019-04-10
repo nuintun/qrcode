@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.qrcode.decoder {*/
-
 import ArgumentException from '../../ArgumentException';
 import IllegalArgumentException from '../../IllegalArgumentException';
 

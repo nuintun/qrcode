@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing {*/
-
-/*import java.util.Map;*/
-
 import BinaryBitmap from './BinaryBitmap';
 import Result from './Result';
 import DecodeHintType from './DecodeHintType';

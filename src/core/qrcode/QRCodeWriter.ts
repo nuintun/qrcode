@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.qrcode {*/
-
 import BarcodeFormat from '../BarcodeFormat';
 import EncodeHintType from '../EncodeHintType';
 import Writer from '../Writer';
@@ -25,8 +23,6 @@ import Encoder from './encoder/Encoder';
 import QRCode from './encoder/QRCode';
 import IllegalArgumentException from '../IllegalArgumentException';
 import IllegalStateException from '../IllegalStateException';
-
-/*import java.util.Map;*/
 
 /**
  * This object renders a QR Code as a BitMatrix 2D array of greyscale values.

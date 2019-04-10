@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.qrcode.decoder {*/
-
 import Version from './Version';
 import ECBlocks from './ECBlocks';
 import ECB from './ECB';

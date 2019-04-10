@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.common {*/
-
-/*import java.nio.charset.Charset;*/
-/*import java.util.Map;*/
-
 import DecodeHintType from '../DecodeHintType';
 import CharacterSetECI from './CharacterSetECI';
 

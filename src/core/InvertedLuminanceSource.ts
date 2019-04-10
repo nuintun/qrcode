@@ -16,8 +16,6 @@
 
 import LuminanceSource from './LuminanceSource';
 
-/*namespace com.google.zxing {*/
-
 /**
  * A wrapper implementation of {@link LuminanceSource} which inverts the luminances it returns -- black becomes
  * white and vice versa, and each value becomes (255-value).

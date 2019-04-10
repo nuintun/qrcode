@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.common.reedsolomon {*/
-
 import GenericGFPoly from './GenericGFPoly';
 import Integer from '../../util/Integer';
 import IllegalArgumentException from '../../IllegalArgumentException';

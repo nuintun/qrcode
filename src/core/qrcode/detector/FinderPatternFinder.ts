@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.qrcode.detector {*/
-
 import DecodeHintType from '../../DecodeHintType';
 import ResultPoint from '../../ResultPoint';
 import ResultPointCallback from '../../ResultPointCallback';
@@ -23,13 +21,6 @@ import BitMatrix from '../../common/BitMatrix';
 import FinderPattern from './FinderPattern';
 import FinderPatternInfo from './FinderPatternInfo';
 import NotFoundException from '../../NotFoundException';
-
-/*import java.io.Serializable;*/
-/*import java.util.ArrayList;*/
-/*import java.util.Collections;*/
-/*import java.util.Comparator;*/
-/*import java.util.List;*/
-/*import java.util.Map;*/
 
 /**
  * <p>This class attempts to find finder patterns in a QR Code. Finder patterns are the square

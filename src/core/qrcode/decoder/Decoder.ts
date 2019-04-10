@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.qrcode.decoder {*/
-
 import DecodeHintType from '../../DecodeHintType';
 import BitMatrix from '../../common/BitMatrix';
 import DecoderResult from '../../common/DecoderResult';
@@ -26,8 +24,6 @@ import QRCodeDecoderMetaData from './QRCodeDecoderMetaData';
 import DataBlock from './DataBlock';
 import DecodedBitStreamParser from './DecodedBitStreamParser';
 import ChecksumException from '../../ChecksumException';
-
-/*import java.util.Map;*/
 
 /**
  * <p>The main class which implements QR Code decoding -- as opposed to locating and extracting
@@ -55,10 +51,6 @@ export default class Decoder {
   public decodeBooleanArray(image: boolean[][], hints?: Map<DecodeHintType, any>): DecoderResult {
     return this.decodeBitMatrix(BitMatrix.parseFromBooleanArray(image), hints);
   }
-
-  // public decodeBitMatrix(bits: BitMatrix): DecoderResult /*throws ChecksumException, FormatException*/ {
-  //   return decode(bits, null)
-  // }
 
   /**
    * <p>Decodes a QR Code represented as a {@link BitMatrix}. A 1 or "true" is taken to mean a black module.</p>

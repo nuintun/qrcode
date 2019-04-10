@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing {*/
-
 import MathUtils from './common/detector/MathUtils';
 import Float from './util/Float';
 

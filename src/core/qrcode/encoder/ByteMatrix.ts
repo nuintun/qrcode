@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-/*namespace com.google.zxing.qrcode.encoder {*/
-
-/*import java.util.Arrays;*/
-
 import Arrays from '../../util/Arrays';
 import StringBuilder from '../../util/StringBuilder';
 
