@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import MathUtils from './common/detector/MathUtils';
 import Float from './util/Float';
+import MathUtils from './common/detector/MathUtils';
 
 /**
  * <p>Encapsulates a point of interest in an image containing a barcode. Typically, this
@@ -24,13 +24,19 @@ import Float from './util/Float';
  * @author Sean Owen
  */
 export default class ResultPoint {
-  public constructor(private x: number /*float*/, private y: number /*float*/) {}
+  private x: number; // float
+  private y: number; // float
 
-  public getX(): number /*float*/ {
+  public constructor(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
+
+  public getX(): number {
     return this.x;
   }
 
-  public getY(): number /*float*/ {
+  public getY(): number {
     return this.y;
   }
 
@@ -38,8 +44,10 @@ export default class ResultPoint {
   public equals(other: Object): boolean {
     if (other instanceof ResultPoint) {
       const otherPoint = <ResultPoint>other;
+
       return this.x === otherPoint.x && this.y === otherPoint.y;
     }
+
     return false;
   }
 
@@ -68,6 +76,7 @@ export default class ResultPoint {
     let pointA: ResultPoint;
     let pointB: ResultPoint;
     let pointC: ResultPoint;
+
     // Assume one closest to other two is B; A and C will just be guesses at first
     if (oneTwoDistance >= zeroOneDistance && oneTwoDistance >= zeroTwoDistance) {
       pointB = patterns[0];
@@ -89,6 +98,7 @@ export default class ResultPoint {
     // should swap A and C.
     if (this.crossProductZ(pointA, pointB, pointC) < 0.0) {
       const temp = pointA;
+
       pointA = pointC;
       pointC = temp;
     }
@@ -103,14 +113,14 @@ export default class ResultPoint {
    * @param pattern2 second pattern
    * @return distance between two points
    */
-  public static distance(pattern1: ResultPoint, pattern2: ResultPoint): number /*float*/ {
+  public static distance(pattern1: ResultPoint, pattern2: ResultPoint): number {
     return MathUtils.distance(pattern1.x, pattern1.y, pattern2.x, pattern2.y);
   }
 
   /**
    * Returns the z component of the cross product between vectors BC and BA.
    */
-  private static crossProductZ(pointA: ResultPoint, pointB: ResultPoint, pointC: ResultPoint): number /*float*/ {
+  private static crossProductZ(pointA: ResultPoint, pointB: ResultPoint, pointC: ResultPoint): number {
     const bX = pointB.x;
     const bY = pointB.y;
 
