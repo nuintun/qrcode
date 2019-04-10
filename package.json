@@ -32,9 +32,7 @@
     "ts-custom-error": "^3.0.0"
   },
   "devDependencies": {
-    "rollup": "^1.9.3",
-    "typescript": "^3.4.3",
-    "rollup-plugin-typescript2": "^0.20.1"
+    "typescript": "^3.4.3"
   },
   "homepage": "https://github.com/nuintun/qrcode#readme"
 }
