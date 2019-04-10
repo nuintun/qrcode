@@ -26,115 +26,108 @@
  * @author Sean Owen
  */
 export default class DecoderResult {
+  private numBits: number; /*int*/
+  private errorsCorrected: number; /*Integer*/
+  private erasures: number; /*Integer*/
+  private other: any;
 
-    private numBits: number; /*int*/
-    private errorsCorrected: number; /*Integer*/
-    private erasures: number; /*Integer*/
-    private other: any;
+  public constructor(
+    private rawBytes: Uint8Array,
+    private text: string,
+    private byteSegments: Uint8Array[],
+    private ecLevel: string,
+    private structuredAppendSequenceNumber: number /*int*/ = -1,
+    private structuredAppendParity: number /*int*/ = -1
+  ) {
+    this.numBits = rawBytes === undefined || rawBytes === null ? 0 : 8 * rawBytes.length;
+  }
 
-    // public constructor(rawBytes: Uint8Array,
-    //                      text: string,
-    //                      List<Uint8Array> byteSegments,
-    //                      String ecLevel) {
-    //   this(rawBytes, text, byteSegments, ecLevel, -1, -1)
-    // }
+  /**
+   * @return raw bytes representing the result, or {@code null} if not applicable
+   */
+  public getRawBytes(): Uint8Array {
+    return this.rawBytes;
+  }
 
-    public constructor(private rawBytes: Uint8Array,
-        private text: string,
-        private byteSegments: Uint8Array[],
-        private ecLevel: string,
-        private structuredAppendSequenceNumber: number /*int*/ = -1,
-        private structuredAppendParity: number /*int*/ = -1) {
-        this.numBits = (rawBytes === undefined || rawBytes === null) ? 0 : 8 * rawBytes.length;
-    }
+  /**
+   * @return how many bits of {@link #getRawBytes()} are valid; typically 8 times its length
+   * @since 3.3.0
+   */
+  public getNumBits(): number /*int*/ {
+    return this.numBits;
+  }
 
-    /**
-     * @return raw bytes representing the result, or {@code null} if not applicable
-     */
-    public getRawBytes(): Uint8Array {
-        return this.rawBytes;
-    }
+  /**
+   * @param numBits overrides the number of bits that are valid in {@link #getRawBytes()}
+   * @since 3.3.0
+   */
+  public setNumBits(numBits: number /*int*/): void {
+    this.numBits = numBits;
+  }
 
-    /**
-     * @return how many bits of {@link #getRawBytes()} are valid; typically 8 times its length
-     * @since 3.3.0
-     */
-    public getNumBits(): number /*int*/ {
-        return this.numBits;
-    }
+  /**
+   * @return text representation of the result
+   */
+  public getText(): string {
+    return this.text;
+  }
 
-    /**
-     * @param numBits overrides the number of bits that are valid in {@link #getRawBytes()}
-     * @since 3.3.0
-     */
-    public setNumBits(numBits: number /*int*/): void {
-        this.numBits = numBits;
-    }
+  /**
+   * @return list of byte segments in the result, or {@code null} if not applicable
+   */
+  public getByteSegments(): Uint8Array[] {
+    return this.byteSegments;
+  }
 
-    /**
-     * @return text representation of the result
-     */
-    public getText(): string {
-        return this.text;
-    }
+  /**
+   * @return name of error correction level used, or {@code null} if not applicable
+   */
+  public getECLevel(): string {
+    return this.ecLevel;
+  }
 
-    /**
-     * @return list of byte segments in the result, or {@code null} if not applicable
-     */
-    public getByteSegments(): Uint8Array[] {
-        return this.byteSegments;
-    }
+  /**
+   * @return number of errors corrected, or {@code null} if not applicable
+   */
+  public getErrorsCorrected(): number /*Integer*/ {
+    return this.errorsCorrected;
+  }
 
-    /**
-     * @return name of error correction level used, or {@code null} if not applicable
-     */
-    public getECLevel(): string {
-        return this.ecLevel;
-    }
+  public setErrorsCorrected(errorsCorrected: number /*Integer*/): void {
+    this.errorsCorrected = errorsCorrected;
+  }
 
-    /**
-     * @return number of errors corrected, or {@code null} if not applicable
-     */
-    public getErrorsCorrected(): number/*Integer*/ {
-        return this.errorsCorrected;
-    }
+  /**
+   * @return number of erasures corrected, or {@code null} if not applicable
+   */
+  public getErasures(): number /*Integer*/ {
+    return this.erasures;
+  }
 
-    public setErrorsCorrected(errorsCorrected: number/*Integer*/): void {
-        this.errorsCorrected = errorsCorrected;
-    }
+  public setErasures(erasures: number /*Integer*/): void {
+    this.erasures = erasures;
+  }
 
-    /**
-     * @return number of erasures corrected, or {@code null} if not applicable
-     */
-    public getErasures(): number/*Integer*/ {
-        return this.erasures;
-    }
+  /**
+   * @return arbitrary additional metadata
+   */
+  public getOther(): any {
+    return this.other;
+  }
 
-    public setErasures(erasures: number/*Integer*/): void {
-        this.erasures = erasures;
-    }
+  public setOther(other: any): void {
+    this.other = other;
+  }
 
-    /**
-     * @return arbitrary additional metadata
-     */
-    public getOther(): any {
-        return this.other;
-    }
+  public hasStructuredAppend(): boolean {
+    return this.structuredAppendParity >= 0 && this.structuredAppendSequenceNumber >= 0;
+  }
 
-    public setOther(other: any): void {
-        this.other = other;
-    }
+  public getStructuredAppendParity(): number /*int*/ {
+    return this.structuredAppendParity;
+  }
 
-    public hasStructuredAppend(): boolean {
-        return this.structuredAppendParity >= 0 && this.structuredAppendSequenceNumber >= 0;
-    }
-
-    public getStructuredAppendParity(): number /*int*/ {
-        return this.structuredAppendParity;
-    }
-
-    public getStructuredAppendSequenceNumber(): number /*int*/ {
-        return this.structuredAppendSequenceNumber;
-    }
-
+  public getStructuredAppendSequenceNumber(): number /*int*/ {
+    return this.structuredAppendSequenceNumber;
+  }
 }

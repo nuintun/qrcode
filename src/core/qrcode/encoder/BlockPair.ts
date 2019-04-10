@@ -17,15 +17,13 @@
 /*namespace com.google.zxing.qrcode.encoder {*/
 
 export default class BlockPair {
+  public constructor(private dataBytes: Uint8Array, private errorCorrectionBytes: Uint8Array) {}
 
-    public constructor(private dataBytes: Uint8Array, private errorCorrectionBytes: Uint8Array) { }
+  public getDataBytes(): Uint8Array {
+    return this.dataBytes;
+  }
 
-    public getDataBytes(): Uint8Array {
-        return this.dataBytes;
-    }
-
-    public getErrorCorrectionBytes(): Uint8Array {
-        return this.errorCorrectionBytes;
-    }
-
+  public getErrorCorrectionBytes(): Uint8Array {
+    return this.errorCorrectionBytes;
+  }
 }

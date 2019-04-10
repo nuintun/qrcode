@@ -27,7 +27,5 @@ export default ResultPointCallback;
  * @see DecodeHintType#NEED_RESULT_POINT_CALLBACK
  */
 interface ResultPointCallback {
-
-    foundPossibleResultPoint(point: ResultPoint): void;
-
+  foundPossibleResultPoint(point: ResultPoint): void;
 }
