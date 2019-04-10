@@ -9,6 +9,7 @@
     "declaration": true,
     "noUnusedLocals": true,
     "listEmittedFiles": true,
+    "moduleResolution": "node",
     "noUnusedParameters": true,
     "allowSyntheticDefaultImports": true
   }
