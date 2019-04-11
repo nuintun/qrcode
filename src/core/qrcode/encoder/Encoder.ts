@@ -67,7 +67,7 @@ export default class Encoder {
    * @return {@link QRCode} representing the encoded QR code
    * @throws WriterException if encoding can't succeed, because of for example invalid content or configuration
    */
-  public static encode(content: string, ecLevel: ErrorCorrectionLevel, hints: Map<EncodeHintType, object> = null): QRCode {
+  public static encode(content: string, ecLevel: ErrorCorrectionLevel, hints: Map<EncodeHintType, any> = null): QRCode {
     // Determine what character encoding has been specified by the caller, if any
     let encoding: string = Encoder.DEFAULT_BYTE_MODE_ENCODING;
     const hasEncodingHint: boolean = hints != null && hints.get(EncodeHintType.CHARACTER_SET) != null;
