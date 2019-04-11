@@ -17,7 +17,7 @@
 import Version from './Version';
 import IllegalArgumentException from '../../IllegalArgumentException';
 
-export enum ModeValues {
+enum ModeValues {
   TERMINATOR, // Not really a mode...
   NUMERIC,
   ALPHANUMERIC,
@@ -27,8 +27,7 @@ export enum ModeValues {
   KANJI,
   FNC1_FIRST_POSITION,
   FNC1_SECOND_POSITION,
-  /** See GBT 18284-2000; "Hanzi" is a transliteration of this mode name. */
-  HANZI
+  HANZI // See GBT 18284-2000; "Hanzi" is a transliteration of this mode name.
 }
 
 /**
@@ -65,15 +64,27 @@ export default class Mode {
     Int32Array.from([0, 0, 0]),
     0x09
   );
-  /** See GBT 18284-2000; "Hanzi" is a transliteration of this mode name. */
+  // See GBT 18284-2000; "Hanzi" is a transliteration of this mode name.
   public static HANZI = new Mode(ModeValues.HANZI, 'HANZI', Int32Array.from([8, 10, 12]), 0x0d);
 
-  private constructor(
-    private value: ModeValues,
-    private stringValue: string,
-    private characterCountBitsForVersions: Int32Array,
-    private bits: number /*int*/
-  ) {
+  private value: ModeValues;
+  private stringValue: string;
+  private characterCountBitsForVersions: Int32Array;
+  private bits: number;
+
+  /**
+   * @constructor
+   * @param value
+   * @param stringValue
+   * @param characterCountBitsForVersions
+   * @param bits
+   */
+  private constructor(value: ModeValues, stringValue: string, characterCountBitsForVersions: Int32Array, bits: number) {
+    this.value = value;
+    this.stringValue = stringValue;
+    this.characterCountBitsForVersions = characterCountBitsForVersions;
+    this.bits = this.bits;
+
     Mode.FOR_BITS.set(bits, this);
     Mode.FOR_VALUE.set(value, this);
   }
@@ -83,10 +94,10 @@ export default class Mode {
    * @return Mode encoded by these bits
    * @throws IllegalArgumentException if bits do not correspond to a known mode
    */
-  public static forBits(bits: number /*int*/): Mode {
-    const mode = Mode.FOR_BITS.get(bits);
+  public static forBits(bits: number): Mode {
+    const mode: Mode = Mode.FOR_BITS.get(bits);
 
-    if (undefined === mode) {
+    if (mode == null) {
       throw new IllegalArgumentException();
     }
 
@@ -98,10 +109,9 @@ export default class Mode {
    * @return number of bits used, in this QR Code symbol {@link Version}, to encode the
    *         count of characters that will follow encoded in this Mode
    */
-  public getCharacterCountBits(version: Version): number /*int*/ {
-    const versionNumber = version.getVersionNumber();
-
-    let offset;
+  public getCharacterCountBits(version: Version): number {
+    const versionNumber: number = version.getVersionNumber();
+    let offset: number;
 
     if (versionNumber <= 9) {
       offset = 0;
@@ -114,20 +124,16 @@ export default class Mode {
     return this.characterCountBitsForVersions[offset];
   }
 
-  public getValue(): ModeValues /*int*/ {
+  public getValue(): ModeValues {
     return this.value;
   }
 
-  public getBits(): number /*int*/ {
+  public getBits(): number {
     return this.bits;
   }
 
-  public equals(o: any): boolean {
-    if (!(o instanceof Mode)) {
-      return false;
-    }
-    const other = <Mode>o;
-    return this.value === other.value;
+  public equals(o: Mode): boolean {
+    return this.value === o.value;
   }
 
   public toString(): string {

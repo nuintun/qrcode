@@ -15,7 +15,18 @@
  */
 
 export default class BlockPair {
-  public constructor(private dataBytes: Uint8Array, private errorCorrectionBytes: Uint8Array) {}
+  private dataBytes: Uint8Array;
+  private errorCorrectionBytes: Uint8Array;
+
+  /**
+   * @constructor
+   * @param dataBytes
+   * @param errorCorrectionBytes
+   */
+  public constructor(dataBytes: Uint8Array, errorCorrectionBytes: Uint8Array) {
+    this.dataBytes = dataBytes;
+    this.errorCorrectionBytes = errorCorrectionBytes;
+  }
 
   public getDataBytes(): Uint8Array {
     return this.dataBytes;

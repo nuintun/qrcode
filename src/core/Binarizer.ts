@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import LuminanceSource from './LuminanceSource';
 import BitArray from './common/BitArray';
 import BitMatrix from './common/BitMatrix';
+import LuminanceSource from './LuminanceSource';
 
 /**
  * This class hierarchy provides a set of methods to convert luminance data to 1 bit data.
@@ -26,8 +26,12 @@ import BitMatrix from './common/BitMatrix';
  *
  * @author dswitkin@google.com (Daniel Switkin)
  */
-abstract class Binarizer {
-  protected constructor(private source: LuminanceSource) {}
+export default abstract class Binarizer {
+  private source: LuminanceSource;
+
+  protected constructor(source: LuminanceSource) {
+    this.source = source;
+  }
 
   public getLuminanceSource(): LuminanceSource {
     return this.source;
@@ -47,7 +51,7 @@ abstract class Binarizer {
    * @return The array of bits for this row (true means black).
    * @throws NotFoundException if row can't be binarized
    */
-  public abstract getBlackRow(y: number /*iny*/, row: BitArray): BitArray; /*throws NotFoundException*/
+  public abstract getBlackRow(y: number, row: BitArray): BitArray;
 
   /**
    * Converts a 2D array of luminance data to 1 bit data. As above, assume this method is expensive
@@ -58,7 +62,7 @@ abstract class Binarizer {
    * @return The 2D array of bits for the image (true means black).
    * @throws NotFoundException if image can't be binarized to make a matrix
    */
-  public abstract getBlackMatrix(): BitMatrix; /*throws NotFoundException*/
+  public abstract getBlackMatrix(): BitMatrix;
 
   /**
    * Creates a new object with the same type as this Binarizer implementation, but with pristine
@@ -70,13 +74,11 @@ abstract class Binarizer {
    */
   public abstract createBinarizer(source: LuminanceSource): Binarizer;
 
-  public getWidth(): number /*int*/ {
+  public getWidth(): number {
     return this.source.getWidth();
   }
 
-  public getHeight(): number /*int*/ {
+  public getHeight(): number {
     return this.source.getHeight();
   }
 }
-
-export default Binarizer;

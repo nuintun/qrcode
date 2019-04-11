@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+import ECB from './ECB';
 import Version from './Version';
 import ECBlocks from './ECBlocks';
-import ECB from './ECB';
 import ErrorCorrectionLevel from './ErrorCorrectionLevel';
 import IllegalArgumentException from '../../IllegalArgumentException';
 
@@ -28,7 +28,18 @@ import IllegalArgumentException from '../../IllegalArgumentException';
  * @author Sean Owen
  */
 export default class DataBlock {
-  private constructor(private numDataCodewords: number /*int*/, private codewords: Uint8Array) {}
+  private numDataCodewords: number;
+  private codewords: Uint8Array;
+
+  /**
+   * @constructor
+   * @param numDataCodewords
+   * @param codewords
+   */
+  private constructor(numDataCodewords: number, codewords: Uint8Array) {
+    this.numDataCodewords = numDataCodewords;
+    this.codewords = codewords;
+  }
 
   /**
    * <p>When QR Codes use multiple data blocks, they are actually interleaved.
@@ -51,7 +62,7 @@ export default class DataBlock {
     const ecBlocks: ECBlocks = version.getECBlocksForLevel(ecLevel);
 
     // First count the total number of data blocks
-    let totalBlocks = 0;
+    let totalBlocks: number = 0;
     const ecBlockArray: ECB[] = ecBlocks.getECBlocks();
 
     for (const ecBlock of ecBlockArray) {
@@ -59,13 +70,13 @@ export default class DataBlock {
     }
 
     // Now establish DataBlocks of the appropriate size and number of data codewords
-    const result = new Array<DataBlock>(totalBlocks);
-    let numResultBlocks = 0;
+    const result: DataBlock[] = new Array<DataBlock>(totalBlocks);
+    let numResultBlocks: number = 0;
 
     for (const ecBlock of ecBlockArray) {
-      for (let i = 0; i < ecBlock.getCount(); i++) {
-        const numDataCodewords = ecBlock.getDataCodewords();
-        const numBlockCodewords = ecBlocks.getECCodewordsPerBlock() + numDataCodewords;
+      for (let i: number = 0; i < ecBlock.getCount(); i++) {
+        const numDataCodewords: number = ecBlock.getDataCodewords();
+        const numBlockCodewords: number = ecBlocks.getECCodewordsPerBlock() + numDataCodewords;
 
         result[numResultBlocks++] = new DataBlock(numDataCodewords, new Uint8Array(numBlockCodewords));
       }
@@ -73,12 +84,12 @@ export default class DataBlock {
 
     // All blocks have the same amount of data, except that the last n
     // (where n may be 0) have 1 more byte. Figure out where these start.
-    const shorterBlocksTotalCodewords = result[0].codewords.length;
-    let longerBlocksStartAt = result.length - 1;
+    const shorterBlocksTotalCodewords: number = result[0].codewords.length;
+    let longerBlocksStartAt: number = result.length - 1;
 
     // TYPESCRIPTPORT: check length is correct here
     while (longerBlocksStartAt >= 0) {
-      const numCodewords = result[longerBlocksStartAt].codewords.length;
+      const numCodewords: number = result[longerBlocksStartAt].codewords.length;
 
       if (numCodewords === shorterBlocksTotalCodewords) {
         break;
@@ -89,28 +100,29 @@ export default class DataBlock {
 
     longerBlocksStartAt++;
 
-    const shorterBlocksNumDataCodewords = shorterBlocksTotalCodewords - ecBlocks.getECCodewordsPerBlock();
+    const shorterBlocksNumDataCodewords: number = shorterBlocksTotalCodewords - ecBlocks.getECCodewordsPerBlock();
     // The last elements of result may be 1 element longer
     // first fill out as many elements as all of them have
-    let rawCodewordsOffset = 0;
+    let rawCodewordsOffset: number = 0;
 
-    for (let i = 0; i < shorterBlocksNumDataCodewords; i++) {
-      for (let j = 0; j < numResultBlocks; j++) {
+    for (let i: number = 0; i < shorterBlocksNumDataCodewords; i++) {
+      for (let j: number = 0; j < numResultBlocks; j++) {
         result[j].codewords[i] = rawCodewords[rawCodewordsOffset++];
       }
     }
 
     // Fill out the last data block in the longer ones
-    for (let j = longerBlocksStartAt; j < numResultBlocks; j++) {
+    for (let j: number = longerBlocksStartAt; j < numResultBlocks; j++) {
       result[j].codewords[shorterBlocksNumDataCodewords] = rawCodewords[rawCodewordsOffset++];
     }
 
     // Now add in error correction blocks
-    const max = result[0].codewords.length;
+    const max: number = result[0].codewords.length;
 
-    for (let i = shorterBlocksNumDataCodewords; i < max; i++) {
-      for (let j = 0; j < numResultBlocks; j++) {
-        const iOffset = j < longerBlocksStartAt ? i : i + 1;
+    for (let i: number = shorterBlocksNumDataCodewords; i < max; i++) {
+      for (let j: number = 0; j < numResultBlocks; j++) {
+        const iOffset: number = j < longerBlocksStartAt ? i : i + 1;
+
         result[j].codewords[iOffset] = rawCodewords[rawCodewordsOffset++];
       }
     }
@@ -118,7 +130,7 @@ export default class DataBlock {
     return result;
   }
 
-  public getNumDataCodewords(): number /*int*/ {
+  public getNumDataCodewords(): number {
     return this.numDataCodewords;
   }
 

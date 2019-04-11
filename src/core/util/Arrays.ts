@@ -1,3 +1,19 @@
+/*
+ * Copyright 2008 ZXing authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import System from './System';
 
 export default class Arrays {
@@ -22,7 +38,7 @@ export default class Arrays {
       return false;
     }
 
-    for (let i = 0, length = first.length; i < length; i++) {
+    for (let i: number = 0, length = first.length; i < length; i++) {
       if (first[i] !== second[i]) {
         return false;
       }
@@ -32,7 +48,7 @@ export default class Arrays {
   }
 
   public static hashCode(a: any) {
-    if (a === null) {
+    if (a == null) {
       return 0;
     }
 
@@ -46,13 +62,13 @@ export default class Arrays {
   }
 
   public static fillUint8Array(a: Uint8Array, value: number) {
-    for (let i = 0; i !== a.length; i++) {
+    for (let i: number = 0; i !== a.length; i++) {
       a[i] = value;
     }
   }
 
   public static copyOf(original: Int32Array, newLength: number) {
-    const copy = new Int32Array(newLength);
+    const copy: Int32Array = new Int32Array(newLength);
 
     System.arraycopy(original, 0, copy, 0, Math.min(original.length, newLength));
 
@@ -75,16 +91,16 @@ export default class Arrays {
    * http://jsfiddle.net/aryzhov/pkfst550/
    */
   public static binarySearch(ar: Int32Array, el: number, comparator?: (a: number, b: number) => number): number {
-    if (undefined === comparator) {
+    if (comparator == null) {
       comparator = Arrays.numberComparator;
     }
 
-    let m = 0;
-    let n = ar.length - 1;
+    let m: number = 0;
+    let n: number = ar.length - 1;
 
     while (m <= n) {
-      const k = (n + m) >> 1;
-      const cmp = comparator(el, ar[k]);
+      const k: number = (n + m) >> 1;
+      const cmp: number = comparator(el, ar[k]);
 
       if (cmp > 0) {
         m = k + 1;
@@ -94,6 +110,7 @@ export default class Arrays {
         return k;
       }
     }
+
     return -m - 1;
   }
 

@@ -16,6 +16,7 @@
 
 import GenericGF from './GenericGF';
 import System from '../../util/System';
+import StringBuilder from '../../util/StringBuilder';
 import IllegalArgumentException from '../../IllegalArgumentException';
 
 /**
@@ -32,6 +33,7 @@ export default class GenericGFPoly {
   private coefficients: Int32Array;
 
   /**
+   * @constructor
    * @param field the {@link GenericGF} instance representing the field to use
    * to perform computations
    * @param coefficients coefficients as ints representing elements of GF(size), arranged
@@ -47,11 +49,11 @@ export default class GenericGFPoly {
 
     this.field = field;
 
-    const coefficientsLength = coefficients.length;
+    const coefficientsLength: number = coefficients.length;
 
     if (coefficientsLength > 1 && coefficients[0] === 0) {
       // Leading term must be non-zero for anything except the constant polynomial "0"
-      let firstNonZero = 1;
+      let firstNonZero: number = 1;
 
       while (firstNonZero < coefficientsLength && coefficients[firstNonZero] === 0) {
         firstNonZero++;
@@ -89,29 +91,28 @@ export default class GenericGFPoly {
   /**
    * @return coefficient of x^degree term in this polynomial
    */
-  public getCoefficient(degree: number /*int*/): number {
+  public getCoefficient(degree: number): number {
     return this.coefficients[this.coefficients.length - 1 - degree];
   }
 
   /**
    * @return evaluation of this polynomial at a given point
    */
-  public evaluateAt(a: number /*int*/): number {
+  public evaluateAt(a: number): number {
     if (a === 0) {
       // Just return the x^0 coefficient
       return this.getCoefficient(0);
     }
 
-    const coefficients = this.coefficients;
-
     let result: number;
+    const coefficients: Int32Array = this.coefficients;
 
     if (a === 1) {
       // Just the sum of the coefficients
       result = 0;
 
-      for (let i = 0, length = coefficients.length; i !== length; i++) {
-        const coefficient = coefficients[i];
+      for (let i: number = 0, length: number = coefficients.length; i !== length; i++) {
+        const coefficient: number = coefficients[i];
 
         result = GenericGF.addOrSubtract(result, coefficient);
       }
@@ -121,10 +122,10 @@ export default class GenericGFPoly {
 
     result = coefficients[0];
 
-    const size = coefficients.length;
-    const field = this.field;
+    const field: GenericGF = this.field;
+    const size: number = coefficients.length;
 
-    for (let i = 1; i < size; i++) {
+    for (let i: number = 1; i < size; i++) {
       result = GenericGF.addOrSubtract(field.multiply(a, result), coefficients[i]);
     }
 
@@ -144,23 +145,20 @@ export default class GenericGFPoly {
       return this;
     }
 
-    let smallerCoefficients = this.coefficients;
-    let largerCoefficients = other.coefficients;
+    let smallerCoefficients: Int32Array = this.coefficients;
+    let largerCoefficients: Int32Array = other.coefficients;
 
     if (smallerCoefficients.length > largerCoefficients.length) {
-      const temp = smallerCoefficients;
-
-      smallerCoefficients = largerCoefficients;
-      largerCoefficients = temp;
+      [smallerCoefficients, largerCoefficients] = [largerCoefficients, smallerCoefficients];
     }
 
-    let sumDiff = new Int32Array(largerCoefficients.length);
-    const lengthDiff = largerCoefficients.length - smallerCoefficients.length;
+    const sumDiff: Int32Array = new Int32Array(largerCoefficients.length);
+    const lengthDiff: number = largerCoefficients.length - smallerCoefficients.length;
 
     // Copy high-order terms only found in higher-degree polynomial's coefficients
     System.arraycopy(largerCoefficients, 0, sumDiff, 0, lengthDiff);
 
-    for (let i = lengthDiff; i < largerCoefficients.length; i++) {
+    for (let i: number = lengthDiff; i < largerCoefficients.length; i++) {
       sumDiff[i] = GenericGF.addOrSubtract(smallerCoefficients[i - lengthDiff], largerCoefficients[i]);
     }
 
@@ -168,25 +166,26 @@ export default class GenericGFPoly {
   }
 
   public multiply(other: GenericGFPoly): GenericGFPoly {
-    if (!this.field.equals(other.field)) {
+    const field: GenericGF = this.field;
+
+    if (!field.equals(other.field)) {
       throw new IllegalArgumentException('GenericGFPolys do not have same GenericGF field');
     }
 
     if (this.isZero() || other.isZero()) {
-      return this.field.getZero();
+      return field.getZero();
     }
 
-    const aCoefficients = this.coefficients;
-    const aLength = aCoefficients.length;
-    const bCoefficients = other.coefficients;
-    const bLength = bCoefficients.length;
-    const product = new Int32Array(aLength + bLength - 1);
-    const field = this.field;
+    const aCoefficients: Int32Array = this.coefficients;
+    const aLength: number = aCoefficients.length;
+    const bCoefficients: Int32Array = other.coefficients;
+    const bLength: number = bCoefficients.length;
+    const product: Int32Array = new Int32Array(aLength + bLength - 1);
 
     for (let i = 0; i < aLength; i++) {
-      const aCoeff = aCoefficients[i];
+      const aCoeff: number = aCoefficients[i];
 
-      for (let j = 0; j < bLength; j++) {
+      for (let j: number = 0; j < bLength; j++) {
         product[i + j] = GenericGF.addOrSubtract(product[i + j], field.multiply(aCoeff, bCoefficients[j]));
       }
     }
@@ -194,42 +193,44 @@ export default class GenericGFPoly {
     return new GenericGFPoly(field, product);
   }
 
-  public multiplyScalar(scalar: number /*int*/): GenericGFPoly {
+  public multiplyScalar(scalar: number): GenericGFPoly {
+    const field: GenericGF = this.field;
+
     if (scalar === 0) {
-      return this.field.getZero();
+      return field.getZero();
     }
 
     if (scalar === 1) {
       return this;
     }
 
-    const size = this.coefficients.length;
-    const field = this.field;
-    const product = new Int32Array(size);
-    const coefficients = this.coefficients;
+    const size: number = this.coefficients.length;
+    const product: Int32Array = new Int32Array(size);
+    const coefficients: Int32Array = this.coefficients;
 
-    for (let i = 0; i < size; i++) {
+    for (let i: number = 0; i < size; i++) {
       product[i] = field.multiply(coefficients[i], scalar);
     }
 
     return new GenericGFPoly(field, product);
   }
 
-  public multiplyByMonomial(degree: number /*int*/, coefficient: number /*int*/): GenericGFPoly {
+  public multiplyByMonomial(degree: number, coefficient: number): GenericGFPoly {
     if (degree < 0) {
       throw new IllegalArgumentException();
     }
 
+    const field: GenericGF = this.field;
+
     if (coefficient === 0) {
-      return this.field.getZero();
+      return field.getZero();
     }
 
-    const coefficients = this.coefficients;
-    const size = coefficients.length;
-    const product = new Int32Array(size + degree);
-    const field = this.field;
+    const coefficients: Int32Array = this.coefficients;
+    const size: number = coefficients.length;
+    const product: Int32Array = new Int32Array(size + degree);
 
-    for (let i = 0; i < size; i++) {
+    for (let i: number = 0; i < size; i++) {
       product[i] = field.multiply(coefficients[i], coefficient);
     }
 
@@ -237,7 +238,9 @@ export default class GenericGFPoly {
   }
 
   public divide(other: GenericGFPoly): GenericGFPoly[] {
-    if (!this.field.equals(other.field)) {
+    const field: GenericGF = this.field;
+
+    if (!field.equals(other.field)) {
       throw new IllegalArgumentException('GenericGFPolys do not have same GenericGF field');
     }
 
@@ -245,17 +248,16 @@ export default class GenericGFPoly {
       throw new IllegalArgumentException('Divide by 0');
     }
 
-    const field = this.field;
     let quotient: GenericGFPoly = field.getZero();
     let remainder: GenericGFPoly = this;
-    const denominatorLeadingTerm = other.getCoefficient(other.getDegree());
-    const inverseDenominatorLeadingTerm = field.inverse(denominatorLeadingTerm);
+    const denominatorLeadingTerm: number = other.getCoefficient(other.getDegree());
+    const inverseDenominatorLeadingTerm: number = field.inverse(denominatorLeadingTerm);
 
     while (remainder.getDegree() >= other.getDegree() && !remainder.isZero()) {
-      const degreeDifference = remainder.getDegree() - other.getDegree();
-      const scale = field.multiply(remainder.getCoefficient(remainder.getDegree()), inverseDenominatorLeadingTerm);
-      const term = other.multiplyByMonomial(degreeDifference, scale);
-      const iterationQuotient = field.buildMonomial(degreeDifference, scale);
+      const degreeDifference: number = remainder.getDegree() - other.getDegree();
+      const scale: number = field.multiply(remainder.getCoefficient(remainder.getDegree()), inverseDenominatorLeadingTerm);
+      const term: GenericGFPoly = other.multiplyByMonomial(degreeDifference, scale);
+      const iterationQuotient: GenericGFPoly = field.buildMonomial(degreeDifference, scale);
 
       quotient = quotient.addOrSubtract(iterationQuotient);
       remainder = remainder.addOrSubtract(term);
@@ -264,47 +266,58 @@ export default class GenericGFPoly {
     return [quotient, remainder];
   }
 
-  /*@Override*/
+  /**
+   * @override
+   */
   public toString(): string {
-    let result = '';
+    if (this.isZero()) {
+      return '0';
+    }
+
+    const result: StringBuilder = new StringBuilder();
 
     for (let degree = this.getDegree(); degree >= 0; degree--) {
-      let coefficient = this.getCoefficient(degree);
+      let coefficient: number = this.getCoefficient(degree);
 
       if (coefficient !== 0) {
         if (coefficient < 0) {
-          result += ' - ';
+          if (degree == this.getDegree()) {
+            result.append('-');
+          } else {
+            result.append(' - ');
+          }
+
           coefficient = -coefficient;
         } else {
-          if (result.length > 0) {
-            result += ' + ';
+          if (result.length() > 0) {
+            result.append(' + ');
           }
         }
 
         if (degree === 0 || coefficient !== 1) {
-          const alphaPower = this.field.log(coefficient);
+          const alphaPower: number = this.field.log(coefficient);
 
           if (alphaPower === 0) {
-            result += '1';
+            result.append('1');
           } else if (alphaPower === 1) {
-            result += 'a';
+            result.append('a');
           } else {
-            result += 'a^';
-            result += alphaPower;
+            result.append('a^');
+            result.append(alphaPower);
           }
         }
 
         if (degree !== 0) {
           if (degree === 1) {
-            result += 'x';
+            result.append('x');
           } else {
-            result += 'x^';
-            result += degree;
+            result.append('x^');
+            result.append(degree);
           }
         }
       }
     }
 
-    return result;
+    return result.toString();
   }
 }

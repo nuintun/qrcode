@@ -17,7 +17,7 @@
 import ArgumentException from '../../ArgumentException';
 import IllegalArgumentException from '../../IllegalArgumentException';
 
-export enum ErrorCorrectionLevelValues {
+enum ErrorCorrectionLevelValues {
   L,
   M,
   Q,
@@ -31,28 +31,44 @@ export enum ErrorCorrectionLevelValues {
  * @author Sean Owen
  */
 export default class ErrorCorrectionLevel {
-  private static FOR_BITS = new Map<number, ErrorCorrectionLevel>();
-  private static FOR_VALUE = new Map<ErrorCorrectionLevelValues, ErrorCorrectionLevel>();
+  private static FOR_BITS: Map<number, ErrorCorrectionLevel> = new Map<number, ErrorCorrectionLevel>();
+  private static FOR_VALUE: Map<ErrorCorrectionLevelValues, ErrorCorrectionLevel> = new Map<
+    ErrorCorrectionLevelValues,
+    ErrorCorrectionLevel
+  >();
 
   /** L = ~7% correction */
-  public static L = new ErrorCorrectionLevel(ErrorCorrectionLevelValues.L, 'L', 0x01);
+  public static L: ErrorCorrectionLevel = new ErrorCorrectionLevel(ErrorCorrectionLevelValues.L, 'L', 0x01);
   /** M = ~15% correction */
-  public static M = new ErrorCorrectionLevel(ErrorCorrectionLevelValues.M, 'M', 0x00);
+  public static M: ErrorCorrectionLevel = new ErrorCorrectionLevel(ErrorCorrectionLevelValues.M, 'M', 0x00);
   /** Q = ~25% correction */
-  public static Q = new ErrorCorrectionLevel(ErrorCorrectionLevelValues.Q, 'Q', 0x03);
+  public static Q: ErrorCorrectionLevel = new ErrorCorrectionLevel(ErrorCorrectionLevelValues.Q, 'Q', 0x03);
   /** H = ~30% correction */
-  public static H = new ErrorCorrectionLevel(ErrorCorrectionLevelValues.H, 'H', 0x02);
+  public static H: ErrorCorrectionLevel = new ErrorCorrectionLevel(ErrorCorrectionLevelValues.H, 'H', 0x02);
 
-  private constructor(private value: ErrorCorrectionLevelValues, private stringValue: string, private bits: number /*int*/) {
+  private value: ErrorCorrectionLevelValues;
+  private stringValue: string;
+  private bits: number;
+  /**
+   * @constructor
+   * @param value
+   * @param stringValue
+   * @param bits
+   */
+  private constructor(value: ErrorCorrectionLevelValues, stringValue: string, bits: number) {
+    this.value = value;
+    this.stringValue = stringValue;
+    this.bits = bits;
+
     ErrorCorrectionLevel.FOR_BITS.set(bits, this);
     ErrorCorrectionLevel.FOR_VALUE.set(value, this);
   }
 
-  public getValue(): ErrorCorrectionLevelValues /*int*/ {
+  public getValue(): ErrorCorrectionLevelValues {
     return this.value;
   }
 
-  public getBits(): number /*int*/ {
+  public getBits(): number {
     return this.bits;
   }
 
@@ -75,21 +91,15 @@ export default class ErrorCorrectionLevel {
     return this.stringValue;
   }
 
-  public equals(o: any): boolean {
-    if (!(o instanceof ErrorCorrectionLevel)) {
-      return false;
-    }
-
-    const other = <ErrorCorrectionLevel>o;
-
-    return this.value === other.value;
+  public equals(o: ErrorCorrectionLevel): boolean {
+    return this.value === o.value;
   }
 
   /**
    * @param bits int containing the two bits encoding a QR Code's error correction level
    * @return ErrorCorrectionLevel representing the encoded error correction level
    */
-  public static forBits(bits: number /*int*/): ErrorCorrectionLevel {
+  public static forBits(bits: number): ErrorCorrectionLevel {
     if (bits < 0 || bits >= ErrorCorrectionLevel.FOR_BITS.size) {
       throw new IllegalArgumentException();
     }

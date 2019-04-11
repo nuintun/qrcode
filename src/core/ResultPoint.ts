@@ -24,8 +24,8 @@ import MathUtils from './common/detector/MathUtils';
  * @author Sean Owen
  */
 export default class ResultPoint {
-  private x: number; // float
-  private y: number; // float
+  private x: number;
+  private y: number;
 
   public constructor(x: number, y: number) {
     this.x = x;
@@ -40,23 +40,24 @@ export default class ResultPoint {
     return this.y;
   }
 
-  /*@Override*/
-  public equals(other: Object): boolean {
-    if (other instanceof ResultPoint) {
-      const otherPoint = <ResultPoint>other;
-
-      return this.x === otherPoint.x && this.y === otherPoint.y;
-    }
-
-    return false;
+  /**
+   * @override
+   * @param o
+   */
+  public equals(o: ResultPoint): boolean {
+    return this.x === o.x && this.y === o.y;
   }
 
-  /*@Override*/
-  public hashCode(): number /*int*/ {
+  /**
+   * @override
+   */
+  public hashCode(): number {
     return 31 * Float.floatToIntBits(this.x) + Float.floatToIntBits(this.y);
   }
 
-  /*@Override*/
+  /**
+   * @override
+   */
   public toString(): string {
     return '(' + this.x + ',' + this.y + ')';
   }
@@ -67,11 +68,11 @@ export default class ResultPoint {
    *
    * @param patterns array of three {@code ResultPoint} to order
    */
-  public static orderBestPatterns(patterns: Array<ResultPoint>): void {
+  public static orderBestPatterns(patterns: ResultPoint[]): void {
     // Find distances between pattern centers
-    const zeroOneDistance = this.distance(patterns[0], patterns[1]);
-    const oneTwoDistance = this.distance(patterns[1], patterns[2]);
-    const zeroTwoDistance = this.distance(patterns[0], patterns[2]);
+    const zeroOneDistance: number = this.distance(patterns[0], patterns[1]);
+    const oneTwoDistance: number = this.distance(patterns[1], patterns[2]);
+    const zeroTwoDistance: number = this.distance(patterns[0], patterns[2]);
 
     let pointA: ResultPoint;
     let pointB: ResultPoint;
@@ -121,8 +122,8 @@ export default class ResultPoint {
    * Returns the z component of the cross product between vectors BC and BA.
    */
   private static crossProductZ(pointA: ResultPoint, pointB: ResultPoint, pointC: ResultPoint): number {
-    const bX = pointB.x;
-    const bY = pointB.y;
+    const bX: number = pointB.x;
+    const bY: number = pointB.y;
 
     return (pointC.x - bX) * (pointA.y - bY) - (pointC.y - bY) * (pointA.x - bX);
   }

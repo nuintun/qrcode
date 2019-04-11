@@ -14,25 +14,28 @@
  * limitations under the License.
  */
 
-import ErrorCorrectionLevel from '../decoder/ErrorCorrectionLevel';
 import Mode from '../decoder/Mode';
+import ByteMatrix from './ByteMatrix';
 import Version from '../decoder/Version';
 import StringBuilder from '../../util/StringBuilder';
-import ByteMatrix from './ByteMatrix';
+import ErrorCorrectionLevel from '../decoder/ErrorCorrectionLevel';
 
 /**
  * @author satorux@google.com (Satoru Takabayashi) - creator
  * @author dswitkin@google.com (Daniel Switkin) - ported from C++
  */
 export default class QRCode {
-  public static NUM_MASK_PATTERNS = 8;
+  public static NUM_MASK_PATTERNS: number = 8;
 
   private mode: Mode;
   private ecLevel: ErrorCorrectionLevel;
   private version: Version;
-  private maskPattern: number; /*int*/
+  private maskPattern: number;
   private matrix: ByteMatrix;
 
+  /**
+   * @constructor
+   */
   public constructor() {
     this.maskPattern = -1;
   }
@@ -49,7 +52,7 @@ export default class QRCode {
     return this.version;
   }
 
-  public getMaskPattern(): number /*int*/ {
+  public getMaskPattern(): number {
     return this.maskPattern;
   }
 
@@ -59,7 +62,8 @@ export default class QRCode {
 
   /*@Override*/
   public toString(): string {
-    const result = new StringBuilder(); // (200)
+    const result: StringBuilder = new StringBuilder(); // (200)
+
     result.append('<<\n');
     result.append(' mode: ');
     result.append(this.mode ? this.mode.toString() : 'null');
@@ -94,7 +98,7 @@ export default class QRCode {
     this.version = version;
   }
 
-  public setMaskPattern(value: number /*int*/): void {
+  public setMaskPattern(value: number): void {
     this.maskPattern = value;
   }
 
@@ -103,7 +107,7 @@ export default class QRCode {
   }
 
   // Check if "mask_pattern" is valid.
-  public static isValidMaskPattern(maskPattern: number /*int*/): boolean {
+  public static isValidMaskPattern(maskPattern: number): boolean {
     return maskPattern >= 0 && maskPattern < QRCode.NUM_MASK_PATTERNS;
   }
 }

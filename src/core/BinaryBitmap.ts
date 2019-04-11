@@ -31,7 +31,7 @@ export default class BinaryBitmap {
   private matrix: BitMatrix;
 
   public constructor(private binarizer: Binarizer) {
-    if (binarizer === null) {
+    if (binarizer == null) {
       throw new IllegalArgumentException('Binarizer must be non-null.');
     }
   }
@@ -39,14 +39,14 @@ export default class BinaryBitmap {
   /**
    * @return The width of the bitmap.
    */
-  public getWidth(): number /*int*/ {
+  public getWidth(): number {
     return this.binarizer.getWidth();
   }
 
   /**
    * @return The height of the bitmap.
    */
-  public getHeight(): number /*int*/ {
+  public getHeight(): number {
     return this.binarizer.getHeight();
   }
 
@@ -61,7 +61,7 @@ export default class BinaryBitmap {
    * @return The array of bits for this row (true means black).
    * @throws NotFoundException if row can't be binarized
    */
-  public getBlackRow(y: number /*int*/, row: BitArray): BitArray /*throws NotFoundException */ {
+  public getBlackRow(y: number, row: BitArray): BitArray {
     return this.binarizer.getBlackRow(y, row);
   }
 
@@ -74,13 +74,13 @@ export default class BinaryBitmap {
    * @return The 2D array of bits for the image (true means black).
    * @throws NotFoundException if image can't be binarized to make a matrix
    */
-  public getBlackMatrix(): BitMatrix /*throws NotFoundException*/ {
+  public getBlackMatrix(): BitMatrix {
     // The matrix is created on demand the first time it is requested, then cached. There are two
     // reasons for this:
     // 1. This work will never be done if the caller only installs 1D Reader objects, or if a
     //    1D Reader finds a barcode before the 2D Readers run.
     // 2. This work will only be done once even if the caller installs multiple 2D Readers.
-    if (this.matrix === null || this.matrix === undefined) {
+    if (this.matrix == null) {
       this.matrix = this.binarizer.getBlackMatrix();
     }
 
@@ -104,7 +104,7 @@ export default class BinaryBitmap {
    * @param height The height of the rectangle to crop.
    * @return A cropped version of this object.
    */
-  public crop(left: number /*int*/, top: number /*int*/, width: number /*int*/, height: number /*int*/): BinaryBitmap {
+  public crop(left: number, top: number, width: number, height: number): BinaryBitmap {
     const newSource: LuminanceSource = this.binarizer.getLuminanceSource().crop(left, top, width, height);
 
     return new BinaryBitmap(this.binarizer.createBinarizer(newSource));
@@ -145,7 +145,7 @@ export default class BinaryBitmap {
   public toString(): string {
     try {
       return this.getBlackMatrix().toString();
-    } catch (e /*: NotFoundException*/) {
+    } catch (e) {
       return '';
     }
   }

@@ -1,5 +1,21 @@
-import UnsupportedOperationException from '../UnsupportedOperationException';
+/*
+ * Copyright 2008 ZXing authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import CharacterSetECI from '../common/CharacterSetECI';
+import UnsupportedOperationException from '../UnsupportedOperationException';
 
 /**
  * Responsible for en/decoding strings.
@@ -9,10 +25,10 @@ export default class StringEncoding {
    * Decodes some Uint8Array to a string format.
    */
   public static decode(bytes: Uint8Array, encoding: string | CharacterSetECI): string {
-    const encodingName = this.encodingName(encoding);
+    const encodingName: string = this.encodingName(encoding);
 
     // Increases browser support.
-    if (typeof TextDecoder === 'undefined') {
+    if (!TextDecoder) {
       return this.decodeFallback(bytes, encodingName);
     }
 
@@ -30,13 +46,13 @@ export default class StringEncoding {
       // SEE: https://nodejs.org/api/buffer.html#buffer_class_buffer
       // SEE: https://github.com/polygonplanet/encoding.js/
       // SEE: https://stackoverflow.com/questions/17191945/conversion-between-utf-8-arraybuffer-and-string
-      const EncoderConstructor = TextEncoder as any;
+      const EncoderConstructor: any = TextEncoder as any;
 
       return new EncoderConstructor(this.encodingName(encoding), { NONSTANDARD_allowLegacyEncoding: true }).encode(s);
     }
 
     // Increases browser support.
-    if (typeof TextEncoder === 'undefined') {
+    if (!TextEncoder) {
       return this.encodeFallback(s);
     }
 
@@ -45,7 +61,7 @@ export default class StringEncoding {
   }
 
   private static isBrowser(): boolean {
-    return typeof window !== 'undefined' && {}.toString.call(window) === '[object Window]';
+    return typeof window != null && {}.toString.call(window) === '[object Window]';
   }
 
   /**
@@ -66,16 +82,16 @@ export default class StringEncoding {
    * Runs a fallback for the native decoding funcion.
    */
   private static decodeFallback(bytes: Uint8Array, encoding: string | CharacterSetECI): string {
-    const characterSet = this.encodingCharacterSet(encoding);
+    const characterSet: CharacterSetECI = this.encodingCharacterSet(encoding);
 
     if (
       characterSet.equals(CharacterSetECI.UTF8) ||
       characterSet.equals(CharacterSetECI.ISO8859_1) ||
       characterSet.equals(CharacterSetECI.ASCII)
     ) {
-      let s = '';
+      let s: string = '';
 
-      for (let i = 0, length = bytes.length; i < length; i++) {
+      for (let i: number = 0, length = bytes.length; i < length; i++) {
         let h = bytes[i].toString(16);
 
         if (h.length < 2) {
@@ -101,11 +117,11 @@ export default class StringEncoding {
    * @see https://stackoverflow.com/a/17192845/4367683
    */
   private static encodeFallback(s: string): Uint8Array {
-    const encodedURIstring = btoa(unescape(encodeURIComponent(s)));
-    const charList = encodedURIstring.split('');
-    const uintArray = [];
+    const encodedURIstring: string = btoa(unescape(encodeURIComponent(s)));
+    const charList: string[] = encodedURIstring.split('');
+    const uintArray: number[] = [];
 
-    for (let i = 0; i < charList.length; i++) {
+    for (let i: number = 0; i < charList.length; i++) {
       uintArray.push(charList[i].charCodeAt(0));
     }
 

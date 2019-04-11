@@ -24,12 +24,12 @@ import CharacterSetECI from './CharacterSetECI';
  * @author Alex Dupre
  */
 export default class StringUtils {
-  public static SHIFT_JIS = CharacterSetECI.SJIS.getName(); // "SJIS"
-  public static GB2312 = 'GB2312';
-  public static ISO88591 = CharacterSetECI.ISO8859_1.getName(); // "ISO8859_1"
-  private static UTF8 = CharacterSetECI.UTF8.getName(); // "UTF8"
-  private static PLATFORM_DEFAULT_ENCODING = StringUtils.UTF8; // "UTF8"//Charset.defaultCharset().name()
-  private static ASSUME_SHIFT_JIS = false;
+  public static SHIFT_JIS: string = CharacterSetECI.SJIS.getName(); // "SJIS"
+  public static GB2312: string = 'GB2312';
+  public static ISO88591: string = CharacterSetECI.ISO8859_1.getName(); // "ISO8859_1"
+  private static UTF8: string = CharacterSetECI.UTF8.getName(); // "UTF8"
+  private static PLATFORM_DEFAULT_ENCODING: string = StringUtils.UTF8; // "UTF8"//Charset.defaultCharset().name()
+  private static ASSUME_SHIFT_JIS: boolean = false;
 
   /**
    * @param bytes bytes encoding a string, whose encoding should be guessed
@@ -45,32 +45,26 @@ export default class StringUtils {
 
     // For now, merely tries to distinguish ISO-8859-1, UTF-8 and Shift_JIS,
     // which should be by far the most common encodings.
-    const length = bytes.length;
-    let canBeISO88591 = true;
-    let canBeShiftJIS = true;
-    let canBeUTF8 = true;
-    let utf8BytesLeft = 0;
-    // int utf8LowChars = 0
-    let utf2BytesChars = 0;
-    let utf3BytesChars = 0;
-    let utf4BytesChars = 0;
-    let sjisBytesLeft = 0;
-    // int sjisLowChars = 0
-    let sjisKatakanaChars = 0;
-    // int sjisDoubleBytesChars = 0
-    let sjisCurKatakanaWordLength = 0;
-    let sjisCurDoubleBytesWordLength = 0;
-    let sjisMaxKatakanaWordLength = 0;
-    let sjisMaxDoubleBytesWordLength = 0;
-    // int isoLowChars = 0
-    // int isoHighChars = 0
-    let isoHighOther = 0;
+    const length: number = bytes.length;
+    let canBeISO88591: boolean = true;
+    let canBeShiftJIS: boolean = true;
+    let canBeUTF8: boolean = true;
+    let utf8BytesLeft: number = 0;
+    let utf2BytesChars: number = 0;
+    let utf3BytesChars: number = 0;
+    let utf4BytesChars: number = 0;
+    let sjisBytesLeft: number = 0;
+    let sjisKatakanaChars: number = 0;
+    let sjisCurKatakanaWordLength: number = 0;
+    let sjisCurDoubleBytesWordLength: number = 0;
+    let sjisMaxKatakanaWordLength: number = 0;
+    let sjisMaxDoubleBytesWordLength: number = 0;
+    let isoHighOther: number = 0;
 
-    const utf8bom =
-      bytes.length > 3 && bytes[0] === /*(byte) */ 0xef && bytes[1] === /*(byte) */ 0xbb && bytes[2] === /*(byte) */ 0xbf;
+    const utf8bom: boolean = bytes.length > 3 && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf;
 
-    for (let i = 0; i < length && (canBeISO88591 || canBeShiftJIS || canBeUTF8); i++) {
-      const value = bytes[i] & 0xff;
+    for (let i: number = 0; i < length && (canBeISO88591 || canBeShiftJIS || canBeUTF8); i++) {
+      const value: number = bytes[i] & 0xff;
 
       // UTF-8 stuff
       if (canBeUTF8) {
@@ -129,6 +123,7 @@ export default class StringUtils {
           sjisKatakanaChars++;
           sjisCurDoubleBytesWordLength = 0;
           sjisCurKatakanaWordLength++;
+
           if (sjisCurKatakanaWordLength > sjisMaxKatakanaWordLength) {
             sjisMaxKatakanaWordLength = sjisCurKatakanaWordLength;
           }
@@ -136,6 +131,7 @@ export default class StringUtils {
           sjisBytesLeft++;
           sjisCurKatakanaWordLength = 0;
           sjisCurDoubleBytesWordLength++;
+
           if (sjisCurDoubleBytesWordLength > sjisMaxDoubleBytesWordLength) {
             sjisMaxDoubleBytesWordLength = sjisCurDoubleBytesWordLength;
           }

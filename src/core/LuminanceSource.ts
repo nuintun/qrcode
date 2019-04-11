@@ -26,8 +26,14 @@ import UnsupportedOperationException from './UnsupportedOperationException';
  *
  * @author dswitkin@google.com (Daniel Switkin)
  */
-abstract class LuminanceSource {
-  protected constructor(private width: number /*int*/, private height: number /*int*/) {}
+export default abstract class LuminanceSource {
+  private width: number;
+  private height: number;
+
+  protected constructor(width: number, height: number) {
+    this.width = width;
+    this.height = height;
+  }
 
   /**
    * Fetches one row of luminance data from the underlying platform's bitmap. Values range from
@@ -41,7 +47,7 @@ abstract class LuminanceSource {
    *            Always use the returned object, and ignore the .length of the array.
    * @return An array containing the luminance data.
    */
-  public abstract getRow(y: number /*int*/, row?: Uint8ClampedArray): Uint8ClampedArray;
+  public abstract getRow(y: number, row?: Uint8Array): Uint8Array;
 
   /**
    * Fetches luminance data for the underlying bitmap. Values should be fetched using:
@@ -51,19 +57,19 @@ abstract class LuminanceSource {
    *         larger than width * height bytes on some platforms. Do not modify the contents
    *         of the result.
    */
-  public abstract getMatrix(): Uint8ClampedArray;
+  public abstract getMatrix(): Uint8Array;
 
   /**
    * @return The width of the bitmap.
    */
-  public getWidth(): number /*int*/ {
+  public getWidth(): number {
     return this.width;
   }
 
   /**
    * @return The height of the bitmap.
    */
-  public getHeight(): number /*int*/ {
+  public getHeight(): number {
     return this.height;
   }
 
@@ -84,7 +90,7 @@ abstract class LuminanceSource {
    * @param height The height of the rectangle to crop.
    * @return A cropped version of this object.
    */
-  public crop(left: number /*int*/, top: number /*int*/, width: number /*int*/, height: number /*int*/): LuminanceSource {
+  public crop(left: number, top: number, width: number, height: number): LuminanceSource {
     throw new UnsupportedOperationException('This luminance source does not support cropping.');
   }
 
@@ -123,15 +129,15 @@ abstract class LuminanceSource {
 
   /*@Override*/
   public toString(): string {
-    const row = new Uint8ClampedArray(this.width);
-    let result = new StringBuilder();
+    const row: Uint8Array = new Uint8Array(this.width);
+    let result: StringBuilder = new StringBuilder();
 
-    for (let y = 0; y < this.height; y++) {
-      const sourceRow = this.getRow(y, row);
+    for (let y: number = 0; y < this.height; y++) {
+      const sourceRow: Uint8Array = this.getRow(y, row);
 
-      for (let x = 0; x < this.width; x++) {
-        const luminance = sourceRow[x] & 0xff;
-        let c;
+      for (let x: number = 0; x < this.width; x++) {
+        const luminance: number = sourceRow[x] & 0xff;
+        let c: string;
 
         if (luminance < 0x40) {
           c = '#';
@@ -152,5 +158,3 @@ abstract class LuminanceSource {
     return result.toString();
   }
 }
-
-export default LuminanceSource;

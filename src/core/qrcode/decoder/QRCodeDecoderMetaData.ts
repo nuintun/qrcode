@@ -23,7 +23,15 @@ import ResultPoint from '../../ResultPoint';
  * @see com.google.zxing.common.DecoderResult#getOther()
  */
 export default class QRCodeDecoderMetaData {
-  public constructor(private mirrored: boolean) {}
+  private mirrored: boolean;
+
+  /**
+   * @constructor
+   * @param mirrored
+   */
+  public constructor(mirrored: boolean) {
+    this.mirrored = mirrored;
+  }
 
   /**
    * @return true if the QR Code was mirrored.
@@ -37,12 +45,12 @@ export default class QRCodeDecoderMetaData {
    *
    * @param points Array of points to apply mirror correction to.
    */
-  public applyMirroredCorrection(points: Array<ResultPoint>): void {
-    if (!this.mirrored || points === null || points.length < 3) {
+  public applyMirroredCorrection(points: ResultPoint[]): void {
+    if (!this.mirrored || points == null || points.length < 3) {
       return;
     }
 
-    const bottomLeft = points[0];
+    const bottomLeft: ResultPoint = points[0];
 
     points[0] = points[2];
     points[2] = bottomLeft;

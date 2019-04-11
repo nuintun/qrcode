@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-import DecodeHintType from '../../DecodeHintType';
-import BitMatrix from '../../common/BitMatrix';
-import DecoderResult from '../../common/DecoderResult';
-import GenericGF from '../../common/reedsolomon/GenericGF';
-import ReedSolomonDecoder from '../../common/reedsolomon/ReedSolomonDecoder';
-import BitMatrixParser from './BitMatrixParser';
-import QRCodeDecoderMetaData from './QRCodeDecoderMetaData';
+import Version from './Version';
 import DataBlock from './DataBlock';
-import DecodedBitStreamParser from './DecodedBitStreamParser';
+import BitMatrix from '../../common/BitMatrix';
+import BitMatrixParser from './BitMatrixParser';
+import DecodeHintType from '../../DecodeHintType';
+import DecoderResult from '../../common/DecoderResult';
 import ChecksumException from '../../ChecksumException';
+import ErrorCorrectionLevel from './ErrorCorrectionLevel';
+import GenericGF from '../../common/reedsolomon/GenericGF';
+import QRCodeDecoderMetaData from './QRCodeDecoderMetaData';
+import DecodedBitStreamParser from './DecodedBitStreamParser';
+import ReedSolomonDecoder from '../../common/reedsolomon/ReedSolomonDecoder';
 
 /**
  * <p>The main class which implements QR Code decoding -- as opposed to locating and extracting
@@ -34,6 +36,9 @@ import ChecksumException from '../../ChecksumException';
 export default class Decoder {
   private rsDecoder: ReedSolomonDecoder;
 
+  /**
+   * @constructor
+   */
   public constructor() {
     this.rsDecoder = new ReedSolomonDecoder(GenericGF.QR_CODE_FIELD_256);
   }
@@ -63,12 +68,12 @@ export default class Decoder {
    */
   public decodeBitMatrix(bits: BitMatrix, hints?: Map<DecodeHintType, any>): DecoderResult {
     // Construct a parser and read version, error-correction level
-    const parser = new BitMatrixParser(bits);
-    let ex = null;
+    const parser: BitMatrixParser = new BitMatrixParser(bits);
+    let ex: any = null;
 
     try {
       return this.decodeBitMatrixParser(parser, hints);
-    } catch (e /*: FormatException, ChecksumException*/) {
+    } catch (e) {
       ex = e;
     }
 
@@ -94,15 +99,15 @@ export default class Decoder {
       // Prepare for a mirrored reading.
       parser.mirror();
 
-      const result = this.decodeBitMatrixParser(parser, hints);
+      const result: DecoderResult = this.decodeBitMatrixParser(parser, hints);
 
       // Success! Notify the caller that the code was mirrored.
       result.setOther(new QRCodeDecoderMetaData(true));
 
       return result;
-    } catch (e /*FormatException | ChecksumException*/) {
+    } catch (e) {
       // Throw the exception from the original reading
-      if (ex !== null) {
+      if (ex != null) {
         throw ex;
       }
 
@@ -111,32 +116,32 @@ export default class Decoder {
   }
 
   private decodeBitMatrixParser(parser: BitMatrixParser, hints: Map<DecodeHintType, any>): DecoderResult {
-    const version = parser.readVersion();
-    const ecLevel = parser.readFormatInformation().getErrorCorrectionLevel();
+    const version: Version = parser.readVersion();
+    const ecLevel: ErrorCorrectionLevel = parser.readFormatInformation().getErrorCorrectionLevel();
 
     // Read codewords
-    const codewords = parser.readCodewords();
+    const codewords: Uint8Array = parser.readCodewords();
     // Separate into data blocks
-    const dataBlocks = DataBlock.getDataBlocks(codewords, version, ecLevel);
+    const dataBlocks: DataBlock[] = DataBlock.getDataBlocks(codewords, version, ecLevel);
 
     // Count total number of data bytes
-    let totalBytes = 0;
+    let totalBytes: number = 0;
 
     for (const dataBlock of dataBlocks) {
       totalBytes += dataBlock.getNumDataCodewords();
     }
 
-    const resultBytes = new Uint8Array(totalBytes);
-    let resultOffset = 0;
+    const resultBytes: Uint8Array = new Uint8Array(totalBytes);
+    let resultOffset: number = 0;
 
     // Error-correct and copy data blocks together into a stream of bytes
     for (const dataBlock of dataBlocks) {
-      const codewordBytes = dataBlock.getCodewords();
-      const numDataCodewords = dataBlock.getNumDataCodewords();
+      const codewordBytes: Uint8Array = dataBlock.getCodewords();
+      const numDataCodewords: number = dataBlock.getNumDataCodewords();
 
       this.correctErrors(codewordBytes, numDataCodewords);
 
-      for (let i = 0; i < numDataCodewords; i++) {
+      for (let i: number = 0; i < numDataCodewords; i++) {
         resultBytes[resultOffset++] = codewordBytes[i];
       }
     }
@@ -153,20 +158,20 @@ export default class Decoder {
    * @param numDataCodewords number of codewords that are data bytes
    * @throws ChecksumException if error correction fails
    */
-  private correctErrors(codewordBytes: Uint8Array, numDataCodewords: number /*int*/): void /*throws ChecksumException*/ {
+  private correctErrors(codewordBytes: Uint8Array, numDataCodewords: number): void {
     // First read into an array of ints
-    const codewordsInts = new Int32Array(codewordBytes);
+    const codewordsInts: Int32Array = new Int32Array(codewordBytes);
 
     try {
       this.rsDecoder.decode(codewordsInts, codewordBytes.length - numDataCodewords);
-    } catch (ignored /*: ReedSolomonException*/) {
+    } catch (ignored) {
       throw new ChecksumException();
     }
 
     // Copy back into array of bytes -- only need to worry about the bytes that were data
     // We don't care about errors in the error-correction codewords
-    for (let i = 0; i < numDataCodewords; i++) {
-      codewordBytes[i] = /*(byte) */ codewordsInts[i];
+    for (let i: number = 0; i < numDataCodewords; i++) {
+      codewordBytes[i] = codewordsInts[i];
     }
   }
 }

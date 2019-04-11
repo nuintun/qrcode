@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-import EncodeHintType from '../../EncodeHintType';
-import BitArray from '../../common/BitArray';
-import CharacterSetECI from '../../common/CharacterSetECI';
-import GenericGF from '../../common/reedsolomon/GenericGF';
-import ReedSolomonEncoder from '../../common/reedsolomon/ReedSolomonEncoder';
-import ErrorCorrectionLevel from '../decoder/ErrorCorrectionLevel';
-import Mode from '../decoder/Mode';
-import Version from '../decoder/Version';
-import MaskUtil from './MaskUtil';
-import ByteMatrix from './ByteMatrix';
 import QRCode from './QRCode';
-import ECBlocks from '../decoder/ECBlocks';
-import MatrixUtil from './MatrixUtil';
-import StringEncoding from '../../util/StringEncoding';
+import MaskUtil from './MaskUtil';
+import Mode from '../decoder/Mode';
 import BlockPair from './BlockPair';
+import ByteMatrix from './ByteMatrix';
+import MatrixUtil from './MatrixUtil';
+import Version from '../decoder/Version';
+import ECBlocks from '../decoder/ECBlocks';
+import BitArray from '../../common/BitArray';
+import EncodeHintType from '../../EncodeHintType';
 import WriterException from '../../WriterException';
+import StringEncoding from '../../util/StringEncoding';
+import GenericGF from '../../common/reedsolomon/GenericGF';
+import CharacterSetECI from '../../common/CharacterSetECI';
+import ErrorCorrectionLevel from '../decoder/ErrorCorrectionLevel';
+import ReedSolomonEncoder from '../../common/reedsolomon/ReedSolomonEncoder';
 
 /**
  * @author satorux@google.com (Satoru Takabayashi) - creator
@@ -38,7 +38,7 @@ import WriterException from '../../WriterException';
 export default class Encoder {
   // prettier-ignore
   // The original table is defined in the table 5 of JISX0510:2004 (p.19).
-  private static ALPHANUMERIC_TABLE = Int32Array.from([
+  private static ALPHANUMERIC_TABLE: Int32Array= Int32Array.from([
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  // 0x00-0x0f
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  // 0x10-0x1f
     36, -1, -1, -1, 37, 38, -1, -1, -1, -1, 39, 40, -1, 41, 42, 43,  // 0x20-0x2f
@@ -47,14 +47,12 @@ export default class Encoder {
     25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, -1, -1, -1, -1, -1,  // 0x50-0x5f
   ]);
 
-  public static DEFAULT_BYTE_MODE_ENCODING = CharacterSetECI.UTF8.getName(); // "ISO-8859-1"
+  public static DEFAULT_BYTE_MODE_ENCODING: string = CharacterSetECI.UTF8.getName(); // "ISO-8859-1"
   // TYPESCRIPTPORT: changed to UTF8, the default for js
-
-  private constructor() {}
 
   // The mask penalty calculation is complicated.  See Table 21 of JISX0510:2004 (p.45) for details.
   // Basically it applies four rules and summate all penalties.
-  private static calculateMaskPenalty(matrix: ByteMatrix): number /*int*/ {
+  private static calculateMaskPenalty(matrix: ByteMatrix): number {
     return (
       MaskUtil.applyMaskPenaltyRule1(matrix) +
       MaskUtil.applyMaskPenaltyRule2(matrix) +
@@ -67,21 +65,12 @@ export default class Encoder {
    * @param content text to encode
    * @param ecLevel error correction level to use
    * @return {@link QRCode} representing the encoded QR code
-   * @throws WriterException if encoding can't succeed, because of for example invalid content
-   *   or configuration
+   * @throws WriterException if encoding can't succeed, because of for example invalid content or configuration
    */
-  // public static encode(content: string, ecLevel: ErrorCorrectionLevel): QRCode /*throws WriterException*/ {
-  //   return encode(content, ecLevel, null)
-  // }
-
-  public static encode(
-    content: string,
-    ecLevel: ErrorCorrectionLevel,
-    hints: Map<EncodeHintType, any> = null
-  ): QRCode /*throws WriterException*/ {
+  public static encode(content: string, ecLevel: ErrorCorrectionLevel, hints: Map<EncodeHintType, object> = null): QRCode {
     // Determine what character encoding has been specified by the caller, if any
     let encoding: string = Encoder.DEFAULT_BYTE_MODE_ENCODING;
-    const hasEncodingHint: boolean = hints !== null && undefined !== hints.get(EncodeHintType.CHARACTER_SET);
+    const hasEncodingHint: boolean = hints != null && hints.get(EncodeHintType.CHARACTER_SET) != null;
 
     if (hasEncodingHint) {
       encoding = hints.get(EncodeHintType.CHARACTER_SET).toString();
@@ -93,13 +82,13 @@ export default class Encoder {
 
     // This will store the header information, like mode and
     // length, as well as "header" segments like an ECI segment.
-    const headerBits = new BitArray();
+    const headerBits: BitArray = new BitArray();
 
     // Append ECI segment if applicable
     if (mode === Mode.BYTE && (hasEncodingHint || Encoder.DEFAULT_BYTE_MODE_ENCODING !== encoding)) {
-      const eci = CharacterSetECI.getCharacterSetECIByName(encoding);
+      const eci: CharacterSetECI = CharacterSetECI.getCharacterSetECIByName(encoding);
 
-      if (eci !== undefined) {
+      if (eci != null) {
         this.appendECI(eci, headerBits);
       }
     }
@@ -109,18 +98,18 @@ export default class Encoder {
 
     // Collect data within the main segment, separately, to count its size if needed. Don't add it to
     // main payload yet.
-    const dataBits = new BitArray();
+    const dataBits: BitArray = new BitArray();
 
     this.appendBytes(content, mode, dataBits, encoding);
 
     let version: Version;
 
-    if (hints !== null && undefined !== hints.get(EncodeHintType.QR_VERSION)) {
-      const versionNumber = Number.parseInt(hints.get(EncodeHintType.QR_VERSION).toString(), 10);
+    if (hints != null && hints.get(EncodeHintType.QR_VERSION) != null) {
+      const versionNumber: number = Number.parseInt(hints.get(EncodeHintType.QR_VERSION).toString(), 10);
 
       version = Version.getVersionForNumber(versionNumber);
 
-      const bitsNeeded = this.calculateBitsNeeded(mode, headerBits, dataBits, version);
+      const bitsNeeded: number = this.calculateBitsNeeded(mode, headerBits, dataBits, version);
 
       if (!this.willFit(bitsNeeded, version, ecLevel)) {
         throw new WriterException('Data too big for requested version');
@@ -129,7 +118,7 @@ export default class Encoder {
       version = this.recommendVersion(ecLevel, mode, headerBits, dataBits);
     }
 
-    const headerAndDataBits = new BitArray();
+    const headerAndDataBits: BitArray = new BitArray();
 
     headerAndDataBits.appendBitArray(headerBits);
 
@@ -141,7 +130,7 @@ export default class Encoder {
     headerAndDataBits.appendBitArray(dataBits);
 
     const ecBlocks: ECBlocks = version.getECBlocksForLevel(ecLevel);
-    const numDataBytes = version.getTotalCodewords() - ecBlocks.getTotalECCodewords();
+    const numDataBytes: number = version.getTotalCodewords() - ecBlocks.getTotalECCodewords();
 
     // Terminate the bits properly.
     this.terminateBits(numDataBytes, headerAndDataBits);
@@ -154,16 +143,16 @@ export default class Encoder {
       ecBlocks.getNumBlocks()
     );
 
-    const qrCode = new QRCode();
+    const qrCode: QRCode = new QRCode();
 
     qrCode.setECLevel(ecLevel);
     qrCode.setMode(mode);
     qrCode.setVersion(version);
 
     //  Choose the mask pattern and set to "qrCode".
-    const dimension = version.getDimensionForVersion();
+    const dimension: number = version.getDimensionForVersion();
     const matrix: ByteMatrix = new ByteMatrix(dimension, dimension);
-    const maskPattern = this.chooseMaskPattern(finalBits, ecLevel, version, matrix);
+    const maskPattern: number = this.chooseMaskPattern(finalBits, ecLevel, version, matrix);
 
     qrCode.setMaskPattern(maskPattern);
 
@@ -184,20 +173,20 @@ export default class Encoder {
     mode: Mode,
     headerBits: BitArray,
     dataBits: BitArray
-  ): Version /*throws WriterException*/ {
+  ): Version {
     // Hard part: need to know version to know how many bits length takes. But need to know how many
     // bits it takes to know version. First we take a guess at version by assuming version will be
     // the minimum, 1:
-    const provisionalBitsNeeded = this.calculateBitsNeeded(mode, headerBits, dataBits, Version.getVersionForNumber(1));
-    const provisionalVersion = this.chooseVersion(provisionalBitsNeeded, ecLevel);
+    const provisionalBitsNeeded: number = this.calculateBitsNeeded(mode, headerBits, dataBits, Version.getVersionForNumber(1));
+    const provisionalVersion: Version = this.chooseVersion(provisionalBitsNeeded, ecLevel);
 
     // Use that guess to calculate the right version. I am still not sure this works in 100% of cases.
-    const bitsNeeded = this.calculateBitsNeeded(mode, headerBits, dataBits, provisionalVersion);
+    const bitsNeeded: number = this.calculateBitsNeeded(mode, headerBits, dataBits, provisionalVersion);
 
     return this.chooseVersion(bitsNeeded, ecLevel);
   }
 
-  private static calculateBitsNeeded(mode: Mode, headerBits: BitArray, dataBits: BitArray, version: Version): number /*int*/ {
+  private static calculateBitsNeeded(mode: Mode, headerBits: BitArray, dataBits: BitArray, version: Version): number {
     return headerBits.getSize() + mode.getCharacterCountBits(version) + dataBits.getSize();
   }
 
@@ -205,17 +194,13 @@ export default class Encoder {
    * @return the code point of the table used in alphanumeric mode or
    *  -1 if there is no corresponding code in the table.
    */
-  public static getAlphanumericCode(code: number /*int*/): number /*int*/ {
+  public static getAlphanumericCode(code: number): number {
     if (code < Encoder.ALPHANUMERIC_TABLE.length) {
       return Encoder.ALPHANUMERIC_TABLE[code];
     }
 
     return -1;
   }
-
-  // public static chooseMode(content: string): Mode {
-  //   return chooseMode(content, null);
-  // }
 
   /**
    * Choose the best mode by examining the content. Note that 'encoding' is used as a hint;
@@ -230,7 +215,7 @@ export default class Encoder {
     let hasNumeric: boolean = false;
     let hasAlphanumeric: boolean = false;
 
-    for (let i = 0, length = content.length; i < length; ++i) {
+    for (let i: number = 0, length = content.length; i < length; ++i) {
       const c: string = content.charAt(i);
 
       if (Encoder.isDigit(c)) {
@@ -258,18 +243,18 @@ export default class Encoder {
 
     try {
       bytes = StringEncoding.encode(content, CharacterSetECI.SJIS); // content.getBytes("Shift_JIS"))
-    } catch (ignored /*: UnsupportedEncodingException*/) {
+    } catch (ignored) {
       return false;
     }
 
-    const length = bytes.length;
+    const length: number = bytes.length;
 
     if (length % 2 !== 0) {
       return false;
     }
 
     for (let i = 0; i < length; i += 2) {
-      const byte1 = bytes[i] & 0xff;
+      const byte1: number = bytes[i] & 0xff;
 
       if ((byte1 < 0x81 || byte1 > 0x9f) && (byte1 < 0xe0 || byte1 > 0xeb)) {
         return false;
@@ -284,15 +269,15 @@ export default class Encoder {
     ecLevel: ErrorCorrectionLevel,
     version: Version,
     matrix: ByteMatrix
-  ): number /*int*/ /*throws WriterException*/ {
-    let minPenalty = Number.MAX_SAFE_INTEGER; // Lower penalty is better.
-    let bestMaskPattern = -1;
+  ): number {
+    let minPenalty: number = Number.MAX_SAFE_INTEGER; // Lower penalty is better.
+    let bestMaskPattern: number = -1;
 
     // We try all mask patterns to choose the best one.
-    for (let maskPattern = 0; maskPattern < QRCode.NUM_MASK_PATTERNS; maskPattern++) {
+    for (let maskPattern: number = 0; maskPattern < QRCode.NUM_MASK_PATTERNS; maskPattern++) {
       MatrixUtil.buildMatrix(bits, ecLevel, version, maskPattern, matrix);
 
-      let penalty = this.calculateMaskPenalty(matrix);
+      let penalty: number = this.calculateMaskPenalty(matrix);
 
       if (penalty < minPenalty) {
         minPenalty = penalty;
@@ -303,12 +288,9 @@ export default class Encoder {
     return bestMaskPattern;
   }
 
-  private static chooseVersion(
-    numInputBits: number /*int*/,
-    ecLevel: ErrorCorrectionLevel
-  ): Version /*throws WriterException*/ {
+  private static chooseVersion(numInputBits: number, ecLevel: ErrorCorrectionLevel): Version {
     for (let versionNum = 1; versionNum <= 40; versionNum++) {
-      const version = Version.getVersionForNumber(versionNum);
+      const version: Version = Version.getVersionForNumber(versionNum);
 
       if (Encoder.willFit(numInputBits, version, ecLevel)) {
         return version;
@@ -322,16 +304,16 @@ export default class Encoder {
    * @return true if the number of input bits will fit in a code with the specified version and
    * error correction level.
    */
-  private static willFit(numInputBits: number /*int*/, version: Version, ecLevel: ErrorCorrectionLevel): boolean {
+  private static willFit(numInputBits: number, version: Version, ecLevel: ErrorCorrectionLevel): boolean {
     // In the following comments, we use numbers of Version 7-H.
     // numBytes = 196
-    const numBytes = version.getTotalCodewords();
+    const numBytes: number = version.getTotalCodewords();
     // getNumECBytes = 130
-    const ecBlocks = version.getECBlocksForLevel(ecLevel);
-    const numEcBytes = ecBlocks.getTotalECCodewords();
+    const ecBlocks: ECBlocks = version.getECBlocksForLevel(ecLevel);
+    const numEcBytes: number = ecBlocks.getTotalECCodewords();
     // getNumDataBytes = 196 - 130 = 66
-    const numDataBytes = numBytes - numEcBytes;
-    const totalInputBytes = (numInputBits + 7) / 8;
+    const numDataBytes: number = numBytes - numEcBytes;
+    const totalInputBytes: number = (numInputBits + 7) / 8;
 
     return numDataBytes >= totalInputBytes;
   }
@@ -339,31 +321,31 @@ export default class Encoder {
   /**
    * Terminate bits as described in 8.4.8 and 8.4.9 of JISX0510:2004 (p.24).
    */
-  public static terminateBits(numDataBytes: number /*int*/, bits: BitArray): void /*throws WriterException*/ {
-    const capacity = numDataBytes * 8;
+  public static terminateBits(numDataBytes: number, bits: BitArray): void {
+    const capacity: number = numDataBytes * 8;
 
     if (bits.getSize() > capacity) {
       throw new WriterException('data bits cannot fit in the QR Code' + bits.getSize() + ' > ' + capacity);
     }
 
-    for (let i = 0; i < 4 && bits.getSize() < capacity; ++i) {
+    for (let i: number = 0; i < 4 && bits.getSize() < capacity; ++i) {
       bits.appendBit(false);
     }
 
     // Append termination bits. See 8.4.8 of JISX0510:2004 (p.24) for details.
     // If the last byte isn't 8-bit aligned, we'll add padding bits.
-    const numBitsInLastByte = bits.getSize() & 0x07;
+    const numBitsInLastByte: number = bits.getSize() & 0x07;
 
     if (numBitsInLastByte > 0) {
-      for (let i = numBitsInLastByte; i < 8; i++) {
+      for (let i: number = numBitsInLastByte; i < 8; i++) {
         bits.appendBit(false);
       }
     }
 
     // If we have more space, we'll fill the space with padding patterns defined in 8.4.9 (p.24).
-    const numPaddingBytes = numDataBytes - bits.getSizeInBytes();
+    const numPaddingBytes: number = numDataBytes - bits.getSizeInBytes();
 
-    for (let i = 0; i < numPaddingBytes; ++i) {
+    for (let i: number = 0; i < numPaddingBytes; ++i) {
       bits.appendBits((i & 0x01) === 0 ? 0xec : 0x11, 8);
     }
 
@@ -378,33 +360,33 @@ export default class Encoder {
    * JISX0510:2004 (p.30)
    */
   public static getNumDataBytesAndNumECBytesForBlockID(
-    numTotalBytes: number /*int*/,
-    numDataBytes: number /*int*/,
-    numRSBlocks: number /*int*/,
-    blockID: number /*int*/,
+    numTotalBytes: number,
+    numDataBytes: number,
+    numRSBlocks: number,
+    blockID: number,
     numDataBytesInBlock: Int32Array,
     numECBytesInBlock: Int32Array
-  ): void /*throws WriterException*/ {
+  ): void {
     if (blockID >= numRSBlocks) {
       throw new WriterException('Block ID too large');
     }
 
     // numRsBlocksInGroup2 = 196 % 5 = 1
-    const numRsBlocksInGroup2 = numTotalBytes % numRSBlocks;
+    const numRsBlocksInGroup2: number = numTotalBytes % numRSBlocks;
     // numRsBlocksInGroup1 = 5 - 1 = 4
-    const numRsBlocksInGroup1 = numRSBlocks - numRsBlocksInGroup2;
+    const numRsBlocksInGroup1: number = numRSBlocks - numRsBlocksInGroup2;
     // numTotalBytesInGroup1 = 196 / 5 = 39
-    const numTotalBytesInGroup1 = Math.floor(numTotalBytes / numRSBlocks);
+    const numTotalBytesInGroup1: number = Math.floor(numTotalBytes / numRSBlocks);
     // numTotalBytesInGroup2 = 39 + 1 = 40
-    const numTotalBytesInGroup2 = numTotalBytesInGroup1 + 1;
+    const numTotalBytesInGroup2: number = numTotalBytesInGroup1 + 1;
     // numDataBytesInGroup1 = 66 / 5 = 13
-    const numDataBytesInGroup1 = Math.floor(numDataBytes / numRSBlocks);
+    const numDataBytesInGroup1: number = Math.floor(numDataBytes / numRSBlocks);
     // numDataBytesInGroup2 = 13 + 1 = 14
-    const numDataBytesInGroup2 = numDataBytesInGroup1 + 1;
+    const numDataBytesInGroup2: number = numDataBytesInGroup1 + 1;
     // numEcBytesInGroup1 = 39 - 13 = 26
-    const numEcBytesInGroup1 = numTotalBytesInGroup1 - numDataBytesInGroup1;
+    const numEcBytesInGroup1: number = numTotalBytesInGroup1 - numDataBytesInGroup1;
     // numEcBytesInGroup2 = 40 - 14 = 26
-    const numEcBytesInGroup2 = numTotalBytesInGroup2 - numDataBytesInGroup2;
+    const numEcBytesInGroup2: number = numTotalBytesInGroup2 - numDataBytesInGroup2;
 
     // Sanity checks.
     // 26 = 26
@@ -441,10 +423,10 @@ export default class Encoder {
    */
   public static interleaveWithECBytes(
     bits: BitArray,
-    numTotalBytes: number /*int*/,
-    numDataBytes: number /*int*/,
-    numRSBlocks: number /*int*/
-  ): BitArray /*throws WriterException*/ {
+    numTotalBytes: number,
+    numDataBytes: number,
+    numRSBlocks: number
+  ): BitArray {
     // "bits" must have "getNumDataBytes" bytes of data.
     if (bits.getSizeInBytes() !== numDataBytes) {
       throw new WriterException('Number of bits and data bytes does not match');
@@ -452,14 +434,14 @@ export default class Encoder {
 
     // Step 1.  Divide data bytes into blocks and generate error correction bytes for them. We'll
     // store the divided data bytes blocks and error correction bytes blocks into "blocks".
-    let dataBytesOffset = 0;
-    let maxNumDataBytes = 0;
-    let maxNumEcBytes = 0;
+    let dataBytesOffset: number = 0;
+    let maxNumDataBytes: number = 0;
+    let maxNumEcBytes: number = 0;
 
     // Since, we know the number of reedsolmon blocks, we can initialize the vector with the number.
-    const blocks = new Array<BlockPair>(); // new Array<BlockPair>(numRSBlocks)
+    const blocks: BlockPair[] = new Array<BlockPair>(); // new Array<BlockPair>(numRSBlocks)
 
-    for (let i = 0; i < numRSBlocks; ++i) {
+    for (let i: number = 0; i < numRSBlocks; ++i) {
       const numDataBytesInBlock: Int32Array = new Int32Array(1);
       const numEcBytesInBlock: Int32Array = new Int32Array(1);
 
@@ -472,8 +454,8 @@ export default class Encoder {
         numEcBytesInBlock
       );
 
-      const size = numDataBytesInBlock[0];
-      const dataBytes = new Uint8Array(size);
+      const size: number = numDataBytesInBlock[0];
+      const dataBytes: Uint8Array = new Uint8Array(size);
 
       bits.toBytes(8 * dataBytesOffset, dataBytes, 0, size);
 
@@ -490,12 +472,12 @@ export default class Encoder {
       throw new WriterException('Data bytes does not match offset');
     }
 
-    const result = new BitArray();
+    const result: BitArray = new BitArray();
 
     // First, place data blocks.
-    for (let i = 0; i < maxNumDataBytes; ++i) {
+    for (let i: number = 0; i < maxNumDataBytes; ++i) {
       for (const block of blocks) {
-        const dataBytes = block.getDataBytes();
+        const dataBytes: Uint8Array = block.getDataBytes();
 
         if (i < dataBytes.length) {
           result.appendBits(dataBytes[i], 8);
@@ -504,9 +486,9 @@ export default class Encoder {
     }
 
     // Then, place error correction blocks.
-    for (let i = 0; i < maxNumEcBytes; ++i) {
+    for (let i: number = 0; i < maxNumEcBytes; ++i) {
       for (const block of blocks) {
-        const ecBytes = block.getErrorCorrectionBytes();
+        const ecBytes: Uint8Array = block.getErrorCorrectionBytes();
 
         if (i < ecBytes.length) {
           result.appendBits(ecBytes[i], 8);
@@ -522,20 +504,20 @@ export default class Encoder {
     return result;
   }
 
-  public static generateECBytes(dataBytes: Uint8Array, numEcBytesInBlock: number /*int*/): Uint8Array {
-    const numDataBytes = dataBytes.length;
+  public static generateECBytes(dataBytes: Uint8Array, numEcBytesInBlock: number): Uint8Array {
+    const numDataBytes: number = dataBytes.length;
     const toEncode: Int32Array = new Int32Array(numDataBytes + numEcBytesInBlock); // int[numDataBytes + numEcBytesInBlock]
 
-    for (let i = 0; i < numDataBytes; i++) {
+    for (let i: number = 0; i < numDataBytes; i++) {
       toEncode[i] = dataBytes[i] & 0xff;
     }
 
     new ReedSolomonEncoder(GenericGF.QR_CODE_FIELD_256).encode(toEncode, numEcBytesInBlock);
 
-    const ecBytes = new Uint8Array(numEcBytesInBlock);
+    const ecBytes: Uint8Array = new Uint8Array(numEcBytesInBlock);
 
     for (let i = 0; i < numEcBytesInBlock; i++) {
-      ecBytes[i] = /*(byte) */ toEncode[numDataBytes + i];
+      ecBytes[i] = toEncode[numDataBytes + i];
     }
 
     return ecBytes;
@@ -551,13 +533,8 @@ export default class Encoder {
   /**
    * Append length info. On success, store the result in "bits".
    */
-  public static appendLengthInfo(
-    numLetters: number /*int*/,
-    version: Version,
-    mode: Mode,
-    bits: BitArray
-  ): void /*throws WriterException*/ {
-    const numBits = mode.getCharacterCountBits(version);
+  public static appendLengthInfo(numLetters: number, version: Version, mode: Mode, bits: BitArray): void {
+    const numBits: number = mode.getCharacterCountBits(version);
 
     if (numLetters >= 1 << numBits) {
       throw new WriterException(numLetters + ' is bigger than ' + ((1 << numBits) - 1));
@@ -569,7 +546,7 @@ export default class Encoder {
   /**
    * Append "bytes" in "mode" mode (encoding) into "bits". On success, store the result in "bits".
    */
-  public static appendBytes(content: string, mode: Mode, bits: BitArray, encoding: string): void /*throws WriterException*/ {
+  public static appendBytes(content: string, mode: Mode, bits: BitArray, encoding: string): void {
     switch (mode) {
       case Mode.NUMERIC:
         Encoder.appendNumericBytes(content, bits);
@@ -593,27 +570,28 @@ export default class Encoder {
   }
 
   private static isDigit(singleCharacter: string): boolean {
-    const cn = Encoder.getDigit(singleCharacter);
+    const cn: number = Encoder.getDigit(singleCharacter);
+
     return cn >= 0 && cn <= 9;
   }
 
   public static appendNumericBytes(content: string, bits: BitArray): void {
-    const length = content.length;
-    let i = 0;
+    const length: number = content.length;
+    let i: number = 0;
 
     while (i < length) {
-      const num1 = Encoder.getDigit(content.charAt(i));
+      const num1: number = Encoder.getDigit(content.charAt(i));
 
       if (i + 2 < length) {
         // Encode three numeric letters in ten bits.
-        const num2 = Encoder.getDigit(content.charAt(i + 1));
-        const num3 = Encoder.getDigit(content.charAt(i + 2));
+        const num2: number = Encoder.getDigit(content.charAt(i + 1));
+        const num3: number = Encoder.getDigit(content.charAt(i + 2));
 
         bits.appendBits(num1 * 100 + num2 * 10 + num3, 10);
         i += 3;
       } else if (i + 1 < length) {
         // Encode two numeric letters in seven bits.
-        const num2 = Encoder.getDigit(content.charAt(i + 1));
+        const num2: number = Encoder.getDigit(content.charAt(i + 1));
 
         bits.appendBits(num1 * 10 + num2, 7);
         i += 2;
@@ -626,18 +604,18 @@ export default class Encoder {
   }
 
   public static appendAlphanumericBytes(content: string, bits: BitArray): void /*throws WriterException*/ {
-    const length = content.length;
-    let i = 0;
+    const length: number = content.length;
+    let i: number = 0;
 
     while (i < length) {
-      const code1 = Encoder.getAlphanumericCode(content.charCodeAt(i));
+      const code1: number = Encoder.getAlphanumericCode(content.charCodeAt(i));
 
       if (code1 === -1) {
         throw new WriterException();
       }
 
       if (i + 1 < length) {
-        const code2 = Encoder.getAlphanumericCode(content.charCodeAt(i + 1));
+        const code2: number = Encoder.getAlphanumericCode(content.charCodeAt(i + 1));
 
         if (code2 === -1) {
           throw new WriterException();
@@ -659,12 +637,12 @@ export default class Encoder {
 
     try {
       bytes = StringEncoding.encode(content, encoding);
-    } catch (uee /*: UnsupportedEncodingException*/) {
+    } catch (uee) {
       throw new WriterException(uee);
     }
 
-    for (let i = 0, length = bytes.length; i !== length; i++) {
-      const b = bytes[i];
+    for (let i: number = 0, length = bytes.length; i !== length; i++) {
+      const b: number = bytes[i];
 
       bits.appendBits(b, 8);
     }
@@ -673,22 +651,22 @@ export default class Encoder {
   /**
    * @throws WriterException
    */
-  public static appendKanjiBytes(content: string, bits: BitArray): void /*throws */ {
+  public static appendKanjiBytes(content: string, bits: BitArray): void {
     let bytes: Uint8Array;
 
     try {
       bytes = StringEncoding.encode(content, CharacterSetECI.SJIS);
-    } catch (uee /*: UnsupportedEncodingException*/) {
+    } catch (uee) {
       throw new WriterException(uee);
     }
 
-    const length = bytes.length;
+    const length: number = bytes.length;
 
-    for (let i = 0; i < length; i += 2) {
-      const byte1 = bytes[i] & 0xff;
-      const byte2 = bytes[i + 1] & 0xff;
-      const code = ((byte1 << 8) & 0xffffffff) | byte2;
-      let subtracted = -1;
+    for (let i: number = 0; i < length; i += 2) {
+      const byte1: number = bytes[i] & 0xff;
+      const byte2: number = bytes[i + 1] & 0xff;
+      const code: number = ((byte1 << 8) & 0xffffffff) | byte2;
+      let subtracted: number = -1;
 
       if (code >= 0x8140 && code <= 0x9ffc) {
         subtracted = code - 0x8140;
@@ -700,7 +678,7 @@ export default class Encoder {
         throw new WriterException('Invalid byte sequence');
       }
 
-      const encoded = (subtracted >> 8) * 0xc0 + (subtracted & 0xff);
+      const encoded: number = (subtracted >> 8) * 0xc0 + (subtracted & 0xff);
 
       bits.appendBits(encoded, 13);
     }

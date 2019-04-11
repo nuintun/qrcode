@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import ResultPoint from '../ResultPoint';
 import BitMatrix from './BitMatrix';
+import ResultPoint from '../ResultPoint';
 
 /**
  * <p>Encapsulates the result of detecting a barcode in an image. This includes the raw
@@ -26,9 +26,14 @@ import BitMatrix from './BitMatrix';
  */
 export default class DetectorResult {
   private bits: BitMatrix;
-  private points: Array<ResultPoint>;
+  private points: ResultPoint[];
 
-  public constructor(bits: BitMatrix, points: Array<ResultPoint>) {
+  /**
+   * @constructor
+   * @param bits
+   * @param points
+   */
+  public constructor(bits: BitMatrix, points: ResultPoint[]) {
     this.bits = bits;
     this.points = points;
   }
@@ -37,7 +42,7 @@ export default class DetectorResult {
     return this.bits;
   }
 
-  public getPoints(): Array<ResultPoint> {
+  public getPoints(): ResultPoint[] {
     return this.points;
   }
 }

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+import System from './util/System';
 import ResultPoint from './ResultPoint';
 import BarcodeFormat from './BarcodeFormat';
-import System from './util/System';
 import ResultMetadataType from './ResultMetadataType';
 
 /**
@@ -25,21 +25,36 @@ import ResultMetadataType from './ResultMetadataType';
  * @author Sean Owen
  */
 export default class Result {
-  private resultMetadata: Map<ResultMetadataType, Object>;
+  private text: string;
+  private rawBytes: Uint8Array;
+  private numBits: number;
+  private resultPoints: ResultPoint[];
+  private format: BarcodeFormat;
+  private resultMetadata: Map<ResultMetadataType, any>;
+  private timestamp: number;
 
+  /**
+   * @constructor
+   * @param text
+   * @param rawBytes
+   * @param numBits
+   * @param resultPoints
+   * @param format
+   * @param timestamp
+   */
   public constructor(
-    private text: string,
-    private rawBytes: Uint8Array,
-    private numBits: number /*int*/,
-    private resultPoints: Array<ResultPoint>,
-    private format: BarcodeFormat,
-    private timestamp: number /*long*/
+    text: string,
+    rawBytes: Uint8Array,
+    numBits: number,
+    resultPoints: ResultPoint[],
+    format: BarcodeFormat,
+    timestamp: number
   ) {
     this.text = text;
     this.rawBytes = rawBytes;
 
-    if (undefined === numBits || null === numBits) {
-      this.numBits = rawBytes === null || rawBytes === undefined ? 0 : 8 * rawBytes.length;
+    if (numBits == null) {
+      this.numBits = rawBytes == null ? 0 : 8 * rawBytes.length;
     } else {
       this.numBits = numBits;
     }
@@ -48,7 +63,7 @@ export default class Result {
     this.format = format;
     this.resultMetadata = null;
 
-    if (undefined === timestamp || null === timestamp) {
+    if (timestamp == null) {
       this.timestamp = System.currentTimeMillis();
     } else {
       this.timestamp = timestamp;
@@ -73,7 +88,7 @@ export default class Result {
    * @return how many bits of {@link #getRawBytes()} are valid; typically 8 times its length
    * @since 3.3.0
    */
-  public getNumBits(): number /*int*/ {
+  public getNumBits(): number {
     return this.numBits;
   }
 
@@ -82,7 +97,7 @@ export default class Result {
    *         identifying finder patterns or the corners of the barcode. The exact meaning is
    *         specific to the type of barcode that was decoded.
    */
-  public getResultPoints(): Array<ResultPoint> {
+  public getResultPoints(): ResultPoint[] {
     return this.resultPoints;
   }
 
@@ -98,20 +113,21 @@ export default class Result {
    *   {@code null}. This contains optional metadata about what was detected about the barcode,
    *   like orientation.
    */
-  public getResultMetadata(): Map<ResultMetadataType, Object> {
+  public getResultMetadata(): Map<ResultMetadataType, any> {
     return this.resultMetadata;
   }
 
-  public putMetadata(type: ResultMetadataType, value: Object): void {
-    if (this.resultMetadata === null) {
-      this.resultMetadata = new Map<ResultMetadataType, Object>();
+  public putMetadata(type: ResultMetadataType, value: any): void {
+    if (this.resultMetadata == null) {
+      this.resultMetadata = new Map<ResultMetadataType, any>();
     }
+
     this.resultMetadata.set(type, value);
   }
 
-  public putAllMetadata(metadata: Map<ResultMetadataType, Object>): void {
-    if (metadata !== null) {
-      if (this.resultMetadata === null) {
+  public putAllMetadata(metadata: Map<ResultMetadataType, any>): void {
+    if (metadata != null) {
+      if (this.resultMetadata == null) {
         this.resultMetadata = metadata;
       } else {
         this.resultMetadata = new Map(metadata);
@@ -119,13 +135,13 @@ export default class Result {
     }
   }
 
-  public addResultPoints(newPoints: Array<ResultPoint>): void {
-    const oldPoints = this.resultPoints;
+  public addResultPoints(newPoints: ResultPoint[]): void {
+    const oldPoints: ResultPoint[] = this.resultPoints;
 
-    if (oldPoints === null) {
+    if (oldPoints == null) {
       this.resultPoints = newPoints;
-    } else if (newPoints !== null && newPoints.length > 0) {
-      const allPoints = new ResultPoint[oldPoints.length + newPoints.length]();
+    } else if (newPoints != null && newPoints.length > 0) {
+      const allPoints: ResultPoint[] = [];
 
       System.arraycopy(oldPoints, 0, allPoints, 0, oldPoints.length);
       System.arraycopy(newPoints, 0, allPoints, oldPoints.length, newPoints.length);
@@ -134,11 +150,13 @@ export default class Result {
     }
   }
 
-  public getTimestamp(): number /*long*/ {
+  public getTimestamp(): number {
     return this.timestamp;
   }
 
-  /*@Override*/
+  /**
+   * @override
+   */
   public toString(): string {
     return this.text;
   }

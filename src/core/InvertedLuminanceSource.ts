@@ -23,64 +23,88 @@ import LuminanceSource from './LuminanceSource';
  * @author Sean Owen
  */
 export default class InvertedLuminanceSource extends LuminanceSource {
-  public constructor(private delegate: LuminanceSource) {
+  private delegate: LuminanceSource;
+
+  public constructor(delegate: LuminanceSource) {
     super(delegate.getWidth(), delegate.getHeight());
+
+    this.delegate = delegate;
   }
 
-  /*@Override*/
-  public getRow(y: number /*int*/, row?: Uint8ClampedArray): Uint8ClampedArray {
-    const sourceRow = this.delegate.getRow(y, row);
-    const width: number /*int*/ = this.getWidth();
+  /**
+   * @override
+   * @param y
+   * @param row
+   */
+  public getRow(y: number, row?: Uint8Array): Uint8Array {
+    const sourceRow: Uint8Array = this.delegate.getRow(y, row);
+    const width: number = this.getWidth();
 
-    for (let i = 0; i < width; i++) {
-      sourceRow[i] = /*(byte)*/ 255 - (sourceRow[i] & 0xff);
+    for (let i: number = 0; i < width; i++) {
+      sourceRow[i] = 255 - (sourceRow[i] & 0xff);
     }
 
     return sourceRow;
   }
 
-  /*@Override*/
-  public getMatrix(): Uint8ClampedArray {
-    const matrix: Uint8ClampedArray = this.delegate.getMatrix();
-    const length: number /*int*/ = this.getWidth() * this.getHeight();
-    const invertedMatrix = new Uint8ClampedArray(length);
+  /**
+   * @override
+   */
+  public getMatrix(): Uint8Array {
+    const matrix: Uint8Array = this.delegate.getMatrix();
+    const length: number = this.getWidth() * this.getHeight();
+    const invertedMatrix: Uint8Array = new Uint8Array(length);
 
-    for (let i = 0; i < length; i++) {
-      invertedMatrix[i] = /*(byte)*/ 255 - (matrix[i] & 0xff);
+    for (let i: number = 0; i < length; i++) {
+      invertedMatrix[i] = 255 - (matrix[i] & 0xff);
     }
 
     return invertedMatrix;
   }
 
-  /*@Override*/
+  /**
+   * @override
+   */
   public isCropSupported(): boolean {
     return this.delegate.isCropSupported();
   }
 
-  /*@Override*/
-  public crop(left: number /*int*/, top: number /*int*/, width: number /*int*/, height: number /*int*/): LuminanceSource {
+  /**
+   * @override
+   * @param left
+   * @param top
+   * @param width
+   * @param height
+   */
+  public crop(left: number, top: number, width: number, height: number): LuminanceSource {
     return new InvertedLuminanceSource(this.delegate.crop(left, top, width, height));
   }
 
-  /*@Override*/
+  /**
+   * @override
+   */
   public isRotateSupported(): boolean {
     return this.delegate.isRotateSupported();
   }
 
   /**
+   * @override
    * @return original delegate {@link LuminanceSource} since invert undoes itself
    */
-  /*@Override*/
   public invert(): LuminanceSource {
     return this.delegate;
   }
 
-  /*@Override*/
+  /**
+   * @override
+   */
   public rotateCounterClockwise(): LuminanceSource {
     return new InvertedLuminanceSource(this.delegate.rotateCounterClockwise());
   }
 
-  /*@Override*/
+  /**
+   * @override
+   */
   public rotateCounterClockwise45(): LuminanceSource {
     return new InvertedLuminanceSource(this.delegate.rotateCounterClockwise45());
   }

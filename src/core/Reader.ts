@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-import BinaryBitmap from './BinaryBitmap';
 import Result from './Result';
+import BinaryBitmap from './BinaryBitmap';
 import DecodeHintType from './DecodeHintType';
-
-export default Reader;
 
 /**
  * Implementations of this interface can decode an image of a barcode in some format into
@@ -32,7 +30,7 @@ export default Reader;
  * @author Sean Owen
  * @author dswitkin@google.com (Daniel Switkin)
  */
-interface Reader {
+export default interface Reader {
   /**
    * Locates and decodes a barcode in some format within an image.
    *

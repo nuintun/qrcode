@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import BitMatrix from '../../common/BitMatrix';
-import ErrorCorrectionLevel from './ErrorCorrectionLevel';
-import FormatInformation from './FormatInformation';
-import ECBlocks from './ECBlocks';
 import ECB from './ECB';
+import ECBlocks from './ECBlocks';
+import BitMatrix from '../../common/BitMatrix';
+import FormatInformation from './FormatInformation';
 import FormatException from '../../FormatException';
+import ErrorCorrectionLevel from './ErrorCorrectionLevel';
 import IllegalArgumentException from '../../IllegalArgumentException';
 
 /**
@@ -32,41 +32,15 @@ export default class Version {
    * See ISO 18004:2006 Annex D.
    * Element i represents the raw version bits that specify version i + 7
    */
-  private static VERSION_DECODE_INFO = Int32Array.from([
-    0x07c94,
-    0x085bc,
-    0x09a99,
-    0x0a4d3,
-    0x0bbf6,
-    0x0c762,
-    0x0d847,
-    0x0e60d,
-    0x0f928,
-    0x10b78,
-    0x1145d,
-    0x12a17,
-    0x13532,
-    0x149a6,
-    0x15683,
-    0x168c9,
-    0x177ec,
-    0x18ec4,
-    0x191e1,
-    0x1afab,
-    0x1b08e,
-    0x1cc1a,
-    0x1d33f,
-    0x1ed75,
-    0x1f250,
-    0x209d5,
-    0x216f0,
-    0x228ba,
-    0x2379f,
-    0x24b0b,
-    0x2542e,
-    0x26a64,
-    0x27541,
-    0x28c69
+  // prettier-ignore
+  private static VERSION_DECODE_INFO: Int32Array= Int32Array.from([
+    0x07C94, 0x085BC, 0x09A99, 0x0A4D3, 0x0BBF6,
+    0x0C762, 0x0D847, 0x0E60D, 0x0F928, 0x10B78,
+    0x1145D, 0x12A17, 0x13532, 0x149A6, 0x15683,
+    0x168C9, 0x177EC, 0x18EC4, 0x191E1, 0x1AFAB,
+    0x1B08E, 0x1CC1A, 0x1D33F, 0x1ED75, 0x1F250,
+    0x209D5, 0x216F0, 0x228BA, 0x2379F, 0x24B0B,
+    0x2542E, 0x26A64, 0x27541, 0x28C69
   ]);
 
   /**
@@ -395,18 +369,18 @@ export default class Version {
     )
   ];
 
+  private versionNumber: number;
+  private alignmentPatternCenters: Int32Array;
   private ecBlocks: ECBlocks[];
-  private totalCodewords: number; /*int*/
+  private totalCodewords: number;
 
-  private constructor(
-    private versionNumber: number /*int*/,
-    private alignmentPatternCenters: Int32Array,
-    ...ecBlocks: ECBlocks[]
-  ) {
+  private constructor(versionNumber: number, alignmentPatternCenters: Int32Array, ...ecBlocks: ECBlocks[]) {
+    this.versionNumber = versionNumber;
+    this.alignmentPatternCenters = alignmentPatternCenters;
     this.ecBlocks = ecBlocks;
 
-    let total = 0;
-    const ecCodewords = ecBlocks[0].getECCodewordsPerBlock();
+    let total: number = 0;
+    const ecCodewords: number = ecBlocks[0].getECCodewordsPerBlock();
     const ecbArray: ECB[] = ecBlocks[0].getECBlocks();
 
     for (const ecBlock of ecbArray) {
@@ -416,7 +390,7 @@ export default class Version {
     this.totalCodewords = total;
   }
 
-  public getVersionNumber(): number /*int*/ {
+  public getVersionNumber(): number {
     return this.versionNumber;
   }
 
@@ -424,11 +398,11 @@ export default class Version {
     return this.alignmentPatternCenters;
   }
 
-  public getTotalCodewords(): number /*int*/ {
+  public getTotalCodewords(): number {
     return this.totalCodewords;
   }
 
-  public getDimensionForVersion(): number /*int*/ {
+  public getDimensionForVersion(): number {
     return 17 + 4 * this.versionNumber;
   }
 
@@ -445,19 +419,19 @@ export default class Version {
    * @return Version for a QR Code of that dimension
    * @throws FormatException if dimension is not 1 mod 4
    */
-  public static getProvisionalVersionForDimension(dimension: number /*int*/): Version /*throws FormatException */ {
+  public static getProvisionalVersionForDimension(dimension: number): Version {
     if (dimension % 4 !== 1) {
       throw new FormatException();
     }
 
     try {
       return this.getVersionForNumber((dimension - 17) / 4);
-    } catch (ignored /*: IllegalArgumentException*/) {
+    } catch (ignored) {
       throw new FormatException();
     }
   }
 
-  public static getVersionForNumber(versionNumber: number /*int*/): Version {
+  public static getVersionForNumber(versionNumber: number): Version {
     if (versionNumber < 1 || versionNumber > 40) {
       throw new IllegalArgumentException();
     }
@@ -465,12 +439,12 @@ export default class Version {
     return Version.VERSIONS[versionNumber - 1];
   }
 
-  public static decodeVersionInformation(versionBits: number /*int*/): Version {
-    let bestDifference = Number.MAX_SAFE_INTEGER;
-    let bestVersion = 0;
+  public static decodeVersionInformation(versionBits: number): Version {
+    let bestDifference: number = Number.MAX_SAFE_INTEGER;
+    let bestVersion: number = 0;
 
-    for (let i = 0; i < Version.VERSION_DECODE_INFO.length; i++) {
-      const targetVersion = Version.VERSION_DECODE_INFO[i];
+    for (let i: number = 0; i < Version.VERSION_DECODE_INFO.length; i++) {
+      const targetVersion: number = Version.VERSION_DECODE_INFO[i];
 
       // Do the version info bits match exactly? done.
       if (targetVersion === versionBits) {
@@ -479,7 +453,7 @@ export default class Version {
 
       // Otherwise see if this is the closest to a real version info bit string
       // we have seen so far
-      const bitsDifference = FormatInformation.numBitsDiffering(versionBits, targetVersion);
+      const bitsDifference: number = FormatInformation.numBitsDiffering(versionBits, targetVersion);
 
       if (bitsDifference < bestDifference) {
         bestVersion = i + 7;
@@ -501,8 +475,8 @@ export default class Version {
    * See ISO 18004:2006 Annex E
    */
   public buildFunctionPattern(): BitMatrix {
-    const dimension = this.getDimensionForVersion();
-    const bitMatrix = new BitMatrix(dimension);
+    const dimension: number = this.getDimensionForVersion();
+    const bitMatrix: BitMatrix = new BitMatrix(dimension);
 
     // Top left finder pattern + separator + format
     bitMatrix.setRegion(0, 0, 9, 9);
@@ -512,12 +486,12 @@ export default class Version {
     bitMatrix.setRegion(0, dimension - 8, 9, 8);
 
     // Alignment patterns
-    const max = this.alignmentPatternCenters.length;
+    const max: number = this.alignmentPatternCenters.length;
 
-    for (let x = 0; x < max; x++) {
-      const i = this.alignmentPatternCenters[x] - 2;
+    for (let x: number = 0; x < max; x++) {
+      const i: number = this.alignmentPatternCenters[x] - 2;
 
-      for (let y = 0; y < max; y++) {
+      for (let y: number = 0; y < max; y++) {
         if ((x === 0 && (y === 0 || y === max - 1)) || (x === max - 1 && y === 0)) {
           // No alignment patterns near the three finder patterns
           continue;
@@ -542,7 +516,9 @@ export default class Version {
     return bitMatrix;
   }
 
-  /*@Override*/
+  /**
+   * @override
+   */
   public toString(): string {
     return '' + this.versionNumber;
   }

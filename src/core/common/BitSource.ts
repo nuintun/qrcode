@@ -26,14 +26,17 @@ import IllegalArgumentException from '../IllegalArgumentException';
  * @author Sean Owen
  */
 export default class BitSource {
-  private byteOffset: number; /*int*/
-  private bitOffset: number; /*int*/
+  private bytes: Uint8Array;
+  private byteOffset: number;
+  private bitOffset: number;
 
   /**
+   * @constructor
    * @param bytes bytes from which this will read bits. Bits will be read from the first byte first.
    * Bits are read within a byte from most-significant to least-significant bit.
    */
-  public constructor(private bytes: Uint8Array) {
+  public constructor(bytes: Uint8Array) {
+    this.bytes = bytes;
     this.byteOffset = 0;
     this.bitOffset = 0;
   }
@@ -41,14 +44,14 @@ export default class BitSource {
   /**
    * @return index of next bit in current byte which would be read by the next call to {@link #readBits(int)}.
    */
-  public getBitOffset(): number /*int*/ {
+  public getBitOffset(): number {
     return this.bitOffset;
   }
 
   /**
    * @return index of next byte in input byte array which would be read by the next call to {@link #readBits(int)}.
    */
-  public getByteOffset(): number /*int*/ {
+  public getByteOffset(): number {
     return this.byteOffset;
   }
 
@@ -58,23 +61,23 @@ export default class BitSource {
    *         bits of the int
    * @throws IllegalArgumentException if numBits isn't in [1,32] or more than is available
    */
-  public readBits(numBits: number /*int*/): number /*int*/ {
+  public readBits(numBits: number): number {
     if (numBits < 1 || numBits > 32 || numBits > this.available()) {
       throw new IllegalArgumentException('' + numBits);
     }
 
-    let result = 0;
-    let bitOffset = this.bitOffset;
-    let byteOffset = this.byteOffset;
+    const bytes: Uint8Array = this.bytes;
+    let bitOffset: number = this.bitOffset;
+    let byteOffset: number = this.byteOffset;
 
-    const bytes = this.bytes;
+    let result: number = 0;
 
     // First, read remainder from current byte
     if (bitOffset > 0) {
-      const bitsLeft = 8 - bitOffset;
-      const toRead = numBits < bitsLeft ? numBits : bitsLeft;
-      const bitsToNotRead = bitsLeft - toRead;
-      const mask = (0xff >> (8 - toRead)) << bitsToNotRead;
+      const bitsLeft: number = 8 - bitOffset;
+      const toRead: number = numBits < bitsLeft ? numBits : bitsLeft;
+      const bitsToNotRead: number = bitsLeft - toRead;
+      const mask: number = (0xff >> (8 - toRead)) << bitsToNotRead;
 
       result = (bytes[byteOffset] & mask) >> bitsToNotRead;
       numBits -= toRead;
@@ -96,8 +99,8 @@ export default class BitSource {
 
       // Finally read a partial byte
       if (numBits > 0) {
-        const bitsToNotRead = 8 - numBits;
-        const mask = (0xff >> bitsToNotRead) << bitsToNotRead;
+        const bitsToNotRead: number = 8 - numBits;
+        const mask: number = (0xff >> bitsToNotRead) << bitsToNotRead;
 
         result = (result << numBits) | ((bytes[byteOffset] & mask) >> bitsToNotRead);
         bitOffset += numBits;
@@ -113,7 +116,7 @@ export default class BitSource {
   /**
    * @return number of bits that can be read successfully
    */
-  public available(): number /*int*/ {
+  public available(): number {
     return 8 * (this.bytes.length - this.byteOffset) - this.bitOffset;
   }
 }

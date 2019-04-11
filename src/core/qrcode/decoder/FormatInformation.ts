@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import ErrorCorrectionLevel from './ErrorCorrectionLevel';
 import Integer from '../../util/Integer';
+import ErrorCorrectionLevel from './ErrorCorrectionLevel';
 
 /**
  * <p>Encapsulates a QR Code's format information, including the data mask used and
@@ -26,12 +26,12 @@ import Integer from '../../util/Integer';
  * @see ErrorCorrectionLevel
  */
 export default class FormatInformation {
-  private static FORMAT_INFO_MASK_QR = 0x5412;
+  private static FORMAT_INFO_MASK_QR: number = 0x5412;
 
   /**
    * See ISO 18004:2006, Annex C, Table C.1
    */
-  private static FORMAT_INFO_DECODE_LOOKUP = [
+  private static FORMAT_INFO_DECODE_LOOKUP: Int32Array[] = [
     Int32Array.from([0x5412, 0x00]),
     Int32Array.from([0x5125, 0x01]),
     Int32Array.from([0x5e7c, 0x02]),
@@ -67,16 +67,20 @@ export default class FormatInformation {
   ];
 
   private errorCorrectionLevel: ErrorCorrectionLevel;
-  private dataMask: number; /*byte*/
+  private dataMask: number;
 
-  private constructor(formatInfo: number /*int*/) {
+  /**
+   * @constructor
+   * @param formatInfo
+   */
+  private constructor(formatInfo: number) {
     // Bits 3,4
     this.errorCorrectionLevel = ErrorCorrectionLevel.forBits((formatInfo >> 3) & 0x03);
     // Bottom 3 bits
-    this.dataMask = /*(byte) */ formatInfo & 0x07;
+    this.dataMask = formatInfo & 0x07;
   }
 
-  public static numBitsDiffering(a: number /*int*/, b: number /*int*/): number /*int*/ {
+  public static numBitsDiffering(a: number, b: number): number {
     return Integer.bitCount(a ^ b);
   }
 
@@ -87,13 +91,10 @@ export default class FormatInformation {
    * @return information about the format it specifies, or {@code null}
    *  if doesn't seem to match any known pattern
    */
-  public static decodeFormatInformation(
-    maskedFormatInfo1: number /*int*/,
-    maskedFormatInfo2: number /*int*/
-  ): FormatInformation {
-    const formatInfo = FormatInformation.doDecodeFormatInformation(maskedFormatInfo1, maskedFormatInfo2);
+  public static decodeFormatInformation(maskedFormatInfo1: number, maskedFormatInfo2: number): FormatInformation {
+    const formatInfo: FormatInformation = FormatInformation.doDecodeFormatInformation(maskedFormatInfo1, maskedFormatInfo2);
 
-    if (formatInfo !== null) {
+    if (formatInfo != null) {
       return formatInfo;
     }
 
@@ -106,23 +107,20 @@ export default class FormatInformation {
     );
   }
 
-  private static doDecodeFormatInformation(
-    maskedFormatInfo1: number /*int*/,
-    maskedFormatInfo2: number /*int*/
-  ): FormatInformation {
+  private static doDecodeFormatInformation(maskedFormatInfo1: number, maskedFormatInfo2: number): FormatInformation {
     // Find the int in FORMAT_INFO_DECODE_LOOKUP with fewest bits differing
-    let bestDifference = Number.MAX_SAFE_INTEGER;
-    let bestFormatInfo = 0;
+    let bestDifference: number = Number.MAX_SAFE_INTEGER;
+    let bestFormatInfo: number = 0;
 
     for (const decodeInfo of FormatInformation.FORMAT_INFO_DECODE_LOOKUP) {
-      const targetInfo = decodeInfo[0];
+      const targetInfo: number = decodeInfo[0];
 
       if (targetInfo === maskedFormatInfo1 || targetInfo === maskedFormatInfo2) {
         // Found an exact match
         return new FormatInformation(decodeInfo[1]);
       }
 
-      let bitsDifference = FormatInformation.numBitsDiffering(maskedFormatInfo1, targetInfo);
+      let bitsDifference: number = FormatInformation.numBitsDiffering(maskedFormatInfo1, targetInfo);
 
       if (bitsDifference < bestDifference) {
         bestFormatInfo = decodeInfo[1];
@@ -153,23 +151,22 @@ export default class FormatInformation {
     return this.errorCorrectionLevel;
   }
 
-  public getDataMask(): number /*byte*/ {
+  public getDataMask(): number {
     return this.dataMask;
   }
 
-  /*@Override*/
-  public hashCode(): number /*int*/ {
+  /**
+   * @override
+   */
+  public hashCode(): number {
     return (this.errorCorrectionLevel.getBits() << 3) | this.dataMask;
   }
 
-  /*@Override*/
-  public equals(o: Object): boolean {
-    if (!(o instanceof FormatInformation)) {
-      return false;
-    }
-
-    const other = <FormatInformation>o;
-
-    return this.errorCorrectionLevel === other.errorCorrectionLevel && this.dataMask === other.dataMask;
+  /**
+   * @override
+   * @param o
+   */
+  public equals(o: FormatInformation): boolean {
+    return this.errorCorrectionLevel === o.errorCorrectionLevel && this.dataMask === o.dataMask;
   }
 }

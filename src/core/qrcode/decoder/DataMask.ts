@@ -16,7 +16,7 @@
 
 import BitMatrix from '../../common/BitMatrix';
 
-export enum DataMaskValues {
+enum DataMaskValues {
   DATA_MASK_000,
   DATA_MASK_001,
   DATA_MASK_010,
@@ -40,16 +40,19 @@ export enum DataMaskValues {
  */
 export default class DataMask {
   // See ISO 18004:2006 6.8.1
+  private isMasked: (i: number, j: number) => boolean;
 
-  public constructor(private value: DataMaskValues, private isMasked: (i: number, j: number) => boolean) {}
+  public constructor(isMasked: (i: number, j: number) => boolean) {
+    this.isMasked = isMasked;
+  }
 
-  public static values = new Map<DataMaskValues, DataMask>([
+  public static values: Map<DataMaskValues, DataMask> = new Map<DataMaskValues, DataMask>([
     /**
      * 000: mask bits for which (x + y) mod 2 == 0
      */
     [
       DataMaskValues.DATA_MASK_000,
-      new DataMask(DataMaskValues.DATA_MASK_000, (i: number /*int*/, j: number /*int*/) => {
+      new DataMask((i: number, j: number) => {
         return ((i + j) & 0x01) === 0;
       })
     ],
@@ -59,7 +62,7 @@ export default class DataMask {
      */
     [
       DataMaskValues.DATA_MASK_001,
-      new DataMask(DataMaskValues.DATA_MASK_001, (i: number /*int*/, j: number /*int*/) => {
+      new DataMask((i: number, j: number) => {
         return (i & 0x01) === 0;
       })
     ],
@@ -69,7 +72,7 @@ export default class DataMask {
      */
     [
       DataMaskValues.DATA_MASK_010,
-      new DataMask(DataMaskValues.DATA_MASK_010, (i: number /*int*/, j: number /*int*/) => {
+      new DataMask((i: number, j: number) => {
         return j % 3 === 0;
       })
     ],
@@ -79,7 +82,7 @@ export default class DataMask {
      */
     [
       DataMaskValues.DATA_MASK_011,
-      new DataMask(DataMaskValues.DATA_MASK_011, (i: number /*int*/, j: number /*int*/) => {
+      new DataMask((i: number, j: number) => {
         return (i + j) % 3 === 0;
       })
     ],
@@ -89,7 +92,7 @@ export default class DataMask {
      */
     [
       DataMaskValues.DATA_MASK_100,
-      new DataMask(DataMaskValues.DATA_MASK_100, (i: number /*int*/, j: number /*int*/) => {
+      new DataMask((i: number, j: number) => {
         return ((Math.floor(i / 2) + Math.floor(j / 3)) & 0x01) === 0;
       })
     ],
@@ -100,7 +103,7 @@ export default class DataMask {
      */
     [
       DataMaskValues.DATA_MASK_101,
-      new DataMask(DataMaskValues.DATA_MASK_101, (i: number /*int*/, j: number /*int*/) => {
+      new DataMask((i: number, j: number) => {
         return (i * j) % 6 === 0;
       })
     ],
@@ -111,7 +114,7 @@ export default class DataMask {
      */
     [
       DataMaskValues.DATA_MASK_110,
-      new DataMask(DataMaskValues.DATA_MASK_110, (i: number /*int*/, j: number /*int*/) => {
+      new DataMask((i: number, j: number) => {
         return (i * j) % 6 < 3;
       })
     ],
@@ -122,7 +125,7 @@ export default class DataMask {
      */
     [
       DataMaskValues.DATA_MASK_111,
-      new DataMask(DataMaskValues.DATA_MASK_111, (i: number /*int*/, j: number /*int*/) => {
+      new DataMask((i: number, j: number) => {
         return ((i + j + ((i * j) % 3)) & 0x01) === 0;
       })
     ]
@@ -137,9 +140,9 @@ export default class DataMask {
    * @param bits representation of QR Code bits
    * @param dimension dimension of QR Code, represented by bits, being unmasked
    */
-  public unmaskBitMatrix(bits: BitMatrix, dimension: number /*int*/): void {
-    for (let i = 0; i < dimension; i++) {
-      for (let j = 0; j < dimension; j++) {
+  public unmaskBitMatrix(bits: BitMatrix, dimension: number): void {
+    for (let i: number = 0; i < dimension; i++) {
+      for (let j: number = 0; j < dimension; j++) {
         if (this.isMasked(i, j)) {
           bits.flip(j, i);
         }

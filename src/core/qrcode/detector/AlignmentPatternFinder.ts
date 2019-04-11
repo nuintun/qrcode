@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import ResultPointCallback from '../../ResultPointCallback';
 import BitMatrix from '../../common/BitMatrix';
 import AlignmentPattern from './AlignmentPattern';
 import NotFoundException from '../../NotFoundException';
+import ResultPointCallback from '../../ResultPointCallback';
 
 /**
  * <p>This class attempts to find alignment patterns in a QR Code. Alignment patterns look like finder
@@ -34,8 +34,15 @@ import NotFoundException from '../../NotFoundException';
  * @author Sean Owen
  */
 export default class AlignmentPatternFinder {
+  private image: BitMatrix;
   private possibleCenters: AlignmentPattern[];
+  private startX: number;
+  private startY: number;
+  private width: number;
+  private height: number;
+  private moduleSize: number;
   private crossCheckStateCount: Int32Array;
+  private resultPointCallback: ResultPointCallback;
 
   /**
    * <p>Creates a finder that will look in a portion of the whole image.</p>
@@ -48,17 +55,24 @@ export default class AlignmentPatternFinder {
    * @param moduleSize estimated module size so far
    */
   public constructor(
-    private image: BitMatrix,
-    private startX: number /*int*/,
-    private startY: number /*int*/,
-    private width: number /*int*/,
-    private height: number /*int*/,
-    private moduleSize: number /*float*/,
-    private resultPointCallback: ResultPointCallback
+    image: BitMatrix,
+    startX: number,
+    startY: number,
+    width: number,
+    height: number,
+    moduleSize: number,
+    resultPointCallback: ResultPointCallback
   ) {
-    this.possibleCenters = []; // new Array<any>(5))
+    this.image = image;
+    this.possibleCenters = [];
+    this.startX = startX;
+    this.startY = startY;
+    this.width = width;
+    this.height = height;
+    this.moduleSize = moduleSize;
     // TYPESCRIPTPORT: array initialization without size as the length is checked below
     this.crossCheckStateCount = new Int32Array(3);
+    this.resultPointCallback = resultPointCallback;
   }
 
   /**
@@ -68,26 +82,26 @@ export default class AlignmentPatternFinder {
    * @return {@link AlignmentPattern} if found
    * @throws NotFoundException if not found
    */
-  public find(): AlignmentPattern /*throws NotFoundException*/ {
-    const startX = this.startX;
-    const height = this.height;
-    const width = this.width;
-    const maxJ = startX + width;
-    const middleI = this.startY + height / 2;
+  public find(): AlignmentPattern {
+    const image: BitMatrix = this.image;
+    const startX: number = this.startX;
+    const height: number = this.height;
+    const width: number = this.width;
+    const maxJ: number = startX + width;
+    const middleI: number = this.startY + height / 2;
     // We are looking for black/white/black modules in 1:1:1 ratio
     // this tracks the number of black/white/black modules seen so far
-    const stateCount = new Int32Array(3);
-    const image = this.image;
+    const stateCount: Int32Array = new Int32Array(3);
 
-    for (let iGen = 0; iGen < height; iGen++) {
+    for (let iGen: number = 0; iGen < height; iGen++) {
       // Search from middle outwards
-      const i = middleI + ((iGen & 0x01) === 0 ? Math.floor((iGen + 1) / 2) : -Math.floor((iGen + 1) / 2));
+      const i: number = middleI + ((iGen & 0x01) === 0 ? Math.floor((iGen + 1) / 2) : -Math.floor((iGen + 1) / 2));
 
       stateCount[0] = 0;
       stateCount[1] = 0;
       stateCount[2] = 0;
 
-      let j = startX;
+      let j: number = startX;
 
       // Burn off leading white pixels before anything else; if we start in the middle of
       // a white run, it doesn't make sense to count its length, since we don't know if the
@@ -96,7 +110,7 @@ export default class AlignmentPatternFinder {
         j++;
       }
 
-      let currentState = 0;
+      let currentState: number = 0;
 
       while (j < maxJ) {
         if (image.get(j, i)) {
@@ -110,7 +124,8 @@ export default class AlignmentPatternFinder {
               // A winner?
               if (this.foundPatternCross(stateCount)) {
                 // Yes
-                const confirmed = this.handlePossibleCenter(stateCount, i, j);
+                const confirmed: AlignmentPattern = this.handlePossibleCenter(stateCount, i, j);
+
                 if (confirmed !== null) {
                   return confirmed;
                 }
@@ -138,7 +153,7 @@ export default class AlignmentPatternFinder {
       }
 
       if (this.foundPatternCross(stateCount)) {
-        const confirmed = this.handlePossibleCenter(stateCount, i, maxJ);
+        const confirmed: AlignmentPattern = this.handlePossibleCenter(stateCount, i, maxJ);
 
         if (confirmed !== null) {
           return confirmed;
@@ -159,7 +174,7 @@ export default class AlignmentPatternFinder {
    * Given a count of black/white/black pixels just seen and an end position,
    * figures the location of the center of this black/white/black run.
    */
-  private static centerFromEnd(stateCount: Int32Array, end: number /*int*/): number /*float*/ {
+  private static centerFromEnd(stateCount: Int32Array, end: number): number {
     return end - stateCount[2] - stateCount[1] / 2.0;
   }
 
@@ -169,10 +184,10 @@ export default class AlignmentPatternFinder {
    *         used by alignment patterns to be considered a match
    */
   private foundPatternCross(stateCount: Int32Array): boolean {
-    const moduleSize: number /*float*/ = this.moduleSize;
-    const maxVariance: number /*float*/ = moduleSize / 2.0;
+    const moduleSize: number = this.moduleSize;
+    const maxVariance: number = moduleSize / 2.0;
 
-    for (let i = 0; i < 3; i++) {
+    for (let i: number = 0; i < 3; i++) {
       if (Math.abs(moduleSize - stateCount[i]) >= maxVariance) {
         return false;
       }
@@ -192,22 +207,17 @@ export default class AlignmentPatternFinder {
    * observed in any reading state, based on the results of the horizontal scan
    * @return vertical center of alignment pattern, or {@link Float#NaN} if not found
    */
-  private crossCheckVertical(
-    startI: number /*int*/,
-    centerJ: number /*int*/,
-    maxCount: number /*int*/,
-    originalStateCountTotal: number /*int*/
-  ): number /*float*/ {
-    const image = this.image;
-    const maxI = image.getHeight();
-    const stateCount = this.crossCheckStateCount;
+  private crossCheckVertical(startI: number, centerJ: number, maxCount: number, originalStateCountTotal: number): number {
+    const image: BitMatrix = this.image;
+    const maxI: number = image.getHeight();
+    const stateCount: Int32Array = this.crossCheckStateCount;
 
     stateCount[0] = 0;
     stateCount[1] = 0;
     stateCount[2] = 0;
 
     // Start counting up from center
-    let i = startI;
+    let i: number = startI;
 
     while (i >= 0 && image.get(centerJ, i) && stateCount[1] <= maxCount) {
       stateCount[1]++;
@@ -269,13 +279,13 @@ export default class AlignmentPatternFinder {
    * @param j end of possible alignment pattern in row
    * @return {@link AlignmentPattern} if we have found the same pattern twice, or null if not
    */
-  private handlePossibleCenter(stateCount: Int32Array, i: number /*int*/, j: number /*int*/): AlignmentPattern {
-    const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2];
-    const centerJ: number /*float*/ = AlignmentPatternFinder.centerFromEnd(stateCount, j);
-    const centerI: number /*float*/ = this.crossCheckVertical(i, /*(int) */ centerJ, 2 * stateCount[1], stateCountTotal);
+  private handlePossibleCenter(stateCount: Int32Array, i: number, j: number): AlignmentPattern {
+    const stateCountTotal: number = stateCount[0] + stateCount[1] + stateCount[2];
+    const centerJ: number = AlignmentPatternFinder.centerFromEnd(stateCount, j);
+    const centerI: number = this.crossCheckVertical(i, centerJ, 2 * stateCount[1], stateCountTotal);
 
     if (!isNaN(centerI)) {
-      const estimatedModuleSize: number /*float*/ = (stateCount[0] + stateCount[1] + stateCount[2]) / 3.0;
+      const estimatedModuleSize: number = (stateCount[0] + stateCount[1] + stateCount[2]) / 3.0;
 
       for (const center of this.possibleCenters) {
         // Look for about the same center and module size:
@@ -285,7 +295,7 @@ export default class AlignmentPatternFinder {
       }
 
       // Hadn't found this before; save it
-      const point = new AlignmentPattern(centerJ, centerI, estimatedModuleSize);
+      const point: AlignmentPattern = new AlignmentPattern(centerJ, centerI, estimatedModuleSize);
 
       this.possibleCenters.push(point);
 

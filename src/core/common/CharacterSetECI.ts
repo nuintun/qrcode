@@ -16,7 +16,13 @@
 
 import FormatException from '../FormatException';
 
-export enum CharacterSetValueIdentifiers {
+/**
+ * Encapsulates a Character Set ECI, according to "Extended Channel Interpretations" 5.3.1.1
+ * of ISO 18004.
+ *
+ * @author Sean Owen
+ */
+enum CharacterSetValueIdentifiers {
   Cp437,
   ISO8859_1,
   ISO8859_2,
@@ -46,25 +52,22 @@ export enum CharacterSetValueIdentifiers {
   EUC_KR
 }
 
-/**
- * Encapsulates a Character Set ECI, according to "Extended Channel Interpretations" 5.3.1.1
- * of ISO 18004.
- *
- * @author Sean Owen
- */
-
 export default class CharacterSetECI {
-  private static VALUE_IDENTIFIER_TO_ECI = new Map<number, CharacterSetECI>();
-  private static VALUES_TO_ECI = new Map<number, CharacterSetECI>();
-  private static NAME_TO_ECI = new Map<string, CharacterSetECI>();
+  private static VALUE_IDENTIFIER_TO_ECI: Map<number, CharacterSetECI> = new Map<number, CharacterSetECI>();
+  private static VALUES_TO_ECI: Map<number, CharacterSetECI> = new Map<number, CharacterSetECI>();
+  private static NAME_TO_ECI: Map<string, CharacterSetECI> = new Map<string, CharacterSetECI>();
 
   // Enum name is a Java encoding valid for java.lang and java.io
   // TYPESCRIPTPORT: changed the main label for ISO as the TextEncoder did not recognized them in the form from java
   // (eg ISO8859_1 must be ISO88591 or ISO8859-1 or ISO-8859-1)
   // later on: well, except 16 wich does not work with ISO885916 so used ISO-8859-1 form for default
-  public static readonly Cp437 = new CharacterSetECI(CharacterSetValueIdentifiers.Cp437, Int32Array.from([0, 2]), 'Cp437');
+  public static readonly Cp437: CharacterSetECI = new CharacterSetECI(
+    CharacterSetValueIdentifiers.Cp437,
+    Int32Array.from([0, 2]),
+    'Cp437'
+  );
 
-  public static readonly ISO8859_1 = new CharacterSetECI(
+  public static readonly ISO8859_1: CharacterSetECI = new CharacterSetECI(
     CharacterSetValueIdentifiers.ISO8859_1,
     Int32Array.from([1, 3]),
     'ISO-8859-1',
@@ -72,7 +75,7 @@ export default class CharacterSetECI {
     'ISO8859_1'
   );
 
-  public static readonly ISO8859_2 = new CharacterSetECI(
+  public static readonly ISO8859_2: CharacterSetECI = new CharacterSetECI(
     CharacterSetValueIdentifiers.ISO8859_2,
     4,
     'ISO-8859-2',
@@ -80,7 +83,7 @@ export default class CharacterSetECI {
     'ISO8859_2'
   );
 
-  public static readonly ISO8859_3 = new CharacterSetECI(
+  public static readonly ISO8859_3: CharacterSetECI = new CharacterSetECI(
     CharacterSetValueIdentifiers.ISO8859_3,
     5,
     'ISO-8859-3',
@@ -88,7 +91,7 @@ export default class CharacterSetECI {
     'ISO8859_3'
   );
 
-  public static readonly ISO8859_4 = new CharacterSetECI(
+  public static readonly ISO8859_4: CharacterSetECI = new CharacterSetECI(
     CharacterSetValueIdentifiers.ISO8859_4,
     6,
     'ISO-8859-4',
@@ -96,7 +99,7 @@ export default class CharacterSetECI {
     'ISO8859_4'
   );
 
-  public static readonly ISO8859_5 = new CharacterSetECI(
+  public static readonly ISO8859_5: CharacterSetECI = new CharacterSetECI(
     CharacterSetValueIdentifiers.ISO8859_5,
     7,
     'ISO-8859-5',
@@ -104,7 +107,7 @@ export default class CharacterSetECI {
     'ISO8859_5'
   );
 
-  public static readonly ISO8859_6 = new CharacterSetECI(
+  public static readonly ISO8859_6: CharacterSetECI = new CharacterSetECI(
     CharacterSetValueIdentifiers.ISO8859_6,
     8,
     'ISO-8859-6',
@@ -112,7 +115,7 @@ export default class CharacterSetECI {
     'ISO8859_6'
   );
 
-  public static readonly ISO8859_7 = new CharacterSetECI(
+  public static readonly ISO8859_7: CharacterSetECI = new CharacterSetECI(
     CharacterSetValueIdentifiers.ISO8859_7,
     9,
     'ISO-8859-7',
@@ -120,7 +123,7 @@ export default class CharacterSetECI {
     'ISO8859_7'
   );
 
-  public static readonly ISO8859_8 = new CharacterSetECI(
+  public static readonly ISO8859_8: CharacterSetECI = new CharacterSetECI(
     CharacterSetValueIdentifiers.ISO8859_8,
     10,
     'ISO-8859-8',
@@ -128,7 +131,7 @@ export default class CharacterSetECI {
     'ISO8859_8'
   );
 
-  public static readonly ISO8859_9 = new CharacterSetECI(
+  public static readonly ISO8859_9: CharacterSetECI = new CharacterSetECI(
     CharacterSetValueIdentifiers.ISO8859_9,
     11,
     'ISO-8859-9',
@@ -136,7 +139,7 @@ export default class CharacterSetECI {
     'ISO8859_9'
   );
 
-  public static readonly ISO8859_10 = new CharacterSetECI(
+  public static readonly ISO8859_10: CharacterSetECI = new CharacterSetECI(
     CharacterSetValueIdentifiers.ISO8859_10,
     12,
     'ISO-8859-10',
@@ -144,7 +147,7 @@ export default class CharacterSetECI {
     'ISO8859_10'
   );
 
-  public static readonly ISO8859_11 = new CharacterSetECI(
+  public static readonly ISO8859_11: CharacterSetECI = new CharacterSetECI(
     CharacterSetValueIdentifiers.ISO8859_11,
     13,
     'ISO-8859-11',
@@ -152,7 +155,7 @@ export default class CharacterSetECI {
     'ISO8859_11'
   );
 
-  public static readonly ISO8859_13 = new CharacterSetECI(
+  public static readonly ISO8859_13: CharacterSetECI = new CharacterSetECI(
     CharacterSetValueIdentifiers.ISO8859_13,
     15,
     'ISO-8859-13',
@@ -160,7 +163,7 @@ export default class CharacterSetECI {
     'ISO8859_13'
   );
 
-  public static readonly ISO8859_14 = new CharacterSetECI(
+  public static readonly ISO8859_14: CharacterSetECI = new CharacterSetECI(
     CharacterSetValueIdentifiers.ISO8859_14,
     16,
     'ISO-8859-14',
@@ -168,7 +171,7 @@ export default class CharacterSetECI {
     'ISO8859_14'
   );
 
-  public static readonly ISO8859_15 = new CharacterSetECI(
+  public static readonly ISO8859_15: CharacterSetECI = new CharacterSetECI(
     CharacterSetValueIdentifiers.ISO8859_15,
     17,
     'ISO-8859-15',
@@ -176,7 +179,7 @@ export default class CharacterSetECI {
     'ISO8859_15'
   );
 
-  public static readonly ISO8859_16 = new CharacterSetECI(
+  public static readonly ISO8859_16: CharacterSetECI = new CharacterSetECI(
     CharacterSetValueIdentifiers.ISO8859_16,
     18,
     'ISO-8859-16',
@@ -184,17 +187,42 @@ export default class CharacterSetECI {
     'ISO8859_16'
   );
 
-  public static readonly SJIS = new CharacterSetECI(CharacterSetValueIdentifiers.SJIS, 20, 'SJIS', 'Shift_JIS');
+  public static readonly SJIS: CharacterSetECI = new CharacterSetECI(
+    CharacterSetValueIdentifiers.SJIS,
+    20,
+    'SJIS',
+    'Shift_JIS'
+  );
 
-  public static readonly Cp1250 = new CharacterSetECI(CharacterSetValueIdentifiers.Cp1250, 21, 'Cp1250', 'windows-1250');
+  public static readonly Cp1250: CharacterSetECI = new CharacterSetECI(
+    CharacterSetValueIdentifiers.Cp1250,
+    21,
+    'Cp1250',
+    'windows-1250'
+  );
 
-  public static readonly Cp1251 = new CharacterSetECI(CharacterSetValueIdentifiers.Cp1251, 22, 'Cp1251', 'windows-1251');
+  public static readonly Cp1251: CharacterSetECI = new CharacterSetECI(
+    CharacterSetValueIdentifiers.Cp1251,
+    22,
+    'Cp1251',
+    'windows-1251'
+  );
 
-  public static readonly Cp1252 = new CharacterSetECI(CharacterSetValueIdentifiers.Cp1252, 23, 'Cp1252', 'windows-1252');
+  public static readonly Cp1252: CharacterSetECI = new CharacterSetECI(
+    CharacterSetValueIdentifiers.Cp1252,
+    23,
+    'Cp1252',
+    'windows-1252'
+  );
 
-  public static readonly Cp1256 = new CharacterSetECI(CharacterSetValueIdentifiers.Cp1256, 24, 'Cp1256', 'windows-1256');
+  public static readonly Cp1256: CharacterSetECI = new CharacterSetECI(
+    CharacterSetValueIdentifiers.Cp1256,
+    24,
+    'Cp1256',
+    'windows-1256'
+  );
 
-  public static readonly UnicodeBigUnmarked = new CharacterSetECI(
+  public static readonly UnicodeBigUnmarked: CharacterSetECI = new CharacterSetECI(
     CharacterSetValueIdentifiers.UnicodeBigUnmarked,
     25,
     'UnicodeBigUnmarked',
@@ -202,18 +230,18 @@ export default class CharacterSetECI {
     'UnicodeBig'
   );
 
-  public static readonly UTF8 = new CharacterSetECI(CharacterSetValueIdentifiers.UTF8, 26, 'UTF8', 'UTF-8');
+  public static readonly UTF8: CharacterSetECI = new CharacterSetECI(CharacterSetValueIdentifiers.UTF8, 26, 'UTF8', 'UTF-8');
 
-  public static readonly ASCII = new CharacterSetECI(
+  public static readonly ASCII: CharacterSetECI = new CharacterSetECI(
     CharacterSetValueIdentifiers.ASCII,
     Int32Array.from([27, 170]),
     'ASCII',
     'US-ASCII'
   );
 
-  public static readonly Big5 = new CharacterSetECI(CharacterSetValueIdentifiers.Big5, 28, 'Big5');
+  public static readonly Big5: CharacterSetECI = new CharacterSetECI(CharacterSetValueIdentifiers.Big5, 28, 'Big5');
 
-  public static readonly GB18030 = new CharacterSetECI(
+  public static readonly GB18030: CharacterSetECI = new CharacterSetECI(
     CharacterSetValueIdentifiers.GB18030,
     29,
     'GB18030',
@@ -222,15 +250,28 @@ export default class CharacterSetECI {
     'GBK'
   );
 
-  public static readonly EUC_KR = new CharacterSetECI(CharacterSetValueIdentifiers.EUC_KR, 30, 'EUC_KR', 'EUC-KR');
+  public static readonly EUC_KR: CharacterSetECI = new CharacterSetECI(
+    CharacterSetValueIdentifiers.EUC_KR,
+    30,
+    'EUC_KR',
+    'EUC-KR'
+  );
 
-  public values: Int32Array;
-  public otherEncodingNames: string[];
+  private name: string;
+  private values: Int32Array;
+  private valueIdentifier: CharacterSetValueIdentifiers;
 
+  /**
+   * @constructor
+   * @param valueIdentifier
+   * @param valuesParam
+   * @param name
+   * @param otherEncodingNames
+   */
   public constructor(
-    public valueIdentifier: CharacterSetValueIdentifiers,
+    valueIdentifier: CharacterSetValueIdentifiers,
     valuesParam: Int32Array | number,
-    public name: string,
+    name: string,
     ...otherEncodingNames: string[]
   ) {
     if (typeof valuesParam === 'number') {
@@ -239,15 +280,17 @@ export default class CharacterSetECI {
       this.values = valuesParam;
     }
 
-    this.otherEncodingNames = otherEncodingNames;
+    this.name = name;
+    this.valueIdentifier = valueIdentifier;
 
     CharacterSetECI.VALUE_IDENTIFIER_TO_ECI.set(valueIdentifier, this);
     CharacterSetECI.NAME_TO_ECI.set(name, this);
 
-    const values = this.values;
+    const values: Int32Array = this.values;
 
-    for (let i = 0, length = values.length; i !== length; i++) {
-      const v = values[i];
+    for (let v: number, i: number = 0, length: number = values.length; i !== length; i++) {
+      v = values[i];
+
       CharacterSetECI.VALUES_TO_ECI.set(v, this);
     }
 
@@ -264,24 +307,23 @@ export default class CharacterSetECI {
     return this.name;
   }
 
-  public getValue(): number /*int*/ {
+  public getValue(): number {
     return this.values[0];
   }
 
   /**
    * @param value character set ECI value
-   * @return {@code CharacterSetECI} representing ECI of given value, or null if it is legal but
-   *   unsupported
+   * @return {@code CharacterSetECI} representing ECI of given value, or null if it is legal but unsupported
    * @throws FormatException if ECI value is invalid
    */
-  public static getCharacterSetECIByValue(value: number /*int*/): CharacterSetECI /*throws FormatException*/ {
+  public static getCharacterSetECIByValue(value: number): CharacterSetECI {
     if (value < 0 || value >= 900) {
       throw new FormatException('incorect value');
     }
 
-    const characterSet = CharacterSetECI.VALUES_TO_ECI.get(value);
+    const characterSet: CharacterSetECI = CharacterSetECI.VALUES_TO_ECI.get(value);
 
-    if (undefined === characterSet) {
+    if (characterSet == null) {
       throw new FormatException('incorect value');
     }
 
@@ -294,22 +336,20 @@ export default class CharacterSetECI {
    *   but unsupported
    */
   public static getCharacterSetECIByName(name: string): CharacterSetECI {
-    const characterSet = CharacterSetECI.NAME_TO_ECI.get(name);
+    const characterSet: CharacterSetECI = CharacterSetECI.NAME_TO_ECI.get(name);
 
-    if (undefined === characterSet) {
+    if (characterSet == null) {
       throw new FormatException('incorect value');
     }
 
     return characterSet;
   }
 
-  public equals(o: CharacterSetECI) {
-    if (!(o instanceof CharacterSetECI)) {
-      return false;
-    }
-
-    const other = o as CharacterSetECI;
-
-    return this.getName() === other.getName();
+  /**
+   * equals
+   * @param o
+   */
+  public equals(o: CharacterSetECI): boolean {
+    return this.getName() === o.getName();
   }
 }

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import GenericGFPoly from './GenericGFPoly';
 import Integer from '../../util/Integer';
-import IllegalArgumentException from '../../IllegalArgumentException';
+import GenericGFPoly from './GenericGFPoly';
 import ArithmeticException from '../../ArithmeticException';
+import IllegalArgumentException from '../../IllegalArgumentException';
 
 /**
  * <p>This class contains utility methods for performing mathematical operations over
@@ -31,21 +31,26 @@ import ArithmeticException from '../../ArithmeticException';
  * @author David Olivier
  */
 export default class GenericGF {
-  public static AZTEC_DATA_12 = new GenericGF(0x1069, 4096, 1); // x^12 + x^6 + x^5 + x^3 + 1
-  public static AZTEC_DATA_10 = new GenericGF(0x409, 1024, 1); // x^10 + x^3 + 1
-  public static AZTEC_DATA_6 = new GenericGF(0x43, 64, 1); // x^6 + x + 1
-  public static AZTEC_PARAM = new GenericGF(0x13, 16, 1); // x^4 + x + 1
-  public static QR_CODE_FIELD_256 = new GenericGF(0x011d, 256, 0); // x^8 + x^4 + x^3 + x^2 + 1
-  public static DATA_MATRIX_FIELD_256 = new GenericGF(0x012d, 256, 1); // x^8 + x^5 + x^3 + x^2 + 1
-  public static AZTEC_DATA_8 = GenericGF.DATA_MATRIX_FIELD_256;
-  public static MAXICODE_FIELD_64 = GenericGF.AZTEC_DATA_6;
+  public static AZTEC_DATA_12: GenericGF = new GenericGF(0x1069, 4096, 1); // x^12 + x^6 + x^5 + x^3 + 1
+  public static AZTEC_DATA_10: GenericGF = new GenericGF(0x409, 1024, 1); // x^10 + x^3 + 1
+  public static AZTEC_DATA_6: GenericGF = new GenericGF(0x43, 64, 1); // x^6 + x + 1
+  public static AZTEC_PARAM: GenericGF = new GenericGF(0x13, 16, 1); // x^4 + x + 1
+  public static QR_CODE_FIELD_256: GenericGF = new GenericGF(0x011d, 256, 0); // x^8 + x^4 + x^3 + x^2 + 1
+  public static DATA_MATRIX_FIELD_256: GenericGF = new GenericGF(0x012d, 256, 1); // x^8 + x^5 + x^3 + x^2 + 1
+  public static AZTEC_DATA_8: GenericGF = GenericGF.DATA_MATRIX_FIELD_256;
+  public static MAXICODE_FIELD_64: GenericGF = GenericGF.AZTEC_DATA_6;
 
   private expTable: Int32Array;
   private logTable: Int32Array;
   private zero: GenericGFPoly;
   private one: GenericGFPoly;
 
+  private primitive: number;
+  private size: number;
+  private generatorBase: number;
+
   /**
+   * @constructor
    * Create a representation of GF(size) using the given primitive polynomial.
    *
    * @param primitive irreducible polynomial whose coefficients are represented by
@@ -56,11 +61,16 @@ export default class GenericGF {
    *  (g(x) = (x+a^b)(x+a^(b+1))...(x+a^(b+2t-1))).
    *  In most cases it should be 1, but for QR code it is 0.
    */
-  public constructor(private primitive: number /*int*/, private size: number /*int*/, private generatorBase: number /*int*/) {
-    const expTable = new Int32Array(size);
-    let x = 1;
+  public constructor(primitive: number, size: number, generatorBase: number) {
+    this.primitive = primitive;
+    this.size = size;
+    this.generatorBase = generatorBase;
 
-    for (let i = 0; i < size; i++) {
+    const expTable: Int32Array = new Int32Array(size);
+
+    let x: number = 1;
+
+    for (let i: number = 0; i < size; i++) {
       expTable[i] = x;
       x *= 2; // we're assuming the generator alpha is 2
 
@@ -72,14 +82,15 @@ export default class GenericGF {
 
     this.expTable = expTable;
 
-    const logTable = new Int32Array(size);
+    const logTable: Int32Array = new Int32Array(size);
 
-    for (let i = 0; i < size - 1; i++) {
+    for (let i: number = 0; i < size - 1; i++) {
       logTable[expTable[i]] = i;
     }
 
     this.logTable = logTable;
     // logTable[0] == 0 but this should never be used
+
     this.zero = new GenericGFPoly(this, Int32Array.from([0]));
     this.one = new GenericGFPoly(this, Int32Array.from([1]));
   }
@@ -95,7 +106,7 @@ export default class GenericGF {
   /**
    * @return the monomial representing coefficient * x^degree
    */
-  public buildMonomial(degree: number /*int*/, coefficient: number /*int*/): GenericGFPoly {
+  public buildMonomial(degree: number, coefficient: number): GenericGFPoly {
     if (degree < 0) {
       throw new IllegalArgumentException();
     }
@@ -104,7 +115,7 @@ export default class GenericGF {
       return this.zero;
     }
 
-    const coefficients = new Int32Array(degree + 1);
+    const coefficients: Int32Array = new Int32Array(degree + 1);
 
     coefficients[0] = coefficient;
 
@@ -116,21 +127,21 @@ export default class GenericGF {
    *
    * @return sum/difference of a and b
    */
-  public static addOrSubtract(a: number /*int*/, b: number /*int*/): number /*int*/ {
+  public static addOrSubtract(a: number, b: number): number {
     return a ^ b;
   }
 
   /**
    * @return 2 to the power of a in GF(size)
    */
-  public exp(a: number /*int*/): number /*int*/ {
+  public exp(a: number): number {
     return this.expTable[a];
   }
 
   /**
    * @return base 2 log of a in GF(size)
    */
-  public log(a: number /*int*/): number /*int*/ {
+  public log(a: number): number {
     if (a === 0) {
       throw new IllegalArgumentException();
     }
@@ -141,7 +152,7 @@ export default class GenericGF {
   /**
    * @return multiplicative inverse of a
    */
-  public inverse(a: number /*int*/): number /*int*/ {
+  public inverse(a: number): number {
     if (a === 0) {
       throw new ArithmeticException();
     }
@@ -152,7 +163,7 @@ export default class GenericGF {
   /**
    * @return product of a and b in GF(size)
    */
-  public multiply(a: number /*int*/, b: number /*int*/): number /*int*/ {
+  public multiply(a: number, b: number): number {
     if (a === 0 || b === 0) {
       return 0;
     }
@@ -160,20 +171,22 @@ export default class GenericGF {
     return this.expTable[(this.logTable[a] + this.logTable[b]) % (this.size - 1)];
   }
 
-  public getSize(): number /*int*/ {
+  public getSize(): number {
     return this.size;
   }
 
-  public getGeneratorBase(): number /*int*/ {
+  public getGeneratorBase(): number {
     return this.generatorBase;
   }
 
-  /*@Override*/
+  /**
+   * @override
+   */
   public toString(): string {
     return 'GF(0x' + Integer.toHexString(this.primitive) + ',' + this.size + ')';
   }
 
-  public equals(o: Object): boolean {
+  public equals(o: GenericGF): boolean {
     return o === this;
   }
 }

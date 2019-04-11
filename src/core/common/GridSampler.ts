@@ -15,8 +15,8 @@
  */
 
 import BitMatrix from './BitMatrix';
-import PerspectiveTransform from './PerspectiveTransform';
 import NotFoundException from '../NotFoundException';
+import PerspectiveTransform from './PerspectiveTransform';
 
 /**
  * Implementations of this class can, given locations of finder patterns for a QR code in an
@@ -31,7 +31,7 @@ import NotFoundException from '../NotFoundException';
  *
  * @author Sean Owen
  */
-abstract class GridSampler {
+export default abstract class GridSampler {
   /**
    * Samples an image for a rectangular matrix of bits of the given dimension. The sampling
    * transformation is determined by the coordinates of 4 points, in the original and transformed
@@ -65,32 +65,32 @@ abstract class GridSampler {
    */
   public abstract sampleGrid(
     image: BitMatrix,
-    dimensionX: number /*int*/,
-    dimensionY: number /*int*/,
-    p1ToX: number /*float*/,
-    p1ToY: number /*float*/,
-    p2ToX: number /*float*/,
-    p2ToY: number /*float*/,
-    p3ToX: number /*float*/,
-    p3ToY: number /*float*/,
-    p4ToX: number /*float*/,
-    p4ToY: number /*float*/,
-    p1FromX: number /*float*/,
-    p1FromY: number /*float*/,
-    p2FromX: number /*float*/,
-    p2FromY: number /*float*/,
-    p3FromX: number /*float*/,
-    p3FromY: number /*float*/,
-    p4FromX: number /*float*/,
-    p4FromY: number /*float*/
-  ): BitMatrix; /*throws NotFoundException*/
+    dimensionX: number,
+    dimensionY: number,
+    p1ToX: number,
+    p1ToY: number,
+    p2ToX: number,
+    p2ToY: number,
+    p3ToX: number,
+    p3ToY: number,
+    p4ToX: number,
+    p4ToY: number,
+    p1FromX: number,
+    p1FromY: number,
+    p2FromX: number,
+    p2FromY: number,
+    p3FromX: number,
+    p3FromY: number,
+    p4FromX: number,
+    p4FromY: number
+  ): BitMatrix;
 
   public abstract sampleGridWithTransform(
     image: BitMatrix,
-    dimensionX: number /*int*/,
-    dimensionY: number /*int*/,
+    dimensionX: number,
+    dimensionY: number,
     transform: PerspectiveTransform
-  ): BitMatrix; /*throws NotFoundException*/
+  ): BitMatrix;
 
   /**
    * <p>Checks a set of points that have been transformed to sample points on an image against
@@ -107,16 +107,17 @@ abstract class GridSampler {
    * @param points actual points in x1,y1,...,xn,yn form
    * @throws NotFoundException if an endpoint is lies outside the image boundaries
    */
-  protected static checkAndNudgePoints(image: BitMatrix, points: Float32Array): void /*throws NotFoundException*/ {
-    const width: number /*int*/ = image.getWidth();
-    const height: number /*int*/ = image.getHeight();
+  protected static checkAndNudgePoints(image: BitMatrix, points: Float32Array): void {
+    const width: number = image.getWidth();
+    const height: number = image.getHeight();
 
     // Check and nudge points from start until we see some that are OK:
     let nudged: boolean = true;
+    const maxOffset: number = points.length - 1; // points.length must be even
 
-    for (let offset = 0; offset < points.length && nudged; offset += 2) {
-      const x = Math.floor(points[offset]);
-      const y = Math.floor(points[offset + 1]);
+    for (let offset: number = 0; offset < maxOffset && nudged; offset += 2) {
+      const x: number = Math.floor(points[offset]);
+      const y: number = Math.floor(points[offset + 1]);
 
       if (x < -1 || x > width || y < -1 || y > height) {
         throw new NotFoundException();
@@ -144,9 +145,9 @@ abstract class GridSampler {
     // Check and nudge points from end:
     nudged = true;
 
-    for (let offset = points.length - 2; offset >= 0 && nudged; offset -= 2) {
-      const x = Math.floor(points[offset]);
-      const y = Math.floor(points[offset + 1]);
+    for (let offset: number = points.length - 2; offset >= 0 && nudged; offset -= 2) {
+      const x: number = Math.floor(points[offset]);
+      const y: number = Math.floor(points[offset + 1]);
 
       if (x < -1 || x > width || y < -1 || y > height) {
         throw new NotFoundException();
@@ -172,5 +173,3 @@ abstract class GridSampler {
     }
   }
 }
-
-export default GridSampler;

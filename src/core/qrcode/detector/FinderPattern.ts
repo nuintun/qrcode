@@ -24,24 +24,21 @@ import ResultPoint from '../../ResultPoint';
  * @author Sean Owen
  */
 export default class FinderPattern extends ResultPoint {
-  public constructor(
-    posX: number /*float*/,
-    posY: number /*float*/,
-    private estimatedModuleSize: number /*float*/,
-    private count?: number /*int*/
-  ) {
+  private estimatedModuleSize: number;
+  private count: number;
+
+  public constructor(posX: number, posY: number, estimatedModuleSize: number, count: number = 1) {
     super(posX, posY);
 
-    if (undefined === count) {
-      this.count = 1;
-    }
+    this.estimatedModuleSize = estimatedModuleSize;
+    this.count = count;
   }
 
-  public getEstimatedModuleSize(): number /*float*/ {
+  public getEstimatedModuleSize(): number {
     return this.estimatedModuleSize;
   }
 
-  public getCount(): number /*int*/ {
+  public getCount(): number {
     return this.count;
   }
 
@@ -49,9 +46,9 @@ export default class FinderPattern extends ResultPoint {
    * <p>Determines if this finder pattern "about equals" a finder pattern at the stated
    * position and size -- meaning, it is at nearly the same center with nearly the same size.</p>
    */
-  public aboutEquals(moduleSize: number /*float*/, i: number /*float*/, j: number /*float*/): boolean {
+  public aboutEquals(moduleSize: number, i: number, j: number): boolean {
     if (Math.abs(i - this.getY()) <= moduleSize && Math.abs(j - this.getX()) <= moduleSize) {
-      const moduleSizeDiff: number /*float*/ = Math.abs(moduleSize - this.estimatedModuleSize);
+      const moduleSizeDiff: number = Math.abs(moduleSize - this.estimatedModuleSize);
 
       return moduleSizeDiff <= 1.0 || moduleSizeDiff <= this.estimatedModuleSize;
     }
@@ -64,11 +61,11 @@ export default class FinderPattern extends ResultPoint {
    * with a new estimate. It returns a new {@code FinderPattern} containing a weighted average
    * based on count.
    */
-  public combineEstimate(i: number /*float*/, j: number /*float*/, newModuleSize: number /*float*/): FinderPattern {
-    const combinedCount = this.count + 1;
-    const combinedX: number /*float*/ = (this.count * this.getX() + j) / combinedCount;
-    const combinedY: number /*float*/ = (this.count * this.getY() + i) / combinedCount;
-    const combinedModuleSize: number /*float*/ = (this.count * this.estimatedModuleSize + newModuleSize) / combinedCount;
+  public combineEstimate(i: number, j: number, newModuleSize: number): FinderPattern {
+    const combinedCount: number = this.count + 1;
+    const combinedX: number = (this.count * this.getX() + j) / combinedCount;
+    const combinedY: number = (this.count * this.getY() + i) / combinedCount;
+    const combinedModuleSize: number = (this.count * this.estimatedModuleSize + newModuleSize) / combinedCount;
 
     return new FinderPattern(combinedX, combinedY, combinedModuleSize, combinedCount);
   }

@@ -27,16 +27,15 @@ export default class MathUtils {
    * @param d real value to round
    * @return nearest {@code int}
    */
-  public static round(d: number /*float*/): number /*int*/ {
-    if (NaN === d) return 0;
+  public static round(d: number): number {
+    if (isNaN(d)) return 0;
 
     if (d <= Number.MIN_SAFE_INTEGER) return Number.MIN_SAFE_INTEGER;
 
     if (d >= Number.MAX_SAFE_INTEGER) return Number.MAX_SAFE_INTEGER;
 
-    return /*(int) */ (d + (d < 0.0 ? -0.5 : 0.5)) | 0;
+    return (d + (d < 0.0 ? -0.5 : 0.5)) | 0;
   }
-  // TYPESCRIPTPORT: maybe remove round method and call directly Math.round, it looks like it doesn't make sense for js
 
   /**
    * @param aX point A x coordinate
@@ -45,27 +44,22 @@ export default class MathUtils {
    * @param bY point B y coordinate
    * @return Euclidean distance between points A and B
    */
-  public static distance(
-    aX: number /*float|int*/,
-    aY: number /*float|int*/,
-    bX: number /*float|int*/,
-    bY: number /*float|int*/
-  ): number /*float*/ {
-    const xDiff = aX - bX;
-    const yDiff = aY - bY;
+  public static distance(aX: number, aY: number, bX: number, bY: number): number {
+    const xDiff: number = aX - bX;
+    const yDiff: number = aY - bY;
 
-    return /*(float) */ Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+    return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
   }
 
   /**
    * @param array values to sum
    * @return sum of values in array
    */
-  public static sum(array: Int32Array): number /*int*/ {
-    let count = 0;
+  public static sum(array: Int32Array): number {
+    let count: number = 0;
 
-    for (let i = 0, length = array.length; i !== length; i++) {
-      const a = array[i];
+    for (let i: number = 0, length: number = array.length; i !== length; i++) {
+      const a: number = array[i];
 
       count += a;
     }

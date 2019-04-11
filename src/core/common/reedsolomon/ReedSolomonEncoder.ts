@@ -15,8 +15,8 @@
  */
 
 import GenericGF from './GenericGF';
-import GenericGFPoly from './GenericGFPoly';
 import System from '../../util/System';
+import GenericGFPoly from './GenericGFPoly';
 import IllegalArgumentException from '../../IllegalArgumentException';
 
 /**
@@ -30,6 +30,7 @@ export default class ReedSolomonEncoder {
   private cachedGenerators: GenericGFPoly[];
 
   /**
+   * @constructor
    * A reed solomon error-correcting encoding constructor is created by
    * passing as Galois Field with of size equal to the number of code
    * words (symbols) in the alphabet (the number of values in each
@@ -43,15 +44,15 @@ export default class ReedSolomonEncoder {
     this.cachedGenerators.push(new GenericGFPoly(field, Int32Array.from([1])));
   }
 
-  private buildGenerator(degree: number /*int*/): GenericGFPoly {
-    const cachedGenerators = this.cachedGenerators;
+  private buildGenerator(degree: number): GenericGFPoly {
+    const cachedGenerators: GenericGFPoly[] = this.cachedGenerators;
 
     if (degree >= cachedGenerators.length) {
-      let lastGenerator = cachedGenerators[cachedGenerators.length - 1];
-      const field = this.field;
+      const field: GenericGF = this.field;
+      let lastGenerator: GenericGFPoly = cachedGenerators[cachedGenerators.length - 1];
 
-      for (let d = cachedGenerators.length; d <= degree; d++) {
-        const nextGenerator = lastGenerator.multiply(
+      for (let d: number = cachedGenerators.length; d <= degree; d++) {
+        const nextGenerator: GenericGFPoly = lastGenerator.multiply(
           new GenericGFPoly(field, Int32Array.from([1, field.exp(d - 1 + field.getGeneratorBase())]))
         );
 
@@ -82,31 +83,31 @@ export default class ReedSolomonEncoder {
    * elements in the Galois Field passed as a constructor to this object.
    * @throws IllegalArgumentException thrown in response to validation errros.
    */
-  public encode(toEncode: Int32Array, ecBytes: number /*int*/): void {
+  public encode(toEncode: Int32Array, ecBytes: number): void {
     if (ecBytes === 0) {
       throw new IllegalArgumentException('No error correction bytes');
     }
 
-    const dataBytes = toEncode.length - ecBytes;
+    const dataBytes: number = toEncode.length - ecBytes;
 
     if (dataBytes <= 0) {
       throw new IllegalArgumentException('No data bytes provided');
     }
 
-    const generator = this.buildGenerator(ecBytes);
+    const generator: GenericGFPoly = this.buildGenerator(ecBytes);
     const infoCoefficients: Int32Array = new Int32Array(dataBytes);
 
     System.arraycopy(toEncode, 0, infoCoefficients, 0, dataBytes);
 
-    let info = new GenericGFPoly(this.field, infoCoefficients);
+    let info: GenericGFPoly = new GenericGFPoly(this.field, infoCoefficients);
 
     info = info.multiplyByMonomial(ecBytes, 1);
 
-    const remainder = info.divide(generator)[1];
-    const coefficients = remainder.getCoefficients();
-    const numZeroCoefficients = ecBytes - coefficients.length;
+    const remainder: GenericGFPoly = info.divide(generator)[1];
+    const coefficients: Int32Array = remainder.getCoefficients();
+    const numZeroCoefficients: number = ecBytes - coefficients.length;
 
-    for (let i = 0; i < numZeroCoefficients; i++) {
+    for (let i: number = 0; i < numZeroCoefficients; i++) {
       toEncode[dataBytes + i] = 0;
     }
 

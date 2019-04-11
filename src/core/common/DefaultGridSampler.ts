@@ -23,28 +23,49 @@ import NotFoundException from '../NotFoundException';
  * @author Sean Owen
  */
 export default class DefaultGridSampler extends GridSampler {
-  /*@Override*/
+  /**
+   * @override
+   * @param image
+   * @param dimensionX
+   * @param dimensionY
+   * @param p1ToX
+   * @param p1ToY
+   * @param p2ToX
+   * @param p2ToY
+   * @param p3ToX
+   * @param p3ToY
+   * @param p4ToX
+   * @param p4ToY
+   * @param p1FromX
+   * @param p1FromY
+   * @param p2FromX
+   * @param p2FromY
+   * @param p3FromX
+   * @param p3FromY
+   * @param p4FromX
+   * @param p4FromY
+   */
   public sampleGrid(
     image: BitMatrix,
-    dimensionX: number /*int*/,
-    dimensionY: number /*int*/,
-    p1ToX: number /*float*/,
-    p1ToY: number /*float*/,
-    p2ToX: number /*float*/,
-    p2ToY: number /*float*/,
-    p3ToX: number /*float*/,
-    p3ToY: number /*float*/,
-    p4ToX: number /*float*/,
-    p4ToY: number /*float*/,
-    p1FromX: number /*float*/,
-    p1FromY: number /*float*/,
-    p2FromX: number /*float*/,
-    p2FromY: number /*float*/,
-    p3FromX: number /*float*/,
-    p3FromY: number /*float*/,
-    p4FromX: number /*float*/,
-    p4FromY: number /*float*/
-  ): BitMatrix /*throws NotFoundException*/ {
+    dimensionX: number,
+    dimensionY: number,
+    p1ToX: number,
+    p1ToY: number,
+    p2ToX: number,
+    p2ToY: number,
+    p3ToX: number,
+    p3ToY: number,
+    p4ToX: number,
+    p4ToY: number,
+    p1FromX: number,
+    p1FromY: number,
+    p2FromX: number,
+    p2FromY: number,
+    p3FromX: number,
+    p3FromY: number,
+    p4FromX: number,
+    p4FromY: number
+  ): BitMatrix {
     const transform = PerspectiveTransform.quadrilateralToQuadrilateral(
       p1ToX,
       p1ToY,
@@ -67,26 +88,32 @@ export default class DefaultGridSampler extends GridSampler {
     return this.sampleGridWithTransform(image, dimensionX, dimensionY, transform);
   }
 
-  /*@Override*/
+  /**
+   * @override
+   * @param image
+   * @param dimensionX
+   * @param dimensionY
+   * @param transform
+   */
   public sampleGridWithTransform(
     image: BitMatrix,
-    dimensionX: number /*int*/,
-    dimensionY: number /*int*/,
+    dimensionX: number,
+    dimensionY: number,
     transform: PerspectiveTransform
-  ): BitMatrix /*throws NotFoundException*/ {
+  ): BitMatrix {
     if (dimensionX <= 0 || dimensionY <= 0) {
       throw new NotFoundException();
     }
 
-    const bits = new BitMatrix(dimensionX, dimensionY);
-    const points = new Float32Array(2 * dimensionX);
+    const bits: BitMatrix = new BitMatrix(dimensionX, dimensionY);
+    const points: Float32Array = new Float32Array(2 * dimensionX);
 
-    for (let y = 0; y < dimensionY; y++) {
-      const max = points.length;
-      const iValue: number /*float*/ = y + 0.5;
+    for (let y: number = 0; y < dimensionY; y++) {
+      const max: number = points.length;
+      const iValue: number = y + 0.5;
 
-      for (let x = 0; x < max; x += 2) {
-        points[x] = /*(float)*/ x / 2 + 0.5;
+      for (let x: number = 0; x < max; x += 2) {
+        points[x] = x / 2 + 0.5;
         points[x + 1] = iValue;
       }
 
@@ -96,13 +123,13 @@ export default class DefaultGridSampler extends GridSampler {
       GridSampler.checkAndNudgePoints(image, points);
 
       try {
-        for (let x = 0; x < max; x += 2) {
+        for (let x: number = 0; x < max; x += 2) {
           if (image.get(Math.floor(points[x]), Math.floor(points[x + 1]))) {
             // Black(-ish) pixel
             bits.set(x / 2, y);
           }
         }
-      } catch (aioobe /*: ArrayIndexOutOfBoundsException*/) {
+      } catch (aioobe) {
         // This feels wrong, but, sometimes if the finder patterns are misidentified, the resulting
         // transform gets "twisted" such that it maps a straight line of points to a set of points
         // whose endpoints are in bounds, but others are not. There is probably some mathematical
