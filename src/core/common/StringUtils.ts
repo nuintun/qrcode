@@ -39,7 +39,7 @@ export default class StringUtils {
    *  default encoding if none of these can possibly be correct
    */
   public static guessEncoding(bytes: Uint8Array, hints: Map<DecodeHintType, any>): string {
-    if (hints !== null && hints !== undefined && undefined !== hints.get(DecodeHintType.CHARACTER_SET)) {
+    if (hints != null && hints.get(DecodeHintType.CHARACTER_SET) != null) {
       return hints.get(DecodeHintType.CHARACTER_SET).toString();
     }
 
