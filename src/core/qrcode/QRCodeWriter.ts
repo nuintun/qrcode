@@ -46,7 +46,7 @@ export default class QRCodeWriter implements Writer {
     format: BarcodeFormat,
     width: number,
     height: number,
-    hints: Map<EncodeHintType, any>
+    hints?: Map<EncodeHintType, any>
   ): BitMatrix {
     if (contents.length === 0) {
       throw new IllegalArgumentException('Found empty contents');

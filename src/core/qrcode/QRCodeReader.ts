@@ -27,7 +27,6 @@ import DecoderResult from '../common/DecoderResult';
 import NotFoundException from '../NotFoundException';
 import DetectorResult from '../common/DetectorResult';
 import ResultMetadataType from '../ResultMetadataType';
-import ResultPointCallback from '../ResultPointCallback';
 import QRCodeDecoderMetaData from './decoder/QRCodeDecoderMetaData';
 
 /**
