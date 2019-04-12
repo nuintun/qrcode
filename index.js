@@ -1,10 +1,11 @@
-const { Encoder } = require('./es5');
+const { Encoder, ErrorCorrectLevel } = require('./es5');
 
 const qrcode = new Encoder();
 
 qrcode.addData('hello world !');
 
-qrcode.setVersion(3);
+qrcode.setVersion(1);
+qrcode.setErrorCorrectLevel(ErrorCorrectLevel.L);
 qrcode.make();
 
-console.log(qrcode.toDataURL());
+console.log(qrcode.toDataURL(4));

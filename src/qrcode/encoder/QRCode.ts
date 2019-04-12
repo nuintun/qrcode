@@ -298,14 +298,14 @@ export default class QRCode {
     this.modules[this.moduleCount - 8][8] = !test;
   }
 
-  public static createData(version: number, errorCorrectLevel: ErrorCorrectLevel, dataArray: QRData[]): number[] {
+  private static createData(version: number, errorCorrectLevel: ErrorCorrectLevel, dataList: QRData[]): number[] {
     const buffer: BitBuffer = new BitBuffer();
     const rsBlocks: RSBlock[] = RSBlock.getRSBlocks(version, errorCorrectLevel);
 
-    const dLength: number = dataArray.length;
+    const dLength: number = dataList.length;
 
     for (let i: number = 0; i < dLength; i++) {
-      const data: QRData = dataArray[i];
+      const data: QRData = dataList[i];
 
       buffer.put(data.getMode(), 4);
       buffer.put(data.getLength(), data.getLengthInBits(version));
@@ -321,7 +321,7 @@ export default class QRCode {
     }
 
     if (buffer.getLengthInBits() > totalDataCount * 8) {
-      throw `code length overflow: ${buffer.getLengthInBits()} > ${totalDataCount * 8}`;
+      throw `data length overflow: ${buffer.getLengthInBits()} > ${totalDataCount * 8}`;
     }
 
     // end
