@@ -8,13 +8,13 @@
 import Mode from './Mode';
 import QRData from './QRData';
 import BitBuffer from './BitBuffer';
-import stringToBytes from '../encoding/SJIS';
+import stringToBytes from '../../encoding/SJIS';
 
 function createCharError(index: number) {
   return `illegal char at ${index + 1}`;
 }
 
-export class QRKanji extends QRData {
+export default class QRKanji extends QRData {
   constructor(data: string) {
     super(Mode.Kanji, data);
   }

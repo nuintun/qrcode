@@ -7,7 +7,7 @@
 import Mode from './Mode';
 import QRData from './QRData';
 import BitBuffer from './BitBuffer';
-import stringToBytes from '../encoding/UTF8';
+import stringToBytes from '../../encoding/UTF8';
 
 export default class QR8BitByte extends QRData {
   constructor(data: string) {

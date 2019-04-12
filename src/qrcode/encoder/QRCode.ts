@@ -10,6 +10,7 @@ import * as QRUtil from './QRUtil';
 import BitBuffer from './BitBuffer';
 import Polynomial from './Polynomial';
 import QR8BitByte from './QR8BitByte';
+import GIFImage from '../../image/GIFImage';
 import ErrorCorrectLevel from './ErrorCorrectLevel';
 
 const toString = Object.prototype.toString;
@@ -421,5 +422,29 @@ export default class QRCode {
     }
 
     return data;
+  }
+
+  public toDataURL(cellSize: number = 2, margin: number = cellSize * 4): string {
+    const mods: number = this.getModuleCount();
+    const size: number = cellSize * mods + margin * 2;
+    const gif: GIFImage = new GIFImage(size, size);
+
+    for (let y: number = 0; y < size; y++) {
+      for (let x: number = 0; x < size; x++) {
+        if (
+          margin <= x &&
+          x < size - margin &&
+          margin <= y &&
+          y < size - margin &&
+          this.isDark(~~((y - margin) / cellSize), ~~((x - margin) / cellSize))
+        ) {
+          gif.setPixel(x, y, 0);
+        } else {
+          gif.setPixel(x, y, 1);
+        }
+      }
+    }
+
+    return gif.toDataURL();
   }
 }
