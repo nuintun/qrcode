@@ -24,3 +24,4 @@ export const ADD: number = '+'.charCodeAt(0);
 export const DIV: number = '/'.charCodeAt(0);
 export const SEMI: number = ';'.charCodeAt(0);
 export const COMMA: number = ','.charCodeAt(0);
+export const QUES: number = '?'.charCodeAt(0);
