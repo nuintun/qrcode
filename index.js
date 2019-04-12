@@ -4,7 +4,7 @@ const qrcode = new Encoder();
 
 qrcode.addData('hello world !');
 
-qrcode.setTypeNumber(3)
+qrcode.setVersion(3);
 qrcode.make();
 
 console.log(qrcode.toDataURL());

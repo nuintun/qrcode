@@ -28,11 +28,11 @@ export default abstract class QRData {
 
   public abstract write(buffer: BitBuffer): void;
 
-  public getLengthInBits(typeNumber: number): number {
+  public getLengthInBits(version: number): number {
     const mode: Mode = this.mode;
     const error: string = `unknow mode: ${mode}`;
 
-    if (1 <= typeNumber && typeNumber < 10) {
+    if (1 <= version && version < 10) {
       // 1 - 9
       switch (mode) {
         case Mode.Numeric:
@@ -46,7 +46,7 @@ export default abstract class QRData {
         default:
           throw error;
       }
-    } else if (typeNumber < 27) {
+    } else if (version < 27) {
       // 10 - 26
       switch (mode) {
         case Mode.Numeric:
@@ -60,7 +60,7 @@ export default abstract class QRData {
         default:
           throw error;
       }
-    } else if (typeNumber < 41) {
+    } else if (version < 41) {
       // 27 - 40
       switch (mode) {
         case Mode.Numeric:
@@ -75,7 +75,7 @@ export default abstract class QRData {
           throw error;
       }
     } else {
-      throw `unknow type number: ${typeNumber}`;
+      throw `unknow version: ${version}`;
     }
   }
 }

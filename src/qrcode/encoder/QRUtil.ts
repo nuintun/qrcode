@@ -269,17 +269,7 @@ export function getBCHDigit(data: number): number {
   return digit;
 }
 
-export function getBCHTypeInfo(data: number): number {
-  let d: number = data << 10;
-
-  while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
-    d ^= G15 << (getBCHDigit(d) - getBCHDigit(G15));
-  }
-
-  return ((data << 10) | d) ^ G15_MASK;
-}
-
-export function getBCHTypeNumber(data: number): number {
+export function getBCHVersion(data: number): number {
   let d: number = data << 12;
 
   while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
@@ -287,4 +277,14 @@ export function getBCHTypeNumber(data: number): number {
   }
 
   return (data << 12) | d;
+}
+
+export function getBCHVersionInfo(data: number): number {
+  let d: number = data << 10;
+
+  while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
+    d ^= G15 << (getBCHDigit(d) - getBCHDigit(G15));
+  }
+
+  return ((data << 10) | d) ^ G15_MASK;
 }

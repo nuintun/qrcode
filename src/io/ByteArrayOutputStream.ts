@@ -13,10 +13,6 @@ export default class ByteArrayOutputStream extends OutputStream {
     this.bytes.push(byte);
   }
 
-  public flush(): void {
-    // do nothing
-  }
-
   public toByteArray(): number[] {
     return this.bytes;
   }

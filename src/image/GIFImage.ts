@@ -112,9 +112,7 @@ export default class GIFImage {
   }
 
   public write(output: OutputStream): void {
-    //---------------------------------
     // GIF Signature
-
     output.writeByte(ASCII.G);
     output.writeByte(ASCII.I);
     output.writeByte(ASCII.F);
@@ -122,9 +120,7 @@ export default class GIFImage {
     output.writeByte(ASCII.SEVEN);
     output.writeByte(ASCII.a);
 
-    //---------------------------------
     // Screen Descriptor
-
     this.writeWord(output, this.width);
     this.writeWord(output, this.height);
 
@@ -132,9 +128,7 @@ export default class GIFImage {
     output.writeByte(0);
     output.writeByte(0);
 
-    //---------------------------------
     // Global Color Map
-
     // black
     output.writeByte(0x00);
     output.writeByte(0x00);
@@ -145,9 +139,7 @@ export default class GIFImage {
     output.writeByte(0xff);
     output.writeByte(0xff);
 
-    //---------------------------------
     // Image Descriptor
-
     output.writeByte(ASCII.COMMA);
 
     this.writeWord(output, 0);
@@ -157,12 +149,8 @@ export default class GIFImage {
 
     output.writeByte(0);
 
-    //---------------------------------
     // Local Color Map
-
-    //---------------------------------
     // Raster Data
-
     const lzwMinCodeSize: number = 2;
     const raster: number[] = this.getLZWRaster(lzwMinCodeSize);
 
@@ -184,7 +172,6 @@ export default class GIFImage {
 
     output.writeByte(0x00);
 
-    //---------------------------------
     // GIF Terminator
     output.writeByte(ASCII.SEMI);
   }
@@ -203,14 +190,14 @@ export default class GIFImage {
     table.add(String.fromCharCode(clearCode));
     table.add(String.fromCharCode(endCode));
 
-    const byteOut: ByteArrayOutputStream = new ByteArrayOutputStream();
-    const bitOut: BitOutputStream = new BitOutputStream(byteOut);
+    const byteOutput: ByteArrayOutputStream = new ByteArrayOutputStream();
+    const bitOutput: BitOutputStream = new BitOutputStream(byteOutput);
 
     let bitLength: number = lzwMinCodeSize + 1;
 
     try {
       // clear code
-      bitOut.write(clearCode, bitLength);
+      bitOutput.write(clearCode, bitLength);
 
       let dataIndex: number = 0;
       let s: string = String.fromCharCode(this.data[dataIndex]);
@@ -225,7 +212,7 @@ export default class GIFImage {
         if (table.contains(s + c)) {
           s = s + c;
         } else {
-          bitOut.write(table.indexOf(s), bitLength);
+          bitOutput.write(table.indexOf(s), bitLength);
 
           if (table.getSize() < 0xfff) {
             if (table.getSize() === 1 << bitLength) {
@@ -239,15 +226,15 @@ export default class GIFImage {
         }
       }
 
-      bitOut.write(table.indexOf(s), bitLength);
+      bitOutput.write(table.indexOf(s), bitLength);
 
       // end code
-      bitOut.write(endCode, bitLength);
+      bitOutput.write(endCode, bitLength);
     } finally {
-      bitOut.close();
+      bitOutput.close();
     }
 
-    return byteOut.toByteArray();
+    return byteOutput.toByteArray();
   }
 
   private writeWord(output: OutputStream, i: number) {

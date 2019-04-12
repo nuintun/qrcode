@@ -30,23 +30,23 @@ export default class QRCode {
   private static PAD1: number = 0x11;
 
   private dataList: QRData[];
-  private typeNumber: number;
+  private version: number;
   private moduleCount: number;
   private modules: boolean[][];
   private errorCorrectLevel: ErrorCorrectLevel;
 
   public constructor() {
-    this.typeNumber = 1;
+    this.version = 1;
     this.dataList = [];
     this.errorCorrectLevel = ErrorCorrectLevel.L;
   }
 
-  public getTypeNumber(): number {
-    return this.typeNumber;
+  public getVersion(): number {
+    return this.version;
   }
 
-  public setTypeNumber(typeNumber: number): void {
-    this.typeNumber = typeNumber;
+  public setVersion(version: number): void {
+    this.version = version;
   }
 
   public getErrorCorrectLevel(): ErrorCorrectLevel {
@@ -112,7 +112,7 @@ export default class QRCode {
   private makeImpl(test: boolean, maskPattern: number): void {
     // initialize modules
     this.modules = [];
-    this.moduleCount = this.typeNumber * 4 + 17;
+    this.moduleCount = this.version * 4 + 17;
 
     for (let i: number = 0; i < this.moduleCount; i++) {
       this.modules.push([]);
@@ -129,13 +129,13 @@ export default class QRCode {
     this.setupPositionAdjustPattern();
     this.setupTimingPattern();
 
-    this.setupTypeInfo(test, maskPattern);
+    this.setupVersionInfo(test, maskPattern);
 
-    if (this.typeNumber >= 7) {
-      this.setupTypeNumber(test);
+    if (this.version >= 7) {
+      this.setupVersion(test);
     }
 
-    const data: number[] = QRCode.createData(this.typeNumber, this.errorCorrectLevel, this.dataList);
+    const data: number[] = QRCode.createData(this.version, this.errorCorrectLevel, this.dataList);
 
     this.mapData(data, maskPattern);
   }
@@ -189,7 +189,7 @@ export default class QRCode {
   }
 
   private setupPositionAdjustPattern(): void {
-    const pos: number[] = QRUtil.getPatternPosition(this.typeNumber);
+    const pos: number[] = QRUtil.getPatternPosition(this.version);
     const length: number = pos.length;
 
     for (let i: number = 0; i < length; i++) {
@@ -252,8 +252,8 @@ export default class QRCode {
     }
   }
 
-  private setupTypeNumber(test: boolean): void {
-    const bits: number = QRUtil.getBCHTypeNumber(this.typeNumber);
+  private setupVersion(test: boolean): void {
+    const bits: number = QRUtil.getBCHVersion(this.version);
 
     for (let i: number = 0; i < 18; i++) {
       this.modules[~~(i / 3)][(i % 3) + this.moduleCount - 8 - 3] = !test && ((bits >> i) & 1) === 1;
@@ -264,9 +264,9 @@ export default class QRCode {
     }
   }
 
-  private setupTypeInfo(test: boolean, maskPattern: number): void {
+  private setupVersionInfo(test: boolean, maskPattern: number): void {
     const data: number = (this.errorCorrectLevel << 3) | maskPattern;
-    const bits: number = QRUtil.getBCHTypeInfo(data);
+    const bits: number = QRUtil.getBCHVersionInfo(data);
 
     // vertical
     for (let i: number = 0; i < 15; i++) {
@@ -298,9 +298,9 @@ export default class QRCode {
     this.modules[this.moduleCount - 8][8] = !test;
   }
 
-  public static createData(typeNumber: number, errorCorrectLevel: ErrorCorrectLevel, dataArray: QRData[]): number[] {
+  public static createData(version: number, errorCorrectLevel: ErrorCorrectLevel, dataArray: QRData[]): number[] {
     const buffer: BitBuffer = new BitBuffer();
-    const rsBlocks: RSBlock[] = RSBlock.getRSBlocks(typeNumber, errorCorrectLevel);
+    const rsBlocks: RSBlock[] = RSBlock.getRSBlocks(version, errorCorrectLevel);
 
     const dLength: number = dataArray.length;
 
@@ -308,7 +308,7 @@ export default class QRCode {
       const data: QRData = dataArray[i];
 
       buffer.put(data.getMode(), 4);
-      buffer.put(data.getLength(), data.getLengthInBits(typeNumber));
+      buffer.put(data.getLength(), data.getLengthInBits(version));
       data.write(buffer);
     }
 
