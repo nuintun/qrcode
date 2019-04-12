@@ -29,8 +29,8 @@ export default class QRCode {
   private static PAD0: number = 0xec;
   private static PAD1: number = 0x11;
 
-  private dataList: QRData[];
   private version: number;
+  private dataList: QRData[];
   private moduleCount: number;
   private modules: boolean[][];
   private errorCorrectLevel: ErrorCorrectLevel;
