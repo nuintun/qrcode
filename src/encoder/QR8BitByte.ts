@@ -1,5 +1,5 @@
 /**
- * @class QR8BitByte
+ * @module QR8BitByte
  * @author nuintun
  * @author Kazuhiko Arase
  */

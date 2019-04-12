@@ -1,5 +1,5 @@
 /**
- * @class BitBuffer
+ * @module BitBuffer
  * @author nuintun
  * @author Kazuhiko Arase
  */

@@ -1,5 +1,5 @@
 /**
- * @class RSBlock
+ * @module RSBlock
  * @author nuintun
  * @author Kazuhiko Arase
  */

@@ -1,5 +1,5 @@
 /**
- * @class QRNumber
+ * @module QRNumber
  * @author nuintun
  * @author Kazuhiko Arase
  */

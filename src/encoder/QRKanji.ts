@@ -1,7 +1,8 @@
 /**
- * @class QRKanji(SJIS only)
+ * @module QRKanji
  * @author nuintun
  * @author Kazuhiko Arase
+ * @description SJIS only
  */
 
 import Mode from './Mode';

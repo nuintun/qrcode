@@ -1,5 +1,5 @@
 /**
- * @enum ErrorCorrectLevel
+ * @module ErrorCorrectLevel
  * @author nuintun
  * @author Kazuhiko Arase
  */

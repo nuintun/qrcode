@@ -1,15 +1,15 @@
 /**
- * @class QRCode
+ * @module QRCode
  * @author nuintun
  * @author Kazuhiko Arase
  */
 
 import QRData from './QRData';
 import RSBlock from './RSBlock';
+import * as QRUtil from './QRUtil';
 import BitBuffer from './BitBuffer';
 import Polynomial from './Polynomial';
 import QR8BitByte from './QR8BitByte';
-import QRUtil, { maskFunc } from './QRUtil';
 import ErrorCorrectLevel from './ErrorCorrectLevel';
 
 const toString = Object.prototype.toString;
@@ -144,7 +144,7 @@ export default class QRCode {
     let bitIndex: number = 7;
     let byteIndex: number = 0;
     let row: number = this.moduleCount - 1;
-    const maskFunc: maskFunc = QRUtil.getMaskFunc(maskPattern);
+    const maskFunc: QRUtil.maskFunc = QRUtil.getMaskFunc(maskPattern);
 
     for (let col: number = this.moduleCount - 1; col > 0; col -= 2) {
       if (col === 6) {

@@ -1,5 +1,5 @@
 /**
- * @class QRMath
+ * @module QRMath
  * @author nuintun
  * @author Kazuhiko Arase
  */
@@ -16,24 +16,22 @@ for (let i: number = 0; i < 255; i++) {
   LOG_TABLE[EXP_TABLE[i]] = i;
 }
 
-export default class QRMath {
-  public static glog(n: number): number {
-    if (n < 1) {
-      throw `unknow log: ${n}`;
-    }
-
-    return LOG_TABLE[n];
+export function glog(n: number): number {
+  if (n < 1) {
+    throw `unknow log: ${n}`;
   }
 
-  public static gexp(n: number): number {
-    while (n < 0) {
-      n += 255;
-    }
+  return LOG_TABLE[n];
+}
 
-    while (n >= 256) {
-      n -= 255;
-    }
-
-    return EXP_TABLE[n];
+export function gexp(n: number): number {
+  while (n < 0) {
+    n += 255;
   }
+
+  while (n >= 256) {
+    n -= 255;
+  }
+
+  return EXP_TABLE[n];
 }

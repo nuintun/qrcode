@@ -1,10 +1,10 @@
 /**
- * @class Polynomial
+ * @module Polynomial
  * @author nuintun
  * @author Kazuhiko Arase
  */
 
-import QRMath from './QRMath';
+import * as QRMath from './QRMath';
 
 export default class Polynomial {
   private num: number[];

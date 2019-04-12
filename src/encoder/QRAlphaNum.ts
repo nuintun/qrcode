@@ -1,5 +1,5 @@
 /**
- * @class QRAlphaNum
+ * @module QRAlphaNum
  * @author nuintun
  * @author Kazuhiko Arase
  */

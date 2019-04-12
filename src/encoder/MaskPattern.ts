@@ -1,5 +1,5 @@
 /**
- * @enum MaskPattern
+ * @module MaskPattern
  * @author nuintun
  * @author Kazuhiko Arase
  */

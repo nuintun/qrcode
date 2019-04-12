@@ -1,5 +1,5 @@
 /**
- * @enum Mode
+ * @module Mode
  * @author nuintun
  * @author Kazuhiko Arase
  */
