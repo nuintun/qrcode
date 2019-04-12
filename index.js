@@ -8,4 +8,4 @@ qrcode.setVersion(1);
 qrcode.setErrorCorrectLevel(ErrorCorrectLevel.L);
 qrcode.make();
 
-console.log(qrcode.toDataURL(4));
+console.log(qrcode.toDataURL());
