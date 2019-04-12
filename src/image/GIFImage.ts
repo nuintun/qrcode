@@ -266,8 +266,6 @@ export default class GIFImage {
 
     this.write(output);
 
-    output.close();
-
     let url: string = 'data:image/gif;base64,';
     const bytes: number[] = Base64.encode(output.toByteArray());
     const length: number = bytes.length;
@@ -275,6 +273,8 @@ export default class GIFImage {
     for (let i: number = 0; i < length; i++) {
       url += String.fromCharCode(bytes[i]);
     }
+
+    output.close();
 
     return url;
   }

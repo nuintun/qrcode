@@ -14,7 +14,7 @@ export default class ByteArrayOutputStream extends OutputStream {
   }
 
   public flush(): void {
-    this.bytes = [];
+    // do nothing
   }
 
   public toByteArray(): number[] {
