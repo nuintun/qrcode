@@ -5,9 +5,9 @@
  */
 
 import Mode from './Mode';
-import QRCode from './QRCode';
 import QRData from './QRData';
 import BitBuffer from './BitBuffer';
+import stringToBytes from '../encoding/UTF8';
 
 export default class QR8BitByte extends QRData {
   constructor(data: string) {
@@ -15,7 +15,7 @@ export default class QR8BitByte extends QRData {
   }
 
   public write(buffer: BitBuffer): void {
-    const data: number[] = QRCode.stringToBytes(this.getData());
+    const data: number[] = stringToBytes(this.getData());
     const length: number = data.length;
 
     for (let i: number = 0; i < length; i++) {
@@ -24,6 +24,6 @@ export default class QR8BitByte extends QRData {
   }
 
   public getLength(): number {
-    return QRCode.stringToBytes(this.getData()).length;
+    return stringToBytes(this.getData()).length;
   }
 }

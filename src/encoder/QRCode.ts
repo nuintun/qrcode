@@ -422,9 +422,4 @@ export default class QRCode {
 
     return data;
   }
-
-  // by default, SJIS encoding is applied.
-  public static stringToBytes(data: string): number[] {
-    return [];
-  }
 }

@@ -6,9 +6,9 @@
  */
 
 import Mode from './Mode';
-import QRCode from './QRCode';
 import QRData from './QRData';
 import BitBuffer from './BitBuffer';
+import stringToBytes from '../encoding/SJIS';
 
 function createCharError(index: number) {
   return `illegal char at ${index + 1}`;
@@ -21,7 +21,7 @@ export class QRKanji extends QRData {
 
   public write(buffer: BitBuffer): void {
     let i: number = 0;
-    const data: number[] = QRCode.stringToBytes(this.getData());
+    const data: number[] = stringToBytes(this.getData());
     const length: number = data.length;
 
     while (i + 1 < length) {
@@ -48,6 +48,6 @@ export class QRKanji extends QRData {
   }
 
   public getLength(): number {
-    return QRCode.stringToBytes(this.getData()).length / 2;
+    return stringToBytes(this.getData()).length / 2;
   }
 }
