@@ -48,11 +48,11 @@ export default class QRNumber extends QRData {
     return num;
   }
 
-  private static charToNum(char: string): number {
-    if ('0' <= char && char <= '9') {
-      return char.charCodeAt(0) - '0'.charCodeAt(0);
+  private static charToNum(ch: string): number {
+    if ('0' <= ch && ch <= '9') {
+      return ch.charCodeAt(0) - '0'.charCodeAt(0);
     }
 
-    throw `illegal char: ${char}`;
+    throw `illegal char: ${ch}`;
   }
 }

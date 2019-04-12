@@ -33,13 +33,13 @@ export default class QRAlphaNum extends QRData {
     return this.getData().length;
   }
 
-  private static getCode(char: string): number {
-    if ('0' <= char && char <= '9') {
-      return char.charCodeAt(0) - '0'.charCodeAt(0);
-    } else if ('A' <= char && char <= 'Z') {
-      return char.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+  private static getCode(ch: string): number {
+    if ('0' <= ch && ch <= '9') {
+      return ch.charCodeAt(0) - '0'.charCodeAt(0);
+    } else if ('A' <= ch && ch <= 'Z') {
+      return ch.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
     } else {
-      switch (char) {
+      switch (ch) {
         case ' ':
           return 36;
         case '$':
@@ -59,7 +59,7 @@ export default class QRAlphaNum extends QRData {
         case ':':
           return 44;
         default:
-          throw `illegal char: ${char}`;
+          throw `illegal char: ${ch}`;
       }
     }
   }
