@@ -270,9 +270,9 @@ export default class RSBlock {
     return this.totalCount;
   }
 
-  public static getRSBlocks(typeNumber: number, errorCorrectLevel: ErrorCorrectLevel): RSBlock[] {
+  public static getRSBlocks(version: number, errorCorrectLevel: ErrorCorrectLevel): RSBlock[] {
     const rsBlocks: RSBlock[] = [];
-    const rsBlock: number[] = RSBlock.getRsBlockTable(typeNumber, errorCorrectLevel);
+    const rsBlock: number[] = RSBlock.getRsBlockTable(version, errorCorrectLevel);
     const length: number = rsBlock.length / 3;
 
     for (let i: number = 0; i < length; i++) {
@@ -288,18 +288,18 @@ export default class RSBlock {
     return rsBlocks;
   }
 
-  private static getRsBlockTable(typeNumber: number, errorCorrectLevel: ErrorCorrectLevel): number[] {
+  private static getRsBlockTable(version: number, errorCorrectLevel: ErrorCorrectLevel): number[] {
     switch (errorCorrectLevel) {
       case ErrorCorrectLevel.L:
-        return RSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+        return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 0];
       case ErrorCorrectLevel.M:
-        return RSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+        return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 1];
       case ErrorCorrectLevel.Q:
-        return RSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+        return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 2];
       case ErrorCorrectLevel.H:
-        return RSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+        return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 3];
       default:
-        throw `unknow type number and error correct level: ${typeNumber} / ${errorCorrectLevel}`;
+        throw `unknow version and error correct level: ${version} / ${errorCorrectLevel}`;
     }
   }
 }

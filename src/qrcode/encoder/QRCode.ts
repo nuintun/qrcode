@@ -313,19 +313,19 @@ export default class QRCode {
     }
 
     // calc max data count
-    let totalDataCount: number = 0;
+    let maxDataCount: number = 0;
     const rLength: number = rsBlocks.length;
 
     for (let i: number = 0; i < rLength; i++) {
-      totalDataCount += rsBlocks[i].getDataCount();
+      maxDataCount += rsBlocks[i].getDataCount();
     }
 
-    if (buffer.getLengthInBits() > totalDataCount * 8) {
-      throw `qrcode data overflow: ${buffer.getLengthInBits()} > ${totalDataCount * 8}`;
+    if (buffer.getLengthInBits() > maxDataCount * 8) {
+      throw `qrcode data overflow: ${buffer.getLengthInBits()} > ${maxDataCount * 8}`;
     }
 
     // end
-    if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+    if (buffer.getLengthInBits() + 4 <= maxDataCount * 8) {
       buffer.put(0, 4);
     }
 
@@ -336,13 +336,13 @@ export default class QRCode {
 
     // padding
     while (true) {
-      if (buffer.getLengthInBits() >= totalDataCount * 8) {
+      if (buffer.getLengthInBits() >= maxDataCount * 8) {
         break;
       }
 
       buffer.put(QRCode.PAD0, 8);
 
-      if (buffer.getLengthInBits() >= totalDataCount * 8) {
+      if (buffer.getLengthInBits() >= maxDataCount * 8) {
         break;
       }
 
@@ -394,14 +394,14 @@ export default class QRCode {
       }
     }
 
-    let totalCodeCount: number = 0;
+    let maxTotalCount: number = 0;
 
     for (let i: number = 0; i < rLength; i++) {
-      totalCodeCount += rsBlocks[i].getTotalCount();
+      maxTotalCount += rsBlocks[i].getTotalCount();
     }
 
     let index: number = 0;
-    const data: number[] = createNumArray(totalCodeCount);
+    const data: number[] = createNumArray(maxTotalCount);
 
     for (let i: number = 0; i < maxDcCount; i++) {
       for (let r: number = 0; r < rLength; r++) {

@@ -75,14 +75,14 @@ export const G15: number = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2)
 
 export const G18: number = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
 
-export function getPatternPosition(typeNumber: number): number[] {
-  return PATTERN_POSITION_TABLE[typeNumber - 1];
+export function getPatternPosition(version: number): number[] {
+  return PATTERN_POSITION_TABLE[version - 1];
 }
 
-export function getMaxLength(typeNumber: number, mode: Mode, errorCorrectLevel: ErrorCorrectLevel): number {
+export function getMaxLength(version: number, mode: Mode, errorCorrectLevel: ErrorCorrectLevel): number {
   let e: number = 0;
   let m: number = 0;
-  const t: number = typeNumber - 1;
+  const t: number = version - 1;
 
   switch (errorCorrectLevel) {
     case ErrorCorrectLevel.L:
