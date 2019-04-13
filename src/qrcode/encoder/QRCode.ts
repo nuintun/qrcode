@@ -101,28 +101,6 @@ export default class QRCode {
       }
     }
 
-    this.makeImpl(false, this.getBestMaskPattern());
-  }
-
-  private getBestMaskPattern(): number {
-    let pattern: number = 0;
-    let minLostPoint: number = 0;
-
-    for (let i: number = 0; i < 8; i++) {
-      this.makeImpl(true, i);
-
-      const lostPoint: number = QRUtil.getLostPoint(this);
-
-      if (i === 0 || minLostPoint > lostPoint) {
-        pattern = i;
-        minLostPoint = lostPoint;
-      }
-    }
-
-    return pattern;
-  }
-
-  private makeImpl(test: boolean, maskPattern: number): void {
     // initialize modules
     this.modules = [];
     this.moduleCount = this.version * 4 + 17;
@@ -135,20 +113,47 @@ export default class QRCode {
       }
     }
 
+    // setupPositionProbePattern
     this.setupPositionProbePattern(0, 0);
     this.setupPositionProbePattern(this.moduleCount - 7, 0);
     this.setupPositionProbePattern(0, this.moduleCount - 7);
 
+    // setupPositionAdjustPattern
     this.setupPositionAdjustPattern();
+
+    // setupTimingPattern
     this.setupTimingPattern();
 
+    // createData
+    const data: number[] = QRCode.createData(this.version, this.errorCorrectLevel, this.dataList);
+
+    this.makeImpl(false, data, this.getBestMaskPattern(data));
+  }
+
+  private getBestMaskPattern(data: number[]): number {
+    let pattern: number = 0;
+    let minLostPoint: number = 0;
+
+    for (let p: number = 0; p < 8; p++) {
+      this.makeImpl(true, data, p);
+
+      const lostPoint: number = QRUtil.getLostPoint(this);
+
+      if (p === 0 || minLostPoint > lostPoint) {
+        pattern = p;
+        minLostPoint = lostPoint;
+      }
+    }
+
+    return pattern;
+  }
+
+  private makeImpl(test: boolean, data: number[], maskPattern: number): void {
     this.setupVersionInfo(test, maskPattern);
 
     if (this.version >= 7) {
       this.setupVersion(test);
     }
-
-    const data: number[] = QRCode.createData(this.version, this.errorCorrectLevel, this.dataList);
 
     this.mapData(data, maskPattern);
   }
