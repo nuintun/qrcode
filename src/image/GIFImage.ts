@@ -14,12 +14,10 @@ class LZWTable {
   private map: { [key: string]: number } = {};
 
   public add(key: string): void {
-    if (this.contains(key)) {
-      throw `dup key: ${key}`;
+    if (!this.contains(key)) {
+      this.map[key] = this.size;
+      this.size += 1;
     }
-
-    this.map[key] = this.size;
-    this.size += 1;
   }
 
   public getSize(): number {
