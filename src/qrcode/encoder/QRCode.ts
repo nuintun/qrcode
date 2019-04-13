@@ -78,7 +78,7 @@ export default class QRCode {
   }
 
   public isDark(row: number, col: number): boolean {
-    if (this.modules[row][col] != null) {
+    if (this.modules[row][col] !== null) {
       return this.modules[row][col];
     } else {
       return false;
@@ -174,7 +174,7 @@ export default class QRCode {
 
       while (true) {
         for (let c: number = 0; c < 2; c++) {
-          if (this.modules[row][col - c] == null) {
+          if (this.modules[row][col - c] === null) {
             let dark: boolean = false;
 
             if (byteIndex < data.length) {
@@ -217,7 +217,7 @@ export default class QRCode {
         const row: number = pos[i];
         const col: number = pos[j];
 
-        if (this.modules[row][col] != null) {
+        if (this.modules[row][col] !== null) {
           continue;
         }
 
@@ -256,7 +256,7 @@ export default class QRCode {
 
   private setupTimingPattern(): void {
     for (let r: number = 8; r < this.moduleCount - 8; r++) {
-      if (this.modules[r][6] != null) {
+      if (this.modules[r][6] !== null) {
         continue;
       }
 
@@ -264,7 +264,7 @@ export default class QRCode {
     }
 
     for (let c: number = 8; c < this.moduleCount - 8; c++) {
-      if (this.modules[6][c] != null) {
+      if (this.modules[6][c] !== null) {
         continue;
       }
 
