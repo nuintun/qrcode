@@ -321,7 +321,7 @@ export default class QRCode {
     }
 
     if (buffer.getLengthInBits() > totalDataCount * 8) {
-      throw `data length overflow: ${buffer.getLengthInBits()} > ${totalDataCount * 8}`;
+      throw `qrcode data overflow: ${buffer.getLengthInBits()} > ${totalDataCount * 8}`;
     }
 
     // end
