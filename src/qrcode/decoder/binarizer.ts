@@ -1,3 +1,9 @@
+/**
+ * @module binarizer
+ * @author nuintun
+ * @author Cosmo Wolfe
+ */
+
 import BitMatrix from './BitMatrix';
 
 const REGION_SIZE: number = 8;

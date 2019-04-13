@@ -1,3 +1,9 @@
+/**
+ * @module BitMatrix
+ * @author nuintun
+ * @author Cosmo Wolfe
+ */
+
 export default class BitMatrix {
   public width: number;
   public height: number;

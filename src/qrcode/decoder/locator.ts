@@ -1,3 +1,9 @@
+/**
+ * @module locator
+ * @author nuintun
+ * @author Cosmo Wolfe
+ */
+
 import Point from './Point';
 import BitMatrix from './BitMatrix';
 
