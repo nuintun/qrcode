@@ -8,6 +8,7 @@
     "declaration": true,
     "alwaysStrict": true,
     "importHelpers": true,
+    "noUnusedLocals": true,
     "declarationDir": "types",
     "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,

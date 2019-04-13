@@ -4,12 +4,10 @@
  * @author Kazuhiko Arase
  */
 
-import Mode from './Mode';
 import QRCode from './QRCode';
 import * as QRMath from './QRMath';
 import Polynomial from './Polynomial';
 import MaskPattern from './MaskPattern';
-import ErrorCorrectLevel from './ErrorCorrectLevel';
 
 const PATTERN_POSITION_TABLE: number[][] = [
   [],
