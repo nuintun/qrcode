@@ -29,7 +29,7 @@ export default class Base64DecodeInputStream extends InputStream {
           return -1;
         }
 
-        throw `unexpected end of file`;
+        throw `unexpected end of stream`;
       } else if (byte === ASCII.EQ) {
         this.bufLength = 0;
 
@@ -66,7 +66,7 @@ export default class Base64DecodeInputStream extends InputStream {
     } else if (ch === ASCII.DIV) {
       return 63;
     } else {
-      throw `unknow char: ${ch}`;
+      throw `illegal char: ${ch}`;
     }
   }
 

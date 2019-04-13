@@ -18,7 +18,7 @@ for (let i: number = 0; i < 255; i++) {
 
 export function glog(n: number): number {
   if (n < 1) {
-    throw `unknow log: ${n}`;
+    throw `illegal log: ${n}`;
   }
 
   return LOG_TABLE[n];

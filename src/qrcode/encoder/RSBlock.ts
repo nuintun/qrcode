@@ -299,7 +299,7 @@ export default class RSBlock {
       case ErrorCorrectLevel.H:
         return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 3];
       default:
-        throw `unknow version and error correct level: ${version} / ${errorCorrectLevel}`;
+        throw `illegal error correct level: ${errorCorrectLevel}`;
     }
   }
 }

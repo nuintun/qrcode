@@ -72,7 +72,7 @@ export default class QRCode {
       if (type === '[object String]') {
         this.dataList.push(new QR8BitByte(data));
       } else {
-        throw `unknow data: ${data}`;
+        throw `illegal data: ${data}`;
       }
     }
   }

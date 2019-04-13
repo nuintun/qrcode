@@ -26,7 +26,7 @@ function toBytes(str: string): number[] {
 function readByte(input: Base64DecodeInputStream): number {
   const byte = input.readByte();
 
-  if (byte === -1) throw 'eof';
+  if (byte === -1) throw 'unexpected end of byte';
 
   return byte;
 }

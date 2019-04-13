@@ -71,6 +71,6 @@ export default class Base64EncodeOutputStream extends OutputStream {
       }
     }
 
-    throw 'unknow char:' + ch;
+    throw 'illegal char:' + ch;
   }
 }
