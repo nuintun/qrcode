@@ -79,48 +79,6 @@ export function getPatternPosition(version: number): number[] {
   return PATTERN_POSITION_TABLE[version - 1];
 }
 
-export function getMaxLength(version: number, mode: Mode, errorCorrectLevel: ErrorCorrectLevel): number {
-  let e: number = 0;
-  let m: number = 0;
-  const t: number = version - 1;
-
-  switch (errorCorrectLevel) {
-    case ErrorCorrectLevel.L:
-      e = 0;
-      break;
-    case ErrorCorrectLevel.M:
-      e = 1;
-      break;
-    case ErrorCorrectLevel.Q:
-      e = 2;
-      break;
-    case ErrorCorrectLevel.H:
-      e = 3;
-      break;
-    default:
-      throw `unknow error correct level: ${errorCorrectLevel}`;
-  }
-
-  switch (mode) {
-    case Mode.Numeric:
-      m = 0;
-      break;
-    case Mode.Alphanumeric:
-      m = 1;
-      break;
-    case Mode.Byte:
-      m = 2;
-      break;
-    case Mode.Kanji:
-      m = 3;
-      break;
-    default:
-      throw `unknow mode: ${mode}`;
-  }
-
-  return MAX_LENGTH[t][e][m];
-}
-
 export function getErrorCorrectPolynomial(errorCorrectLength: number): Polynomial {
   let e: Polynomial = new Polynomial([1]);
 
@@ -258,7 +216,7 @@ export function getLostPoint(qrcode: QRCode): number {
   return lostPoint;
 }
 
-export function getBCHDigit(data: number): number {
+function getBCHDigit(data: number): number {
   let digit = 0;
 
   while (data !== 0) {
