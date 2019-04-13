@@ -1,5 +1,5 @@
 /**
- * @module QRAlphaNum
+ * @module QRAlphanumeric
  * @author nuintun
  * @author Kazuhiko Arase
  */
@@ -8,7 +8,7 @@ import Mode from './Mode';
 import QRData from './QRData';
 import BitBuffer from './BitBuffer';
 
-export default class QRAlphaNum extends QRData {
+export default class QRAlphanumeric extends QRData {
   constructor(data: string) {
     super(Mode.Alphanumeric, data);
   }
@@ -19,13 +19,13 @@ export default class QRAlphaNum extends QRData {
     const length: number = data.length;
 
     while (i + 1 < length) {
-      buffer.put(QRAlphaNum.getCode(data.charAt(i)) * 45 + QRAlphaNum.getCode(data.charAt(i + 1)), 11);
+      buffer.put(QRAlphanumeric.getCode(data.charAt(i)) * 45 + QRAlphanumeric.getCode(data.charAt(i + 1)), 11);
 
       i += 2;
     }
 
     if (i < data.length) {
-      buffer.put(QRAlphaNum.getCode(data.charAt(i)), 6);
+      buffer.put(QRAlphanumeric.getCode(data.charAt(i)), 6);
     }
   }
 
