@@ -15,6 +15,8 @@ import ErrorCorrectLevel from './ErrorCorrectLevel';
 
 const toString = Object.prototype.toString;
 
+type prepareData = [BitBuffer, RSBlock[], number];
+
 function createNumArray(length: number): number[] {
   const array: number[] = [];
 
@@ -36,7 +38,7 @@ export default class QRCode {
   private errorCorrectLevel: ErrorCorrectLevel;
 
   public constructor() {
-    this.version = 1;
+    this.version = 0;
     this.dataList = [];
     this.errorCorrectLevel = ErrorCorrectLevel.L;
   }
@@ -88,6 +90,17 @@ export default class QRCode {
   }
 
   public make(): void {
+    if (this.version === 0) {
+      const dataList = this.dataList;
+      const errorCorrectLevel = this.errorCorrectLevel;
+
+      for (this.version = 1; this.version < 41; this.version++) {
+        const [buffer, , maxDataCount]: prepareData = QRCode.prepareData(this.version, errorCorrectLevel, dataList);
+
+        if (buffer.getLengthInBits() <= maxDataCount) break;
+      }
+    }
+
     this.makeImpl(false, this.getBestMaskPattern());
   }
 
@@ -298,11 +311,10 @@ export default class QRCode {
     this.modules[this.moduleCount - 8][8] = !test;
   }
 
-  private static createData(version: number, errorCorrectLevel: ErrorCorrectLevel, dataList: QRData[]): number[] {
+  private static prepareData(version: number, errorCorrectLevel: ErrorCorrectLevel, dataList: QRData[]): prepareData {
+    const dLength: number = dataList.length;
     const buffer: BitBuffer = new BitBuffer();
     const rsBlocks: RSBlock[] = RSBlock.getRSBlocks(version, errorCorrectLevel);
-
-    const dLength: number = dataList.length;
 
     for (let i: number = 0; i < dLength; i++) {
       const data: QRData = dataList[i];
@@ -320,12 +332,20 @@ export default class QRCode {
       maxDataCount += rsBlocks[i].getDataCount();
     }
 
-    if (buffer.getLengthInBits() > maxDataCount * 8) {
-      throw `qrcode data overflow: ${buffer.getLengthInBits()} > ${maxDataCount * 8}`;
+    maxDataCount *= 8;
+
+    return [buffer, rsBlocks, maxDataCount];
+  }
+
+  private static createData(version: number, errorCorrectLevel: ErrorCorrectLevel, dataList: QRData[]): number[] {
+    const [buffer, rsBlocks, maxDataCount]: prepareData = QRCode.prepareData(version, errorCorrectLevel, dataList);
+
+    if (buffer.getLengthInBits() > maxDataCount) {
+      throw `qrcode data overflow: ${buffer.getLengthInBits()} > ${maxDataCount}`;
     }
 
     // end
-    if (buffer.getLengthInBits() + 4 <= maxDataCount * 8) {
+    if (buffer.getLengthInBits() + 4 <= maxDataCount) {
       buffer.put(0, 4);
     }
 
@@ -336,13 +356,13 @@ export default class QRCode {
 
     // padding
     while (true) {
-      if (buffer.getLengthInBits() >= maxDataCount * 8) {
+      if (buffer.getLengthInBits() >= maxDataCount) {
         break;
       }
 
       buffer.put(QRCode.PAD0, 8);
 
-      if (buffer.getLengthInBits() >= maxDataCount * 8) {
+      if (buffer.getLengthInBits() >= maxDataCount) {
         break;
       }
 
