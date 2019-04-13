@@ -72,7 +72,7 @@ export default class QRCode {
       if (type === '[object String]') {
         this.dataList.push(new QR8BitByte(data));
       } else {
-        throw `unknow qrcode data: ${data}`;
+        throw `unknow data: ${data}`;
       }
     }
   }
@@ -348,7 +348,7 @@ export default class QRCode {
     const [buffer, rsBlocks, maxDataCount]: prepareData = QRCode.prepareData(version, errorCorrectLevel, dataList);
 
     if (buffer.getLengthInBits() > maxDataCount) {
-      throw `qrcode data overflow: ${buffer.getLengthInBits()} > ${maxDataCount}`;
+      throw `data overflow: ${buffer.getLengthInBits()} > ${maxDataCount}`;
     }
 
     // end
