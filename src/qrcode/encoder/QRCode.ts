@@ -94,7 +94,7 @@ export default class QRCode {
       const dataList = this.dataList;
       const errorCorrectLevel = this.errorCorrectLevel;
 
-      for (this.version = 1; this.version < 41; this.version++) {
+      for (this.version = 1; this.version < 40; this.version++) {
         const [buffer, , maxDataCount]: prepareData = QRCode.prepareData(this.version, errorCorrectLevel, dataList);
 
         if (buffer.getLengthInBits() <= maxDataCount) break;
