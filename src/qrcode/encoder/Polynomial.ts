@@ -52,21 +52,6 @@ export default class Polynomial {
     return buffer;
   }
 
-  public toLogString(): string {
-    let buffer: string = '';
-    const length: number = this.getLength();
-
-    for (let i: number = 0; i < length; i++) {
-      if (i > 0) {
-        buffer += ',';
-      }
-
-      buffer += QRMath.glog(this.getAt(i));
-    }
-
-    return buffer;
-  }
-
   public multiply(e: Polynomial): Polynomial {
     const num: number[] = [];
     const eLength: number = e.getLength();
