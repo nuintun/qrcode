@@ -101,29 +101,6 @@ export default class QRCode {
       }
     }
 
-    // initialize modules
-    this.modules = [];
-    this.moduleCount = this.version * 4 + 17;
-
-    for (let i: number = 0; i < this.moduleCount; i++) {
-      this.modules.push([]);
-
-      for (let j: number = 0; j < this.moduleCount; j++) {
-        this.modules[i].push(null);
-      }
-    }
-
-    // setupPositionProbePattern
-    this.setupPositionProbePattern(0, 0);
-    this.setupPositionProbePattern(this.moduleCount - 7, 0);
-    this.setupPositionProbePattern(0, this.moduleCount - 7);
-
-    // setupPositionAdjustPattern
-    this.setupPositionAdjustPattern();
-
-    // setupTimingPattern
-    this.setupTimingPattern();
-
     // createData
     const data: number[] = QRCode.createData(this.version, this.errorCorrectLevel, this.dataList);
 
@@ -149,11 +126,36 @@ export default class QRCode {
   }
 
   private makeImpl(test: boolean, data: number[], maskPattern: number): void {
-    this.setupVersionInfo(test, maskPattern);
+    // initialize modules
+    this.modules = [];
+    this.moduleCount = this.version * 4 + 17;
 
+    for (let i: number = 0; i < this.moduleCount; i++) {
+      this.modules.push([]);
+
+      for (let j: number = 0; j < this.moduleCount; j++) {
+        this.modules[i].push(null);
+      }
+    }
+
+    // setupPositionProbePattern
+    this.setupPositionProbePattern(0, 0);
+    this.setupPositionProbePattern(this.moduleCount - 7, 0);
+    this.setupPositionProbePattern(0, this.moduleCount - 7);
+
+    // setupPositionAdjustPattern
+    this.setupPositionAdjustPattern();
+
+    // setupTimingPattern
+    this.setupTimingPattern();
+
+    // setupVersion
     if (this.version >= 7) {
       this.setupVersion(test);
     }
+
+    // setupVersionInfo
+    this.setupVersionInfo(test, maskPattern);
 
     this.mapData(data, maskPattern);
   }
