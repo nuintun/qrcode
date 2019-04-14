@@ -4,7 +4,6 @@
  * @author Kazuhiko Arase
  */
 
-export { default as Mode } from './qrcode/encoder/Mode';
 export { default as Encoder } from './qrcode/encoder/QRCode';
 export { default as QRKanji } from './qrcode/encoder/QRKanji';
 export { default as QRNumber } from './qrcode/encoder/QRNumber';
