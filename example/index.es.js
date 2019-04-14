@@ -1,4 +1,4 @@
-import { Encoder, QRKanji, QR8BitByte, ErrorCorrectLevel } from '../esnext';
+import { Encoder, ErrorCorrectLevel } from '../esnext';
 
 var image = new Image();
 var data = document.getElementById('data');
@@ -18,9 +18,6 @@ function create() {
       var qrcode = new Encoder();
 
       qrcode.addData(data.value + '\n');
-      qrcode.addData('世界你好！\n');
-      qrcode.addData(new QR8BitByte('hello world !\n'));
-      qrcode.addData(new QRKanji('こんにちは世界！'));
       qrcode.setErrorCorrectLevel(ErrorCorrectLevel.L);
       qrcode.make();
 
