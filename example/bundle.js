@@ -1892,7 +1892,7 @@
           var qrcode = new QRCode();
 
           qrcode.addData(data.value + '\n');
-          qrcode.setErrorCorrectLevel(ErrorCorrectLevel$1.L);
+          qrcode.setErrorCorrectLevel(ErrorCorrectLevel$1.M);
           qrcode.make();
 
           console.timeEnd('QRCode');

@@ -18,7 +18,7 @@ function create() {
       var qrcode = new Encoder();
 
       qrcode.addData(data.value + '\n');
-      qrcode.setErrorCorrectLevel(ErrorCorrectLevel.L);
+      qrcode.setErrorCorrectLevel(ErrorCorrectLevel.M);
       qrcode.make();
 
       console.timeEnd('QRCode');
