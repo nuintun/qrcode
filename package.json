@@ -22,6 +22,7 @@
     "url": "https://github.com/nuintun/qrcode/issues"
   },
   "scripts": {
+    "rollup": "rollup -c",
     "prepublishOnly": "npm run build",
     "build": "npm run build:es5 && npm run build:es6",
     "build:es5": "tsc --pretty --module commonjs --outDir es5",
@@ -31,7 +32,9 @@
     "tslib": "^1.9.3"
   },
   "devDependencies": {
-    "typescript": "^3.4.3"
+    "rollup": "^1.10.0",
+    "typescript": "^3.4.3",
+    "rollup-plugin-node-resolve": "^4.2.3"
   },
   "homepage": "https://github.com/nuintun/qrcode#readme"
 }
