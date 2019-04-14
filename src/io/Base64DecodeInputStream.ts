@@ -51,7 +51,7 @@ export default class Base64DecodeInputStream extends InputStream {
 
   private static isWhitespace(ch: number): boolean {
     // \v \t \r \n
-    return ch == 0x0b || ch == 0x09 || ch == 0x0d || ch == 0x0a;
+    return ch === 0x0b || ch === 0x09 || ch === 0x0d || ch === 0x0a;
   }
 
   private static decode(ch: number): number {
