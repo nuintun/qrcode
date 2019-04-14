@@ -52,7 +52,7 @@ function createUnicodeMap(unicodeData: string, numChars: number): unicodeMap {
   }
 
   if (count !== numChars) {
-    throw `${count} != ${numChars}`;
+    throw `expect ${numChars} unicode map, but got ${count}`;
   }
 
   return unicodeMap;

@@ -1748,7 +1748,7 @@
             count++;
         }
         if (count !== numChars) {
-            throw count + " != " + numChars;
+            throw "expect " + numChars + " unicode map, but got " + count;
         }
         return unicodeMap;
     }
