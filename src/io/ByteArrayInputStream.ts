@@ -18,9 +18,7 @@ export default class ByteArrayInputStream extends InputStream {
 
   public readByte(): number {
     if (this.pos < this.bytes.length) {
-      const byte: number = this.bytes[this.pos];
-
-      this.pos += 1;
+      const byte: number = this.bytes[this.pos++];
 
       return byte;
     }

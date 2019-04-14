@@ -189,7 +189,7 @@ export function getLostPoint(qrcode: QRCode): number {
   for (let col: number = 0; col < moduleCount; col++) {
     for (let row: number = 0; row < moduleCount; row++) {
       if (qrcode.isDark(row, col)) {
-        darkCount += 1;
+        darkCount++;
       }
     }
   }
@@ -205,7 +205,7 @@ function getBCHDigit(data: number): number {
   let digit = 0;
 
   while (data !== 0) {
-    digit += 1;
+    digit++;
     data >>>= 1;
   }
 

@@ -191,7 +191,7 @@ export default class QRCode {
             bitIndex -= 1;
 
             if (bitIndex === -1) {
-              byteIndex += 1;
+              byteIndex++;
               bitIndex = 7;
             }
           }
@@ -433,8 +433,7 @@ export default class QRCode {
     for (let i: number = 0; i < maxDcCount; i++) {
       for (let r: number = 0; r < rLength; r++) {
         if (i < dcdata[r].length) {
-          data[index] = dcdata[r][i];
-          index += 1;
+          data[index++] = dcdata[r][i];
         }
       }
     }
@@ -442,8 +441,7 @@ export default class QRCode {
     for (let i: number = 0; i < maxEcCount; i++) {
       for (let r: number = 0; r < rLength; r++) {
         if (i < ecdata[r].length) {
-          data[index] = ecdata[r][i];
-          index += 1;
+          data[index++] = ecdata[r][i];
         }
       }
     }

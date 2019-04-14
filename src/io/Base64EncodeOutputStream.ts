@@ -22,7 +22,7 @@ export default class Base64EncodeOutputStream extends OutputStream {
   public writeByte(byte: number): void {
     this.buffer = (this.buffer << 8) | (byte & 0xff);
     this.bufLength += 8;
-    this.length += 1;
+    this.length++;
 
     while (this.bufLength >= 6) {
       this.writeEncoded(this.buffer >>> (this.bufLength - 6));

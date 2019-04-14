@@ -49,7 +49,7 @@ function createUnicodeMap(unicodeData: string, numChars: number): unicodeMap {
     const v: number = (b2 << 8) | b3;
 
     unicodeMap[k] = v;
-    count += 1;
+    count++;
   }
 
   if (count !== numChars) {

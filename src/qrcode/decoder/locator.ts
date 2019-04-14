@@ -422,8 +422,8 @@ export function locate(matrix: BitMatrix): QRLocation {
         return;
       }
 
-      const lengths = [q.top.endX - q.top.startX, q.bottom.endX - q.bottom.startX, q.bottom.y - q.top.y + 1];
-      const size = sum(lengths) / lengths.length;
+      // const lengths = [q.top.endX - q.top.startX, q.bottom.endX - q.bottom.startX, q.bottom.y - q.top.y + 1];
+      // const size = sum(lengths) / lengths.length;
       const sizeScore = scorePattern({ x: Math.floor(x), y: Math.floor(y) }, [1, 1, 1], matrix);
       const score = sizeScore + distance({ x, y }, expectedAlignmentPattern);
       return { x, y, score };

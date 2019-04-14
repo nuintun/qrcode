@@ -15,8 +15,7 @@ class LZWTable {
 
   public add(key: string): void {
     if (!this.contains(key)) {
-      this.map[key] = this.size;
-      this.size += 1;
+      this.map[key] = this.size++;
     }
   }
 
@@ -198,14 +197,10 @@ export default class GIFImage {
       bitOutput.write(clearCode, bitLength);
 
       let dataIndex: number = 0;
-      let s: string = String.fromCharCode(this.data[dataIndex]);
-
-      dataIndex += 1;
+      let s: string = String.fromCharCode(this.data[dataIndex++]);
 
       while (dataIndex < this.data.length) {
-        const c: string = String.fromCharCode(this.data[dataIndex]);
-
-        dataIndex += 1;
+        const c: string = String.fromCharCode(this.data[dataIndex++]);
 
         if (table.contains(s + c)) {
           s = s + c;
@@ -214,7 +209,7 @@ export default class GIFImage {
 
           if (table.getSize() < 0xfff) {
             if (table.getSize() === 1 << bitLength) {
-              bitLength += 1;
+              bitLength++;
             }
 
             table.add(s + c);
