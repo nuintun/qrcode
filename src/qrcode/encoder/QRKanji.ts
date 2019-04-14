@@ -10,8 +10,8 @@ import QRData from './QRData';
 import BitBuffer from './BitBuffer';
 import stringToBytes from '../../encoding/SJIS';
 
-function createCharError(index: number) {
-  return `illegal char at ${index + 1}`;
+function createCharError(index: number, data: number[]) {
+  return `illegal char: ${String.fromCharCode(data[index])}`;
 }
 
 export default class QRKanji extends QRData {
@@ -20,30 +20,30 @@ export default class QRKanji extends QRData {
   }
 
   public write(buffer: BitBuffer): void {
-    let i: number = 0;
+    let index: number = 0;
     const data: number[] = stringToBytes(this.getData());
     const length: number = data.length;
 
-    while (i + 1 < length) {
-      let c: number = ((0xff & data[i]) << 8) | (0xff & data[i + 1]);
+    while (index + 1 < length) {
+      let code: number = ((0xff & data[index]) << 8) | (0xff & data[index + 1]);
 
-      if (0x8140 <= c && c <= 0x9ffc) {
-        c -= 0x8140;
-      } else if (0xe040 <= c && c <= 0xebbf) {
-        c -= 0xc140;
+      if (0x8140 <= code && code <= 0x9ffc) {
+        code -= 0x8140;
+      } else if (0xe040 <= code && code <= 0xebbf) {
+        code -= 0xc140;
       } else {
-        throw `${createCharError(i)} / ${c}`;
+        throw createCharError(index, data);
       }
 
-      c = ((c >>> 8) & 0xff) * 0xc0 + (c & 0xff);
+      code = ((code >>> 8) & 0xff) * 0xc0 + (code & 0xff);
 
-      buffer.put(c, 13);
+      buffer.put(code, 13);
 
-      i += 2;
+      index += 2;
     }
 
-    if (i < data.length) {
-      throw createCharError(i);
+    if (index < data.length) {
+      throw createCharError(index, data);
     }
   }
 
