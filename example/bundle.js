@@ -1889,9 +1889,6 @@
           var qrcode = new QRCode();
 
           qrcode.addData(data.value + '\n');
-          qrcode.addData('世界你好！\n');
-          qrcode.addData(new QR8BitByte('hello world !\n'));
-          qrcode.addData(new QRKanji('こんにちは世界！'));
           qrcode.setErrorCorrectLevel(ErrorCorrectLevel$1.L);
           qrcode.make();
 
