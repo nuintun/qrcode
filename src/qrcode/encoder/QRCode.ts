@@ -449,9 +449,9 @@ export default class QRCode {
     return data;
   }
 
-  public toDataURL(cellSize: number = 2, margin: number = cellSize * 4): string {
+  public toDataURL(moduleSize: number = 2, margin: number = moduleSize * 4): string {
     const mods: number = this.getModuleCount();
-    const size: number = cellSize * mods + margin * 2;
+    const size: number = moduleSize * mods + margin * 2;
     const gif: GIFImage = new GIFImage(size, size);
 
     for (let y: number = 0; y < size; y++) {
@@ -461,7 +461,7 @@ export default class QRCode {
           x < size - margin &&
           margin <= y &&
           y < size - margin &&
-          this.isDark(~~((y - margin) / cellSize), ~~((x - margin) / cellSize))
+          this.isDark(~~((y - margin) / moduleSize), ~~((x - margin) / moduleSize))
         ) {
           gif.setPixel(x, y, 0);
         } else {

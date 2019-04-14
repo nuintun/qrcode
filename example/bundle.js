@@ -1607,11 +1607,11 @@
             }
             return data;
         };
-        QRCode.prototype.toDataURL = function (cellSize, margin) {
-            if (cellSize === void 0) { cellSize = 2; }
-            if (margin === void 0) { margin = cellSize * 4; }
+        QRCode.prototype.toDataURL = function (moduleSize, margin) {
+            if (moduleSize === void 0) { moduleSize = 2; }
+            if (margin === void 0) { margin = moduleSize * 4; }
             var mods = this.getModuleCount();
-            var size = cellSize * mods + margin * 2;
+            var size = moduleSize * mods + margin * 2;
             var gif = new GIFImage(size, size);
             for (var y = 0; y < size; y++) {
                 for (var x = 0; x < size; x++) {
@@ -1619,7 +1619,7 @@
                         x < size - margin &&
                         margin <= y &&
                         y < size - margin &&
-                        this.isDark(~~((y - margin) / cellSize), ~~((x - margin) / cellSize))) {
+                        this.isDark(~~((y - margin) / moduleSize), ~~((x - margin) / moduleSize))) {
                         gif.setPixel(x, y, 0);
                     }
                     else {
