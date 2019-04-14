@@ -72,21 +72,21 @@ function createStringToBytes(unicodeData: string, numChars: number): (str: strin
     const length: number = str.length;
 
     for (let i: number = 0; i < length; i++) {
-      const c: number = str.charCodeAt(i);
+      const code: number = str.charCodeAt(i);
 
-      if (c < 128) {
-        bytes.push(c);
+      if (code < 128) {
+        bytes.push(code);
       } else {
-        const b: number = unicodeMap[str.charAt(i)];
+        const byte: number = unicodeMap[str.charAt(i)];
 
-        if (toString.call(b) === '[object Number]') {
-          if ((b & 0xff) === b) {
+        if (toString.call(byte) === '[object Number]') {
+          if ((byte & 0xff) === byte) {
             // 1byte
-            bytes.push(b);
+            bytes.push(byte);
           } else {
             // 2bytes
-            bytes.push(b >>> 8);
-            bytes.push(b & 0xff);
+            bytes.push(byte >>> 8);
+            bytes.push(byte & 0xff);
           }
         } else {
           // ?

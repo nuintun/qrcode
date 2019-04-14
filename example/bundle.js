@@ -668,18 +668,18 @@
         return digit;
     }
     function getBCHVersion(data) {
-        var d = data << 12;
-        while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
-            d ^= G18 << (getBCHDigit(d) - getBCHDigit(G18));
+        var offset = data << 12;
+        while (getBCHDigit(offset) - getBCHDigit(G18) >= 0) {
+            offset ^= G18 << (getBCHDigit(offset) - getBCHDigit(G18));
         }
-        return (data << 12) | d;
+        return (data << 12) | offset;
     }
     function getBCHVersionInfo(data) {
-        var d = data << 10;
-        while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
-            d ^= G15 << (getBCHDigit(d) - getBCHDigit(G15));
+        var offset = data << 10;
+        while (getBCHDigit(offset) - getBCHDigit(G15) >= 0) {
+            offset ^= G15 << (getBCHDigit(offset) - getBCHDigit(G15));
         }
-        return ((data << 10) | d) ^ G15_MASK;
+        return ((data << 10) | offset) ^ G15_MASK;
     }
 
     /**
@@ -1687,21 +1687,21 @@
             var bytes = [];
             var length = str.length;
             for (var i = 0; i < length; i++) {
-                var c = str.charCodeAt(i);
-                if (c < 128) {
-                    bytes.push(c);
+                var code = str.charCodeAt(i);
+                if (code < 128) {
+                    bytes.push(code);
                 }
                 else {
-                    var b = unicodeMap[str.charAt(i)];
-                    if (toString$1.call(b) === '[object Number]') {
-                        if ((b & 0xff) === b) {
+                    var byte = unicodeMap[str.charAt(i)];
+                    if (toString$1.call(byte) === '[object Number]') {
+                        if ((byte & 0xff) === byte) {
                             // 1byte
-                            bytes.push(b);
+                            bytes.push(byte);
                         }
                         else {
                             // 2bytes
-                            bytes.push(b >>> 8);
-                            bytes.push(b & 0xff);
+                            bytes.push(byte >>> 8);
+                            bytes.push(byte & 0xff);
                         }
                     }
                     else {

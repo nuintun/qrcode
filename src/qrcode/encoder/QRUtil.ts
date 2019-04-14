@@ -213,21 +213,21 @@ function getBCHDigit(data: number): number {
 }
 
 export function getBCHVersion(data: number): number {
-  let d: number = data << 12;
+  let offset: number = data << 12;
 
-  while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
-    d ^= G18 << (getBCHDigit(d) - getBCHDigit(G18));
+  while (getBCHDigit(offset) - getBCHDigit(G18) >= 0) {
+    offset ^= G18 << (getBCHDigit(offset) - getBCHDigit(G18));
   }
 
-  return (data << 12) | d;
+  return (data << 12) | offset;
 }
 
 export function getBCHVersionInfo(data: number): number {
-  let d: number = data << 10;
+  let offset: number = data << 10;
 
-  while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
-    d ^= G15 << (getBCHDigit(d) - getBCHDigit(G15));
+  while (getBCHDigit(offset) - getBCHDigit(G15) >= 0) {
+    offset ^= G15 << (getBCHDigit(offset) - getBCHDigit(G15));
   }
 
-  return ((data << 10) | d) ^ G15_MASK;
+  return ((data << 10) | offset) ^ G15_MASK;
 }
