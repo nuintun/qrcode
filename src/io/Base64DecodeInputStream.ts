@@ -4,7 +4,6 @@
  * @author Kazuhiko Arase
  */
 
-import * as ASCII from './ASCII';
 import InputStream from './InputStream';
 
 export default class Base64DecodeInputStream extends InputStream {
@@ -30,7 +29,7 @@ export default class Base64DecodeInputStream extends InputStream {
         }
 
         throw `unexpected end of stream`;
-      } else if (byte === ASCII.EQ) {
+      } else if (byte === 0x3d) {
         this.bufLength = 0;
 
         return -1;
@@ -51,19 +50,25 @@ export default class Base64DecodeInputStream extends InputStream {
   }
 
   private static isWhitespace(ch: number): boolean {
-    return ch == ASCII.VT || ch == ASCII.HT || ch == ASCII.CR || ch == ASCII.LF;
+    // \v \t \r \n
+    return ch == 0x0b || ch == 0x09 || ch == 0x0d || ch == 0x0a;
   }
 
   private static decode(ch: number): number {
-    if (ASCII.A <= ch && ch <= ASCII.Z) {
-      return ch - ASCII.A;
-    } else if (ASCII.a <= ch && ch <= ASCII.z) {
-      return ch - ASCII.a + 26;
-    } else if (ASCII.ZERO <= ch && ch <= ASCII.NINE) {
-      return ch - ASCII.ZERO + 52;
-    } else if (ch === ASCII.ADD) {
+    if (0x41 <= ch && ch <= 0x5a) {
+      // A - Z
+      return ch - 0x41;
+    } else if (0x61 <= ch && ch <= 0x7a) {
+      // a - z
+      return ch - 0x61 + 26;
+    } else if (0x30 <= ch && ch <= 0x39) {
+      // 0 - 9
+      return ch - 0x30 + 52;
+    } else if (ch === 0x2b) {
+      // +
       return 62;
-    } else if (ch === ASCII.DIV) {
+    } else if (ch === 0x2f) {
+      // /
       return 63;
     } else {
       throw `illegal char: ${ch}`;

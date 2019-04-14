@@ -4,7 +4,6 @@
  * @author Kazuhiko Arase
  */
 
-import * as ASCII from '../io/ASCII';
 import * as Base64 from '../io/Base64';
 import OutputStream from '../io/OutputStream';
 import ByteArrayOutputStream from '../io/ByteArrayOutputStream';
@@ -110,12 +109,12 @@ export default class GIFImage {
 
   public write(output: OutputStream): void {
     // GIF Signature
-    output.writeByte(ASCII.G);
-    output.writeByte(ASCII.I);
-    output.writeByte(ASCII.F);
-    output.writeByte(ASCII.EIGHT);
-    output.writeByte(ASCII.SEVEN);
-    output.writeByte(ASCII.a);
+    output.writeByte(0x47); // G
+    output.writeByte(0x49); // I
+    output.writeByte(0x46); // F
+    output.writeByte(0x38); // 8
+    output.writeByte(0x37); // 7
+    output.writeByte(0x61); // a
 
     // Screen Descriptor
     this.writeWord(output, this.width);
@@ -137,7 +136,7 @@ export default class GIFImage {
     output.writeByte(0xff);
 
     // Image Descriptor
-    output.writeByte(ASCII.COMMA);
+    output.writeByte(0x2c); // ,
 
     this.writeWord(output, 0);
     this.writeWord(output, 0);
@@ -170,7 +169,7 @@ export default class GIFImage {
     output.writeByte(0x00);
 
     // GIF Terminator
-    output.writeByte(ASCII.SEMI);
+    output.writeByte(0x3b); // ;
   }
 
   private getLZWRaster(lzwMinCodeSize: number): number[] {

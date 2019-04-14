@@ -4,7 +4,6 @@
  * @author Kazuhiko Arase
  */
 
-import * as ASCII from './ASCII';
 import OutputStream from './OutputStream';
 
 export default class Base64EncodeOutputStream extends OutputStream {
@@ -47,7 +46,8 @@ export default class Base64EncodeOutputStream extends OutputStream {
       const pad: number = 3 - (this.length % 3);
 
       for (let i: number = 0; i < pad; i++) {
-        this.stream.writeByte(ASCII.EQ);
+        // =
+        this.stream.writeByte(0x3d);
       }
     }
   }
@@ -59,15 +59,20 @@ export default class Base64EncodeOutputStream extends OutputStream {
   private static encode(ch: number): number {
     if (ch >= 0) {
       if (ch < 26) {
-        return ASCII.A + ch;
+        // A
+        return 0x41 + ch;
       } else if (ch < 52) {
-        return ASCII.a + (ch - 26);
+        // a
+        return 0x61 + (ch - 26);
       } else if (ch < 62) {
-        return ASCII.ZERO + (ch - 52);
+        // 0
+        return 0x30 + (ch - 52);
       } else if (ch === 62) {
-        return ASCII.ADD;
+        // +
+        return 0x2b;
       } else if (ch === 63) {
-        return ASCII.DIV;
+        // /
+        return 0x2f;
       }
     }
 

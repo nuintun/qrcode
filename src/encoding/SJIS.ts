@@ -4,7 +4,6 @@
  * @author Kazuhiko Arase
  */
 
-import * as ASCII from '../io/ASCII';
 import ByteArrayInputStream from '../io/ByteArrayInputStream';
 import Base64DecodeInputStream from '../io/Base64DecodeInputStream';
 
@@ -90,7 +89,8 @@ function createStringToBytes(unicodeData: string, numChars: number): (str: strin
             bytes.push(b & 0xff);
           }
         } else {
-          bytes.push(ASCII.QUES);
+          // ?
+          bytes.push(0x3f);
         }
       }
     }
