@@ -95,6 +95,10 @@
      * @author nuintun
      * @author Kazuhiko Arase
      */
+    /**
+     * @readonly
+     * @enum {L, M, Q, H}
+     */
     var ErrorCorrectLevel;
     (function (ErrorCorrectLevel) {
         // 7%
@@ -800,9 +804,18 @@
      */
     var QR8BitByte = /** @class */ (function (_super) {
         __extends(QR8BitByte, _super);
+        /**
+         * @constructor
+         * @param {string} data
+         */
         function QR8BitByte(data) {
             return _super.call(this, Mode$1.Byte, data) || this;
         }
+        /**
+         * @public
+         * @method write
+         * @param {BitBuffer} buffer
+         */
         QR8BitByte.prototype.write = function (buffer) {
             var data = UTF8(this.getData());
             var length = data.length;
@@ -810,6 +823,11 @@
                 buffer.put(data[i], 8);
             }
         };
+        /**
+         * @public
+         * @method getLength
+         * @returns {number}
+         */
         QR8BitByte.prototype.getLength = function () {
             return UTF8(this.getData()).length;
         };
@@ -1283,21 +1301,65 @@
             this.dataList = [];
             this.errorCorrectLevel = ErrorCorrectLevel$1.L;
         }
+        /**
+         * @public
+         * @method getModuleCount
+         */
+        QRCode.prototype.getModuleCount = function () {
+            return this.moduleCount;
+        };
+        /**
+         * @public
+         * @method getModules
+         * @returns {boolean[][]}
+         */
+        QRCode.prototype.getModules = function () {
+            return this.modules;
+        };
+        /**
+         * @public
+         * @method getVersion
+         * @returns {number}
+         */
         QRCode.prototype.getVersion = function () {
             return this.version;
         };
+        /**
+         * @public
+         * @method setVersion
+         * @param {number} version
+         */
         QRCode.prototype.setVersion = function (version) {
             this.version = version;
         };
+        /**
+         * @public
+         * @method getErrorCorrectLevel
+         * @returns {ErrorCorrectLevel}
+         */
         QRCode.prototype.getErrorCorrectLevel = function () {
             return this.errorCorrectLevel;
         };
+        /**
+         * @public
+         * @method setErrorCorrectLevel
+         * @param {ErrorCorrectLevel} errorCorrectLevel
+         */
         QRCode.prototype.setErrorCorrectLevel = function (errorCorrectLevel) {
             this.errorCorrectLevel = errorCorrectLevel;
         };
+        /**
+         * @public
+         * @method clearData
+         */
         QRCode.prototype.clearData = function () {
             this.dataList = [];
         };
+        /**
+         * @public
+         * @method addData
+         * @param {QRData} data
+         */
         QRCode.prototype.addData = function (data) {
             if (data instanceof QRData) {
                 this.dataList.push(data);
@@ -1312,6 +1374,13 @@
                 }
             }
         };
+        /**
+         * @public
+         * @method isDark
+         * @param {number} row
+         * @param {number} col
+         * @returns {boolean}
+         */
         QRCode.prototype.isDark = function (row, col) {
             if (this.modules[row][col] !== null) {
                 return this.modules[row][col];
@@ -1320,9 +1389,10 @@
                 return false;
             }
         };
-        QRCode.prototype.getModuleCount = function () {
-            return this.moduleCount;
-        };
+        /**
+         * @public
+         * @method make
+         */
         QRCode.prototype.make = function () {
             if (this.version === 0) {
                 var dataList = this.dataList;
@@ -1528,32 +1598,6 @@
             maxDataCount *= 8;
             return [buffer, rsBlocks, maxDataCount];
         };
-        QRCode.createData = function (version, errorCorrectLevel, dataList) {
-            var _a = QRCode.prepareData(version, errorCorrectLevel, dataList), buffer = _a[0], rsBlocks = _a[1], maxDataCount = _a[2];
-            if (buffer.getLengthInBits() > maxDataCount) {
-                throw "data overflow: " + buffer.getLengthInBits() + " > " + maxDataCount;
-            }
-            // end
-            if (buffer.getLengthInBits() + 4 <= maxDataCount) {
-                buffer.put(0, 4);
-            }
-            // padding
-            while (buffer.getLengthInBits() % 8 !== 0) {
-                buffer.putBit(false);
-            }
-            // padding
-            while (true) {
-                if (buffer.getLengthInBits() >= maxDataCount) {
-                    break;
-                }
-                buffer.put(QRCode.PAD0, 8);
-                if (buffer.getLengthInBits() >= maxDataCount) {
-                    break;
-                }
-                buffer.put(QRCode.PAD1, 8);
-            }
-            return QRCode.createBytes(buffer, rsBlocks);
-        };
         QRCode.createBytes = function (buffer, rsBlocks) {
             var offset = 0;
             var maxDcCount = 0;
@@ -1607,10 +1651,43 @@
             }
             return data;
         };
+        QRCode.createData = function (version, errorCorrectLevel, dataList) {
+            var _a = QRCode.prepareData(version, errorCorrectLevel, dataList), buffer = _a[0], rsBlocks = _a[1], maxDataCount = _a[2];
+            if (buffer.getLengthInBits() > maxDataCount) {
+                throw "data overflow: " + buffer.getLengthInBits() + " > " + maxDataCount;
+            }
+            // end
+            if (buffer.getLengthInBits() + 4 <= maxDataCount) {
+                buffer.put(0, 4);
+            }
+            // padding
+            while (buffer.getLengthInBits() % 8 !== 0) {
+                buffer.putBit(false);
+            }
+            // padding
+            while (true) {
+                if (buffer.getLengthInBits() >= maxDataCount) {
+                    break;
+                }
+                buffer.put(QRCode.PAD0, 8);
+                if (buffer.getLengthInBits() >= maxDataCount) {
+                    break;
+                }
+                buffer.put(QRCode.PAD1, 8);
+            }
+            return QRCode.createBytes(buffer, rsBlocks);
+        };
+        /**
+         * @public
+         * @method toDataURL
+         * @param {number} moduleSize
+         * @param {number} margin
+         * @returns {string}
+         */
         QRCode.prototype.toDataURL = function (moduleSize, margin) {
             if (moduleSize === void 0) { moduleSize = 2; }
             if (margin === void 0) { margin = moduleSize * 4; }
-            var mods = this.getModuleCount();
+            var mods = this.moduleCount;
             var size = moduleSize * mods + margin * 2;
             var gif = new GIFImage(size, size);
             for (var y = 0; y < size; y++) {
@@ -1726,9 +1803,18 @@
     }
     var QRKanji = /** @class */ (function (_super) {
         __extends(QRKanji, _super);
+        /**
+         * @constructor
+         * @param {string} data
+         */
         function QRKanji(data) {
             return _super.call(this, Mode$1.Kanji, data) || this;
         }
+        /**
+         * @public
+         * @method write
+         * @param {BitBuffer} buffer
+         */
         QRKanji.prototype.write = function (buffer) {
             var index = 0;
             var data = stringToBytes(this.getData());
@@ -1752,6 +1838,11 @@
                 throw createCharError(index, data);
             }
         };
+        /**
+         * @public
+         * @method getLength
+         * @returns {number}
+         */
         QRKanji.prototype.getLength = function () {
             return stringToBytes(this.getData()).length / 2;
         };
@@ -1765,9 +1856,18 @@
      */
     var QRNumber = /** @class */ (function (_super) {
         __extends(QRNumber, _super);
+        /**
+         * @constructor
+         * @param {string} data
+         */
         function QRNumber(data) {
             return _super.call(this, Mode$1.Numeric, data) || this;
         }
+        /**
+         * @public
+         * @method write
+         * @param {BitBuffer} buffer
+         */
         QRNumber.prototype.write = function (buffer) {
             var i = 0;
             var data = this.getData();
@@ -1785,6 +1885,11 @@
                 }
             }
         };
+        /**
+         * @public
+         * @method getLength
+         * @returns {number}
+         */
         QRNumber.prototype.getLength = function () {
             return this.getData().length;
         };
@@ -1813,9 +1918,18 @@
      */
     var QRAlphanumeric = /** @class */ (function (_super) {
         __extends(QRAlphanumeric, _super);
+        /**
+         * @constructor
+         * @param {string} data
+         */
         function QRAlphanumeric(data) {
             return _super.call(this, Mode$1.Alphanumeric, data) || this;
         }
+        /**
+         * @public
+         * @method write
+         * @param {BitBuffer} buffer
+         */
         QRAlphanumeric.prototype.write = function (buffer) {
             var i = 0;
             var data = this.getData();
@@ -1828,6 +1942,11 @@
                 buffer.put(QRAlphanumeric.getCode(data.charAt(i)), 6);
             }
         };
+        /**
+         * @public
+         * @method getLength
+         * @returns {number}
+         */
         QRAlphanumeric.prototype.getLength = function () {
             return this.getData().length;
         };
