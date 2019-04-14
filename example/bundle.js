@@ -776,7 +776,7 @@
                 output[pos++] = (code >> 6) | 192;
                 output[pos++] = (code & 63) | 128;
             }
-            else if ((code & 0xfc00) == 0xd800 && i + 1 < str.length && (str.charCodeAt(i + 1) & 0xfc00) == 0xdc00) {
+            else if ((code & 0xfc00) === 0xd800 && i + 1 < str.length && (str.charCodeAt(i + 1) & 0xfc00) === 0xdc00) {
                 // Surrogate Pair
                 code = 0x10000 + ((code & 0x03ff) << 10) + (str.charCodeAt(++i) & 0x03ff);
                 output[pos++] = (code >> 18) | 240;
@@ -1798,7 +1798,7 @@
         };
         QRNumber.charToNum = function (ch) {
             if ('0' <= ch && ch <= '9') {
-                return ch.charCodeAt(0) - '0'.charCodeAt(0);
+                return ch.charCodeAt(0) - 0x30;
             }
             throw "illegal char: " + ch;
         };

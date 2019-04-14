@@ -20,7 +20,7 @@ export default function UTF8(str: string): number[] {
     } else if (code < 2048) {
       output[pos++] = (code >> 6) | 192;
       output[pos++] = (code & 63) | 128;
-    } else if ((code & 0xfc00) == 0xd800 && i + 1 < str.length && (str.charCodeAt(i + 1) & 0xfc00) == 0xdc00) {
+    } else if ((code & 0xfc00) === 0xd800 && i + 1 < str.length && (str.charCodeAt(i + 1) & 0xfc00) === 0xdc00) {
       // Surrogate Pair
       code = 0x10000 + ((code & 0x03ff) << 10) + (str.charCodeAt(++i) & 0x03ff);
 
