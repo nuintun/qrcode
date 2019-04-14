@@ -76,6 +76,6 @@ export default class Base64EncodeOutputStream extends OutputStream {
       }
     }
 
-    throw 'illegal char:' + ch;
+    throw `illegal char: ${String.fromCharCode(ch)}`;
   }
 }

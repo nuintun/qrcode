@@ -71,7 +71,7 @@ export default class Base64DecodeInputStream extends InputStream {
       // /
       return 63;
     } else {
-      throw `illegal char: ${ch}`;
+      throw `illegal char: ${String.fromCharCode(ch)}`;
     }
   }
 
