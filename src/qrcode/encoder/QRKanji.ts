@@ -15,10 +15,19 @@ function createCharError(index: number, data: number[]) {
 }
 
 export default class QRKanji extends QRData {
+  /**
+   * @constructor
+   * @param {string} data
+   */
   constructor(data: string) {
     super(Mode.Kanji, data);
   }
 
+  /**
+   * @public
+   * @method write
+   * @param {BitBuffer} buffer
+   */
   public write(buffer: BitBuffer): void {
     let index: number = 0;
     const data: number[] = stringToBytes(this.getData());
@@ -47,6 +56,11 @@ export default class QRKanji extends QRData {
     }
   }
 
+  /**
+   * @public
+   * @method getLength
+   * @returns {number}
+   */
   public getLength(): number {
     return stringToBytes(this.getData()).length / 2;
   }

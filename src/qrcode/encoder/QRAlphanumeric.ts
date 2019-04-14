@@ -9,10 +9,19 @@ import QRData from './QRData';
 import BitBuffer from './BitBuffer';
 
 export default class QRAlphanumeric extends QRData {
+  /**
+   * @constructor
+   * @param {string} data
+   */
   constructor(data: string) {
     super(Mode.Alphanumeric, data);
   }
 
+  /**
+   * @public
+   * @method write
+   * @param {BitBuffer} buffer
+   */
   public write(buffer: BitBuffer): void {
     let i: number = 0;
     const data: string = this.getData();
@@ -29,6 +38,11 @@ export default class QRAlphanumeric extends QRData {
     }
   }
 
+  /**
+   * @public
+   * @method getLength
+   * @returns {number}
+   */
   public getLength(): number {
     return this.getData().length;
   }

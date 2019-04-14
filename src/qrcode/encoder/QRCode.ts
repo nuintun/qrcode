@@ -43,26 +43,72 @@ export default class QRCode {
     this.errorCorrectLevel = ErrorCorrectLevel.L;
   }
 
+  /**
+   * @public
+   * @method getModuleCount
+   */
+  public getModuleCount(): number {
+    return this.moduleCount;
+  }
+
+  /**
+   * @public
+   * @method getModules
+   * @returns {boolean[][]}
+   */
+  public getModules(): boolean[][] {
+    return this.modules;
+  }
+
+  /**
+   * @public
+   * @method getVersion
+   * @returns {number}
+   */
   public getVersion(): number {
     return this.version;
   }
 
+  /**
+   * @public
+   * @method setVersion
+   * @param {number} version
+   */
   public setVersion(version: number): void {
     this.version = version;
   }
 
+  /**
+   * @public
+   * @method getErrorCorrectLevel
+   * @returns {ErrorCorrectLevel}
+   */
   public getErrorCorrectLevel(): ErrorCorrectLevel {
     return this.errorCorrectLevel;
   }
 
+  /**
+   * @public
+   * @method setErrorCorrectLevel
+   * @param {ErrorCorrectLevel} errorCorrectLevel
+   */
   public setErrorCorrectLevel(errorCorrectLevel: ErrorCorrectLevel) {
     this.errorCorrectLevel = errorCorrectLevel;
   }
 
+  /**
+   * @public
+   * @method clearData
+   */
   public clearData(): void {
     this.dataList = [];
   }
 
+  /**
+   * @public
+   * @method addData
+   * @param {QRData} data
+   */
   public addData(data: QRData | string): void {
     if (data instanceof QRData) {
       this.dataList.push(data);
@@ -77,6 +123,13 @@ export default class QRCode {
     }
   }
 
+  /**
+   * @public
+   * @method isDark
+   * @param {number} row
+   * @param {number} col
+   * @returns {boolean}
+   */
   public isDark(row: number, col: number): boolean {
     if (this.modules[row][col] !== null) {
       return this.modules[row][col];
@@ -85,10 +138,10 @@ export default class QRCode {
     }
   }
 
-  public getModuleCount(): number {
-    return this.moduleCount;
-  }
-
+  /**
+   * @public
+   * @method make
+   */
   public make(): void {
     if (this.version === 0) {
       const dataList = this.dataList;
@@ -344,41 +397,6 @@ export default class QRCode {
     return [buffer, rsBlocks, maxDataCount];
   }
 
-  private static createData(version: number, errorCorrectLevel: ErrorCorrectLevel, dataList: QRData[]): number[] {
-    const [buffer, rsBlocks, maxDataCount]: prepareData = QRCode.prepareData(version, errorCorrectLevel, dataList);
-
-    if (buffer.getLengthInBits() > maxDataCount) {
-      throw `data overflow: ${buffer.getLengthInBits()} > ${maxDataCount}`;
-    }
-
-    // end
-    if (buffer.getLengthInBits() + 4 <= maxDataCount) {
-      buffer.put(0, 4);
-    }
-
-    // padding
-    while (buffer.getLengthInBits() % 8 !== 0) {
-      buffer.putBit(false);
-    }
-
-    // padding
-    while (true) {
-      if (buffer.getLengthInBits() >= maxDataCount) {
-        break;
-      }
-
-      buffer.put(QRCode.PAD0, 8);
-
-      if (buffer.getLengthInBits() >= maxDataCount) {
-        break;
-      }
-
-      buffer.put(QRCode.PAD1, 8);
-    }
-
-    return QRCode.createBytes(buffer, rsBlocks);
-  }
-
   private static createBytes(buffer: BitBuffer, rsBlocks: RSBlock[]): number[] {
     let offset: number = 0;
     let maxDcCount: number = 0;
@@ -449,8 +467,50 @@ export default class QRCode {
     return data;
   }
 
+  private static createData(version: number, errorCorrectLevel: ErrorCorrectLevel, dataList: QRData[]): number[] {
+    const [buffer, rsBlocks, maxDataCount]: prepareData = QRCode.prepareData(version, errorCorrectLevel, dataList);
+
+    if (buffer.getLengthInBits() > maxDataCount) {
+      throw `data overflow: ${buffer.getLengthInBits()} > ${maxDataCount}`;
+    }
+
+    // end
+    if (buffer.getLengthInBits() + 4 <= maxDataCount) {
+      buffer.put(0, 4);
+    }
+
+    // padding
+    while (buffer.getLengthInBits() % 8 !== 0) {
+      buffer.putBit(false);
+    }
+
+    // padding
+    while (true) {
+      if (buffer.getLengthInBits() >= maxDataCount) {
+        break;
+      }
+
+      buffer.put(QRCode.PAD0, 8);
+
+      if (buffer.getLengthInBits() >= maxDataCount) {
+        break;
+      }
+
+      buffer.put(QRCode.PAD1, 8);
+    }
+
+    return QRCode.createBytes(buffer, rsBlocks);
+  }
+
+  /**
+   * @public
+   * @method toDataURL
+   * @param {number} moduleSize
+   * @param {number} margin
+   * @returns {string}
+   */
   public toDataURL(moduleSize: number = 2, margin: number = moduleSize * 4): string {
-    const mods: number = this.getModuleCount();
+    const mods: number = this.moduleCount;
     const size: number = moduleSize * mods + margin * 2;
     const gif: GIFImage = new GIFImage(size, size);
 

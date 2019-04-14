@@ -4,6 +4,10 @@
  * @author Kazuhiko Arase
  */
 
+/**
+ * @readonly
+ * @enum {L, M, Q, H}
+ */
 enum ErrorCorrectLevel {
   // 7%
   L = 1,
