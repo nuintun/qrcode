@@ -50,6 +50,7 @@ export default class QRNumber extends QRData {
 
   private static charToNum(ch: string): number {
     if ('0' <= ch && ch <= '9') {
+      // 0
       return ch.charCodeAt(0) - 0x30;
     }
 

@@ -35,9 +35,11 @@ export default class QRAlphanumeric extends QRData {
 
   private static getCode(ch: string): number {
     if ('0' <= ch && ch <= '9') {
-      return ch.charCodeAt(0) - '0'.charCodeAt(0);
+      // 0
+      return ch.charCodeAt(0) - 0x30;
     } else if ('A' <= ch && ch <= 'Z') {
-      return ch.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+      // A
+      return ch.charCodeAt(0) - 0x41 + 10;
     } else {
       switch (ch) {
         case ' ':
