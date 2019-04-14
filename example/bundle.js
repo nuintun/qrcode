@@ -1728,7 +1728,7 @@
     function readByte(input) {
         var byte = input.readByte();
         if (byte === -1)
-            throw 'unexpected end of byte';
+            throw 'unexpected end of stream';
         return byte;
     }
     function createUnicodeMap(unicodeData, numChars) {
