@@ -2028,7 +2028,7 @@
 
           var qrcode = new QRCode();
 
-          qrcode.write(data.value + '\n');
+          qrcode.write(data.value);
           qrcode.setErrorCorrectLevel(ErrorCorrectLevel$1.M);
           qrcode.make();
 
