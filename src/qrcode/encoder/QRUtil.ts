@@ -77,21 +77,21 @@ export function getErrorCorrectPolynomial(errorCorrectLength: number): Polynomia
 export function getMaskFunc(maskPattern: number): maskFunc {
   switch (maskPattern) {
     case MaskPattern.PATTERN000:
-      return (x: number, y: number) => (x + y) % 2 === 0;
+      return (x: number, y: number): boolean => (x + y) % 2 === 0;
     case MaskPattern.PATTERN001:
-      return (x: number, y: number) => x % 2 === 0;
+      return (x: number, y: number): boolean => x % 2 === 0;
     case MaskPattern.PATTERN010:
-      return (x: number, y: number) => y % 3 === 0;
+      return (x: number, y: number): boolean => y % 3 === 0;
     case MaskPattern.PATTERN011:
-      return (x: number, y: number) => (x + y) % 3 === 0;
+      return (x: number, y: number): boolean => (x + y) % 3 === 0;
     case MaskPattern.PATTERN100:
-      return (x: number, y: number) => (((x / 2) >>> 0) + ((y / 3) >>> 0)) % 2 === 0;
+      return (x: number, y: number): boolean => (((x / 2) >>> 0) + ((y / 3) >>> 0)) % 2 === 0;
     case MaskPattern.PATTERN101:
-      return (x: number, y: number) => ((x * y) % 2) + ((x * y) % 3) === 0;
+      return (x: number, y: number): boolean => ((x * y) % 2) + ((x * y) % 3) === 0;
     case MaskPattern.PATTERN110:
-      return (x: number, y: number) => (((x * y) % 2) + ((x * y) % 3)) % 2 === 0;
+      return (x: number, y: number): boolean => (((x * y) % 2) + ((x * y) % 3)) % 2 === 0;
     case MaskPattern.PATTERN111:
-      return (x: number, y: number) => (((x * y) % 3) + ((x + y) % 2)) % 2 === 0;
+      return (x: number, y: number): boolean => (((x * y) % 3) + ((x + y) % 2)) % 2 === 0;
     default:
       throw `illegal mask: ${maskPattern}`;
   }

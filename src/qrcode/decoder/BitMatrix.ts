@@ -15,7 +15,7 @@ export default class BitMatrix {
     this.height = data.length / width;
   }
 
-  public static createEmpty(width: number, height: number) {
+  public static createEmpty(width: number, height: number): BitMatrix {
     return new BitMatrix(new Uint8ClampedArray(width * height), width);
   }
 
@@ -27,11 +27,11 @@ export default class BitMatrix {
     return !!this.data[y * this.width + x];
   }
 
-  public set(x: number, y: number, v: boolean) {
+  public set(x: number, y: number, v: boolean): void {
     this.data[y * this.width + x] = v ? 1 : 0;
   }
 
-  public setRegion(left: number, top: number, width: number, height: number, v: boolean) {
+  public setRegion(left: number, top: number, width: number, height: number, v: boolean): void {
     for (let y: number = top; y < top + height; y++) {
       for (let x: number = left; x < left + width; x++) {
         this.set(x, y, !!v);

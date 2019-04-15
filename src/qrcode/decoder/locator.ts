@@ -7,9 +7,9 @@
 import Point from './Point';
 import BitMatrix from './BitMatrix';
 
-const MAX_FINDERPATTERNS_TO_SEARCH: number = 4;
 const MIN_QUAD_RATIO: number = 0.5;
 const MAX_QUAD_RATIO: number = 1.5;
+const MAX_FINDERPATTERNS_TO_SEARCH: number = 4;
 
 export interface QRLocation {
   topRight: Point;
@@ -178,13 +178,15 @@ function countBlackWhiteRun(origin: Point, end: Point, matrix: BitMatrix, length
   return awayFromEnd.concat(middleValue).concat(...towardsEnd);
 }
 
+type blackWhiteResult = { averageSize: number; error: number };
+
 // Takes in a black white run and an array of expected ratios. Returns the average size of the run as well as the "error" -
 // that is the amount the run diverges from the expected ratio
-function scoreBlackWhiteRun(sequence: number[], ratios: number[]) {
+function scoreBlackWhiteRun(sequence: number[], ratios: number[]): blackWhiteResult {
   const averageSize: number = sum(sequence) / sum(ratios);
   let error: number = 0;
 
-  ratios.forEach((ratio: number, i: number) => {
+  ratios.forEach((ratio, i) => {
     error += (sequence[i] - ratio * averageSize) ** 2;
   });
 
@@ -194,7 +196,7 @@ function scoreBlackWhiteRun(sequence: number[], ratios: number[]) {
 // Takes an X,Y point and an array of sizes and scores the point against those ratios.
 // For example for a finder pattern takes the ratio list of 1:1:3:1:1 and checks horizontal, vertical and diagonal ratios
 // against that.
-function scorePattern(point: Point, ratios: number[], matrix: BitMatrix) {
+function scorePattern(point: Point, ratios: number[], matrix: BitMatrix): number {
   try {
     const horizontalRun: number[] = countBlackWhiteRun(point, { x: -1, y: point.y }, matrix, ratios.length);
     const verticalRun: number[] = countBlackWhiteRun(point, { x: point.x, y: -1 }, matrix, ratios.length);
@@ -211,10 +213,10 @@ function scorePattern(point: Point, ratios: number[], matrix: BitMatrix) {
     };
     const bottomLeftTopRightRun: number[] = countBlackWhiteRun(point, bottomLeftPoint, matrix, ratios.length);
 
-    const horzError = scoreBlackWhiteRun(horizontalRun, ratios);
-    const vertError = scoreBlackWhiteRun(verticalRun, ratios);
-    const diagDownError = scoreBlackWhiteRun(topLeftBottomRightRun, ratios);
-    const diagUpError = scoreBlackWhiteRun(bottomLeftTopRightRun, ratios);
+    const horzError: blackWhiteResult = scoreBlackWhiteRun(horizontalRun, ratios);
+    const vertError: blackWhiteResult = scoreBlackWhiteRun(verticalRun, ratios);
+    const diagDownError: blackWhiteResult = scoreBlackWhiteRun(topLeftBottomRightRun, ratios);
+    const diagUpError: blackWhiteResult = scoreBlackWhiteRun(bottomLeftTopRightRun, ratios);
 
     const ratioError: number = Math.sqrt(
       horzError.error * horzError.error +
@@ -223,14 +225,16 @@ function scorePattern(point: Point, ratios: number[], matrix: BitMatrix) {
         diagUpError.error * diagUpError.error
     );
 
-    const avgSize = (horzError.averageSize + vertError.averageSize + diagDownError.averageSize + diagUpError.averageSize) / 4;
+    const avgSize: number =
+      (horzError.averageSize + vertError.averageSize + diagDownError.averageSize + diagUpError.averageSize) / 4;
 
-    const sizeError =
+    const sizeError: number =
       ((horzError.averageSize - avgSize) ** 2 +
         (vertError.averageSize - avgSize) ** 2 +
         (diagDownError.averageSize - avgSize) ** 2 +
         (diagUpError.averageSize - avgSize) ** 2) /
       avgSize;
+
     return ratioError + sizeError;
   } catch {
     return Infinity;
@@ -250,19 +254,20 @@ interface Quad {
   };
 }
 
-export function locate(matrix: BitMatrix): QRLocation {
+export default function locate(matrix: BitMatrix): QRLocation {
   const finderPatternQuads: Quad[] = [];
   let activeFinderPatternQuads: Quad[] = [];
   const alignmentPatternQuads: Quad[] = [];
   let activeAlignmentPatternQuads: Quad[] = [];
 
-  for (let y = 0; y <= matrix.height; y++) {
-    let length = 0;
-    let lastBit = false;
-    let scans = [0, 0, 0, 0, 0];
+  for (let y: number = 0; y <= matrix.height; y++) {
+    let length: number = 0;
+    let lastBit: boolean = false;
+    let scans: number[] = [0, 0, 0, 0, 0];
 
-    for (let x = -1; x <= matrix.width; x++) {
-      const v = matrix.get(x, y);
+    for (let x: number = -1; x <= matrix.width; x++) {
+      const v: boolean = matrix.get(x, y);
+
       if (v === lastBit) {
         length++;
       } else {
@@ -271,8 +276,8 @@ export function locate(matrix: BitMatrix): QRLocation {
         lastBit = v;
 
         // Do the last 5 color changes ~ match the expected ratio for a finder pattern? 1:1:3:1:1 of b:w:b:w:b
-        const averageFinderPatternBlocksize = sum(scans) / 7;
-        const validFinderPattern =
+        const averageFinderPatternBlocksize: number = sum(scans) / 7;
+        const validFinderPattern: boolean =
           Math.abs(scans[0] - averageFinderPatternBlocksize) < averageFinderPatternBlocksize &&
           Math.abs(scans[1] - averageFinderPatternBlocksize) < averageFinderPatternBlocksize &&
           Math.abs(scans[2] - 3 * averageFinderPatternBlocksize) < 3 * averageFinderPatternBlocksize &&
@@ -281,8 +286,8 @@ export function locate(matrix: BitMatrix): QRLocation {
           !v; // And make sure the current pixel is white since finder patterns are bordered in white
 
         // Do the last 3 color changes ~ match the expected ratio for an alignment pattern? 1:1:1 of w:b:w
-        const averageAlignmentPatternBlocksize = sum(scans.slice(-3)) / 3;
-        const validAlignmentPattern =
+        const averageAlignmentPatternBlocksize: number = sum(scans.slice(-3)) / 3;
+        const validAlignmentPattern: boolean =
           Math.abs(scans[2] - averageAlignmentPatternBlocksize) < averageAlignmentPatternBlocksize &&
           Math.abs(scans[3] - averageAlignmentPatternBlocksize) < averageAlignmentPatternBlocksize &&
           Math.abs(scans[4] - averageAlignmentPatternBlocksize) < averageAlignmentPatternBlocksize &&
@@ -290,13 +295,13 @@ export function locate(matrix: BitMatrix): QRLocation {
 
         if (validFinderPattern) {
           // Compute the start and end x values of the large center black square
-          const endX = x - scans[3] - scans[4];
-          const startX = endX - scans[2];
+          const endX: number = x - scans[3] - scans[4];
+          const startX: number = endX - scans[2];
 
-          const line = { startX, endX, y };
+          const line: { startX: number; endX: number; y: number } = { startX, endX, y };
           // Is there a quad directly above the current spot? If so, extend it with the new line. Otherwise, create a new quad with
           // that line as the starting point.
-          const matchingQuads = activeFinderPatternQuads.filter(
+          const matchingQuads: Quad[] = activeFinderPatternQuads.filter(
             q =>
               (startX >= q.bottom.startX && startX <= q.bottom.endX) ||
               (endX >= q.bottom.startX && startX <= q.bottom.endX) ||
@@ -305,18 +310,20 @@ export function locate(matrix: BitMatrix): QRLocation {
                 (scans[2] / (q.bottom.endX - q.bottom.startX) < MAX_QUAD_RATIO &&
                   scans[2] / (q.bottom.endX - q.bottom.startX) > MIN_QUAD_RATIO))
           );
+
           if (matchingQuads.length > 0) {
             matchingQuads[0].bottom = line;
           } else {
             activeFinderPatternQuads.push({ top: line, bottom: line });
           }
         }
+
         if (validAlignmentPattern) {
           // Compute the start and end x values of the center black square
-          const endX = x - scans[4];
-          const startX = endX - scans[3];
+          const endX: number = x - scans[4];
+          const startX: number = endX - scans[3];
 
-          const line = { startX, y, endX };
+          const line: { startX: number; endX: number; y: number } = { startX, y, endX };
           // Is there a quad directly above the current spot? If so, extend it with the new line. Otherwise, create a new quad with
           // that line as the starting point.
           const matchingQuads = activeAlignmentPatternQuads.filter(
@@ -328,6 +335,7 @@ export function locate(matrix: BitMatrix): QRLocation {
                 (scans[2] / (q.bottom.endX - q.bottom.startX) < MAX_QUAD_RATIO &&
                   scans[2] / (q.bottom.endX - q.bottom.startX) > MIN_QUAD_RATIO))
           );
+
           if (matchingQuads.length > 0) {
             matchingQuads[0].bottom = line;
           } else {
@@ -336,6 +344,7 @@ export function locate(matrix: BitMatrix): QRLocation {
         }
       }
     }
+
     finderPatternQuads.push(...activeFinderPatternQuads.filter(q => q.bottom.y !== y && q.bottom.y - q.top.y >= 2));
     activeFinderPatternQuads = activeFinderPatternQuads.filter(q => q.bottom.y === y);
 
@@ -350,15 +359,17 @@ export function locate(matrix: BitMatrix): QRLocation {
     .filter(q => q.bottom.y - q.top.y >= 2) // All quads must be at least 2px tall since the center square is larger than a block
     .map(q => {
       // Initial scoring of finder pattern quads by looking at their ratios, not taking into account position
-      const x = (q.top.startX + q.top.endX + q.bottom.startX + q.bottom.endX) / 4;
-      const y = (q.top.y + q.bottom.y + 1) / 2;
+      const x: number = (q.top.startX + q.top.endX + q.bottom.startX + q.bottom.endX) / 4;
+      const y: number = (q.top.y + q.bottom.y + 1) / 2;
+
       if (!matrix.get(Math.round(x), Math.round(y))) {
         return;
       }
 
-      const lengths = [q.top.endX - q.top.startX, q.bottom.endX - q.bottom.startX, q.bottom.y - q.top.y + 1];
-      const size = sum(lengths) / lengths.length;
-      const score = scorePattern({ x: Math.round(x), y: Math.round(y) }, [1, 1, 3, 1, 1], matrix);
+      const lengths: number[] = [q.top.endX - q.top.startX, q.bottom.endX - q.bottom.startX, q.bottom.y - q.top.y + 1];
+      const size: number = sum(lengths) / lengths.length;
+      const score: number = scorePattern({ x: Math.round(x), y: Math.round(y) }, [1, 1, 3, 1, 1], matrix);
+
       return { score, x, y, size };
     })
     .filter(q => !!q) // Filter out any rejected quads from above
@@ -368,14 +379,18 @@ export function locate(matrix: BitMatrix): QRLocation {
       if (i > MAX_FINDERPATTERNS_TO_SEARCH) {
         return null;
       }
+
       const otherPoints = finderPatterns
         .filter((p, ii) => i !== ii)
         .map(p => ({ x: p.x, y: p.y, score: p.score + (p.size - point.size) ** 2 / point.size, size: p.size }))
         .sort((a, b) => a.score - b.score);
+
       if (otherPoints.length < 2) {
         return null;
       }
-      const score = point.score + otherPoints[0].score + otherPoints[1].score;
+
+      const score: number = point.score + otherPoints[0].score + otherPoints[1].score;
+
       return { points: [point].concat(otherPoints.slice(0, 2)), score };
     })
     .filter(q => !!q) // Filter out any rejected finder patterns from above
@@ -385,7 +400,7 @@ export function locate(matrix: BitMatrix): QRLocation {
     return null;
   }
 
-  const { topRight, topLeft, bottomLeft } = reorderFinderPatterns(
+  const { topRight, topLeft, bottomLeft }: { topRight: Point; topLeft: Point; bottomLeft: Point } = reorderFinderPatterns(
     finderPatternGroups[0].points[0],
     finderPatternGroups[0].points[1],
     finderPatternGroups[0].points[2]
@@ -395,6 +410,7 @@ export function locate(matrix: BitMatrix): QRLocation {
   // We'll use these to help find the alignment pattern but also later when we do the extraction.
   let dimension: number;
   let moduleSize: number;
+
   try {
     ({ dimension, moduleSize } = computeDimension(topLeft, topRight, bottomLeft, matrix));
   } catch (e) {
@@ -402,30 +418,32 @@ export function locate(matrix: BitMatrix): QRLocation {
   }
 
   // Now find the alignment pattern
-  const bottomRightFinderPattern = {
+  const bottomRightFinderPattern: { x: number; y: number } = {
     // Best guess at where a bottomRight finder pattern would be
     x: topRight.x - topLeft.x + bottomLeft.x,
     y: topRight.y - topLeft.y + bottomLeft.y
   };
-  const modulesBetweenFinderPatterns = (distance(topLeft, bottomLeft) + distance(topLeft, topRight)) / 2 / moduleSize;
-  const correctionToTopLeft = 1 - 3 / modulesBetweenFinderPatterns;
-  const expectedAlignmentPattern = {
+  const modulesBetweenFinderPatterns: number = (distance(topLeft, bottomLeft) + distance(topLeft, topRight)) / 2 / moduleSize;
+  const correctionToTopLeft: number = 1 - 3 / modulesBetweenFinderPatterns;
+  const expectedAlignmentPattern: { x: number; y: number } = {
     x: topLeft.x + correctionToTopLeft * (bottomRightFinderPattern.x - topLeft.x),
     y: topLeft.y + correctionToTopLeft * (bottomRightFinderPattern.y - topLeft.y)
   };
 
-  const alignmentPatterns = alignmentPatternQuads
+  const alignmentPatterns: { x: number; y: number; score: number }[] = alignmentPatternQuads
     .map(q => {
-      const x = (q.top.startX + q.top.endX + q.bottom.startX + q.bottom.endX) / 4;
-      const y = (q.top.y + q.bottom.y + 1) / 2;
+      const x: number = (q.top.startX + q.top.endX + q.bottom.startX + q.bottom.endX) / 4;
+      const y: number = (q.top.y + q.bottom.y + 1) / 2;
+
       if (!matrix.get(Math.floor(x), Math.floor(y))) {
         return;
       }
 
       // const lengths = [q.top.endX - q.top.startX, q.bottom.endX - q.bottom.startX, q.bottom.y - q.top.y + 1];
       // const size = sum(lengths) / lengths.length;
-      const sizeScore = scorePattern({ x: Math.floor(x), y: Math.floor(y) }, [1, 1, 1], matrix);
-      const score = sizeScore + distance({ x, y }, expectedAlignmentPattern);
+      const sizeScore: number = scorePattern({ x: Math.floor(x), y: Math.floor(y) }, [1, 1, 1], matrix);
+      const score: number = sizeScore + distance({ x, y }, expectedAlignmentPattern);
+
       return { x, y, score };
     })
     .filter(v => !!v)
@@ -433,7 +451,7 @@ export function locate(matrix: BitMatrix): QRLocation {
 
   // If there are less than 15 modules between finder patterns it's a version 1 QR code and as such has no alignmemnt pattern
   // so we can only use our best guess.
-  const alignmentPattern =
+  const alignmentPattern: { x: number; y: number } =
     modulesBetweenFinderPatterns >= 15 && alignmentPatterns.length ? alignmentPatterns[0] : expectedAlignmentPattern;
 
   return {

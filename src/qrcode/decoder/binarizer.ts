@@ -32,7 +32,17 @@ class Matrix {
   }
 }
 
-export default function binarize(data: Uint8ClampedArray, width: number, height: number, returnInverted: boolean) {
+export interface BinarizeResult {
+  inverted?: BitMatrix;
+  binarized: BitMatrix;
+}
+
+export default function binarize(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  returnInverted: boolean
+): BinarizeResult {
   if (data.length !== width * height * 4) {
     throw new Error('Malformed data passed to binarizer.');
   }
