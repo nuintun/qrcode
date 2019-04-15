@@ -1,4 +1,4 @@
-import { Encoder, ErrorCorrectLevel } from '../esnext';
+import { Encoder, ErrorCorrectLevel } from '../../esnext';
 
 var image = new Image();
 var data = document.getElementById('data');

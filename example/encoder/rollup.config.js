@@ -2,10 +2,10 @@
 import resolve from 'rollup-plugin-node-resolve';
 
 export default {
-  input: 'example/index.es.js',
+  input: 'example/encoder/index.js',
   output: {
     format: 'iife',
-    file: 'example/bundle.js'
+    file: 'example/encoder/bundle.js'
   },
   plugins: [resolve()]
 };
