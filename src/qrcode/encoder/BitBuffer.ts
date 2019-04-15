@@ -5,13 +5,8 @@
  */
 
 export default class BitBuffer {
-  private length: number;
-  private buffer: number[];
-
-  public constructor() {
-    this.length = 0;
-    this.buffer = [];
-  }
+  private length: number = 0;
+  private buffer: number[] = [];
 
   public getBuffer(): number[] {
     return this.buffer;

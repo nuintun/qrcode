@@ -31,17 +31,12 @@ export default class QRCode {
   private static PAD0: number = 0xec;
   private static PAD1: number = 0x11;
 
-  private version: number;
-  private dataList: QRData[];
-  private moduleCount: number;
-  private modules: boolean[][];
-  private errorCorrectLevel: ErrorCorrectLevel;
-
-  public constructor() {
-    this.version = 0;
-    this.dataList = [];
-    this.errorCorrectLevel = ErrorCorrectLevel.L;
-  }
+  private version: number = 0;
+  private moduleCount: number = 0;
+  private dataList: QRData[] = [];
+  private modules: boolean[][] = [];
+  private autoVersion: boolean = this.version === 0;
+  private errorCorrectLevel: ErrorCorrectLevel = ErrorCorrectLevel.L;
 
   /**
    * @public
@@ -76,6 +71,7 @@ export default class QRCode {
    */
   public setVersion(version: number): void {
     this.version = Math.min(40, Math.max(0, version >> 0));
+    this.autoVersion = this.version === 0;
   }
 
   /**
@@ -123,10 +119,16 @@ export default class QRCode {
 
   /**
    * @public
-   * @method clear
+   * @method reset
    */
-  public clear(): void {
+  public reset(): void {
+    this.modules = [];
     this.dataList = [];
+    this.moduleCount = 0;
+
+    if (this.autoVersion) {
+      this.version = 0;
+    }
   }
 
   /**
@@ -149,7 +151,7 @@ export default class QRCode {
    * @method make
    */
   public make(): void {
-    if (this.version === 0) {
+    if (this.autoVersion) {
       const dataList = this.dataList;
       const errorCorrectLevel = this.errorCorrectLevel;
 

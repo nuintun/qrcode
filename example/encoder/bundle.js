@@ -1298,7 +1298,10 @@
     var QRCode = /** @class */ (function () {
         function QRCode() {
             this.version = 0;
+            this.moduleCount = 0;
             this.dataList = [];
+            this.modules = [];
+            this.autoVersion = this.version === 0;
             this.errorCorrectLevel = ErrorCorrectLevel$1.L;
         }
         /**
@@ -1331,6 +1334,7 @@
          */
         QRCode.prototype.setVersion = function (version) {
             this.version = Math.min(40, Math.max(0, version >> 0));
+            this.autoVersion = this.version === 0;
         };
         /**
          * @public
@@ -1375,10 +1379,15 @@
         };
         /**
          * @public
-         * @method clear
+         * @method reset
          */
-        QRCode.prototype.clear = function () {
+        QRCode.prototype.reset = function () {
+            this.modules = [];
             this.dataList = [];
+            this.moduleCount = 0;
+            if (this.autoVersion) {
+                this.version = 0;
+            }
         };
         /**
          * @public
@@ -1400,7 +1409,7 @@
          * @method make
          */
         QRCode.prototype.make = function () {
-            if (this.version === 0) {
+            if (this.autoVersion) {
                 var dataList = this.dataList;
                 var errorCorrectLevel = this.errorCorrectLevel;
                 for (this.version = 1; this.version < 40; this.version++) {
