@@ -671,7 +671,7 @@
             case MaskPattern$1.PATTERN011:
                 return function (x, y) { return (x + y) % 3 === 0; };
             case MaskPattern$1.PATTERN100:
-                return function (x, y) { return (~~(x / 2) + ~~(y / 3)) % 2 === 0; };
+                return function (x, y) { return (((x / 2) >>> 0) + ((y / 3) >>> 0)) % 2 === 0; };
             case MaskPattern$1.PATTERN101:
                 return function (x, y) { return ((x * y) % 2) + ((x * y) % 3) === 0; };
             case MaskPattern$1.PATTERN110:
@@ -815,7 +815,7 @@
             return buffer;
         };
         BitBuffer.prototype.getBit = function (index) {
-            return ((this.buffer[~~(index / 8)] >>> (7 - (index % 8))) & 1) === 1;
+            return ((this.buffer[(index / 8) >>> 0] >>> (7 - (index % 8))) & 1) === 1;
         };
         BitBuffer.prototype.put = function (num, length) {
             for (var i = 0; i < length; i++) {
@@ -827,7 +827,7 @@
                 this.buffer.push(0);
             }
             if (bit) {
-                this.buffer[~~(this.length / 8)] |= 0x80 >>> this.length % 8;
+                this.buffer[(this.length / 8) >>> 0] |= 0x80 >>> this.length % 8;
             }
             this.length++;
         };
@@ -1333,7 +1333,7 @@
          * @param {number} version
          */
         QRCode.prototype.setVersion = function (version) {
-            this.version = Math.min(40, Math.max(0, version >> 0));
+            this.version = Math.min(40, Math.max(0, version >>> 0));
             this.autoVersion = this.version === 0;
         };
         /**
@@ -1556,10 +1556,10 @@
         QRCode.prototype.setupVersion = function (test) {
             var bits = getBCHVersion(this.version);
             for (var i = 0; i < 18; i++) {
-                this.modules[~~(i / 3)][(i % 3) + this.moduleCount - 8 - 3] = !test && ((bits >> i) & 1) === 1;
+                this.modules[(i / 3) >>> 0][(i % 3) + this.moduleCount - 8 - 3] = !test && ((bits >> i) & 1) === 1;
             }
             for (var i = 0; i < 18; i++) {
-                this.modules[(i % 3) + this.moduleCount - 8 - 3][~~(i / 3)] = !test && ((bits >> i) & 1) === 1;
+                this.modules[(i % 3) + this.moduleCount - 8 - 3][(i / 3) >>> 0] = !test && ((bits >> i) & 1) === 1;
             }
         };
         QRCode.prototype.setupVersionInfo = function (test, maskPattern) {
@@ -1702,8 +1702,8 @@
         QRCode.prototype.toDataURL = function (moduleSize, margin) {
             if (moduleSize === void 0) { moduleSize = 2; }
             if (margin === void 0) { margin = moduleSize * 4; }
-            moduleSize = Math.max(1, moduleSize >> 0);
-            margin = Math.max(0, margin >> 0);
+            moduleSize = Math.max(1, moduleSize >>> 0);
+            margin = Math.max(0, margin >>> 0);
             var mods = this.moduleCount;
             var size = moduleSize * mods + margin * 2;
             var gif = new GIFImage(size, size);
@@ -1713,7 +1713,7 @@
                         x < size - margin &&
                         margin <= y &&
                         y < size - margin &&
-                        this.isDark(~~((y - margin) / moduleSize), ~~((x - margin) / moduleSize))) {
+                        this.isDark(((y - margin) / moduleSize) >>> 0, ((x - margin) / moduleSize) >>> 0)) {
                         gif.setPixel(x, y, 0);
                     }
                     else {

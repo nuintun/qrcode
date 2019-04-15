@@ -28,7 +28,7 @@ export default class BitBuffer {
   }
 
   private getBit(index: number): boolean {
-    return ((this.buffer[~~(index / 8)] >>> (7 - (index % 8))) & 1) === 1;
+    return ((this.buffer[(index / 8) >>> 0] >>> (7 - (index % 8))) & 1) === 1;
   }
 
   public put(num: number, length: number): void {
@@ -43,7 +43,7 @@ export default class BitBuffer {
     }
 
     if (bit) {
-      this.buffer[~~(this.length / 8)] |= 0x80 >>> this.length % 8;
+      this.buffer[(this.length / 8) >>> 0] |= 0x80 >>> this.length % 8;
     }
 
     this.length++;

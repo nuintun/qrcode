@@ -70,7 +70,7 @@ export default class QRCode {
    * @param {number} version
    */
   public setVersion(version: number): void {
-    this.version = Math.min(40, Math.max(0, version >> 0));
+    this.version = Math.min(40, Math.max(0, version >>> 0));
     this.autoVersion = this.version === 0;
   }
 
@@ -337,11 +337,11 @@ export default class QRCode {
     const bits: number = QRUtil.getBCHVersion(this.version);
 
     for (let i: number = 0; i < 18; i++) {
-      this.modules[~~(i / 3)][(i % 3) + this.moduleCount - 8 - 3] = !test && ((bits >> i) & 1) === 1;
+      this.modules[(i / 3) >>> 0][(i % 3) + this.moduleCount - 8 - 3] = !test && ((bits >> i) & 1) === 1;
     }
 
     for (let i: number = 0; i < 18; i++) {
-      this.modules[(i % 3) + this.moduleCount - 8 - 3][~~(i / 3)] = !test && ((bits >> i) & 1) === 1;
+      this.modules[(i % 3) + this.moduleCount - 8 - 3][(i / 3) >>> 0] = !test && ((bits >> i) & 1) === 1;
     }
   }
 
@@ -518,8 +518,8 @@ export default class QRCode {
    * @returns {string}
    */
   public toDataURL(moduleSize: number = 2, margin: number = moduleSize * 4): string {
-    moduleSize = Math.max(1, moduleSize >> 0);
-    margin = Math.max(0, margin >> 0);
+    moduleSize = Math.max(1, moduleSize >>> 0);
+    margin = Math.max(0, margin >>> 0);
 
     const mods: number = this.moduleCount;
     const size: number = moduleSize * mods + margin * 2;
@@ -532,7 +532,7 @@ export default class QRCode {
           x < size - margin &&
           margin <= y &&
           y < size - margin &&
-          this.isDark(~~((y - margin) / moduleSize), ~~((x - margin) / moduleSize))
+          this.isDark(((y - margin) / moduleSize) >>> 0, ((x - margin) / moduleSize) >>> 0)
         ) {
           gif.setPixel(x, y, 0);
         } else {

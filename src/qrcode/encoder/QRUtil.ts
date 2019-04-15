@@ -85,7 +85,7 @@ export function getMaskFunc(maskPattern: number): maskFunc {
     case MaskPattern.PATTERN011:
       return (x: number, y: number) => (x + y) % 3 === 0;
     case MaskPattern.PATTERN100:
-      return (x: number, y: number) => (~~(x / 2) + ~~(y / 3)) % 2 === 0;
+      return (x: number, y: number) => (((x / 2) >>> 0) + ((y / 3) >>> 0)) % 2 === 0;
     case MaskPattern.PATTERN101:
       return (x: number, y: number) => ((x * y) % 2) + ((x * y) % 3) === 0;
     case MaskPattern.PATTERN110:
