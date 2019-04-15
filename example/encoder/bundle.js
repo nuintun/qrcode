@@ -1303,18 +1303,18 @@
         }
         /**
          * @public
-         * @method getModuleCount
-         */
-        QRCode.prototype.getModuleCount = function () {
-            return this.moduleCount;
-        };
-        /**
-         * @public
          * @method getModules
          * @returns {boolean[][]}
          */
         QRCode.prototype.getModules = function () {
             return this.modules;
+        };
+        /**
+         * @public
+         * @method getModuleCount
+         */
+        QRCode.prototype.getModuleCount = function () {
+            return this.moduleCount;
         };
         /**
          * @public
@@ -1330,7 +1330,7 @@
          * @param {number} version
          */
         QRCode.prototype.setVersion = function (version) {
-            this.version = version;
+            this.version = Math.min(40, Math.max(0, version >> 0));
         };
         /**
          * @public
@@ -1346,14 +1346,13 @@
          * @param {ErrorCorrectLevel} errorCorrectLevel
          */
         QRCode.prototype.setErrorCorrectLevel = function (errorCorrectLevel) {
-            this.errorCorrectLevel = errorCorrectLevel;
-        };
-        /**
-         * @public
-         * @method clearData
-         */
-        QRCode.prototype.clearData = function () {
-            this.dataList = [];
+            switch (errorCorrectLevel) {
+                case ErrorCorrectLevel$1.L:
+                case ErrorCorrectLevel$1.M:
+                case ErrorCorrectLevel$1.Q:
+                case ErrorCorrectLevel$1.H:
+                    this.errorCorrectLevel = errorCorrectLevel;
+            }
         };
         /**
          * @public
@@ -1373,6 +1372,13 @@
                     throw "illegal data: " + data;
                 }
             }
+        };
+        /**
+         * @public
+         * @method clear
+         */
+        QRCode.prototype.clear = function () {
+            this.dataList = [];
         };
         /**
          * @public
@@ -1687,6 +1693,8 @@
         QRCode.prototype.toDataURL = function (moduleSize, margin) {
             if (moduleSize === void 0) { moduleSize = 2; }
             if (margin === void 0) { margin = moduleSize * 4; }
+            moduleSize = Math.max(1, moduleSize >> 0);
+            margin = Math.max(0, margin >> 0);
             var mods = this.moduleCount;
             var size = moduleSize * mods + margin * 2;
             var gif = new GIFImage(size, size);

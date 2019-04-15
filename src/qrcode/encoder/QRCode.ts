@@ -45,19 +45,19 @@ export default class QRCode {
 
   /**
    * @public
-   * @method getModuleCount
-   */
-  public getModuleCount(): number {
-    return this.moduleCount;
-  }
-
-  /**
-   * @public
    * @method getModules
    * @returns {boolean[][]}
    */
   public getModules(): boolean[][] {
     return this.modules;
+  }
+
+  /**
+   * @public
+   * @method getModuleCount
+   */
+  public getModuleCount(): number {
+    return this.moduleCount;
   }
 
   /**
@@ -75,7 +75,7 @@ export default class QRCode {
    * @param {number} version
    */
   public setVersion(version: number): void {
-    this.version = version;
+    this.version = Math.min(40, Math.max(0, version >> 0));
   }
 
   /**
@@ -93,15 +93,13 @@ export default class QRCode {
    * @param {ErrorCorrectLevel} errorCorrectLevel
    */
   public setErrorCorrectLevel(errorCorrectLevel: ErrorCorrectLevel) {
-    this.errorCorrectLevel = errorCorrectLevel;
-  }
-
-  /**
-   * @public
-   * @method clearData
-   */
-  public clearData(): void {
-    this.dataList = [];
+    switch (errorCorrectLevel) {
+      case ErrorCorrectLevel.L:
+      case ErrorCorrectLevel.M:
+      case ErrorCorrectLevel.Q:
+      case ErrorCorrectLevel.H:
+        this.errorCorrectLevel = errorCorrectLevel;
+    }
   }
 
   /**
@@ -121,6 +119,14 @@ export default class QRCode {
         throw `illegal data: ${data}`;
       }
     }
+  }
+
+  /**
+   * @public
+   * @method clear
+   */
+  public clear(): void {
+    this.dataList = [];
   }
 
   /**
@@ -510,6 +516,9 @@ export default class QRCode {
    * @returns {string}
    */
   public toDataURL(moduleSize: number = 2, margin: number = moduleSize * 4): string {
+    moduleSize = Math.max(1, moduleSize >> 0);
+    margin = Math.max(0, margin >> 0);
+
     const mods: number = this.moduleCount;
     const size: number = moduleSize * mods + margin * 2;
     const gif: GIFImage = new GIFImage(size, size);
