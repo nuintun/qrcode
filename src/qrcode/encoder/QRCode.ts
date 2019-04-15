@@ -4,12 +4,12 @@
  * @author Kazuhiko Arase
  */
 
+import QRByte from './QRByte';
 import QRData from './QRData';
 import RSBlock from './RSBlock';
 import * as QRUtil from './QRUtil';
 import BitBuffer from './BitBuffer';
 import Polynomial from './Polynomial';
-import QR8BitByte from './QR8BitByte';
 import GIFImage from '../../image/GIFImage';
 import ErrorCorrectLevel from './ErrorCorrectLevel';
 
@@ -106,17 +106,17 @@ export default class QRCode {
 
   /**
    * @public
-   * @method addData
+   * @method write
    * @param {QRData} data
    */
-  public addData(data: QRData | string): void {
+  public write(data: QRData | string): void {
     if (data instanceof QRData) {
       this.dataList.push(data);
     } else {
       const type: string = toString.call(data);
 
       if (type === '[object String]') {
-        this.dataList.push(new QR8BitByte(data));
+        this.dataList.push(new QRByte(data));
       } else {
         throw `illegal data: ${data}`;
       }

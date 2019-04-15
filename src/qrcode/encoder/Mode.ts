@@ -9,7 +9,7 @@ enum Mode {
   Numeric = 0x1,
   // alphabet and number
   Alphanumeric = 0x2,
-  // 8bit byte
+  // 8 bit byte
   Byte = 0x4,
   // KANJI
   Kanji = 0x8

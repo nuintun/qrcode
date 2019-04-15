@@ -95,4 +95,4 @@ yarn.lock
 tsconfig.json
 
 # src file
-/src/
+src/

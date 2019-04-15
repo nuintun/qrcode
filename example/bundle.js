@@ -1,6 +1,35 @@
 (function () {
     'use strict';
 
+    /*! *****************************************************************************
+    Copyright (c) Microsoft Corporation. All rights reserved.
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+    this file except in compliance with the License. You may obtain a copy of the
+    License at http://www.apache.org/licenses/LICENSE-2.0
+
+    THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+    WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+    MERCHANTABLITY OR NON-INFRINGEMENT.
+
+    See the Apache Version 2.0 License for specific language governing permissions
+    and limitations under the License.
+    ***************************************************************************** */
+    /* global Reflect, Promise */
+
+    var extendStatics = function(d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+
+    function __extends(d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    }
+
     /**
      * @module Mode
      * @author nuintun
@@ -12,7 +41,7 @@
         Mode[Mode["Numeric"] = 1] = "Numeric";
         // alphabet and number
         Mode[Mode["Alphanumeric"] = 2] = "Alphanumeric";
-        // 8bit byte
+        // 8 bit byte
         Mode[Mode["Byte"] = 4] = "Byte";
         // KANJI
         Mode[Mode["Kanji"] = 8] = "Kanji";
@@ -89,6 +118,81 @@
         };
         return QRData;
     }());
+
+    /**
+     * @module UTF8
+     * @author nuintun
+     */
+    /**
+     * @function UTF8
+     * @param str
+     * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
+     */
+    function UTF8(str) {
+        var pos = 0;
+        var output = [];
+        for (var i = 0; i < str.length; i++) {
+            var code = str.charCodeAt(i);
+            if (code < 128) {
+                output[pos++] = code;
+            }
+            else if (code < 2048) {
+                output[pos++] = (code >> 6) | 192;
+                output[pos++] = (code & 63) | 128;
+            }
+            else if ((code & 0xfc00) === 0xd800 && i + 1 < str.length && (str.charCodeAt(i + 1) & 0xfc00) === 0xdc00) {
+                // Surrogate Pair
+                code = 0x10000 + ((code & 0x03ff) << 10) + (str.charCodeAt(++i) & 0x03ff);
+                output[pos++] = (code >> 18) | 240;
+                output[pos++] = ((code >> 12) & 63) | 128;
+                output[pos++] = ((code >> 6) & 63) | 128;
+                output[pos++] = (code & 63) | 128;
+            }
+            else {
+                output[pos++] = (code >> 12) | 224;
+                output[pos++] = ((code >> 6) & 63) | 128;
+                output[pos++] = (code & 63) | 128;
+            }
+        }
+        return output;
+    }
+
+    /**
+     * @module QR8BitByte
+     * @author nuintun
+     * @author Kazuhiko Arase
+     */
+    var QRByte = /** @class */ (function (_super) {
+        __extends(QRByte, _super);
+        /**
+         * @constructor
+         * @param {string} data
+         */
+        function QRByte(data) {
+            return _super.call(this, Mode$1.Byte, data) || this;
+        }
+        /**
+         * @public
+         * @method write
+         * @param {BitBuffer} buffer
+         */
+        QRByte.prototype.write = function (buffer) {
+            var data = UTF8(this.getData());
+            var length = data.length;
+            for (var i = 0; i < length; i++) {
+                buffer.put(data[i], 8);
+            }
+        };
+        /**
+         * @public
+         * @method getLength
+         * @returns {number}
+         */
+        QRByte.prototype.getLength = function () {
+            return UTF8(this.getData()).length;
+        };
+        return QRByte;
+    }(QRData));
 
     /**
      * @module ErrorCorrectLevel
@@ -730,110 +834,6 @@
         return BitBuffer;
     }());
 
-    /*! *****************************************************************************
-    Copyright (c) Microsoft Corporation. All rights reserved.
-    Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-    this file except in compliance with the License. You may obtain a copy of the
-    License at http://www.apache.org/licenses/LICENSE-2.0
-
-    THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-    WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-    MERCHANTABLITY OR NON-INFRINGEMENT.
-
-    See the Apache Version 2.0 License for specific language governing permissions
-    and limitations under the License.
-    ***************************************************************************** */
-    /* global Reflect, Promise */
-
-    var extendStatics = function(d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-
-    function __extends(d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    }
-
-    /**
-     * @module UTF8
-     * @author nuintun
-     */
-    /**
-     * @function UTF8
-     * @param str
-     * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
-     */
-    function UTF8(str) {
-        var pos = 0;
-        var output = [];
-        for (var i = 0; i < str.length; i++) {
-            var code = str.charCodeAt(i);
-            if (code < 128) {
-                output[pos++] = code;
-            }
-            else if (code < 2048) {
-                output[pos++] = (code >> 6) | 192;
-                output[pos++] = (code & 63) | 128;
-            }
-            else if ((code & 0xfc00) === 0xd800 && i + 1 < str.length && (str.charCodeAt(i + 1) & 0xfc00) === 0xdc00) {
-                // Surrogate Pair
-                code = 0x10000 + ((code & 0x03ff) << 10) + (str.charCodeAt(++i) & 0x03ff);
-                output[pos++] = (code >> 18) | 240;
-                output[pos++] = ((code >> 12) & 63) | 128;
-                output[pos++] = ((code >> 6) & 63) | 128;
-                output[pos++] = (code & 63) | 128;
-            }
-            else {
-                output[pos++] = (code >> 12) | 224;
-                output[pos++] = ((code >> 6) & 63) | 128;
-                output[pos++] = (code & 63) | 128;
-            }
-        }
-        return output;
-    }
-
-    /**
-     * @module QR8BitByte
-     * @author nuintun
-     * @author Kazuhiko Arase
-     */
-    var QR8BitByte = /** @class */ (function (_super) {
-        __extends(QR8BitByte, _super);
-        /**
-         * @constructor
-         * @param {string} data
-         */
-        function QR8BitByte(data) {
-            return _super.call(this, Mode$1.Byte, data) || this;
-        }
-        /**
-         * @public
-         * @method write
-         * @param {BitBuffer} buffer
-         */
-        QR8BitByte.prototype.write = function (buffer) {
-            var data = UTF8(this.getData());
-            var length = data.length;
-            for (var i = 0; i < length; i++) {
-                buffer.put(data[i], 8);
-            }
-        };
-        /**
-         * @public
-         * @method getLength
-         * @returns {number}
-         */
-        QR8BitByte.prototype.getLength = function () {
-            return UTF8(this.getData()).length;
-        };
-        return QR8BitByte;
-    }(QRData));
-
     /**
      * @module InputStream
      * @author nuintun
@@ -1357,17 +1357,17 @@
         };
         /**
          * @public
-         * @method addData
+         * @method write
          * @param {QRData} data
          */
-        QRCode.prototype.addData = function (data) {
+        QRCode.prototype.write = function (data) {
             if (data instanceof QRData) {
                 this.dataList.push(data);
             }
             else {
                 var type = toString.call(data);
                 if (type === '[object String]') {
-                    this.dataList.push(new QR8BitByte(data));
+                    this.dataList.push(new QRByte(data));
                 }
                 else {
                     throw "illegal data: " + data;
@@ -2010,7 +2010,7 @@
 
           var qrcode = new QRCode();
 
-          qrcode.addData(data.value + '\n');
+          qrcode.write(data.value + '\n');
           qrcode.setErrorCorrectLevel(ErrorCorrectLevel$1.M);
           qrcode.make();
 

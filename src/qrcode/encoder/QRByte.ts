@@ -9,7 +9,7 @@ import QRData from './QRData';
 import BitBuffer from './BitBuffer';
 import stringToBytes from '../../encoding/UTF8';
 
-export default class QR8BitByte extends QRData {
+export default class QRByte extends QRData {
   /**
    * @constructor
    * @param {string} data
