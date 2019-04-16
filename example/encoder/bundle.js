@@ -2117,8 +2117,8 @@
 
           var qrcode = new QRCode();
 
-          qrcode.write(data.value);
           qrcode.setErrorCorrectLevel(ErrorCorrectLevel$1.M);
+          qrcode.write(data.value);
           qrcode.make();
 
           console.timeEnd('QRCode');
