@@ -1,8 +1,8 @@
 import Point from '../Point';
 import rsDecode from './reedsolomon';
 import BitMatrix from '../BitMatrix';
-import { Version, VERSIONS } from './version';
-import { decode as decodeData, DecodedQR } from './decode';
+import { Version, VERSIONS, ECLevel } from './version';
+import { decode as decodeBytes, DecodeResult } from './decode';
 
 function numBitsDiffering(x: number, y: number): number {
   let z: number = x ^ y;
@@ -25,12 +25,12 @@ interface FormatInformation {
   errorCorrectionLevel: number;
 }
 
-interface FormatInfo {
+interface FormatItem {
   bits: number;
   formatInfo: FormatInformation;
 }
 
-const FORMAT_INFO_TABLE: FormatInfo[] = [
+const FORMAT_INFO_TABLE: FormatItem[] = [
   { bits: 0x5412, formatInfo: { errorCorrectionLevel: 1, dataMask: 0 } },
   { bits: 0x5125, formatInfo: { errorCorrectionLevel: 1, dataMask: 1 } },
   { bits: 0x5e7c, formatInfo: { errorCorrectionLevel: 1, dataMask: 2 } },
@@ -106,90 +106,106 @@ function buildFunctionPatternMask(version: Version): BitMatrix {
   return matrix;
 }
 
-function readCodewords(matrix: BitMatrix, version: Version, formatInfo: FormatInformation) {
-  const dataMask = DATA_MASKS[formatInfo.dataMask];
-  const dimension = matrix.height;
+function readCodewords(matrix: BitMatrix, version: Version, formatInfo: FormatInformation): number[] {
+  const dimension: number = matrix.height;
+  const dataMask: maskFunc = DATA_MASKS[formatInfo.dataMask];
+  const functionPatternMask: BitMatrix = buildFunctionPatternMask(version);
 
-  const functionPatternMask = buildFunctionPatternMask(version);
-
+  let bitsRead: number = 0;
+  let currentByte: number = 0;
   const codewords: number[] = [];
-  let currentByte = 0;
-  let bitsRead = 0;
 
   // Read columns in pairs, from right to left
-  let readingUp = true;
-  for (let columnIndex = dimension - 1; columnIndex > 0; columnIndex -= 2) {
+  let readingUp: boolean = true;
+
+  for (let columnIndex: number = dimension - 1; columnIndex > 0; columnIndex -= 2) {
     if (columnIndex === 6) {
       // Skip whole column with vertical alignment pattern;
       columnIndex--;
     }
-    for (let i = 0; i < dimension; i++) {
-      const y = readingUp ? dimension - 1 - i : i;
-      for (let columnOffset = 0; columnOffset < 2; columnOffset++) {
-        const x = columnIndex - columnOffset;
+
+    for (let i: number = 0; i < dimension; i++) {
+      const y: number = readingUp ? dimension - 1 - i : i;
+
+      for (let columnOffset: number = 0; columnOffset < 2; columnOffset++) {
+        const x: number = columnIndex - columnOffset;
+
         if (!functionPatternMask.get(x, y)) {
           bitsRead++;
-          let bit = matrix.get(x, y);
+
+          let bit: boolean = matrix.get(x, y);
+
           if (dataMask({ y, x })) {
             bit = !bit;
           }
+
           currentByte = pushBit(bit, currentByte);
+
           if (bitsRead === 8) {
             // Whole bytes
             codewords.push(currentByte);
+
             bitsRead = 0;
             currentByte = 0;
           }
         }
       }
     }
+
     readingUp = !readingUp;
   }
+
   return codewords;
 }
 
 function readVersion(matrix: BitMatrix): Version {
-  const dimension = matrix.height;
+  const dimension: number = matrix.height;
+  const provisionalVersion: number = Math.floor((dimension - 17) / 4);
 
-  const provisionalVersion = Math.floor((dimension - 17) / 4);
   if (provisionalVersion <= 6) {
     // 6 and under dont have version info in the QR code
     return VERSIONS[provisionalVersion - 1];
   }
 
-  let topRightVersionBits = 0;
-  for (let y = 5; y >= 0; y--) {
-    for (let x = dimension - 9; x >= dimension - 11; x--) {
+  let topRightVersionBits: number = 0;
+
+  for (let y: number = 5; y >= 0; y--) {
+    for (let x: number = dimension - 9; x >= dimension - 11; x--) {
       topRightVersionBits = pushBit(matrix.get(x, y), topRightVersionBits);
     }
   }
 
-  let bottomLeftVersionBits = 0;
-  for (let x = 5; x >= 0; x--) {
-    for (let y = dimension - 9; y >= dimension - 11; y--) {
+  let bottomLeftVersionBits: number = 0;
+
+  for (let x: number = 5; x >= 0; x--) {
+    for (let y: number = dimension - 9; y >= dimension - 11; y--) {
       bottomLeftVersionBits = pushBit(matrix.get(x, y), bottomLeftVersionBits);
     }
   }
 
-  let bestDifference = Infinity;
   let bestVersion: Version;
+  let bestDifference: number = Infinity;
+
   for (const version of VERSIONS) {
     if (version.infoBits === topRightVersionBits || version.infoBits === bottomLeftVersionBits) {
       return version;
     }
 
-    let difference = numBitsDiffering(topRightVersionBits, version.infoBits);
+    let difference: number = numBitsDiffering(topRightVersionBits, version.infoBits);
+
     if (difference < bestDifference) {
       bestVersion = version;
       bestDifference = difference;
     }
 
     difference = numBitsDiffering(bottomLeftVersionBits, version.infoBits);
+
     if (difference < bestDifference) {
       bestVersion = version;
       bestDifference = difference;
     }
   }
+
   // We can tolerate up to 3 bits of error since no two version info codewords will
   // differ in less than 8 bits.
   if (bestDifference <= 3) {
@@ -197,70 +213,85 @@ function readVersion(matrix: BitMatrix): Version {
   }
 }
 
-function readFormatInformation(matrix: BitMatrix) {
-  let topLeftFormatInfoBits = 0;
-  for (let x = 0; x <= 8; x++) {
+function readFormatInformation(matrix: BitMatrix): FormatInformation {
+  let topLeftFormatInfoBits: number = 0;
+
+  for (let x: number = 0; x <= 8; x++) {
     if (x !== 6) {
       // Skip timing pattern bit
       topLeftFormatInfoBits = pushBit(matrix.get(x, 8), topLeftFormatInfoBits);
     }
   }
-  for (let y = 7; y >= 0; y--) {
+
+  for (let y: number = 7; y >= 0; y--) {
     if (y !== 6) {
       // Skip timing pattern bit
       topLeftFormatInfoBits = pushBit(matrix.get(8, y), topLeftFormatInfoBits);
     }
   }
 
-  const dimension = matrix.height;
-  let topRightBottomRightFormatInfoBits = 0;
-  for (let y = dimension - 1; y >= dimension - 7; y--) {
+  const dimension: number = matrix.height;
+  let topRightBottomRightFormatInfoBits: number = 0;
+
+  for (let y: number = dimension - 1; y >= dimension - 7; y--) {
     // bottom left
     topRightBottomRightFormatInfoBits = pushBit(matrix.get(8, y), topRightBottomRightFormatInfoBits);
   }
-  for (let x = dimension - 8; x < dimension; x++) {
+
+  for (let x: number = dimension - 8; x < dimension; x++) {
     // top right
     topRightBottomRightFormatInfoBits = pushBit(matrix.get(x, 8), topRightBottomRightFormatInfoBits);
   }
 
-  let bestDifference = Infinity;
-  let bestFormatInfo = null;
+  let bestDifference: number = Infinity;
+  let bestFormatInfo: FormatInformation = null;
+
   for (const { bits, formatInfo } of FORMAT_INFO_TABLE) {
     if (bits === topLeftFormatInfoBits || bits === topRightBottomRightFormatInfoBits) {
       return formatInfo;
     }
-    let difference = numBitsDiffering(topLeftFormatInfoBits, bits);
+
+    let difference: number = numBitsDiffering(topLeftFormatInfoBits, bits);
+
     if (difference < bestDifference) {
       bestFormatInfo = formatInfo;
       bestDifference = difference;
     }
+
     if (topLeftFormatInfoBits !== topRightBottomRightFormatInfoBits) {
       // also try the other option
       difference = numBitsDiffering(topRightBottomRightFormatInfoBits, bits);
+
       if (difference < bestDifference) {
         bestFormatInfo = formatInfo;
         bestDifference = difference;
       }
     }
   }
+
   // Hamming distance of the 32 masked codes is 7, by construction, so <= 3 bits differing means we found a match
   if (bestDifference <= 3) {
     return bestFormatInfo;
   }
+
   return null;
 }
 
-function getDataBlocks(codewords: number[], version: Version, ecLevel: number) {
-  const ecInfo = version.errorCorrectionLevels[ecLevel];
-  const dataBlocks: Array<{
-    numDataCodewords: number;
-    codewords: number[];
-  }> = [];
+interface DataBlock {
+  codewords: number[];
+  numDataCodewords: number;
+}
 
-  let totalCodewords = 0;
+function getDataBlocks(codewords: number[], version: Version, ecLevel: number): DataBlock[] {
+  const dataBlocks: DataBlock[] = [];
+  const ecInfo: ECLevel = version.errorCorrectionLevels[ecLevel];
+
+  let totalCodewords: number = 0;
+
   ecInfo.ecBlocks.forEach(block => {
-    for (let i = 0; i < block.numBlocks; i++) {
+    for (let i: number = 0; i < block.numBlocks; i++) {
       dataBlocks.push({ numDataCodewords: block.dataCodewordsPerBlock, codewords: [] });
+
       totalCodewords += block.dataCodewordsPerBlock + ecInfo.ecCodewordsPerBlock;
     }
   });
@@ -271,11 +302,13 @@ function getDataBlocks(codewords: number[], version: Version, ecLevel: number) {
   if (codewords.length < totalCodewords) {
     return null;
   }
+
   codewords = codewords.slice(0, totalCodewords);
 
-  const shortBlockSize = ecInfo.ecBlocks[0].dataCodewordsPerBlock;
+  const shortBlockSize: number = ecInfo.ecBlocks[0].dataCodewordsPerBlock;
+
   // Pull codewords to fill the blocks up to the minimum size
-  for (let i = 0; i < shortBlockSize; i++) {
+  for (let i: number = 0; i < shortBlockSize; i++) {
     for (const dataBlock of dataBlocks) {
       dataBlock.codewords.push(codewords.shift());
     }
@@ -283,9 +316,10 @@ function getDataBlocks(codewords: number[], version: Version, ecLevel: number) {
 
   // If there are any large blocks, pull codewords to fill the last element of those
   if (ecInfo.ecBlocks.length > 1) {
-    const smallBlockCount = ecInfo.ecBlocks[0].numBlocks;
-    const largeBlockCount = ecInfo.ecBlocks[1].numBlocks;
-    for (let i = 0; i < largeBlockCount; i++) {
+    const smallBlockCount: number = ecInfo.ecBlocks[0].numBlocks;
+    const largeBlockCount: number = ecInfo.ecBlocks[1].numBlocks;
+
+    for (let i: number = 0; i < largeBlockCount; i++) {
       dataBlocks[smallBlockCount + i].codewords.push(codewords.shift());
     }
   }
@@ -300,61 +334,74 @@ function getDataBlocks(codewords: number[], version: Version, ecLevel: number) {
   return dataBlocks;
 }
 
-function decodeMatrix(matrix: BitMatrix) {
-  const version = readVersion(matrix);
+function decodeMatrix(matrix: BitMatrix): DecodeResult {
+  const version: Version = readVersion(matrix);
+
   if (!version) {
     return null;
   }
 
-  const formatInfo = readFormatInformation(matrix);
+  const formatInfo: FormatInformation = readFormatInformation(matrix);
+
   if (!formatInfo) {
     return null;
   }
 
-  const codewords = readCodewords(matrix, version, formatInfo);
-  const dataBlocks = getDataBlocks(codewords, version, formatInfo.errorCorrectionLevel);
+  const codewords: number[] = readCodewords(matrix, version, formatInfo);
+  const dataBlocks: DataBlock[] = getDataBlocks(codewords, version, formatInfo.errorCorrectionLevel);
+
   if (!dataBlocks) {
     return null;
   }
 
   // Count total number of data bytes
-  const totalBytes = dataBlocks.reduce((a, b) => a + b.numDataCodewords, 0);
-  const resultBytes = new Uint8ClampedArray(totalBytes);
+  const totalBytes: number = dataBlocks.reduce((a, b) => a + b.numDataCodewords, 0);
+  const resultBytes: Uint8ClampedArray = new Uint8ClampedArray(totalBytes);
 
-  let resultIndex = 0;
+  let resultIndex: number = 0;
+
   for (const dataBlock of dataBlocks) {
-    const correctedBytes = rsDecode(dataBlock.codewords, dataBlock.codewords.length - dataBlock.numDataCodewords);
+    const correctedBytes: Uint8ClampedArray = rsDecode(
+      dataBlock.codewords,
+      dataBlock.codewords.length - dataBlock.numDataCodewords
+    );
+
     if (!correctedBytes) {
       return null;
     }
-    for (let i = 0; i < dataBlock.numDataCodewords; i++) {
+
+    for (let i: number = 0; i < dataBlock.numDataCodewords; i++) {
       resultBytes[resultIndex++] = correctedBytes[i];
     }
   }
 
   try {
-    return decodeData(resultBytes, version.versionNumber);
+    return decodeBytes(resultBytes, version.versionNumber);
   } catch {
     return null;
   }
 }
 
-export function decode(matrix: BitMatrix): DecodedQR {
+export default function decode(matrix: BitMatrix): DecodeResult {
   if (matrix == null) {
     return null;
   }
-  const result = decodeMatrix(matrix);
+
+  const result: DecodeResult = decodeMatrix(matrix);
+
   if (result) {
     return result;
   }
+
   // Decoding didn't work, try mirroring the QR across the topLeft -> bottomRight line.
-  for (let x = 0; x < matrix.width; x++) {
-    for (let y = x + 1; y < matrix.height; y++) {
+  for (let x: number = 0; x < matrix.width; x++) {
+    for (let y: number = x + 1; y < matrix.height; y++) {
       if (matrix.get(x, y) !== matrix.get(y, x)) {
         matrix.set(x, y, !matrix.get(x, y));
         matrix.set(y, x, !matrix.get(y, x));
       }
     }
   }
+
   return decodeMatrix(matrix);
 }

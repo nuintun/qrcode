@@ -24,15 +24,13 @@ export interface ECIChunk {
 
 export type Chunks = Array<Chunk | ByteChunk | ECIChunk>;
 
-export interface DecodedQR {
+export interface DecodeData {
   text: string;
   bytes: number[];
-  chunks: Chunks;
 }
 
-export interface DecodeResult {
-  text: string;
-  bytes: number[];
+export interface DecodeResult extends DecodeData {
+  chunks: Chunks;
 }
 
 export enum Mode {
@@ -55,7 +53,7 @@ enum ModeByte {
   // FNC1SecondPosition = 0x9
 }
 
-function decodeNumeric(stream: BitStream, size: number): DecodeResult {
+function decodeNumeric(stream: BitStream, size: number): DecodeData {
   let text: string = '';
   const bytes: number[] = [];
 
@@ -119,7 +117,7 @@ const AlphanumericCharacterCodes: string[]= [
   ' ', '$', '%', '*', '+', '-', '.', '/', ':'
 ];
 
-function decodeAlphanumeric(stream: BitStream, size: number): DecodeResult {
+function decodeAlphanumeric(stream: BitStream, size: number): DecodeData {
   let text: string = '';
   const bytes: number[] = [];
 
@@ -150,7 +148,7 @@ function decodeAlphanumeric(stream: BitStream, size: number): DecodeResult {
   return { bytes, text };
 }
 
-function decodeByte(stream: BitStream, size: number): DecodeResult {
+function decodeByte(stream: BitStream, size: number): DecodeData {
   let text: string = '';
   const bytes: number[] = [];
 
@@ -172,7 +170,7 @@ function decodeByte(stream: BitStream, size: number): DecodeResult {
   return { bytes, text };
 }
 
-function decodeKanji(stream: BitStream, size: number): DecodeResult {
+function decodeKanji(stream: BitStream, size: number): DecodeData {
   let text: string = '';
   const bytes: number[] = [];
 
@@ -198,17 +196,13 @@ function decodeKanji(stream: BitStream, size: number): DecodeResult {
   return { bytes, text };
 }
 
-export function decode(data: Uint8ClampedArray, version: number): DecodedQR {
+export function decode(data: Uint8ClampedArray, version: number): DecodeResult {
   const stream: BitStream = new BitStream(data);
 
   // There are 3 'sizes' based on the version. 1-9 is small (0), 10-26 is medium (1) and 27-40 is large (2).
   const size: number = version <= 9 ? 0 : version <= 26 ? 1 : 2;
 
-  const result: DecodedQR = {
-    text: '',
-    bytes: [],
-    chunks: []
-  };
+  const result: DecodeResult = { text: '', bytes: [], chunks: [] };
 
   while (stream.available() >= 4) {
     const mode: number = stream.readBits(4);
@@ -239,7 +233,7 @@ export function decode(data: Uint8ClampedArray, version: number): DecodedQR {
         });
       }
     } else if (mode === ModeByte.Numeric) {
-      const numericResult: DecodeResult = decodeNumeric(stream, size);
+      const numericResult: DecodeData = decodeNumeric(stream, size);
 
       result.text += numericResult.text;
 
@@ -249,7 +243,7 @@ export function decode(data: Uint8ClampedArray, version: number): DecodedQR {
         text: numericResult.text
       });
     } else if (mode === ModeByte.Alphanumeric) {
-      const alphanumericResult: DecodeResult = decodeAlphanumeric(stream, size);
+      const alphanumericResult: DecodeData = decodeAlphanumeric(stream, size);
 
       result.text += alphanumericResult.text;
 
@@ -259,7 +253,7 @@ export function decode(data: Uint8ClampedArray, version: number): DecodedQR {
         text: alphanumericResult.text
       });
     } else if (mode === ModeByte.Byte) {
-      const byteResult: DecodeResult = decodeByte(stream, size);
+      const byteResult: DecodeData = decodeByte(stream, size);
 
       result.text += byteResult.text;
 
@@ -270,7 +264,7 @@ export function decode(data: Uint8ClampedArray, version: number): DecodedQR {
         text: byteResult.text
       });
     } else if (mode === ModeByte.Kanji) {
-      const kanjiResult: DecodeResult = decodeKanji(stream, size);
+      const kanjiResult: DecodeData = decodeKanji(stream, size);
 
       result.text += kanjiResult.text;
 

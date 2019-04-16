@@ -1729,6 +1729,42 @@
     }());
 
     /**
+     * @module GenericGF
+     * @author nuintun
+     * @author Cosmo Wolfe
+     */
+
+    /**
+     * @module GenericGFPoly
+     * @author nuintun
+     * @author Cosmo Wolfe
+     */
+
+    /**
+     * @module index
+     * @author nuintun
+     * @author Cosmo Wolfe
+     */
+
+    /**
+     * @module BitMatrix
+     * @author nuintun
+     * @author Cosmo Wolfe
+     */
+
+    /**
+     * @module Version
+     * @author nuintun
+     * @author Cosmo Wolfe
+     */
+
+    /**
+     * @module BitStream
+     * @author nuintun
+     * @author Cosmo Wolfe
+     */
+
+    /**
      * @module SJIS
      * @author nuintun
      * @author Kazuhiko Arase
@@ -1812,6 +1848,56 @@
         }
         return bytes;
     }
+
+    /**
+     * @module index
+     * @author nuintun
+     * @author Cosmo Wolfe
+     */
+    var Mode$2;
+    (function (Mode) {
+        Mode["Numeric"] = "numeric";
+        Mode["Alphanumeric"] = "alphanumeric";
+        Mode["Byte"] = "byte";
+        Mode["Kanji"] = "kanji";
+        Mode["ECI"] = "eci";
+    })(Mode$2 || (Mode$2 = {}));
+    var ModeByte;
+    (function (ModeByte) {
+        ModeByte[ModeByte["Terminator"] = 0] = "Terminator";
+        ModeByte[ModeByte["Numeric"] = 1] = "Numeric";
+        ModeByte[ModeByte["Alphanumeric"] = 2] = "Alphanumeric";
+        ModeByte[ModeByte["Byte"] = 4] = "Byte";
+        ModeByte[ModeByte["Kanji"] = 8] = "Kanji";
+        ModeByte[ModeByte["ECI"] = 7] = "ECI";
+        // StructuredAppend = 0x3,
+        // FNC1FirstPosition = 0x5,
+        // FNC1SecondPosition = 0x9
+    })(ModeByte || (ModeByte = {}));
+
+    /**
+     * @module locator
+     * @author nuintun
+     * @author Cosmo Wolfe
+     */
+
+    /**
+     * @module extractor
+     * @author nuintun
+     * @author Cosmo Wolfe
+     */
+
+    /**
+     * @module binarizer
+     * @author nuintun
+     * @author Cosmo Wolfe
+     */
+
+    /**
+     * @module QRCode
+     * @author nuintun
+     * @author Cosmo Wolfe
+     */
 
     /**
      * @module QRKanji

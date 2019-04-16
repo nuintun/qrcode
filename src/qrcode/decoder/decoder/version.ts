@@ -4,17 +4,21 @@
  * @author Cosmo Wolfe
  */
 
+export interface ECBlock {
+  numBlocks: number;
+  dataCodewordsPerBlock: number;
+}
+
+export interface ECLevel {
+  ecBlocks: ECBlock[];
+  ecCodewordsPerBlock: number;
+}
+
 export interface Version {
   infoBits: number;
   versionNumber: number;
+  errorCorrectionLevels: ECLevel[];
   alignmentPatternCenters: number[];
-  errorCorrectionLevels: Array<{
-    ecCodewordsPerBlock: number;
-    ecBlocks: Array<{
-      numBlocks: number;
-      dataCodewordsPerBlock: number;
-    }>;
-  }>;
 }
 
 export const VERSIONS: Version[] = [

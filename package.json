@@ -23,11 +23,12 @@
   },
   "scripts": {
     "prepublishOnly": "npm run build",
-    "rollup": "npm run rollup:encoder",
     "build": "npm run build:es5 && npm run build:es6",
     "build:es5": "tsc --pretty --module commonjs --outDir es5",
     "build:es6": "tsc --pretty --module esnext --outDir esnext",
-    "rollup:encoder": "rollup -c example/encoder/rollup.config.js"
+    "rollup": "npm run rollup:encoder && npm run rollup:decoder",
+    "rollup:encoder": "rollup -c example/encoder/rollup.config.js",
+    "rollup:decoder": "rollup -c example/decoder/rollup.config.js"
   },
   "dependencies": {
     "tslib": "^1.9.3"
