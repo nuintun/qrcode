@@ -229,8 +229,8 @@
     var EXP_TABLE = [];
     var LOG_TABLE = [];
     for (var i = 0; i < 256; i++) {
-        LOG_TABLE.push(0);
-        EXP_TABLE.push(i < 8 ? 1 << i : EXP_TABLE[i - 4] ^ EXP_TABLE[i - 5] ^ EXP_TABLE[i - 6] ^ EXP_TABLE[i - 8]);
+        LOG_TABLE[i] = 0;
+        EXP_TABLE[i] = i < 8 ? 1 << i : EXP_TABLE[i - 4] ^ EXP_TABLE[i - 5] ^ EXP_TABLE[i - 6] ^ EXP_TABLE[i - 8];
     }
     for (var i = 0; i < 255; i++) {
         LOG_TABLE[EXP_TABLE[i]] = i;
@@ -537,14 +537,15 @@
         return a ^ b;
     }
     var GenericGF = /** @class */ (function () {
-        function GenericGF(primitive, size, genBase) {
+        function GenericGF(primitive, size, generatorBase) {
             this.primitive = primitive;
             this.size = size;
-            this.generatorBase = genBase;
-            this.expTable = new Array(this.size);
-            this.logTable = new Array(this.size);
+            this.generatorBase = generatorBase;
+            this.expTable = [];
+            this.logTable = [];
             var x = 1;
             for (var i = 0; i < this.size; i++) {
+                this.logTable[i] = 0;
                 this.expTable[i] = x;
                 x = x * 2;
                 if (x >= this.size) {
@@ -565,13 +566,13 @@
         };
         GenericGF.prototype.inverse = function (a) {
             if (a === 0) {
-                throw new Error("Can't invert 0");
+                throw "can't invert 0";
             }
             return this.expTable[this.size - this.logTable[a] - 1];
         };
         GenericGF.prototype.buildMonomial = function (degree, coefficient) {
             if (degree < 0) {
-                throw new Error('Invalid monomial degree less than 0');
+                throw 'invalid monomial degree less than 0';
             }
             if (coefficient === 0) {
                 return this.zero;
@@ -582,7 +583,7 @@
         };
         GenericGF.prototype.log = function (a) {
             if (a === 0) {
-                throw new Error("Can't take log(0)");
+                throw "can't take log(0)";
             }
             return this.logTable[a];
         };
@@ -600,7 +601,7 @@
     var GenericGFPoly = /** @class */ (function () {
         function GenericGFPoly(field, coefficients) {
             if (coefficients.length === 0) {
-                throw new Error('no coefficients');
+                throw 'no coefficients';
             }
             this.field = field;
             var coefficientsLength = coefficients.length;
@@ -689,7 +690,7 @@
         };
         GenericGFPoly.prototype.multiplyByMonomial = function (degree, coefficient) {
             if (degree < 0) {
-                throw new Error('invalid degree less than 0');
+                throw 'invalid degree less than 0';
             }
             if (coefficient === 0) {
                 return this.field.zero;
@@ -1821,7 +1822,7 @@
         }
         BitStream.prototype.readBits = function (numBits) {
             if (numBits < 1 || numBits > 32 || numBits > this.available()) {
-                throw new Error('Cannot read ' + numBits.toString() + ' bits');
+                throw "can't read " + numBits + " bits";
             }
             var result = 0;
             // First, read remainder from current byte
@@ -1980,7 +1981,7 @@
         while (length >= 3) {
             var num = stream.readBits(10);
             if (num >= 1000) {
-                throw new Error('Invalid numeric value above 999');
+                throw 'invalid numeric value above 999';
             }
             var a = Math.floor(num / 100);
             var b = Math.floor(num / 10) % 10;
@@ -1993,7 +1994,7 @@
         if (length === 2) {
             var num = stream.readBits(7);
             if (num >= 100) {
-                throw new Error('Invalid numeric value above 99');
+                throw 'invalid numeric value above 99';
             }
             var a = Math.floor(num / 10);
             var b = num % 10;
@@ -2003,7 +2004,7 @@
         else if (length === 1) {
             var num = stream.readBits(4);
             if (num >= 10) {
-                throw new Error('Invalid numeric value above 9');
+                throw 'invalid numeric value above 9';
             }
             bytes.push(48 + num);
             text += num.toString();
@@ -2514,7 +2515,7 @@
             sum(countBlackWhiteRun(topRight, topLeft, matrix, 5)) / 7) /
             4;
         if (moduleSize < 1) {
-            throw new Error('Invalid module size');
+            throw 'invalid module size';
         }
         var topDimension = Math.round(distance(topLeft, topRight) / moduleSize);
         var sideDimension = Math.round(distance(topLeft, bottomLeft) / moduleSize);
@@ -2951,7 +2952,7 @@
     }());
     function binarize(data, width, height, returnInverted) {
         if (data.length !== width * height * 4) {
-            throw new Error('Malformed data passed to binarizer.');
+            throw 'malformed data passed to binarizer';
         }
         // Convert image to greyscale
         var greyscalePixels = new Matrix(width, height);
@@ -3083,6 +3084,11 @@
         function QRCode() {
             this.options = defaultOptions;
         }
+        /**
+         * @public
+         * @method setOptions
+         * @param {object} options
+         */
         QRCode.prototype.setOptions = function (options) {
             if (options === void 0) { options = {}; }
             options = options || {};
@@ -3092,6 +3098,14 @@
             });
             this.options = options;
         };
+        /**
+         * @public
+         * @method decode
+         * @param {Uint8ClampedArray} data
+         * @param {number} width
+         * @param {number} height
+         * @returns {DecoderResult}
+         */
         QRCode.prototype.decode = function (data, width, height) {
             var options = this.options;
             var shouldInvert = options.inversionAttempts === 'attemptBoth' || options.inversionAttempts === 'invertFirst';
@@ -3103,6 +3117,12 @@
             }
             return result;
         };
+        /**
+         * @public
+         * @method scan
+         * @param {string} src
+         * @returns {Promise}
+         */
         QRCode.prototype.scan = function (src) {
             var _this = this;
             return new Promise(function (resolve, reject) {

@@ -44,7 +44,7 @@ export default function binarize(
   returnInverted: boolean
 ): BinarizeResult {
   if (data.length !== width * height * 4) {
-    throw new Error('Malformed data passed to binarizer.');
+    throw 'malformed data passed to binarizer';
   }
 
   // Convert image to greyscale

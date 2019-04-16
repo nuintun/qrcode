@@ -4,7 +4,7 @@
  * @author Cosmo Wolfe
  */
 
-export interface ECBlock {
+interface ECBlock {
   numBlocks: number;
   dataCodewordsPerBlock: number;
 }

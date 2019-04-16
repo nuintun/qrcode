@@ -75,6 +75,11 @@ function disposeImageEvents(image: HTMLImageElement): void {
 export default class QRCode {
   private options: Options = defaultOptions;
 
+  /**
+   * @public
+   * @method setOptions
+   * @param {object} options
+   */
   public setOptions(options: Options = {}): void {
     options = options || {};
 
@@ -86,6 +91,14 @@ export default class QRCode {
     this.options = options;
   }
 
+  /**
+   * @public
+   * @method decode
+   * @param {Uint8ClampedArray} data
+   * @param {number} width
+   * @param {number} height
+   * @returns {DecoderResult}
+   */
   public decode(data: Uint8ClampedArray, width: number, height: number): DecoderResult {
     const options: Options = this.options;
     const shouldInvert: boolean = options.inversionAttempts === 'attemptBoth' || options.inversionAttempts === 'invertFirst';
@@ -101,6 +114,12 @@ export default class QRCode {
     return result;
   }
 
+  /**
+   * @public
+   * @method scan
+   * @param {string} src
+   * @returns {Promise}
+   */
   public scan(src: string): Promise<DecoderResult> {
     return new Promise((resolve, reject) => {
       const image: HTMLImageElement = new Image();

@@ -20,16 +20,18 @@ export default class GenericGF {
   private expTable: number[];
   private logTable: number[];
 
-  constructor(primitive: number, size: number, genBase: number) {
+  constructor(primitive: number, size: number, generatorBase: number) {
     this.primitive = primitive;
     this.size = size;
-    this.generatorBase = genBase;
-    this.expTable = new Array(this.size);
-    this.logTable = new Array(this.size);
+    this.generatorBase = generatorBase;
+
+    this.expTable = [];
+    this.logTable = [];
 
     let x: number = 1;
 
     for (let i: number = 0; i < this.size; i++) {
+      this.logTable[i] = 0;
       this.expTable[i] = x;
 
       x = x * 2;
@@ -57,7 +59,7 @@ export default class GenericGF {
 
   public inverse(a: number): number {
     if (a === 0) {
-      throw new Error("Can't invert 0");
+      throw "can't invert 0";
     }
 
     return this.expTable[this.size - this.logTable[a] - 1];
@@ -65,7 +67,7 @@ export default class GenericGF {
 
   public buildMonomial(degree: number, coefficient: number): GenericGFPoly {
     if (degree < 0) {
-      throw new Error('Invalid monomial degree less than 0');
+      throw 'invalid monomial degree less than 0';
     }
 
     if (coefficient === 0) {
@@ -81,7 +83,7 @@ export default class GenericGF {
 
   public log(a: number): number {
     if (a === 0) {
-      throw new Error("Can't take log(0)");
+      throw "can't take log(0)";
     }
 
     return this.logTable[a];

@@ -7,24 +7,24 @@
 import BitStream from './BitStream';
 import { UTF2SJISTable } from '../../../../encoding/SJIS';
 
-export interface Chunk {
+interface Chunk {
   type: Mode;
   text: string;
 }
 
-export interface ByteChunk {
+interface ByteChunk {
   type: Mode.Byte | Mode.Kanji;
   bytes: number[];
 }
 
-export interface ECIChunk {
+interface ECIChunk {
   type: Mode.ECI;
   assignmentNumber: number;
 }
 
 export type Chunks = Array<Chunk | ByteChunk | ECIChunk>;
 
-export interface DecodeData {
+interface DecodeData {
   text: string;
   bytes: number[];
 }
@@ -33,7 +33,7 @@ export interface DecodeResult extends DecodeData {
   chunks: Chunks;
 }
 
-export enum Mode {
+enum Mode {
   Numeric = 'numeric',
   Alphanumeric = 'alphanumeric',
   Byte = 'byte',
@@ -65,7 +65,7 @@ function decodeNumeric(stream: BitStream, size: number): DecodeData {
     const num: number = stream.readBits(10);
 
     if (num >= 1000) {
-      throw new Error('Invalid numeric value above 999');
+      throw 'invalid numeric value above 999';
     }
 
     const a: number = Math.floor(num / 100);
@@ -84,7 +84,7 @@ function decodeNumeric(stream: BitStream, size: number): DecodeData {
     const num: number = stream.readBits(7);
 
     if (num >= 100) {
-      throw new Error('Invalid numeric value above 99');
+      throw 'invalid numeric value above 99';
     }
 
     const a: number = Math.floor(num / 10);
@@ -97,7 +97,7 @@ function decodeNumeric(stream: BitStream, size: number): DecodeData {
     const num: number = stream.readBits(4);
 
     if (num >= 10) {
-      throw new Error('Invalid numeric value above 9');
+      throw 'invalid numeric value above 9';
     }
 
     bytes.push(48 + num);

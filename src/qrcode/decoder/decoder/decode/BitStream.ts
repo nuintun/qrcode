@@ -15,7 +15,7 @@ export default class BitStream {
 
   public readBits(numBits: number): number {
     if (numBits < 1 || numBits > 32 || numBits > this.available()) {
-      throw new Error('Cannot read ' + numBits.toString() + ' bits');
+      throw `can't read ${numBits} bits`;
     }
 
     let result: number = 0;

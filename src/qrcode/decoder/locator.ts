@@ -76,7 +76,7 @@ function computeDimension(topLeft: Point, topRight: Point, bottomLeft: Point, ma
     4;
 
   if (moduleSize < 1) {
-    throw new Error('Invalid module size');
+    throw 'invalid module size';
   }
 
   const topDimension: number = Math.round(distance(topLeft, topRight) / moduleSize);
