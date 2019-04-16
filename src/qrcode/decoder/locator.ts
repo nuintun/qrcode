@@ -21,12 +21,18 @@ export interface QRLocation {
 
 const distance = (a: Point, b: Point): number => Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
 
-function sum(values: number[]) {
+function sum(values: number[]): number {
   return values.reduce((a, b) => a + b);
 }
 
+interface Patterns {
+  topRight: Point;
+  topLeft: Point;
+  bottomLeft: Point;
+}
+
 // Takes three finder patterns and organizes them into topLeft, topRight, etc
-function reorderFinderPatterns(pattern1: Point, pattern2: Point, pattern3: Point) {
+function reorderFinderPatterns(pattern1: Point, pattern2: Point, pattern3: Point): Patterns {
   // Find distances between pattern centers
   const oneTwoDistance: number = distance(pattern1, pattern2);
   const twoThreeDistance: number = distance(pattern2, pattern3);
@@ -55,8 +61,13 @@ function reorderFinderPatterns(pattern1: Point, pattern2: Point, pattern3: Point
   return { bottomLeft, topLeft, topRight };
 }
 
+interface Dimension {
+  dimension: number;
+  moduleSize: number;
+}
+
 // Computes the dimension (number of modules on a side) of the QR Code based on the position of the finder patterns
-function computeDimension(topLeft: Point, topRight: Point, bottomLeft: Point, matrix: BitMatrix) {
+function computeDimension(topLeft: Point, topRight: Point, bottomLeft: Point, matrix: BitMatrix): Dimension {
   const moduleSize: number =
     (sum(countBlackWhiteRun(topLeft, bottomLeft, matrix, 5)) / 7 + // Divide by 7 since the ratio is 1:1:3:1:1
       sum(countBlackWhiteRun(topLeft, topRight, matrix, 5)) / 7 +
@@ -87,7 +98,7 @@ function computeDimension(topLeft: Point, topRight: Point, bottomLeft: Point, ma
 // Takes an origin point and an end point and counts the sizes of the black white run from the origin towards the end point.
 // Returns an array of elements, representing the pixel size of the black white run.
 // Uses a variant of http://en.wikipedia.org/wiki/Bresenham's_line_algorithm
-function countBlackWhiteRunTowardsPoint(origin: Point, end: Point, matrix: BitMatrix, length: number) {
+function countBlackWhiteRunTowardsPoint(origin: Point, end: Point, matrix: BitMatrix, length: number): number[] {
   const switchPoints: Point[] = [{ x: Math.floor(origin.x), y: Math.floor(origin.y) }];
   const steep: boolean = Math.abs(end.y - origin.y) > Math.abs(end.x - origin.x);
 
@@ -161,7 +172,7 @@ function countBlackWhiteRunTowardsPoint(origin: Point, end: Point, matrix: BitMa
 // Takes an origin point and an end point and counts the sizes of the black white run in the origin point
 // along the line that intersects with the end point. Returns an array of elements, representing the pixel sizes
 // of the black white run. Takes a length which represents the number of switches from black to white to look for.
-function countBlackWhiteRun(origin: Point, end: Point, matrix: BitMatrix, length: number) {
+function countBlackWhiteRun(origin: Point, end: Point, matrix: BitMatrix, length: number): number[] {
   const rise: number = end.y - origin.y;
   const run: number = end.x - origin.x;
 
@@ -252,6 +263,20 @@ interface Quad {
     endX: number;
     y: number;
   };
+}
+
+interface FinderPattern extends Point {
+  size: number;
+  score: number;
+}
+
+interface FinderPatternGroup {
+  score: number;
+  points: FinderPattern[];
+}
+
+interface AlignmentPattern extends Point {
+  score: number;
 }
 
 export default function locate(matrix: BitMatrix): QRLocation {
@@ -355,7 +380,7 @@ export default function locate(matrix: BitMatrix): QRLocation {
   finderPatternQuads.push(...activeFinderPatternQuads.filter(q => q.bottom.y - q.top.y >= 2));
   alignmentPatternQuads.push(...activeAlignmentPatternQuads);
 
-  const finderPatternGroups = finderPatternQuads
+  const finderPatternGroups: FinderPatternGroup[] = finderPatternQuads
     .filter(q => q.bottom.y - q.top.y >= 2) // All quads must be at least 2px tall since the center square is larger than a block
     .map(q => {
       // Initial scoring of finder pattern quads by looking at their ratios, not taking into account position
@@ -380,7 +405,7 @@ export default function locate(matrix: BitMatrix): QRLocation {
         return null;
       }
 
-      const otherPoints = finderPatterns
+      const otherPoints: FinderPattern[] = finderPatterns
         .filter((p, ii) => i !== ii)
         .map(p => ({ x: p.x, y: p.y, score: p.score + (p.size - point.size) ** 2 / point.size, size: p.size }))
         .sort((a, b) => a.score - b.score);
@@ -400,7 +425,7 @@ export default function locate(matrix: BitMatrix): QRLocation {
     return null;
   }
 
-  const { topRight, topLeft, bottomLeft }: { topRight: Point; topLeft: Point; bottomLeft: Point } = reorderFinderPatterns(
+  const { topRight, topLeft, bottomLeft }: Patterns = reorderFinderPatterns(
     finderPatternGroups[0].points[0],
     finderPatternGroups[0].points[1],
     finderPatternGroups[0].points[2]
@@ -418,19 +443,19 @@ export default function locate(matrix: BitMatrix): QRLocation {
   }
 
   // Now find the alignment pattern
-  const bottomRightFinderPattern: { x: number; y: number } = {
+  const bottomRightFinderPattern: Point = {
     // Best guess at where a bottomRight finder pattern would be
     x: topRight.x - topLeft.x + bottomLeft.x,
     y: topRight.y - topLeft.y + bottomLeft.y
   };
   const modulesBetweenFinderPatterns: number = (distance(topLeft, bottomLeft) + distance(topLeft, topRight)) / 2 / moduleSize;
   const correctionToTopLeft: number = 1 - 3 / modulesBetweenFinderPatterns;
-  const expectedAlignmentPattern: { x: number; y: number } = {
+  const expectedAlignmentPattern: Point = {
     x: topLeft.x + correctionToTopLeft * (bottomRightFinderPattern.x - topLeft.x),
     y: topLeft.y + correctionToTopLeft * (bottomRightFinderPattern.y - topLeft.y)
   };
 
-  const alignmentPatterns: { x: number; y: number; score: number }[] = alignmentPatternQuads
+  const alignmentPatterns: AlignmentPattern[] = alignmentPatternQuads
     .map(q => {
       const x: number = (q.top.startX + q.top.endX + q.bottom.startX + q.bottom.endX) / 4;
       const y: number = (q.top.y + q.bottom.y + 1) / 2;
@@ -451,7 +476,7 @@ export default function locate(matrix: BitMatrix): QRLocation {
 
   // If there are less than 15 modules between finder patterns it's a version 1 QR code and as such has no alignmemnt pattern
   // so we can only use our best guess.
-  const alignmentPattern: { x: number; y: number } =
+  const alignmentPattern: Point =
     modulesBetweenFinderPatterns >= 15 && alignmentPatterns.length ? alignmentPatterns[0] : expectedAlignmentPattern;
 
   return {
