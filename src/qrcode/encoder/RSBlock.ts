@@ -272,7 +272,7 @@ export default class RSBlock {
 
   public static getRSBlocks(version: number, errorCorrectLevel: ErrorCorrectLevel): RSBlock[] {
     const rsBlocks: RSBlock[] = [];
-    const rsBlock: number[] = RSBlock.getRsBlockTable(version, errorCorrectLevel);
+    const rsBlock: number[] = RSBlock.getRSBlockTable(version, errorCorrectLevel);
     const length: number = rsBlock.length / 3;
 
     for (let i: number = 0; i < length; i++) {
@@ -288,7 +288,7 @@ export default class RSBlock {
     return rsBlocks;
   }
 
-  private static getRsBlockTable(version: number, errorCorrectLevel: ErrorCorrectLevel): number[] {
+  private static getRSBlockTable(version: number, errorCorrectLevel: ErrorCorrectLevel): number[] {
     switch (errorCorrectLevel) {
       case ErrorCorrectLevel.L:
         return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 0];

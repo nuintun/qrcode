@@ -234,7 +234,7 @@
         };
         RSBlock.getRSBlocks = function (version, errorCorrectLevel) {
             var rsBlocks = [];
-            var rsBlock = RSBlock.getRsBlockTable(version, errorCorrectLevel);
+            var rsBlock = RSBlock.getRSBlockTable(version, errorCorrectLevel);
             var length = rsBlock.length / 3;
             for (var i = 0; i < length; i++) {
                 var count = rsBlock[i * 3 + 0];
@@ -246,7 +246,7 @@
             }
             return rsBlocks;
         };
-        RSBlock.getRsBlockTable = function (version, errorCorrectLevel) {
+        RSBlock.getRSBlockTable = function (version, errorCorrectLevel) {
             switch (errorCorrectLevel) {
                 case ErrorCorrectLevel$1.L:
                     return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 0];
