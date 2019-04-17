@@ -97,6 +97,11 @@ export function getMaskFunc(maskPattern: number): maskFunc {
   }
 }
 
+/**
+ * @function getLostPoint
+ * @param {QRCode} qrcode
+ * @see https://www.jianshu.com/p/cfa2bae198ea
+ */
 export function getLostPoint(qrcode: QRCode): number {
   let lostPoint: number = 0;
   const moduleCount: number = qrcode.getModuleCount();
@@ -151,8 +156,9 @@ export function getLostPoint(qrcode: QRCode): number {
   }
 
   // LEVEL3
+  // dark - light - dark - dark - dark - light - dark - light - light - light - light
   for (let row: number = 0; row < moduleCount; row++) {
-    for (let col: number = 0; col < moduleCount - 6; col++) {
+    for (let col: number = 0; col < moduleCount - 10; col++) {
       // vertical
       if (
         qrcode.isDark(row, col) &&
@@ -161,7 +167,11 @@ export function getLostPoint(qrcode: QRCode): number {
         qrcode.isDark(row, col + 3) &&
         qrcode.isDark(row, col + 4) &&
         !qrcode.isDark(row, col + 5) &&
-        qrcode.isDark(row, col + 6)
+        qrcode.isDark(row, col + 6) &&
+        !qrcode.isDark(row, col + 7) &&
+        !qrcode.isDark(row, col + 8) &&
+        !qrcode.isDark(row, col + 9) &&
+        !qrcode.isDark(row, col + 10)
       ) {
         lostPoint += 40;
       }
@@ -174,7 +184,11 @@ export function getLostPoint(qrcode: QRCode): number {
         qrcode.isDark(col + 3, row) &&
         qrcode.isDark(col + 4, row) &&
         !qrcode.isDark(col + 5, row) &&
-        qrcode.isDark(col + 6, row)
+        qrcode.isDark(col + 6, row) &&
+        !qrcode.isDark(col + 7, row) &&
+        !qrcode.isDark(col + 8, row) &&
+        !qrcode.isDark(col + 9, row) &&
+        !qrcode.isDark(col + 10, row)
       ) {
         lostPoint += 40;
       }
