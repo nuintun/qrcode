@@ -168,6 +168,9 @@ export default class QRCode {
       [buffer, rsBlocks, maxDataCount] = QRCode.prepareData(this.version, errorCorrectLevel, dataList);
     }
 
+    // calc module count
+    this.moduleCount = this.version * 4 + 17;
+
     // create data
     const data: number[] = QRCode.createData(buffer, rsBlocks, maxDataCount);
 
@@ -195,7 +198,6 @@ export default class QRCode {
   private makeImpl(test: boolean, data: number[], maskPattern: number): void {
     // initialize modules
     this.modules = [];
-    this.moduleCount = this.version * 4 + 17;
 
     for (let row: number = 0; row < this.moduleCount; row++) {
       this.modules[row] = [];

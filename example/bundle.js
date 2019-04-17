@@ -737,10 +737,10 @@
         }
         // LEVEL3
         // dark - light - dark - dark - dark - light - dark - light - light - light - light
+        // vertical
         for (var row = 0; row < moduleCount; row++) {
             for (var col = 0; col < moduleCount - 10; col++) {
-                // vertical
-                if (qrcode.isDark(row, col) &&
+                if ((qrcode.isDark(row, col) &&
                     !qrcode.isDark(row, col + 1) &&
                     qrcode.isDark(row, col + 2) &&
                     qrcode.isDark(row, col + 3) &&
@@ -750,21 +750,47 @@
                     !qrcode.isDark(row, col + 7) &&
                     !qrcode.isDark(row, col + 8) &&
                     !qrcode.isDark(row, col + 9) &&
-                    !qrcode.isDark(row, col + 10)) {
+                    !qrcode.isDark(row, col + 10)) ||
+                    (!qrcode.isDark(row, col) &&
+                        !qrcode.isDark(row, col + 1) &&
+                        !qrcode.isDark(row, col + 2) &&
+                        !qrcode.isDark(row, col + 3) &&
+                        qrcode.isDark(row, col + 4) &&
+                        !qrcode.isDark(row, col + 5) &&
+                        qrcode.isDark(row, col + 6) &&
+                        qrcode.isDark(row, col + 7) &&
+                        qrcode.isDark(row, col + 8) &&
+                        !qrcode.isDark(row, col + 9) &&
+                        qrcode.isDark(row, col + 10))) {
                     lostPoint += 40;
                 }
-                // horizontal
-                if (qrcode.isDark(col, row) &&
-                    !qrcode.isDark(col + 1, row) &&
-                    qrcode.isDark(col + 2, row) &&
-                    qrcode.isDark(col + 3, row) &&
-                    qrcode.isDark(col + 4, row) &&
-                    !qrcode.isDark(col + 5, row) &&
-                    qrcode.isDark(col + 6, row) &&
-                    !qrcode.isDark(col + 7, row) &&
-                    !qrcode.isDark(col + 8, row) &&
-                    !qrcode.isDark(col + 9, row) &&
-                    !qrcode.isDark(col + 10, row)) {
+            }
+        }
+        // horizontal
+        for (var row = 0; row < moduleCount - 10; row++) {
+            for (var col = 0; col < moduleCount; col++) {
+                if ((qrcode.isDark(row, col) &&
+                    !qrcode.isDark(row + 1, col) &&
+                    qrcode.isDark(row + 2, col) &&
+                    qrcode.isDark(row + 3, col) &&
+                    qrcode.isDark(row + 4, col) &&
+                    !qrcode.isDark(row + 5, col) &&
+                    qrcode.isDark(row + 6, col) &&
+                    !qrcode.isDark(row + 7, col) &&
+                    !qrcode.isDark(row + 8, col) &&
+                    !qrcode.isDark(row + 9, col) &&
+                    !qrcode.isDark(row + 10, col)) ||
+                    (!qrcode.isDark(row, col) &&
+                        !qrcode.isDark(row + 1, col) &&
+                        !qrcode.isDark(row + 2, col) &&
+                        !qrcode.isDark(row + 3, col) &&
+                        qrcode.isDark(row + 4, col) &&
+                        !qrcode.isDark(row + 5, col) &&
+                        qrcode.isDark(row + 6, col) &&
+                        qrcode.isDark(row + 7, col) &&
+                        qrcode.isDark(row + 8, col) &&
+                        !qrcode.isDark(row + 9, col) &&
+                        qrcode.isDark(row + 10, col))) {
                     lostPoint += 40;
                 }
             }
@@ -778,7 +804,8 @@
                 }
             }
         }
-        var ratio = Math.abs((100 * darkCount) / moduleCount / moduleCount - 50) / 5;
+        var div = (((darkCount / (moduleCount * moduleCount)) * 100) / 5) >>> 0;
+        var ratio = Math.min(Math.abs(div * 5 - 50) / 5, Math.abs((div + 1) * 5 - 50) / 5);
         lostPoint += ratio * 10;
         return lostPoint;
     }
@@ -1440,6 +1467,8 @@
             else {
                 _b = QRCode.prepareData(this.version, errorCorrectLevel, dataList), buffer = _b[0], rsBlocks = _b[1], maxDataCount = _b[2];
             }
+            // calc module count
+            this.moduleCount = this.version * 4 + 17;
             // create data
             var data = QRCode.createData(buffer, rsBlocks, maxDataCount);
             this.makeImpl(false, data, this.getBestMaskPattern(data));
@@ -1460,7 +1489,6 @@
         QRCode.prototype.makeImpl = function (test, data, maskPattern) {
             // initialize modules
             this.modules = [];
-            this.moduleCount = this.version * 4 + 17;
             for (var row = 0; row < this.moduleCount; row++) {
                 this.modules[row] = [];
                 for (var col = 0; col < this.moduleCount; col++) {
