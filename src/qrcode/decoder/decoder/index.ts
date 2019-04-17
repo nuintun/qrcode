@@ -1,3 +1,9 @@
+/**
+ * @module index
+ * @author nuintun
+ * @author Cosmo Wolfe
+ */
+
 import Point from '../Point';
 import rsDecode from './reedsolomon';
 import BitMatrix from '../BitMatrix';

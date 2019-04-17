@@ -21,7 +21,7 @@ function createNumArray(length: number): number[] {
   const array: number[] = [];
 
   for (let i: number = 0; i < length; i++) {
-    array.push(0);
+    array[i] = 0;
   }
 
   return array;
@@ -159,7 +159,7 @@ export default class QRCode {
     const errorCorrectLevel = this.errorCorrectLevel;
 
     if (this.autoVersion) {
-      for (this.version = 1; this.version < 40; this.version++) {
+      for (this.version = 1; this.version <= 40; this.version++) {
         [buffer, rsBlocks, maxDataCount] = QRCode.prepareData(this.version, errorCorrectLevel, dataList);
 
         if (buffer.getLengthInBits() <= maxDataCount) break;

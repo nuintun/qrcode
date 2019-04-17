@@ -18,7 +18,7 @@ export default class BitBuffer {
 
   public toString(): string {
     let buffer: string = '';
-    const length: number = this.getLengthInBits();
+    const length: number = this.length;
 
     for (let i: number = 0; i < length; i++) {
       buffer += this.getBit(i) ? '1' : '0';

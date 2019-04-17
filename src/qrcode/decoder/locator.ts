@@ -137,6 +137,7 @@ function countBlackWhiteRunTowardsPoint(origin: Point, end: Point, matrix: BitMa
 
     if (matrix.get(realX, realY) !== currentPixel) {
       currentPixel = !currentPixel;
+
       switchPoints.push({ x: realX, y: realY });
 
       if (switchPoints.length === length + 1) {
@@ -371,9 +372,11 @@ export default function locate(matrix: BitMatrix): QRLocation {
     }
 
     finderPatternQuads.push(...activeFinderPatternQuads.filter(q => q.bottom.y !== y && q.bottom.y - q.top.y >= 2));
+
     activeFinderPatternQuads = activeFinderPatternQuads.filter(q => q.bottom.y === y);
 
     alignmentPatternQuads.push(...activeAlignmentPatternQuads.filter(q => q.bottom.y !== y));
+
     activeAlignmentPatternQuads = activeAlignmentPatternQuads.filter(q => q.bottom.y === y);
   }
 

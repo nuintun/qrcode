@@ -2158,6 +2158,11 @@
         }
     }
 
+    /**
+     * @module index
+     * @author nuintun
+     * @author Cosmo Wolfe
+     */
     function numBitsDiffering(x, y) {
         var z = x ^ y;
         var bitCount = 0;

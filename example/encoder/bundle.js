@@ -806,7 +806,7 @@
         };
         BitBuffer.prototype.toString = function () {
             var buffer = '';
-            var length = this.getLengthInBits();
+            var length = this.length;
             for (var i = 0; i < length; i++) {
                 buffer += this.getBit(i) ? '1' : '0';
             }
@@ -1149,7 +1149,7 @@
             this.height = height;
             var size = width * height;
             for (var i = 0; i < size; i++) {
-                this.data.push(0);
+                this.data[i] = 0;
             }
         }
         GIFImage.prototype.setPixel = function (x, y, pixel) {
@@ -1289,7 +1289,7 @@
     function createNumArray(length) {
         var array = [];
         for (var i = 0; i < length; i++) {
-            array.push(0);
+            array[i] = 0;
         }
         return array;
     }
@@ -1414,7 +1414,7 @@
             var dataList = this.dataList;
             var errorCorrectLevel = this.errorCorrectLevel;
             if (this.autoVersion) {
-                for (this.version = 1; this.version < 40; this.version++) {
+                for (this.version = 1; this.version <= 40; this.version++) {
                     _a = QRCode.prepareData(this.version, errorCorrectLevel, dataList), buffer = _a[0], rsBlocks = _a[1], maxDataCount = _a[2];
                     if (buffer.getLengthInBits() <= maxDataCount)
                         break;
@@ -1869,6 +1869,12 @@
         // FNC1FirstPosition = 0x5,
         // FNC1SecondPosition = 0x9
     })(ModeByte || (ModeByte = {}));
+
+    /**
+     * @module index
+     * @author nuintun
+     * @author Cosmo Wolfe
+     */
 
     /**
      * @module locator

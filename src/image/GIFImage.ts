@@ -87,7 +87,7 @@ export default class GIFImage {
     const size: number = width * height;
 
     for (let i: number = 0; i < size; i++) {
-      this.data.push(0);
+      this.data[i] = 0;
     }
   }
 
