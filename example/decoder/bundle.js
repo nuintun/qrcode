@@ -3132,6 +3132,8 @@
             var _this = this;
             return new Promise(function (resolve, reject) {
                 var image = new Image();
+                // image cross origin
+                image.crossOrigin = 'anonymous';
                 image.onload = function () {
                     disposeImageEvents(image);
                     var width = image.width;

@@ -124,6 +124,9 @@ export default class QRCode {
     return new Promise((resolve, reject) => {
       const image: HTMLImageElement = new Image();
 
+      // image cross origin
+      image.crossOrigin = 'anonymous';
+
       image.onload = () => {
         disposeImageEvents(image);
 
