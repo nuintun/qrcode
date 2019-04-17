@@ -1486,13 +1486,12 @@
                             if (byteIndex < data.length) {
                                 dark = ((data[byteIndex] >>> bitIndex) & 1) === 1;
                             }
-                            var mask = maskFunc(col - c, row);
+                            var mask = maskFunc(row, col - c);
                             if (mask) {
                                 dark = !dark;
                             }
                             this.modules[row][col - c] = dark;
-                            bitIndex -= 1;
-                            if (bitIndex === -1) {
+                            if (--bitIndex === -1) {
                                 byteIndex++;
                                 bitIndex = 7;
                             }

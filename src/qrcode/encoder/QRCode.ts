@@ -248,16 +248,15 @@ export default class QRCode {
               dark = ((data[byteIndex] >>> bitIndex) & 1) === 1;
             }
 
-            const mask: boolean = maskFunc(col - c, row);
+            const mask: boolean = maskFunc(row, col - c);
 
             if (mask) {
               dark = !dark;
             }
 
             this.modules[row][col - c] = dark;
-            bitIndex -= 1;
 
-            if (bitIndex === -1) {
+            if (--bitIndex === -1) {
               byteIndex++;
               bitIndex = 7;
             }
