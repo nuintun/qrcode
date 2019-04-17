@@ -248,7 +248,7 @@ export default class QRCode {
               dark = ((data[byteIndex] >>> bitIndex) & 1) === 1;
             }
 
-            const mask: boolean = maskFunc(row, col - c);
+            const mask: boolean = maskFunc(col - c, row);
 
             if (mask) {
               dark = !dark;

@@ -1486,7 +1486,7 @@
                             if (byteIndex < data.length) {
                                 dark = ((data[byteIndex] >>> bitIndex) & 1) === 1;
                             }
-                            var mask = maskFunc(row, col - c);
+                            var mask = maskFunc(col - c, row);
                             if (mask) {
                                 dark = !dark;
                             }
