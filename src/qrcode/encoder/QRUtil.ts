@@ -128,7 +128,7 @@ export function getLostPoint(qrcode: QRCode): number {
       }
 
       if (sameCount > 5) {
-        lostPoint += sameCount - 2;
+        lostPoint += 3 + sameCount - 5;
       }
     }
   }
@@ -153,6 +153,7 @@ export function getLostPoint(qrcode: QRCode): number {
   // LEVEL3
   for (let row: number = 0; row < moduleCount; row++) {
     for (let col: number = 0; col < moduleCount - 6; col++) {
+      // vertical
       if (
         qrcode.isDark(row, col) &&
         !qrcode.isDark(row, col + 1) &&
@@ -164,19 +165,16 @@ export function getLostPoint(qrcode: QRCode): number {
       ) {
         lostPoint += 40;
       }
-    }
-  }
 
-  for (let col: number = 0; col < moduleCount; col++) {
-    for (let row: number = 0; row < moduleCount - 6; row++) {
+      // horizontal
       if (
-        qrcode.isDark(row, col) &&
-        !qrcode.isDark(row + 1, col) &&
-        qrcode.isDark(row + 2, col) &&
-        qrcode.isDark(row + 3, col) &&
-        qrcode.isDark(row + 4, col) &&
-        !qrcode.isDark(row + 5, col) &&
-        qrcode.isDark(row + 6, col)
+        qrcode.isDark(col, row) &&
+        !qrcode.isDark(col + 1, row) &&
+        qrcode.isDark(col + 2, row) &&
+        qrcode.isDark(col + 3, row) &&
+        qrcode.isDark(col + 4, row) &&
+        !qrcode.isDark(col + 5, row) &&
+        qrcode.isDark(col + 6, row)
       ) {
         lostPoint += 40;
       }
