@@ -156,65 +156,52 @@ export function getLostPoint(qrcode: QRCode): number {
   }
 
   // LEVEL3
-  // dark - light - dark - dark - dark - light - dark - light - light - light - light
-  // vertical
   for (let row: number = 0; row < moduleCount; row++) {
     for (let col: number = 0; col < moduleCount - 10; col++) {
+      // vertical
+      const [r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10]: boolean[] = [
+        qrcode.isDark(row, col),
+        qrcode.isDark(row, col + 1),
+        qrcode.isDark(row, col + 2),
+        qrcode.isDark(row, col + 3),
+        qrcode.isDark(row, col + 4),
+        qrcode.isDark(row, col + 5),
+        qrcode.isDark(row, col + 6),
+        qrcode.isDark(row, col + 7),
+        qrcode.isDark(row, col + 8),
+        qrcode.isDark(row, col + 9),
+        qrcode.isDark(row, col + 10)
+      ];
+
+      // dark - light - dark - dark - dark - light - dark - light - light - light - light
+      // light - light - light - light - dark - light - dark - dark - dark - light - dark
       if (
-        (qrcode.isDark(row, col) &&
-          !qrcode.isDark(row, col + 1) &&
-          qrcode.isDark(row, col + 2) &&
-          qrcode.isDark(row, col + 3) &&
-          qrcode.isDark(row, col + 4) &&
-          !qrcode.isDark(row, col + 5) &&
-          qrcode.isDark(row, col + 6) &&
-          !qrcode.isDark(row, col + 7) &&
-          !qrcode.isDark(row, col + 8) &&
-          !qrcode.isDark(row, col + 9) &&
-          !qrcode.isDark(row, col + 10)) ||
-        (!qrcode.isDark(row, col) &&
-          !qrcode.isDark(row, col + 1) &&
-          !qrcode.isDark(row, col + 2) &&
-          !qrcode.isDark(row, col + 3) &&
-          qrcode.isDark(row, col + 4) &&
-          !qrcode.isDark(row, col + 5) &&
-          qrcode.isDark(row, col + 6) &&
-          qrcode.isDark(row, col + 7) &&
-          qrcode.isDark(row, col + 8) &&
-          !qrcode.isDark(row, col + 9) &&
-          qrcode.isDark(row, col + 10))
+        (r0 && !r1 && r1 && r3 && r4 && !r5 && r6 && !r7 && !r8 && !r9 && !r10) ||
+        (!r0 && !r1 && !r2 && !r3 && r4 && !r5 && r6 && r7 && r8 && !r9 && r10)
       ) {
         lostPoint += 40;
       }
-    }
-  }
 
-  // horizontal
-  for (let row: number = 0; row < moduleCount - 10; row++) {
-    for (let col: number = 0; col < moduleCount; col++) {
+      // horizontal
+      const [c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10]: boolean[] = [
+        qrcode.isDark(col, row),
+        qrcode.isDark(col + 1, row),
+        qrcode.isDark(col + 2, row),
+        qrcode.isDark(col + 3, row),
+        qrcode.isDark(col + 4, row),
+        qrcode.isDark(col + 5, row),
+        qrcode.isDark(col + 6, row),
+        qrcode.isDark(col + 7, row),
+        qrcode.isDark(col + 8, row),
+        qrcode.isDark(col + 9, row),
+        qrcode.isDark(col + 10, row)
+      ];
+
+      // dark - light - dark - dark - dark - light - dark - light - light - light - light
+      // light - light - light - light - dark - light - dark - dark - dark - light - dark
       if (
-        (qrcode.isDark(row, col) &&
-          !qrcode.isDark(row + 1, col) &&
-          qrcode.isDark(row + 2, col) &&
-          qrcode.isDark(row + 3, col) &&
-          qrcode.isDark(row + 4, col) &&
-          !qrcode.isDark(row + 5, col) &&
-          qrcode.isDark(row + 6, col) &&
-          !qrcode.isDark(row + 7, col) &&
-          !qrcode.isDark(row + 8, col) &&
-          !qrcode.isDark(row + 9, col) &&
-          !qrcode.isDark(row + 10, col)) ||
-        (!qrcode.isDark(row, col) &&
-          !qrcode.isDark(row + 1, col) &&
-          !qrcode.isDark(row + 2, col) &&
-          !qrcode.isDark(row + 3, col) &&
-          qrcode.isDark(row + 4, col) &&
-          !qrcode.isDark(row + 5, col) &&
-          qrcode.isDark(row + 6, col) &&
-          qrcode.isDark(row + 7, col) &&
-          qrcode.isDark(row + 8, col) &&
-          !qrcode.isDark(row + 9, col) &&
-          qrcode.isDark(row + 10, col))
+        (c0 && !c1 && c1 && c3 && c4 && !c5 && c6 && !c7 && !c8 && !c9 && !c10) ||
+        (!c0 && !c1 && !c2 && !c3 && c4 && !c5 && c6 && c7 && c8 && !c9 && c10)
       ) {
         lostPoint += 40;
       }
