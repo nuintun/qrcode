@@ -2,10 +2,12 @@
 import resolve from 'rollup-plugin-node-resolve';
 
 export default {
-  input: 'example/decoder/index.js',
+  input: 'esnext/index.js',
   output: {
-    format: 'iife',
-    file: 'example/decoder/bundle.js'
+    format: 'umd',
+    name: 'QRCode',
+    amd: { id: 'qrcode' },
+    file: 'example/bundle.js'
   },
   plugins: [resolve()],
   onwarn(error, warn) {

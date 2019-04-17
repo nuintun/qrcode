@@ -99,8 +99,7 @@ export default function SJIS(str: string): number[] {
           bytes.push(byte & 0xff);
         }
       } else {
-        // keep origin ASCII code
-        bytes.push(code);
+        throw `illegal char: ${String.fromCharCode(code)}`;
       }
     }
   }

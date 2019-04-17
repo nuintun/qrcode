@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="StyleSheet" type="text/css" href="default.css" />
+    <title>QRCode</title>
+    <style type="text/css">
+      body {
+        overflow-y: scroll;
+      }
+      html *,
+      body * {
+        font-family: MICROSOFT YAHEI, serif;
+      }
+      textarea {
+        resize: none;
+        width: 100%;
+      }
+      button {
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main">
+      <ul class="tabs clearfix">
+        <li class="selected">编码</li>
+        <li>解码</li>
+      </ul>
+      <ul class="content clearfix">
+        <li class="encode selected">
+          <p>输入文本：</p>
+          <div><textarea id="encode-text"></textarea></div>
+          <p>
+            <label>纠错等级：</label>
+            <select id="encode-eclevel">
+              <option value="L">Level L (7%)</option>
+              <option value="M">Level M (15%)</option>
+              <option value="Q">Level Q (25%)</option>
+              <option value="H" selected>Level H (30%)</option>
+            </select>
+            <label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;编码方式：</label>
+            <select id="encode-mode">
+              <option value="QRByte" selected>Byte</option>
+              <option value="QRAlphanumeric">Alphanumeric</option>
+              <option value="QRNumeric">Numeric</option>
+              <option value="QRKanji">Kanji</option>
+            </select>
+          </p>
+          <p>
+            <label>色块大小：</label>
+            <input id="encode-msize" type="number" min="1" max="10" value="2" />
+            <label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;留白大小：</label>
+            <input id="encode-margin" type="number" min="0" max="10" value="8" />
+          </p>
+          <p>
+            <button id="encode-btn">编码</button>
+          </p>
+          <div id="encode-result"></div>
+        </li>
+        <li class="decode">
+          <p><label>选择二维码图片：</label><input type="file" name="files[]" id="decode-file" /></p>
+          <div>
+            <canvas id="decode-canvas"></canvas>
+          </div>
+          <p>
+            <button id="decode-btn">解码</button>
+          </p>
+          <p id="decode-text" class="hide">解码值为：<br /><br /><textarea></textarea></p>
+        </li>
+      </ul>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <script type="text/javascript" src="./bundle.js"></script>
+    <script type="text/javascript">
+      // Tab 切换
+      var nav = $('.tabs li');
+      var content = $('.content li');
+
+      nav.on('click', function(e) {
+        nav.removeClass('selected');
+
+        $(this).addClass('selected');
+
+        content
+          .removeClass('selected')
+          .eq($(this).index())
+          .addClass('selected');
+      });
+
+      // 生成二维码
+      $('#encode-btn').on('click', function() {
+        var text = $('#encode-text').val();
+        var mode = $('#encode-mode').val();
+        var ecLevel = $('#encode-eclevel').val();
+        var moduleSize = +$('#encode-msize').val();
+        var margin = Number($('#encode-margin').val());
+
+        if (!text) {
+          return alert('请输入文本');
+        }
+
+        try {
+          var qrcode = new QRCode.Encoder();
+
+          qrcode.write(new QRCode[mode](text));
+          qrcode.setErrorCorrectLevel(QRCode.ErrorCorrectLevel[ecLevel]);
+          qrcode.make();
+
+          $('#encode-result').html('<img src="' + qrcode.toDataURL(moduleSize, margin) + '" />');
+        } catch (error) {
+          alert(error);
+          $('#encode-result').empty();
+        }
+      });
+
+      var decodeText = $('#decode-text');
+      var canvas = $('#decode-canvas')[0];
+      var context = canvas.getContext('2d');
+      var decodeResult = decodeText.find('textarea');
+
+      // 二维码加载
+      $('#decode-file').on('change', function(e) {
+        decodeText.hide();
+        decodeResult.val('');
+
+        var file = e.target.files[0];
+        var reader = new FileReader();
+
+        reader.onload = function(e) {
+          var img = new Image();
+
+          img.onload = function() {
+            canvas.width = img.width;
+            canvas.height = img.height;
+
+            context.drawImage(img, 0, 0);
+          };
+
+          img.src = e.target.result;
+        };
+
+        file && reader.readAsDataURL(file);
+      });
+
+      $('#decode-btn').on('click', function() {
+        var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        var result = new QRCode.Decoder().decode(imageData.data, imageData.width, imageData.height);
+
+        if (result) {
+          decodeText.show();
+          decodeResult.val(result.data);
+        } else {
+          alert('二维码解码失败');
+        }
+      });
+    </script>
+  </body>
+</html>
