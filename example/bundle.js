@@ -723,21 +723,26 @@
         for (var row = 0; row < moduleCount - 1; row++) {
             for (var col = 0; col < moduleCount - 1; col++) {
                 var count = 0;
-                if (qrcode.isDark(row, col))
+                if (qrcode.isDark(row, col)) {
                     count++;
-                if (qrcode.isDark(row + 1, col))
+                }
+                if (qrcode.isDark(row + 1, col)) {
                     count++;
-                if (qrcode.isDark(row, col + 1))
+                }
+                if (qrcode.isDark(row, col + 1)) {
                     count++;
-                if (qrcode.isDark(row + 1, col + 1))
+                }
+                if (qrcode.isDark(row + 1, col + 1)) {
                     count++;
-                if (count === 0 || count === 4)
+                }
+                if (count === 0 || count === 4) {
                     lostPoint += 3;
+                }
             }
         }
         // LEVEL3
         for (var row = 0; row < moduleCount; row++) {
-            for (var col = 0; col < moduleCount - 10; col++) {
+            for (var col = 0; col < moduleCount - 6; col++) {
                 // vertical
                 var _a = [
                     qrcode.isDark(row, col),
@@ -746,16 +751,10 @@
                     qrcode.isDark(row, col + 3),
                     qrcode.isDark(row, col + 4),
                     qrcode.isDark(row, col + 5),
-                    qrcode.isDark(row, col + 6),
-                    qrcode.isDark(row, col + 7),
-                    qrcode.isDark(row, col + 8),
-                    qrcode.isDark(row, col + 9),
-                    qrcode.isDark(row, col + 10)
-                ], r0 = _a[0], r1 = _a[1], r2 = _a[2], r3 = _a[3], r4 = _a[4], r5 = _a[5], r6 = _a[6], r7 = _a[7], r8 = _a[8], r9 = _a[9], r10 = _a[10];
-                // dark - light - dark - dark - dark - light - dark - light - light - light - light
-                // light - light - light - light - dark - light - dark - dark - dark - light - dark
-                if ((r0 && !r1 && r1 && r3 && r4 && !r5 && r6 && !r7 && !r8 && !r9 && !r10) ||
-                    (!r0 && !r1 && !r2 && !r3 && r4 && !r5 && r6 && r7 && r8 && !r9 && r10)) {
+                    qrcode.isDark(row, col + 6)
+                ], r0 = _a[0], r1 = _a[1], r2 = _a[2], r3 = _a[3], r4 = _a[4], r5 = _a[5], r6 = _a[6];
+                // dark - light - dark - dark - dark - light - dark
+                if (r0 && !r1 && r2 && r3 && r4 && !r5 && r6) {
                     lostPoint += 40;
                 }
                 // horizontal
@@ -766,16 +765,10 @@
                     qrcode.isDark(col + 3, row),
                     qrcode.isDark(col + 4, row),
                     qrcode.isDark(col + 5, row),
-                    qrcode.isDark(col + 6, row),
-                    qrcode.isDark(col + 7, row),
-                    qrcode.isDark(col + 8, row),
-                    qrcode.isDark(col + 9, row),
-                    qrcode.isDark(col + 10, row)
-                ], c0 = _b[0], c1 = _b[1], c2 = _b[2], c3 = _b[3], c4 = _b[4], c5 = _b[5], c6 = _b[6], c7 = _b[7], c8 = _b[8], c9 = _b[9], c10 = _b[10];
-                // dark - light - dark - dark - dark - light - dark - light - light - light - light
-                // light - light - light - light - dark - light - dark - dark - dark - light - dark
-                if ((c0 && !c1 && c1 && c3 && c4 && !c5 && c6 && !c7 && !c8 && !c9 && !c10) ||
-                    (!c0 && !c1 && !c2 && !c3 && c4 && !c5 && c6 && c7 && c8 && !c9 && c10)) {
+                    qrcode.isDark(col + 6, row)
+                ], c0 = _b[0], c1 = _b[1], c2 = _b[2], c3 = _b[3], c4 = _b[4], c5 = _b[5], c6 = _b[6];
+                // dark - light - dark - dark - dark - light - dark
+                if (c0 && !c1 && c2 && c3 && c4 && !c5 && c6) {
                     lostPoint += 40;
                 }
             }
@@ -789,9 +782,7 @@
                 }
             }
         }
-        var div = (((darkCount / (moduleCount * moduleCount)) * 100) / 5) >>> 0;
-        var ratio = Math.min(Math.abs(div * 5 - 50) / 5, Math.abs((div + 1) * 5 - 50) / 5);
-        lostPoint += ratio * 10;
+        lostPoint += 10 * Math.floor(Math.abs((darkCount / (moduleCount * moduleCount)) * 100 - 50) / 5);
         return lostPoint;
     }
     function getBCHDigit(data) {
