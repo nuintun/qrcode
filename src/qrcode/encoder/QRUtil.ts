@@ -98,15 +98,16 @@ export function getMaskFunc(maskPattern: number): maskFunc {
 }
 
 /**
- * @function getLostPoint
+ * @function getPenaltyScore
  * @param {QRCode} qrcode
  * @see https://www.jianshu.com/p/cfa2bae198ea
+ * @see https://www.thonky.com/qr-code-tutorial/data-masking
  */
-export function getLostPoint(qrcode: QRCode): number {
-  let lostPoint: number = 0;
+export function getPenaltyScore(qrcode: QRCode): number {
+  let score: number = 0;
   const moduleCount: number = qrcode.getModuleCount();
 
-  // LEVEL1
+  // penalty rule 1
   for (let row: number = 0; row < moduleCount; row++) {
     for (let col: number = 0; col < moduleCount; col++) {
       let sameCount: number = 0;
@@ -133,12 +134,12 @@ export function getLostPoint(qrcode: QRCode): number {
       }
 
       if (sameCount > 5) {
-        lostPoint += 3 + sameCount - 5;
+        score += 3 + sameCount - 5;
       }
     }
   }
 
-  // LEVEL2
+  // penalty rule 2
   for (let row: number = 0; row < moduleCount - 1; row++) {
     for (let col: number = 0; col < moduleCount - 1; col++) {
       let count: number = 0;
@@ -160,12 +161,12 @@ export function getLostPoint(qrcode: QRCode): number {
       }
 
       if (count === 0 || count === 4) {
-        lostPoint += 3;
+        score += 3;
       }
     }
   }
 
-  // LEVEL3
+  // penalty rule 3
   for (let row: number = 0; row < moduleCount; row++) {
     for (let col: number = 0; col < moduleCount - 6; col++) {
       // vertical
@@ -181,7 +182,7 @@ export function getLostPoint(qrcode: QRCode): number {
 
       // dark - light - dark - dark - dark - light - dark
       if (r0 && !r1 && r2 && r3 && r4 && !r5 && r6) {
-        lostPoint += 40;
+        score += 40;
       }
 
       // horizontal
@@ -197,12 +198,12 @@ export function getLostPoint(qrcode: QRCode): number {
 
       // dark - light - dark - dark - dark - light - dark
       if (c0 && !c1 && c2 && c3 && c4 && !c5 && c6) {
-        lostPoint += 40;
+        score += 40;
       }
     }
   }
 
-  // LEVEL4
+  // penalty rule 4
   let darkCount = 0;
 
   for (let col: number = 0; col < moduleCount; col++) {
@@ -213,9 +214,9 @@ export function getLostPoint(qrcode: QRCode): number {
     }
   }
 
-  lostPoint += 10 * Math.floor(Math.abs((darkCount / (moduleCount * moduleCount)) * 100 - 50) / 5);
+  score += 10 * Math.floor(Math.abs((darkCount / (moduleCount * moduleCount)) * 100 - 50) / 5);
 
-  return lostPoint;
+  return score;
 }
 
 function getBCHDigit(data: number): number {

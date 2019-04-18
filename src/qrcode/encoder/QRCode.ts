@@ -178,17 +178,17 @@ export default class QRCode {
   }
 
   private getBestMaskPattern(data: number[]): number {
+    let lowest: number = 0;
     let pattern: number = 0;
-    let minLostPoint: number = 0;
 
     for (let i: number = 0; i < 8; i++) {
       this.makeImpl(true, data, i);
 
-      const lostPoint: number = QRUtil.getLostPoint(this);
+      const score: number = QRUtil.getPenaltyScore(this);
 
-      if (i === 0 || minLostPoint > lostPoint) {
+      if (i === 0 || lowest > score) {
         pattern = i;
-        minLostPoint = lostPoint;
+        lowest = score;
       }
     }
 

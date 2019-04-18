@@ -686,14 +686,15 @@
         }
     }
     /**
-     * @function getLostPoint
+     * @function getPenaltyScore
      * @param {QRCode} qrcode
      * @see https://www.jianshu.com/p/cfa2bae198ea
+     * @see https://www.thonky.com/qr-code-tutorial/data-masking
      */
-    function getLostPoint(qrcode) {
-        var lostPoint = 0;
+    function getPenaltyScore(qrcode) {
+        var score = 0;
         var moduleCount = qrcode.getModuleCount();
-        // LEVEL1
+        // penalty rule 1
         for (var row = 0; row < moduleCount; row++) {
             for (var col = 0; col < moduleCount; col++) {
                 var sameCount = 0;
@@ -715,11 +716,11 @@
                     }
                 }
                 if (sameCount > 5) {
-                    lostPoint += 3 + sameCount - 5;
+                    score += 3 + sameCount - 5;
                 }
             }
         }
-        // LEVEL2
+        // penalty rule 2
         for (var row = 0; row < moduleCount - 1; row++) {
             for (var col = 0; col < moduleCount - 1; col++) {
                 var count = 0;
@@ -736,11 +737,11 @@
                     count++;
                 }
                 if (count === 0 || count === 4) {
-                    lostPoint += 3;
+                    score += 3;
                 }
             }
         }
-        // LEVEL3
+        // penalty rule 3
         for (var row = 0; row < moduleCount; row++) {
             for (var col = 0; col < moduleCount - 6; col++) {
                 // vertical
@@ -755,7 +756,7 @@
                 ], r0 = _a[0], r1 = _a[1], r2 = _a[2], r3 = _a[3], r4 = _a[4], r5 = _a[5], r6 = _a[6];
                 // dark - light - dark - dark - dark - light - dark
                 if (r0 && !r1 && r2 && r3 && r4 && !r5 && r6) {
-                    lostPoint += 40;
+                    score += 40;
                 }
                 // horizontal
                 var _b = [
@@ -769,11 +770,11 @@
                 ], c0 = _b[0], c1 = _b[1], c2 = _b[2], c3 = _b[3], c4 = _b[4], c5 = _b[5], c6 = _b[6];
                 // dark - light - dark - dark - dark - light - dark
                 if (c0 && !c1 && c2 && c3 && c4 && !c5 && c6) {
-                    lostPoint += 40;
+                    score += 40;
                 }
             }
         }
-        // LEVEL4
+        // penalty rule 4
         var darkCount = 0;
         for (var col = 0; col < moduleCount; col++) {
             for (var row = 0; row < moduleCount; row++) {
@@ -782,8 +783,8 @@
                 }
             }
         }
-        lostPoint += 10 * Math.floor(Math.abs((darkCount / (moduleCount * moduleCount)) * 100 - 50) / 5);
-        return lostPoint;
+        score += 10 * Math.floor(Math.abs((darkCount / (moduleCount * moduleCount)) * 100 - 50) / 5);
+        return score;
     }
     function getBCHDigit(data) {
         var digit = 0;
@@ -1450,14 +1451,14 @@
             this.makeImpl(false, data, this.getBestMaskPattern(data));
         };
         QRCode.prototype.getBestMaskPattern = function (data) {
+            var lowest = 0;
             var pattern = 0;
-            var minLostPoint = 0;
             for (var i = 0; i < 8; i++) {
                 this.makeImpl(true, data, i);
-                var lostPoint = getLostPoint(this);
-                if (i === 0 || minLostPoint > lostPoint) {
+                var score = getPenaltyScore(this);
+                if (i === 0 || lowest > score) {
                     pattern = i;
-                    minLostPoint = lostPoint;
+                    lowest = score;
                 }
             }
             return pattern;
