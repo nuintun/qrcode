@@ -5,9 +5,6 @@
   "main": "es5/index.js",
   "module": "esnext/index.js",
   "types": "types/index.d.ts",
-  "directories": {
-    "example": "examples"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nuintun/qrcode.git"
