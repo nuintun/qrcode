@@ -1,6 +1,6 @@
 {
   "name": "@nuintun/qrcode",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "QRCode encode and decode library.",
   "main": "es5/index.js",
   "module": "esnext/index.js",
@@ -21,16 +21,16 @@
   "scripts": {
     "prepublishOnly": "npm run build",
     "example": "rollup -c example/rollup.config.js",
-    "build": "npm run build:es5 && npm run build:es6",
+    "build": "npm run build:es5 && npm run build:esnext",
     "build:es5": "tsc --pretty --module commonjs --outDir es5",
-    "build:es6": "tsc --pretty --module esnext --outDir esnext"
+    "build:esnext": "tsc --pretty --module esnext --outDir esnext"
   },
   "dependencies": {
     "tslib": "^1.9.3"
   },
   "devDependencies": {
     "rollup": "^1.10.1",
-    "typescript": "^3.4.4",
+    "typescript": "^3.4.5",
     "rollup-plugin-node-resolve": "^4.2.3"
   },
   "homepage": "https://github.com/nuintun/qrcode#readme"
