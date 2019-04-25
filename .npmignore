@@ -102,3 +102,6 @@ example/
 
 # qrcode guide screenshot
 qrcode-guide.png
+
+# github pages config
+_config.yml
