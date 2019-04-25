@@ -3270,7 +3270,7 @@
     }
     /**
      * @function bytesToUTF8
-     * @param bytes
+     * @param {number[]} bytes
      * @returns {string}
      * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
      */
