@@ -1487,8 +1487,8 @@
             this.setupFinderPattern(0, 0);
             this.setupFinderPattern(this.moduleCount - 7, 0);
             this.setupFinderPattern(0, this.moduleCount - 7);
-            // setup format bits
-            this.setupFormatBits();
+            // setup format info
+            this.setupFormatInfo();
             // setup timing pattern
             this.setupTimingPattern();
             // setup version info
@@ -1536,7 +1536,7 @@
                 }
             }
         };
-        QRCode.prototype.setupFormatBits = function () {
+        QRCode.prototype.setupFormatInfo = function () {
             var pos = getPatternPosition(this.version);
             var length = pos.length;
             for (var i = 0; i < length; i++) {

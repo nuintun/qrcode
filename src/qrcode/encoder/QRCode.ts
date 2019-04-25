@@ -212,8 +212,8 @@ export default class QRCode {
     this.setupFinderPattern(this.moduleCount - 7, 0);
     this.setupFinderPattern(0, this.moduleCount - 7);
 
-    // setup format bits
-    this.setupFormatBits();
+    // setup format info
+    this.setupFormatInfo();
 
     // setup timing pattern
     this.setupTimingPattern();
@@ -276,7 +276,7 @@ export default class QRCode {
     }
   }
 
-  private setupFormatBits(): void {
+  private setupFormatInfo(): void {
     const pos: number[] = QRUtil.getPatternPosition(this.version);
     const length: number = pos.length;
 
