@@ -1483,18 +1483,18 @@
                     this.modules[row][col] = null;
                 }
             }
-            // setup position probe pattern
-            this.setupPositionProbePattern(0, 0);
-            this.setupPositionProbePattern(this.moduleCount - 7, 0);
-            this.setupPositionProbePattern(0, this.moduleCount - 7);
-            // setup position adjust pattern
-            this.setupPositionAdjustPattern();
             // setup timing pattern
             this.setupTimingPattern();
-            // setup version
+            // setup finder pattern
+            this.setupFinderPattern(0, 0);
+            this.setupFinderPattern(this.moduleCount - 7, 0);
+            this.setupFinderPattern(0, this.moduleCount - 7);
+            // setup alignment pattern
             if (this.version >= 7) {
-                this.setupVersion(test);
+                this.setupAlignmentPattern(test);
             }
+            // setup format bits
+            this.setupFormatBits();
             // setup version info
             this.setupVersionInfo(test, maskPattern);
             this.mapData(data, maskPattern);
@@ -1536,7 +1536,7 @@
                 }
             }
         };
-        QRCode.prototype.setupPositionAdjustPattern = function () {
+        QRCode.prototype.setupFormatBits = function () {
             var pos = getPatternPosition(this.version);
             var length = pos.length;
             for (var i = 0; i < length; i++) {
@@ -1559,7 +1559,7 @@
                 }
             }
         };
-        QRCode.prototype.setupPositionProbePattern = function (row, col) {
+        QRCode.prototype.setupFinderPattern = function (row, col) {
             for (var r = -1; r <= 7; r++) {
                 for (var c = -1; c <= 7; c++) {
                     if (row + r <= -1 || this.moduleCount <= row + r || col + c <= -1 || this.moduleCount <= col + c) {
@@ -1589,7 +1589,7 @@
                 }
             }
         };
-        QRCode.prototype.setupVersion = function (test) {
+        QRCode.prototype.setupAlignmentPattern = function (test) {
             var bits = getBCHVersion(this.version);
             for (var i = 0; i < 18; i++) {
                 var mod = !test && ((bits >> i) & 1) === 1;

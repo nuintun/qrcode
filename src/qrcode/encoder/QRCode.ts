@@ -207,21 +207,21 @@ export default class QRCode {
       }
     }
 
-    // setup position probe pattern
-    this.setupPositionProbePattern(0, 0);
-    this.setupPositionProbePattern(this.moduleCount - 7, 0);
-    this.setupPositionProbePattern(0, this.moduleCount - 7);
-
-    // setup position adjust pattern
-    this.setupPositionAdjustPattern();
-
     // setup timing pattern
     this.setupTimingPattern();
 
-    // setup version
+    // setup finder pattern
+    this.setupFinderPattern(0, 0);
+    this.setupFinderPattern(this.moduleCount - 7, 0);
+    this.setupFinderPattern(0, this.moduleCount - 7);
+
+    // setup alignment pattern
     if (this.version >= 7) {
-      this.setupVersion(test);
+      this.setupAlignmentPattern(test);
     }
+
+    // setup format bits
+    this.setupFormatBits();
 
     // setup version info
     this.setupVersionInfo(test, maskPattern);
@@ -276,7 +276,7 @@ export default class QRCode {
     }
   }
 
-  private setupPositionAdjustPattern(): void {
+  private setupFormatBits(): void {
     const pos: number[] = QRUtil.getPatternPosition(this.version);
     const length: number = pos.length;
 
@@ -302,7 +302,7 @@ export default class QRCode {
     }
   }
 
-  private setupPositionProbePattern(row: number, col: number): void {
+  private setupFinderPattern(row: number, col: number): void {
     for (let r: number = -1; r <= 7; r++) {
       for (let c: number = -1; c <= 7; c++) {
         if (row + r <= -1 || this.moduleCount <= row + r || col + c <= -1 || this.moduleCount <= col + c) {
@@ -338,7 +338,7 @@ export default class QRCode {
     }
   }
 
-  private setupVersion(test: boolean): void {
+  private setupAlignmentPattern(test: boolean): void {
     const bits: number = QRUtil.getBCHVersion(this.version);
 
     for (let i: number = 0; i < 18; i++) {
