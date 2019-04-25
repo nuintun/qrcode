@@ -15,14 +15,14 @@ import { Chunks, DecodeResult } from './decoder/decode';
 export interface DecoderResult {
   data: string;
   chunks: Chunks;
-  binaryData: number[];
+  binary: number[];
   location: {
-    topRightCorner: Point;
     topLeftCorner: Point;
-    bottomRightCorner: Point;
+    topRightCorner: Point;
     bottomLeftCorner: Point;
-    topRightFinderPattern: Point;
+    bottomRightCorner: Point;
     topLeftFinderPattern: Point;
+    topRightFinderPattern: Point;
     bottomLeftFinderPattern: Point;
     bottomRightAlignmentPattern?: Point;
   };
@@ -44,17 +44,17 @@ function scan(matrix: BitMatrix): DecoderResult {
 
   return {
     data: decoded.text,
+    binary: decoded.bytes,
     chunks: decoded.chunks,
-    binaryData: decoded.bytes,
     location: {
-      topRightCorner: extracted.mappingFunction(location.dimension, 0),
-      topLeftCorner: extracted.mappingFunction(0, 0),
-      bottomRightCorner: extracted.mappingFunction(location.dimension, location.dimension),
-      bottomLeftCorner: extracted.mappingFunction(0, location.dimension),
-      topRightFinderPattern: location.topRight,
       topLeftFinderPattern: location.topLeft,
+      topRightFinderPattern: location.topRight,
       bottomLeftFinderPattern: location.bottomLeft,
-      bottomRightAlignmentPattern: location.alignmentPattern
+      bottomRightAlignmentPattern: location.alignmentPattern,
+      topLeftCorner: extracted.mappingFunction(0, 0),
+      topRightCorner: extracted.mappingFunction(location.dimension, 0),
+      bottomLeftCorner: extracted.mappingFunction(0, location.dimension),
+      bottomRightCorner: extracted.mappingFunction(location.dimension, location.dimension)
     }
   };
 }

@@ -15,8 +15,8 @@ function numBetween(value: number, min: number, max: number): number {
 
 // Like BitMatrix but accepts arbitry Uint8 values
 class Matrix {
-  private data: Uint8ClampedArray;
   private width: number;
+  private data: Uint8ClampedArray;
 
   constructor(width: number, height: number) {
     this.width = width;

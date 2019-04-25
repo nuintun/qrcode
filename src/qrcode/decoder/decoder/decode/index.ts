@@ -22,7 +22,17 @@ interface ECIChunk {
   assignmentNumber: number;
 }
 
-export type Chunks = Array<Chunk | ByteChunk | ECIChunk>;
+interface StructuredAppend {
+  M: number;
+  N: number;
+  parity: number;
+}
+
+interface StructuredAppendChunk extends StructuredAppend {
+  type: Mode.StructuredAppend;
+}
+
+export type Chunks = Array<Chunk | ByteChunk | ECIChunk | StructuredAppendChunk>;
 
 interface DecodeData {
   text: string;
@@ -36,6 +46,7 @@ export interface DecodeResult extends DecodeData {
 enum Mode {
   Numeric = 'numeric',
   Alphanumeric = 'alphanumeric',
+  StructuredAppend = 'structuredappend',
   Byte = 'byte',
   Kanji = 'kanji',
   ECI = 'eci'
@@ -45,10 +56,10 @@ enum ModeByte {
   Terminator = 0x0,
   Numeric = 0x1,
   Alphanumeric = 0x2,
+  StructuredAppend = 0x3,
   Byte = 0x4,
   Kanji = 0x8,
   ECI = 0x7
-  // StructuredAppend = 0x3,
   // FNC1FirstPosition = 0x5,
   // FNC1SecondPosition = 0x9
 }
@@ -251,6 +262,19 @@ export function decode(data: Uint8ClampedArray, version: number): DecodeResult {
       result.chunks.push({
         type: Mode.Alphanumeric,
         text: alphanumericResult.text
+      });
+    } else if (mode === ModeByte.StructuredAppend) {
+      // QR Standard section 9.2:
+      // > The 4-bit patterns shall be the binary equivalents of (m - 1) and (n - 1) respectively.
+      const structuredAppend: StructuredAppend = {
+        M: stream.readBits(4) + 1,
+        N: stream.readBits(4) + 1,
+        parity: stream.readBits(8)
+      };
+
+      result.chunks.push({
+        type: Mode.StructuredAppend,
+        ...structuredAppend
       });
     } else if (mode === ModeByte.Byte) {
       const byteResult: DecodeData = decodeByte(stream, size);
