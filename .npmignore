@@ -100,7 +100,8 @@ src/
 # example file
 example/
 
-# qrcode guide screenshot
+# qrcode guide
+qrcode.pdf
 qrcode-guide.png
 
 # github pages config
