@@ -33,6 +33,17 @@
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     }
 
+    var __assign = function() {
+        __assign = Object.assign || function __assign(t) {
+            for (var s, i = 1, n = arguments.length; i < n; i++) {
+                s = arguments[i];
+                for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+            }
+            return t;
+        };
+        return __assign.apply(this, arguments);
+    };
+
     /**
      * @module Mode
      * @author nuintun
@@ -3171,6 +3182,7 @@
     (function (Mode) {
         Mode["Numeric"] = "numeric";
         Mode["Alphanumeric"] = "alphanumeric";
+        Mode["StructuredAppend"] = "structuredappend";
         Mode["Byte"] = "byte";
         Mode["Kanji"] = "kanji";
         Mode["ECI"] = "eci";
@@ -3180,10 +3192,10 @@
         ModeByte[ModeByte["Terminator"] = 0] = "Terminator";
         ModeByte[ModeByte["Numeric"] = 1] = "Numeric";
         ModeByte[ModeByte["Alphanumeric"] = 2] = "Alphanumeric";
+        ModeByte[ModeByte["StructuredAppend"] = 3] = "StructuredAppend";
         ModeByte[ModeByte["Byte"] = 4] = "Byte";
         ModeByte[ModeByte["Kanji"] = 8] = "Kanji";
         ModeByte[ModeByte["ECI"] = 7] = "ECI";
-        // StructuredAppend = 0x3,
         // FNC1FirstPosition = 0x5,
         // FNC1SecondPosition = 0x9
     })(ModeByte || (ModeByte = {}));
@@ -3345,6 +3357,16 @@
                     type: Mode$2.Alphanumeric,
                     text: alphanumericResult.text
                 });
+            }
+            else if (mode === ModeByte.StructuredAppend) {
+                // QR Standard section 9.2:
+                // > The 4-bit patterns shall be the binary equivalents of (m - 1) and (n - 1) respectively.
+                var structuredAppend = {
+                    M: stream.readBits(4) + 1,
+                    N: stream.readBits(4) + 1,
+                    parity: stream.readBits(8)
+                };
+                result.chunks.push(__assign({ type: Mode$2.StructuredAppend }, structuredAppend));
             }
             else if (mode === ModeByte.Byte) {
                 var byteResult = decodeByte(stream, size);
@@ -4279,17 +4301,17 @@
         }
         return {
             data: decoded.text,
+            binary: decoded.bytes,
             chunks: decoded.chunks,
-            binaryData: decoded.bytes,
             location: {
-                topRightCorner: extracted.mappingFunction(location.dimension, 0),
-                topLeftCorner: extracted.mappingFunction(0, 0),
-                bottomRightCorner: extracted.mappingFunction(location.dimension, location.dimension),
-                bottomLeftCorner: extracted.mappingFunction(0, location.dimension),
-                topRightFinderPattern: location.topRight,
                 topLeftFinderPattern: location.topLeft,
+                topRightFinderPattern: location.topRight,
                 bottomLeftFinderPattern: location.bottomLeft,
-                bottomRightAlignmentPattern: location.alignmentPattern
+                bottomRightAlignmentPattern: location.alignmentPattern,
+                topLeftCorner: extracted.mappingFunction(0, 0),
+                topRightCorner: extracted.mappingFunction(location.dimension, 0),
+                bottomLeftCorner: extracted.mappingFunction(0, location.dimension),
+                bottomRightCorner: extracted.mappingFunction(location.dimension, location.dimension)
             }
         };
     }
