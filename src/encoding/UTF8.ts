@@ -6,6 +6,7 @@
 /**
  * @function UTF8
  * @param {string} str
+ * @returns {number[]}
  * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
  */
 export default function UTF8(str: string): number[] {

@@ -7,8 +7,7 @@
 import ByteArrayInputStream from '../io/ByteArrayInputStream';
 import Base64DecodeInputStream from '../io/Base64DecodeInputStream';
 
-export type SJISTable = { [byte: number]: number };
-
+type SJISTable = { [byte: number]: number };
 type SJISTables = { SJIS2UTFTable: SJISTable; UTF2SJISTable: SJISTable };
 
 function toBytes(str: string): number[] {
@@ -76,6 +75,7 @@ export const { SJIS2UTFTable, UTF2SJISTable }: SJISTables = createSJISTable(UNIC
 /**
  * @function SJIS
  * @param {string} str
+ * @returns {number[]}
  */
 export default function SJIS(str: string): number[] {
   const bytes: number[] = [];

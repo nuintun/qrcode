@@ -159,26 +159,57 @@ function decodeAlphanumeric(stream: BitStream, size: number): DecodeData {
   return { bytes, text };
 }
 
+/**
+ * @function bytesToUTF8
+ * @param bytes
+ * @returns {string}
+ * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
+ */
+function bytesToUTF8(bytes: number[]): string {
+  // TODO(user): Use native implementations if/when available
+  let pos: number = 0;
+  let output: string = '';
+
+  while (pos < bytes.length) {
+    const c1: number = bytes[pos++];
+
+    if (c1 < 128) {
+      output += String.fromCharCode(c1);
+    } else if (c1 > 191 && c1 < 224) {
+      const c2: number = bytes[pos++];
+
+      output += String.fromCharCode(((c1 & 31) << 6) | (c2 & 63));
+    } else if (c1 > 239 && c1 < 365) {
+      // Surrogate Pair
+      const c2: number = bytes[pos++];
+      const c3: number = bytes[pos++];
+      const c4: number = bytes[pos++];
+      const u: number = (((c1 & 7) << 18) | ((c2 & 63) << 12) | ((c3 & 63) << 6) | (c4 & 63)) - 0x10000;
+
+      output += String.fromCharCode(0xd800 + (u >> 10));
+      output += String.fromCharCode(0xdc00 + (u & 1023));
+    } else {
+      const c2 = bytes[pos++];
+      const c3 = bytes[pos++];
+
+      output += String.fromCharCode(((c1 & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+    }
+  }
+
+  return output;
+}
+
 function decodeByte(stream: BitStream, size: number): DecodeData {
-  let text: string = '';
   const bytes: number[] = [];
 
   const characterCountSize: number = [8, 16, 16][size];
   const length: number = stream.readBits(characterCountSize);
 
   for (let i: number = 0; i < length; i++) {
-    const b: number = stream.readBits(8);
-
-    bytes.push(b);
+    bytes.push(stream.readBits(8));
   }
 
-  try {
-    text += decodeURIComponent(bytes.map(b => `%${('0' + b.toString(16)).substr(-2)}`).join(''));
-  } catch {
-    // failed to decode
-  }
-
-  return { bytes, text };
+  return { bytes, text: bytesToUTF8(bytes) };
 }
 
 function decodeKanji(stream: BitStream, size: number): DecodeData {
