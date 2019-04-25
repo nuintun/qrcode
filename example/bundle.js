@@ -1483,20 +1483,20 @@
                     this.modules[row][col] = null;
                 }
             }
-            // setup timing pattern
-            this.setupTimingPattern();
             // setup finder pattern
             this.setupFinderPattern(0, 0);
             this.setupFinderPattern(this.moduleCount - 7, 0);
             this.setupFinderPattern(0, this.moduleCount - 7);
+            // setup format bits
+            this.setupFormatBits();
+            // setup timing pattern
+            this.setupTimingPattern();
+            // setup version info
+            this.setupVersionInfo(test, maskPattern);
             // setup alignment pattern
             if (this.version >= 7) {
                 this.setupAlignmentPattern(test);
             }
-            // setup format bits
-            this.setupFormatBits();
-            // setup version info
-            this.setupVersionInfo(test, maskPattern);
             this.mapData(data, maskPattern);
         };
         QRCode.prototype.mapData = function (data, maskPattern) {
