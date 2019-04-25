@@ -9,7 +9,7 @@ import * as QRMath from './QRMath';
 import Polynomial from './Polynomial';
 import MaskPattern from './MaskPattern';
 
-const PATTERN_POSITION_TABLE: number[][] = [
+const ALIGNMENT_PATTERN_TABLE: number[][] = [
   [],
   [6, 18],
   [6, 22],
@@ -60,8 +60,8 @@ export const G15: number = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2)
 
 export const G18: number = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
 
-export function getPatternPosition(version: number): number[] {
-  return PATTERN_POSITION_TABLE[version - 1];
+export function getAlignmentPattern(version: number): number[] {
+  return ALIGNMENT_PATTERN_TABLE[version - 1];
 }
 
 export function getErrorCorrectPolynomial(errorCorrectLength: number): Polynomial {
