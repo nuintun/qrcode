@@ -85,7 +85,7 @@ export default class QRCode {
 
     Object.keys(defaultOptions).forEach(key => {
       // Sad implementation of Object.assign since we target es5 not es6
-      options[key] = options[key] || defaultOptions[key];
+      options[key] = key in options ? options[key] : defaultOptions[key];
     });
 
     this.options = options;
