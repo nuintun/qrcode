@@ -593,32 +593,6 @@
     }());
 
     /**
-     * @module MaskPattern
-     * @author nuintun
-     * @author Kazuhiko Arase
-     */
-    var MaskPattern;
-    (function (MaskPattern) {
-        // mask pattern 000
-        MaskPattern[MaskPattern["PATTERN000"] = 0] = "PATTERN000";
-        // mask pattern 001
-        MaskPattern[MaskPattern["PATTERN001"] = 1] = "PATTERN001";
-        // mask pattern 010
-        MaskPattern[MaskPattern["PATTERN010"] = 2] = "PATTERN010";
-        // mask pattern 011
-        MaskPattern[MaskPattern["PATTERN011"] = 3] = "PATTERN011";
-        // mask pattern 100
-        MaskPattern[MaskPattern["PATTERN100"] = 4] = "PATTERN100";
-        // mask pattern 101
-        MaskPattern[MaskPattern["PATTERN101"] = 5] = "PATTERN101";
-        // mask pattern 110
-        MaskPattern[MaskPattern["PATTERN110"] = 6] = "PATTERN110";
-        // mask pattern 111
-        MaskPattern[MaskPattern["PATTERN111"] = 7] = "PATTERN111";
-    })(MaskPattern || (MaskPattern = {}));
-    var MaskPattern$1 = MaskPattern;
-
-    /**
      * @module QRUtil
      * @author nuintun
      * @author Kazuhiko Arase
@@ -680,21 +654,21 @@
     }
     function getMaskFunc(maskPattern) {
         switch (maskPattern) {
-            case MaskPattern$1.PATTERN000:
+            case 0 /* PATTERN000 */:
                 return function (x, y) { return (x + y) % 2 === 0; };
-            case MaskPattern$1.PATTERN001:
+            case 1 /* PATTERN001 */:
                 return function (x, y) { return x % 2 === 0; };
-            case MaskPattern$1.PATTERN010:
+            case 2 /* PATTERN010 */:
                 return function (x, y) { return y % 3 === 0; };
-            case MaskPattern$1.PATTERN011:
+            case 3 /* PATTERN011 */:
                 return function (x, y) { return (x + y) % 3 === 0; };
-            case MaskPattern$1.PATTERN100:
+            case 4 /* PATTERN100 */:
                 return function (x, y) { return (((x / 2) >>> 0) + ((y / 3) >>> 0)) % 2 === 0; };
-            case MaskPattern$1.PATTERN101:
+            case 5 /* PATTERN101 */:
                 return function (x, y) { return ((x * y) % 2) + ((x * y) % 3) === 0; };
-            case MaskPattern$1.PATTERN110:
+            case 6 /* PATTERN110 */:
                 return function (x, y) { return (((x * y) % 2) + ((x * y) % 3)) % 2 === 0; };
-            case MaskPattern$1.PATTERN111:
+            case 7 /* PATTERN111 */:
                 return function (x, y) { return (((x * y) % 3) + ((x + y) % 2)) % 2 === 0; };
             default:
                 throw "illegal mask: " + maskPattern;

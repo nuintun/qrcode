@@ -4,7 +4,7 @@
  * @author Kazuhiko Arase
  */
 
-enum MaskPattern {
+const enum MaskPattern {
   // mask pattern 000
   PATTERN000 = 0b000,
   // mask pattern 001
