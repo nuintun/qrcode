@@ -13,6 +13,8 @@ import Polynomial from './Polynomial';
 import GIFImage from '../../image/GIFImage';
 import ErrorCorrectionLevel from '../common/ErrorCorrectionLevel';
 
+const PAD0: number = 0xec;
+const PAD1: number = 0x11;
 const toString = Object.prototype.toString;
 
 type prepareData = [BitBuffer, RSBlock[], number];
@@ -27,10 +29,130 @@ function createNumArray(length: number): number[] {
   return array;
 }
 
-export default class QRCode {
-  private static PAD0: number = 0xec;
-  private static PAD1: number = 0x11;
+function prepareData(version: number, errorCorrectionLevel: ErrorCorrectionLevel, dataList: QRData[]): prepareData {
+  const dLength: number = dataList.length;
+  const buffer: BitBuffer = new BitBuffer();
+  const rsBlocks: RSBlock[] = RSBlock.getRSBlocks(version, errorCorrectionLevel);
 
+  for (let i: number = 0; i < dLength; i++) {
+    const data: QRData = dataList[i];
+
+    buffer.put(data.getMode(), 4);
+    buffer.put(data.getLength(), data.getLengthInBits(version));
+    data.write(buffer);
+  }
+
+  // calc max data count
+  let maxDataCount: number = 0;
+  const rLength: number = rsBlocks.length;
+
+  for (let i: number = 0; i < rLength; i++) {
+    maxDataCount += rsBlocks[i].getDataCount();
+  }
+
+  maxDataCount *= 8;
+
+  return [buffer, rsBlocks, maxDataCount];
+}
+
+function createBytes(buffer: BitBuffer, rsBlocks: RSBlock[]): number[] {
+  let offset: number = 0;
+  let maxDcCount: number = 0;
+  let maxEcCount: number = 0;
+  let maxTotalCount: number = 0;
+  const dcData: number[][] = [];
+  const ecData: number[][] = [];
+  const rLength: number = rsBlocks.length;
+
+  for (let r: number = 0; r < rLength; r++) {
+    const dcCount: number = rsBlocks[r].getDataCount();
+    const ecCount: number = rsBlocks[r].getTotalCount() - dcCount;
+
+    dcData[r] = [];
+    ecData[r] = [];
+    maxDcCount = Math.max(maxDcCount, dcCount);
+    maxEcCount = Math.max(maxEcCount, ecCount);
+
+    dcData[r] = createNumArray(dcCount);
+
+    for (let i: number = 0; i < dcCount; i++) {
+      dcData[r][i] = 0xff & buffer.getBuffer()[i + offset];
+    }
+
+    offset += dcCount;
+
+    const rsPoly: Polynomial = QRUtil.getErrorCorrectionPolynomial(ecCount);
+    const rawPoly: Polynomial = new Polynomial(dcData[r], rsPoly.getLength() - 1);
+    const modPoly: Polynomial = rawPoly.mod(rsPoly);
+    const ecLength: number = rsPoly.getLength() - 1;
+
+    ecData[r] = createNumArray(ecLength);
+
+    for (let i: number = 0; i < ecLength; i++) {
+      const modIndex: number = i + modPoly.getLength() - ecData[r].length;
+
+      ecData[r][i] = modIndex >= 0 ? modPoly.getAt(modIndex) : 0;
+    }
+
+    maxTotalCount += rsBlocks[r].getTotalCount();
+  }
+
+  let index: number = 0;
+  const data: number[] = createNumArray(maxTotalCount);
+
+  for (let i: number = 0; i < maxDcCount; i++) {
+    for (let r: number = 0; r < rLength; r++) {
+      if (i < dcData[r].length) {
+        data[index++] = dcData[r][i];
+      }
+    }
+  }
+
+  for (let i: number = 0; i < maxEcCount; i++) {
+    for (let r: number = 0; r < rLength; r++) {
+      if (i < ecData[r].length) {
+        data[index++] = ecData[r][i];
+      }
+    }
+  }
+
+  return data;
+}
+
+function createData(buffer: BitBuffer, rsBlocks: RSBlock[], maxDataCount: number): number[] {
+  if (buffer.getLengthInBits() > maxDataCount) {
+    throw `data overflow: ${buffer.getLengthInBits()} > ${maxDataCount}`;
+  }
+
+  // end
+  if (buffer.getLengthInBits() + 4 <= maxDataCount) {
+    buffer.put(0, 4);
+  }
+
+  // padding
+  while (buffer.getLengthInBits() % 8 !== 0) {
+    buffer.putBit(false);
+  }
+
+  // padding
+  while (true) {
+    if (buffer.getLengthInBits() >= maxDataCount) {
+      break;
+    }
+
+    buffer.put(PAD0, 8);
+
+    if (buffer.getLengthInBits() >= maxDataCount) {
+      break;
+    }
+
+    buffer.put(PAD1, 8);
+  }
+
+  return createBytes(buffer, rsBlocks);
+}
+
+export default class QRCode {
   private version: number = 0;
   private moduleCount: number = 0;
   private dataList: QRData[] = [];
@@ -249,129 +371,6 @@ export default class QRCode {
     }
   }
 
-  private static prepareData(version: number, errorCorrectionLevel: ErrorCorrectionLevel, dataList: QRData[]): prepareData {
-    const dLength: number = dataList.length;
-    const buffer: BitBuffer = new BitBuffer();
-    const rsBlocks: RSBlock[] = RSBlock.getRSBlocks(version, errorCorrectionLevel);
-
-    for (let i: number = 0; i < dLength; i++) {
-      const data: QRData = dataList[i];
-
-      buffer.put(data.getMode(), 4);
-      buffer.put(data.getLength(), data.getLengthInBits(version));
-      data.write(buffer);
-    }
-
-    // calc max data count
-    let maxDataCount: number = 0;
-    const rLength: number = rsBlocks.length;
-
-    for (let i: number = 0; i < rLength; i++) {
-      maxDataCount += rsBlocks[i].getDataCount();
-    }
-
-    maxDataCount *= 8;
-
-    return [buffer, rsBlocks, maxDataCount];
-  }
-
-  private static createBytes(buffer: BitBuffer, rsBlocks: RSBlock[]): number[] {
-    let offset: number = 0;
-    let maxDcCount: number = 0;
-    let maxEcCount: number = 0;
-    let maxTotalCount: number = 0;
-    const dcData: number[][] = [];
-    const ecData: number[][] = [];
-    const rLength: number = rsBlocks.length;
-
-    for (let r: number = 0; r < rLength; r++) {
-      const dcCount: number = rsBlocks[r].getDataCount();
-      const ecCount: number = rsBlocks[r].getTotalCount() - dcCount;
-
-      dcData[r] = [];
-      ecData[r] = [];
-      maxDcCount = Math.max(maxDcCount, dcCount);
-      maxEcCount = Math.max(maxEcCount, ecCount);
-
-      dcData[r] = createNumArray(dcCount);
-
-      for (let i: number = 0; i < dcCount; i++) {
-        dcData[r][i] = 0xff & buffer.getBuffer()[i + offset];
-      }
-
-      offset += dcCount;
-
-      const rsPoly: Polynomial = QRUtil.getErrorCorrectionPolynomial(ecCount);
-      const rawPoly: Polynomial = new Polynomial(dcData[r], rsPoly.getLength() - 1);
-      const modPoly: Polynomial = rawPoly.mod(rsPoly);
-      const ecLength: number = rsPoly.getLength() - 1;
-
-      ecData[r] = createNumArray(ecLength);
-
-      for (let i: number = 0; i < ecLength; i++) {
-        const modIndex: number = i + modPoly.getLength() - ecData[r].length;
-
-        ecData[r][i] = modIndex >= 0 ? modPoly.getAt(modIndex) : 0;
-      }
-
-      maxTotalCount += rsBlocks[r].getTotalCount();
-    }
-
-    let index: number = 0;
-    const data: number[] = createNumArray(maxTotalCount);
-
-    for (let i: number = 0; i < maxDcCount; i++) {
-      for (let r: number = 0; r < rLength; r++) {
-        if (i < dcData[r].length) {
-          data[index++] = dcData[r][i];
-        }
-      }
-    }
-
-    for (let i: number = 0; i < maxEcCount; i++) {
-      for (let r: number = 0; r < rLength; r++) {
-        if (i < ecData[r].length) {
-          data[index++] = ecData[r][i];
-        }
-      }
-    }
-
-    return data;
-  }
-
-  private static createData(buffer: BitBuffer, rsBlocks: RSBlock[], maxDataCount: number): number[] {
-    if (buffer.getLengthInBits() > maxDataCount) {
-      throw `data overflow: ${buffer.getLengthInBits()} > ${maxDataCount}`;
-    }
-
-    // end
-    if (buffer.getLengthInBits() + 4 <= maxDataCount) {
-      buffer.put(0, 4);
-    }
-
-    // padding
-    while (buffer.getLengthInBits() % 8 !== 0) {
-      buffer.putBit(false);
-    }
-
-    // padding
-    while (true) {
-      if (buffer.getLengthInBits() >= maxDataCount) {
-        break;
-      }
-
-      buffer.put(QRCode.PAD0, 8);
-
-      if (buffer.getLengthInBits() >= maxDataCount) {
-        break;
-      }
-
-      buffer.put(QRCode.PAD1, 8);
-    }
-
-    return QRCode.createBytes(buffer, rsBlocks);
-  }
-
   private mapData(data: number[], maskPattern: number): void {
     let inc: number = -1;
     let bitIndex: number = 7;
@@ -485,19 +484,19 @@ export default class QRCode {
 
     if (this.autoVersion) {
       for (this.version = 1; this.version <= 40; this.version++) {
-        [buffer, rsBlocks, maxDataCount] = QRCode.prepareData(this.version, errorCorrectionLevel, dataList);
+        [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, dataList);
 
         if (buffer.getLengthInBits() <= maxDataCount) break;
       }
     } else {
-      [buffer, rsBlocks, maxDataCount] = QRCode.prepareData(this.version, errorCorrectionLevel, dataList);
+      [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, dataList);
     }
 
     // calc module count
     this.moduleCount = this.version * 4 + 17;
 
     // create data
-    const data: number[] = QRCode.createData(buffer, rsBlocks, maxDataCount);
+    const data: number[] = createData(buffer, rsBlocks, maxDataCount);
 
     this.makeImpl(false, data, this.getBestMaskPattern(data));
   }
