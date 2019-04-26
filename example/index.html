@@ -104,8 +104,10 @@
           var qrcode = new QRCode.Encoder();
 
           qrcode.write(new QRCode[mode](text));
-          qrcode.setErrorCorrectLevel(QRCode.ErrorCorrectLevel[ecLevel]);
+          qrcode.setErrorCorrectionLevel(QRCode.ErrorCorrectionLevel[ecLevel]);
           qrcode.make();
+
+          console && console.log(qrcode);
 
           $('#encode-result').html('<img src="' + qrcode.toDataURL(moduleSize, margin) + '" />');
         } catch (error) {
@@ -149,7 +151,8 @@
 
         if (result) {
           decodeText.show();
-          decodeResult.val(result.data);
+          decodeResult.val(result.text);
+          console && console.log(result);
         } else {
           alert('二维码解码失败');
         }

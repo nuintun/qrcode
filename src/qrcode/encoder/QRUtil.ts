@@ -64,10 +64,10 @@ export function getAlignmentPattern(version: number): number[] {
   return ALIGNMENT_PATTERN_TABLE[version - 1];
 }
 
-export function getErrorCorrectPolynomial(errorCorrectLength: number): Polynomial {
+export function getErrorCorrectionPolynomial(errorCorrectionLength: number): Polynomial {
   let e: Polynomial = new Polynomial([1]);
 
-  for (let i: number = 0; i < errorCorrectLength; i++) {
+  for (let i: number = 0; i < errorCorrectionLength; i++) {
     e = e.multiply(new Polynomial([1, QRMath.gexp(i)]));
   }
 

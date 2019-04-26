@@ -1,6 +1,7 @@
 /**
- * @module ErrorCorrectLevel
+ * @module ErrorCorrectionLevel
  * @author nuintun
+ * @author Cosmo Wolfe
  * @author Kazuhiko Arase
  */
 
@@ -8,7 +9,7 @@
  * @readonly
  * @enum {L, M, Q, H}
  */
-enum ErrorCorrectLevel {
+enum ErrorCorrectionLevel {
   // 7%
   L = 1,
   // 15%
@@ -19,4 +20,4 @@ enum ErrorCorrectLevel {
   H = 2
 }
 
-export default ErrorCorrectLevel;
+export default ErrorCorrectionLevel;

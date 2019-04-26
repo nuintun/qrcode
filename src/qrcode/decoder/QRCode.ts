@@ -8,14 +8,11 @@ import Point from './Point';
 import BitMatrix from './BitMatrix';
 import decodeQRCode from './decoder';
 import locate, { QRLocation } from './locator';
+import { DecodeResult } from './decoder/decode';
 import extract, { ExtractResult } from './extractor';
 import binarize, { BinarizeResult } from './binarizer';
-import { Chunks, DecodeResult } from './decoder/decode';
 
-export interface DecoderResult {
-  data: string;
-  chunks: Chunks;
-  binary: number[];
+export interface DecoderResult extends DecodeResult {
   location: {
     topLeftCorner: Point;
     topRightCorner: Point;
@@ -24,7 +21,7 @@ export interface DecoderResult {
     topLeftFinderPattern: Point;
     topRightFinderPattern: Point;
     bottomLeftFinderPattern: Point;
-    bottomRightAlignmentPattern?: Point;
+    bottomRightAlignmentPattern: Point | null;
   };
 }
 
@@ -43,18 +40,16 @@ function scan(matrix: BitMatrix): DecoderResult {
   }
 
   return {
-    data: decoded.text,
-    binary: decoded.bytes,
-    chunks: decoded.chunks,
+    ...decoded,
     location: {
-      topLeftFinderPattern: location.topLeft,
-      topRightFinderPattern: location.topRight,
-      bottomLeftFinderPattern: location.bottomLeft,
-      bottomRightAlignmentPattern: location.alignmentPattern,
       topLeftCorner: extracted.mappingFunction(0, 0),
       topRightCorner: extracted.mappingFunction(location.dimension, 0),
       bottomLeftCorner: extracted.mappingFunction(0, location.dimension),
-      bottomRightCorner: extracted.mappingFunction(location.dimension, location.dimension)
+      bottomRightCorner: extracted.mappingFunction(location.dimension, location.dimension),
+      topLeftFinderPattern: location.topLeft,
+      topRightFinderPattern: location.topRight,
+      bottomLeftFinderPattern: location.bottomLeft,
+      bottomRightAlignmentPattern: decoded.version > 7 ? location.alignmentPattern : null
     }
   };
 }
@@ -83,12 +78,7 @@ export default class QRCode {
   public setOptions(options: Options = {}): void {
     options = options || {};
 
-    Object.keys(defaultOptions).forEach(key => {
-      // Sad implementation of Object.assign since we target es5 not es6
-      options[key] = key in options ? options[key] : defaultOptions[key];
-    });
-
-    this.options = options;
+    this.options = { ...defaultOptions, ...options };
   }
 
   /**

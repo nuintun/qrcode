@@ -9,6 +9,7 @@ import rsDecode from './reedsolomon';
 import BitMatrix from '../BitMatrix';
 import { Version, VERSIONS, ECLevel } from './version';
 import { decode as decodeBytes, DecodeResult } from './decode';
+import ErrorCorrectionLevel from '../../common/ErrorCorrectionLevel';
 
 function numBitsDiffering(x: number, y: number): number {
   let z: number = x ^ y;
@@ -28,7 +29,7 @@ function pushBit(bit: any, byte: number): number {
 
 interface FormatInformation {
   dataMask: number;
-  errorCorrectionLevel: number;
+  errorCorrectionLevel: ErrorCorrectionLevel;
 }
 
 interface FormatItem {
@@ -382,7 +383,7 @@ function decodeMatrix(matrix: BitMatrix): DecodeResult {
   }
 
   try {
-    return decodeBytes(resultBytes, version.versionNumber);
+    return decodeBytes(resultBytes, version.versionNumber, formatInfo.errorCorrectionLevel);
   } catch {
     return null;
   }

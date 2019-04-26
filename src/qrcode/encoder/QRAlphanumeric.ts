@@ -4,8 +4,8 @@
  * @author Kazuhiko Arase
  */
 
-import Mode from './Mode';
 import QRData from './QRData';
+import Mode from '../common/Mode';
 import BitBuffer from './BitBuffer';
 
 export default class QRAlphanumeric extends QRData {

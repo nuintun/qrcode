@@ -4,6 +4,26 @@
     (global = global || self, factory(global.QRCode = {}));
 }(this, function (exports) { 'use strict';
 
+    /**
+     * @module Mode
+     * @author nuintun
+     * @author Cosmo Wolfe
+     * @author Kazuhiko Arase
+     */
+    var Mode;
+    (function (Mode) {
+        Mode[Mode["Terminator"] = 0] = "Terminator";
+        Mode[Mode["Numeric"] = 1] = "Numeric";
+        Mode[Mode["Alphanumeric"] = 2] = "Alphanumeric";
+        Mode[Mode["StructuredAppend"] = 3] = "StructuredAppend";
+        Mode[Mode["Byte"] = 4] = "Byte";
+        Mode[Mode["Kanji"] = 8] = "Kanji";
+        Mode[Mode["ECI"] = 7] = "ECI";
+        // FNC1FirstPosition = 0x5,
+        // FNC1SecondPosition = 0x9
+    })(Mode || (Mode = {}));
+    var Mode$1 = Mode;
+
     /*! *****************************************************************************
     Copyright (c) Microsoft Corporation. All rights reserved.
     Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -43,24 +63,6 @@
         };
         return __assign.apply(this, arguments);
     };
-
-    /**
-     * @module Mode
-     * @author nuintun
-     * @author Kazuhiko Arase
-     */
-    var Mode;
-    (function (Mode) {
-        // number
-        Mode[Mode["Numeric"] = 1] = "Numeric";
-        // alphabet and number
-        Mode[Mode["Alphanumeric"] = 2] = "Alphanumeric";
-        // 8 bit byte
-        Mode[Mode["Byte"] = 4] = "Byte";
-        // KANJI
-        Mode[Mode["Kanji"] = 8] = "Kanji";
-    })(Mode || (Mode = {}));
-    var Mode$1 = Mode;
 
     /**
      * @module QRData
@@ -210,26 +212,27 @@
     }(QRData));
 
     /**
-     * @module ErrorCorrectLevel
+     * @module ErrorCorrectionLevel
      * @author nuintun
+     * @author Cosmo Wolfe
      * @author Kazuhiko Arase
      */
     /**
      * @readonly
      * @enum {L, M, Q, H}
      */
-    var ErrorCorrectLevel;
-    (function (ErrorCorrectLevel) {
+    var ErrorCorrectionLevel;
+    (function (ErrorCorrectionLevel) {
         // 7%
-        ErrorCorrectLevel[ErrorCorrectLevel["L"] = 1] = "L";
+        ErrorCorrectionLevel[ErrorCorrectionLevel["L"] = 1] = "L";
         // 15%
-        ErrorCorrectLevel[ErrorCorrectLevel["M"] = 0] = "M";
+        ErrorCorrectionLevel[ErrorCorrectionLevel["M"] = 0] = "M";
         // 25%
-        ErrorCorrectLevel[ErrorCorrectLevel["Q"] = 3] = "Q";
+        ErrorCorrectionLevel[ErrorCorrectionLevel["Q"] = 3] = "Q";
         // 30%
-        ErrorCorrectLevel[ErrorCorrectLevel["H"] = 2] = "H";
-    })(ErrorCorrectLevel || (ErrorCorrectLevel = {}));
-    var ErrorCorrectLevel$1 = ErrorCorrectLevel;
+        ErrorCorrectionLevel[ErrorCorrectionLevel["H"] = 2] = "H";
+    })(ErrorCorrectionLevel || (ErrorCorrectionLevel = {}));
+    var ErrorCorrectionLevel$1 = ErrorCorrectionLevel;
 
     /**
      * @module RSBlock
@@ -247,9 +250,9 @@
         RSBlock.prototype.getTotalCount = function () {
             return this.totalCount;
         };
-        RSBlock.getRSBlocks = function (version, errorCorrectLevel) {
+        RSBlock.getRSBlocks = function (version, errorCorrectionLevel) {
             var rsBlocks = [];
-            var rsBlock = RSBlock.getRSBlockTable(version, errorCorrectLevel);
+            var rsBlock = RSBlock.getRSBlockTable(version, errorCorrectionLevel);
             var length = rsBlock.length / 3;
             for (var i = 0; i < length; i++) {
                 var count = rsBlock[i * 3 + 0];
@@ -261,18 +264,18 @@
             }
             return rsBlocks;
         };
-        RSBlock.getRSBlockTable = function (version, errorCorrectLevel) {
-            switch (errorCorrectLevel) {
-                case ErrorCorrectLevel$1.L:
+        RSBlock.getRSBlockTable = function (version, errorCorrectionLevel) {
+            switch (errorCorrectionLevel) {
+                case ErrorCorrectionLevel$1.L:
                     return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 0];
-                case ErrorCorrectLevel$1.M:
+                case ErrorCorrectionLevel$1.M:
                     return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 1];
-                case ErrorCorrectLevel$1.Q:
+                case ErrorCorrectionLevel$1.Q:
                     return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 2];
-                case ErrorCorrectLevel$1.H:
+                case ErrorCorrectionLevel$1.H:
                     return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 3];
                 default:
-                    throw "illegal error correct level: " + errorCorrectLevel;
+                    throw "illegal error correction level: " + errorCorrectionLevel;
             }
         };
         RSBlock.RS_BLOCK_TABLE = [
@@ -668,9 +671,9 @@
     function getAlignmentPattern(version) {
         return ALIGNMENT_PATTERN_TABLE[version - 1];
     }
-    function getErrorCorrectPolynomial(errorCorrectLength) {
+    function getErrorCorrectionPolynomial(errorCorrectionLength) {
         var e = new Polynomial([1]);
-        for (var i = 0; i < errorCorrectLength; i++) {
+        for (var i = 0; i < errorCorrectionLength; i++) {
             e = e.multiply(new Polynomial([1, gexp(i)]));
         }
         return e;
@@ -1333,7 +1336,7 @@
             this.dataList = [];
             this.modules = [];
             this.autoVersion = this.version === 0;
-            this.errorCorrectLevel = ErrorCorrectLevel$1.L;
+            this.errorCorrectionLevel = ErrorCorrectionLevel$1.L;
         }
         /**
          * @public
@@ -1369,24 +1372,24 @@
         };
         /**
          * @public
-         * @method getErrorCorrectLevel
-         * @returns {ErrorCorrectLevel}
+         * @method getErrorCorrectionLevel
+         * @returns {ErrorCorrectionLevel}
          */
-        QRCode.prototype.getErrorCorrectLevel = function () {
-            return this.errorCorrectLevel;
+        QRCode.prototype.getErrorCorrectionLevel = function () {
+            return this.errorCorrectionLevel;
         };
         /**
          * @public
-         * @method setErrorCorrectLevel
-         * @param {ErrorCorrectLevel} errorCorrectLevel
+         * @method setErrorCorrectionLevel
+         * @param {ErrorCorrectionLevel} errorCorrectionLevel
          */
-        QRCode.prototype.setErrorCorrectLevel = function (errorCorrectLevel) {
-            switch (errorCorrectLevel) {
-                case ErrorCorrectLevel$1.L:
-                case ErrorCorrectLevel$1.M:
-                case ErrorCorrectLevel$1.Q:
-                case ErrorCorrectLevel$1.H:
-                    this.errorCorrectLevel = errorCorrectLevel;
+        QRCode.prototype.setErrorCorrectionLevel = function (errorCorrectionLevel) {
+            switch (errorCorrectionLevel) {
+                case ErrorCorrectionLevel$1.L:
+                case ErrorCorrectionLevel$1.M:
+                case ErrorCorrectionLevel$1.Q:
+                case ErrorCorrectionLevel$1.H:
+                    this.errorCorrectionLevel = errorCorrectionLevel;
             }
         };
         /**
@@ -1489,7 +1492,7 @@
             }
         };
         QRCode.prototype.setupFormatInfo = function (test, maskPattern) {
-            var data = (this.errorCorrectLevel << 3) | maskPattern;
+            var data = (this.errorCorrectionLevel << 3) | maskPattern;
             var bits = getBCHVersionInfo(data);
             for (var i = 0; i < 15; i++) {
                 var mod = !test && ((bits >> i) & 1) === 1;
@@ -1525,10 +1528,10 @@
                 this.modules[(i % 3) + this.moduleCount - 8 - 3][(i / 3) >>> 0] = mod;
             }
         };
-        QRCode.prepareData = function (version, errorCorrectLevel, dataList) {
+        QRCode.prepareData = function (version, errorCorrectionLevel, dataList) {
             var dLength = dataList.length;
             var buffer = new BitBuffer();
-            var rsBlocks = RSBlock.getRSBlocks(version, errorCorrectLevel);
+            var rsBlocks = RSBlock.getRSBlocks(version, errorCorrectionLevel);
             for (var i = 0; i < dLength; i++) {
                 var data = dataList[i];
                 buffer.put(data.getMode(), 4);
@@ -1564,7 +1567,7 @@
                     dcData[r][i] = 0xff & buffer.getBuffer()[i + offset];
                 }
                 offset += dcCount;
-                var rsPoly = getErrorCorrectPolynomial(ecCount);
+                var rsPoly = getErrorCorrectionPolynomial(ecCount);
                 var rawPoly = new Polynomial(dcData[r], rsPoly.getLength() - 1);
                 var modPoly = rawPoly.mod(rsPoly);
                 var ecLength = rsPoly.getLength() - 1;
@@ -1703,16 +1706,16 @@
             var rsBlocks;
             var maxDataCount;
             var dataList = this.dataList;
-            var errorCorrectLevel = this.errorCorrectLevel;
+            var errorCorrectionLevel = this.errorCorrectionLevel;
             if (this.autoVersion) {
                 for (this.version = 1; this.version <= 40; this.version++) {
-                    _a = QRCode.prepareData(this.version, errorCorrectLevel, dataList), buffer = _a[0], rsBlocks = _a[1], maxDataCount = _a[2];
+                    _a = QRCode.prepareData(this.version, errorCorrectionLevel, dataList), buffer = _a[0], rsBlocks = _a[1], maxDataCount = _a[2];
                     if (buffer.getLengthInBits() <= maxDataCount)
                         break;
                 }
             }
             else {
-                _b = QRCode.prepareData(this.version, errorCorrectLevel, dataList), buffer = _b[0], rsBlocks = _b[1], maxDataCount = _b[2];
+                _b = QRCode.prepareData(this.version, errorCorrectionLevel, dataList), buffer = _b[0], rsBlocks = _b[1], maxDataCount = _b[2];
             }
             // calc module count
             this.moduleCount = this.version * 4 + 17;
@@ -3180,27 +3183,6 @@
      * @author nuintun
      * @author Cosmo Wolfe
      */
-    var Mode$2;
-    (function (Mode) {
-        Mode["Numeric"] = "numeric";
-        Mode["Alphanumeric"] = "alphanumeric";
-        Mode["StructuredAppend"] = "structuredappend";
-        Mode["Byte"] = "byte";
-        Mode["Kanji"] = "kanji";
-        Mode["ECI"] = "eci";
-    })(Mode$2 || (Mode$2 = {}));
-    var ModeByte;
-    (function (ModeByte) {
-        ModeByte[ModeByte["Terminator"] = 0] = "Terminator";
-        ModeByte[ModeByte["Numeric"] = 1] = "Numeric";
-        ModeByte[ModeByte["Alphanumeric"] = 2] = "Alphanumeric";
-        ModeByte[ModeByte["StructuredAppend"] = 3] = "StructuredAppend";
-        ModeByte[ModeByte["Byte"] = 4] = "Byte";
-        ModeByte[ModeByte["Kanji"] = 8] = "Kanji";
-        ModeByte[ModeByte["ECI"] = 7] = "ECI";
-        // FNC1FirstPosition = 0x5,
-        // FNC1SecondPosition = 0x9
-    })(ModeByte || (ModeByte = {}));
     function decodeNumeric(stream, size) {
         var text = '';
         var bytes = [];
@@ -3332,63 +3314,63 @@
         }
         return { bytes: bytes, text: text };
     }
-    function decode$1(data, version) {
+    function decode$1(data, version, errorCorrectionLevel) {
         var _a, _b, _c, _d;
         var stream = new BitStream(data);
         // There are 3 'sizes' based on the version. 1-9 is small (0), 10-26 is medium (1) and 27-40 is large (2).
         var size = version <= 9 ? 0 : version <= 26 ? 1 : 2;
-        var result = { text: '', bytes: [], chunks: [] };
+        var result = { text: '', bytes: [], chunks: [], version: version, errorCorrectionLevel: errorCorrectionLevel };
         while (stream.available() >= 4) {
             var mode = stream.readBits(4);
-            if (mode === ModeByte.Terminator) {
+            if (mode === Mode$1.Terminator) {
                 return result;
             }
-            else if (mode === ModeByte.ECI) {
+            else if (mode === Mode$1.ECI) {
                 if (stream.readBits(1) === 0) {
                     result.chunks.push({
-                        type: Mode$2.ECI,
+                        type: Mode$1.ECI,
                         assignmentNumber: stream.readBits(7)
                     });
                 }
                 else if (stream.readBits(1) === 0) {
                     result.chunks.push({
-                        type: Mode$2.ECI,
+                        type: Mode$1.ECI,
                         assignmentNumber: stream.readBits(14)
                     });
                 }
                 else if (stream.readBits(1) === 0) {
                     result.chunks.push({
-                        type: Mode$2.ECI,
+                        type: Mode$1.ECI,
                         assignmentNumber: stream.readBits(21)
                     });
                 }
                 else {
                     // ECI data seems corrupted
                     result.chunks.push({
-                        type: Mode$2.ECI,
+                        type: Mode$1.ECI,
                         assignmentNumber: -1
                     });
                 }
             }
-            else if (mode === ModeByte.Numeric) {
+            else if (mode === Mode$1.Numeric) {
                 var numericResult = decodeNumeric(stream, size);
                 result.text += numericResult.text;
                 (_a = result.bytes).push.apply(_a, numericResult.bytes);
                 result.chunks.push({
-                    type: Mode$2.Numeric,
+                    type: Mode$1.Numeric,
                     text: numericResult.text
                 });
             }
-            else if (mode === ModeByte.Alphanumeric) {
+            else if (mode === Mode$1.Alphanumeric) {
                 var alphanumericResult = decodeAlphanumeric(stream, size);
                 result.text += alphanumericResult.text;
                 (_b = result.bytes).push.apply(_b, alphanumericResult.bytes);
                 result.chunks.push({
-                    type: Mode$2.Alphanumeric,
+                    type: Mode$1.Alphanumeric,
                     text: alphanumericResult.text
                 });
             }
-            else if (mode === ModeByte.StructuredAppend) {
+            else if (mode === Mode$1.StructuredAppend) {
                 // QR Standard section 9.2:
                 // > The 4-bit patterns shall be the binary equivalents of (m - 1) and (n - 1) respectively.
                 var structuredAppend = {
@@ -3396,24 +3378,24 @@
                     N: stream.readBits(4) + 1,
                     parity: stream.readBits(8)
                 };
-                result.chunks.push(__assign({ type: Mode$2.StructuredAppend }, structuredAppend));
+                result.chunks.push(__assign({ type: Mode$1.StructuredAppend }, structuredAppend));
             }
-            else if (mode === ModeByte.Byte) {
+            else if (mode === Mode$1.Byte) {
                 var byteResult = decodeByte(stream, size);
                 result.text += byteResult.text;
                 (_c = result.bytes).push.apply(_c, byteResult.bytes);
                 result.chunks.push({
-                    type: Mode$2.Byte,
+                    type: Mode$1.Byte,
                     bytes: byteResult.bytes,
                     text: byteResult.text
                 });
             }
-            else if (mode === ModeByte.Kanji) {
+            else if (mode === Mode$1.Kanji) {
                 var kanjiResult = decodeKanji(stream, size);
                 result.text += kanjiResult.text;
                 (_d = result.bytes).push.apply(_d, kanjiResult.bytes);
                 result.chunks.push({
-                    type: Mode$2.Kanji,
+                    type: Mode$1.Kanji,
                     bytes: kanjiResult.bytes,
                     text: kanjiResult.text
                 });
@@ -3713,7 +3695,7 @@
             }
         }
         try {
-            return decode$1(resultBytes, version.versionNumber);
+            return decode$1(resultBytes, version.versionNumber, formatInfo.errorCorrectionLevel);
         }
         catch (_a) {
             return null;
@@ -3758,9 +3740,9 @@
         var oneTwoDistance = distance(pattern1, pattern2);
         var twoThreeDistance = distance(pattern2, pattern3);
         var oneThreeDistance = distance(pattern1, pattern3);
-        var bottomLeft;
         var topLeft;
         var topRight;
+        var bottomLeft;
         // Assume one closest to other two is B; A and C will just be guesses at first
         if (twoThreeDistance >= oneTwoDistance && twoThreeDistance >= oneThreeDistance) {
             _a = [pattern2, pattern1, pattern3], bottomLeft = _a[0], topLeft = _a[1], topRight = _a[2];
@@ -4093,11 +4075,11 @@
         // so we can only use our best guess.
         var alignmentPattern = modulesBetweenFinderPatterns >= 15 && alignmentPatterns.length ? alignmentPatterns[0] : expectedAlignmentPattern;
         return {
-            alignmentPattern: { x: alignmentPattern.x, y: alignmentPattern.y },
-            bottomLeft: { x: bottomLeft.x, y: bottomLeft.y },
             dimension: dimension,
             topLeft: { x: topLeft.x, y: topLeft.y },
-            topRight: { x: topRight.x, y: topRight.y }
+            topRight: { x: topRight.x, y: topRight.y },
+            bottomLeft: { x: bottomLeft.x, y: bottomLeft.y },
+            alignmentPattern: { x: alignmentPattern.x, y: alignmentPattern.y }
         };
     }
 
@@ -4329,21 +4311,16 @@
         if (!decoded) {
             return null;
         }
-        return {
-            data: decoded.text,
-            binary: decoded.bytes,
-            chunks: decoded.chunks,
-            location: {
-                topLeftFinderPattern: location.topLeft,
-                topRightFinderPattern: location.topRight,
-                bottomLeftFinderPattern: location.bottomLeft,
-                bottomRightAlignmentPattern: location.alignmentPattern,
+        return __assign({}, decoded, { location: {
                 topLeftCorner: extracted.mappingFunction(0, 0),
                 topRightCorner: extracted.mappingFunction(location.dimension, 0),
                 bottomLeftCorner: extracted.mappingFunction(0, location.dimension),
-                bottomRightCorner: extracted.mappingFunction(location.dimension, location.dimension)
-            }
-        };
+                bottomRightCorner: extracted.mappingFunction(location.dimension, location.dimension),
+                topLeftFinderPattern: location.topLeft,
+                topRightFinderPattern: location.topRight,
+                bottomLeftFinderPattern: location.bottomLeft,
+                bottomRightAlignmentPattern: decoded.version > 7 ? location.alignmentPattern : null
+            } });
     }
     var defaultOptions = {
         inversionAttempts: 'attemptBoth'
@@ -4364,11 +4341,7 @@
         QRCode.prototype.setOptions = function (options) {
             if (options === void 0) { options = {}; }
             options = options || {};
-            Object.keys(defaultOptions).forEach(function (key) {
-                // Sad implementation of Object.assign since we target es5 not es6
-                options[key] = key in options ? options[key] : defaultOptions[key];
-            });
-            this.options = options;
+            this.options = __assign({}, defaultOptions, options);
         };
         /**
          * @public
@@ -4630,7 +4603,8 @@
 
     exports.Decoder = QRCode$1;
     exports.Encoder = QRCode;
-    exports.ErrorCorrectLevel = ErrorCorrectLevel$1;
+    exports.ErrorCorrectionLevel = ErrorCorrectionLevel$1;
+    exports.Mode = Mode$1;
     exports.QRAlphanumeric = QRAlphanumeric;
     exports.QRByte = QRByte;
     exports.QRKanji = QRKanji;

@@ -4,7 +4,7 @@
  * @author Kazuhiko Arase
  */
 
-import ErrorCorrectLevel from './ErrorCorrectLevel';
+import ErrorCorrectionLevel from '../common/ErrorCorrectionLevel';
 
 export default class RSBlock {
   private static RS_BLOCK_TABLE = [
@@ -270,9 +270,9 @@ export default class RSBlock {
     return this.totalCount;
   }
 
-  public static getRSBlocks(version: number, errorCorrectLevel: ErrorCorrectLevel): RSBlock[] {
+  public static getRSBlocks(version: number, errorCorrectionLevel: ErrorCorrectionLevel): RSBlock[] {
     const rsBlocks: RSBlock[] = [];
-    const rsBlock: number[] = RSBlock.getRSBlockTable(version, errorCorrectLevel);
+    const rsBlock: number[] = RSBlock.getRSBlockTable(version, errorCorrectionLevel);
     const length: number = rsBlock.length / 3;
 
     for (let i: number = 0; i < length; i++) {
@@ -288,18 +288,18 @@ export default class RSBlock {
     return rsBlocks;
   }
 
-  private static getRSBlockTable(version: number, errorCorrectLevel: ErrorCorrectLevel): number[] {
-    switch (errorCorrectLevel) {
-      case ErrorCorrectLevel.L:
+  private static getRSBlockTable(version: number, errorCorrectionLevel: ErrorCorrectionLevel): number[] {
+    switch (errorCorrectionLevel) {
+      case ErrorCorrectionLevel.L:
         return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 0];
-      case ErrorCorrectLevel.M:
+      case ErrorCorrectionLevel.M:
         return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 1];
-      case ErrorCorrectLevel.Q:
+      case ErrorCorrectionLevel.Q:
         return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 2];
-      case ErrorCorrectLevel.H:
+      case ErrorCorrectionLevel.H:
         return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 3];
       default:
-        throw `illegal error correct level: ${errorCorrectLevel}`;
+        throw `illegal error correction level: ${errorCorrectionLevel}`;
     }
   }
 }

@@ -5,7 +5,9 @@
  */
 
 import BitStream from './BitStream';
+import Mode from '../../../common/Mode';
 import { UTF2SJISTable } from '../../../../encoding/SJIS';
+import ErrorCorrectionLevel from '../../../common/ErrorCorrectionLevel';
 
 interface Chunk {
   type: Mode;
@@ -32,36 +34,17 @@ interface StructuredAppendChunk extends StructuredAppend {
   type: Mode.StructuredAppend;
 }
 
-export type Chunks = Array<Chunk | ByteChunk | ECIChunk | StructuredAppendChunk>;
-
 interface DecodeData {
   text: string;
   bytes: number[];
 }
 
+type Chunks = Array<Chunk | ByteChunk | ECIChunk | StructuredAppendChunk>;
+
 export interface DecodeResult extends DecodeData {
   chunks: Chunks;
-}
-
-enum Mode {
-  Numeric = 'numeric',
-  Alphanumeric = 'alphanumeric',
-  StructuredAppend = 'structuredappend',
-  Byte = 'byte',
-  Kanji = 'kanji',
-  ECI = 'eci'
-}
-
-enum ModeByte {
-  Terminator = 0x0,
-  Numeric = 0x1,
-  Alphanumeric = 0x2,
-  StructuredAppend = 0x3,
-  Byte = 0x4,
-  Kanji = 0x8,
-  ECI = 0x7
-  // FNC1FirstPosition = 0x5,
-  // FNC1SecondPosition = 0x9
+  version: number;
+  errorCorrectionLevel: ErrorCorrectionLevel;
 }
 
 function decodeNumeric(stream: BitStream, size: number): DecodeData {
@@ -238,20 +221,20 @@ function decodeKanji(stream: BitStream, size: number): DecodeData {
   return { bytes, text };
 }
 
-export function decode(data: Uint8ClampedArray, version: number): DecodeResult {
+export function decode(data: Uint8ClampedArray, version: number, errorCorrectionLevel: ErrorCorrectionLevel): DecodeResult {
   const stream: BitStream = new BitStream(data);
 
   // There are 3 'sizes' based on the version. 1-9 is small (0), 10-26 is medium (1) and 27-40 is large (2).
   const size: number = version <= 9 ? 0 : version <= 26 ? 1 : 2;
 
-  const result: DecodeResult = { text: '', bytes: [], chunks: [] };
+  const result: DecodeResult = { text: '', bytes: [], chunks: [], version, errorCorrectionLevel };
 
   while (stream.available() >= 4) {
     const mode: number = stream.readBits(4);
 
-    if (mode === ModeByte.Terminator) {
+    if (mode === Mode.Terminator) {
       return result;
-    } else if (mode === ModeByte.ECI) {
+    } else if (mode === Mode.ECI) {
       if (stream.readBits(1) === 0) {
         result.chunks.push({
           type: Mode.ECI,
@@ -274,7 +257,7 @@ export function decode(data: Uint8ClampedArray, version: number): DecodeResult {
           assignmentNumber: -1
         });
       }
-    } else if (mode === ModeByte.Numeric) {
+    } else if (mode === Mode.Numeric) {
       const numericResult: DecodeData = decodeNumeric(stream, size);
 
       result.text += numericResult.text;
@@ -284,7 +267,7 @@ export function decode(data: Uint8ClampedArray, version: number): DecodeResult {
         type: Mode.Numeric,
         text: numericResult.text
       });
-    } else if (mode === ModeByte.Alphanumeric) {
+    } else if (mode === Mode.Alphanumeric) {
       const alphanumericResult: DecodeData = decodeAlphanumeric(stream, size);
 
       result.text += alphanumericResult.text;
@@ -294,7 +277,7 @@ export function decode(data: Uint8ClampedArray, version: number): DecodeResult {
         type: Mode.Alphanumeric,
         text: alphanumericResult.text
       });
-    } else if (mode === ModeByte.StructuredAppend) {
+    } else if (mode === Mode.StructuredAppend) {
       // QR Standard section 9.2:
       // > The 4-bit patterns shall be the binary equivalents of (m - 1) and (n - 1) respectively.
       const structuredAppend: StructuredAppend = {
@@ -307,7 +290,7 @@ export function decode(data: Uint8ClampedArray, version: number): DecodeResult {
         type: Mode.StructuredAppend,
         ...structuredAppend
       });
-    } else if (mode === ModeByte.Byte) {
+    } else if (mode === Mode.Byte) {
       const byteResult: DecodeData = decodeByte(stream, size);
 
       result.text += byteResult.text;
@@ -318,7 +301,7 @@ export function decode(data: Uint8ClampedArray, version: number): DecodeResult {
         bytes: byteResult.bytes,
         text: byteResult.text
       });
-    } else if (mode === ModeByte.Kanji) {
+    } else if (mode === Mode.Kanji) {
       const kanjiResult: DecodeData = decodeKanji(stream, size);
 
       result.text += kanjiResult.text;

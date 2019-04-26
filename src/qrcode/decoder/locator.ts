@@ -12,11 +12,11 @@ const MAX_QUAD_RATIO: number = 1.5;
 const MAX_FINDERPATTERNS_TO_SEARCH: number = 4;
 
 export interface QRLocation {
+  topLeft: Point;
   topRight: Point;
   bottomLeft: Point;
-  topLeft: Point;
-  alignmentPattern: Point;
   dimension: number;
+  alignmentPattern: Point;
 }
 
 const distance = (a: Point, b: Point): number => Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
@@ -26,8 +26,8 @@ function sum(values: number[]): number {
 }
 
 interface Patterns {
-  topRight: Point;
   topLeft: Point;
+  topRight: Point;
   bottomLeft: Point;
 }
 
@@ -38,9 +38,9 @@ function reorderFinderPatterns(pattern1: Point, pattern2: Point, pattern3: Point
   const twoThreeDistance: number = distance(pattern2, pattern3);
   const oneThreeDistance: number = distance(pattern1, pattern3);
 
-  let bottomLeft: Point;
   let topLeft: Point;
   let topRight: Point;
+  let bottomLeft: Point;
 
   // Assume one closest to other two is B; A and C will just be guesses at first
   if (twoThreeDistance >= oneTwoDistance && twoThreeDistance >= oneThreeDistance) {
@@ -483,10 +483,10 @@ export default function locate(matrix: BitMatrix): QRLocation {
     modulesBetweenFinderPatterns >= 15 && alignmentPatterns.length ? alignmentPatterns[0] : expectedAlignmentPattern;
 
   return {
-    alignmentPattern: { x: alignmentPattern.x, y: alignmentPattern.y },
-    bottomLeft: { x: bottomLeft.x, y: bottomLeft.y },
     dimension,
     topLeft: { x: topLeft.x, y: topLeft.y },
-    topRight: { x: topRight.x, y: topRight.y }
+    topRight: { x: topRight.x, y: topRight.y },
+    bottomLeft: { x: bottomLeft.x, y: bottomLeft.y },
+    alignmentPattern: { x: alignmentPattern.x, y: alignmentPattern.y }
   };
 }

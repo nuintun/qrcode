@@ -11,7 +11,7 @@ import * as QRUtil from './QRUtil';
 import BitBuffer from './BitBuffer';
 import Polynomial from './Polynomial';
 import GIFImage from '../../image/GIFImage';
-import ErrorCorrectLevel from './ErrorCorrectLevel';
+import ErrorCorrectionLevel from '../common/ErrorCorrectionLevel';
 
 const toString = Object.prototype.toString;
 
@@ -36,7 +36,7 @@ export default class QRCode {
   private dataList: QRData[] = [];
   private modules: boolean[][] = [];
   private autoVersion: boolean = this.version === 0;
-  private errorCorrectLevel: ErrorCorrectLevel = ErrorCorrectLevel.L;
+  private errorCorrectionLevel: ErrorCorrectionLevel = ErrorCorrectionLevel.L;
 
   /**
    * @public
@@ -76,25 +76,25 @@ export default class QRCode {
 
   /**
    * @public
-   * @method getErrorCorrectLevel
-   * @returns {ErrorCorrectLevel}
+   * @method getErrorCorrectionLevel
+   * @returns {ErrorCorrectionLevel}
    */
-  public getErrorCorrectLevel(): ErrorCorrectLevel {
-    return this.errorCorrectLevel;
+  public getErrorCorrectionLevel(): ErrorCorrectionLevel {
+    return this.errorCorrectionLevel;
   }
 
   /**
    * @public
-   * @method setErrorCorrectLevel
-   * @param {ErrorCorrectLevel} errorCorrectLevel
+   * @method setErrorCorrectionLevel
+   * @param {ErrorCorrectionLevel} errorCorrectionLevel
    */
-  public setErrorCorrectLevel(errorCorrectLevel: ErrorCorrectLevel) {
-    switch (errorCorrectLevel) {
-      case ErrorCorrectLevel.L:
-      case ErrorCorrectLevel.M:
-      case ErrorCorrectLevel.Q:
-      case ErrorCorrectLevel.H:
-        this.errorCorrectLevel = errorCorrectLevel;
+  public setErrorCorrectionLevel(errorCorrectionLevel: ErrorCorrectionLevel) {
+    switch (errorCorrectionLevel) {
+      case ErrorCorrectionLevel.L:
+      case ErrorCorrectionLevel.M:
+      case ErrorCorrectionLevel.Q:
+      case ErrorCorrectionLevel.H:
+        this.errorCorrectionLevel = errorCorrectionLevel;
     }
   }
 
@@ -209,7 +209,7 @@ export default class QRCode {
   }
 
   private setupFormatInfo(test: boolean, maskPattern: number): void {
-    const data: number = (this.errorCorrectLevel << 3) | maskPattern;
+    const data: number = (this.errorCorrectionLevel << 3) | maskPattern;
     const bits: number = QRUtil.getBCHVersionInfo(data);
 
     for (let i: number = 0; i < 15; i++) {
@@ -249,10 +249,10 @@ export default class QRCode {
     }
   }
 
-  private static prepareData(version: number, errorCorrectLevel: ErrorCorrectLevel, dataList: QRData[]): prepareData {
+  private static prepareData(version: number, errorCorrectionLevel: ErrorCorrectionLevel, dataList: QRData[]): prepareData {
     const dLength: number = dataList.length;
     const buffer: BitBuffer = new BitBuffer();
-    const rsBlocks: RSBlock[] = RSBlock.getRSBlocks(version, errorCorrectLevel);
+    const rsBlocks: RSBlock[] = RSBlock.getRSBlocks(version, errorCorrectionLevel);
 
     for (let i: number = 0; i < dLength; i++) {
       const data: QRData = dataList[i];
@@ -301,7 +301,7 @@ export default class QRCode {
 
       offset += dcCount;
 
-      const rsPoly: Polynomial = QRUtil.getErrorCorrectPolynomial(ecCount);
+      const rsPoly: Polynomial = QRUtil.getErrorCorrectionPolynomial(ecCount);
       const rawPoly: Polynomial = new Polynomial(dcData[r], rsPoly.getLength() - 1);
       const modPoly: Polynomial = rawPoly.mod(rsPoly);
       const ecLength: number = rsPoly.getLength() - 1;
@@ -481,16 +481,16 @@ export default class QRCode {
     let maxDataCount: number;
 
     const dataList = this.dataList;
-    const errorCorrectLevel = this.errorCorrectLevel;
+    const errorCorrectionLevel = this.errorCorrectionLevel;
 
     if (this.autoVersion) {
       for (this.version = 1; this.version <= 40; this.version++) {
-        [buffer, rsBlocks, maxDataCount] = QRCode.prepareData(this.version, errorCorrectLevel, dataList);
+        [buffer, rsBlocks, maxDataCount] = QRCode.prepareData(this.version, errorCorrectionLevel, dataList);
 
         if (buffer.getLengthInBits() <= maxDataCount) break;
       }
     } else {
-      [buffer, rsBlocks, maxDataCount] = QRCode.prepareData(this.version, errorCorrectLevel, dataList);
+      [buffer, rsBlocks, maxDataCount] = QRCode.prepareData(this.version, errorCorrectionLevel, dataList);
     }
 
     // calc module count
