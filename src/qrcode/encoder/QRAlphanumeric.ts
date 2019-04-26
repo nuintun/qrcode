@@ -24,7 +24,7 @@ export default class QRAlphanumeric extends QRData {
    */
   public write(buffer: BitBuffer): void {
     let i: number = 0;
-    const data: string = this.getData();
+    const data: string = this.data;
     const length: number = data.length;
 
     while (i + 1 < length) {
@@ -44,7 +44,7 @@ export default class QRAlphanumeric extends QRData {
    * @returns {number}
    */
   public getLength(): number {
-    return this.getData().length;
+    return this.data.length;
   }
 
   private static getCode(ch: string): number {

@@ -24,7 +24,7 @@ export default class QRNumeric extends QRData {
    */
   public write(buffer: BitBuffer): void {
     let i: number = 0;
-    const data: string = this.getData();
+    const data: string = this.data;
     const length: number = data.length;
 
     while (i + 2 < length) {
@@ -48,7 +48,7 @@ export default class QRNumeric extends QRData {
    * @returns {number}
    */
   public getLength(): number {
-    return this.getData().length;
+    return this.data.length;
   }
 
   private static strToNum(str: string): number {

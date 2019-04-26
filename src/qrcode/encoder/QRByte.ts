@@ -16,6 +16,8 @@ export default class QRByte extends QRData {
    */
   constructor(data: string) {
     super(Mode.Byte, data);
+
+    this.bytes = stringToBytes(data);
   }
 
   /**
@@ -24,11 +26,11 @@ export default class QRByte extends QRData {
    * @param {BitBuffer} buffer
    */
   public write(buffer: BitBuffer): void {
-    const data: number[] = stringToBytes(this.getData());
-    const length: number = data.length;
+    const bytes: number[] = this.bytes;
+    const length: number = bytes.length;
 
     for (let i: number = 0; i < length; i++) {
-      buffer.put(data[i], 8);
+      buffer.put(bytes[i], 8);
     }
   }
 
@@ -38,6 +40,6 @@ export default class QRByte extends QRData {
    * @returns {number}
    */
   public getLength(): number {
-    return stringToBytes(this.getData()).length;
+    return this.bytes.length;
   }
 }

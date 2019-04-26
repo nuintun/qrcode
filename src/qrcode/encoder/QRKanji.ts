@@ -21,6 +21,8 @@ export default class QRKanji extends QRData {
    */
   constructor(data: string) {
     super(Mode.Kanji, data);
+
+    this.bytes = stringToBytes(data);
   }
 
   /**
@@ -30,18 +32,18 @@ export default class QRKanji extends QRData {
    */
   public write(buffer: BitBuffer): void {
     let index: number = 0;
-    const data: number[] = stringToBytes(this.getData());
-    const length: number = data.length;
+    const bytes: number[] = this.bytes;
+    const length: number = bytes.length;
 
     while (index + 1 < length) {
-      let code: number = ((0xff & data[index]) << 8) | (0xff & data[index + 1]);
+      let code: number = ((0xff & bytes[index]) << 8) | (0xff & bytes[index + 1]);
 
       if (0x8140 <= code && code <= 0x9ffc) {
         code -= 0x8140;
       } else if (0xe040 <= code && code <= 0xebbf) {
         code -= 0xc140;
       } else {
-        throw createCharError(index, data);
+        throw createCharError(index, bytes);
       }
 
       code = ((code >>> 8) & 0xff) * 0xc0 + (code & 0xff);
@@ -51,8 +53,8 @@ export default class QRKanji extends QRData {
       index += 2;
     }
 
-    if (index < data.length) {
-      throw createCharError(index, data);
+    if (index < length) {
+      throw createCharError(index, bytes);
     }
   }
 
@@ -62,6 +64,6 @@ export default class QRKanji extends QRData {
    * @returns {number}
    */
   public getLength(): number {
-    return stringToBytes(this.getData()).length / 2;
+    return this.bytes.length / 2;
   }
 }

@@ -8,8 +8,9 @@ import Mode from '../common/Mode';
 import BitBuffer from './BitBuffer';
 
 export default abstract class QRData {
-  private mode: Mode;
-  private data: string;
+  protected mode: Mode;
+  protected data: string;
+  protected bytes: number[];
 
   constructor(mode: Mode, data: string) {
     this.mode = mode;
@@ -18,10 +19,6 @@ export default abstract class QRData {
 
   public getMode(): Mode {
     return this.mode;
-  }
-
-  public getData(): string {
-    return this.data;
   }
 
   public abstract getLength(): number;

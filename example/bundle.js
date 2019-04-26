@@ -77,9 +77,6 @@
         QRData.prototype.getMode = function () {
             return this.mode;
         };
-        QRData.prototype.getData = function () {
-            return this.data;
-        };
         QRData.prototype.getLengthInBits = function (version) {
             var mode = this.mode;
             var error = "illegal mode: " + mode;
@@ -186,7 +183,9 @@
          * @param {string} data
          */
         function QRByte(data) {
-            return _super.call(this, Mode$1.Byte, data) || this;
+            var _this = _super.call(this, Mode$1.Byte, data) || this;
+            _this.bytes = UTF8(data);
+            return _this;
         }
         /**
          * @public
@@ -194,10 +193,10 @@
          * @param {BitBuffer} buffer
          */
         QRByte.prototype.write = function (buffer) {
-            var data = UTF8(this.getData());
-            var length = data.length;
+            var bytes = this.bytes;
+            var length = bytes.length;
             for (var i = 0; i < length; i++) {
-                buffer.put(data[i], 8);
+                buffer.put(bytes[i], 8);
             }
         };
         /**
@@ -206,7 +205,7 @@
          * @returns {number}
          */
         QRByte.prototype.getLength = function () {
-            return UTF8(this.getData()).length;
+            return this.bytes.length;
         };
         return QRByte;
     }(QRData));
@@ -4392,7 +4391,9 @@
          * @param {string} data
          */
         function QRKanji(data) {
-            return _super.call(this, Mode$1.Kanji, data) || this;
+            var _this = _super.call(this, Mode$1.Kanji, data) || this;
+            _this.bytes = SJIS(data);
+            return _this;
         }
         /**
          * @public
@@ -4401,10 +4402,10 @@
          */
         QRKanji.prototype.write = function (buffer) {
             var index = 0;
-            var data = SJIS(this.getData());
-            var length = data.length;
+            var bytes = this.bytes;
+            var length = bytes.length;
             while (index + 1 < length) {
-                var code = ((0xff & data[index]) << 8) | (0xff & data[index + 1]);
+                var code = ((0xff & bytes[index]) << 8) | (0xff & bytes[index + 1]);
                 if (0x8140 <= code && code <= 0x9ffc) {
                     code -= 0x8140;
                 }
@@ -4412,14 +4413,14 @@
                     code -= 0xc140;
                 }
                 else {
-                    throw createCharError(index, data);
+                    throw createCharError(index, bytes);
                 }
                 code = ((code >>> 8) & 0xff) * 0xc0 + (code & 0xff);
                 buffer.put(code, 13);
                 index += 2;
             }
-            if (index < data.length) {
-                throw createCharError(index, data);
+            if (index < length) {
+                throw createCharError(index, bytes);
             }
         };
         /**
@@ -4428,7 +4429,7 @@
          * @returns {number}
          */
         QRKanji.prototype.getLength = function () {
-            return SJIS(this.getData()).length / 2;
+            return this.bytes.length / 2;
         };
         return QRKanji;
     }(QRData));
@@ -4454,7 +4455,7 @@
          */
         QRNumeric.prototype.write = function (buffer) {
             var i = 0;
-            var data = this.getData();
+            var data = this.data;
             var length = data.length;
             while (i + 2 < length) {
                 buffer.put(QRNumeric.strToNum(data.substring(i, i + 3)), 10);
@@ -4475,7 +4476,7 @@
          * @returns {number}
          */
         QRNumeric.prototype.getLength = function () {
-            return this.getData().length;
+            return this.data.length;
         };
         QRNumeric.strToNum = function (str) {
             var num = 0;
@@ -4516,7 +4517,7 @@
          */
         QRAlphanumeric.prototype.write = function (buffer) {
             var i = 0;
-            var data = this.getData();
+            var data = this.data;
             var length = data.length;
             while (i + 1 < length) {
                 buffer.put(QRAlphanumeric.getCode(data.charAt(i)) * 45 + QRAlphanumeric.getCode(data.charAt(i + 1)), 11);
@@ -4532,7 +4533,7 @@
          * @returns {number}
          */
         QRAlphanumeric.prototype.getLength = function () {
-            return this.getData().length;
+            return this.data.length;
         };
         QRAlphanumeric.getCode = function (ch) {
             if ('0' <= ch && ch <= '9') {
