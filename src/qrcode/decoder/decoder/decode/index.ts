@@ -9,13 +9,9 @@ import Mode from '../../../common/Mode';
 import { UTF2SJISTable } from '../../../../encoding/SJIS';
 import ErrorCorrectionLevel from '../../../common/ErrorCorrectionLevel';
 
-interface Chunk {
-  type: Mode;
-  text: string;
-}
-
 interface ByteChunk {
-  type: Mode.Byte | Mode.Kanji;
+  type: Mode.Numeric | Mode.Alphanumeric | Mode.Byte | Mode.Kanji;
+  text: string;
   bytes: number[];
 }
 
@@ -39,7 +35,7 @@ interface DecodeData {
   bytes: number[];
 }
 
-type Chunks = Array<Chunk | ByteChunk | ECIChunk | StructuredAppendChunk>;
+type Chunks = Array<ByteChunk | ECIChunk | StructuredAppendChunk>;
 
 export interface DecodeResult extends DecodeData {
   chunks: Chunks;
@@ -262,21 +258,23 @@ export function decode(data: Uint8ClampedArray, version: number, errorCorrection
 
       result.text += numericResult.text;
 
-      result.bytes.push(...numericResult.bytes);
       result.chunks.push({
         type: Mode.Numeric,
-        text: numericResult.text
+        text: numericResult.text,
+        bytes: numericResult.bytes
       });
+      result.bytes.push(...numericResult.bytes);
     } else if (mode === Mode.Alphanumeric) {
       const alphanumericResult: DecodeData = decodeAlphanumeric(stream, size);
 
       result.text += alphanumericResult.text;
 
-      result.bytes.push(...alphanumericResult.bytes);
       result.chunks.push({
         type: Mode.Alphanumeric,
-        text: alphanumericResult.text
+        text: alphanumericResult.text,
+        bytes: alphanumericResult.bytes
       });
+      result.bytes.push(...alphanumericResult.bytes);
     } else if (mode === Mode.StructuredAppend) {
       // QR Standard section 9.2:
       // > The 4-bit patterns shall be the binary equivalents of (m - 1) and (n - 1) respectively.
@@ -295,23 +293,23 @@ export function decode(data: Uint8ClampedArray, version: number, errorCorrection
 
       result.text += byteResult.text;
 
-      result.bytes.push(...byteResult.bytes);
       result.chunks.push({
         type: Mode.Byte,
-        bytes: byteResult.bytes,
-        text: byteResult.text
+        text: byteResult.text,
+        bytes: byteResult.bytes
       });
+      result.bytes.push(...byteResult.bytes);
     } else if (mode === Mode.Kanji) {
       const kanjiResult: DecodeData = decodeKanji(stream, size);
 
       result.text += kanjiResult.text;
 
-      result.bytes.push(...kanjiResult.bytes);
       result.chunks.push({
         type: Mode.Kanji,
-        bytes: kanjiResult.bytes,
-        text: kanjiResult.text
+        text: kanjiResult.text,
+        bytes: kanjiResult.bytes
       });
+      result.bytes.push(...kanjiResult.bytes);
     }
   }
 

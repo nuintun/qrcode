@@ -3312,6 +3312,7 @@
             bytes.push(c >> 8, c & 0xff);
             text += String.fromCharCode(UTF2SJISTable[c]);
         }
+        console.log(bytesToUTF8(bytes));
         return { bytes: bytes, text: text };
     }
     function decode$1(data, version, errorCorrectionLevel) {
@@ -3355,20 +3356,22 @@
             else if (mode === Mode$1.Numeric) {
                 var numericResult = decodeNumeric(stream, size);
                 result.text += numericResult.text;
-                (_a = result.bytes).push.apply(_a, numericResult.bytes);
                 result.chunks.push({
                     type: Mode$1.Numeric,
-                    text: numericResult.text
+                    text: numericResult.text,
+                    bytes: numericResult.bytes
                 });
+                (_a = result.bytes).push.apply(_a, numericResult.bytes);
             }
             else if (mode === Mode$1.Alphanumeric) {
                 var alphanumericResult = decodeAlphanumeric(stream, size);
                 result.text += alphanumericResult.text;
-                (_b = result.bytes).push.apply(_b, alphanumericResult.bytes);
                 result.chunks.push({
                     type: Mode$1.Alphanumeric,
-                    text: alphanumericResult.text
+                    text: alphanumericResult.text,
+                    bytes: alphanumericResult.bytes
                 });
+                (_b = result.bytes).push.apply(_b, alphanumericResult.bytes);
             }
             else if (mode === Mode$1.StructuredAppend) {
                 // QR Standard section 9.2:
@@ -3383,22 +3386,22 @@
             else if (mode === Mode$1.Byte) {
                 var byteResult = decodeByte(stream, size);
                 result.text += byteResult.text;
-                (_c = result.bytes).push.apply(_c, byteResult.bytes);
                 result.chunks.push({
                     type: Mode$1.Byte,
-                    bytes: byteResult.bytes,
-                    text: byteResult.text
+                    text: byteResult.text,
+                    bytes: byteResult.bytes
                 });
+                (_c = result.bytes).push.apply(_c, byteResult.bytes);
             }
             else if (mode === Mode$1.Kanji) {
                 var kanjiResult = decodeKanji(stream, size);
                 result.text += kanjiResult.text;
-                (_d = result.bytes).push.apply(_d, kanjiResult.bytes);
                 result.chunks.push({
                     type: Mode$1.Kanji,
-                    bytes: kanjiResult.bytes,
-                    text: kanjiResult.text
+                    text: kanjiResult.text,
+                    bytes: kanjiResult.bytes
                 });
+                (_d = result.bytes).push.apply(_d, kanjiResult.bytes);
             }
         }
         // If there is no data left, or the remaining bits are all 0, then that counts as a termination marker
