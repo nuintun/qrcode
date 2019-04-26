@@ -3158,7 +3158,7 @@
      * @author Cosmo Wolfe
      */
     function decodeNumeric(stream, size) {
-        var text = '';
+        var data = '';
         var bytes = [];
         var characterCountSize = [10, 12, 14][size];
         var length = stream.readBits(characterCountSize);
@@ -3172,7 +3172,7 @@
             var b = Math.floor(num / 10) % 10;
             var c = num % 10;
             bytes.push(48 + a, 48 + b, 48 + c);
-            text += a.toString() + b.toString() + c.toString();
+            data += a.toString() + b.toString() + c.toString();
             length -= 3;
         }
         // If the number of digits aren't a multiple of 3, the remaining digits are special cased.
@@ -3184,7 +3184,7 @@
             var a = Math.floor(num / 10);
             var b = num % 10;
             bytes.push(48 + a, 48 + b);
-            text += a.toString() + b.toString();
+            data += a.toString() + b.toString();
         }
         else if (length === 1) {
             var num = stream.readBits(4);
@@ -3192,9 +3192,9 @@
                 throw 'invalid numeric value above 9';
             }
             bytes.push(48 + num);
-            text += num.toString();
+            data += num.toString();
         }
-        return { bytes: bytes, text: text };
+        return { bytes: bytes, data: data };
     }
     // prettier-ignore
     var AlphanumericCharacterCodes = [
@@ -3205,7 +3205,7 @@
         ' ', '$', '%', '*', '+', '-', '.', '/', ':'
     ];
     function decodeAlphanumeric(stream, size) {
-        var text = '';
+        var data = '';
         var bytes = [];
         var characterCountSize = [9, 11, 13][size];
         var length = stream.readBits(characterCountSize);
@@ -3214,15 +3214,15 @@
             var a = Math.floor(v / 45);
             var b = v % 45;
             bytes.push(AlphanumericCharacterCodes[a].charCodeAt(0), AlphanumericCharacterCodes[b].charCodeAt(0));
-            text += AlphanumericCharacterCodes[a] + AlphanumericCharacterCodes[b];
+            data += AlphanumericCharacterCodes[a] + AlphanumericCharacterCodes[b];
             length -= 2;
         }
         if (length === 1) {
             var a = stream.readBits(6);
             bytes.push(AlphanumericCharacterCodes[a].charCodeAt(0));
-            text += AlphanumericCharacterCodes[a];
+            data += AlphanumericCharacterCodes[a];
         }
-        return { bytes: bytes, text: text };
+        return { bytes: bytes, data: data };
     }
     /**
      * @function bytesToUTF8
@@ -3267,10 +3267,10 @@
         for (var i = 0; i < length; i++) {
             bytes.push(stream.readBits(8));
         }
-        return { bytes: bytes, text: bytesToUTF8(bytes) };
+        return { bytes: bytes, data: bytesToUTF8(bytes) };
     }
     function decodeKanji(stream, size) {
-        var text = '';
+        var data = '';
         var bytes = [];
         var characterCountSize = [8, 10, 12][size];
         var length = stream.readBits(characterCountSize);
@@ -3284,16 +3284,16 @@
                 c += 0xc140;
             }
             bytes.push(c >> 8, c & 0xff);
-            text += String.fromCharCode(UTF2SJISTable[c]);
+            data += String.fromCharCode(UTF2SJISTable[c]);
         }
-        return { bytes: bytes, text: text };
+        return { bytes: bytes, data: data };
     }
     function decode$1(data, version, errorCorrectionLevel) {
         var _a, _b, _c, _d;
         var stream = new BitStream(data);
         // There are 3 'sizes' based on the version. 1-9 is small (0), 10-26 is medium (1) and 27-40 is large (2).
         var size = version <= 9 ? 0 : version <= 26 ? 1 : 2;
-        var result = { text: '', bytes: [], chunks: [], version: version, errorCorrectionLevel: errorCorrectionLevel };
+        var result = { data: '', bytes: [], chunks: [], version: version, errorCorrectionLevel: errorCorrectionLevel };
         while (stream.available() >= 4) {
             var mode = stream.readBits(4);
             if (mode === Mode$1.Terminator) {
@@ -3302,46 +3302,46 @@
             else if (mode === Mode$1.ECI) {
                 if (stream.readBits(1) === 0) {
                     result.chunks.push({
-                        type: Mode$1.ECI,
+                        mode: Mode$1.ECI,
                         assignmentNumber: stream.readBits(7)
                     });
                 }
                 else if (stream.readBits(1) === 0) {
                     result.chunks.push({
-                        type: Mode$1.ECI,
+                        mode: Mode$1.ECI,
                         assignmentNumber: stream.readBits(14)
                     });
                 }
                 else if (stream.readBits(1) === 0) {
                     result.chunks.push({
-                        type: Mode$1.ECI,
+                        mode: Mode$1.ECI,
                         assignmentNumber: stream.readBits(21)
                     });
                 }
                 else {
                     // ECI data seems corrupted
                     result.chunks.push({
-                        type: Mode$1.ECI,
+                        mode: Mode$1.ECI,
                         assignmentNumber: -1
                     });
                 }
             }
             else if (mode === Mode$1.Numeric) {
                 var numericResult = decodeNumeric(stream, size);
-                result.text += numericResult.text;
+                result.data += numericResult.data;
                 result.chunks.push({
-                    type: Mode$1.Numeric,
-                    text: numericResult.text,
+                    mode: Mode$1.Numeric,
+                    data: numericResult.data,
                     bytes: numericResult.bytes
                 });
                 (_a = result.bytes).push.apply(_a, numericResult.bytes);
             }
             else if (mode === Mode$1.Alphanumeric) {
                 var alphanumericResult = decodeAlphanumeric(stream, size);
-                result.text += alphanumericResult.text;
+                result.data += alphanumericResult.data;
                 result.chunks.push({
-                    type: Mode$1.Alphanumeric,
-                    text: alphanumericResult.text,
+                    mode: Mode$1.Alphanumeric,
+                    data: alphanumericResult.data,
                     bytes: alphanumericResult.bytes
                 });
                 (_b = result.bytes).push.apply(_b, alphanumericResult.bytes);
@@ -3354,24 +3354,24 @@
                     N: stream.readBits(4) + 1,
                     parity: stream.readBits(8)
                 };
-                result.chunks.push(__assign({ type: Mode$1.StructuredAppend }, structuredAppend));
+                result.chunks.push(__assign({ mode: Mode$1.StructuredAppend }, structuredAppend));
             }
             else if (mode === Mode$1.Byte) {
                 var byteResult = decodeByte(stream, size);
-                result.text += byteResult.text;
+                result.data += byteResult.data;
                 result.chunks.push({
-                    type: Mode$1.Byte,
-                    text: byteResult.text,
+                    mode: Mode$1.Byte,
+                    data: byteResult.data,
                     bytes: byteResult.bytes
                 });
                 (_c = result.bytes).push.apply(_c, byteResult.bytes);
             }
             else if (mode === Mode$1.Kanji) {
                 var kanjiResult = decodeKanji(stream, size);
-                result.text += kanjiResult.text;
+                result.data += kanjiResult.data;
                 result.chunks.push({
-                    type: Mode$1.Kanji,
-                    text: kanjiResult.text,
+                    mode: Mode$1.Kanji,
+                    data: kanjiResult.data,
                     bytes: kanjiResult.bytes
                 });
                 (_d = result.bytes).push.apply(_d, kanjiResult.bytes);

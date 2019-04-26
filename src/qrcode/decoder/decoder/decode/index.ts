@@ -10,13 +10,13 @@ import { UTF2SJISTable } from '../../../../encoding/SJIS';
 import ErrorCorrectionLevel from '../../../common/ErrorCorrectionLevel';
 
 interface ByteChunk {
-  type: Mode.Numeric | Mode.Alphanumeric | Mode.Byte | Mode.Kanji;
-  text: string;
+  mode: Mode.Numeric | Mode.Alphanumeric | Mode.Byte | Mode.Kanji;
+  data: string;
   bytes: number[];
 }
 
 interface ECIChunk {
-  type: Mode.ECI;
+  mode: Mode.ECI;
   assignmentNumber: number;
 }
 
@@ -27,11 +27,11 @@ interface StructuredAppend {
 }
 
 interface StructuredAppendChunk extends StructuredAppend {
-  type: Mode.StructuredAppend;
+  mode: Mode.StructuredAppend;
 }
 
 interface DecodeData {
-  text: string;
+  data: string;
   bytes: number[];
 }
 
@@ -44,7 +44,7 @@ export interface DecodeResult extends DecodeData {
 }
 
 function decodeNumeric(stream: BitStream, size: number): DecodeData {
-  let text: string = '';
+  let data: string = '';
   const bytes: number[] = [];
 
   const characterCountSize: number = [10, 12, 14][size];
@@ -64,7 +64,7 @@ function decodeNumeric(stream: BitStream, size: number): DecodeData {
 
     bytes.push(48 + a, 48 + b, 48 + c);
 
-    text += a.toString() + b.toString() + c.toString();
+    data += a.toString() + b.toString() + c.toString();
 
     length -= 3;
   }
@@ -82,7 +82,7 @@ function decodeNumeric(stream: BitStream, size: number): DecodeData {
 
     bytes.push(48 + a, 48 + b);
 
-    text += a.toString() + b.toString();
+    data += a.toString() + b.toString();
   } else if (length === 1) {
     const num: number = stream.readBits(4);
 
@@ -92,10 +92,10 @@ function decodeNumeric(stream: BitStream, size: number): DecodeData {
 
     bytes.push(48 + num);
 
-    text += num.toString();
+    data += num.toString();
   }
 
-  return { bytes, text };
+  return { bytes, data };
 }
 
 // prettier-ignore
@@ -108,7 +108,7 @@ const AlphanumericCharacterCodes: string[]= [
 ];
 
 function decodeAlphanumeric(stream: BitStream, size: number): DecodeData {
-  let text: string = '';
+  let data: string = '';
   const bytes: number[] = [];
 
   const characterCountSize: number = [9, 11, 13][size];
@@ -122,7 +122,7 @@ function decodeAlphanumeric(stream: BitStream, size: number): DecodeData {
 
     bytes.push(AlphanumericCharacterCodes[a].charCodeAt(0), AlphanumericCharacterCodes[b].charCodeAt(0));
 
-    text += AlphanumericCharacterCodes[a] + AlphanumericCharacterCodes[b];
+    data += AlphanumericCharacterCodes[a] + AlphanumericCharacterCodes[b];
 
     length -= 2;
   }
@@ -132,10 +132,10 @@ function decodeAlphanumeric(stream: BitStream, size: number): DecodeData {
 
     bytes.push(AlphanumericCharacterCodes[a].charCodeAt(0));
 
-    text += AlphanumericCharacterCodes[a];
+    data += AlphanumericCharacterCodes[a];
   }
 
-  return { bytes, text };
+  return { bytes, data };
 }
 
 /**
@@ -188,11 +188,11 @@ function decodeByte(stream: BitStream, size: number): DecodeData {
     bytes.push(stream.readBits(8));
   }
 
-  return { bytes, text: bytesToUTF8(bytes) };
+  return { bytes, data: bytesToUTF8(bytes) };
 }
 
 function decodeKanji(stream: BitStream, size: number): DecodeData {
-  let text: string = '';
+  let data: string = '';
   const bytes: number[] = [];
 
   const characterCountSize: number = [8, 10, 12][size];
@@ -211,10 +211,10 @@ function decodeKanji(stream: BitStream, size: number): DecodeData {
 
     bytes.push(c >> 8, c & 0xff);
 
-    text += String.fromCharCode(UTF2SJISTable[c]);
+    data += String.fromCharCode(UTF2SJISTable[c]);
   }
 
-  return { bytes, text };
+  return { bytes, data };
 }
 
 export function decode(data: Uint8ClampedArray, version: number, errorCorrectionLevel: ErrorCorrectionLevel): DecodeResult {
@@ -223,7 +223,7 @@ export function decode(data: Uint8ClampedArray, version: number, errorCorrection
   // There are 3 'sizes' based on the version. 1-9 is small (0), 10-26 is medium (1) and 27-40 is large (2).
   const size: number = version <= 9 ? 0 : version <= 26 ? 1 : 2;
 
-  const result: DecodeResult = { text: '', bytes: [], chunks: [], version, errorCorrectionLevel };
+  const result: DecodeResult = { data: '', bytes: [], chunks: [], version, errorCorrectionLevel };
 
   while (stream.available() >= 4) {
     const mode: number = stream.readBits(4);
@@ -233,45 +233,45 @@ export function decode(data: Uint8ClampedArray, version: number, errorCorrection
     } else if (mode === Mode.ECI) {
       if (stream.readBits(1) === 0) {
         result.chunks.push({
-          type: Mode.ECI,
+          mode: Mode.ECI,
           assignmentNumber: stream.readBits(7)
         });
       } else if (stream.readBits(1) === 0) {
         result.chunks.push({
-          type: Mode.ECI,
+          mode: Mode.ECI,
           assignmentNumber: stream.readBits(14)
         });
       } else if (stream.readBits(1) === 0) {
         result.chunks.push({
-          type: Mode.ECI,
+          mode: Mode.ECI,
           assignmentNumber: stream.readBits(21)
         });
       } else {
         // ECI data seems corrupted
         result.chunks.push({
-          type: Mode.ECI,
+          mode: Mode.ECI,
           assignmentNumber: -1
         });
       }
     } else if (mode === Mode.Numeric) {
       const numericResult: DecodeData = decodeNumeric(stream, size);
 
-      result.text += numericResult.text;
+      result.data += numericResult.data;
 
       result.chunks.push({
-        type: Mode.Numeric,
-        text: numericResult.text,
+        mode: Mode.Numeric,
+        data: numericResult.data,
         bytes: numericResult.bytes
       });
       result.bytes.push(...numericResult.bytes);
     } else if (mode === Mode.Alphanumeric) {
       const alphanumericResult: DecodeData = decodeAlphanumeric(stream, size);
 
-      result.text += alphanumericResult.text;
+      result.data += alphanumericResult.data;
 
       result.chunks.push({
-        type: Mode.Alphanumeric,
-        text: alphanumericResult.text,
+        mode: Mode.Alphanumeric,
+        data: alphanumericResult.data,
         bytes: alphanumericResult.bytes
       });
       result.bytes.push(...alphanumericResult.bytes);
@@ -285,28 +285,28 @@ export function decode(data: Uint8ClampedArray, version: number, errorCorrection
       };
 
       result.chunks.push({
-        type: Mode.StructuredAppend,
+        mode: Mode.StructuredAppend,
         ...structuredAppend
       });
     } else if (mode === Mode.Byte) {
       const byteResult: DecodeData = decodeByte(stream, size);
 
-      result.text += byteResult.text;
+      result.data += byteResult.data;
 
       result.chunks.push({
-        type: Mode.Byte,
-        text: byteResult.text,
+        mode: Mode.Byte,
+        data: byteResult.data,
         bytes: byteResult.bytes
       });
       result.bytes.push(...byteResult.bytes);
     } else if (mode === Mode.Kanji) {
       const kanjiResult: DecodeData = decodeKanji(stream, size);
 
-      result.text += kanjiResult.text;
+      result.data += kanjiResult.data;
 
       result.chunks.push({
-        type: Mode.Kanji,
-        text: kanjiResult.text,
+        mode: Mode.Kanji,
+        data: kanjiResult.data,
         bytes: kanjiResult.bytes
       });
       result.bytes.push(...kanjiResult.bytes);
