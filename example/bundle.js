@@ -3312,7 +3312,6 @@
             bytes.push(c >> 8, c & 0xff);
             text += String.fromCharCode(UTF2SJISTable[c]);
         }
-        console.log(bytesToUTF8(bytes));
         return { bytes: bytes, text: text };
     }
     function decode$1(data, version, errorCorrectionLevel) {
