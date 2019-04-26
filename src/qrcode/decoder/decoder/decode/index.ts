@@ -168,8 +168,8 @@ function bytesToUTF8(bytes: number[]): string {
       output += String.fromCharCode(0xd800 + (u >> 10));
       output += String.fromCharCode(0xdc00 + (u & 1023));
     } else {
-      const c2 = bytes[pos++];
-      const c3 = bytes[pos++];
+      const c2: number = bytes[pos++];
+      const c3: number = bytes[pos++];
 
       output += String.fromCharCode(((c1 & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
     }

@@ -18,7 +18,7 @@ export default class Base64DecodeInputStream extends InputStream {
   }
 
   public readByte(): number {
-    const stream = this.stream;
+    const stream: InputStream = this.stream;
 
     while (this.bufLength < 8) {
       const byte: number = stream.readByte();
@@ -42,7 +42,7 @@ export default class Base64DecodeInputStream extends InputStream {
       this.bufLength += 6;
     }
 
-    const byte = (this.buffer >>> (this.bufLength - 8)) & 0xff;
+    const byte: number = (this.buffer >>> (this.bufLength - 8)) & 0xff;
 
     this.bufLength -= 8;
 

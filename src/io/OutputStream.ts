@@ -8,7 +8,7 @@ export default abstract class OutputStream {
   public abstract writeByte(byte: number): void;
 
   public writeBytes(bytes: number[]): void {
-    const length = bytes.length;
+    const length: number = bytes.length;
 
     for (let i: number = 0; i < length; i++) {
       this.writeByte(bytes[i]);

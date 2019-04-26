@@ -19,7 +19,9 @@ export interface QRLocation {
   alignmentPattern: Point;
 }
 
-const distance = (a: Point, b: Point): number => Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
+function distance(a: Point, b: Point): number {
+  return Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
+}
 
 function sum(values: number[]): number {
   return values.reduce((a, b) => a + b);
@@ -467,8 +469,6 @@ export default function locate(matrix: BitMatrix): QRLocation {
         return;
       }
 
-      // const lengths = [q.top.endX - q.top.startX, q.bottom.endX - q.bottom.startX, q.bottom.y - q.top.y + 1];
-      // const size = sum(lengths) / lengths.length;
       const sizeScore: number = scorePattern({ x: Math.floor(x), y: Math.floor(y) }, [1, 1, 1], matrix);
       const score: number = sizeScore + distance({ x, y }, expectedAlignmentPattern);
 

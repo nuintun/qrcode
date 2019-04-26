@@ -204,7 +204,7 @@ export function getPenaltyScore(qrcode: QRCode): number {
   }
 
   // penalty rule 4
-  let darkCount = 0;
+  let darkCount: number = 0;
 
   for (let col: number = 0; col < moduleCount; col++) {
     for (let row: number = 0; row < moduleCount; row++) {
@@ -220,7 +220,7 @@ export function getPenaltyScore(qrcode: QRCode): number {
 }
 
 function getBCHDigit(data: number): number {
-  let digit = 0;
+  let digit: number = 0;
 
   while (data !== 0) {
     digit++;

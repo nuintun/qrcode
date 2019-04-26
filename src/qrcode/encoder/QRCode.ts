@@ -15,7 +15,7 @@ import ErrorCorrectionLevel from '../common/ErrorCorrectionLevel';
 
 const PAD0: number = 0xec;
 const PAD1: number = 0x11;
-const toString = Object.prototype.toString;
+const toString: () => string = Object.prototype.toString;
 
 type prepareData = [BitBuffer, RSBlock[], number];
 
@@ -29,13 +29,13 @@ function createNumArray(length: number): number[] {
   return array;
 }
 
-function prepareData(version: number, errorCorrectionLevel: ErrorCorrectionLevel, dataList: QRData[]): prepareData {
-  const dLength: number = dataList.length;
+function prepareData(version: number, errorCorrectionLevel: ErrorCorrectionLevel, chunks: QRData[]): prepareData {
+  const dLength: number = chunks.length;
   const buffer: BitBuffer = new BitBuffer();
   const rsBlocks: RSBlock[] = RSBlock.getRSBlocks(version, errorCorrectionLevel);
 
   for (let i: number = 0; i < dLength; i++) {
-    const data: QRData = dataList[i];
+    const data: QRData = chunks[i];
 
     buffer.put(data.getMode(), 4);
     buffer.put(data.getLength(), data.getLengthInBits(version));
@@ -154,8 +154,8 @@ function createData(buffer: BitBuffer, rsBlocks: RSBlock[], maxDataCount: number
 
 export default class QRCode {
   private version: number = 0;
+  private chunks: QRData[] = [];
   private moduleCount: number = 0;
-  private dataList: QRData[] = [];
   private modules: boolean[][] = [];
   private autoVersion: boolean = this.version === 0;
   private errorCorrectionLevel: ErrorCorrectionLevel = ErrorCorrectionLevel.L;
@@ -227,12 +227,12 @@ export default class QRCode {
    */
   public write(data: QRData | string): void {
     if (data instanceof QRData) {
-      this.dataList.push(data);
+      this.chunks.push(data);
     } else {
       const type: string = toString.call(data);
 
       if (type === '[object String]') {
-        this.dataList.push(new QRByte(data));
+        this.chunks.push(new QRByte(data));
       } else {
         throw `illegal data: ${data}`;
       }
@@ -244,8 +244,8 @@ export default class QRCode {
    * @method reset
    */
   public reset(): void {
+    this.chunks = [];
     this.modules = [];
-    this.dataList = [];
     this.moduleCount = 0;
 
     if (this.autoVersion) {
@@ -316,7 +316,7 @@ export default class QRCode {
 
   private setupTimingPattern(): void {
     for (let i: number = 8; i < this.moduleCount - 8; i++) {
-      const mod = i % 2 === 0;
+      const mod: boolean = i % 2 === 0;
 
       // vertical
       if (this.modules[i][6] === null) {
@@ -479,17 +479,17 @@ export default class QRCode {
     let rsBlocks: RSBlock[];
     let maxDataCount: number;
 
-    const dataList = this.dataList;
-    const errorCorrectionLevel = this.errorCorrectionLevel;
+    const chunks: QRData[] = this.chunks;
+    const errorCorrectionLevel: ErrorCorrectionLevel = this.errorCorrectionLevel;
 
     if (this.autoVersion) {
       for (this.version = 1; this.version <= 40; this.version++) {
-        [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, dataList);
+        [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, chunks);
 
         if (buffer.getLengthInBits() <= maxDataCount) break;
       }
     } else {
-      [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, dataList);
+      [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, chunks);
     }
 
     // calc module count
