@@ -4319,7 +4319,7 @@
                 topLeftFinderPattern: location.topLeft,
                 topRightFinderPattern: location.topRight,
                 bottomLeftFinderPattern: location.bottomLeft,
-                bottomRightAlignmentPattern: decoded.version > 7 ? location.alignmentPattern : null
+                bottomRightAlignmentPattern: decoded.version > 1 ? location.alignmentPattern : null
             } });
     }
     var defaultOptions = {
