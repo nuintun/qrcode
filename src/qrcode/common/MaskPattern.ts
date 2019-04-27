@@ -31,13 +31,13 @@ export default function getMaskFunc(maskPattern: number): maskFunc {
     case MaskPattern.PATTERN000:
       return (x: number, y: number): boolean => (x + y) % 2 === 0;
     case MaskPattern.PATTERN001:
-      return (x: number, y: number): boolean => x % 2 === 0;
+      return (x: number, y: number): boolean => y % 2 === 0;
     case MaskPattern.PATTERN010:
-      return (x: number, y: number): boolean => y % 3 === 0;
+      return (x: number, y: number): boolean => x % 3 === 0;
     case MaskPattern.PATTERN011:
       return (x: number, y: number): boolean => (x + y) % 3 === 0;
     case MaskPattern.PATTERN100:
-      return (x: number, y: number): boolean => (((x / 2) >>> 0) + ((y / 3) >>> 0)) % 2 === 0;
+      return (x: number, y: number): boolean => (((x / 3) >> 0) + ((y / 2) >> 0)) % 2 === 0;
     case MaskPattern.PATTERN101:
       return (x: number, y: number): boolean => ((x * y) % 2) + ((x * y) % 3) === 0;
     case MaskPattern.PATTERN110:

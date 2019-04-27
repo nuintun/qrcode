@@ -800,7 +800,7 @@
             return buffer;
         };
         BitBuffer.prototype.getBit = function (index) {
-            return ((this.buffer[(index / 8) >>> 0] >>> (7 - (index % 8))) & 1) === 1;
+            return ((this.buffer[(index / 8) >> 0] >>> (7 - (index % 8))) & 1) === 1;
         };
         BitBuffer.prototype.put = function (num, length) {
             for (var i = 0; i < length; i++) {
@@ -812,7 +812,7 @@
                 this.buffer.push(0);
             }
             if (bit) {
-                this.buffer[(this.length / 8) >>> 0] |= 0x80 >>> this.length % 8;
+                this.buffer[(this.length / 8) >> 0] |= 0x80 >>> this.length % 8;
             }
             this.length++;
         };
@@ -1278,13 +1278,13 @@
             case 0 /* PATTERN000 */:
                 return function (x, y) { return (x + y) % 2 === 0; };
             case 1 /* PATTERN001 */:
-                return function (x, y) { return x % 2 === 0; };
+                return function (x, y) { return y % 2 === 0; };
             case 2 /* PATTERN010 */:
-                return function (x, y) { return y % 3 === 0; };
+                return function (x, y) { return x % 3 === 0; };
             case 3 /* PATTERN011 */:
                 return function (x, y) { return (x + y) % 3 === 0; };
             case 4 /* PATTERN100 */:
-                return function (x, y) { return (((x / 2) >>> 0) + ((y / 3) >>> 0)) % 2 === 0; };
+                return function (x, y) { return (((x / 3) >> 0) + ((y / 2) >> 0)) % 2 === 0; };
             case 5 /* PATTERN101 */:
                 return function (x, y) { return ((x * y) % 2) + ((x * y) % 3) === 0; };
             case 6 /* PATTERN110 */:
@@ -1442,7 +1442,7 @@
          * @param {number} version
          */
         QRCode.prototype.setVersion = function (version) {
-            this.version = Math.min(40, Math.max(0, version >>> 0));
+            this.version = Math.min(40, Math.max(0, version >> 0));
             this.autoVersion = this.version === 0;
         };
         /**
@@ -1599,8 +1599,8 @@
             var bits = getBCHVersion(this.version);
             for (var i = 0; i < 18; i++) {
                 var mod = !test && ((bits >> i) & 1) === 1;
-                this.modules[(i / 3) >>> 0][(i % 3) + this.moduleCount - 8 - 3] = mod;
-                this.modules[(i % 3) + this.moduleCount - 8 - 3][(i / 3) >>> 0] = mod;
+                this.modules[(i / 3) >> 0][(i % 3) + this.moduleCount - 8 - 3] = mod;
+                this.modules[(i % 3) + this.moduleCount - 8 - 3][(i / 3) >> 0] = mod;
             }
         };
         QRCode.prototype.mapData = function (data, maskPattern) {
@@ -1620,7 +1620,7 @@
                             if (byteIndex < data.length) {
                                 dark = ((data[byteIndex] >>> bitIndex) & 1) === 1;
                             }
-                            var mask = maskFunc(row, col - c);
+                            var mask = maskFunc(col - c, row);
                             if (mask) {
                                 dark = !dark;
                             }
@@ -1715,8 +1715,8 @@
         QRCode.prototype.toDataURL = function (moduleSize, margin) {
             if (moduleSize === void 0) { moduleSize = 2; }
             if (margin === void 0) { margin = moduleSize * 4; }
-            moduleSize = Math.max(1, moduleSize >>> 0);
-            margin = Math.max(0, margin >>> 0);
+            moduleSize = Math.max(1, moduleSize >> 0);
+            margin = Math.max(0, margin >> 0);
             var mods = this.moduleCount;
             var size = moduleSize * mods + margin * 2;
             var gif = new GIFImage(size, size);
@@ -1726,7 +1726,7 @@
                         x < size - margin &&
                         margin <= y &&
                         y < size - margin &&
-                        this.isDark(((y - margin) / moduleSize) >>> 0, ((x - margin) / moduleSize) >>> 0)) {
+                        this.isDark(((y - margin) / moduleSize) >> 0, ((x - margin) / moduleSize) >> 0)) {
                         gif.setPixel(x, y, 0);
                     }
                     else {
@@ -3485,7 +3485,7 @@
                     if (!functionPatternMask.get(x, y)) {
                         bitsRead++;
                         var bit = matrix.get(x, y);
-                        if (maskFunc(y, x)) {
+                        if (maskFunc(x, y)) {
                             bit = !bit;
                         }
                         currentByte = pushBit(bit, currentByte);

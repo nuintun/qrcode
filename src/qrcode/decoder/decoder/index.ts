@@ -129,7 +129,7 @@ function readCodewords(matrix: BitMatrix, version: Version, formatInfo: FormatIn
 
           let bit: boolean = matrix.get(x, y);
 
-          if (maskFunc(y, x)) {
+          if (maskFunc(x, y)) {
             bit = !bit;
           }
 
