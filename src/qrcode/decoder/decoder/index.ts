@@ -4,11 +4,11 @@
  * @author Cosmo Wolfe
  */
 
-import Point from '../Point';
 import rsDecode from './reedsolomon';
 import BitMatrix from '../BitMatrix';
 import { Version, VERSIONS, ECLevel } from './version';
 import { decode as decodeBytes, DecodeResult } from './decode';
+import getMaskFunc, { maskFunc } from '../../common/MaskPattern';
 import ErrorCorrectionLevel from '../../common/ErrorCorrectionLevel';
 
 function numBitsDiffering(x: number, y: number): number {
@@ -72,19 +72,6 @@ const FORMAT_INFO_TABLE: FormatItem[] = [
   { bits: 0x2bed, formatInfo: { errorCorrectionLevel: 3, dataMask: 7 } }
 ];
 
-type maskFunc = (point: Point) => boolean;
-
-const DATA_MASKS: maskFunc[] = [
-  (p: Point): boolean => (p.y + p.x) % 2 === 0,
-  (p: Point): boolean => p.y % 2 === 0,
-  (p: Point): boolean => p.x % 3 === 0,
-  (p: Point): boolean => (p.y + p.x) % 3 === 0,
-  (p: Point): boolean => (Math.floor(p.y / 2) + Math.floor(p.x / 3)) % 2 === 0,
-  (p: Point): boolean => ((p.x * p.y) % 2) + ((p.x * p.y) % 3) === 0,
-  (p: Point): boolean => (((p.y * p.x) % 2) + ((p.y * p.x) % 3)) % 2 === 0,
-  (p: Point): boolean => (((p.y + p.x) % 2) + ((p.y * p.x) % 3)) % 2 === 0
-];
-
 function buildFunctionPatternMask(version: Version): BitMatrix {
   const dimension: number = 17 + 4 * version.versionNumber;
   const matrix: BitMatrix = BitMatrix.createEmpty(dimension, dimension);
@@ -115,7 +102,7 @@ function buildFunctionPatternMask(version: Version): BitMatrix {
 
 function readCodewords(matrix: BitMatrix, version: Version, formatInfo: FormatInformation): number[] {
   const dimension: number = matrix.height;
-  const dataMask: maskFunc = DATA_MASKS[formatInfo.dataMask];
+  const maskFunc: maskFunc = getMaskFunc(formatInfo.dataMask);
   const functionPatternMask: BitMatrix = buildFunctionPatternMask(version);
 
   let bitsRead: number = 0;
@@ -142,7 +129,7 @@ function readCodewords(matrix: BitMatrix, version: Version, formatInfo: FormatIn
 
           let bit: boolean = matrix.get(x, y);
 
-          if (dataMask({ y, x })) {
+          if (maskFunc(y, x)) {
             bit = !bit;
           }
 

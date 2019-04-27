@@ -11,6 +11,7 @@ import * as QRUtil from './QRUtil';
 import BitBuffer from './BitBuffer';
 import Polynomial from './Polynomial';
 import GIFImage from '../../image/GIFImage';
+import getMaskFunc, { maskFunc } from '../common/MaskPattern';
 import ErrorCorrectionLevel from '../common/ErrorCorrectionLevel';
 
 const PAD0: number = 0xec;
@@ -376,7 +377,7 @@ export default class QRCode {
     let bitIndex: number = 7;
     let byteIndex: number = 0;
     let row: number = this.moduleCount - 1;
-    const maskFunc: QRUtil.maskFunc = QRUtil.getMaskFunc(maskPattern);
+    const maskFunc: maskFunc = getMaskFunc(maskPattern);
 
     for (let col: number = this.moduleCount - 1; col > 0; col -= 2) {
       if (col === 6) {

@@ -651,28 +651,6 @@
         }
         return e;
     }
-    function getMaskFunc(maskPattern) {
-        switch (maskPattern) {
-            case 0 /* PATTERN000 */:
-                return function (x, y) { return (x + y) % 2 === 0; };
-            case 1 /* PATTERN001 */:
-                return function (x, y) { return x % 2 === 0; };
-            case 2 /* PATTERN010 */:
-                return function (x, y) { return y % 3 === 0; };
-            case 3 /* PATTERN011 */:
-                return function (x, y) { return (x + y) % 3 === 0; };
-            case 4 /* PATTERN100 */:
-                return function (x, y) { return (((x / 2) >>> 0) + ((y / 3) >>> 0)) % 2 === 0; };
-            case 5 /* PATTERN101 */:
-                return function (x, y) { return ((x * y) % 2) + ((x * y) % 3) === 0; };
-            case 6 /* PATTERN110 */:
-                return function (x, y) { return (((x * y) % 2) + ((x * y) % 3)) % 2 === 0; };
-            case 7 /* PATTERN111 */:
-                return function (x, y) { return (((x * y) % 3) + ((x + y) % 2)) % 2 === 0; };
-            default:
-                throw "illegal mask: " + maskPattern;
-        }
-    }
     /**
      * @function getPenaltyScore
      * @param {QRCode} qrcode
@@ -1288,6 +1266,35 @@
         };
         return GIFImage;
     }());
+
+    /**
+     * @module MaskPattern
+     * @author nuintun
+     * @author Cosmo Wolfe
+     * @author Kazuhiko Arase
+     */
+    function getMaskFunc(maskPattern) {
+        switch (maskPattern) {
+            case 0 /* PATTERN000 */:
+                return function (x, y) { return (x + y) % 2 === 0; };
+            case 1 /* PATTERN001 */:
+                return function (x, y) { return x % 2 === 0; };
+            case 2 /* PATTERN010 */:
+                return function (x, y) { return y % 3 === 0; };
+            case 3 /* PATTERN011 */:
+                return function (x, y) { return (x + y) % 3 === 0; };
+            case 4 /* PATTERN100 */:
+                return function (x, y) { return (((x / 2) >>> 0) + ((y / 3) >>> 0)) % 2 === 0; };
+            case 5 /* PATTERN101 */:
+                return function (x, y) { return ((x * y) % 2) + ((x * y) % 3) === 0; };
+            case 6 /* PATTERN110 */:
+                return function (x, y) { return (((x * y) % 2) + ((x * y) % 3)) % 2 === 0; };
+            case 7 /* PATTERN111 */:
+                return function (x, y) { return (((x * y) % 3) + ((x + y) % 2)) % 2 === 0; };
+            default:
+                throw "illegal mask: " + maskPattern;
+        }
+    }
 
     /**
      * @module QRCode
@@ -3433,16 +3440,6 @@
         { bits: 0x2eda, formatInfo: { errorCorrectionLevel: 3, dataMask: 6 } },
         { bits: 0x2bed, formatInfo: { errorCorrectionLevel: 3, dataMask: 7 } }
     ];
-    var DATA_MASKS = [
-        function (p) { return (p.y + p.x) % 2 === 0; },
-        function (p) { return p.y % 2 === 0; },
-        function (p) { return p.x % 3 === 0; },
-        function (p) { return (p.y + p.x) % 3 === 0; },
-        function (p) { return (Math.floor(p.y / 2) + Math.floor(p.x / 3)) % 2 === 0; },
-        function (p) { return ((p.x * p.y) % 2) + ((p.x * p.y) % 3) === 0; },
-        function (p) { return (((p.y * p.x) % 2) + ((p.y * p.x) % 3)) % 2 === 0; },
-        function (p) { return (((p.y + p.x) % 2) + ((p.y * p.x) % 3)) % 2 === 0; }
-    ];
     function buildFunctionPatternMask(version) {
         var dimension = 17 + 4 * version.versionNumber;
         var matrix = BitMatrix.createEmpty(dimension, dimension);
@@ -3469,7 +3466,7 @@
     }
     function readCodewords(matrix, version, formatInfo) {
         var dimension = matrix.height;
-        var dataMask = DATA_MASKS[formatInfo.dataMask];
+        var maskFunc = getMaskFunc(formatInfo.dataMask);
         var functionPatternMask = buildFunctionPatternMask(version);
         var bitsRead = 0;
         var currentByte = 0;
@@ -3488,7 +3485,7 @@
                     if (!functionPatternMask.get(x, y)) {
                         bitsRead++;
                         var bit = matrix.get(x, y);
-                        if (dataMask({ y: y, x: x })) {
+                        if (maskFunc(y, x)) {
                             bit = !bit;
                         }
                         currentByte = pushBit(bit, currentByte);

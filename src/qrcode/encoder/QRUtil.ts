@@ -7,7 +7,6 @@
 import QRCode from './QRCode';
 import * as QRMath from './QRMath';
 import Polynomial from './Polynomial';
-import MaskPattern from './MaskPattern';
 
 const ALIGNMENT_PATTERN_TABLE: number[][] = [
   [],
@@ -72,29 +71,6 @@ export function getErrorCorrectionPolynomial(errorCorrectionLength: number): Pol
   }
 
   return e;
-}
-
-export function getMaskFunc(maskPattern: number): maskFunc {
-  switch (maskPattern) {
-    case MaskPattern.PATTERN000:
-      return (x: number, y: number): boolean => (x + y) % 2 === 0;
-    case MaskPattern.PATTERN001:
-      return (x: number, y: number): boolean => x % 2 === 0;
-    case MaskPattern.PATTERN010:
-      return (x: number, y: number): boolean => y % 3 === 0;
-    case MaskPattern.PATTERN011:
-      return (x: number, y: number): boolean => (x + y) % 3 === 0;
-    case MaskPattern.PATTERN100:
-      return (x: number, y: number): boolean => (((x / 2) >>> 0) + ((y / 3) >>> 0)) % 2 === 0;
-    case MaskPattern.PATTERN101:
-      return (x: number, y: number): boolean => ((x * y) % 2) + ((x * y) % 3) === 0;
-    case MaskPattern.PATTERN110:
-      return (x: number, y: number): boolean => (((x * y) % 2) + ((x * y) % 3)) % 2 === 0;
-    case MaskPattern.PATTERN111:
-      return (x: number, y: number): boolean => (((x * y) % 3) + ((x + y) % 2)) % 2 === 0;
-    default:
-      throw `illegal mask: ${maskPattern}`;
-  }
 }
 
 /**
