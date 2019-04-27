@@ -7,6 +7,27 @@
 import QRData from './QRData';
 import Mode from '../common/Mode';
 import BitBuffer from './BitBuffer';
+import { default as stringToBytes } from '../../encoding/UTF16';
+
+function getCode(byte: number): number {
+  // 0 - 9
+  if (0x30 <= byte && byte <= 0x39) {
+    return byte - 0x30;
+  }
+
+  throw `illegal char: ${String.fromCharCode(byte)}`;
+}
+
+function getBatchCode(bytes: number[]): number {
+  let num: number = 0;
+  const length: number = bytes.length;
+
+  for (let i: number = 0; i < length; i++) {
+    num = num * 10 + getCode(bytes[i]);
+  }
+
+  return num;
+}
 
 export default class QRNumeric extends QRData {
   /**
@@ -15,6 +36,8 @@ export default class QRNumeric extends QRData {
    */
   constructor(data: string) {
     super(Mode.Numeric, data);
+
+    this.bytes = stringToBytes(data);
   }
 
   /**
@@ -24,20 +47,20 @@ export default class QRNumeric extends QRData {
    */
   public write(buffer: BitBuffer): void {
     let i: number = 0;
-    const data: string = this.data;
-    const length: number = data.length;
+    const bytes: number[] = this.bytes;
+    const length: number = bytes.length;
 
     while (i + 2 < length) {
-      buffer.put(QRNumeric.strToNum(data.substring(i, i + 3)), 10);
+      buffer.put(getBatchCode([bytes[i], bytes[i + 1], bytes[i + 2]]), 10);
 
       i += 3;
     }
 
     if (i < length) {
       if (length - i === 1) {
-        buffer.put(QRNumeric.strToNum(data.substring(i, i + 1)), 4);
+        buffer.put(getBatchCode([bytes[i]]), 4);
       } else if (length - i === 2) {
-        buffer.put(QRNumeric.strToNum(data.substring(i, i + 2)), 7);
+        buffer.put(getBatchCode([bytes[i], bytes[i + 1]]), 7);
       }
     }
   }
@@ -48,26 +71,6 @@ export default class QRNumeric extends QRData {
    * @returns {number}
    */
   public getLength(): number {
-    return this.data.length;
-  }
-
-  private static strToNum(str: string): number {
-    let num: number = 0;
-    const length: number = str.length;
-
-    for (let i: number = 0; i < length; i++) {
-      num = num * 10 + QRNumeric.charToNum(str.charAt(i));
-    }
-
-    return num;
-  }
-
-  private static charToNum(ch: string): number {
-    if ('0' <= ch && ch <= '9') {
-      // 0
-      return ch.charCodeAt(0) - 0x30;
-    }
-
-    throw `illegal char: ${ch}`;
+    return this.bytes.length;
   }
 }

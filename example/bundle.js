@@ -4436,10 +4436,38 @@
     }(QRData));
 
     /**
+     * @module UTF16
+     * @author nuintun
+     */
+    function UTF16(str) {
+        var bytes = [];
+        var length = str.length;
+        for (var i = 0; i < length; i++) {
+            bytes.push(str.charCodeAt(i));
+        }
+        return bytes;
+    }
+
+    /**
      * @module QRNumeric
      * @author nuintun
      * @author Kazuhiko Arase
      */
+    function getCode(byte) {
+        // 0 - 9
+        if (0x30 <= byte && byte <= 0x39) {
+            return byte - 0x30;
+        }
+        throw "illegal char: " + String.fromCharCode(byte);
+    }
+    function getBatchCode(bytes) {
+        var num = 0;
+        var length = bytes.length;
+        for (var i = 0; i < length; i++) {
+            num = num * 10 + getCode(bytes[i]);
+        }
+        return num;
+    }
     var QRNumeric = /** @class */ (function (_super) {
         __extends(QRNumeric, _super);
         /**
@@ -4447,7 +4475,9 @@
          * @param {string} data
          */
         function QRNumeric(data) {
-            return _super.call(this, Mode$1.Numeric, data) || this;
+            var _this = _super.call(this, Mode$1.Numeric, data) || this;
+            _this.bytes = UTF16(data);
+            return _this;
         }
         /**
          * @public
@@ -4456,18 +4486,18 @@
          */
         QRNumeric.prototype.write = function (buffer) {
             var i = 0;
-            var data = this.data;
-            var length = data.length;
+            var bytes = this.bytes;
+            var length = bytes.length;
             while (i + 2 < length) {
-                buffer.put(QRNumeric.strToNum(data.substring(i, i + 3)), 10);
+                buffer.put(getBatchCode([bytes[i], bytes[i + 1], bytes[i + 2]]), 10);
                 i += 3;
             }
             if (i < length) {
                 if (length - i === 1) {
-                    buffer.put(QRNumeric.strToNum(data.substring(i, i + 1)), 4);
+                    buffer.put(getBatchCode([bytes[i]]), 4);
                 }
                 else if (length - i === 2) {
-                    buffer.put(QRNumeric.strToNum(data.substring(i, i + 2)), 7);
+                    buffer.put(getBatchCode([bytes[i], bytes[i + 1]]), 7);
                 }
             }
         };
@@ -4477,22 +4507,7 @@
          * @returns {number}
          */
         QRNumeric.prototype.getLength = function () {
-            return this.data.length;
-        };
-        QRNumeric.strToNum = function (str) {
-            var num = 0;
-            var length = str.length;
-            for (var i = 0; i < length; i++) {
-                num = num * 10 + QRNumeric.charToNum(str.charAt(i));
-            }
-            return num;
-        };
-        QRNumeric.charToNum = function (ch) {
-            if ('0' <= ch && ch <= '9') {
-                // 0
-                return ch.charCodeAt(0) - 0x30;
-            }
-            throw "illegal char: " + ch;
+            return this.bytes.length;
         };
         return QRNumeric;
     }(QRData));
@@ -4502,6 +4517,49 @@
      * @author nuintun
      * @author Kazuhiko Arase
      */
+    function getCode$1(byte) {
+        if (0x30 <= byte && byte <= 0x39) {
+            // 0 - 9
+            return byte - 0x30;
+        }
+        else if (0x41 <= byte && byte <= 0x5a) {
+            // A - Z
+            return byte - 0x41 + 10;
+        }
+        else {
+            switch (byte) {
+                // space
+                case 0x20:
+                    return 36;
+                // $
+                case 0x24:
+                    return 37;
+                // %
+                case 0x25:
+                    return 38;
+                // *
+                case 0x2a:
+                    return 39;
+                // +
+                case 0x2b:
+                    return 40;
+                // -
+                case 0x2d:
+                    return 41;
+                // .
+                case 0x2e:
+                    return 42;
+                // /
+                case 0x2f:
+                    return 43;
+                // :
+                case 0x3a:
+                    return 44;
+                default:
+                    throw "illegal char: " + String.fromCharCode(byte);
+            }
+        }
+    }
     var QRAlphanumeric = /** @class */ (function (_super) {
         __extends(QRAlphanumeric, _super);
         /**
@@ -4509,7 +4567,9 @@
          * @param {string} data
          */
         function QRAlphanumeric(data) {
-            return _super.call(this, Mode$1.Alphanumeric, data) || this;
+            var _this = _super.call(this, Mode$1.Alphanumeric, data) || this;
+            _this.bytes = UTF16(data);
+            return _this;
         }
         /**
          * @public
@@ -4518,14 +4578,14 @@
          */
         QRAlphanumeric.prototype.write = function (buffer) {
             var i = 0;
-            var data = this.data;
-            var length = data.length;
+            var bytes = this.bytes;
+            var length = bytes.length;
             while (i + 1 < length) {
-                buffer.put(QRAlphanumeric.getCode(data.charAt(i)) * 45 + QRAlphanumeric.getCode(data.charAt(i + 1)), 11);
+                buffer.put(getCode$1(bytes[i]) * 45 + getCode$1(bytes[i + 1]), 11);
                 i += 2;
             }
-            if (i < data.length) {
-                buffer.put(QRAlphanumeric.getCode(data.charAt(i)), 6);
+            if (i < length) {
+                buffer.put(getCode$1(bytes[i]), 6);
             }
         };
         /**
@@ -4534,41 +4594,7 @@
          * @returns {number}
          */
         QRAlphanumeric.prototype.getLength = function () {
-            return this.data.length;
-        };
-        QRAlphanumeric.getCode = function (ch) {
-            if ('0' <= ch && ch <= '9') {
-                // 0
-                return ch.charCodeAt(0) - 0x30;
-            }
-            else if ('A' <= ch && ch <= 'Z') {
-                // A
-                return ch.charCodeAt(0) - 0x41 + 10;
-            }
-            else {
-                switch (ch) {
-                    case ' ':
-                        return 36;
-                    case '$':
-                        return 37;
-                    case '%':
-                        return 38;
-                    case '*':
-                        return 39;
-                    case '+':
-                        return 40;
-                    case '-':
-                        return 41;
-                    case '.':
-                        return 42;
-                    case '/':
-                        return 43;
-                    case ':':
-                        return 44;
-                    default:
-                        throw "illegal char: " + ch;
-                }
-            }
+            return this.bytes.length;
         };
         return QRAlphanumeric;
     }(QRData));

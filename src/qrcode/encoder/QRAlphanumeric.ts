@@ -7,6 +7,49 @@
 import QRData from './QRData';
 import Mode from '../common/Mode';
 import BitBuffer from './BitBuffer';
+import { default as stringToBytes } from '../../encoding/UTF16';
+
+function getCode(byte: number): number {
+  if (0x30 <= byte && byte <= 0x39) {
+    // 0 - 9
+    return byte - 0x30;
+  } else if (0x41 <= byte && byte <= 0x5a) {
+    // A - Z
+    return byte - 0x41 + 10;
+  } else {
+    switch (byte) {
+      // space
+      case 0x20:
+        return 36;
+      // $
+      case 0x24:
+        return 37;
+      // %
+      case 0x25:
+        return 38;
+      // *
+      case 0x2a:
+        return 39;
+      // +
+      case 0x2b:
+        return 40;
+      // -
+      case 0x2d:
+        return 41;
+      // .
+      case 0x2e:
+        return 42;
+      // /
+      case 0x2f:
+        return 43;
+      // :
+      case 0x3a:
+        return 44;
+      default:
+        throw `illegal char: ${String.fromCharCode(byte)}`;
+    }
+  }
+}
 
 export default class QRAlphanumeric extends QRData {
   /**
@@ -15,6 +58,8 @@ export default class QRAlphanumeric extends QRData {
    */
   constructor(data: string) {
     super(Mode.Alphanumeric, data);
+
+    this.bytes = stringToBytes(data);
   }
 
   /**
@@ -24,17 +69,17 @@ export default class QRAlphanumeric extends QRData {
    */
   public write(buffer: BitBuffer): void {
     let i: number = 0;
-    const data: string = this.data;
-    const length: number = data.length;
+    const bytes: number[] = this.bytes;
+    const length: number = bytes.length;
 
     while (i + 1 < length) {
-      buffer.put(QRAlphanumeric.getCode(data.charAt(i)) * 45 + QRAlphanumeric.getCode(data.charAt(i + 1)), 11);
+      buffer.put(getCode(bytes[i]) * 45 + getCode(bytes[i + 1]), 11);
 
       i += 2;
     }
 
-    if (i < data.length) {
-      buffer.put(QRAlphanumeric.getCode(data.charAt(i)), 6);
+    if (i < length) {
+      buffer.put(getCode(bytes[i]), 6);
     }
   }
 
@@ -44,39 +89,6 @@ export default class QRAlphanumeric extends QRData {
    * @returns {number}
    */
   public getLength(): number {
-    return this.data.length;
-  }
-
-  private static getCode(ch: string): number {
-    if ('0' <= ch && ch <= '9') {
-      // 0
-      return ch.charCodeAt(0) - 0x30;
-    } else if ('A' <= ch && ch <= 'Z') {
-      // A
-      return ch.charCodeAt(0) - 0x41 + 10;
-    } else {
-      switch (ch) {
-        case ' ':
-          return 36;
-        case '$':
-          return 37;
-        case '%':
-          return 38;
-        case '*':
-          return 39;
-        case '+':
-          return 40;
-        case '-':
-          return 41;
-        case '.':
-          return 42;
-        case '/':
-          return 43;
-        case ':':
-          return 44;
-        default:
-          throw `illegal char: ${ch}`;
-      }
-    }
+    return this.bytes.length;
   }
 }
