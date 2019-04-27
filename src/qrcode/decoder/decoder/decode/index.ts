@@ -142,7 +142,7 @@ function decodeAlphanumeric(stream: BitStream, size: number): DecodeData {
  * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
  */
 function decodeByte(stream: BitStream, size: number): DecodeData {
-  let data = '';
+  let data: string = '';
   const bytes: number[] = [];
 
   const characterCountSize: number = [8, 16, 16][size];
@@ -158,11 +158,11 @@ function decodeByte(stream: BitStream, size: number): DecodeData {
     } else if (c1 > 191 && c1 < 224) {
       const c2: number = stream.readBits(8);
 
-      i++;
-
       bytes.push(c2);
 
       data += String.fromCharCode(((c1 & 31) << 6) | (c2 & 63));
+
+      i++;
     } else if (c1 > 239 && c1 < 365) {
       // Surrogate Pair
       const c2: number = stream.readBits(8);
@@ -170,21 +170,21 @@ function decodeByte(stream: BitStream, size: number): DecodeData {
       const c4: number = stream.readBits(8);
       const u: number = (((c1 & 7) << 18) | ((c2 & 63) << 12) | ((c3 & 63) << 6) | (c4 & 63)) - 0x10000;
 
-      i += 3;
-
       bytes.push(c2, c3, c4);
 
       data += String.fromCharCode(0xd800 + (u >> 10));
       data += String.fromCharCode(0xdc00 + (u & 1023));
+
+      i += 3;
     } else {
       const c2: number = stream.readBits(8);
       const c3: number = stream.readBits(8);
 
-      i += 2;
-
       bytes.push(c2, c3);
 
       data += String.fromCharCode(((c1 & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+
+      i += 2;
     }
   }
 
@@ -211,7 +211,7 @@ function decodeKanji(stream: BitStream, size: number): DecodeData {
 
     bytes.push(c >> 8, c & 0xff);
 
-    const b = SJIS2UTFTable[c];
+    const b: number = SJIS2UTFTable[c];
 
     data += String.fromCharCode(b != null ? b : c);
   }
