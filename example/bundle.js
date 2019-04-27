@@ -4416,7 +4416,7 @@
                 else {
                     throw createCharError(bytes, index);
                 }
-                code = ((code >>> 8) & 0xff) * 0xc0 + (code & 0xff);
+                code = ((code >> 8) & 0xff) * 0xc0 + (code & 0xff);
                 buffer.put(code, 13);
                 index += 2;
             }
