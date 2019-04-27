@@ -38,38 +38,38 @@ interface FormatItem {
 }
 
 const FORMAT_INFO_TABLE: FormatItem[] = [
-  { bits: 0x5412, formatInfo: { errorCorrectionLevel: 1, dataMask: 0 } },
-  { bits: 0x5125, formatInfo: { errorCorrectionLevel: 1, dataMask: 1 } },
-  { bits: 0x5e7c, formatInfo: { errorCorrectionLevel: 1, dataMask: 2 } },
-  { bits: 0x5b4b, formatInfo: { errorCorrectionLevel: 1, dataMask: 3 } },
-  { bits: 0x45f9, formatInfo: { errorCorrectionLevel: 1, dataMask: 4 } },
-  { bits: 0x40ce, formatInfo: { errorCorrectionLevel: 1, dataMask: 5 } },
-  { bits: 0x4f97, formatInfo: { errorCorrectionLevel: 1, dataMask: 6 } },
-  { bits: 0x4aa0, formatInfo: { errorCorrectionLevel: 1, dataMask: 7 } },
-  { bits: 0x77c4, formatInfo: { errorCorrectionLevel: 0, dataMask: 0 } },
-  { bits: 0x72f3, formatInfo: { errorCorrectionLevel: 0, dataMask: 1 } },
-  { bits: 0x7daa, formatInfo: { errorCorrectionLevel: 0, dataMask: 2 } },
-  { bits: 0x789d, formatInfo: { errorCorrectionLevel: 0, dataMask: 3 } },
-  { bits: 0x662f, formatInfo: { errorCorrectionLevel: 0, dataMask: 4 } },
-  { bits: 0x6318, formatInfo: { errorCorrectionLevel: 0, dataMask: 5 } },
-  { bits: 0x6c41, formatInfo: { errorCorrectionLevel: 0, dataMask: 6 } },
-  { bits: 0x6976, formatInfo: { errorCorrectionLevel: 0, dataMask: 7 } },
-  { bits: 0x1689, formatInfo: { errorCorrectionLevel: 3, dataMask: 0 } },
-  { bits: 0x13be, formatInfo: { errorCorrectionLevel: 3, dataMask: 1 } },
-  { bits: 0x1ce7, formatInfo: { errorCorrectionLevel: 3, dataMask: 2 } },
-  { bits: 0x19d0, formatInfo: { errorCorrectionLevel: 3, dataMask: 3 } },
-  { bits: 0x0762, formatInfo: { errorCorrectionLevel: 3, dataMask: 4 } },
-  { bits: 0x0255, formatInfo: { errorCorrectionLevel: 3, dataMask: 5 } },
-  { bits: 0x0d0c, formatInfo: { errorCorrectionLevel: 3, dataMask: 6 } },
-  { bits: 0x083b, formatInfo: { errorCorrectionLevel: 3, dataMask: 7 } },
-  { bits: 0x355f, formatInfo: { errorCorrectionLevel: 2, dataMask: 0 } },
-  { bits: 0x3068, formatInfo: { errorCorrectionLevel: 2, dataMask: 1 } },
-  { bits: 0x3f31, formatInfo: { errorCorrectionLevel: 2, dataMask: 2 } },
-  { bits: 0x3a06, formatInfo: { errorCorrectionLevel: 2, dataMask: 3 } },
-  { bits: 0x24b4, formatInfo: { errorCorrectionLevel: 2, dataMask: 4 } },
-  { bits: 0x2183, formatInfo: { errorCorrectionLevel: 2, dataMask: 5 } },
-  { bits: 0x2eda, formatInfo: { errorCorrectionLevel: 2, dataMask: 6 } },
-  { bits: 0x2bed, formatInfo: { errorCorrectionLevel: 2, dataMask: 7 } }
+  { bits: 0x5412, formatInfo: { errorCorrectionLevel: 0, dataMask: 0 } },
+  { bits: 0x5125, formatInfo: { errorCorrectionLevel: 0, dataMask: 1 } },
+  { bits: 0x5e7c, formatInfo: { errorCorrectionLevel: 0, dataMask: 2 } },
+  { bits: 0x5b4b, formatInfo: { errorCorrectionLevel: 0, dataMask: 3 } },
+  { bits: 0x45f9, formatInfo: { errorCorrectionLevel: 0, dataMask: 4 } },
+  { bits: 0x40ce, formatInfo: { errorCorrectionLevel: 0, dataMask: 5 } },
+  { bits: 0x4f97, formatInfo: { errorCorrectionLevel: 0, dataMask: 6 } },
+  { bits: 0x4aa0, formatInfo: { errorCorrectionLevel: 0, dataMask: 7 } },
+  { bits: 0x77c4, formatInfo: { errorCorrectionLevel: 1, dataMask: 0 } },
+  { bits: 0x72f3, formatInfo: { errorCorrectionLevel: 1, dataMask: 1 } },
+  { bits: 0x7daa, formatInfo: { errorCorrectionLevel: 1, dataMask: 2 } },
+  { bits: 0x789d, formatInfo: { errorCorrectionLevel: 1, dataMask: 3 } },
+  { bits: 0x662f, formatInfo: { errorCorrectionLevel: 1, dataMask: 4 } },
+  { bits: 0x6318, formatInfo: { errorCorrectionLevel: 1, dataMask: 5 } },
+  { bits: 0x6c41, formatInfo: { errorCorrectionLevel: 1, dataMask: 6 } },
+  { bits: 0x6976, formatInfo: { errorCorrectionLevel: 1, dataMask: 7 } },
+  { bits: 0x1689, formatInfo: { errorCorrectionLevel: 2, dataMask: 0 } },
+  { bits: 0x13be, formatInfo: { errorCorrectionLevel: 2, dataMask: 1 } },
+  { bits: 0x1ce7, formatInfo: { errorCorrectionLevel: 2, dataMask: 2 } },
+  { bits: 0x19d0, formatInfo: { errorCorrectionLevel: 2, dataMask: 3 } },
+  { bits: 0x0762, formatInfo: { errorCorrectionLevel: 2, dataMask: 4 } },
+  { bits: 0x0255, formatInfo: { errorCorrectionLevel: 2, dataMask: 5 } },
+  { bits: 0x0d0c, formatInfo: { errorCorrectionLevel: 2, dataMask: 6 } },
+  { bits: 0x083b, formatInfo: { errorCorrectionLevel: 2, dataMask: 7 } },
+  { bits: 0x355f, formatInfo: { errorCorrectionLevel: 3, dataMask: 0 } },
+  { bits: 0x3068, formatInfo: { errorCorrectionLevel: 3, dataMask: 1 } },
+  { bits: 0x3f31, formatInfo: { errorCorrectionLevel: 3, dataMask: 2 } },
+  { bits: 0x3a06, formatInfo: { errorCorrectionLevel: 3, dataMask: 3 } },
+  { bits: 0x24b4, formatInfo: { errorCorrectionLevel: 3, dataMask: 4 } },
+  { bits: 0x2183, formatInfo: { errorCorrectionLevel: 3, dataMask: 5 } },
+  { bits: 0x2eda, formatInfo: { errorCorrectionLevel: 3, dataMask: 6 } },
+  { bits: 0x2bed, formatInfo: { errorCorrectionLevel: 3, dataMask: 7 } }
 ];
 
 type maskFunc = (point: Point) => boolean;
@@ -289,9 +289,9 @@ interface DataBlock {
   numDataCodewords: number;
 }
 
-function getDataBlocks(codewords: number[], version: Version, ecLevel: number): DataBlock[] {
+function getDataBlocks(codewords: number[], version: Version, errorCorrectionLevel: number): DataBlock[] {
   const dataBlocks: DataBlock[] = [];
-  const ecInfo: ECLevel = version.errorCorrectionLevels[ecLevel];
+  const ecInfo: ECLevel = version.errorCorrectionLevels[errorCorrectionLevel];
 
   let totalCodewords: number = 0;
 
