@@ -3224,45 +3224,48 @@
         return { bytes: bytes, data: data };
     }
     /**
+     * @function stringFromUTF8Bytes
+     * @param {number[]} bytes
      * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
      */
+    function stringFromUTF8Bytes(bytes) {
+        // TODO(user): Use native implementations if/when available
+        var pos = 0;
+        var output = '';
+        while (pos < bytes.length) {
+            var c1 = bytes[pos++];
+            if (c1 < 128) {
+                output += String.fromCharCode(c1);
+            }
+            else if (c1 > 191 && c1 < 224) {
+                var c2 = bytes[pos++];
+                output += String.fromCharCode(((c1 & 31) << 6) | (c2 & 63));
+            }
+            else if (c1 > 239 && c1 < 365) {
+                // Surrogate Pair
+                var c2 = bytes[pos++];
+                var c3 = bytes[pos++];
+                var c4 = bytes[pos++];
+                var u = (((c1 & 7) << 18) | ((c2 & 63) << 12) | ((c3 & 63) << 6) | (c4 & 63)) - 0x10000;
+                output += String.fromCharCode(0xd800 + (u >> 10));
+                output += String.fromCharCode(0xdc00 + (u & 1023));
+            }
+            else {
+                var c2 = bytes[pos++];
+                var c3 = bytes[pos++];
+                output += String.fromCharCode(((c1 & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+            }
+        }
+        return output;
+    }
     function decodeByte(stream, size) {
-        var data = '';
         var bytes = [];
         var characterCountSize = [8, 16, 16][size];
         var length = stream.readBits(characterCountSize);
         for (var i = 0; i < length; i++) {
-            var c1 = stream.readBits(8);
-            bytes.push(c1);
-            if (c1 < 128) {
-                data += String.fromCharCode(c1);
-            }
-            else if (c1 > 191 && c1 < 224) {
-                var c2 = stream.readBits(8);
-                bytes.push(c2);
-                data += String.fromCharCode(((c1 & 31) << 6) | (c2 & 63));
-                i++;
-            }
-            else if (c1 > 239 && c1 < 365) {
-                // Surrogate Pair
-                var c2 = stream.readBits(8);
-                var c3 = stream.readBits(8);
-                var c4 = stream.readBits(8);
-                var u = (((c1 & 7) << 18) | ((c2 & 63) << 12) | ((c3 & 63) << 6) | (c4 & 63)) - 0x10000;
-                bytes.push(c2, c3, c4);
-                data += String.fromCharCode(0xd800 + (u >> 10));
-                data += String.fromCharCode(0xdc00 + (u & 1023));
-                i += 3;
-            }
-            else {
-                var c2 = stream.readBits(8);
-                var c3 = stream.readBits(8);
-                bytes.push(c2, c3);
-                data += String.fromCharCode(((c1 & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
-                i += 2;
-            }
+            bytes.push(stream.readBits(8));
         }
-        return { bytes: bytes, data: data };
+        return { bytes: bytes, data: stringFromUTF8Bytes(bytes) };
     }
     function decodeKanji(stream, size) {
         var data = '';

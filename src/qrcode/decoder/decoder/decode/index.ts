@@ -139,56 +139,55 @@ function decodeAlphanumeric(stream: BitStream, size: number): DecodeData {
 }
 
 /**
+ * @function stringFromUTF8Bytes
+ * @param {number[]} bytes
  * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
  */
+function stringFromUTF8Bytes(bytes: number[]): string {
+  // TODO(user): Use native implementations if/when available
+  let pos: number = 0;
+  let output: string = '';
+
+  while (pos < bytes.length) {
+    const c1: number = bytes[pos++];
+
+    if (c1 < 128) {
+      output += String.fromCharCode(c1);
+    } else if (c1 > 191 && c1 < 224) {
+      const c2: number = bytes[pos++];
+
+      output += String.fromCharCode(((c1 & 31) << 6) | (c2 & 63));
+    } else if (c1 > 239 && c1 < 365) {
+      // Surrogate Pair
+      const c2: number = bytes[pos++];
+      const c3: number = bytes[pos++];
+      const c4: number = bytes[pos++];
+      const u: number = (((c1 & 7) << 18) | ((c2 & 63) << 12) | ((c3 & 63) << 6) | (c4 & 63)) - 0x10000;
+
+      output += String.fromCharCode(0xd800 + (u >> 10));
+      output += String.fromCharCode(0xdc00 + (u & 1023));
+    } else {
+      const c2: number = bytes[pos++];
+      const c3: number = bytes[pos++];
+
+      output += String.fromCharCode(((c1 & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+    }
+  }
+
+  return output;
+}
+
 function decodeByte(stream: BitStream, size: number): DecodeData {
-  let data: string = '';
   const bytes: number[] = [];
 
   const characterCountSize: number = [8, 16, 16][size];
   const length: number = stream.readBits(characterCountSize);
 
   for (let i: number = 0; i < length; i++) {
-    const c1: number = stream.readBits(8);
-
-    bytes.push(c1);
-
-    if (c1 < 128) {
-      data += String.fromCharCode(c1);
-    } else if (c1 > 191 && c1 < 224) {
-      const c2: number = stream.readBits(8);
-
-      bytes.push(c2);
-
-      data += String.fromCharCode(((c1 & 31) << 6) | (c2 & 63));
-
-      i++;
-    } else if (c1 > 239 && c1 < 365) {
-      // Surrogate Pair
-      const c2: number = stream.readBits(8);
-      const c3: number = stream.readBits(8);
-      const c4: number = stream.readBits(8);
-      const u: number = (((c1 & 7) << 18) | ((c2 & 63) << 12) | ((c3 & 63) << 6) | (c4 & 63)) - 0x10000;
-
-      bytes.push(c2, c3, c4);
-
-      data += String.fromCharCode(0xd800 + (u >> 10));
-      data += String.fromCharCode(0xdc00 + (u & 1023));
-
-      i += 3;
-    } else {
-      const c2: number = stream.readBits(8);
-      const c3: number = stream.readBits(8);
-
-      bytes.push(c2, c3);
-
-      data += String.fromCharCode(((c1 & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
-
-      i += 2;
-    }
+    bytes.push(stream.readBits(8));
   }
 
-  return { bytes, data };
+  return { bytes, data: stringFromUTF8Bytes(bytes) };
 }
 
 function decodeKanji(stream: BitStream, size: number): DecodeData {
