@@ -53,8 +53,8 @@ function createSJISTable(unicodeData: string, numChars: number): SJISTables {
     const k: number = (b0 << 8) | b1;
     const v: number = (b2 << 8) | b3;
 
-    SJIS2UTFTable[k] = v;
-    UTF2SJISTable[v] = k;
+    UTF2SJISTable[k] = v;
+    SJIS2UTFTable[v] = k;
 
     count++;
   }
@@ -87,7 +87,7 @@ export default function SJIS(str: string): number[] {
     if (code < 128) {
       bytes.push(code);
     } else {
-      const byte: number = SJIS2UTFTable[code];
+      const byte: number = UTF2SJISTable[code];
 
       if (byte != null) {
         if ((byte & 0xff) === byte) {
@@ -95,7 +95,7 @@ export default function SJIS(str: string): number[] {
           bytes.push(byte);
         } else {
           // 2bytes
-          bytes.push(byte >>> 8);
+          bytes.push(byte >> 8);
           bytes.push(byte & 0xff);
         }
       } else {

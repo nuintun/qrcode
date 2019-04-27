@@ -3105,8 +3105,8 @@
             var b3 = readByte(input);
             var k = (b0 << 8) | b1;
             var v = (b2 << 8) | b3;
-            SJIS2UTFTable[k] = v;
-            UTF2SJISTable[v] = k;
+            UTF2SJISTable[k] = v;
+            SJIS2UTFTable[v] = k;
             count++;
         }
         if (count !== numChars) {
@@ -3131,7 +3131,7 @@
                 bytes.push(code);
             }
             else {
-                var byte = SJIS2UTFTable[code];
+                var byte = UTF2SJISTable[code];
                 if (byte != null) {
                     if ((byte & 0xff) === byte) {
                         // 1byte
@@ -3139,7 +3139,7 @@
                     }
                     else {
                         // 2bytes
-                        bytes.push(byte >>> 8);
+                        bytes.push(byte >> 8);
                         bytes.push(byte & 0xff);
                     }
                 }
@@ -3224,49 +3224,45 @@
         return { bytes: bytes, data: data };
     }
     /**
-     * @function bytesToUTF8
-     * @param {number[]} bytes
-     * @returns {string}
      * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
      */
-    function bytesToUTF8(bytes) {
-        // TODO(user): Use native implementations if/when available
-        var pos = 0;
-        var output = '';
-        while (pos < bytes.length) {
-            var c1 = bytes[pos++];
-            if (c1 < 128) {
-                output += String.fromCharCode(c1);
-            }
-            else if (c1 > 191 && c1 < 224) {
-                var c2 = bytes[pos++];
-                output += String.fromCharCode(((c1 & 31) << 6) | (c2 & 63));
-            }
-            else if (c1 > 239 && c1 < 365) {
-                // Surrogate Pair
-                var c2 = bytes[pos++];
-                var c3 = bytes[pos++];
-                var c4 = bytes[pos++];
-                var u = (((c1 & 7) << 18) | ((c2 & 63) << 12) | ((c3 & 63) << 6) | (c4 & 63)) - 0x10000;
-                output += String.fromCharCode(0xd800 + (u >> 10));
-                output += String.fromCharCode(0xdc00 + (u & 1023));
-            }
-            else {
-                var c2 = bytes[pos++];
-                var c3 = bytes[pos++];
-                output += String.fromCharCode(((c1 & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
-            }
-        }
-        return output;
-    }
     function decodeByte(stream, size) {
+        var data = '';
         var bytes = [];
         var characterCountSize = [8, 16, 16][size];
         var length = stream.readBits(characterCountSize);
         for (var i = 0; i < length; i++) {
-            bytes.push(stream.readBits(8));
+            var c1 = stream.readBits(8);
+            bytes.push(c1);
+            if (c1 < 128) {
+                data += String.fromCharCode(c1);
+            }
+            else if (c1 > 191 && c1 < 224) {
+                var c2 = stream.readBits(8);
+                i++;
+                bytes.push(c2);
+                data += String.fromCharCode(((c1 & 31) << 6) | (c2 & 63));
+            }
+            else if (c1 > 239 && c1 < 365) {
+                // Surrogate Pair
+                var c2 = stream.readBits(8);
+                var c3 = stream.readBits(8);
+                var c4 = stream.readBits(8);
+                var u = (((c1 & 7) << 18) | ((c2 & 63) << 12) | ((c3 & 63) << 6) | (c4 & 63)) - 0x10000;
+                i += 3;
+                bytes.push(c2, c3, c4);
+                data += String.fromCharCode(0xd800 + (u >> 10));
+                data += String.fromCharCode(0xdc00 + (u & 1023));
+            }
+            else {
+                var c2 = stream.readBits(8);
+                var c3 = stream.readBits(8);
+                i += 2;
+                bytes.push(c2, c3);
+                data += String.fromCharCode(((c1 & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+            }
         }
-        return { bytes: bytes, data: bytesToUTF8(bytes) };
+        return { bytes: bytes, data: data };
     }
     function decodeKanji(stream, size) {
         var data = '';
@@ -3283,7 +3279,8 @@
                 c += 0xc140;
             }
             bytes.push(c >> 8, c & 0xff);
-            data += String.fromCharCode(UTF2SJISTable[c]);
+            var b = SJIS2UTFTable[c];
+            data += String.fromCharCode(b != null ? b : c);
         }
         return { bytes: bytes, data: data };
     }
@@ -4381,8 +4378,12 @@
      * @author Kazuhiko Arase
      * @description SJIS only
      */
-    function createCharError(index, data) {
-        return "illegal char: " + String.fromCharCode(data[index]);
+    function createCharError(bytes, index) {
+        var byte = bytes[index];
+        if (0xa0 <= byte && byte <= 0xdf) {
+            byte += 0xfec0;
+        }
+        return "illegal char: " + String.fromCharCode(byte);
     }
     var QRKanji = /** @class */ (function (_super) {
         __extends(QRKanji, _super);
@@ -4413,14 +4414,14 @@
                     code -= 0xc140;
                 }
                 else {
-                    throw createCharError(index, bytes);
+                    throw createCharError(bytes, index);
                 }
                 code = ((code >>> 8) & 0xff) * 0xc0 + (code & 0xff);
                 buffer.put(code, 13);
                 index += 2;
             }
             if (index < length) {
-                throw createCharError(index, bytes);
+                throw createCharError(bytes, index);
             }
         };
         /**
@@ -4429,7 +4430,7 @@
          * @returns {number}
          */
         QRKanji.prototype.getLength = function () {
-            return this.bytes.length / 2;
+            return Math.floor(this.bytes.length / 2);
         };
         return QRKanji;
     }(QRData));

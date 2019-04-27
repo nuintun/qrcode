@@ -10,8 +10,14 @@ import Mode from '../common/Mode';
 import BitBuffer from './BitBuffer';
 import stringToBytes from '../../encoding/SJIS';
 
-function createCharError(index: number, data: number[]) {
-  return `illegal char: ${String.fromCharCode(data[index])}`;
+function createCharError(bytes: number[], index: number) {
+  let byte = bytes[index];
+
+  if (0xa0 <= byte && byte <= 0xdf) {
+    byte += 0xfec0;
+  }
+
+  return `illegal char: ${String.fromCharCode(byte)}`;
 }
 
 export default class QRKanji extends QRData {
@@ -43,7 +49,7 @@ export default class QRKanji extends QRData {
       } else if (0xe040 <= code && code <= 0xebbf) {
         code -= 0xc140;
       } else {
-        throw createCharError(index, bytes);
+        throw createCharError(bytes, index);
       }
 
       code = ((code >>> 8) & 0xff) * 0xc0 + (code & 0xff);
@@ -54,7 +60,7 @@ export default class QRKanji extends QRData {
     }
 
     if (index < length) {
-      throw createCharError(index, bytes);
+      throw createCharError(bytes, index);
     }
   }
 
@@ -64,6 +70,6 @@ export default class QRKanji extends QRData {
    * @returns {number}
    */
   public getLength(): number {
-    return this.bytes.length / 2;
+    return Math.floor(this.bytes.length / 2);
   }
 }

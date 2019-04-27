@@ -6,7 +6,7 @@
 
 import BitStream from './BitStream';
 import Mode from '../../../common/Mode';
-import { UTF2SJISTable } from '../../../../encoding/SJIS';
+import { SJIS2UTFTable } from '../../../../encoding/SJIS';
 import ErrorCorrectionLevel from '../../../common/ErrorCorrectionLevel';
 
 interface ByteChunk {
@@ -139,56 +139,56 @@ function decodeAlphanumeric(stream: BitStream, size: number): DecodeData {
 }
 
 /**
- * @function bytesToUTF8
- * @param {number[]} bytes
- * @returns {string}
  * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
  */
-function bytesToUTF8(bytes: number[]): string {
-  // TODO(user): Use native implementations if/when available
-  let pos: number = 0;
-  let output: string = '';
-
-  while (pos < bytes.length) {
-    const c1: number = bytes[pos++];
-
-    if (c1 < 128) {
-      output += String.fromCharCode(c1);
-    } else if (c1 > 191 && c1 < 224) {
-      const c2: number = bytes[pos++];
-
-      output += String.fromCharCode(((c1 & 31) << 6) | (c2 & 63));
-    } else if (c1 > 239 && c1 < 365) {
-      // Surrogate Pair
-      const c2: number = bytes[pos++];
-      const c3: number = bytes[pos++];
-      const c4: number = bytes[pos++];
-      const u: number = (((c1 & 7) << 18) | ((c2 & 63) << 12) | ((c3 & 63) << 6) | (c4 & 63)) - 0x10000;
-
-      output += String.fromCharCode(0xd800 + (u >> 10));
-      output += String.fromCharCode(0xdc00 + (u & 1023));
-    } else {
-      const c2: number = bytes[pos++];
-      const c3: number = bytes[pos++];
-
-      output += String.fromCharCode(((c1 & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
-    }
-  }
-
-  return output;
-}
-
 function decodeByte(stream: BitStream, size: number): DecodeData {
+  let data = '';
   const bytes: number[] = [];
 
   const characterCountSize: number = [8, 16, 16][size];
   const length: number = stream.readBits(characterCountSize);
 
   for (let i: number = 0; i < length; i++) {
-    bytes.push(stream.readBits(8));
+    const c1: number = stream.readBits(8);
+
+    bytes.push(c1);
+
+    if (c1 < 128) {
+      data += String.fromCharCode(c1);
+    } else if (c1 > 191 && c1 < 224) {
+      const c2: number = stream.readBits(8);
+
+      i++;
+
+      bytes.push(c2);
+
+      data += String.fromCharCode(((c1 & 31) << 6) | (c2 & 63));
+    } else if (c1 > 239 && c1 < 365) {
+      // Surrogate Pair
+      const c2: number = stream.readBits(8);
+      const c3: number = stream.readBits(8);
+      const c4: number = stream.readBits(8);
+      const u: number = (((c1 & 7) << 18) | ((c2 & 63) << 12) | ((c3 & 63) << 6) | (c4 & 63)) - 0x10000;
+
+      i += 3;
+
+      bytes.push(c2, c3, c4);
+
+      data += String.fromCharCode(0xd800 + (u >> 10));
+      data += String.fromCharCode(0xdc00 + (u & 1023));
+    } else {
+      const c2: number = stream.readBits(8);
+      const c3: number = stream.readBits(8);
+
+      i += 2;
+
+      bytes.push(c2, c3);
+
+      data += String.fromCharCode(((c1 & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+    }
   }
 
-  return { bytes, data: bytesToUTF8(bytes) };
+  return { bytes, data };
 }
 
 function decodeKanji(stream: BitStream, size: number): DecodeData {
@@ -211,7 +211,9 @@ function decodeKanji(stream: BitStream, size: number): DecodeData {
 
     bytes.push(c >> 8, c & 0xff);
 
-    data += String.fromCharCode(UTF2SJISTable[c]);
+    const b = SJIS2UTFTable[c];
+
+    data += String.fromCharCode(b != null ? b : c);
   }
 
   return { bytes, data };
