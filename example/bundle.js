@@ -3239,9 +3239,9 @@
             }
             else if (c1 > 191 && c1 < 224) {
                 var c2 = stream.readBits(8);
-                i++;
                 bytes.push(c2);
                 data += String.fromCharCode(((c1 & 31) << 6) | (c2 & 63));
+                i++;
             }
             else if (c1 > 239 && c1 < 365) {
                 // Surrogate Pair
@@ -3249,17 +3249,17 @@
                 var c3 = stream.readBits(8);
                 var c4 = stream.readBits(8);
                 var u = (((c1 & 7) << 18) | ((c2 & 63) << 12) | ((c3 & 63) << 6) | (c4 & 63)) - 0x10000;
-                i += 3;
                 bytes.push(c2, c3, c4);
                 data += String.fromCharCode(0xd800 + (u >> 10));
                 data += String.fromCharCode(0xdc00 + (u & 1023));
+                i += 3;
             }
             else {
                 var c2 = stream.readBits(8);
                 var c3 = stream.readBits(8);
-                i += 2;
                 bytes.push(c2, c3);
                 data += String.fromCharCode(((c1 & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+                i += 2;
             }
         }
         return { bytes: bytes, data: data };
