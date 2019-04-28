@@ -10,9 +10,9 @@ body {
 }
 ul,
 li {
-  list-style-type: none;
   margin: 0;
   padding: 0;
+  list-style-type: none;
 }
 .clearfix:after {
   visibility: hidden;
@@ -57,13 +57,13 @@ textarea {
   height: 180px;
   resize: none;
 }
-#logo-canvas {
-  position: absolute;
-  top: 330px;
-  right: 0;
-  width: 200px;
-  height: 200px;
-}
 .hide {
   display: none;
+}
+#encode-result {
+  padding: 8px;
+  display: inline-block;
+}
+#encode-result img {
+  display: block;
 }
