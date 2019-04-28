@@ -104,6 +104,6 @@ example/
 qrcode.pdf
 qrcode.png
 
-# github pages config
+# github pages
 _config.yml
 favicon.ico
