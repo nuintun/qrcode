@@ -62,6 +62,7 @@ textarea {
 }
 #encode-result {
   padding: 8px;
+  background: #ccc;
   display: inline-block;
 }
 #encode-result img {
