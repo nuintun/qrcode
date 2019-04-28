@@ -102,7 +102,7 @@ example/
 
 # qrcode guide
 qrcode.pdf
-qrcode-guide.png
+qrcode.png
 
 # github pages config
 _config.yml
