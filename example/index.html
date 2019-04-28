@@ -76,13 +76,15 @@
       var content = $('.content li');
 
       nav.on('click', function(e) {
+        var target = $(this);
+
         nav.removeClass('selected');
 
-        $(this).addClass('selected');
+        target.addClass('selected');
 
         content
           .removeClass('selected')
-          .eq($(this).index())
+          .eq(target.index())
           .addClass('selected');
       });
 
@@ -125,15 +127,24 @@
         }
       });
 
+      var hasImage = false;
+      var imageData = null;
       var decodeText = $('#decode-text');
       var canvas = $('#decode-canvas')[0];
       var context = canvas.getContext('2d');
       var decodeResult = decodeText.find('textarea');
 
-      // 二维码加载
-      $('#decode-file').on('change', function(e) {
+      function resetDecoder() {
+        hasImage = false;
+        imageData = null;
+
         decodeResult.val('');
         decodeText.addClass('hide');
+      }
+
+      // 二维码加载
+      $('#decode-file').on('change', function(e) {
+        resetDecoder();
 
         var file = e.target.files[0];
         var reader = new FileReader();
@@ -142,10 +153,16 @@
           var img = new Image();
 
           img.onload = function() {
-            canvas.width = img.width;
-            canvas.height = img.height;
+            var width = img.width;
+            var height = img.height;
+            var actualWidth = Math.min(960, width);
+            var actualHeight = height * (actualWidth / width);
 
-            context.drawImage(img, 0, 0);
+            hasImage = true;
+            canvas.width = actualWidth;
+            canvas.height = actualHeight;
+
+            context.drawImage(img, 0, 0, width, height, 0, 0, actualWidth, actualHeight);
           };
 
           img.src = e.target.result;
@@ -154,25 +171,40 @@
         file && reader.readAsDataURL(file);
       });
 
+      function getImageData() {
+        imageData && context.putImageData(imageData, 0, 0);
+
+        imageData = imageData || context.getImageData(0, 0, canvas.width, canvas.height);
+
+        return imageData;
+      }
+
+      function markQRCodeArea(location) {
+        context.lineWidth = 1;
+        context.strokeStyle = '#ff0000';
+
+        context.beginPath();
+        context.moveTo(location.topLeftCorner.x, location.topLeftCorner.y);
+        context.lineTo(location.topRightCorner.x, location.topRightCorner.y);
+        context.lineTo(location.bottomRightCorner.x, location.bottomRightCorner.y);
+        context.lineTo(location.bottomLeftCorner.x, location.bottomLeftCorner.y);
+        context.lineTo(location.topLeftCorner.x, location.topLeftCorner.y);
+        context.stroke();
+      }
+
       $('#decode-btn').on('click', function() {
-        var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        if (!hasImage) {
+          return alert('请选择二维码图片');
+        }
+
+        var imageData = getImageData();
         var result = new QRCode.Decoder().decode(imageData.data, imageData.width, imageData.height);
 
         if (result) {
           decodeResult.val(result.data);
           decodeText.removeClass('hide');
 
-          var location = result.location;
-
-          context.lineWidth = 1;
-          context.strokeStyle = '#ff0000';
-          context.beginPath();
-          context.moveTo(location.topLeftCorner.x, location.topLeftCorner.y);
-          context.lineTo(location.topRightCorner.x, location.topRightCorner.y);
-          context.lineTo(location.bottomRightCorner.x, location.bottomRightCorner.y);
-          context.lineTo(location.bottomLeftCorner.x, location.bottomLeftCorner.y);
-          context.lineTo(location.topLeftCorner.x, location.topLeftCorner.y);
-          context.stroke();
+          markQRCodeArea(result.location);
 
           console && console.log(result);
         } else {
