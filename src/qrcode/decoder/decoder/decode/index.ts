@@ -147,8 +147,9 @@ function stringFromUTF8Bytes(bytes: number[]): string {
   // TODO(user): Use native implementations if/when available
   let pos: number = 0;
   let output: string = '';
+  const length: number = bytes.length;
 
-  while (pos < bytes.length) {
+  while (pos < length) {
     const c1: number = bytes[pos++];
 
     if (c1 < 128) {

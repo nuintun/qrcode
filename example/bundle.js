@@ -145,7 +145,8 @@
     function UTF8(str) {
         var pos = 0;
         var bytes = [];
-        for (var i = 0; i < str.length; i++) {
+        var length = str.length;
+        for (var i = 0; i < length; i++) {
             var code = str.charCodeAt(i);
             if (code < 128) {
                 bytes[pos++] = code;
@@ -154,7 +155,7 @@
                 bytes[pos++] = (code >> 6) | 192;
                 bytes[pos++] = (code & 63) | 128;
             }
-            else if ((code & 0xfc00) === 0xd800 && i + 1 < str.length && (str.charCodeAt(i + 1) & 0xfc00) === 0xdc00) {
+            else if ((code & 0xfc00) === 0xd800 && i + 1 < length && (str.charCodeAt(i + 1) & 0xfc00) === 0xdc00) {
                 // Surrogate Pair
                 code = 0x10000 + ((code & 0x03ff) << 10) + (str.charCodeAt(++i) & 0x03ff);
                 bytes[pos++] = (code >> 18) | 240;
@@ -3239,7 +3240,8 @@
         // TODO(user): Use native implementations if/when available
         var pos = 0;
         var output = '';
-        while (pos < bytes.length) {
+        var length = bytes.length;
+        while (pos < length) {
             var c1 = bytes[pos++];
             if (c1 < 128) {
                 output += String.fromCharCode(c1);
