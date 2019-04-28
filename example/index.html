@@ -162,6 +162,18 @@
           decodeResult.val(result.data);
           decodeText.removeClass('hide');
 
+          var location = result.location;
+
+          context.lineWidth = 1;
+          context.strokeStyle = '#ff0000';
+          context.beginPath();
+          context.moveTo(location.topLeftCorner.x, location.topLeftCorner.y);
+          context.lineTo(location.topRightCorner.x, location.topRightCorner.y);
+          context.lineTo(location.bottomRightCorner.x, location.bottomRightCorner.y);
+          context.lineTo(location.bottomLeftCorner.x, location.bottomLeftCorner.y);
+          context.lineTo(location.topLeftCorner.x, location.topLeftCorner.y);
+          context.stroke();
+
           console && console.log(result);
         } else {
           alert('二维码解码失败');
