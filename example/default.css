@@ -1,11 +1,14 @@
 body {
   margin: 0;
-  background-color: #f0f0f0;
+  background: #f0f0f0;
+}
+body .hide {
+  display: none;
 }
 .main {
   width: 1000px;
   margin: 20px auto;
-  background-color: #fff;
+  background: #fff;
   border: 1px solid #bbb;
 }
 ul,
@@ -34,9 +37,9 @@ li {
   float: left;
   width: 500px;
   height: 38px;
-  border: 1px solid #bbb;
   line-height: 38px;
   text-align: center;
+  border: 1px solid #bbb;
 }
 .tabs li.selected {
   height: 39px;
@@ -57,14 +60,11 @@ textarea {
   height: 180px;
   resize: none;
 }
-.hide {
-  display: none;
-}
-#encode-result {
+.encode-result {
   padding: 8px;
-  background: #ccc;
   display: inline-block;
+  background: #f0f0f0;
 }
-#encode-result img {
+.encode-result img {
   display: block;
 }

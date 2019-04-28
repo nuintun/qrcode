@@ -56,7 +56,7 @@
           <p>
             <button id="encode-btn">编码</button>
           </p>
-          <div id="encode-result"></div>
+          <div id="encode-result" class="encode-result hide"></div>
         </li>
         <li class="decode">
           <p><label>选择二维码图片：</label><input type="file" name="files[]" id="decode-file" /></p>
@@ -88,16 +88,25 @@
           .addClass('selected');
       });
 
+      var encodeText = $('#encode-text');
+      var encodeMode = $('#encode-mode');
+      var encodeECLevel = $('#encode-eclevel');
+      var encodeMargin = $('#encode-margin');
+      var encodeMSize = $('#encode-msize');
+      var encodeResult = $('#encode-result');
+
       // 生成二维码
       $('#encode-btn').on('click', function() {
-        var text = $('#encode-text').val();
-        var mode = $('#encode-mode').val();
-        var ecLevel = $('#encode-eclevel').val();
-        var moduleSize = +$('#encode-msize').val();
-        var margin = Number($('#encode-margin').val());
+        var text = encodeText.val();
+        var mode = encodeMode.val();
+        var ecLevel = encodeECLevel.val();
+        var margin = Number(encodeMargin.val());
+        var moduleSize = Number(encodeMSize.val());
 
         if (!text) {
-          return alert('请输入文本');
+          encodeResult.addClass('hide');
+
+          return alert('请输入二维码内容数据');
         }
 
         try {
@@ -107,12 +116,14 @@
           qrcode.setErrorCorrectionLevel(QRCode.ErrorCorrectionLevel[ecLevel]);
           qrcode.make();
 
-          console && console.log(qrcode);
+          encodeResult.html('<img src="' + qrcode.toDataURL(moduleSize, margin) + '" />');
+          encodeResult.removeClass('hide');
 
-          $('#encode-result').html('<img src="' + qrcode.toDataURL(moduleSize, margin) + '" />');
+          console && console.log(qrcode);
         } catch (error) {
+          encodeResult.addClass('hide');
+
           alert(error);
-          $('#encode-result').empty();
         }
       });
 
@@ -123,8 +134,8 @@
 
       // 二维码加载
       $('#decode-file').on('change', function(e) {
-        decodeText.hide();
         decodeResult.val('');
+        decodeText.addClass('hide');
 
         var file = e.target.files[0];
         var reader = new FileReader();
@@ -150,8 +161,9 @@
         var result = new QRCode.Decoder().decode(imageData.data, imageData.width, imageData.height);
 
         if (result) {
-          decodeText.show();
           decodeResult.val(result.data);
+          decodeText.removeClass('hide');
+
           console && console.log(result);
         } else {
           alert('二维码解码失败');
