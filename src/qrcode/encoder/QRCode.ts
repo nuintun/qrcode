@@ -470,7 +470,7 @@ export default class QRCode {
     for (let i: number = 0; i < 8; i++) {
       this.makeImpl(true, data, i);
 
-      const score: number = QRUtil.getPenaltyScore(this);
+      const score: number = QRUtil.calculateMaskPenalty(this);
 
       if (i === 0 || minimum > score) {
         pattern = i;

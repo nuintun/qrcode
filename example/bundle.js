@@ -598,6 +598,10 @@
      * @author nuintun
      * @author Kazuhiko Arase
      */
+    var N1 = 3;
+    var N2 = 3;
+    var N3 = 40;
+    var N4 = 10;
     var ALIGNMENT_PATTERN_TABLE = [
         [],
         [6, 18],
@@ -653,107 +657,6 @@
         }
         return e;
     }
-    /**
-     * @function getPenaltyScore
-     * @param {QRCode} qrcode
-     * @see https://www.jianshu.com/p/cfa2bae198ea
-     * @see https://www.thonky.com/qr-code-tutorial/data-masking
-     */
-    function getPenaltyScore(qrcode) {
-        var score = 0;
-        var moduleCount = qrcode.getModuleCount();
-        // penalty rule 1
-        for (var row = 0; row < moduleCount; row++) {
-            for (var col = 0; col < moduleCount; col++) {
-                var sameCount = 0;
-                var dark = qrcode.isDark(row, col);
-                for (var r = -1; r <= 1; r++) {
-                    if (row + r < 0 || moduleCount <= row + r) {
-                        continue;
-                    }
-                    for (var c = -1; c <= 1; c++) {
-                        if (col + c < 0 || moduleCount <= col + c) {
-                            continue;
-                        }
-                        if (r === 0 && c === 0) {
-                            continue;
-                        }
-                        if (dark === qrcode.isDark(row + r, col + c)) {
-                            sameCount++;
-                        }
-                    }
-                }
-                if (sameCount > 5) {
-                    score += 3 + sameCount - 5;
-                }
-            }
-        }
-        // penalty rule 2
-        for (var row = 0; row < moduleCount - 1; row++) {
-            for (var col = 0; col < moduleCount - 1; col++) {
-                var count = 0;
-                if (qrcode.isDark(row, col)) {
-                    count++;
-                }
-                if (qrcode.isDark(row + 1, col)) {
-                    count++;
-                }
-                if (qrcode.isDark(row, col + 1)) {
-                    count++;
-                }
-                if (qrcode.isDark(row + 1, col + 1)) {
-                    count++;
-                }
-                if (count === 0 || count === 4) {
-                    score += 3;
-                }
-            }
-        }
-        // penalty rule 3
-        for (var row = 0; row < moduleCount; row++) {
-            for (var col = 0; col < moduleCount - 6; col++) {
-                // vertical
-                var _a = [
-                    qrcode.isDark(row, col),
-                    qrcode.isDark(row, col + 1),
-                    qrcode.isDark(row, col + 2),
-                    qrcode.isDark(row, col + 3),
-                    qrcode.isDark(row, col + 4),
-                    qrcode.isDark(row, col + 5),
-                    qrcode.isDark(row, col + 6)
-                ], r0 = _a[0], r1 = _a[1], r2 = _a[2], r3 = _a[3], r4 = _a[4], r5 = _a[5], r6 = _a[6];
-                // dark - light - dark - dark - dark - light - dark
-                if (r0 && !r1 && r2 && r3 && r4 && !r5 && r6) {
-                    score += 40;
-                }
-                // horizontal
-                var _b = [
-                    qrcode.isDark(col, row),
-                    qrcode.isDark(col + 1, row),
-                    qrcode.isDark(col + 2, row),
-                    qrcode.isDark(col + 3, row),
-                    qrcode.isDark(col + 4, row),
-                    qrcode.isDark(col + 5, row),
-                    qrcode.isDark(col + 6, row)
-                ], c0 = _b[0], c1 = _b[1], c2 = _b[2], c3 = _b[3], c4 = _b[4], c5 = _b[5], c6 = _b[6];
-                // dark - light - dark - dark - dark - light - dark
-                if (c0 && !c1 && c2 && c3 && c4 && !c5 && c6) {
-                    score += 40;
-                }
-            }
-        }
-        // penalty rule 4
-        var darkCount = 0;
-        for (var col = 0; col < moduleCount; col++) {
-            for (var row = 0; row < moduleCount; row++) {
-                if (qrcode.isDark(row, col)) {
-                    darkCount++;
-                }
-            }
-        }
-        score += 10 * Math.floor(Math.abs((darkCount / (moduleCount * moduleCount)) * 100 - 50) / 5);
-        return score;
-    }
     function getBCHDigit(data) {
         var digit = 0;
         while (data !== 0) {
@@ -775,6 +678,118 @@
             offset ^= G15 << (getBCHDigit(offset) - getBCHDigit(G15));
         }
         return ((data << 10) | offset) ^ G15_MASK;
+    }
+    function applyMaskPenaltyRule1Internal(qrcode, isHorizontal) {
+        var penalty = 0;
+        var moduleCount = qrcode.getModuleCount();
+        for (var i = 0; i < moduleCount; i++) {
+            var prevBit = false;
+            var numSameBitCells = 0;
+            for (var j = 0; j < moduleCount; j++) {
+                var bit = isHorizontal ? qrcode.isDark(i, j) : qrcode.isDark(j, i);
+                if (bit === prevBit) {
+                    numSameBitCells++;
+                }
+                else {
+                    if (numSameBitCells >= 5) {
+                        penalty += N1 + (numSameBitCells - 5);
+                    }
+                    prevBit = bit;
+                    // include the cell itself
+                    numSameBitCells = 1;
+                }
+            }
+            if (numSameBitCells >= 5) {
+                penalty += N1 + (numSameBitCells - 5);
+            }
+        }
+        return penalty;
+    }
+    function applyMaskPenaltyRule1(qrcode) {
+        return applyMaskPenaltyRule1Internal(qrcode, true) + applyMaskPenaltyRule1Internal(qrcode, false);
+    }
+    function applyMaskPenaltyRule2(qrcode) {
+        var penalty = 0;
+        var moduleCount = qrcode.getModuleCount();
+        for (var y = 0; y < moduleCount - 1; y++) {
+            for (var x = 0; x < moduleCount - 1; x++) {
+                var value = qrcode.isDark(y, x);
+                if (value === qrcode.isDark(y, x + 1) && value === qrcode.isDark(y + 1, x) && value === qrcode.isDark(y + 1, x + 1)) {
+                    penalty++;
+                }
+            }
+        }
+        return N2 * penalty;
+    }
+    function isFourWhite(qrcode, rangeIndex, from, to, isHorizontal) {
+        if (isHorizontal === void 0) { isHorizontal = true; }
+        from = Math.max(from, 0);
+        to = Math.min(to, qrcode.getModuleCount());
+        for (var i = from; i < to; i++) {
+            var value = isHorizontal ? qrcode.isDark(rangeIndex, i) : qrcode.isDark(i, rangeIndex);
+            if (value) {
+                return false;
+            }
+        }
+        return true;
+    }
+    function applyMaskPenaltyRule3(qrcode) {
+        var numPenalties = 0;
+        var moduleCount = qrcode.getModuleCount();
+        for (var y = 0; y < moduleCount; y++) {
+            for (var x = 0; x < moduleCount; x++) {
+                if (x + 6 < moduleCount &&
+                    qrcode.isDark(y, x) &&
+                    !qrcode.isDark(y, x + 1) &&
+                    qrcode.isDark(y, x + 2) &&
+                    qrcode.isDark(y, x + 3) &&
+                    qrcode.isDark(y, x + 4) &&
+                    !qrcode.isDark(y, x + 5) &&
+                    qrcode.isDark(y, x + 6) &&
+                    (isFourWhite(qrcode, y, x - 4, x) || isFourWhite(qrcode, y, x + 7, x + 11))) {
+                    numPenalties++;
+                }
+                if (y + 6 < moduleCount &&
+                    qrcode.isDark(y, x) &&
+                    !qrcode.isDark(y + 1, x) &&
+                    qrcode.isDark(y + 2, x) &&
+                    qrcode.isDark(y + 3, x) &&
+                    qrcode.isDark(y + 4, x) &&
+                    !qrcode.isDark(y + 5, x) &&
+                    qrcode.isDark(y + 6, x) &&
+                    (isFourWhite(qrcode, x, y - 4, y, false) || isFourWhite(qrcode, x, y + 7, y + 11, false))) {
+                    numPenalties++;
+                }
+            }
+        }
+        return numPenalties * N3;
+    }
+    function applyMaskPenaltyRule4(qrcode) {
+        var numDarkCells = 0;
+        var moduleCount = qrcode.getModuleCount();
+        for (var y = 0; y < moduleCount; y++) {
+            for (var x = 0; x < moduleCount; x++) {
+                if (qrcode.isDark(y, x)) {
+                    numDarkCells++;
+                }
+            }
+        }
+        var numTotalCells = moduleCount * moduleCount;
+        var fivePercentVariances = Math.floor((Math.abs(numDarkCells * 2 - numTotalCells) * 10) / numTotalCells);
+        return fivePercentVariances * N4;
+    }
+    /**
+     * @function calculateMaskPenalty
+     * @param {QRCode} qrcode
+     * @see https://www.jianshu.com/p/cfa2bae198ea
+     * @see https://www.thonky.com/qr-code-tutorial/data-masking
+     * @see https://github.com/zxing/zxing/blob/master/core/src/main/java/com/google/zxing/qrcode/encoder/MaskUtil.java
+     */
+    function calculateMaskPenalty(qrcode) {
+        return (applyMaskPenaltyRule1(qrcode) +
+            applyMaskPenaltyRule2(qrcode) +
+            applyMaskPenaltyRule3(qrcode) +
+            applyMaskPenaltyRule4(qrcode));
     }
 
     /**
@@ -1678,7 +1693,7 @@
             var pattern = 0;
             for (var i = 0; i < 8; i++) {
                 this.makeImpl(true, data, i);
-                var score = getPenaltyScore(this);
+                var score = calculateMaskPenalty(this);
                 if (i === 0 || minimum > score) {
                     pattern = i;
                     minimum = score;
