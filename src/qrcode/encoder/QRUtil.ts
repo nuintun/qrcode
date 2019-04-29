@@ -196,6 +196,7 @@ function applyMaskPenaltyRule3(qrcode: QRCode): number {
       ) {
         numPenalties++;
       }
+
       if (
         y + 6 < moduleCount &&
         qrcode.isDark(y, x) &&
