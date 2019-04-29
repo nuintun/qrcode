@@ -270,9 +270,11 @@ export default class QRCode {
   }
 
   private setupFinderPattern(row: number, col: number): void {
+    const moduleCount: number = this.moduleCount;
+
     for (let r: number = -1; r <= 7; r++) {
       for (let c: number = -1; c <= 7; c++) {
-        if (row + r <= -1 || this.moduleCount <= row + r || col + c <= -1 || this.moduleCount <= col + c) {
+        if (row + r <= -1 || moduleCount <= row + r || col + c <= -1 || moduleCount <= col + c) {
           continue;
         }
 
@@ -316,7 +318,9 @@ export default class QRCode {
   }
 
   private setupTimingPattern(): void {
-    for (let i: number = 8; i < this.moduleCount - 8; i++) {
+    const count: number = this.moduleCount - 8;
+
+    for (let i: number = 8; i < count; i++) {
       const mod: boolean = i % 2 === 0;
 
       // vertical
@@ -334,6 +338,7 @@ export default class QRCode {
   private setupFormatInfo(test: boolean, maskPattern: number): void {
     const data: number = (this.errorCorrectionLevel << 3) | maskPattern;
     const bits: number = QRUtil.getBCHVersionInfo(data);
+    const moduleCount: number = this.moduleCount;
 
     for (let i: number = 0; i < 15; i++) {
       const mod: boolean = !test && ((bits >> i) & 1) === 1;
@@ -344,12 +349,12 @@ export default class QRCode {
       } else if (i < 8) {
         this.modules[i + 1][8] = mod;
       } else {
-        this.modules[this.moduleCount - 15 + i][8] = mod;
+        this.modules[moduleCount - 15 + i][8] = mod;
       }
 
       // horizontal
       if (i < 8) {
-        this.modules[8][this.moduleCount - i - 1] = mod;
+        this.modules[8][moduleCount - i - 1] = mod;
       } else if (i < 9) {
         this.modules[8][15 - i - 1 + 1] = mod;
       } else {
@@ -357,29 +362,32 @@ export default class QRCode {
       }
     }
 
-    // fixed
-    this.modules[this.moduleCount - 8][8] = !test;
+    // fixed point
+    this.modules[moduleCount - 8][8] = !test;
   }
 
   private setupVersionInfo(test: boolean): void {
+    const moduleCount: number = this.moduleCount;
     const bits: number = QRUtil.getBCHVersion(this.version);
 
     for (let i: number = 0; i < 18; i++) {
       const mod: boolean = !test && ((bits >> i) & 1) === 1;
 
-      this.modules[(i / 3) >> 0][(i % 3) + this.moduleCount - 8 - 3] = mod;
-      this.modules[(i % 3) + this.moduleCount - 8 - 3][(i / 3) >> 0] = mod;
+      this.modules[(i / 3) >> 0][(i % 3) + moduleCount - 8 - 3] = mod;
+      this.modules[(i % 3) + moduleCount - 8 - 3][(i / 3) >> 0] = mod;
     }
   }
 
   private mapData(data: number[], maskPattern: number): void {
+    const moduleCount: number = this.moduleCount;
+    const maskFunc: maskFunc = getMaskFunc(maskPattern);
+
     let inc: number = -1;
     let bitIndex: number = 7;
     let byteIndex: number = 0;
-    let row: number = this.moduleCount - 1;
-    const maskFunc: maskFunc = getMaskFunc(maskPattern);
+    let row: number = moduleCount - 1;
 
-    for (let col: number = this.moduleCount - 1; col > 0; col -= 2) {
+    for (let col: number = moduleCount - 1; col > 0; col -= 2) {
       if (col === 6) {
         col--;
       }
@@ -410,7 +418,7 @@ export default class QRCode {
 
         row += inc;
 
-        if (row < 0 || this.moduleCount <= row) {
+        if (row < 0 || moduleCount <= row) {
           row -= inc;
           inc = -inc;
           break;
@@ -423,18 +431,20 @@ export default class QRCode {
     // initialize modules
     this.modules = [];
 
-    for (let row: number = 0; row < this.moduleCount; row++) {
+    const moduleCount: number = this.moduleCount;
+
+    for (let row: number = 0; row < moduleCount; row++) {
       this.modules[row] = [];
 
-      for (let col: number = 0; col < this.moduleCount; col++) {
+      for (let col: number = 0; col < moduleCount; col++) {
         this.modules[row][col] = null;
       }
     }
 
     // setup finder pattern
     this.setupFinderPattern(0, 0);
-    this.setupFinderPattern(this.moduleCount - 7, 0);
-    this.setupFinderPattern(0, this.moduleCount - 7);
+    this.setupFinderPattern(moduleCount - 7, 0);
+    this.setupFinderPattern(0, moduleCount - 7);
 
     // setup alignment pattern
     this.setupAlignmentPattern();
@@ -513,8 +523,8 @@ export default class QRCode {
     moduleSize = Math.max(1, moduleSize >> 0);
     margin = Math.max(0, margin >> 0);
 
-    const mods: number = this.moduleCount;
-    const size: number = moduleSize * mods + margin * 2;
+    const moduleCount: number = this.moduleCount;
+    const size: number = moduleSize * moduleCount + margin * 2;
     const gif: GIFImage = new GIFImage(size, size);
 
     for (let y: number = 0; y < size; y++) {

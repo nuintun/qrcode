@@ -527,10 +527,11 @@
             if (shift === void 0) { shift = 0; }
             this.num = [];
             var offset = 0;
-            while (offset < num.length && num[offset] === 0) {
+            var length = num.length;
+            while (offset < length && num[offset] === 0) {
                 offset++;
             }
-            var length = num.length - offset;
+            length -= offset;
             for (var i = 0; i < length; i++) {
                 this.num.push(num[offset + i]);
             }
@@ -1515,9 +1516,10 @@
             }
         };
         QRCode.prototype.setupFinderPattern = function (row, col) {
+            var moduleCount = this.moduleCount;
             for (var r = -1; r <= 7; r++) {
                 for (var c = -1; c <= 7; c++) {
-                    if (row + r <= -1 || this.moduleCount <= row + r || col + c <= -1 || this.moduleCount <= col + c) {
+                    if (row + r <= -1 || moduleCount <= row + r || col + c <= -1 || moduleCount <= col + c) {
                         continue;
                     }
                     if ((0 <= r && r <= 6 && (c === 0 || c === 6)) ||
@@ -1555,7 +1557,8 @@
             }
         };
         QRCode.prototype.setupTimingPattern = function () {
-            for (var i = 8; i < this.moduleCount - 8; i++) {
+            var count = this.moduleCount - 8;
+            for (var i = 8; i < count; i++) {
                 var mod = i % 2 === 0;
                 // vertical
                 if (this.modules[i][6] === null) {
@@ -1570,6 +1573,7 @@
         QRCode.prototype.setupFormatInfo = function (test, maskPattern) {
             var data = (this.errorCorrectionLevel << 3) | maskPattern;
             var bits = getBCHVersionInfo(data);
+            var moduleCount = this.moduleCount;
             for (var i = 0; i < 15; i++) {
                 var mod = !test && ((bits >> i) & 1) === 1;
                 // vertical
@@ -1580,11 +1584,11 @@
                     this.modules[i + 1][8] = mod;
                 }
                 else {
-                    this.modules[this.moduleCount - 15 + i][8] = mod;
+                    this.modules[moduleCount - 15 + i][8] = mod;
                 }
                 // horizontal
                 if (i < 8) {
-                    this.modules[8][this.moduleCount - i - 1] = mod;
+                    this.modules[8][moduleCount - i - 1] = mod;
                 }
                 else if (i < 9) {
                     this.modules[8][15 - i - 1 + 1] = mod;
@@ -1593,24 +1597,26 @@
                     this.modules[8][15 - i - 1] = mod;
                 }
             }
-            // fixed
-            this.modules[this.moduleCount - 8][8] = !test;
+            // fixed point
+            this.modules[moduleCount - 8][8] = !test;
         };
         QRCode.prototype.setupVersionInfo = function (test) {
+            var moduleCount = this.moduleCount;
             var bits = getBCHVersion(this.version);
             for (var i = 0; i < 18; i++) {
                 var mod = !test && ((bits >> i) & 1) === 1;
-                this.modules[(i / 3) >> 0][(i % 3) + this.moduleCount - 8 - 3] = mod;
-                this.modules[(i % 3) + this.moduleCount - 8 - 3][(i / 3) >> 0] = mod;
+                this.modules[(i / 3) >> 0][(i % 3) + moduleCount - 8 - 3] = mod;
+                this.modules[(i % 3) + moduleCount - 8 - 3][(i / 3) >> 0] = mod;
             }
         };
         QRCode.prototype.mapData = function (data, maskPattern) {
+            var moduleCount = this.moduleCount;
+            var maskFunc = getMaskFunc(maskPattern);
             var inc = -1;
             var bitIndex = 7;
             var byteIndex = 0;
-            var row = this.moduleCount - 1;
-            var maskFunc = getMaskFunc(maskPattern);
-            for (var col = this.moduleCount - 1; col > 0; col -= 2) {
+            var row = moduleCount - 1;
+            for (var col = moduleCount - 1; col > 0; col -= 2) {
                 if (col === 6) {
                     col--;
                 }
@@ -1633,7 +1639,7 @@
                         }
                     }
                     row += inc;
-                    if (row < 0 || this.moduleCount <= row) {
+                    if (row < 0 || moduleCount <= row) {
                         row -= inc;
                         inc = -inc;
                         break;
@@ -1644,16 +1650,17 @@
         QRCode.prototype.makeImpl = function (test, data, maskPattern) {
             // initialize modules
             this.modules = [];
-            for (var row = 0; row < this.moduleCount; row++) {
+            var moduleCount = this.moduleCount;
+            for (var row = 0; row < moduleCount; row++) {
                 this.modules[row] = [];
-                for (var col = 0; col < this.moduleCount; col++) {
+                for (var col = 0; col < moduleCount; col++) {
                     this.modules[row][col] = null;
                 }
             }
             // setup finder pattern
             this.setupFinderPattern(0, 0);
-            this.setupFinderPattern(this.moduleCount - 7, 0);
-            this.setupFinderPattern(0, this.moduleCount - 7);
+            this.setupFinderPattern(moduleCount - 7, 0);
+            this.setupFinderPattern(0, moduleCount - 7);
             // setup alignment pattern
             this.setupAlignmentPattern();
             // setup timing pattern
@@ -1718,8 +1725,8 @@
             if (margin === void 0) { margin = moduleSize * 4; }
             moduleSize = Math.max(1, moduleSize >> 0);
             margin = Math.max(0, margin >> 0);
-            var mods = this.moduleCount;
-            var size = moduleSize * mods + margin * 2;
+            var moduleCount = this.moduleCount;
+            var size = moduleSize * moduleCount + margin * 2;
             var gif = new GIFImage(size, size);
             for (var y = 0; y < size; y++) {
                 for (var x = 0; x < size; x++) {

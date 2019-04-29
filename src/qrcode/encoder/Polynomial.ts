@@ -13,12 +13,13 @@ export default class Polynomial {
     this.num = [];
 
     let offset: number = 0;
+    let length: number = num.length;
 
-    while (offset < num.length && num[offset] === 0) {
+    while (offset < length && num[offset] === 0) {
       offset++;
     }
 
-    const length: number = num.length - offset;
+    length -= offset;
 
     for (let i: number = 0; i < length; i++) {
       this.num.push(num[offset + i]);
