@@ -143,6 +143,27 @@
         decodeText.addClass('hide');
       }
 
+      function drawImage(src) {
+        var img = new Image();
+
+        img.crossOrigin = 'anonymous';
+
+        img.onload = function() {
+          var width = img.width;
+          var height = img.height;
+          var actualWidth = Math.min(960, width);
+          var actualHeight = height * (actualWidth / width);
+
+          hasImage = true;
+          canvas.width = actualWidth;
+          canvas.height = actualHeight;
+
+          context.drawImage(img, 0, 0, width, height, 0, 0, actualWidth, actualHeight);
+        };
+
+        img.src = src;
+      }
+
       // 二维码加载
       $('#decode-file').on('change', function(e) {
         resetDecoder();
@@ -151,22 +172,7 @@
         var reader = new FileReader();
 
         reader.onload = function(e) {
-          var img = new Image();
-
-          img.onload = function() {
-            var width = img.width;
-            var height = img.height;
-            var actualWidth = Math.min(960, width);
-            var actualHeight = height * (actualWidth / width);
-
-            hasImage = true;
-            canvas.width = actualWidth;
-            canvas.height = actualHeight;
-
-            context.drawImage(img, 0, 0, width, height, 0, 0, actualWidth, actualHeight);
-          };
-
-          img.src = e.target.result;
+          drawImage(e.target.result);
         };
 
         file && reader.readAsDataURL(file);
@@ -212,6 +218,8 @@
           alert('二维码解码失败');
         }
       });
+
+      drawImage('./QRCode.jpg');
     </script>
   </body>
 </html>
