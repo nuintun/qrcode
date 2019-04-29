@@ -1554,12 +1554,12 @@
                 }
             }
         };
-        QRCode.prototype.setupFormatInfo = function (test, maskPattern) {
+        QRCode.prototype.setupFormatInfo = function (maskPattern) {
             var data = (this.errorCorrectionLevel << 3) | maskPattern;
             var bits = getBCHVersionInfo(data);
             var moduleCount = this.moduleCount;
             for (var i = 0; i < 15; i++) {
-                var bit = !test && ((bits >> i) & 1) === 1;
+                var bit = ((bits >> i) & 1) === 1;
                 // vertical
                 if (i < 6) {
                     this.modules[i][8] = bit;
@@ -1582,14 +1582,14 @@
                 }
             }
             // fixed point
-            this.modules[moduleCount - 8][8] = !test;
+            this.modules[moduleCount - 8][8] = true;
         };
-        QRCode.prototype.setupVersionInfo = function (test) {
+        QRCode.prototype.setupVersionInfo = function () {
             if (this.version >= 7) {
                 var moduleCount = this.moduleCount;
                 var bits = getBCHVersion(this.version);
                 for (var i = 0; i < 18; i++) {
-                    var bit = !test && ((bits >> i) & 1) === 1;
+                    var bit = ((bits >> i) & 1) === 1;
                     this.modules[(i / 3) >> 0][(i % 3) + moduleCount - 8 - 3] = bit;
                     this.modules[(i % 3) + moduleCount - 8 - 3][(i / 3) >> 0] = bit;
                 }
@@ -1631,7 +1631,7 @@
                 }
             }
         };
-        QRCode.prototype.makeImpl = function (test, data, maskPattern) {
+        QRCode.prototype.makeImpl = function (data, maskPattern) {
             // initialize modules
             this.modules = [];
             var moduleCount = this.moduleCount;
@@ -1650,23 +1650,23 @@
             // setup timing pattern
             this.setupTimingPattern();
             // setup format info
-            this.setupFormatInfo(test, maskPattern);
+            this.setupFormatInfo(maskPattern);
             // setup version info
-            this.setupVersionInfo(test);
+            this.setupVersionInfo();
             this.mapData(data, maskPattern);
         };
         QRCode.prototype.getBestMaskPattern = function (data) {
-            var minimum = 0;
-            var pattern = 0;
-            for (var i = 0; i < 8; i++) {
-                this.makeImpl(true, data, i);
-                var score = calculateMaskPenalty(this);
-                if (i === 0 || minimum > score) {
-                    pattern = i;
-                    minimum = score;
+            var bestMaskPattern = -1;
+            var minPenalty = Number.MAX_VALUE;
+            for (var maskPattern = 0; maskPattern < 8; maskPattern++) {
+                this.makeImpl(data, maskPattern);
+                var penalty = calculateMaskPenalty(this);
+                if (penalty < minPenalty) {
+                    minPenalty = penalty;
+                    bestMaskPattern = maskPattern;
                 }
             }
-            return pattern;
+            return bestMaskPattern;
         };
         /**
          * @public
@@ -1693,7 +1693,7 @@
             this.moduleCount = this.version * 4 + 17;
             // create data
             var data = createData(buffer, rsBlocks, maxDataCount);
-            this.makeImpl(false, data, this.getBestMaskPattern(data));
+            this.makeImpl(data, this.getBestMaskPattern(data));
         };
         /**
          * @public

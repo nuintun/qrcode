@@ -321,13 +321,13 @@ export default class QRCode {
     }
   }
 
-  private setupFormatInfo(test: boolean, maskPattern: number): void {
+  private setupFormatInfo(maskPattern: number): void {
     const data: number = (this.errorCorrectionLevel << 3) | maskPattern;
     const bits: number = QRUtil.getBCHVersionInfo(data);
     const moduleCount: number = this.moduleCount;
 
     for (let i: number = 0; i < 15; i++) {
-      const bit: boolean = !test && ((bits >> i) & 1) === 1;
+      const bit: boolean = ((bits >> i) & 1) === 1;
 
       // vertical
       if (i < 6) {
@@ -349,16 +349,16 @@ export default class QRCode {
     }
 
     // fixed point
-    this.modules[moduleCount - 8][8] = !test;
+    this.modules[moduleCount - 8][8] = true;
   }
 
-  private setupVersionInfo(test: boolean): void {
+  private setupVersionInfo(): void {
     if (this.version >= 7) {
       const moduleCount: number = this.moduleCount;
       const bits: number = QRUtil.getBCHVersion(this.version);
 
       for (let i: number = 0; i < 18; i++) {
-        const bit: boolean = !test && ((bits >> i) & 1) === 1;
+        const bit: boolean = ((bits >> i) & 1) === 1;
 
         this.modules[(i / 3) >> 0][(i % 3) + moduleCount - 8 - 3] = bit;
         this.modules[(i % 3) + moduleCount - 8 - 3][(i / 3) >> 0] = bit;
@@ -411,7 +411,7 @@ export default class QRCode {
     }
   }
 
-  private makeImpl(test: boolean, data: BitBuffer, maskPattern: number): void {
+  private makeImpl(data: BitBuffer, maskPattern: number): void {
     // initialize modules
     this.modules = [];
 
@@ -437,30 +437,30 @@ export default class QRCode {
     this.setupTimingPattern();
 
     // setup format info
-    this.setupFormatInfo(test, maskPattern);
+    this.setupFormatInfo(maskPattern);
 
     // setup version info
-    this.setupVersionInfo(test);
+    this.setupVersionInfo();
 
     this.mapData(data, maskPattern);
   }
 
   private getBestMaskPattern(data: BitBuffer): number {
-    let minimum: number = 0;
-    let pattern: number = 0;
+    let bestMaskPattern: number = -1;
+    let minPenalty: number = Number.MAX_VALUE;
 
-    for (let i: number = 0; i < 8; i++) {
-      this.makeImpl(true, data, i);
+    for (let maskPattern: number = 0; maskPattern < 8; maskPattern++) {
+      this.makeImpl(data, maskPattern);
 
-      const score: number = QRUtil.calculateMaskPenalty(this);
+      const penalty: number = QRUtil.calculateMaskPenalty(this);
 
-      if (i === 0 || minimum > score) {
-        pattern = i;
-        minimum = score;
+      if (penalty < minPenalty) {
+        minPenalty = penalty;
+        bestMaskPattern = maskPattern;
       }
     }
 
-    return pattern;
+    return bestMaskPattern;
   }
 
   /**
@@ -491,7 +491,7 @@ export default class QRCode {
     // create data
     const data: BitBuffer = createData(buffer, rsBlocks, maxDataCount);
 
-    this.makeImpl(false, data, this.getBestMaskPattern(data));
+    this.makeImpl(data, this.getBestMaskPattern(data));
   }
 
   /**
