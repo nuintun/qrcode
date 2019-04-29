@@ -1300,13 +1300,6 @@
     var PAD0 = 0xec;
     var PAD1 = 0x11;
     var toString = Object.prototype.toString;
-    function createNumArray(length) {
-        var array = [];
-        for (var i = 0; i < length; i++) {
-            array[i] = 0;
-        }
-        return array;
-    }
     function prepareData(version, errorCorrectionLevel, chunks) {
         var dLength = chunks.length;
         var buffer = new BitBuffer();
@@ -1340,7 +1333,7 @@
             ecData[r] = [];
             maxDcCount = Math.max(maxDcCount, dcCount);
             maxEcCount = Math.max(maxEcCount, ecCount);
-            dcData[r] = createNumArray(dcCount);
+            dcData[r] = [];
             for (var i = 0; i < dcCount; i++) {
                 dcData[r][i] = 0xff & buffer.getBuffer()[i + offset];
             }
@@ -1349,9 +1342,9 @@
             var rawPoly = new Polynomial(dcData[r], rsPoly.getLength() - 1);
             var modPoly = rawPoly.mod(rsPoly);
             var ecLength = rsPoly.getLength() - 1;
-            ecData[r] = createNumArray(ecLength);
+            ecData[r] = [];
             for (var i = 0; i < ecLength; i++) {
-                var modIndex = i + modPoly.getLength() - ecData[r].length;
+                var modIndex = i + modPoly.getLength() - ecLength;
                 ecData[r][i] = modIndex >= 0 ? modPoly.getAt(modIndex) : 0;
             }
         }

@@ -20,16 +20,6 @@ const toString: () => string = Object.prototype.toString;
 
 type prepareData = [BitBuffer, RSBlock[], number];
 
-function createNumArray(length: number): number[] {
-  const array: number[] = [];
-
-  for (let i: number = 0; i < length; i++) {
-    array[i] = 0;
-  }
-
-  return array;
-}
-
 function prepareData(version: number, errorCorrectionLevel: ErrorCorrectionLevel, chunks: QRData[]): prepareData {
   const dLength: number = chunks.length;
   const buffer: BitBuffer = new BitBuffer();
@@ -73,7 +63,7 @@ function createBytes(buffer: BitBuffer, rsBlocks: RSBlock[]): BitBuffer {
     maxDcCount = Math.max(maxDcCount, dcCount);
     maxEcCount = Math.max(maxEcCount, ecCount);
 
-    dcData[r] = createNumArray(dcCount);
+    dcData[r] = [];
 
     for (let i: number = 0; i < dcCount; i++) {
       dcData[r][i] = 0xff & buffer.getBuffer()[i + offset];
@@ -86,10 +76,10 @@ function createBytes(buffer: BitBuffer, rsBlocks: RSBlock[]): BitBuffer {
     const modPoly: Polynomial = rawPoly.mod(rsPoly);
     const ecLength: number = rsPoly.getLength() - 1;
 
-    ecData[r] = createNumArray(ecLength);
+    ecData[r] = [];
 
     for (let i: number = 0; i < ecLength; i++) {
-      const modIndex: number = i + modPoly.getLength() - ecData[r].length;
+      const modIndex: number = i + modPoly.getLength() - ecLength;
 
       ecData[r][i] = modIndex >= 0 ? modPoly.getAt(modIndex) : 0;
     }
