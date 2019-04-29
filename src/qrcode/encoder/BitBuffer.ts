@@ -27,7 +27,7 @@ export default class BitBuffer {
     return buffer;
   }
 
-  private getBit(index: number): boolean {
+  public getBit(index: number): boolean {
     return ((this.buffer[(index / 8) >> 0] >>> (7 - (index % 8))) & 1) === 1;
   }
 

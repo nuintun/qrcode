@@ -1351,7 +1351,6 @@
         var offset = 0;
         var maxDcCount = 0;
         var maxEcCount = 0;
-        var maxTotalCount = 0;
         var dcData = [];
         var ecData = [];
         var rLength = rsBlocks.length;
@@ -1376,25 +1375,23 @@
                 var modIndex = i + modPoly.getLength() - ecData[r].length;
                 ecData[r][i] = modIndex >= 0 ? modPoly.getAt(modIndex) : 0;
             }
-            maxTotalCount += rsBlocks[r].getTotalCount();
         }
-        var index = 0;
-        var data = createNumArray(maxTotalCount);
+        buffer = new BitBuffer();
         for (var i = 0; i < maxDcCount; i++) {
             for (var r = 0; r < rLength; r++) {
                 if (i < dcData[r].length) {
-                    data[index++] = dcData[r][i];
+                    buffer.put(dcData[r][i], 8);
                 }
             }
         }
         for (var i = 0; i < maxEcCount; i++) {
             for (var r = 0; r < rLength; r++) {
                 if (i < ecData[r].length) {
-                    data[index++] = ecData[r][i];
+                    buffer.put(ecData[r][i], 8);
                 }
             }
         }
-        return data;
+        return buffer;
     }
     function createData(buffer, rsBlocks, maxDataCount) {
         if (buffer.getLengthInBits() > maxDataCount) {
@@ -1574,14 +1571,14 @@
         QRCode.prototype.setupTimingPattern = function () {
             var count = this.moduleCount - 8;
             for (var i = 8; i < count; i++) {
-                var mod = i % 2 === 0;
+                var bit = i % 2 === 0;
                 // vertical
                 if (this.modules[i][6] === null) {
-                    this.modules[i][6] = mod;
+                    this.modules[i][6] = bit;
                 }
                 // horizontal
                 if (this.modules[6][i] === null) {
-                    this.modules[6][i] = mod;
+                    this.modules[6][i] = bit;
                 }
             }
         };
@@ -1590,26 +1587,26 @@
             var bits = getBCHVersionInfo(data);
             var moduleCount = this.moduleCount;
             for (var i = 0; i < 15; i++) {
-                var mod = !test && ((bits >> i) & 1) === 1;
+                var bit = !test && ((bits >> i) & 1) === 1;
                 // vertical
                 if (i < 6) {
-                    this.modules[i][8] = mod;
+                    this.modules[i][8] = bit;
                 }
                 else if (i < 8) {
-                    this.modules[i + 1][8] = mod;
+                    this.modules[i + 1][8] = bit;
                 }
                 else {
-                    this.modules[moduleCount - 15 + i][8] = mod;
+                    this.modules[moduleCount - 15 + i][8] = bit;
                 }
                 // horizontal
                 if (i < 8) {
-                    this.modules[8][moduleCount - i - 1] = mod;
+                    this.modules[8][moduleCount - i - 1] = bit;
                 }
                 else if (i < 9) {
-                    this.modules[8][15 - i - 1 + 1] = mod;
+                    this.modules[8][15 - i - 1 + 1] = bit;
                 }
                 else {
-                    this.modules[8][15 - i - 1] = mod;
+                    this.modules[8][15 - i - 1] = bit;
                 }
             }
             // fixed point
@@ -1619,45 +1616,43 @@
             var moduleCount = this.moduleCount;
             var bits = getBCHVersion(this.version);
             for (var i = 0; i < 18; i++) {
-                var mod = !test && ((bits >> i) & 1) === 1;
-                this.modules[(i / 3) >> 0][(i % 3) + moduleCount - 8 - 3] = mod;
-                this.modules[(i % 3) + moduleCount - 8 - 3][(i / 3) >> 0] = mod;
+                var bit = !test && ((bits >> i) & 1) === 1;
+                this.modules[(i / 3) >> 0][(i % 3) + moduleCount - 8 - 3] = bit;
+                this.modules[(i % 3) + moduleCount - 8 - 3][(i / 3) >> 0] = bit;
             }
         };
         QRCode.prototype.mapData = function (data, maskPattern) {
+            // bit index into the data
+            var bitIndex = 0;
             var moduleCount = this.moduleCount;
-            var maskFunc = getMaskFunc(maskPattern);
-            var inc = -1;
-            var bitIndex = 7;
-            var byteIndex = 0;
-            var row = moduleCount - 1;
-            for (var col = moduleCount - 1; col > 0; col -= 2) {
-                if (col === 6) {
-                    col--;
+            var bitLength = data.getLengthInBits();
+            // do the funny zigzag scan
+            for (var right = moduleCount - 1; right >= 1; right -= 2) {
+                // index of right column in each column pair
+                if (right === 6) {
+                    right = 5;
                 }
-                while (true) {
-                    for (var c = 0; c < 2; c++) {
-                        if (this.modules[row][col - c] === null) {
-                            var dark = false;
-                            if (byteIndex < data.length) {
-                                dark = ((data[byteIndex] >>> bitIndex) & 1) === 1;
-                            }
-                            var mask = maskFunc(col - c, row);
-                            if (mask) {
-                                dark = !dark;
-                            }
-                            this.modules[row][col - c] = dark;
-                            if (--bitIndex === -1) {
-                                byteIndex++;
-                                bitIndex = 7;
-                            }
+                for (var vert = 0; vert < moduleCount; vert++) {
+                    // Vertical counter
+                    for (var j = 0; j < 2; j++) {
+                        // actual x coordinate
+                        var x = right - j;
+                        var upward = ((right + 1) & 2) === 0;
+                        // actual y coordinate
+                        var y = upward ? moduleCount - 1 - vert : vert;
+                        if (this.modules[y][x] !== null) {
+                            continue;
                         }
-                    }
-                    row += inc;
-                    if (row < 0 || moduleCount <= row) {
-                        row -= inc;
-                        inc = -inc;
-                        break;
+                        var bit = false;
+                        if (bitIndex < bitLength) {
+                            bit = data.getBit(bitIndex++);
+                        }
+                        var maskFunc = getMaskFunc(maskPattern);
+                        var invert = maskFunc(x, y);
+                        if (invert) {
+                            bit = !bit;
+                        }
+                        this.modules[y][x] = bit;
                     }
                 }
             }

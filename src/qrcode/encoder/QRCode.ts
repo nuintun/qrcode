@@ -56,11 +56,10 @@ function prepareData(version: number, errorCorrectionLevel: ErrorCorrectionLevel
   return [buffer, rsBlocks, maxDataCount];
 }
 
-function createBytes(buffer: BitBuffer, rsBlocks: RSBlock[]): number[] {
+function createBytes(buffer: BitBuffer, rsBlocks: RSBlock[]): BitBuffer {
   let offset: number = 0;
   let maxDcCount: number = 0;
   let maxEcCount: number = 0;
-  let maxTotalCount: number = 0;
   const dcData: number[][] = [];
   const ecData: number[][] = [];
   const rLength: number = rsBlocks.length;
@@ -94,17 +93,14 @@ function createBytes(buffer: BitBuffer, rsBlocks: RSBlock[]): number[] {
 
       ecData[r][i] = modIndex >= 0 ? modPoly.getAt(modIndex) : 0;
     }
-
-    maxTotalCount += rsBlocks[r].getTotalCount();
   }
 
-  let index: number = 0;
-  const data: number[] = createNumArray(maxTotalCount);
+  buffer = new BitBuffer();
 
   for (let i: number = 0; i < maxDcCount; i++) {
     for (let r: number = 0; r < rLength; r++) {
       if (i < dcData[r].length) {
-        data[index++] = dcData[r][i];
+        buffer.put(dcData[r][i], 8);
       }
     }
   }
@@ -112,15 +108,15 @@ function createBytes(buffer: BitBuffer, rsBlocks: RSBlock[]): number[] {
   for (let i: number = 0; i < maxEcCount; i++) {
     for (let r: number = 0; r < rLength; r++) {
       if (i < ecData[r].length) {
-        data[index++] = ecData[r][i];
+        buffer.put(ecData[r][i], 8);
       }
     }
   }
 
-  return data;
+  return buffer;
 }
 
-function createData(buffer: BitBuffer, rsBlocks: RSBlock[], maxDataCount: number): number[] {
+function createData(buffer: BitBuffer, rsBlocks: RSBlock[], maxDataCount: number): BitBuffer {
   if (buffer.getLengthInBits() > maxDataCount) {
     throw `data overflow: ${buffer.getLengthInBits()} > ${maxDataCount}`;
   }
@@ -321,16 +317,16 @@ export default class QRCode {
     const count: number = this.moduleCount - 8;
 
     for (let i: number = 8; i < count; i++) {
-      const mod: boolean = i % 2 === 0;
+      const bit: boolean = i % 2 === 0;
 
       // vertical
       if (this.modules[i][6] === null) {
-        this.modules[i][6] = mod;
+        this.modules[i][6] = bit;
       }
 
       // horizontal
       if (this.modules[6][i] === null) {
-        this.modules[6][i] = mod;
+        this.modules[6][i] = bit;
       }
     }
   }
@@ -341,24 +337,24 @@ export default class QRCode {
     const moduleCount: number = this.moduleCount;
 
     for (let i: number = 0; i < 15; i++) {
-      const mod: boolean = !test && ((bits >> i) & 1) === 1;
+      const bit: boolean = !test && ((bits >> i) & 1) === 1;
 
       // vertical
       if (i < 6) {
-        this.modules[i][8] = mod;
+        this.modules[i][8] = bit;
       } else if (i < 8) {
-        this.modules[i + 1][8] = mod;
+        this.modules[i + 1][8] = bit;
       } else {
-        this.modules[moduleCount - 15 + i][8] = mod;
+        this.modules[moduleCount - 15 + i][8] = bit;
       }
 
       // horizontal
       if (i < 8) {
-        this.modules[8][moduleCount - i - 1] = mod;
+        this.modules[8][moduleCount - i - 1] = bit;
       } else if (i < 9) {
-        this.modules[8][15 - i - 1 + 1] = mod;
+        this.modules[8][15 - i - 1 + 1] = bit;
       } else {
-        this.modules[8][15 - i - 1] = mod;
+        this.modules[8][15 - i - 1] = bit;
       }
     }
 
@@ -371,63 +367,59 @@ export default class QRCode {
     const bits: number = QRUtil.getBCHVersion(this.version);
 
     for (let i: number = 0; i < 18; i++) {
-      const mod: boolean = !test && ((bits >> i) & 1) === 1;
+      const bit: boolean = !test && ((bits >> i) & 1) === 1;
 
-      this.modules[(i / 3) >> 0][(i % 3) + moduleCount - 8 - 3] = mod;
-      this.modules[(i % 3) + moduleCount - 8 - 3][(i / 3) >> 0] = mod;
+      this.modules[(i / 3) >> 0][(i % 3) + moduleCount - 8 - 3] = bit;
+      this.modules[(i % 3) + moduleCount - 8 - 3][(i / 3) >> 0] = bit;
     }
   }
 
-  private mapData(data: number[], maskPattern: number): void {
+  private mapData(data: BitBuffer, maskPattern: number): void {
+    // bit index into the data
+    let bitIndex: number = 0;
     const moduleCount: number = this.moduleCount;
-    const maskFunc: maskFunc = getMaskFunc(maskPattern);
+    const bitLength: number = data.getLengthInBits();
 
-    let inc: number = -1;
-    let bitIndex: number = 7;
-    let byteIndex: number = 0;
-    let row: number = moduleCount - 1;
-
-    for (let col: number = moduleCount - 1; col > 0; col -= 2) {
-      if (col === 6) {
-        col--;
+    // do the funny zigzag scan
+    for (let right: number = moduleCount - 1; right >= 1; right -= 2) {
+      // index of right column in each column pair
+      if (right === 6) {
+        right = 5;
       }
 
-      while (true) {
-        for (let c: number = 0; c < 2; c++) {
-          if (this.modules[row][col - c] === null) {
-            let dark: boolean = false;
+      for (let vert: number = 0; vert < moduleCount; vert++) {
+        // Vertical counter
+        for (let j: number = 0; j < 2; j++) {
+          // actual x coordinate
+          const x: number = right - j;
+          const upward: boolean = ((right + 1) & 2) === 0;
+          // actual y coordinate
+          const y: number = upward ? moduleCount - 1 - vert : vert;
 
-            if (byteIndex < data.length) {
-              dark = ((data[byteIndex] >>> bitIndex) & 1) === 1;
-            }
-
-            const mask: boolean = maskFunc(col - c, row);
-
-            if (mask) {
-              dark = !dark;
-            }
-
-            this.modules[row][col - c] = dark;
-
-            if (--bitIndex === -1) {
-              byteIndex++;
-              bitIndex = 7;
-            }
+          if (this.modules[y][x] !== null) {
+            continue;
           }
-        }
 
-        row += inc;
+          let bit: boolean = false;
 
-        if (row < 0 || moduleCount <= row) {
-          row -= inc;
-          inc = -inc;
-          break;
+          if (bitIndex < bitLength) {
+            bit = data.getBit(bitIndex++);
+          }
+
+          const maskFunc: maskFunc = getMaskFunc(maskPattern);
+          const invert: boolean = maskFunc(x, y);
+
+          if (invert) {
+            bit = !bit;
+          }
+
+          this.modules[y][x] = bit;
         }
       }
     }
   }
 
-  private makeImpl(test: boolean, data: number[], maskPattern: number): void {
+  private makeImpl(test: boolean, data: BitBuffer, maskPattern: number): void {
     // initialize modules
     this.modules = [];
 
@@ -463,7 +455,7 @@ export default class QRCode {
     this.mapData(data, maskPattern);
   }
 
-  private getBestMaskPattern(data: number[]): number {
+  private getBestMaskPattern(data: BitBuffer): number {
     let minimum: number = 0;
     let pattern: number = 0;
 
@@ -507,7 +499,7 @@ export default class QRCode {
     this.moduleCount = this.version * 4 + 17;
 
     // create data
-    const data: number[] = createData(buffer, rsBlocks, maxDataCount);
+    const data: BitBuffer = createData(buffer, rsBlocks, maxDataCount);
 
     this.makeImpl(false, data, this.getBestMaskPattern(data));
   }
