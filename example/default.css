@@ -67,4 +67,5 @@ textarea {
 }
 .encode-result img {
   display: block;
+  max-width: 944px;
 }

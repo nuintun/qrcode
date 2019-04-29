@@ -16,17 +16,6 @@ export default class BitBuffer {
     return this.length;
   }
 
-  public toString(): string {
-    let buffer: string = '';
-    const length: number = this.length;
-
-    for (let i: number = 0; i < length; i++) {
-      buffer += this.getBit(i) ? '1' : '0';
-    }
-
-    return buffer;
-  }
-
   public getBit(index: number): boolean {
     return ((this.buffer[(index / 8) >> 0] >>> (7 - (index % 8))) & 1) === 1;
   }

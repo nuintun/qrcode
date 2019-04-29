@@ -114,7 +114,7 @@ function applyMaskPenaltyRule1Internal(qrcode: QRCode, isHorizontal: boolean): n
   const moduleCount: number = qrcode.getModuleCount();
 
   for (let i: number = 0; i < moduleCount; i++) {
-    let prevBit: boolean = false;
+    let prevBit: boolean = null;
     let numSameBitCells: number = 0;
 
     for (let j: number = 0; j < moduleCount; j++) {
@@ -162,7 +162,7 @@ function applyMaskPenaltyRule2(qrcode: QRCode): number {
   return N2 * penalty;
 }
 
-function isFourWhite(qrcode: QRCode, rangeIndex: number, from: number, to: number, isHorizontal: boolean = true): boolean {
+function isFourWhite(qrcode: QRCode, rangeIndex: number, from: number, to: number, isHorizontal: boolean): boolean {
   from = Math.max(from, 0);
   to = Math.min(to, qrcode.getModuleCount());
 
@@ -192,7 +192,7 @@ function applyMaskPenaltyRule3(qrcode: QRCode): number {
         qrcode.isDark(y, x + 4) &&
         !qrcode.isDark(y, x + 5) &&
         qrcode.isDark(y, x + 6) &&
-        (isFourWhite(qrcode, y, x - 4, x) || isFourWhite(qrcode, y, x + 7, x + 11))
+        (isFourWhite(qrcode, y, x - 4, x, true) || isFourWhite(qrcode, y, x + 7, x + 11, true))
       ) {
         numPenalties++;
       }
@@ -236,7 +236,6 @@ function applyMaskPenaltyRule4(qrcode: QRCode): number {
 /**
  * @function calculateMaskPenalty
  * @param {QRCode} qrcode
- * @see https://www.jianshu.com/p/cfa2bae198ea
  * @see https://www.thonky.com/qr-code-tutorial/data-masking
  * @see https://github.com/zxing/zxing/blob/master/core/src/main/java/com/google/zxing/qrcode/encoder/MaskUtil.java
  */

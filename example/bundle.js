@@ -545,17 +545,6 @@
         Polynomial.prototype.getLength = function () {
             return this.num.length;
         };
-        Polynomial.prototype.toString = function () {
-            var buffer = '';
-            var length = this.getLength();
-            for (var i = 0; i < length; i++) {
-                if (i > 0) {
-                    buffer += ',';
-                }
-                buffer += this.getAt(i);
-            }
-            return buffer;
-        };
         Polynomial.prototype.multiply = function (e) {
             var num = [];
             var eLength = e.getLength();
@@ -683,7 +672,7 @@
         var penalty = 0;
         var moduleCount = qrcode.getModuleCount();
         for (var i = 0; i < moduleCount; i++) {
-            var prevBit = false;
+            var prevBit = null;
             var numSameBitCells = 0;
             for (var j = 0; j < moduleCount; j++) {
                 var bit = isHorizontal ? qrcode.isDark(i, j) : qrcode.isDark(j, i);
@@ -722,7 +711,6 @@
         return N2 * penalty;
     }
     function isFourWhite(qrcode, rangeIndex, from, to, isHorizontal) {
-        if (isHorizontal === void 0) { isHorizontal = true; }
         from = Math.max(from, 0);
         to = Math.min(to, qrcode.getModuleCount());
         for (var i = from; i < to; i++) {
@@ -746,7 +734,7 @@
                     qrcode.isDark(y, x + 4) &&
                     !qrcode.isDark(y, x + 5) &&
                     qrcode.isDark(y, x + 6) &&
-                    (isFourWhite(qrcode, y, x - 4, x) || isFourWhite(qrcode, y, x + 7, x + 11))) {
+                    (isFourWhite(qrcode, y, x - 4, x, true) || isFourWhite(qrcode, y, x + 7, x + 11, true))) {
                     numPenalties++;
                 }
                 if (y + 6 < moduleCount &&
@@ -781,7 +769,6 @@
     /**
      * @function calculateMaskPenalty
      * @param {QRCode} qrcode
-     * @see https://www.jianshu.com/p/cfa2bae198ea
      * @see https://www.thonky.com/qr-code-tutorial/data-masking
      * @see https://github.com/zxing/zxing/blob/master/core/src/main/java/com/google/zxing/qrcode/encoder/MaskUtil.java
      */
@@ -807,14 +794,6 @@
         };
         BitBuffer.prototype.getLengthInBits = function () {
             return this.length;
-        };
-        BitBuffer.prototype.toString = function () {
-            var buffer = '';
-            var length = this.length;
-            for (var i = 0; i < length; i++) {
-                buffer += this.getBit(i) ? '1' : '0';
-            }
-            return buffer;
         };
         BitBuffer.prototype.getBit = function (index) {
             return ((this.buffer[(index / 8) >> 0] >>> (7 - (index % 8))) & 1) === 1;
@@ -1293,21 +1272,21 @@
     function getMaskFunc(maskPattern) {
         switch (maskPattern) {
             case 0 /* PATTERN000 */:
-                return function (x, y) { return (x + y) % 2 === 0; };
+                return function (x, y) { return ((x + y) & 0x1) === 0; };
             case 1 /* PATTERN001 */:
-                return function (x, y) { return y % 2 === 0; };
+                return function (x, y) { return (y & 0x1) === 0; };
             case 2 /* PATTERN010 */:
                 return function (x, y) { return x % 3 === 0; };
             case 3 /* PATTERN011 */:
                 return function (x, y) { return (x + y) % 3 === 0; };
             case 4 /* PATTERN100 */:
-                return function (x, y) { return (((x / 3) >> 0) + ((y / 2) >> 0)) % 2 === 0; };
+                return function (x, y) { return ((((x / 3) >> 0) + ((y / 2) >> 0)) & 0x1) === 0; };
             case 5 /* PATTERN101 */:
-                return function (x, y) { return ((x * y) % 2) + ((x * y) % 3) === 0; };
+                return function (x, y) { return ((x * y) & 0x1) + ((x * y) % 3) === 0; };
             case 6 /* PATTERN110 */:
-                return function (x, y) { return (((x * y) % 2) + ((x * y) % 3)) % 2 === 0; };
+                return function (x, y) { return ((((x * y) & 0x1) + ((x * y) % 3)) & 0x1) === 0; };
             case 7 /* PATTERN111 */:
-                return function (x, y) { return (((x * y) % 3) + ((x + y) % 2)) % 2 === 0; };
+                return function (x, y) { return ((((x * y) % 3) + ((x + y) & 0x1)) & 0x1) === 0; };
             default:
                 throw "illegal mask: " + maskPattern;
         }
@@ -1613,12 +1592,14 @@
             this.modules[moduleCount - 8][8] = !test;
         };
         QRCode.prototype.setupVersionInfo = function (test) {
-            var moduleCount = this.moduleCount;
-            var bits = getBCHVersion(this.version);
-            for (var i = 0; i < 18; i++) {
-                var bit = !test && ((bits >> i) & 1) === 1;
-                this.modules[(i / 3) >> 0][(i % 3) + moduleCount - 8 - 3] = bit;
-                this.modules[(i % 3) + moduleCount - 8 - 3][(i / 3) >> 0] = bit;
+            if (this.version >= 7) {
+                var moduleCount = this.moduleCount;
+                var bits = getBCHVersion(this.version);
+                for (var i = 0; i < 18; i++) {
+                    var bit = !test && ((bits >> i) & 1) === 1;
+                    this.modules[(i / 3) >> 0][(i % 3) + moduleCount - 8 - 3] = bit;
+                    this.modules[(i % 3) + moduleCount - 8 - 3][(i / 3) >> 0] = bit;
+                }
             }
         };
         QRCode.prototype.mapData = function (data, maskPattern) {
@@ -1633,7 +1614,7 @@
                     right = 5;
                 }
                 for (var vert = 0; vert < moduleCount; vert++) {
-                    // Vertical counter
+                    // vertical counter
                     for (var j = 0; j < 2; j++) {
                         // actual x coordinate
                         var x = right - j;
@@ -1678,9 +1659,7 @@
             // setup format info
             this.setupFormatInfo(test, maskPattern);
             // setup version info
-            if (this.version >= 7) {
-                this.setupVersionInfo(test);
-            }
+            this.setupVersionInfo(test);
             this.mapData(data, maskPattern);
         };
         QRCode.prototype.getBestMaskPattern = function (data) {

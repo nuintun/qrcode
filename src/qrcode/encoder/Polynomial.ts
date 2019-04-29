@@ -38,21 +38,6 @@ export default class Polynomial {
     return this.num.length;
   }
 
-  public toString(): string {
-    let buffer: string = '';
-    const length: number = this.getLength();
-
-    for (let i: number = 0; i < length; i++) {
-      if (i > 0) {
-        buffer += ',';
-      }
-
-      buffer += this.getAt(i);
-    }
-
-    return buffer;
-  }
-
   public multiply(e: Polynomial): Polynomial {
     const num: number[] = [];
     const eLength: number = e.getLength();

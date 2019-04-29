@@ -363,14 +363,16 @@ export default class QRCode {
   }
 
   private setupVersionInfo(test: boolean): void {
-    const moduleCount: number = this.moduleCount;
-    const bits: number = QRUtil.getBCHVersion(this.version);
+    if (this.version >= 7) {
+      const moduleCount: number = this.moduleCount;
+      const bits: number = QRUtil.getBCHVersion(this.version);
 
-    for (let i: number = 0; i < 18; i++) {
-      const bit: boolean = !test && ((bits >> i) & 1) === 1;
+      for (let i: number = 0; i < 18; i++) {
+        const bit: boolean = !test && ((bits >> i) & 1) === 1;
 
-      this.modules[(i / 3) >> 0][(i % 3) + moduleCount - 8 - 3] = bit;
-      this.modules[(i % 3) + moduleCount - 8 - 3][(i / 3) >> 0] = bit;
+        this.modules[(i / 3) >> 0][(i % 3) + moduleCount - 8 - 3] = bit;
+        this.modules[(i % 3) + moduleCount - 8 - 3][(i / 3) >> 0] = bit;
+      }
     }
   }
 
@@ -388,7 +390,7 @@ export default class QRCode {
       }
 
       for (let vert: number = 0; vert < moduleCount; vert++) {
-        // Vertical counter
+        // vertical counter
         for (let j: number = 0; j < 2; j++) {
           // actual x coordinate
           const x: number = right - j;
@@ -448,9 +450,7 @@ export default class QRCode {
     this.setupFormatInfo(test, maskPattern);
 
     // setup version info
-    if (this.version >= 7) {
-      this.setupVersionInfo(test);
-    }
+    this.setupVersionInfo(test);
 
     this.mapData(data, maskPattern);
   }
