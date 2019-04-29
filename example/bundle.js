@@ -1595,7 +1595,7 @@
                 }
             }
         };
-        QRCode.prototype.mapData = function (data, maskPattern) {
+        QRCode.prototype.setupCodewords = function (data, maskPattern) {
             // bit index into the data
             var bitIndex = 0;
             var moduleCount = this.moduleCount;
@@ -1631,7 +1631,7 @@
                 }
             }
         };
-        QRCode.prototype.makeImpl = function (data, maskPattern) {
+        QRCode.prototype.buildMatrix = function (data, maskPattern) {
             // initialize modules
             this.modules = [];
             var moduleCount = this.moduleCount;
@@ -1653,19 +1653,23 @@
             this.setupFormatInfo(maskPattern);
             // setup version info
             this.setupVersionInfo();
-            this.mapData(data, maskPattern);
+            // setup codewords
+            this.setupCodewords(data, maskPattern);
         };
-        QRCode.prototype.getBestMaskPattern = function (data) {
+        QRCode.prototype.chooseMaskPattern = function (data) {
             var bestMaskPattern = -1;
             var minPenalty = Number.MAX_VALUE;
+            var modules = [];
             for (var maskPattern = 0; maskPattern < 8; maskPattern++) {
-                this.makeImpl(data, maskPattern);
+                this.buildMatrix(data, maskPattern);
+                modules.push(this.modules);
                 var penalty = calculateMaskPenalty(this);
                 if (penalty < minPenalty) {
                     minPenalty = penalty;
                     bestMaskPattern = maskPattern;
                 }
             }
+            this.modules = modules[bestMaskPattern];
             return bestMaskPattern;
         };
         /**
@@ -1693,7 +1697,8 @@
             this.moduleCount = this.version * 4 + 17;
             // create data
             var data = createData(buffer, rsBlocks, maxDataCount);
-            this.makeImpl(data, this.getBestMaskPattern(data));
+            // choose mask pattern
+            this.chooseMaskPattern(data);
         };
         /**
          * @public
