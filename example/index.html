@@ -1,26 +1,9 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8" />
+    <title>QRCode</title>
     <link rel="stylesheet" type="text/css" href="./default.css" />
     <link rel="shortcut icon" type="image/x-icon" href="./favicon.ico" />
-    <title>QRCode</title>
-    <style type="text/css">
-      body {
-        overflow-y: scroll;
-      }
-      html *,
-      body * {
-        font-family: MICROSOFT YAHEI, serif;
-      }
-      textarea {
-        resize: none;
-        width: 100%;
-      }
-      button {
-        margin: 0;
-      }
-    </style>
   </head>
   <body>
     <div class="main">
@@ -40,16 +23,16 @@
               <option value="Q">Level Q (25%)</option>
               <option value="H">Level H (30%)</option>
             </select>
-            <label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;编码方式：</label>
+            <label class="indent">编码方式：</label>
             <select id="encode-mode">
               <option value="QRByte" selected>Byte</option>
               <option value="QRAlphanumeric">Alphanumeric</option>
               <option value="QRNumeric">Numeric</option>
               <option value="QRKanji">Kanji</option>
             </select>
-            <label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;色块大小：</label>
+            <label class="indent">色块大小：</label>
             <input id="encode-msize" type="number" min="1" max="10" value="2" />
-            <label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;留白大小：</label>
+            <label class="indent">留白大小：</label>
             <input id="encode-margin" type="number" min="0" max="10" value="8" />
           </p>
           <p>
