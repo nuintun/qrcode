@@ -159,6 +159,8 @@
           canvas.height = actualHeight;
 
           context.drawImage(img, 0, 0, width, height, 0, 0, actualWidth, actualHeight);
+
+          imageData = context.getImageData(0, 0, actualWidth, actualHeight);
         };
 
         img.src = src;
@@ -181,9 +183,7 @@
       function getImageData() {
         imageData && context.putImageData(imageData, 0, 0);
 
-        imageData = imageData || context.getImageData(0, 0, canvas.width, canvas.height);
-
-        return imageData;
+        return imageData || context.getImageData(0, 0, canvas.width, canvas.height);
       }
 
       function markQRCodeArea(location) {
