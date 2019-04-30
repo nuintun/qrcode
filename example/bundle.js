@@ -1301,15 +1301,15 @@
     var PAD0 = 0xec;
     var PAD1 = 0x11;
     var toString = Object.prototype.toString;
-    function prepareData(version, errorCorrectionLevel, chunks) {
+    function prepareData(version, errorCorrectionLevel, hasECI, chunks) {
         var dLength = chunks.length;
         var buffer = new BitBuffer();
         var rsBlocks = RSBlock.getRSBlocks(version, errorCorrectionLevel);
         for (var i = 0; i < dLength; i++) {
             var data = chunks[i];
             var mode = data.getMode();
-            // default set encoding UTF-8
-            if (mode === Mode$1.Byte) {
+            // default set encoding UTF-8 when has ECI
+            if (hasECI && mode === Mode$1.Byte) {
                 buffer.put(Mode$1.ECI, 4);
                 buffer.put(26, 8);
             }
@@ -1401,6 +1401,7 @@
         function QRCode() {
             this.version = 0;
             this.chunks = [];
+            this.hasECI = true;
             this.moduleCount = 0;
             this.modules = [];
             this.autoVersion = this.version === 0;
@@ -1462,6 +1463,22 @@
         };
         /**
          * @public
+         * @method getECI
+         * @returns {boolean}
+         */
+        QRCode.prototype.getECI = function () {
+            return this.hasECI;
+        };
+        /**
+         * @public
+         * @method setECI
+         * @param {boolean} hasECI
+         */
+        QRCode.prototype.setECI = function (hasECI) {
+            this.hasECI = hasECI;
+        };
+        /**
+         * @public
          * @method write
          * @param {QRData} data
          */
@@ -1477,18 +1494,6 @@
                 else {
                     throw "illegal data: " + data;
                 }
-            }
-        };
-        /**
-         * @public
-         * @method reset
-         */
-        QRCode.prototype.reset = function () {
-            this.chunks = [];
-            this.modules = [];
-            this.moduleCount = 0;
-            if (this.autoVersion) {
-                this.version = 0;
             }
         };
         /**
@@ -1692,13 +1697,13 @@
             var errorCorrectionLevel = this.errorCorrectionLevel;
             if (this.autoVersion) {
                 for (this.version = 1; this.version <= 40; this.version++) {
-                    _a = prepareData(this.version, errorCorrectionLevel, chunks), buffer = _a[0], rsBlocks = _a[1], maxDataCount = _a[2];
+                    _a = prepareData(this.version, errorCorrectionLevel, this.hasECI, chunks), buffer = _a[0], rsBlocks = _a[1], maxDataCount = _a[2];
                     if (buffer.getLengthInBits() <= maxDataCount)
                         break;
                 }
             }
             else {
-                _b = prepareData(this.version, errorCorrectionLevel, chunks), buffer = _b[0], rsBlocks = _b[1], maxDataCount = _b[2];
+                _b = prepareData(this.version, errorCorrectionLevel, this.hasECI, chunks), buffer = _b[0], rsBlocks = _b[1], maxDataCount = _b[2];
             }
             // calc module count
             this.moduleCount = this.version * 4 + 17;
