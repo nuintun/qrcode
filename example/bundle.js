@@ -1401,7 +1401,7 @@
         function QRCode() {
             this.version = 0;
             this.chunks = [];
-            this.hasECI = true;
+            this.hasECI = false;
             this.moduleCount = 0;
             this.modules = [];
             this.autoVersion = this.version === 0;

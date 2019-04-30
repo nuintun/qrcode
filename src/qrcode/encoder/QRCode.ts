@@ -155,7 +155,7 @@ function createData(buffer: BitBuffer, rsBlocks: RSBlock[], maxDataCount: number
 export default class QRCode {
   private version: number = 0;
   private chunks: QRData[] = [];
-  private hasECI: boolean = true;
+  private hasECI: boolean = false;
   private moduleCount: number = 0;
   private modules: boolean[][] = [];
   private autoVersion: boolean = this.version === 0;
