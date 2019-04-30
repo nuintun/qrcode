@@ -21,7 +21,12 @@ const toString: () => string = Object.prototype.toString;
 
 type prepareData = [BitBuffer, RSBlock[], number];
 
-function prepareData(version: number, errorCorrectionLevel: ErrorCorrectionLevel, chunks: QRData[]): prepareData {
+function prepareData(
+  version: number,
+  errorCorrectionLevel: ErrorCorrectionLevel,
+  hasECI: boolean,
+  chunks: QRData[]
+): prepareData {
   const dLength: number = chunks.length;
   const buffer: BitBuffer = new BitBuffer();
   const rsBlocks: RSBlock[] = RSBlock.getRSBlocks(version, errorCorrectionLevel);
@@ -30,8 +35,8 @@ function prepareData(version: number, errorCorrectionLevel: ErrorCorrectionLevel
     const data: QRData = chunks[i];
     const mode: Mode = data.getMode();
 
-    // default set encoding UTF-8
-    if (mode === Mode.Byte) {
+    // default set encoding UTF-8 when has ECI
+    if (hasECI && mode === Mode.Byte) {
       buffer.put(Mode.ECI, 4);
       buffer.put(26, 8);
     }
@@ -150,6 +155,7 @@ function createData(buffer: BitBuffer, rsBlocks: RSBlock[], maxDataCount: number
 export default class QRCode {
   private version: number = 0;
   private chunks: QRData[] = [];
+  private hasECI: boolean = true;
   private moduleCount: number = 0;
   private modules: boolean[][] = [];
   private autoVersion: boolean = this.version === 0;
@@ -205,7 +211,7 @@ export default class QRCode {
    * @method setErrorCorrectionLevel
    * @param {ErrorCorrectionLevel} errorCorrectionLevel
    */
-  public setErrorCorrectionLevel(errorCorrectionLevel: ErrorCorrectionLevel) {
+  public setErrorCorrectionLevel(errorCorrectionLevel: ErrorCorrectionLevel): void {
     switch (errorCorrectionLevel) {
       case ErrorCorrectionLevel.L:
       case ErrorCorrectionLevel.M:
@@ -213,6 +219,24 @@ export default class QRCode {
       case ErrorCorrectionLevel.H:
         this.errorCorrectionLevel = errorCorrectionLevel;
     }
+  }
+
+  /**
+   * @public
+   * @method getECI
+   * @returns {boolean}
+   */
+  public getECI(): boolean {
+    return this.hasECI;
+  }
+
+  /**
+   * @public
+   * @method setECI
+   * @param {boolean} hasECI
+   */
+  public setECI(hasECI: boolean): void {
+    this.hasECI = hasECI;
   }
 
   /**
@@ -231,20 +255,6 @@ export default class QRCode {
       } else {
         throw `illegal data: ${data}`;
       }
-    }
-  }
-
-  /**
-   * @public
-   * @method reset
-   */
-  public reset(): void {
-    this.chunks = [];
-    this.modules = [];
-    this.moduleCount = 0;
-
-    if (this.autoVersion) {
-      this.version = 0;
     }
   }
 
@@ -492,12 +502,12 @@ export default class QRCode {
 
     if (this.autoVersion) {
       for (this.version = 1; this.version <= 40; this.version++) {
-        [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, chunks);
+        [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, this.hasECI, chunks);
 
         if (buffer.getLengthInBits() <= maxDataCount) break;
       }
     } else {
-      [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, chunks);
+      [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, this.hasECI, chunks);
     }
 
     // calc module count
