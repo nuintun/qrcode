@@ -165,10 +165,6 @@ function isFourWhite(qrcode: QRCode, rangeIndex: number, from: number, to: numbe
   from = Math.max(from, 0);
   to = Math.min(to, qrcode.getModuleCount());
 
-  if (to - from !== 4) {
-    return false;
-  }
-
   for (let i: number = from; i < to; i++) {
     const value: boolean = isHorizontal ? qrcode.isDark(rangeIndex, i) : qrcode.isDark(i, rangeIndex);
 
