@@ -1307,7 +1307,13 @@
         var rsBlocks = RSBlock.getRSBlocks(version, errorCorrectionLevel);
         for (var i = 0; i < dLength; i++) {
             var data = chunks[i];
-            buffer.put(data.getMode(), 4);
+            var mode = data.getMode();
+            // default set encoding UTF-8
+            if (mode === Mode$1.Byte) {
+                buffer.put(Mode$1.ECI, 4);
+                buffer.put(26, 8);
+            }
+            buffer.put(mode, 4);
             buffer.put(data.getLength(), data.getLengthInBits(version));
             data.write(buffer);
         }

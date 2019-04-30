@@ -7,6 +7,7 @@
 import QRByte from './QRByte';
 import QRData from './QRData';
 import RSBlock from './RSBlock';
+import Mode from '../common/Mode';
 import * as QRUtil from './QRUtil';
 import BitBuffer from './BitBuffer';
 import Polynomial from './Polynomial';
@@ -27,8 +28,15 @@ function prepareData(version: number, errorCorrectionLevel: ErrorCorrectionLevel
 
   for (let i: number = 0; i < dLength; i++) {
     const data: QRData = chunks[i];
+    const mode: Mode = data.getMode();
 
-    buffer.put(data.getMode(), 4);
+    // default set encoding UTF-8
+    if (mode === Mode.Byte) {
+      buffer.put(Mode.ECI, 4);
+      buffer.put(26, 8);
+    }
+
+    buffer.put(mode, 4);
     buffer.put(data.getLength(), data.getLengthInBits(version));
     data.write(buffer);
   }
