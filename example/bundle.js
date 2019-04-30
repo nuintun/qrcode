@@ -678,18 +678,19 @@
                 var bit = isHorizontal ? qrcode.isDark(i, j) : qrcode.isDark(j, i);
                 if (bit === prevBit) {
                     numSameBitCells++;
+                    if (numSameBitCells === 5) {
+                        penalty += N1;
+                    }
+                    else if (numSameBitCells > 5) {
+                        penalty++;
+                    }
                 }
                 else {
-                    if (numSameBitCells >= 5) {
-                        penalty += N1 + (numSameBitCells - 5);
-                    }
+                    // set prev bit
                     prevBit = bit;
                     // include the cell itself
                     numSameBitCells = 1;
                 }
-            }
-            if (numSameBitCells >= 5) {
-                penalty += N1 + (numSameBitCells - 5);
             }
         }
         return penalty;
@@ -704,15 +705,18 @@
             for (var x = 0; x < moduleCount - 1; x++) {
                 var value = qrcode.isDark(y, x);
                 if (value === qrcode.isDark(y, x + 1) && value === qrcode.isDark(y + 1, x) && value === qrcode.isDark(y + 1, x + 1)) {
-                    penalty++;
+                    penalty += N2;
                 }
             }
         }
-        return N2 * penalty;
+        return penalty;
     }
     function isFourWhite(qrcode, rangeIndex, from, to, isHorizontal) {
         from = Math.max(from, 0);
         to = Math.min(to, qrcode.getModuleCount());
+        if (to - from !== 4) {
+            return false;
+        }
         for (var i = from; i < to; i++) {
             var value = isHorizontal ? qrcode.isDark(rangeIndex, i) : qrcode.isDark(i, rangeIndex);
             if (value) {
@@ -722,7 +726,7 @@
         return true;
     }
     function applyMaskPenaltyRule3(qrcode) {
-        var numPenalties = 0;
+        var penalty = 0;
         var moduleCount = qrcode.getModuleCount();
         for (var y = 0; y < moduleCount; y++) {
             for (var x = 0; x < moduleCount; x++) {
@@ -735,7 +739,7 @@
                     !qrcode.isDark(y, x + 5) &&
                     qrcode.isDark(y, x + 6) &&
                     (isFourWhite(qrcode, y, x - 4, x, true) || isFourWhite(qrcode, y, x + 7, x + 11, true))) {
-                    numPenalties++;
+                    penalty += N3;
                 }
                 if (y + 6 < moduleCount &&
                     qrcode.isDark(y, x) &&
@@ -746,11 +750,11 @@
                     !qrcode.isDark(y + 5, x) &&
                     qrcode.isDark(y + 6, x) &&
                     (isFourWhite(qrcode, x, y - 4, y, false) || isFourWhite(qrcode, x, y + 7, y + 11, false))) {
-                    numPenalties++;
+                    penalty += N3;
                 }
             }
         }
-        return numPenalties * N3;
+        return penalty;
     }
     function applyMaskPenaltyRule4(qrcode) {
         var numDarkCells = 0;
@@ -763,7 +767,7 @@
             }
         }
         var numTotalCells = moduleCount * moduleCount;
-        var fivePercentVariances = Math.floor((Math.abs(numDarkCells * 2 - numTotalCells) * 10) / numTotalCells);
+        var fivePercentVariances = Math.floor(Math.abs(numDarkCells * 20 - numTotalCells * 10) / numTotalCells);
         return fivePercentVariances * N4;
     }
     /**
