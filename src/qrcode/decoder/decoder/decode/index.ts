@@ -6,7 +6,7 @@
 
 import BitStream from './BitStream';
 import Mode from '../../../common/Mode';
-import { SJIS2UTFTable } from '../../../../encoding/SJIS';
+import { SJIS_TO_UTF8_Table } from '../../../../encoding/SJIS';
 import ErrorCorrectionLevel from '../../../common/ErrorCorrectionLevel';
 
 interface ByteChunk {
@@ -210,7 +210,7 @@ function decodeKanji(stream: BitStream, size: number): DecodeData {
 
     bytes.push(c >> 8, c & 0xff);
 
-    const b: number = SJIS2UTFTable[c];
+    const b: number = SJIS_TO_UTF8_Table[c];
 
     data += String.fromCharCode(b != null ? b : c);
   }
