@@ -17,12 +17,11 @@ interface ByteChunk {
 
 interface ECIChunk {
   mode: Mode.ECI;
-  assignmentNumber: number;
+  encoding: number;
 }
 
 interface StructuredAppend {
-  M: number;
-  N: number;
+  symbol: number;
   parity: number;
 }
 
@@ -236,23 +235,23 @@ export function decode(data: Uint8ClampedArray, version: number, errorCorrection
       if (stream.readBits(1) === 0) {
         result.chunks.push({
           mode: Mode.ECI,
-          assignmentNumber: stream.readBits(7)
+          encoding: stream.readBits(7)
         });
       } else if (stream.readBits(1) === 0) {
         result.chunks.push({
           mode: Mode.ECI,
-          assignmentNumber: stream.readBits(14)
+          encoding: stream.readBits(14)
         });
       } else if (stream.readBits(1) === 0) {
         result.chunks.push({
           mode: Mode.ECI,
-          assignmentNumber: stream.readBits(21)
+          encoding: stream.readBits(21)
         });
       } else {
         // ECI data seems corrupted
         result.chunks.push({
           mode: Mode.ECI,
-          assignmentNumber: -1
+          encoding: -1
         });
       }
     } else if (mode === Mode.Numeric) {
@@ -281,8 +280,7 @@ export function decode(data: Uint8ClampedArray, version: number, errorCorrection
       // QR Standard section 9.2:
       // > The 4-bit patterns shall be the binary equivalents of (m - 1) and (n - 1) respectively.
       const structuredAppend: StructuredAppend = {
-        M: stream.readBits(4) + 1,
-        N: stream.readBits(4) + 1,
+        symbol: stream.readBits(8),
         parity: stream.readBits(8)
       };
 
