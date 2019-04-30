@@ -3084,6 +3084,7 @@
      * @module SJIS
      * @author nuintun
      * @author soldair
+     * @author Kazuhiko Arase
      * @see https://github.com/soldair/node-qrcode/blob/master/helper/to-sjis.js
      */
     // prettier-ignore
