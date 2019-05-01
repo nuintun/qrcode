@@ -76,7 +76,7 @@
       function chooseMode(data) {
         if (/^\d+$/g.test(data)) {
           return 'QRNumeric';
-        } else if (/^[0-9A-Z$%*+-./:\s]+$/g.test(data)) {
+        } else if (/^[0-9A-Z$%*+-./: ]+$/g.test(data)) {
           return 'QRAlphanumeric';
         }
 
@@ -99,6 +99,8 @@
         var moduleSize = Number(encodeMSize.val());
 
         mode = mode === 'Auto' ? chooseMode(data) : mode;
+
+        console.log(mode);
 
         if (!data) {
           encodeResult.addClass('hide');
