@@ -7,7 +7,7 @@ export default {
     format: 'umd',
     name: 'QRCode',
     amd: { id: 'qrcode' },
-    file: 'example/bundle.js'
+    file: 'example/qrcode.js'
   },
   plugins: [resolve()],
   onwarn(error, warn) {
