@@ -464,30 +464,6 @@ export default class QRCode {
     this.setupCodewords(data, maskPattern);
   }
 
-  private chooseMaskPattern(data: BitBuffer): number {
-    let bestMaskPattern: number = -1;
-    let minPenalty: number = Number.MAX_VALUE;
-
-    const modules: boolean[][][] = [];
-
-    for (let maskPattern: number = 0; maskPattern < 8; maskPattern++) {
-      this.buildMatrix(data, maskPattern);
-
-      modules.push(this.modules);
-
-      const penalty: number = QRUtil.calculateMaskPenalty(this);
-
-      if (penalty < minPenalty) {
-        minPenalty = penalty;
-        bestMaskPattern = maskPattern;
-      }
-    }
-
-    this.modules = modules[bestMaskPattern];
-
-    return bestMaskPattern;
-  }
-
   /**
    * @public
    * @method make
@@ -513,11 +489,27 @@ export default class QRCode {
     // calc module count
     this.moduleCount = this.version * 4 + 17;
 
-    // create data
+    const matrices: boolean[][][] = [];
     const data: BitBuffer = createData(buffer, rsBlocks, maxDataCount);
 
-    // choose mask pattern
-    this.chooseMaskPattern(data);
+    let bestMaskPattern: number = -1;
+    let minPenalty: number = Number.MAX_VALUE;
+
+    // choose best mask pattern
+    for (let maskPattern: number = 0; maskPattern < 8; maskPattern++) {
+      this.buildMatrix(data, maskPattern);
+
+      matrices.push(this.modules);
+
+      const penalty: number = QRUtil.calculateMaskPenalty(this);
+
+      if (penalty < minPenalty) {
+        minPenalty = penalty;
+        bestMaskPattern = maskPattern;
+      }
+    }
+
+    this.modules = matrices[bestMaskPattern];
   }
 
   /**

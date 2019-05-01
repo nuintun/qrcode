@@ -1668,22 +1668,6 @@
             // setup codewords
             this.setupCodewords(data, maskPattern);
         };
-        QRCode.prototype.chooseMaskPattern = function (data) {
-            var bestMaskPattern = -1;
-            var minPenalty = Number.MAX_VALUE;
-            var modules = [];
-            for (var maskPattern = 0; maskPattern < 8; maskPattern++) {
-                this.buildMatrix(data, maskPattern);
-                modules.push(this.modules);
-                var penalty = calculateMaskPenalty(this);
-                if (penalty < minPenalty) {
-                    minPenalty = penalty;
-                    bestMaskPattern = maskPattern;
-                }
-            }
-            this.modules = modules[bestMaskPattern];
-            return bestMaskPattern;
-        };
         /**
          * @public
          * @method make
@@ -1707,10 +1691,21 @@
             }
             // calc module count
             this.moduleCount = this.version * 4 + 17;
-            // create data
+            var matrices = [];
             var data = createData(buffer, rsBlocks, maxDataCount);
-            // choose mask pattern
-            this.chooseMaskPattern(data);
+            var bestMaskPattern = -1;
+            var minPenalty = Number.MAX_VALUE;
+            // choose best mask pattern
+            for (var maskPattern = 0; maskPattern < 8; maskPattern++) {
+                this.buildMatrix(data, maskPattern);
+                matrices.push(this.modules);
+                var penalty = calculateMaskPenalty(this);
+                if (penalty < minPenalty) {
+                    minPenalty = penalty;
+                    bestMaskPattern = maskPattern;
+                }
+            }
+            this.modules = matrices[bestMaskPattern];
         };
         /**
          * @public
