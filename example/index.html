@@ -25,7 +25,8 @@
             </select>
             <label class="indent">编码方式：</label>
             <select id="encode-mode">
-              <option value="QRByte" selected>Byte</option>
+              <option value="Auto" selected>Auto exclude Kanji</option>
+              <option value="QRByte">Byte</option>
               <option value="QRAlphanumeric">Alphanumeric</option>
               <option value="QRNumeric">Numeric</option>
               <option value="QRKanji">Kanji</option>
@@ -72,6 +73,16 @@
           .addClass('selected');
       });
 
+      function chooseMode(data) {
+        if (/^\d+$/.test(data)) {
+          return 'QRNumeric';
+        } else if (/^[0-9A-Z$%*+-./:\s]+$/.test(data)) {
+          return 'QRAlphanumeric';
+        }
+
+        return 'QRByte';
+      }
+
       var encodeText = $('#encode-text');
       var encodeMode = $('#encode-mode');
       var encodeECLevel = $('#encode-eclevel');
@@ -81,13 +92,15 @@
 
       // 生成二维码
       $('#encode-btn').on('click', function() {
-        var text = encodeText.val();
+        var data = encodeText.val();
         var mode = encodeMode.val();
         var ecLevel = encodeECLevel.val();
         var margin = Number(encodeMargin.val());
         var moduleSize = Number(encodeMSize.val());
 
-        if (!text) {
+        mode = mode === 'Auto' ? chooseMode(data) : mode;
+
+        if (!data) {
           encodeResult.addClass('hide');
 
           return alert('请输入二维码内容');
@@ -96,7 +109,7 @@
         try {
           var qrcode = new QRCode.Encoder();
 
-          qrcode.write(new QRCode[mode](text));
+          qrcode.write(new QRCode[mode](data));
           qrcode.setErrorCorrectionLevel(QRCode.ErrorCorrectionLevel[ecLevel]);
           qrcode.make();
 
