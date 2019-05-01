@@ -123,8 +123,8 @@ export default function extract(image: BitMatrix, location: QRLocation): Extract
     const denominator: number = transform.a13 * x + transform.a23 * y + transform.a33;
 
     return {
-      x: (transform.a11 * x + transform.a21 * y + transform.a31) / denominator,
-      y: (transform.a12 * x + transform.a22 * y + transform.a32) / denominator
+      x: Math.max(0, (transform.a11 * x + transform.a21 * y + transform.a31) / denominator),
+      y: Math.max(0, (transform.a12 * x + transform.a22 * y + transform.a32) / denominator)
     };
   };
 
