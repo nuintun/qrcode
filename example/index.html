@@ -74,9 +74,9 @@
       });
 
       function chooseMode(data) {
-        if (/^\d+$/.test(data)) {
+        if (/^\d+$/g.test(data)) {
           return 'QRNumeric';
-        } else if (/^[0-9A-Z$%*+-./:\s]+$/.test(data)) {
+        } else if (/^[0-9A-Z$%*+-./:\s]+$/g.test(data)) {
           return 'QRAlphanumeric';
         }
 
