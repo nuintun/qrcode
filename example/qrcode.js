@@ -1332,39 +1332,40 @@
         var maxEcCount = 0;
         var dcData = [];
         var ecData = [];
-        var rLength = rsBlocks.length;
-        for (var r = 0; r < rLength; r++) {
-            var dcCount = rsBlocks[r].getDataCount();
-            var ecCount = rsBlocks[r].getTotalCount() - dcCount;
-            dcData[r] = [];
-            ecData[r] = [];
+        var rsLength = rsBlocks.length;
+        var bufferData = buffer.getBuffer();
+        for (var r = 0; r < rsLength; r++) {
+            var rsBlock = rsBlocks[r];
+            var dcCount = rsBlock.getDataCount();
+            var ecCount = rsBlock.getTotalCount() - dcCount;
             maxDcCount = Math.max(maxDcCount, dcCount);
             maxEcCount = Math.max(maxEcCount, ecCount);
             dcData[r] = [];
             for (var i = 0; i < dcCount; i++) {
-                dcData[r][i] = 0xff & buffer.getBuffer()[i + offset];
+                dcData[r][i] = 0xff & bufferData[i + offset];
             }
             offset += dcCount;
             var rsPoly = getErrorCorrectionPolynomial(ecCount);
-            var rawPoly = new Polynomial(dcData[r], rsPoly.getLength() - 1);
-            var modPoly = rawPoly.mod(rsPoly);
             var ecLength = rsPoly.getLength() - 1;
+            var rawPoly = new Polynomial(dcData[r], ecLength);
+            var modPoly = rawPoly.mod(rsPoly);
+            var mpLength = modPoly.getLength();
             ecData[r] = [];
             for (var i = 0; i < ecLength; i++) {
-                var modIndex = i + modPoly.getLength() - ecLength;
+                var modIndex = i + mpLength - ecLength;
                 ecData[r][i] = modIndex >= 0 ? modPoly.getAt(modIndex) : 0;
             }
         }
         buffer = new BitBuffer();
         for (var i = 0; i < maxDcCount; i++) {
-            for (var r = 0; r < rLength; r++) {
+            for (var r = 0; r < rsLength; r++) {
                 if (i < dcData[r].length) {
                     buffer.put(dcData[r][i], 8);
                 }
             }
         }
         for (var i = 0; i < maxEcCount; i++) {
-            for (var r = 0; r < rLength; r++) {
+            for (var r = 0; r < rsLength; r++) {
                 if (i < ecData[r].length) {
                     buffer.put(ecData[r][i], 8);
                 }

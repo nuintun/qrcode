@@ -65,34 +65,35 @@ function createBytes(buffer: BitBuffer, rsBlocks: RSBlock[]): BitBuffer {
   let maxEcCount: number = 0;
   const dcData: number[][] = [];
   const ecData: number[][] = [];
-  const rLength: number = rsBlocks.length;
+  const rsLength: number = rsBlocks.length;
+  const bufferData: number[] = buffer.getBuffer();
 
-  for (let r: number = 0; r < rLength; r++) {
-    const dcCount: number = rsBlocks[r].getDataCount();
-    const ecCount: number = rsBlocks[r].getTotalCount() - dcCount;
+  for (let r: number = 0; r < rsLength; r++) {
+    const rsBlock: RSBlock = rsBlocks[r];
+    const dcCount: number = rsBlock.getDataCount();
+    const ecCount: number = rsBlock.getTotalCount() - dcCount;
 
-    dcData[r] = [];
-    ecData[r] = [];
     maxDcCount = Math.max(maxDcCount, dcCount);
     maxEcCount = Math.max(maxEcCount, ecCount);
 
     dcData[r] = [];
 
     for (let i: number = 0; i < dcCount; i++) {
-      dcData[r][i] = 0xff & buffer.getBuffer()[i + offset];
+      dcData[r][i] = 0xff & bufferData[i + offset];
     }
 
     offset += dcCount;
 
     const rsPoly: Polynomial = QRUtil.getErrorCorrectionPolynomial(ecCount);
-    const rawPoly: Polynomial = new Polynomial(dcData[r], rsPoly.getLength() - 1);
-    const modPoly: Polynomial = rawPoly.mod(rsPoly);
     const ecLength: number = rsPoly.getLength() - 1;
+    const rawPoly: Polynomial = new Polynomial(dcData[r], ecLength);
+    const modPoly: Polynomial = rawPoly.mod(rsPoly);
+    const mpLength: number = modPoly.getLength();
 
     ecData[r] = [];
 
     for (let i: number = 0; i < ecLength; i++) {
-      const modIndex: number = i + modPoly.getLength() - ecLength;
+      const modIndex: number = i + mpLength - ecLength;
 
       ecData[r][i] = modIndex >= 0 ? modPoly.getAt(modIndex) : 0;
     }
@@ -101,7 +102,7 @@ function createBytes(buffer: BitBuffer, rsBlocks: RSBlock[]): BitBuffer {
   buffer = new BitBuffer();
 
   for (let i: number = 0; i < maxDcCount; i++) {
-    for (let r: number = 0; r < rLength; r++) {
+    for (let r: number = 0; r < rsLength; r++) {
       if (i < dcData[r].length) {
         buffer.put(dcData[r][i], 8);
       }
@@ -109,7 +110,7 @@ function createBytes(buffer: BitBuffer, rsBlocks: RSBlock[]): BitBuffer {
   }
 
   for (let i: number = 0; i < maxEcCount; i++) {
-    for (let r: number = 0; r < rLength; r++) {
+    for (let r: number = 0; r < rsLength; r++) {
       if (i < ecData[r].length) {
         buffer.put(ecData[r][i], 8);
       }
