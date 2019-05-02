@@ -127,24 +127,14 @@ export default function SJIS(str: string): number[] {
 
   for (let i: number = 0; i < length; i++) {
     const code: number = str.charCodeAt(i);
+    const byte: number = UTF8_TO_SJIS_Table[code];
 
-    if (code < 128) {
-      bytes.push(code);
+    if (byte != null) {
+      // 2bytes
+      bytes.push(byte >> 8);
+      bytes.push(byte & 0xff);
     } else {
-      const byte: number = UTF8_TO_SJIS_Table[code];
-
-      if (byte != null) {
-        if ((byte & 0xff) === byte) {
-          // 1byte
-          bytes.push(byte);
-        } else {
-          // 2bytes
-          bytes.push(byte >> 8);
-          bytes.push(byte & 0xff);
-        }
-      } else {
-        throw `illegal char: ${String.fromCharCode(code)}`;
-      }
+      throw `illegal char: ${String.fromCharCode(code)}`;
     }
   }
 

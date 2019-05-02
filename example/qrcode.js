@@ -3076,25 +3076,14 @@
         var length = str.length;
         for (var i = 0; i < length; i++) {
             var code = str.charCodeAt(i);
-            if (code < 128) {
-                bytes.push(code);
+            var byte = UTF8_TO_SJIS_Table[code];
+            if (byte != null) {
+                // 2bytes
+                bytes.push(byte >> 8);
+                bytes.push(byte & 0xff);
             }
             else {
-                var byte = UTF8_TO_SJIS_Table[code];
-                if (byte != null) {
-                    if ((byte & 0xff) === byte) {
-                        // 1byte
-                        bytes.push(byte);
-                    }
-                    else {
-                        // 2bytes
-                        bytes.push(byte >> 8);
-                        bytes.push(byte & 0xff);
-                    }
-                }
-                else {
-                    throw "illegal char: " + String.fromCharCode(code);
-                }
+                throw "illegal char: " + String.fromCharCode(code);
             }
         }
         return bytes;
@@ -4320,13 +4309,6 @@
      * @author Kazuhiko Arase
      * @description SJIS only
      */
-    function createCharError(bytes, index) {
-        var byte = bytes[index];
-        if (0xa0 <= byte && byte <= 0xdf) {
-            byte += 0xfec0;
-        }
-        return "illegal char: " + String.fromCharCode(byte);
-    }
     var QRKanji = /** @class */ (function (_super) {
         __extends(QRKanji, _super);
         /**
@@ -4355,15 +4337,9 @@
                 else if (0xe040 <= code && code <= 0xebbf) {
                     code -= 0xc140;
                 }
-                else {
-                    throw createCharError(bytes, index);
-                }
                 code = ((code >> 8) & 0xff) * 0xc0 + (code & 0xff);
                 buffer.put(code, 13);
                 index += 2;
-            }
-            if (index < length) {
-                throw createCharError(bytes, index);
             }
         };
         /**
