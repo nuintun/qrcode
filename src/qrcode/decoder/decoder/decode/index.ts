@@ -6,6 +6,7 @@
 
 import BitStream from './BitStream';
 import Mode from '../../../common/Mode';
+import Encoding from '../../../common/Encoding';
 import { SJIS_TO_UTF8_Table } from '../../../../encoding/SJIS';
 import ErrorCorrectionLevel from '../../../common/ErrorCorrectionLevel';
 
@@ -138,11 +139,12 @@ function decodeAlphanumeric(stream: BitStream, size: number): DecodeData {
 }
 
 /**
- * @function stringFromUTF8Bytes
+ * @function decodeByteAsUTF8
  * @param {number[]} bytes
+ * @returns {string}
  * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
  */
-function stringFromUTF8Bytes(bytes: number[]): string {
+function decodeByteAsUTF8(bytes: number[]): string {
   // TODO(user): Use native implementations if/when available
   let pos: number = 0;
   let output: string = '';
@@ -177,7 +179,40 @@ function stringFromUTF8Bytes(bytes: number[]): string {
   return output;
 }
 
-function decodeByte(stream: BitStream, size: number): DecodeData {
+/**
+ * @function decodeByteAsUTF8
+ * @param {number[]} bytes
+ * @returns {string}
+ * @see https://github.com/narirou/jconv/blob/master/jconv.js
+ */
+function decodeByteAsSJIS(bytes: number[]): string {
+  let output: string = '';
+
+  const length: number = bytes.length;
+
+  for (let i: number = 0; i < length; ) {
+    var byte = bytes[i++];
+
+    if (byte < 0x80) {
+      // ASCII
+      output += String.fromCharCode(byte);
+    } else if (0xa0 <= byte && byte <= 0xdf) {
+      // HALFWIDTH_KATAKANA
+      output += String.fromCharCode(byte + 0xfec0);
+    } else {
+      // KANJI
+      let code: number = (byte << 8) + bytes[i++];
+
+      code = SJIS_TO_UTF8_Table[code];
+
+      output += code != null ? String.fromCharCode(code) : '?';
+    }
+  }
+
+  return output;
+}
+
+function decodeByte(stream: BitStream, size: number, encoding: number): DecodeData {
   const bytes: number[] = [];
 
   const characterCountSize: number = [8, 16, 16][size];
@@ -187,7 +222,7 @@ function decodeByte(stream: BitStream, size: number): DecodeData {
     bytes.push(stream.readBits(8));
   }
 
-  return { bytes, data: stringFromUTF8Bytes(bytes) };
+  return { bytes, data: encoding === Encoding.SJIS ? decodeByteAsSJIS(bytes) : decodeByteAsUTF8(bytes) };
 }
 
 function decodeKanji(stream: BitStream, size: number): DecodeData {
@@ -289,7 +324,9 @@ export function decode(data: Uint8ClampedArray, version: number, errorCorrection
         ...structuredAppend
       });
     } else if (mode === Mode.Byte) {
-      const byteResult: DecodeData = decodeByte(stream, size);
+      const chunk = result.chunks[result.chunks.length - 1];
+      const encoding = chunk && chunk.mode === Mode.ECI ? chunk.encoding : Encoding.UTF8;
+      const byteResult: DecodeData = decodeByte(stream, size, encoding);
 
       result.data += byteResult.data;
 

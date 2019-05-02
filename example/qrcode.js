@@ -1192,7 +1192,7 @@
             // default set encoding UTF-8 when has encoding hint
             if (hasECI && mode === Mode$1.Byte) {
                 buffer.put(Mode$1.ECI, 4);
-                buffer.put(26, 8);
+                buffer.put(26 /* UTF8 */, 8);
             }
             buffer.put(mode, 4);
             buffer.put(data.getLength(), data.getLengthInBits(version));
@@ -3162,11 +3162,12 @@
         return { bytes: bytes, data: data };
     }
     /**
-     * @function stringFromUTF8Bytes
+     * @function decodeByteAsUTF8
      * @param {number[]} bytes
+     * @returns {string}
      * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
      */
-    function stringFromUTF8Bytes(bytes) {
+    function decodeByteAsUTF8(bytes) {
         // TODO(user): Use native implementations if/when available
         var pos = 0;
         var output = '';
@@ -3197,14 +3198,42 @@
         }
         return output;
     }
-    function decodeByte(stream, size) {
+    /**
+     * @function decodeByteAsUTF8
+     * @param {number[]} bytes
+     * @returns {string}
+     * @see https://github.com/narirou/jconv/blob/master/jconv.js
+     */
+    function decodeByteAsSJIS(bytes) {
+        var output = '';
+        var length = bytes.length;
+        for (var i = 0; i < length;) {
+            var byte = bytes[i++];
+            if (byte < 0x80) {
+                // ASCII
+                output += String.fromCharCode(byte);
+            }
+            else if (0xa0 <= byte && byte <= 0xdf) {
+                // HALFWIDTH_KATAKANA
+                output += String.fromCharCode(byte + 0xfec0);
+            }
+            else {
+                // KANJI
+                var code = (byte << 8) + bytes[i++];
+                code = SJIS_TO_UTF8_Table[code];
+                output += code != null ? String.fromCharCode(code) : '?';
+            }
+        }
+        return output;
+    }
+    function decodeByte(stream, size, encoding) {
         var bytes = [];
         var characterCountSize = [8, 16, 16][size];
         var length = stream.readBits(characterCountSize);
         for (var i = 0; i < length; i++) {
             bytes.push(stream.readBits(8));
         }
-        return { bytes: bytes, data: stringFromUTF8Bytes(bytes) };
+        return { bytes: bytes, data: encoding === 20 /* SJIS */ ? decodeByteAsSJIS(bytes) : decodeByteAsUTF8(bytes) };
     }
     function decodeKanji(stream, size) {
         var data = '';
@@ -3294,7 +3323,9 @@
                 result.chunks.push(__assign({ mode: Mode$1.StructuredAppend }, structuredAppend));
             }
             else if (mode === Mode$1.Byte) {
-                var byteResult = decodeByte(stream, size);
+                var chunk = result.chunks[result.chunks.length - 1];
+                var encoding = chunk && chunk.mode === Mode$1.ECI ? chunk.encoding : 26 /* UTF8 */;
+                var byteResult = decodeByte(stream, size, encoding);
                 result.data += byteResult.data;
                 result.chunks.push({
                     mode: Mode$1.Byte,

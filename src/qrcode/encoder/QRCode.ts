@@ -11,6 +11,7 @@ import Mode from '../common/Mode';
 import * as QRUtil from './QRUtil';
 import BitBuffer from './BitBuffer';
 import Polynomial from './Polynomial';
+import Encoding from '../common/Encoding';
 import GIFImage from '../../image/GIFImage';
 import getMaskFunc, { maskFunc } from '../common/MaskPattern';
 import ErrorCorrectionLevel from '../common/ErrorCorrectionLevel';
@@ -38,7 +39,7 @@ function prepareData(
     // default set encoding UTF-8 when has encoding hint
     if (hasECI && mode === Mode.Byte) {
       buffer.put(Mode.ECI, 4);
-      buffer.put(26, 8);
+      buffer.put(Encoding.UTF8, 8);
     }
 
     buffer.put(mode, 4);
