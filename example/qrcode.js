@@ -1182,7 +1182,7 @@
     var PAD0 = 0xec;
     var PAD1 = 0x11;
     var toString = Object.prototype.toString;
-    function prepareData(version, errorCorrectionLevel, hasECI, chunks) {
+    function prepareData(version, errorCorrectionLevel, hasEncodingHint, chunks) {
         var dLength = chunks.length;
         var buffer = new BitBuffer();
         var rsBlocks = RSBlock.getRSBlocks(version, errorCorrectionLevel);
@@ -1190,7 +1190,7 @@
             var data = chunks[i];
             var mode = data.getMode();
             // default set encoding UTF-8 when has encoding hint
-            if (hasECI && mode === Mode$1.Byte) {
+            if (hasEncodingHint && mode === Mode$1.Byte) {
                 buffer.put(Mode$1.ECI, 4);
                 buffer.put(26 /* UTF8 */, 8);
             }
@@ -1283,9 +1283,9 @@
         function QRCode() {
             this.version = 0;
             this.chunks = [];
-            this.hasECI = true;
             this.moduleCount = 0;
             this.modules = [];
+            this.hasEncodingHint = true;
             this.autoVersion = this.version === 0;
             this.errorCorrectionLevel = ErrorCorrectionLevel$1.L;
         }
@@ -1345,19 +1345,19 @@
         };
         /**
          * @public
-         * @method getECI
+         * @method getEncodingHint
          * @returns {boolean}
          */
-        QRCode.prototype.getECI = function () {
-            return this.hasECI;
+        QRCode.prototype.getEncodingHint = function () {
+            return this.hasEncodingHint;
         };
         /**
          * @public
-         * @method setECI
-         * @param {boolean} hasECI
+         * @method setEncodingHint
+         * @param {boolean} hasEncodingHint
          */
-        QRCode.prototype.setECI = function (hasECI) {
-            this.hasECI = hasECI;
+        QRCode.prototype.setEncodingHint = function (hasEncodingHint) {
+            this.hasEncodingHint = hasEncodingHint;
         };
         /**
          * @public
@@ -1563,13 +1563,13 @@
             var errorCorrectionLevel = this.errorCorrectionLevel;
             if (this.autoVersion) {
                 for (this.version = 1; this.version <= 40; this.version++) {
-                    _a = prepareData(this.version, errorCorrectionLevel, this.hasECI, chunks), buffer = _a[0], rsBlocks = _a[1], maxDataCount = _a[2];
+                    _a = prepareData(this.version, errorCorrectionLevel, this.hasEncodingHint, chunks), buffer = _a[0], rsBlocks = _a[1], maxDataCount = _a[2];
                     if (buffer.getLengthInBits() <= maxDataCount)
                         break;
                 }
             }
             else {
-                _b = prepareData(this.version, errorCorrectionLevel, this.hasECI, chunks), buffer = _b[0], rsBlocks = _b[1], maxDataCount = _b[2];
+                _b = prepareData(this.version, errorCorrectionLevel, this.hasEncodingHint, chunks), buffer = _b[0], rsBlocks = _b[1], maxDataCount = _b[2];
             }
             // calc module count
             this.moduleCount = this.version * 4 + 17;

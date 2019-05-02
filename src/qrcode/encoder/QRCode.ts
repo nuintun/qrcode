@@ -25,7 +25,7 @@ type prepareData = [BitBuffer, RSBlock[], number];
 function prepareData(
   version: number,
   errorCorrectionLevel: ErrorCorrectionLevel,
-  hasECI: boolean,
+  hasEncodingHint: boolean,
   chunks: QRData[]
 ): prepareData {
   const dLength: number = chunks.length;
@@ -37,7 +37,7 @@ function prepareData(
     const mode: Mode = data.getMode();
 
     // default set encoding UTF-8 when has encoding hint
-    if (hasECI && mode === Mode.Byte) {
+    if (hasEncodingHint && mode === Mode.Byte) {
       buffer.put(Mode.ECI, 4);
       buffer.put(Encoding.UTF8, 8);
     }
@@ -157,9 +157,9 @@ function createData(buffer: BitBuffer, rsBlocks: RSBlock[], maxDataCount: number
 export default class QRCode {
   private version: number = 0;
   private chunks: QRData[] = [];
-  private hasECI: boolean = true;
   private moduleCount: number = 0;
   private modules: boolean[][] = [];
+  private hasEncodingHint: boolean = true;
   private autoVersion: boolean = this.version === 0;
   private errorCorrectionLevel: ErrorCorrectionLevel = ErrorCorrectionLevel.L;
 
@@ -225,20 +225,20 @@ export default class QRCode {
 
   /**
    * @public
-   * @method getECI
+   * @method getEncodingHint
    * @returns {boolean}
    */
-  public getECI(): boolean {
-    return this.hasECI;
+  public getEncodingHint(): boolean {
+    return this.hasEncodingHint;
   }
 
   /**
    * @public
-   * @method setECI
-   * @param {boolean} hasECI
+   * @method setEncodingHint
+   * @param {boolean} hasEncodingHint
    */
-  public setECI(hasECI: boolean): void {
-    this.hasECI = hasECI;
+  public setEncodingHint(hasEncodingHint: boolean): void {
+    this.hasEncodingHint = hasEncodingHint;
   }
 
   /**
@@ -480,12 +480,12 @@ export default class QRCode {
 
     if (this.autoVersion) {
       for (this.version = 1; this.version <= 40; this.version++) {
-        [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, this.hasECI, chunks);
+        [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, this.hasEncodingHint, chunks);
 
         if (buffer.getLengthInBits() <= maxDataCount) break;
       }
     } else {
-      [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, this.hasECI, chunks);
+      [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, this.hasEncodingHint, chunks);
     }
 
     // calc module count
