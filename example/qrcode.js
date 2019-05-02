@@ -1062,15 +1062,17 @@
             // Raster Data
             var lzwMinCodeSize = 2;
             var raster = this.getLZWRaster(lzwMinCodeSize);
+            var raLength = raster.length;
             output.writeByte(lzwMinCodeSize);
             var offset = 0;
-            while (raster.length - offset > 255) {
+            while (raLength - offset > 255) {
                 output.writeByte(255);
                 this.writeBytes(output, raster, offset, 255);
                 offset += 255;
             }
-            output.writeByte(raster.length - offset);
-            this.writeBytes(output, raster, offset, raster.length - offset);
+            var length = raLength - offset;
+            output.writeByte(length);
+            this.writeBytes(output, raster, offset, length);
             output.writeByte(0x00);
             // GIF Terminator
             output.writeByte(0x3b); // ;
@@ -1093,7 +1095,8 @@
                 bitOutput.write(clearCode, bitLength);
                 var dataIndex = 0;
                 var s = String.fromCharCode(this.data[dataIndex++]);
-                while (dataIndex < this.data.length) {
+                var length_1 = this.data.length;
+                while (dataIndex < length_1) {
                     var c = String.fromCharCode(this.data[dataIndex++]);
                     if (table.contains(s + c)) {
                         s = s + c;
@@ -1132,8 +1135,8 @@
             this.write(output);
             var bytes = encodeToBase64(output.toByteArray());
             output.close();
-            var length = bytes.length;
             var url = 'data:image/gif;base64,';
+            var length = bytes.length;
             for (var i = 0; i < length; i++) {
                 url += String.fromCharCode(bytes[i]);
             }

@@ -164,12 +164,13 @@ export default class GIFImage {
     // Raster Data
     const lzwMinCodeSize: number = 2;
     const raster: number[] = this.getLZWRaster(lzwMinCodeSize);
+    const raLength: number = raster.length;
 
     output.writeByte(lzwMinCodeSize);
 
     let offset: number = 0;
 
-    while (raster.length - offset > 255) {
+    while (raLength - offset > 255) {
       output.writeByte(255);
 
       this.writeBytes(output, raster, offset, 255);
@@ -177,9 +178,11 @@ export default class GIFImage {
       offset += 255;
     }
 
-    output.writeByte(raster.length - offset);
+    const length: number = raLength - offset;
 
-    this.writeBytes(output, raster, offset, raster.length - offset);
+    output.writeByte(length);
+
+    this.writeBytes(output, raster, offset, length);
 
     output.writeByte(0x00);
 
@@ -213,7 +216,9 @@ export default class GIFImage {
       let dataIndex: number = 0;
       let s: string = String.fromCharCode(this.data[dataIndex++]);
 
-      while (dataIndex < this.data.length) {
+      const length: number = this.data.length;
+
+      while (dataIndex < length) {
         const c: string = String.fromCharCode(this.data[dataIndex++]);
 
         if (table.contains(s + c)) {
@@ -264,8 +269,9 @@ export default class GIFImage {
 
     output.close();
 
-    const length: number = bytes.length;
     let url: string = 'data:image/gif;base64,';
+
+    const length: number = bytes.length;
 
     for (let i: number = 0; i < length; i++) {
       url += String.fromCharCode(bytes[i]);
