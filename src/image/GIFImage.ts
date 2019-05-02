@@ -4,9 +4,27 @@
  * @author Kazuhiko Arase
  */
 
-import * as Base64 from '../io/Base64';
 import OutputStream from '../io/OutputStream';
 import ByteArrayOutputStream from '../io/ByteArrayOutputStream';
+import Base64EncodeOutputStream from '../io/Base64EncodeOutputStream';
+
+function encodeToBase64(data: number[]): number[] {
+  const output: ByteArrayOutputStream = new ByteArrayOutputStream();
+
+  try {
+    const stream: Base64EncodeOutputStream = new Base64EncodeOutputStream(output);
+
+    try {
+      stream.writeBytes(data);
+    } finally {
+      stream.close();
+    }
+  } finally {
+    output.close();
+  }
+
+  return output.toByteArray();
+}
 
 class LZWTable {
   private size: number = 0;
@@ -32,9 +50,9 @@ class LZWTable {
 }
 
 class BitOutputStream {
-  private output: OutputStream;
   private bitLength: number;
   private bitBuffer: number;
+  private output: OutputStream;
 
   constructor(output: OutputStream) {
     this.output = output;
@@ -245,7 +263,7 @@ export default class GIFImage {
 
     this.write(output);
 
-    const bytes: number[] = Base64.encode(output.toByteArray());
+    const bytes: number[] = encodeToBase64(output.toByteArray());
 
     output.close();
 

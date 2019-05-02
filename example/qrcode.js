@@ -819,44 +819,6 @@
     }());
 
     /**
-     * @module InputStream
-     * @author nuintun
-     * @author Kazuhiko Arase
-     */
-    var InputStream = /** @class */ (function () {
-        function InputStream() {
-        }
-        return InputStream;
-    }());
-
-    /**
-     * @module ByteArrayInputStream
-     * @author nuintun
-     * @author Kazuhiko Arase
-     */
-    var ByteArrayInputStream = /** @class */ (function (_super) {
-        __extends(ByteArrayInputStream, _super);
-        function ByteArrayInputStream(bytes) {
-            var _this = _super.call(this) || this;
-            _this.pos = 0;
-            _this.bytes = bytes;
-            return _this;
-        }
-        ByteArrayInputStream.prototype.readByte = function () {
-            if (this.pos < this.bytes.length) {
-                var byte = this.bytes[this.pos++];
-                return byte;
-            }
-            return -1;
-        };
-        ByteArrayInputStream.prototype.close = function () {
-            this.pos = 0;
-            this.bytes = [];
-        };
-        return ByteArrayInputStream;
-    }(InputStream));
-
-    /**
      * @module OutputStream
      * @author nuintun
      * @author Kazuhiko Arase
@@ -899,82 +861,6 @@
         };
         return ByteArrayOutputStream;
     }(OutputStream));
-
-    /**
-     * @module Base64DecodeInputStream
-     * @author nuintun
-     * @author Kazuhiko Arase
-     */
-    var Base64DecodeInputStream = /** @class */ (function (_super) {
-        __extends(Base64DecodeInputStream, _super);
-        function Base64DecodeInputStream(stream) {
-            var _this = _super.call(this) || this;
-            _this.buffer = 0;
-            _this.bufLength = 0;
-            _this.stream = stream;
-            return _this;
-        }
-        Base64DecodeInputStream.prototype.readByte = function () {
-            var stream = this.stream;
-            while (this.bufLength < 8) {
-                var byte_1 = stream.readByte();
-                if (byte_1 === -1) {
-                    if (this.bufLength === 0) {
-                        return -1;
-                    }
-                    throw "unexpected end of stream";
-                }
-                else if (byte_1 === 0x3d) {
-                    this.bufLength = 0;
-                    return -1;
-                }
-                else if (Base64DecodeInputStream.isWhitespace(byte_1)) {
-                    // ignore if whitespace.
-                    continue;
-                }
-                this.buffer = (this.buffer << 6) | Base64DecodeInputStream.decode(byte_1);
-                this.bufLength += 6;
-            }
-            var byte = (this.buffer >>> (this.bufLength - 8)) & 0xff;
-            this.bufLength -= 8;
-            return byte;
-        };
-        Base64DecodeInputStream.isWhitespace = function (ch) {
-            // \v \t \r \n
-            return ch === 0x0b || ch === 0x09 || ch === 0x0d || ch === 0x0a;
-        };
-        Base64DecodeInputStream.decode = function (ch) {
-            if (0x41 <= ch && ch <= 0x5a) {
-                // A - Z
-                return ch - 0x41;
-            }
-            else if (0x61 <= ch && ch <= 0x7a) {
-                // a - z
-                return ch - 0x61 + 26;
-            }
-            else if (0x30 <= ch && ch <= 0x39) {
-                // 0 - 9
-                return ch - 0x30 + 52;
-            }
-            else if (ch === 0x2b) {
-                // +
-                return 62;
-            }
-            else if (ch === 0x2f) {
-                // /
-                return 63;
-            }
-            else {
-                throw "illegal char: " + String.fromCharCode(ch);
-            }
-        };
-        Base64DecodeInputStream.prototype.close = function () {
-            this.buffer = 0;
-            this.bufLength = 0;
-            this.stream = null;
-        };
-        return Base64DecodeInputStream;
-    }(InputStream));
 
     /**
      * @module Base64EncodeOutputStream
@@ -1050,11 +936,11 @@
     }(OutputStream));
 
     /**
-     * @module Base64
+     * @module GIF Image (B/W)
      * @author nuintun
      * @author Kazuhiko Arase
      */
-    function encode(data) {
+    function encodeToBase64(data) {
         var output = new ByteArrayOutputStream();
         try {
             var stream = new Base64EncodeOutputStream(output);
@@ -1070,12 +956,6 @@
         }
         return output.toByteArray();
     }
-
-    /**
-     * @module GIF Image (B/W)
-     * @author nuintun
-     * @author Kazuhiko Arase
-     */
     var LZWTable = /** @class */ (function () {
         function LZWTable() {
             this.size = 0;
@@ -1254,7 +1134,7 @@
         GIFImage.prototype.toDataURL = function () {
             var output = new ByteArrayOutputStream();
             this.write(output);
-            var bytes = encode(output.toByteArray());
+            var bytes = encodeToBase64(output.toByteArray());
             output.close();
             var length = bytes.length;
             var url = 'data:image/gif;base64,';
