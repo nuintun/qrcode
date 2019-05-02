@@ -867,6 +867,31 @@
      * @author nuintun
      * @author Kazuhiko Arase
      */
+    function encode(ch) {
+        if (ch >= 0) {
+            if (ch < 26) {
+                // A
+                return 0x41 + ch;
+            }
+            else if (ch < 52) {
+                // a
+                return 0x61 + (ch - 26);
+            }
+            else if (ch < 62) {
+                // 0
+                return 0x30 + (ch - 52);
+            }
+            else if (ch === 62) {
+                // +
+                return 0x2b;
+            }
+            else if (ch === 63) {
+                // /
+                return 0x2f;
+            }
+        }
+        throw "illegal char: " + String.fromCharCode(ch);
+    }
     var Base64EncodeOutputStream = /** @class */ (function (_super) {
         __extends(Base64EncodeOutputStream, _super);
         function Base64EncodeOutputStream(stream) {
@@ -905,32 +930,7 @@
             }
         };
         Base64EncodeOutputStream.prototype.writeEncoded = function (byte) {
-            this.stream.writeByte(Base64EncodeOutputStream.encode(byte & 0x3f));
-        };
-        Base64EncodeOutputStream.encode = function (ch) {
-            if (ch >= 0) {
-                if (ch < 26) {
-                    // A
-                    return 0x41 + ch;
-                }
-                else if (ch < 52) {
-                    // a
-                    return 0x61 + (ch - 26);
-                }
-                else if (ch < 62) {
-                    // 0
-                    return 0x30 + (ch - 52);
-                }
-                else if (ch === 62) {
-                    // +
-                    return 0x2b;
-                }
-                else if (ch === 63) {
-                    // /
-                    return 0x2f;
-                }
-            }
-            throw "illegal char: " + String.fromCharCode(ch);
+            this.stream.writeByte(encode(byte & 0x3f));
         };
         return Base64EncodeOutputStream;
     }(OutputStream));
@@ -942,18 +942,14 @@
      */
     function encodeToBase64(data) {
         var output = new ByteArrayOutputStream();
+        var stream = new Base64EncodeOutputStream(output);
         try {
-            var stream = new Base64EncodeOutputStream(output);
-            try {
-                stream.writeBytes(data);
-            }
-            finally {
-                stream.close();
-            }
+            stream.writeBytes(data);
         }
         finally {
-            output.close();
+            stream.close();
         }
+        output.close();
         return output.toByteArray();
     }
     var LZWTable = /** @class */ (function () {

@@ -10,18 +10,15 @@ import Base64EncodeOutputStream from '../io/Base64EncodeOutputStream';
 
 function encodeToBase64(data: number[]): number[] {
   const output: ByteArrayOutputStream = new ByteArrayOutputStream();
+  const stream: Base64EncodeOutputStream = new Base64EncodeOutputStream(output);
 
   try {
-    const stream: Base64EncodeOutputStream = new Base64EncodeOutputStream(output);
-
-    try {
-      stream.writeBytes(data);
-    } finally {
-      stream.close();
-    }
+    stream.writeBytes(data);
   } finally {
-    output.close();
+    stream.close();
   }
+
+  output.close();
 
   return output.toByteArray();
 }

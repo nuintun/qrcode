@@ -6,6 +6,29 @@
 
 import OutputStream from './OutputStream';
 
+function encode(ch: number): number {
+  if (ch >= 0) {
+    if (ch < 26) {
+      // A
+      return 0x41 + ch;
+    } else if (ch < 52) {
+      // a
+      return 0x61 + (ch - 26);
+    } else if (ch < 62) {
+      // 0
+      return 0x30 + (ch - 52);
+    } else if (ch === 62) {
+      // +
+      return 0x2b;
+    } else if (ch === 63) {
+      // /
+      return 0x2f;
+    }
+  }
+
+  throw `illegal char: ${String.fromCharCode(ch)}`;
+}
+
 export default class Base64EncodeOutputStream extends OutputStream {
   private buffer = 0;
   private length = 0;
@@ -53,29 +76,6 @@ export default class Base64EncodeOutputStream extends OutputStream {
   }
 
   private writeEncoded(byte: number): void {
-    this.stream.writeByte(Base64EncodeOutputStream.encode(byte & 0x3f));
-  }
-
-  private static encode(ch: number): number {
-    if (ch >= 0) {
-      if (ch < 26) {
-        // A
-        return 0x41 + ch;
-      } else if (ch < 52) {
-        // a
-        return 0x61 + (ch - 26);
-      } else if (ch < 62) {
-        // 0
-        return 0x30 + (ch - 52);
-      } else if (ch === 62) {
-        // +
-        return 0x2b;
-      } else if (ch === 63) {
-        // /
-        return 0x2f;
-      }
-    }
-
-    throw `illegal char: ${String.fromCharCode(ch)}`;
+    this.stream.writeByte(encode(byte & 0x3f));
   }
 }
