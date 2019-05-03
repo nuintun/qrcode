@@ -186,12 +186,12 @@ function decodeByteAsUTF8(bytes: number[]): string {
  * @see https://github.com/narirou/jconv/blob/master/jconv.js
  */
 function decodeByteAsSJIS(bytes: number[]): string {
+  let pos: number = 0;
   let output: string = '';
-
   const length: number = bytes.length;
 
-  for (let i: number = 0; i < length; ) {
-    var byte = bytes[i++];
+  while (pos < length) {
+    const byte: number = bytes[pos++];
 
     if (byte < 0x80) {
       // ASCII
@@ -201,7 +201,7 @@ function decodeByteAsSJIS(bytes: number[]): string {
       output += String.fromCharCode(byte + 0xfec0);
     } else {
       // KANJI
-      let code: number = (byte << 8) + bytes[i++];
+      let code: number = (byte << 8) + bytes[pos++];
 
       code = SJIS_TO_UTF8_Table[code];
 

@@ -3205,10 +3205,11 @@
      * @see https://github.com/narirou/jconv/blob/master/jconv.js
      */
     function decodeByteAsSJIS(bytes) {
+        var pos = 0;
         var output = '';
         var length = bytes.length;
-        for (var i = 0; i < length;) {
-            var byte = bytes[i++];
+        while (pos < length) {
+            var byte = bytes[pos++];
             if (byte < 0x80) {
                 // ASCII
                 output += String.fromCharCode(byte);
@@ -3219,7 +3220,7 @@
             }
             else {
                 // KANJI
-                var code = (byte << 8) + bytes[i++];
+                var code = (byte << 8) + bytes[pos++];
                 code = SJIS_TO_UTF8_Table[code];
                 output += code != null ? String.fromCharCode(code) : '?';
             }
