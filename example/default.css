@@ -67,11 +67,11 @@ textarea {
   box-sizing: border-box;
 }
 .encode-result {
-  padding: 12px;
+  padding: 8px;
   display: inline-block;
   background: #f0f0f0;
 }
 .encode-result img {
   display: block;
-  max-width: 936px;
+  max-width: 944px;
 }
