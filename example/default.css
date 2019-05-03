@@ -63,7 +63,7 @@ textarea {
   width: 100%;
   height: 200px;
   resize: none;
-  padding: 8px;
+  padding: 12px;
   box-sizing: border-box;
 }
 .encode-result {
