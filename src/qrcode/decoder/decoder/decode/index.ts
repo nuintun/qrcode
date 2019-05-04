@@ -254,11 +254,10 @@ function decodeKanji(stream: BitStream, size: number): DecodeData {
 }
 
 export function decode(data: Uint8ClampedArray, version: number, errorCorrectionLevel: ErrorCorrectionLevel): DecodeResult {
+  let encoding: number = EncodingHint.UTF8;
   const stream: BitStream = new BitStream(data);
-
   // There are 3 'sizes' based on the version. 1-9 is small (0), 10-26 is medium (1) and 27-40 is large (2).
   const size: number = version <= 9 ? 0 : version <= 26 ? 1 : 2;
-
   const result: DecodeResult = { data: '', bytes: [], chunks: [], version, errorCorrectionLevel };
 
   while (stream.available() >= 4) {
@@ -268,26 +267,20 @@ export function decode(data: Uint8ClampedArray, version: number, errorCorrection
       return result;
     } else if (mode === Mode.ECI) {
       if (stream.readBits(1) === 0) {
-        result.chunks.push({
-          mode: Mode.ECI,
-          encoding: stream.readBits(7)
-        });
+        encoding = stream.readBits(7);
+
+        result.chunks.push({ mode: Mode.ECI, encoding });
       } else if (stream.readBits(1) === 0) {
-        result.chunks.push({
-          mode: Mode.ECI,
-          encoding: stream.readBits(14)
-        });
+        encoding = stream.readBits(14);
+
+        result.chunks.push({ mode: Mode.ECI, encoding });
       } else if (stream.readBits(1) === 0) {
-        result.chunks.push({
-          mode: Mode.ECI,
-          encoding: stream.readBits(21)
-        });
+        encoding = stream.readBits(21);
+
+        result.chunks.push({ mode: Mode.ECI, encoding });
       } else {
         // ECI data seems corrupted
-        result.chunks.push({
-          mode: Mode.ECI,
-          encoding: -1
-        });
+        result.chunks.push({ mode: Mode.ECI, encoding: -1 });
       }
     } else if (mode === Mode.Numeric) {
       const numericResult: DecodeData = decodeNumeric(stream, size);
@@ -319,13 +312,8 @@ export function decode(data: Uint8ClampedArray, version: number, errorCorrection
         parity: stream.readBits(8)
       };
 
-      result.chunks.push({
-        mode: Mode.StructuredAppend,
-        ...structuredAppend
-      });
+      result.chunks.push({ mode: Mode.StructuredAppend, ...structuredAppend });
     } else if (mode === Mode.Byte) {
-      const chunk = result.chunks[result.chunks.length - 1];
-      const encoding = chunk && chunk.mode === Mode.ECI ? chunk.encoding : EncodingHint.UTF8;
       const byteResult: DecodeData = decodeByte(stream, size, encoding);
 
       result.data += byteResult.data;

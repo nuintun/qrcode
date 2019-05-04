@@ -3258,6 +3258,7 @@
     }
     function decode$1(data, version, errorCorrectionLevel) {
         var _a, _b, _c, _d;
+        var encoding = 26 /* UTF8 */;
         var stream = new BitStream(data);
         // There are 3 'sizes' based on the version. 1-9 is small (0), 10-26 is medium (1) and 27-40 is large (2).
         var size = version <= 9 ? 0 : version <= 26 ? 1 : 2;
@@ -3269,29 +3270,20 @@
             }
             else if (mode === Mode$1.ECI) {
                 if (stream.readBits(1) === 0) {
-                    result.chunks.push({
-                        mode: Mode$1.ECI,
-                        encoding: stream.readBits(7)
-                    });
+                    encoding = stream.readBits(7);
+                    result.chunks.push({ mode: Mode$1.ECI, encoding: encoding });
                 }
                 else if (stream.readBits(1) === 0) {
-                    result.chunks.push({
-                        mode: Mode$1.ECI,
-                        encoding: stream.readBits(14)
-                    });
+                    encoding = stream.readBits(14);
+                    result.chunks.push({ mode: Mode$1.ECI, encoding: encoding });
                 }
                 else if (stream.readBits(1) === 0) {
-                    result.chunks.push({
-                        mode: Mode$1.ECI,
-                        encoding: stream.readBits(21)
-                    });
+                    encoding = stream.readBits(21);
+                    result.chunks.push({ mode: Mode$1.ECI, encoding: encoding });
                 }
                 else {
                     // ECI data seems corrupted
-                    result.chunks.push({
-                        mode: Mode$1.ECI,
-                        encoding: -1
-                    });
+                    result.chunks.push({ mode: Mode$1.ECI, encoding: -1 });
                 }
             }
             else if (mode === Mode$1.Numeric) {
@@ -3324,8 +3316,6 @@
                 result.chunks.push(__assign({ mode: Mode$1.StructuredAppend }, structuredAppend));
             }
             else if (mode === Mode$1.Byte) {
-                var chunk = result.chunks[result.chunks.length - 1];
-                var encoding = chunk && chunk.mode === Mode$1.ECI ? chunk.encoding : 26 /* UTF8 */;
                 var byteResult = decodeByte(stream, size, encoding);
                 result.data += byteResult.data;
                 result.chunks.push({
