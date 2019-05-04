@@ -22,7 +22,7 @@ interface ECIChunk {
 }
 
 interface StructuredAppend {
-  symbol: number;
+  symbols: number[];
   parity: number;
 }
 
@@ -305,10 +305,10 @@ export function decode(data: Uint8ClampedArray, version: number, errorCorrection
       });
       result.bytes.push(...alphanumericResult.bytes);
     } else if (mode === Mode.StructuredAppend) {
-      // QR Standard section 9.2:
-      // > The 4-bit patterns shall be the binary equivalents of (m - 1) and (n - 1) respectively.
+      // QR Standard section 9.2
       const structuredAppend: StructuredAppend = {
-        symbol: stream.readBits(8),
+        // [current, total]
+        symbols: [stream.readBits(4), stream.readBits(4)],
         parity: stream.readBits(8)
       };
 

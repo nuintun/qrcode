@@ -3307,10 +3307,10 @@
                 (_b = result.bytes).push.apply(_b, alphanumericResult.bytes);
             }
             else if (mode === Mode$1.StructuredAppend) {
-                // QR Standard section 9.2:
-                // > The 4-bit patterns shall be the binary equivalents of (m - 1) and (n - 1) respectively.
+                // QR Standard section 9.2
                 var structuredAppend = {
-                    symbol: stream.readBits(8),
+                    // [current, total]
+                    symbols: [stream.readBits(4), stream.readBits(4)],
                     parity: stream.readBits(8)
                 };
                 result.chunks.push(__assign({ mode: Mode$1.StructuredAppend }, structuredAppend));
