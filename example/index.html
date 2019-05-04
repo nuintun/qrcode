@@ -117,13 +117,14 @@
         }
 
         var qrcode = new QRCode.Encoder();
-        var data = chooseBestModeData(data);
         var errorCorrectionLevel = QRCode.ErrorCorrectionLevel[ecLevel];
 
         qrcode.setEncodingHint(hasEncodingHint);
         qrcode.setErrorCorrectionLevel(errorCorrectionLevel);
 
         try {
+          var data = mode === 'Auto' ? chooseBestModeData(data) : new QRCode[mode](data);
+
           qrcode.write(data);
           qrcode.make();
 
