@@ -24,8 +24,10 @@
               <option value="Q">Level Q (25%)</option>
               <option value="H">Level H (30%)</option>
             </select>
+            <label class="indent">支持 ECI：</label>
+            <input id="encoding-hint" type="checkbox" checked />
             <label class="indent">编码方式：</label>
-            <select id="encode-mode" title="Auto mode not include Kanji mode">
+            <select id="encode-mode">
               <option value="Auto" selected>Auto</option>
               <option value="QRByte">Byte</option>
               <option value="QRAlphanumeric">Alphanumeric</option>
@@ -43,7 +45,7 @@
           <div id="encode-result" class="encode-result hide"></div>
         </li>
         <li class="decode">
-          <p><label>二维码图片：</label><input type="file" name="file" accept="image/*" id="decode-file" /></p>
+          <p><label>二维码图片：</label><input type="file" accept="image/*" id="decode-file" /></p>
           <div>
             <canvas id="decode-canvas"></canvas>
           </div>
@@ -61,7 +63,7 @@
       var nav = $('.tabs li');
       var content = $('.content li');
 
-      nav.on('click', function(e) {
+      nav.on('click', function() {
         var target = $(this);
 
         nav.removeClass('selected');
@@ -77,18 +79,23 @@
       var TEST_NUMERIC = /^\d+$/;
       var TEST_ALPHANUMERIC = /^[0-9A-Z$%*+-./: ]+$/;
 
-      function chooseMode(data) {
+      function chooseBestModeData(data) {
         if (TEST_NUMERIC.test(data)) {
-          return 'QRNumeric';
+          return new QRCode.QRNumeric(data);
         } else if (TEST_ALPHANUMERIC.test(data)) {
-          return 'QRAlphanumeric';
+          return new QRCode.QRAlphanumeric(data);
         }
 
-        return 'QRByte';
+        try {
+          return new QRCode.QRKanji(data);
+        } catch (error) {
+          return new QRCode.QRByte(data);
+        }
       }
 
       var encodeText = $('#encode-text');
       var encodeMode = $('#encode-mode');
+      var encodingHint = $('#encoding-hint');
       var encodeECLevel = $('#encode-eclevel');
       var encodeMargin = $('#encode-margin');
       var encodeMSize = $('#encode-msize');
@@ -101,8 +108,9 @@
         var ecLevel = encodeECLevel.val();
         var margin = Number(encodeMargin.val());
         var moduleSize = Number(encodeMSize.val());
+        var hasEncodingHint = encodingHint.prop('checked');
 
-        mode = mode === 'Auto' ? chooseMode(data) : mode;
+        console.log(hasEncodingHint);
 
         if (!data) {
           encodeResult.addClass('hide');
@@ -110,11 +118,15 @@
           return alert('请输入二维码内容');
         }
 
-        try {
-          var qrcode = new QRCode.Encoder();
+        var qrcode = new QRCode.Encoder();
+        var data = chooseBestModeData(data);
+        var errorCorrectionLevel = QRCode.ErrorCorrectionLevel[ecLevel];
 
-          qrcode.write(new QRCode[mode](data));
-          qrcode.setErrorCorrectionLevel(QRCode.ErrorCorrectionLevel[ecLevel]);
+        qrcode.setEncodingHint(hasEncodingHint);
+        qrcode.setErrorCorrectionLevel(errorCorrectionLevel);
+
+        try {
+          qrcode.write(data);
           qrcode.make();
 
           encodeResult.html('<img src="' + qrcode.toDataURL(moduleSize, margin) + '" />');
