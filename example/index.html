@@ -178,16 +178,19 @@
 
       // 二维码加载
       $('#decode-file').on('change', function(e) {
-        resetDecoder();
-
         var file = e.target.files[0];
-        var reader = new FileReader();
 
-        reader.onload = function(e) {
-          drawImage(e.target.result);
-        };
+        if (file) {
+          resetDecoder();
 
-        file && reader.readAsDataURL(file);
+          var reader = new FileReader();
+
+          reader.onload = function(e) {
+            drawImage(e.target.result);
+          };
+
+          reader.readAsDataURL(file);
+        }
       });
 
       function getImageData() {
