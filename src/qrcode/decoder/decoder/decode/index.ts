@@ -6,7 +6,7 @@
 
 import BitStream from './BitStream';
 import Mode from '../../../common/Mode';
-import Encoding from '../../../common/Encoding';
+import EncodingHint from '../../../common/EncodingHint';
 import { SJIS_TO_UTF8_Table } from '../../../../encoding/SJIS';
 import ErrorCorrectionLevel from '../../../common/ErrorCorrectionLevel';
 
@@ -222,7 +222,7 @@ function decodeByte(stream: BitStream, size: number, encoding: number): DecodeDa
     bytes.push(stream.readBits(8));
   }
 
-  return { bytes, data: encoding === Encoding.SJIS ? decodeByteAsSJIS(bytes) : decodeByteAsUTF8(bytes) };
+  return { bytes, data: encoding === EncodingHint.SJIS ? decodeByteAsSJIS(bytes) : decodeByteAsUTF8(bytes) };
 }
 
 function decodeKanji(stream: BitStream, size: number): DecodeData {
@@ -325,7 +325,7 @@ export function decode(data: Uint8ClampedArray, version: number, errorCorrection
       });
     } else if (mode === Mode.Byte) {
       const chunk = result.chunks[result.chunks.length - 1];
-      const encoding = chunk && chunk.mode === Mode.ECI ? chunk.encoding : Encoding.UTF8;
+      const encoding = chunk && chunk.mode === Mode.ECI ? chunk.encoding : EncodingHint.UTF8;
       const byteResult: DecodeData = decodeByte(stream, size, encoding);
 
       result.data += byteResult.data;
