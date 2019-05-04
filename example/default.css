@@ -97,6 +97,7 @@ input {
   vertical-align: middle;
 }
 
+input[type="text"],
 input[type="number"] {
   width: 60px;
 }
