@@ -255,17 +255,15 @@ function scorePattern(point: Point, ratios: number[], matrix: BitMatrix): number
   }
 }
 
+interface QuadPoint {
+  startX: number;
+  endX: number;
+  y: number;
+}
+
 interface Quad {
-  top: {
-    startX: number;
-    endX: number;
-    y: number;
-  };
-  bottom: {
-    startX: number;
-    endX: number;
-    y: number;
-  };
+  top: QuadPoint;
+  bottom: QuadPoint;
 }
 
 interface FinderPattern extends Point {
@@ -284,8 +282,8 @@ interface AlignmentPattern extends Point {
 
 export default function locate(matrix: BitMatrix): QRLocation {
   const finderPatternQuads: Quad[] = [];
-  let activeFinderPatternQuads: Quad[] = [];
   const alignmentPatternQuads: Quad[] = [];
+  let activeFinderPatternQuads: Quad[] = [];
   let activeAlignmentPatternQuads: Quad[] = [];
 
   for (let y: number = 0; y <= matrix.height; y++) {
@@ -326,7 +324,7 @@ export default function locate(matrix: BitMatrix): QRLocation {
           const endX: number = x - scans[3] - scans[4];
           const startX: number = endX - scans[2];
 
-          const line: { startX: number; endX: number; y: number } = { startX, endX, y };
+          const line: QuadPoint = { startX, endX, y };
           // Is there a quad directly above the current spot? If so, extend it with the new line. Otherwise, create a new quad with
           // that line as the starting point.
           const matchingQuads: Quad[] = activeFinderPatternQuads.filter(
@@ -351,10 +349,10 @@ export default function locate(matrix: BitMatrix): QRLocation {
           const endX: number = x - scans[4];
           const startX: number = endX - scans[3];
 
-          const line: { startX: number; endX: number; y: number } = { startX, y, endX };
+          const line: QuadPoint = { startX, y, endX };
           // Is there a quad directly above the current spot? If so, extend it with the new line. Otherwise, create a new quad with
           // that line as the starting point.
-          const matchingQuads = activeAlignmentPatternQuads.filter(
+          const matchingQuads: Quad[] = activeAlignmentPatternQuads.filter(
             q =>
               (startX >= q.bottom.startX && startX <= q.bottom.endX) ||
               (endX >= q.bottom.startX && startX <= q.bottom.endX) ||
@@ -479,14 +477,8 @@ export default function locate(matrix: BitMatrix): QRLocation {
 
   // If there are less than 15 modules between finder patterns it's a version 1 QR code and as such has no alignmemnt pattern
   // so we can only use our best guess.
-  const alignmentPattern: Point =
-    modulesBetweenFinderPatterns >= 15 && alignmentPatterns.length ? alignmentPatterns[0] : expectedAlignmentPattern;
+  const hasAlignmentPatterns: false | number = modulesBetweenFinderPatterns >= 15 && alignmentPatterns.length;
+  const alignmentPattern: Point = hasAlignmentPatterns ? alignmentPatterns[0] : expectedAlignmentPattern;
 
-  return {
-    dimension,
-    topLeft: { x: topLeft.x, y: topLeft.y },
-    topRight: { x: topRight.x, y: topRight.y },
-    bottomLeft: { x: bottomLeft.x, y: bottomLeft.y },
-    alignmentPattern: { x: alignmentPattern.x, y: alignmentPattern.y }
-  };
+  return { dimension, topLeft, topRight, bottomLeft, alignmentPattern };
 }

@@ -3835,8 +3835,8 @@
     function locate(matrix) {
         var _a;
         var finderPatternQuads = [];
-        var activeFinderPatternQuads = [];
         var alignmentPatternQuads = [];
+        var activeFinderPatternQuads = [];
         var activeAlignmentPatternQuads = [];
         var _loop_1 = function (y) {
             var length_1 = 0;
@@ -3998,14 +3998,9 @@
             .sort(function (a, b) { return a.score - b.score; });
         // If there are less than 15 modules between finder patterns it's a version 1 QR code and as such has no alignmemnt pattern
         // so we can only use our best guess.
-        var alignmentPattern = modulesBetweenFinderPatterns >= 15 && alignmentPatterns.length ? alignmentPatterns[0] : expectedAlignmentPattern;
-        return {
-            dimension: dimension,
-            topLeft: { x: topLeft.x, y: topLeft.y },
-            topRight: { x: topRight.x, y: topRight.y },
-            bottomLeft: { x: bottomLeft.x, y: bottomLeft.y },
-            alignmentPattern: { x: alignmentPattern.x, y: alignmentPattern.y }
-        };
+        var hasAlignmentPatterns = modulesBetweenFinderPatterns >= 15 && alignmentPatterns.length;
+        var alignmentPattern = hasAlignmentPatterns ? alignmentPatterns[0] : expectedAlignmentPattern;
+        return { dimension: dimension, topLeft: topLeft, topRight: topRight, bottomLeft: bottomLeft, alignmentPattern: alignmentPattern };
     }
 
     /**
