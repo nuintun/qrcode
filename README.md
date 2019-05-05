@@ -91,7 +91,11 @@ qrcode.setEncodingHint(true);
 // Custom your own encode and return bytes and encoding
 // The encoding value must a valid ECI value
 // https://github.com/zxing/zxing/blob/master/core/src/main/java/com/google/zxing/common/CharacterSetECI.java
-qrcode.write(new QRByte('Custom ECI', data => ({ encoding: 26, bytes: [67, 117, 115, 116, 111, 109, 32, 69, 67, 73] })));
+qrcode.write(new QRByte('Custom ECI', data => ({
+  encoding: 26,
+  bytes: [67, 117, 115, 116, 111, 109, 32, 69, 67, 73]
+})));
+
 qrcode.make();
 
 console.log(qrcode.toDataURL());
