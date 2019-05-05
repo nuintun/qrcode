@@ -20,12 +20,7 @@ interface PerspectiveTransform {
   a33: number;
 }
 
-interface MappingResult {
-  x: number;
-  y: number;
-}
-
-type mappingFunction = (x: number, y: number) => MappingResult;
+type mappingFunction = (x: number, y: number) => Point;
 
 export interface ExtractResult {
   matrix: BitMatrix;
@@ -119,7 +114,7 @@ export default function extract(image: BitMatrix, location: QRLocation): Extract
   const transform: PerspectiveTransform = times(sToQ, qToS);
 
   const matrix: BitMatrix = BitMatrix.createEmpty(location.dimension, location.dimension);
-  const mappingFunction: mappingFunction = (x: number, y: number): MappingResult => {
+  const mappingFunction: mappingFunction = (x: number, y: number): Point => {
     const denominator: number = transform.a13 * x + transform.a23 * y + transform.a33;
 
     return {
@@ -132,7 +127,7 @@ export default function extract(image: BitMatrix, location: QRLocation): Extract
     for (let x: number = 0; x < location.dimension; x++) {
       const xValue: number = x + 0.5;
       const yValue: number = y + 0.5;
-      const sourcePixel: MappingResult = mappingFunction(xValue, yValue);
+      const sourcePixel: Point = mappingFunction(xValue, yValue);
 
       matrix.set(x, y, image.get(Math.floor(sourcePixel.x), Math.floor(sourcePixel.y)));
     }
