@@ -1,10 +1,10 @@
 {
   "name": "@nuintun/qrcode",
-  "version": "0.18.1",
+  "version": "0.18.2",
   "description": "QRCode encode and decode library.",
   "main": "es5/index.js",
   "module": "esnext/index.js",
-  "typings": "types/index.d.ts",
+  "typings": "typings/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nuintun/qrcode.git"
