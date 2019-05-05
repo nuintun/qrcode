@@ -19,10 +19,11 @@
 ##### Encoder
 
 ```js
-import { Encoder } from '@nuintun/qrcode';
+import { Encoder, ErrorCorrectionLevel } from '@nuintun/qrcode';
 
 const qrcode = new Encoder();
 
+qrcode.setErrorCorrectionLevel(ErrorCorrectionLevel.H);
 qrcode.write('https://github.com/nuintun/qrcode');
 qrcode.make();
 
