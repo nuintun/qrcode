@@ -29,7 +29,7 @@
     "tslib": "^1.9.3"
   },
   "devDependencies": {
-    "rollup": "^1.11.2",
+    "rollup": "^1.11.3",
     "typescript": "^3.4.5",
     "rollup-plugin-node-resolve": "^4.2.3"
   },
