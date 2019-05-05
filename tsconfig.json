@@ -10,8 +10,8 @@
     "importHelpers": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,
-    "declarationDir": "types",
     "moduleResolution": "node",
+    "declarationDir": "typings",
     "forceConsistentCasingInFileNames": true,
     "lib": ["es5", "esnext", "dom", "scripthost"]
   },

@@ -69,4 +69,4 @@ package-lock.json
 # build file
 es5/
 esnext/
-types/
+typings/
