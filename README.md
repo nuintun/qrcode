@@ -8,7 +8,7 @@
 
 ### QRCode guide and demo
 
-> [QRCode guide](http://coolshell.cn/articles/10590.html)
+> [QRCode guide](https://nuintun.github.io/qrcode/qrcode.pdf)
 >
 > [QRCode demo](https://nuintun.github.io/qrcode/example/index.html)
 >
