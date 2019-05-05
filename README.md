@@ -19,12 +19,17 @@
 #### Encoder
 
 ```js
-import { Encoder, ErrorCorrectionLevel } from '@nuintun/qrcode';
+import { Encoder, QRByte, QRKanji, ErrorCorrectionLevel } from '@nuintun/qrcode';
 
 const qrcode = new Encoder();
 
+qrcode.setEncodingHint(true);
 qrcode.setErrorCorrectionLevel(ErrorCorrectionLevel.H);
-qrcode.write('https://github.com/nuintun/qrcode');
+
+qrcode.write('你好世界\n');
+qrcode.write(new QRByte('hello world\n'));
+qrcode.write(new QRKanji('こんにちは世界'));
+
 qrcode.make();
 
 console.log(qrcode.toDataURL());
@@ -92,9 +97,9 @@ qrcode.setEncodingHint(true);
 // Custom your own encode and return bytes and encoding
 // The encoding value must a valid ECI value
 // https://github.com/zxing/zxing/blob/master/core/src/main/java/com/google/zxing/common/CharacterSetECI.java
-qrcode.write(new QRByte('Custom ECI', data => ({
+qrcode.write(new QRByte('hello world', data => ({
   encoding: 26,
-  bytes: [67, 117, 115, 116, 111, 109, 32, 69, 67, 73]
+  bytes: [104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100]
 })));
 
 qrcode.make();
