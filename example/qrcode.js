@@ -4032,7 +4032,13 @@
         // so we can only use our best guess.
         var hasAlignmentPatterns = modulesBetweenFinderPatterns >= 15 && alignmentPatterns.length;
         var alignmentPattern = hasAlignmentPatterns ? alignmentPatterns[0] : expectedAlignmentPattern;
-        return { dimension: dimension, topLeft: topLeft, topRight: topRight, bottomLeft: bottomLeft, alignmentPattern: alignmentPattern };
+        return {
+            dimension: dimension,
+            topLeft: { x: topLeft.x, y: topLeft.y },
+            topRight: { x: topRight.x, y: topRight.y },
+            bottomLeft: { x: bottomLeft.x, y: bottomLeft.y },
+            alignmentPattern: { x: alignmentPattern.x, y: alignmentPattern.y }
+        };
     }
 
     /**
@@ -4263,11 +4269,12 @@
         if (!decoded) {
             return null;
         }
+        var dimension = location.dimension;
         return __assign({}, decoded, { location: {
                 topLeftCorner: extracted.mappingFunction(0, 0),
-                topRightCorner: extracted.mappingFunction(location.dimension, 0),
-                bottomLeftCorner: extracted.mappingFunction(0, location.dimension),
-                bottomRightCorner: extracted.mappingFunction(location.dimension, location.dimension),
+                topRightCorner: extracted.mappingFunction(dimension, 0),
+                bottomLeftCorner: extracted.mappingFunction(0, dimension),
+                bottomRightCorner: extracted.mappingFunction(dimension, dimension),
                 topLeftFinderPattern: location.topLeft,
                 topRightFinderPattern: location.topRight,
                 bottomLeftFinderPattern: location.bottomLeft,

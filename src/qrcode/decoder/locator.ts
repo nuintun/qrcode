@@ -480,5 +480,11 @@ export default function locate(matrix: BitMatrix): QRLocation {
   const hasAlignmentPatterns: false | number = modulesBetweenFinderPatterns >= 15 && alignmentPatterns.length;
   const alignmentPattern: Point = hasAlignmentPatterns ? alignmentPatterns[0] : expectedAlignmentPattern;
 
-  return { dimension, topLeft, topRight, bottomLeft, alignmentPattern };
+  return {
+    dimension,
+    topLeft: { x: topLeft.x, y: topLeft.y },
+    topRight: { x: topRight.x, y: topRight.y },
+    bottomLeft: { x: bottomLeft.x, y: bottomLeft.y },
+    alignmentPattern: { x: alignmentPattern.x, y: alignmentPattern.y }
+  };
 }

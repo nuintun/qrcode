@@ -39,13 +39,15 @@ function scan(matrix: BitMatrix): DecoderResult {
     return null;
   }
 
+  const dimension: number = location.dimension;
+
   return {
     ...decoded,
     location: {
       topLeftCorner: extracted.mappingFunction(0, 0),
-      topRightCorner: extracted.mappingFunction(location.dimension, 0),
-      bottomLeftCorner: extracted.mappingFunction(0, location.dimension),
-      bottomRightCorner: extracted.mappingFunction(location.dimension, location.dimension),
+      topRightCorner: extracted.mappingFunction(dimension, 0),
+      bottomLeftCorner: extracted.mappingFunction(0, dimension),
+      bottomRightCorner: extracted.mappingFunction(dimension, dimension),
       topLeftFinderPattern: location.topLeft,
       topRightFinderPattern: location.topRight,
       bottomLeftFinderPattern: location.bottomLeft,
