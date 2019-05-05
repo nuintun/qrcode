@@ -6,7 +6,7 @@
 > [![Download Status][download-image]][npm-url]
 > [![Dependencies][david-image]][david-url]
 
-#### QRCode guide and demo
+### QRCode guide and demo
 
 > [QRCode guide](http://coolshell.cn/articles/10590.html)
 >
@@ -14,9 +14,9 @@
 >
 > Modify from [kazuhikoarase/qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) and [cozmo/jsQR](https://github.com/cozmo/jsQR)
 
-#### Usage
+### Usage
 
-##### Encoder
+#### Encoder
 
 ```js
 import { Encoder, ErrorCorrectionLevel } from '@nuintun/qrcode';
@@ -102,7 +102,7 @@ qrcode.make();
 console.log(qrcode.toDataURL());
 ```
 
-##### Decoder
+#### Decoder
 
 ```js
 import { Decoder } from '@nuintun/qrcode';
