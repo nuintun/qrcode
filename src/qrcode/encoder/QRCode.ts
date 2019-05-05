@@ -159,7 +159,7 @@ export default class QRCode {
   private chunks: QRData[] = [];
   private moduleCount: number = 0;
   private modules: boolean[][] = [];
-  private hasEncodingHint: boolean = true;
+  private hasEncodingHint: boolean = false;
   private autoVersion: boolean = this.version === 0;
   private errorCorrectionLevel: ErrorCorrectionLevel = ErrorCorrectionLevel.L;
 

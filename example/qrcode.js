@@ -1285,7 +1285,7 @@
             this.chunks = [];
             this.moduleCount = 0;
             this.modules = [];
-            this.hasEncodingHint = true;
+            this.hasEncodingHint = false;
             this.autoVersion = this.version === 0;
             this.errorCorrectionLevel = ErrorCorrectionLevel$1.L;
         }
