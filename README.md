@@ -130,7 +130,7 @@ qrcode
 
   - Set decode options.
 
-- scan(src: string): Promise<DecoderResult>
+- scan(src: string): Promise\<DecoderResult>
 
   - Decode a qrcode from image src.
 
