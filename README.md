@@ -94,7 +94,7 @@ const qrcode = new Encoder();
 
 qrcode.setEncodingHint(true);
 
-// Custom your own encode and return bytes and encoding
+// Custom your own encode function return bytes and encoding
 // The encoding value must a valid ECI value
 // https://github.com/zxing/zxing/blob/master/core/src/main/java/com/google/zxing/common/CharacterSetECI.java
 qrcode.write(new QRByte('hello world', data => ({
