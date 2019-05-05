@@ -183,9 +183,18 @@
          * @constructor
          * @param {string} data
          */
-        function QRByte(data) {
+        function QRByte(data, encode) {
             var _this = _super.call(this, Mode$1.Byte, data) || this;
-            _this.bytes = UTF8(data);
+            _this.encoding = -1;
+            if (typeof encode === 'function') {
+                var _a = encode(data), encoding = _a.encoding, bytes = _a.bytes;
+                _this.bytes = bytes;
+                _this.encoding = encoding;
+            }
+            else {
+                _this.bytes = UTF8(data);
+                _this.encoding = 26 /* UTF8 */;
+            }
             return _this;
         }
         /**
@@ -1182,6 +1191,30 @@
     var PAD0 = 0xec;
     var PAD1 = 0x11;
     var toString = Object.prototype.toString;
+    /**
+     * @function appendECI
+     * @param {number} encoding
+     * @param {BitBuffer} buffer
+     * @see https://github.com/nayuki/QR-Code-generator/blob/master/typescript/qrcodegen.ts
+     * @see https://github.com/zxing/zxing/blob/master/core/src/main/java/com/google/zxing/qrcode/encoder/Encoder.java
+     */
+    function appendECI(encoding, buffer) {
+        if (encoding < 0 || encoding >= 1000000) {
+            throw 'byte mode encoding value out of range';
+        }
+        buffer.put(Mode$1.ECI, 4);
+        if (encoding < 1 << 7) {
+            buffer.put(encoding, 8);
+        }
+        else if (encoding < 1 << 14) {
+            buffer.put(2, 2);
+            buffer.put(encoding, 14);
+        }
+        else {
+            buffer.put(6, 3);
+            buffer.put(encoding, 21);
+        }
+    }
     function prepareData(version, errorCorrectionLevel, hasEncodingHint, chunks) {
         var dLength = chunks.length;
         var buffer = new BitBuffer();
@@ -1191,8 +1224,7 @@
             var mode = data.getMode();
             // default set encoding UTF-8 when has encoding hint
             if (hasEncodingHint && mode === Mode$1.Byte) {
-                buffer.put(Mode$1.ECI, 4);
-                buffer.put(26 /* UTF8 */, 8);
+                appendECI(data.encoding, buffer);
             }
             buffer.put(mode, 4);
             buffer.put(data.getLength(), data.getLengthInBits(version));

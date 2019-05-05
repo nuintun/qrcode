@@ -8,16 +8,34 @@ import QRData from './QRData';
 import Mode from '../common/Mode';
 import BitBuffer from './BitBuffer';
 import stringToBytes from '../../encoding/UTF8';
+import EncodingHint from '../common/EncodingHint';
+
+interface EncodeResult {
+  bytes: number[];
+  encoding: number;
+}
+
+type encode = (data: string) => EncodeResult;
 
 export default class QRByte extends QRData {
+  public encoding: number = -1;
+
   /**
    * @constructor
    * @param {string} data
    */
-  constructor(data: string) {
+  constructor(data: string, encode?: encode) {
     super(Mode.Byte, data);
 
-    this.bytes = stringToBytes(data);
+    if (typeof encode === 'function') {
+      const { encoding, bytes }: EncodeResult = encode(data);
+
+      this.bytes = bytes;
+      this.encoding = encoding;
+    } else {
+      this.bytes = stringToBytes(data);
+      this.encoding = EncodingHint.UTF8;
+    }
   }
 
   /**

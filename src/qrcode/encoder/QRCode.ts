@@ -12,7 +12,6 @@ import * as QRUtil from './QRUtil';
 import BitBuffer from './BitBuffer';
 import Polynomial from './Polynomial';
 import GIFImage from '../../image/GIFImage';
-import EncodingHint from '../common/EncodingHint';
 import getMaskFunc, { maskFunc } from '../common/MaskPattern';
 import ErrorCorrectionLevel from '../common/ErrorCorrectionLevel';
 
@@ -21,6 +20,31 @@ const PAD1: number = 0x11;
 const toString: () => string = Object.prototype.toString;
 
 type prepareData = [BitBuffer, RSBlock[], number];
+
+/**
+ * @function appendECI
+ * @param {number} encoding
+ * @param {BitBuffer} buffer
+ * @see https://github.com/nayuki/QR-Code-generator/blob/master/typescript/qrcodegen.ts
+ * @see https://github.com/zxing/zxing/blob/master/core/src/main/java/com/google/zxing/qrcode/encoder/Encoder.java
+ */
+function appendECI(encoding: number, buffer: BitBuffer) {
+  if (encoding < 0 || encoding >= 1000000) {
+    throw 'byte mode encoding value out of range';
+  }
+
+  buffer.put(Mode.ECI, 4);
+
+  if (encoding < 1 << 7) {
+    buffer.put(encoding, 8);
+  } else if (encoding < 1 << 14) {
+    buffer.put(2, 2);
+    buffer.put(encoding, 14);
+  } else {
+    buffer.put(6, 3);
+    buffer.put(encoding, 21);
+  }
+}
 
 function prepareData(
   version: number,
@@ -38,8 +62,7 @@ function prepareData(
 
     // default set encoding UTF-8 when has encoding hint
     if (hasEncodingHint && mode === Mode.Byte) {
-      buffer.put(Mode.ECI, 4);
-      buffer.put(EncodingHint.UTF8, 8);
+      appendECI((data as QRByte).encoding, buffer);
     }
 
     buffer.put(mode, 4);
