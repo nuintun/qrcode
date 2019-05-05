@@ -97,8 +97,8 @@ const SJIS_UTF8_TABLE: [number, string][]= [
   [0xea80, '黴黶黷黹黻黼黽鼇鼈皷鼕鼡鼬鼾齊齒齔齣齟齠齡齦齧齬齪齷齲齶龕龜龠堯槇遙瑤凜熙']
 ];
 
-export const SJIS_TO_UTF8_Table: SJISTable = {};
-export const UTF8_TO_SJIS_Table: SJISTable = {};
+const UTF8_TO_SJIS_Table: SJISTable = {};
+const SJIS_TO_UTF8_Table: SJISTable = {};
 
 const tLength: number = SJIS_UTF8_TABLE.length;
 
@@ -111,10 +111,12 @@ for (let i: number = 0; i < tLength; i++) {
     const kCode: number = mapItem[0] + j;
     const uCode: number = kanji.charAt(j).charCodeAt(0);
 
-    SJIS_TO_UTF8_Table[kCode] = uCode;
     UTF8_TO_SJIS_Table[uCode] = kCode;
+    SJIS_TO_UTF8_Table[kCode] = uCode;
   }
 }
+
+export { UTF8_TO_SJIS_Table, SJIS_TO_UTF8_Table };
 
 /**
  * @function SJIS

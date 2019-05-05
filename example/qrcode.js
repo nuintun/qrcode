@@ -3052,8 +3052,8 @@
         [0xea40, '鵝鵞鵤鵑鵐鵙鵲鶉鶇鶫鵯鵺鶚鶤鶩鶲鷄鷁鶻鶸鶺鷆鷏鷂鷙鷓鷸鷦鷭鷯鷽鸚鸛鸞鹵鹹鹽麁麈麋麌麒麕麑麝麥麩麸麪麭靡黌黎黏黐黔黜點黝黠黥黨黯'],
         [0xea80, '黴黶黷黹黻黼黽鼇鼈皷鼕鼡鼬鼾齊齒齔齣齟齠齡齦齧齬齪齷齲齶龕龜龠堯槇遙瑤凜熙']
     ];
-    var SJIS_TO_UTF8_Table = {};
     var UTF8_TO_SJIS_Table = {};
+    var SJIS_TO_UTF8_Table = {};
     var tLength = SJIS_UTF8_TABLE.length;
     for (var i$1 = 0; i$1 < tLength; i$1++) {
         var mapItem = SJIS_UTF8_TABLE[i$1];
@@ -3062,8 +3062,8 @@
         for (var j = 0; j < kLength; j++) {
             var kCode = mapItem[0] + j;
             var uCode = kanji.charAt(j).charCodeAt(0);
-            SJIS_TO_UTF8_Table[kCode] = uCode;
             UTF8_TO_SJIS_Table[uCode] = kCode;
+            SJIS_TO_UTF8_Table[kCode] = uCode;
         }
     }
     /**
