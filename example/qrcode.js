@@ -4271,14 +4271,14 @@
         }
         var dimension = location.dimension;
         return __assign({}, decoded, { location: {
-                topLeftCorner: extracted.mappingFunction(0, 0),
-                topRightCorner: extracted.mappingFunction(dimension, 0),
-                bottomLeftCorner: extracted.mappingFunction(0, dimension),
-                bottomRightCorner: extracted.mappingFunction(dimension, dimension),
-                topLeftFinderPattern: location.topLeft,
-                topRightFinderPattern: location.topRight,
-                bottomLeftFinderPattern: location.bottomLeft,
-                bottomRightAlignmentPattern: decoded.version > 1 ? location.alignmentPattern : null
+                topLeft: extracted.mappingFunction(0, 0),
+                topRight: extracted.mappingFunction(dimension, 0),
+                bottomLeft: extracted.mappingFunction(0, dimension),
+                bottomRight: extracted.mappingFunction(dimension, dimension),
+                topLeftFinder: location.topLeft,
+                topRightFinder: location.topRight,
+                bottomLeftFinder: location.bottomLeft,
+                bottomRightAlignment: decoded.version > 1 ? location.alignmentPattern : null
             } });
     }
     var defaultOptions = {

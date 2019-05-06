@@ -201,8 +201,8 @@
       }
 
       function getModuleSize(location, version) {
-        var topLeftCorner = location.topLeftCorner;
-        var topRightCorner = location.topRightCorner;
+        var topLeftCorner = location.topLeft;
+        var topRightCorner = location.topRight;
         var a = topRightCorner.x - topLeftCorner.x;
         var b = topRightCorner.y - topLeftCorner.y;
         var c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
@@ -223,18 +223,18 @@
         context.strokeStyle = '#00ff00';
 
         context.beginPath();
-        context.moveTo(location.topLeftCorner.x, location.topLeftCorner.y);
-        context.lineTo(location.topRightCorner.x, location.topRightCorner.y);
-        context.lineTo(location.bottomRightCorner.x, location.bottomRightCorner.y);
-        context.lineTo(location.bottomLeftCorner.x, location.bottomLeftCorner.y);
-        context.lineTo(location.topLeftCorner.x, location.topLeftCorner.y);
+        context.moveTo(location.topLeft.x, location.topLeft.y);
+        context.lineTo(location.topRight.x, location.topRight.y);
+        context.lineTo(location.bottomRight.x, location.bottomRight.y);
+        context.lineTo(location.bottomLeft.x, location.bottomLeft.y);
+        context.lineTo(location.topLeft.x, location.topLeft.y);
         context.stroke();
 
         var moduleSize = getModuleSize(location, version);
 
-        markFinderPattern(location.topLeftFinderPattern.x, location.topLeftFinderPattern.y, moduleSize);
-        markFinderPattern(location.topRightFinderPattern.x, location.topRightFinderPattern.y, moduleSize);
-        markFinderPattern(location.bottomLeftFinderPattern.x, location.bottomLeftFinderPattern.y, moduleSize);
+        markFinderPattern(location.topLeftFinder.x, location.topLeftFinder.y, moduleSize);
+        markFinderPattern(location.topRightFinder.x, location.topRightFinder.y, moduleSize);
+        markFinderPattern(location.bottomLeftFinder.x, location.bottomLeftFinder.y, moduleSize);
       }
 
       $('#decode-btn').on('click', function() {

@@ -14,14 +14,14 @@ import binarize, { BinarizeResult } from './binarizer';
 
 export interface DecoderResult extends DecodeResult {
   location: {
-    topLeftCorner: Point;
-    topRightCorner: Point;
-    bottomLeftCorner: Point;
-    bottomRightCorner: Point;
-    topLeftFinderPattern: Point;
-    topRightFinderPattern: Point;
-    bottomLeftFinderPattern: Point;
-    bottomRightAlignmentPattern: Point | null;
+    topLeft: Point;
+    topRight: Point;
+    bottomLeft: Point;
+    bottomRight: Point;
+    topLeftFinder: Point;
+    topRightFinder: Point;
+    bottomLeftFinder: Point;
+    bottomRightAlignment: Point | null;
   };
 }
 
@@ -44,14 +44,14 @@ function scan(matrix: BitMatrix): DecoderResult {
   return {
     ...decoded,
     location: {
-      topLeftCorner: extracted.mappingFunction(0, 0),
-      topRightCorner: extracted.mappingFunction(dimension, 0),
-      bottomLeftCorner: extracted.mappingFunction(0, dimension),
-      bottomRightCorner: extracted.mappingFunction(dimension, dimension),
-      topLeftFinderPattern: location.topLeft,
-      topRightFinderPattern: location.topRight,
-      bottomLeftFinderPattern: location.bottomLeft,
-      bottomRightAlignmentPattern: decoded.version > 1 ? location.alignmentPattern : null
+      topLeft: extracted.mappingFunction(0, 0),
+      topRight: extracted.mappingFunction(dimension, 0),
+      bottomLeft: extracted.mappingFunction(0, dimension),
+      bottomRight: extracted.mappingFunction(dimension, dimension),
+      topLeftFinder: location.topLeft,
+      topRightFinder: location.topRight,
+      bottomLeftFinder: location.bottomLeft,
+      bottomRightAlignment: decoded.version > 1 ? location.alignmentPattern : null
     }
   };
 }
