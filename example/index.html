@@ -201,10 +201,10 @@
       }
 
       function getModuleSize(location, version) {
-        var topLeftCorner = location.topLeft;
-        var topRightCorner = location.topRight;
-        var a = Math.abs(topRightCorner.x - topLeftCorner.x);
-        var b = Math.abs(topRightCorner.y - topLeftCorner.y);
+        var topLeft = location.topLeft;
+        var topRight = location.topRight;
+        var a = Math.abs(topRight.x - topLeft.x);
+        var b = Math.abs(topRight.y - topLeft.y);
         var c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
 
         return c / (version * 4 + 17);
