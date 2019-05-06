@@ -200,7 +200,25 @@
         return imageData || context.getImageData(0, 0, canvas.width, canvas.height);
       }
 
-      function markQRCodeArea(location) {
+      function getModuleSize(location, version) {
+        var topLeftCorner = location.topLeftCorner;
+        var topRightCorner = location.topRightCorner;
+        var a = topRightCorner.x - topLeftCorner.x;
+        var b = topRightCorner.y - topLeftCorner.y;
+        var c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+
+        return c / (version * 4 + 17);
+      }
+
+      function markFinderPattern(x, y, moduleSize) {
+        context.fillStyle = '#00ff00';
+
+        context.beginPath();
+        context.arc(x, y, moduleSize * 0.75, 0, 2 * Math.PI);
+        context.fill();
+      }
+
+      function markQRCodeArea(location, version) {
         context.lineWidth = 2;
         context.strokeStyle = '#00ff00';
 
@@ -211,6 +229,12 @@
         context.lineTo(location.bottomLeftCorner.x, location.bottomLeftCorner.y);
         context.lineTo(location.topLeftCorner.x, location.topLeftCorner.y);
         context.stroke();
+
+        var moduleSize = getModuleSize(location, version);
+
+        markFinderPattern(location.topLeftFinderPattern.x, location.topLeftFinderPattern.y, moduleSize);
+        markFinderPattern(location.topRightFinderPattern.x, location.topRightFinderPattern.y, moduleSize);
+        markFinderPattern(location.bottomLeftFinderPattern.x, location.bottomLeftFinderPattern.y, moduleSize);
       }
 
       $('#decode-btn').on('click', function() {
@@ -225,7 +249,7 @@
           decodeResult.val(result.data);
           decodeText.removeClass('hide');
 
-          markQRCodeArea(result.location);
+          markQRCodeArea(result.location, result.version);
 
           console && console.log(result);
         } else {
