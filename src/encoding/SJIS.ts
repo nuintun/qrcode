@@ -105,10 +105,10 @@ const SJIS_UTF8_TABLE: [number, string][]= [
 let tables: SJISTables;
 
 /**
- * @function createTable
+ * @function getTables
  * @returns {SJISTables}
  */
-export function createTable(): SJISTables {
+export function getTables(): SJISTables {
   if (!tables) {
     const UTF8_TO_SJIS: SJISTable = {};
     const SJIS_TO_UTF8: SJISTable = {};
@@ -142,7 +142,7 @@ export function createTable(): SJISTables {
 export default function SJIS(str: string): number[] {
   const bytes: number[] = [];
   const length: number = str.length;
-  const { UTF8_TO_SJIS }: SJISTables = createTable();
+  const { UTF8_TO_SJIS }: SJISTables = getTables();
 
   for (let i: number = 0; i < length; i++) {
     const code: number = str.charCodeAt(i);

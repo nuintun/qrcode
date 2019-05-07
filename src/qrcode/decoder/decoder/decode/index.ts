@@ -7,7 +7,7 @@
 import BitStream from './BitStream';
 import Mode from '../../../common/Mode';
 import EncodingHint from '../../../common/EncodingHint';
-import { createTable, SJISTables } from '../../../../encoding/SJIS';
+import { getTables, SJISTables } from '../../../../encoding/SJIS';
 import ErrorCorrectionLevel from '../../../common/ErrorCorrectionLevel';
 
 interface ByteChunk {
@@ -187,7 +187,7 @@ function decodeByteAsSJIS(bytes: number[]): string {
   let pos: number = 0;
   let output: string = '';
   const length: number = bytes.length;
-  const { SJIS_TO_UTF8 }: SJISTables = createTable();
+  const { SJIS_TO_UTF8 }: SJISTables = getTables();
 
   while (pos < length) {
     const byte: number = bytes[pos++];
@@ -226,7 +226,7 @@ function decodeByte(stream: BitStream, size: number, encoding: number): DecodeDa
 function decodeKanji(stream: BitStream, size: number): DecodeData {
   let data: string = '';
   const bytes: number[] = [];
-  const { SJIS_TO_UTF8 }: SJISTables = createTable();
+  const { SJIS_TO_UTF8 }: SJISTables = getTables();
   const characterCountSize: number = [8, 10, 12][size];
   const length: number = stream.readBits(characterCountSize);
 

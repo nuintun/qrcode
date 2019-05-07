@@ -3086,10 +3086,10 @@
     ];
     var tables;
     /**
-     * @function createTable
+     * @function getTables
      * @returns {SJISTables}
      */
-    function createTable() {
+    function getTables() {
         if (!tables) {
             var UTF8_TO_SJIS = {};
             var SJIS_TO_UTF8 = {};
@@ -3117,7 +3117,7 @@
     function SJIS(str) {
         var bytes = [];
         var length = str.length;
-        var UTF8_TO_SJIS = createTable().UTF8_TO_SJIS;
+        var UTF8_TO_SJIS = getTables().UTF8_TO_SJIS;
         for (var i = 0; i < length; i++) {
             var code = str.charCodeAt(i);
             var byte = UTF8_TO_SJIS[code];
@@ -3252,7 +3252,7 @@
         var pos = 0;
         var output = '';
         var length = bytes.length;
-        var SJIS_TO_UTF8 = createTable().SJIS_TO_UTF8;
+        var SJIS_TO_UTF8 = getTables().SJIS_TO_UTF8;
         while (pos < length) {
             var byte = bytes[pos++];
             if (byte < 0x80) {
@@ -3284,7 +3284,7 @@
     function decodeKanji(stream, size) {
         var data = '';
         var bytes = [];
-        var SJIS_TO_UTF8 = createTable().SJIS_TO_UTF8;
+        var SJIS_TO_UTF8 = getTables().SJIS_TO_UTF8;
         var characterCountSize = [8, 10, 12][size];
         var length = stream.readBits(characterCountSize);
         for (var i = 0; i < length; i++) {
