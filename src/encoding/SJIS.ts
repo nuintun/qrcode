@@ -8,6 +8,11 @@
 
 type SJISTable = { [byte: number]: number };
 
+export interface SJISTables {
+  UTF8_TO_SJIS: SJISTable;
+  SJIS_TO_UTF8: SJISTable;
+}
+
 // prettier-ignore
 const SJIS_UTF8_TABLE: [number, string][]= [
   [0x8140, '　、。，．・：；？！゛゜´｀¨＾￣＿ヽヾゝゞ〃仝々〆〇ー―‐／＼～∥｜…‥‘’“”（）〔〕［］｛｝〈〉《》「」『』【】＋－±×'],
@@ -97,18 +102,16 @@ const SJIS_UTF8_TABLE: [number, string][]= [
   [0xea80, '黴黶黷黹黻黼黽鼇鼈皷鼕鼡鼬鼾齊齒齔齣齟齠齡齦齧齬齪齷齲齶龕龜龠堯槇遙瑤凜熙']
 ];
 
-export interface SJISTables {
-  UTF8_TO_SJIS: SJISTable;
-  SJIS_TO_UTF8: SJISTable;
-}
-
 let tables: SJISTables;
 
+/**
+ * @function createTable
+ * @returns {SJISTables}
+ */
 export function createTable(): SJISTables {
   if (!tables) {
     const UTF8_TO_SJIS: SJISTable = {};
     const SJIS_TO_UTF8: SJISTable = {};
-
     const tLength: number = SJIS_UTF8_TABLE.length;
 
     for (let i: number = 0; i < tLength; i++) {

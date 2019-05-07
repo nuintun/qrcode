@@ -3085,6 +3085,10 @@
         [0xea80, '黴黶黷黹黻黼黽鼇鼈皷鼕鼡鼬鼾齊齒齔齣齟齠齡齦齧齬齪齷齲齶龕龜龠堯槇遙瑤凜熙']
     ];
     var tables;
+    /**
+     * @function createTable
+     * @returns {SJISTables}
+     */
     function createTable() {
         if (!tables) {
             var UTF8_TO_SJIS = {};
