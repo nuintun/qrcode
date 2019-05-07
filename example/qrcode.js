@@ -1200,7 +1200,7 @@
      */
     function appendECI(encoding, buffer) {
         if (encoding < 0 || encoding >= 1000000) {
-            throw 'byte mode encoding value out of range';
+            throw 'byte mode encoding hint out of range';
         }
         buffer.put(Mode$1.ECI, 4);
         if (encoding < 1 << 7) {

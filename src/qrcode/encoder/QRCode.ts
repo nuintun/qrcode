@@ -30,7 +30,7 @@ type prepareData = [BitBuffer, RSBlock[], number];
  */
 function appendECI(encoding: number, buffer: BitBuffer) {
   if (encoding < 0 || encoding >= 1000000) {
-    throw 'byte mode encoding value out of range';
+    throw 'byte mode encoding hint out of range';
   }
 
   buffer.put(Mode.ECI, 4);
