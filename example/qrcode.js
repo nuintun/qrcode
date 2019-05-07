@@ -3117,9 +3117,9 @@
     function SJIS(str) {
         var bytes = [];
         var length = str.length;
+        var UTF8_TO_SJIS = createTable().UTF8_TO_SJIS;
         for (var i = 0; i < length; i++) {
             var code = str.charCodeAt(i);
-            var UTF8_TO_SJIS = createTable().UTF8_TO_SJIS;
             var byte = UTF8_TO_SJIS[code];
             if (byte != null) {
                 // 2bytes

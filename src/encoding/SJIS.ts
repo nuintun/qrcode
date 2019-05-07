@@ -142,10 +142,10 @@ export function createTable(): SJISTables {
 export default function SJIS(str: string): number[] {
   const bytes: number[] = [];
   const length: number = str.length;
+  const { UTF8_TO_SJIS }: SJISTables = createTable();
 
   for (let i: number = 0; i < length; i++) {
     const code: number = str.charCodeAt(i);
-    const { UTF8_TO_SJIS }: SJISTables = createTable();
     const byte: number = UTF8_TO_SJIS[code];
 
     if (byte != null) {

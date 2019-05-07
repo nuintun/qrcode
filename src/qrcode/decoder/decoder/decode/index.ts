@@ -46,7 +46,6 @@ export interface DecodeResult extends DecodeData {
 function decodeNumeric(stream: BitStream, size: number): DecodeData {
   let data: string = '';
   const bytes: number[] = [];
-
   const characterCountSize: number = [10, 12, 14][size];
   let length: number = stream.readBits(characterCountSize);
 
@@ -110,7 +109,6 @@ const AlphanumericCharacterCodes: string[]= [
 function decodeAlphanumeric(stream: BitStream, size: number): DecodeData {
   let data: string = '';
   const bytes: number[] = [];
-
   const characterCountSize: number = [9, 11, 13][size];
   let length: number = stream.readBits(characterCountSize);
 
@@ -215,7 +213,6 @@ function decodeByteAsSJIS(bytes: number[]): string {
 
 function decodeByte(stream: BitStream, size: number, encoding: number): DecodeData {
   const bytes: number[] = [];
-
   const characterCountSize: number = [8, 16, 16][size];
   const length: number = stream.readBits(characterCountSize);
 
@@ -229,7 +226,6 @@ function decodeByte(stream: BitStream, size: number, encoding: number): DecodeDa
 function decodeKanji(stream: BitStream, size: number): DecodeData {
   let data: string = '';
   const bytes: number[] = [];
-
   const { SJIS_TO_UTF8 }: SJISTables = createTable();
   const characterCountSize: number = [8, 10, 12][size];
   const length: number = stream.readBits(characterCountSize);
