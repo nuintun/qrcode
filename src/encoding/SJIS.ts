@@ -97,26 +97,39 @@ const SJIS_UTF8_TABLE: [number, string][]= [
   [0xea80, '黴黶黷黹黻黼黽鼇鼈皷鼕鼡鼬鼾齊齒齔齣齟齠齡齦齧齬齪齷齲齶龕龜龠堯槇遙瑤凜熙']
 ];
 
-const UTF8_TO_SJIS_Table: SJISTable = {};
-const SJIS_TO_UTF8_Table: SJISTable = {};
-
-const tLength: number = SJIS_UTF8_TABLE.length;
-
-for (let i: number = 0; i < tLength; i++) {
-  const mapItem: [number, string] = SJIS_UTF8_TABLE[i];
-  const kanji: string = mapItem[1];
-  const kLength: number = kanji.length;
-
-  for (var j: number = 0; j < kLength; j++) {
-    const kCode: number = mapItem[0] + j;
-    const uCode: number = kanji.charAt(j).charCodeAt(0);
-
-    UTF8_TO_SJIS_Table[uCode] = kCode;
-    SJIS_TO_UTF8_Table[kCode] = uCode;
-  }
+export interface SJISTables {
+  UTF8_TO_SJIS: SJISTable;
+  SJIS_TO_UTF8: SJISTable;
 }
 
-export { UTF8_TO_SJIS_Table, SJIS_TO_UTF8_Table };
+let tables: SJISTables;
+
+export function createTable(): SJISTables {
+  if (!tables) {
+    const UTF8_TO_SJIS: SJISTable = {};
+    const SJIS_TO_UTF8: SJISTable = {};
+
+    const tLength: number = SJIS_UTF8_TABLE.length;
+
+    for (let i: number = 0; i < tLength; i++) {
+      const mapItem: [number, string] = SJIS_UTF8_TABLE[i];
+      const kanji: string = mapItem[1];
+      const kLength: number = kanji.length;
+
+      for (var j: number = 0; j < kLength; j++) {
+        const kCode: number = mapItem[0] + j;
+        const uCode: number = kanji.charAt(j).charCodeAt(0);
+
+        UTF8_TO_SJIS[uCode] = kCode;
+        SJIS_TO_UTF8[kCode] = uCode;
+      }
+    }
+
+    tables = { UTF8_TO_SJIS, SJIS_TO_UTF8 };
+  }
+
+  return tables;
+}
 
 /**
  * @function SJIS
@@ -129,7 +142,8 @@ export default function SJIS(str: string): number[] {
 
   for (let i: number = 0; i < length; i++) {
     const code: number = str.charCodeAt(i);
-    const byte: number = UTF8_TO_SJIS_Table[code];
+    const { UTF8_TO_SJIS }: SJISTables = createTable();
+    const byte: number = UTF8_TO_SJIS[code];
 
     if (byte != null) {
       // 2bytes

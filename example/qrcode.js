@@ -3084,19 +3084,26 @@
         [0xea40, '鵝鵞鵤鵑鵐鵙鵲鶉鶇鶫鵯鵺鶚鶤鶩鶲鷄鷁鶻鶸鶺鷆鷏鷂鷙鷓鷸鷦鷭鷯鷽鸚鸛鸞鹵鹹鹽麁麈麋麌麒麕麑麝麥麩麸麪麭靡黌黎黏黐黔黜點黝黠黥黨黯'],
         [0xea80, '黴黶黷黹黻黼黽鼇鼈皷鼕鼡鼬鼾齊齒齔齣齟齠齡齦齧齬齪齷齲齶龕龜龠堯槇遙瑤凜熙']
     ];
-    var UTF8_TO_SJIS_Table = {};
-    var SJIS_TO_UTF8_Table = {};
-    var tLength = SJIS_UTF8_TABLE.length;
-    for (var i$1 = 0; i$1 < tLength; i$1++) {
-        var mapItem = SJIS_UTF8_TABLE[i$1];
-        var kanji = mapItem[1];
-        var kLength = kanji.length;
-        for (var j = 0; j < kLength; j++) {
-            var kCode = mapItem[0] + j;
-            var uCode = kanji.charAt(j).charCodeAt(0);
-            UTF8_TO_SJIS_Table[uCode] = kCode;
-            SJIS_TO_UTF8_Table[kCode] = uCode;
+    var tables;
+    function createTable() {
+        if (!tables) {
+            var UTF8_TO_SJIS = {};
+            var SJIS_TO_UTF8 = {};
+            var tLength = SJIS_UTF8_TABLE.length;
+            for (var i = 0; i < tLength; i++) {
+                var mapItem = SJIS_UTF8_TABLE[i];
+                var kanji = mapItem[1];
+                var kLength = kanji.length;
+                for (var j = 0; j < kLength; j++) {
+                    var kCode = mapItem[0] + j;
+                    var uCode = kanji.charAt(j).charCodeAt(0);
+                    UTF8_TO_SJIS[uCode] = kCode;
+                    SJIS_TO_UTF8[kCode] = uCode;
+                }
+            }
+            tables = { UTF8_TO_SJIS: UTF8_TO_SJIS, SJIS_TO_UTF8: SJIS_TO_UTF8 };
         }
+        return tables;
     }
     /**
      * @function SJIS
@@ -3108,7 +3115,8 @@
         var length = str.length;
         for (var i = 0; i < length; i++) {
             var code = str.charCodeAt(i);
-            var byte = UTF8_TO_SJIS_Table[code];
+            var UTF8_TO_SJIS = createTable().UTF8_TO_SJIS;
+            var byte = UTF8_TO_SJIS[code];
             if (byte != null) {
                 // 2bytes
                 bytes.push(byte >> 8);
@@ -3240,6 +3248,7 @@
         var pos = 0;
         var output = '';
         var length = bytes.length;
+        var SJIS_TO_UTF8 = createTable().SJIS_TO_UTF8;
         while (pos < length) {
             var byte = bytes[pos++];
             if (byte < 0x80) {
@@ -3253,7 +3262,7 @@
             else {
                 // KANJI
                 var code = (byte << 8) + bytes[pos++];
-                code = SJIS_TO_UTF8_Table[code];
+                code = SJIS_TO_UTF8[code];
                 output += code != null ? String.fromCharCode(code) : '?';
             }
         }
@@ -3271,6 +3280,7 @@
     function decodeKanji(stream, size) {
         var data = '';
         var bytes = [];
+        var SJIS_TO_UTF8 = createTable().SJIS_TO_UTF8;
         var characterCountSize = [8, 10, 12][size];
         var length = stream.readBits(characterCountSize);
         for (var i = 0; i < length; i++) {
@@ -3283,7 +3293,7 @@
                 c += 0xc140;
             }
             bytes.push(c >> 8, c & 0xff);
-            var b = SJIS_TO_UTF8_Table[c];
+            var b = SJIS_TO_UTF8[c];
             data += String.fromCharCode(b != null ? b : c);
         }
         return { bytes: bytes, data: data };
