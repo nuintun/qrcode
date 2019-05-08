@@ -103,3 +103,6 @@ qrcode.png
 
 # github pages
 _config.yml
+
+# build tools
+tools/
