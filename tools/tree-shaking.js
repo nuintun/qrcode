@@ -24,7 +24,9 @@ const src = process.argv[2];
 if (src === 'es5' || src === 'esnext') {
   read(src, src => {
     fs.readFile(src, (error, buffer) => {
-      if (!error) {
+      if (error) {
+        console.error(`fixed tree-shaking fail in file: ${src}`);
+      } else {
         const ast = parse(buffer.toString(), { sourceType: 'module' });
 
         traverse(ast, {
@@ -41,7 +43,11 @@ if (src === 'es5' || src === 'esnext') {
 
         const { code } = generate(ast, { retainLines: true });
 
-        fs.writeFile(src, code, () => {});
+        fs.writeFile(src, code, error => {
+          if (error) {
+            console.error(`fixed tree-shaking fail in file: ${src}`);
+          }
+        });
       }
     });
   });
