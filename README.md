@@ -1,6 +1,6 @@
 # QRCode
 
-> QRCode encode and decode library.
+> A pure JavaScript QRCode encode and decode library.
 >
 > [![NPM Version][npm-image]][npm-url]
 > [![Download Status][download-image]][npm-url]
