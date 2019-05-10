@@ -4588,7 +4588,6 @@
     /**
      * @module index
      * @author nuintun
-     * @author Kazuhiko Arase
      */
 
     exports.Decoder = Decoder;

@@ -1,7 +1,6 @@
 /**
  * @module index
  * @author nuintun
- * @author Kazuhiko Arase
  */
 
 export { Mode } from './qrcode/common/Mode';
