@@ -4,9 +4,9 @@
  * @author Kazuhiko Arase
  */
 
-import OutputStream from './OutputStream';
+import { OutputStream } from './OutputStream';
 
-export default class ByteArrayOutputStream extends OutputStream {
+export class ByteArrayOutputStream extends OutputStream {
   private bytes: number[] = [];
 
   public writeByte(byte: number): void {

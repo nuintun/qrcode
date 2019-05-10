@@ -26,7 +26,7 @@ const enum MaskPattern {
 
 export type maskFunc = (x: number, y: number) => boolean;
 
-export default function getMaskFunc(maskPattern: number): maskFunc {
+export function getMaskFunc(maskPattern: number): maskFunc {
   switch (maskPattern) {
     case MaskPattern.PATTERN000:
       return (x: number, y: number): boolean => ((x + y) & 0x1) === 0;

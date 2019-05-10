@@ -139,7 +139,7 @@ export function getTables(): SJISTables {
  * @param {string} str
  * @returns {number[]}
  */
-export default function SJIS(str: string): number[] {
+export function SJIS(str: string): number[] {
   const bytes: number[] = [];
   const length: number = str.length;
   const { UTF8_TO_SJIS }: SJISTables = getTables();

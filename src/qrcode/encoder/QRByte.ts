@@ -4,11 +4,11 @@
  * @author Kazuhiko Arase
  */
 
-import QRData from './QRData';
-import Mode from '../common/Mode';
-import BitBuffer from './BitBuffer';
-import stringToBytes from '../../encoding/UTF8';
-import EncodingHint from '../common/EncodingHint';
+import { QRData } from './QRData';
+import { Mode } from '../common/Mode';
+import { BitBuffer } from './BitBuffer';
+import { EncodingHint } from '../common/EncodingHint';
+import { UTF8 as stringToBytes } from '../../encoding/UTF8';
 
 interface EncodeResult {
   bytes: number[];
@@ -17,7 +17,7 @@ interface EncodeResult {
 
 type encode = (data: string) => EncodeResult;
 
-export default class QRByte extends QRData {
+export class QRByte extends QRData {
   public encoding: number = -1;
 
   /**

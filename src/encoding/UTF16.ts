@@ -3,7 +3,7 @@
  * @author nuintun
  */
 
-export default function UTF16(str: string): number[] {
+export function UTF16(str: string): number[] {
   const bytes: number[] = [];
   const length: number = str.length;
 

@@ -4,8 +4,8 @@
  * @author Cosmo Wolfe
  */
 
-import GenericGFPoly from './GenericGFPoly';
-import GenericGF, { addOrSubtractGF } from './GenericGF';
+import { GenericGFPoly } from './GenericGFPoly';
+import { GenericGF, addOrSubtractGF } from './GenericGF';
 
 function runEuclideanAlgorithm(field: GenericGF, a: GenericGFPoly, b: GenericGFPoly, R: number): GenericGFPoly[] {
   // Assume a's degree is >= b's
@@ -114,7 +114,7 @@ function findErrorMagnitudes(field: GenericGF, errorEvaluator: GenericGFPoly, er
   return result;
 }
 
-export default function decode(bytes: number[], twoS: number): Uint8ClampedArray {
+export function rsDecode(bytes: number[], twoS: number): Uint8ClampedArray {
   const outputBytes: Uint8ClampedArray = new Uint8ClampedArray(bytes.length);
 
   outputBytes.set(bytes);

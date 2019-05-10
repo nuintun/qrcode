@@ -4,13 +4,13 @@
  * @author Cosmo Wolfe
  */
 
-import GenericGFPoly from './GenericGFPoly';
+import { GenericGFPoly } from './GenericGFPoly';
 
 export function addOrSubtractGF(a: number, b: number): number {
   return a ^ b;
 }
 
-export default class GenericGF {
+export class GenericGF {
   public primitive: number;
   public size: number;
   public generatorBase: number;

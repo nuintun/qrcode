@@ -4,7 +4,7 @@
  * @author Cosmo Wolfe
  */
 
-export default interface Point {
+export interface Point {
   x: number;
   y: number;
 }

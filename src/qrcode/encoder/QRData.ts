@@ -4,10 +4,10 @@
  * @author Kazuhiko Arase
  */
 
-import Mode from '../common/Mode';
-import BitBuffer from './BitBuffer';
+import { Mode } from '../common/Mode';
+import { BitBuffer } from './BitBuffer';
 
-export default abstract class QRData {
+export abstract class QRData {
   protected mode: Mode;
   protected data: string;
   protected bytes: number[];

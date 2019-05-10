@@ -9,7 +9,7 @@
  * @returns {number[]}
  * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
  */
-export default function UTF8(str: string): number[] {
+export function UTF8(str: string): number[] {
   let pos: number = 0;
   const bytes: number[] = [];
   const length: number = str.length;

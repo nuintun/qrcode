@@ -4,9 +4,9 @@
  * @author Kazuhiko Arase
  */
 
-import QRCode from './QRCode';
 import * as QRMath from './QRMath';
-import Polynomial from './Polynomial';
+import { Encoder } from './Writer';
+import { Polynomial } from './Polynomial';
 
 const N1: number = 3;
 const N2: number = 3;
@@ -113,7 +113,7 @@ export function getBCHVersionInfo(data: number): number {
   return ((data << 10) | offset) ^ G15_MASK;
 }
 
-function applyMaskPenaltyRule1Internal(qrcode: QRCode, isHorizontal: boolean): number {
+function applyMaskPenaltyRule1Internal(qrcode: Encoder, isHorizontal: boolean): number {
   let penalty: number = 0;
   const moduleCount: number = qrcode.getModuleCount();
 
@@ -144,11 +144,11 @@ function applyMaskPenaltyRule1Internal(qrcode: QRCode, isHorizontal: boolean): n
   return penalty;
 }
 
-function applyMaskPenaltyRule1(qrcode: QRCode): number {
+function applyMaskPenaltyRule1(qrcode: Encoder): number {
   return applyMaskPenaltyRule1Internal(qrcode, true) + applyMaskPenaltyRule1Internal(qrcode, false);
 }
 
-function applyMaskPenaltyRule2(qrcode: QRCode): number {
+function applyMaskPenaltyRule2(qrcode: Encoder): number {
   let penalty: number = 0;
   const moduleCount: number = qrcode.getModuleCount();
 
@@ -165,7 +165,7 @@ function applyMaskPenaltyRule2(qrcode: QRCode): number {
   return penalty;
 }
 
-function isFourWhite(qrcode: QRCode, rangeIndex: number, from: number, to: number, isHorizontal: boolean): boolean {
+function isFourWhite(qrcode: Encoder, rangeIndex: number, from: number, to: number, isHorizontal: boolean): boolean {
   from = Math.max(from, 0);
   to = Math.min(to, qrcode.getModuleCount());
 
@@ -180,7 +180,7 @@ function isFourWhite(qrcode: QRCode, rangeIndex: number, from: number, to: numbe
   return true;
 }
 
-function applyMaskPenaltyRule3(qrcode: QRCode): number {
+function applyMaskPenaltyRule3(qrcode: Encoder): number {
   let penalty: number = 0;
   const moduleCount: number = qrcode.getModuleCount();
 
@@ -219,7 +219,7 @@ function applyMaskPenaltyRule3(qrcode: QRCode): number {
   return penalty;
 }
 
-function applyMaskPenaltyRule4(qrcode: QRCode): number {
+function applyMaskPenaltyRule4(qrcode: Encoder): number {
   let numDarkCells: number = 0;
   const moduleCount: number = qrcode.getModuleCount();
 
@@ -239,11 +239,11 @@ function applyMaskPenaltyRule4(qrcode: QRCode): number {
 
 /**
  * @function calculateMaskPenalty
- * @param {QRCode} qrcode
+ * @param {Encoder} qrcode
  * @see https://www.thonky.com/qr-code-tutorial/data-masking
  * @see https://github.com/zxing/zxing/blob/master/core/src/main/java/com/google/zxing/qrcode/encoder/MaskUtil.java
  */
-export function calculateMaskPenalty(qrcode: QRCode): number {
+export function calculateMaskPenalty(qrcode: Encoder): number {
   return (
     applyMaskPenaltyRule1(qrcode) +
     applyMaskPenaltyRule2(qrcode) +

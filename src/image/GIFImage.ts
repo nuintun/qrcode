@@ -4,9 +4,9 @@
  * @author Kazuhiko Arase
  */
 
-import OutputStream from '../io/OutputStream';
-import ByteArrayOutputStream from '../io/ByteArrayOutputStream';
-import Base64EncodeOutputStream from '../io/Base64EncodeOutputStream';
+import { OutputStream } from '../io/OutputStream';
+import { ByteArrayOutputStream } from '../io/ByteArrayOutputStream';
+import { Base64EncodeOutputStream } from '../io/Base64EncodeOutputStream';
 
 function encodeToBase64(data: number[]): number[] {
   const output: ByteArrayOutputStream = new ByteArrayOutputStream();
@@ -89,7 +89,7 @@ class BitOutputStream {
   }
 }
 
-export default class GIFImage {
+export class GIFImage {
   private width: number;
   private height: number;
   private data: number[];

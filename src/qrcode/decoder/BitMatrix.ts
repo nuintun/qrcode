@@ -4,7 +4,7 @@
  * @author Cosmo Wolfe
  */
 
-export default class BitMatrix {
+export class BitMatrix {
   public width: number;
   public height: number;
   private data: Uint8ClampedArray;

@@ -4,9 +4,9 @@
  * @author Kazuhiko Arase
  */
 
-import ErrorCorrectionLevel from '../common/ErrorCorrectionLevel';
+import { ErrorCorrectionLevel } from '../common/ErrorCorrectionLevel';
 
-export default class RSBlock {
+export class RSBlock {
   private static RS_BLOCK_TABLE = [
     // L
     // M

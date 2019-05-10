@@ -4,11 +4,11 @@
  * @author Cosmo Wolfe
  */
 
-import BitStream from './BitStream';
-import Mode from '../../../common/Mode';
-import EncodingHint from '../../../common/EncodingHint';
+import { BitStream } from './BitStream';
+import { Mode } from '../../../common/Mode';
+import { EncodingHint } from '../../../common/EncodingHint';
 import { getTables, SJISTables } from '../../../../encoding/SJIS';
-import ErrorCorrectionLevel from '../../../common/ErrorCorrectionLevel';
+import { ErrorCorrectionLevel } from '../../../common/ErrorCorrectionLevel';
 
 interface ByteChunk {
   mode: Mode.Numeric | Mode.Alphanumeric | Mode.Byte | Mode.Kanji;
@@ -251,7 +251,11 @@ function decodeKanji(stream: BitStream, size: number): DecodeData {
   return { bytes, data };
 }
 
-export function decode(data: Uint8ClampedArray, version: number, errorCorrectionLevel: ErrorCorrectionLevel): DecodeResult {
+export function bytesDecode(
+  data: Uint8ClampedArray,
+  version: number,
+  errorCorrectionLevel: ErrorCorrectionLevel
+): DecodeResult {
   let encoding: number = EncodingHint.UTF8;
   const stream: BitStream = new BitStream(data);
   // There are 3 'sizes' based on the version. 1-9 is small (0), 10-26 is medium (1) and 27-40 is large (2).

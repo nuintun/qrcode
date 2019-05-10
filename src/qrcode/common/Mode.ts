@@ -5,7 +5,7 @@
  * @author Kazuhiko Arase
  */
 
-enum Mode {
+export enum Mode {
   Terminator = 0x0,
   Numeric = 0x1,
   Alphanumeric = 0x2,
@@ -16,5 +16,3 @@ enum Mode {
   // FNC1FirstPosition = 0x5,
   // FNC1SecondPosition = 0x9
 }
-
-export default Mode;

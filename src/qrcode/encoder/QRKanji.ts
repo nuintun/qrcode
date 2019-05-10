@@ -5,12 +5,12 @@
  * @description SJIS only
  */
 
-import QRData from './QRData';
-import Mode from '../common/Mode';
-import BitBuffer from './BitBuffer';
-import stringToBytes from '../../encoding/SJIS';
+import { QRData } from './QRData';
+import { Mode } from '../common/Mode';
+import { BitBuffer } from './BitBuffer';
+import { SJIS as stringToBytes } from '../../encoding/SJIS';
 
-export default class QRKanji extends QRData {
+export class QRKanji extends QRData {
   /**
    * @constructor
    * @param {string} data

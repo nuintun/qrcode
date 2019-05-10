@@ -4,10 +4,10 @@
  * @author Kazuhiko Arase
  */
 
-import QRData from './QRData';
-import Mode from '../common/Mode';
-import BitBuffer from './BitBuffer';
-import { default as stringToBytes } from '../../encoding/UTF16';
+import { QRData } from './QRData';
+import { Mode } from '../common/Mode';
+import { BitBuffer } from './BitBuffer';
+import { UTF16 as stringToBytes } from '../../encoding/UTF16';
 
 function getCode(byte: number): number {
   if (0x30 <= byte && byte <= 0x39) {
@@ -51,7 +51,7 @@ function getCode(byte: number): number {
   }
 }
 
-export default class QRAlphanumeric extends QRData {
+export class QRAlphanumeric extends QRData {
   /**
    * @constructor
    * @param {string} data

@@ -1,6 +1,6 @@
 {
   "name": "@nuintun/qrcode",
-  "version": "0.21.0",
+  "version": "0.30.0",
   "description": "A pure JavaScript QRCode encode and decode library.",
   "main": "es5/index.js",
   "module": "esnext/index.js",
@@ -19,21 +19,23 @@
     "url": "https://github.com/nuintun/qrcode/issues"
   },
   "scripts": {
+    "clean": "node tools/clean.js",
     "prepublishOnly": "npm run build",
+    "build:es5": "rollup -c tools/rollup.es5.js",
     "example": "rollup -c example/rollup.config.js",
-    "build": "npm run build:es5 && npm run build:esnext",
-    "build:es5": "tsc --pretty --module commonjs --outDir es5 & node tools/tree-shaking.js es5",
-    "build:esnext": "tsc --pretty --module esnext --outDir esnext & node tools/tree-shaking.js esnext"
+    "build:esnext": "rollup -c tools/rollup.esnext.js",
+    "build": "npm run clean & npm run build:es5 & npm run build:esnext"
   },
   "dependencies": {
     "tslib": "^1.9.3"
   },
   "devDependencies": {
+    "del": "^4.1.1",
     "rollup": "^1.11.3",
     "typescript": "^3.4.5",
-    "@babel/parser": "7.4.4",
-    "@babel/traverse": "^7.4.4",
-    "@babel/generator": "7.4.4",
+    "acorn-walk": "^6.1.1",
+    "magic-string": "^0.25.2",
+    "rollup-plugin-typescript2": "^0.21.0",
     "rollup-plugin-node-resolve": "^4.2.3"
   },
   "homepage": "https://github.com/nuintun/qrcode#readme"

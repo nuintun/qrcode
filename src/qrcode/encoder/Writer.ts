@@ -4,16 +4,16 @@
  * @author Kazuhiko Arase
  */
 
-import QRByte from './QRByte';
-import QRData from './QRData';
-import RSBlock from './RSBlock';
-import Mode from '../common/Mode';
+import { QRByte } from './QRByte';
+import { QRData } from './QRData';
 import * as QRUtil from './QRUtil';
-import BitBuffer from './BitBuffer';
-import Polynomial from './Polynomial';
-import GIFImage from '../../image/GIFImage';
-import getMaskFunc, { maskFunc } from '../common/MaskPattern';
-import ErrorCorrectionLevel from '../common/ErrorCorrectionLevel';
+import { RSBlock } from './RSBlock';
+import { Mode } from '../common/Mode';
+import { BitBuffer } from './BitBuffer';
+import { Polynomial } from './Polynomial';
+import { GIFImage } from '../../image/GIFImage';
+import { getMaskFunc, maskFunc } from '../common/MaskPattern';
+import { ErrorCorrectionLevel } from '../common/ErrorCorrectionLevel';
 
 const PAD0: number = 0xec;
 const PAD1: number = 0x11;
@@ -177,7 +177,7 @@ function createData(buffer: BitBuffer, rsBlocks: RSBlock[], maxDataCount: number
   return createBytes(buffer, rsBlocks);
 }
 
-export default class QRCode {
+export class Encoder {
   private version: number = 0;
   private chunks: QRData[] = [];
   private moduleCount: number = 0;

@@ -4,7 +4,7 @@
  * @author Kazuhiko Arase
  */
 
-export default class BitBuffer {
+export class BitBuffer {
   private length: number = 0;
   private buffer: number[] = [];
 

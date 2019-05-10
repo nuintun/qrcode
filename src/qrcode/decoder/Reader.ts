@@ -4,13 +4,12 @@
  * @author Cosmo Wolfe
  */
 
-import Point from './Point';
-import BitMatrix from './BitMatrix';
-import decodeQRCode from './decoder';
-import locate, { QRLocation } from './locator';
-import { DecodeResult } from './decoder/decode';
-import extract, { ExtractResult } from './extractor';
-import binarize, { BinarizeResult } from './binarizer';
+import { Point } from './Point';
+import { BitMatrix } from './BitMatrix';
+import { locate, QRLocation } from './locator';
+import { decode, DecodeResult } from './decoder';
+import { extract, ExtractResult } from './extractor';
+import { binarize, BinarizeResult } from './binarizer';
 
 export interface DecoderResult extends DecodeResult {
   location: {
@@ -33,7 +32,7 @@ function scan(matrix: BitMatrix): DecoderResult {
   }
 
   const extracted: ExtractResult = extract(matrix, location);
-  const decoded: DecodeResult = decodeQRCode(extracted.matrix);
+  const decoded: DecodeResult = decode(extracted.matrix);
 
   if (!decoded) {
     return null;
@@ -69,7 +68,7 @@ function disposeImageEvents(image: HTMLImageElement): void {
   image.onerror = null;
 }
 
-export default class QRCode {
+export class Decoder {
   private options: Options = defaultOptions;
 
   /**

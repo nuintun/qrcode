@@ -6,7 +6,7 @@
 
 import * as QRMath from './QRMath';
 
-export default class Polynomial {
+export class Polynomial {
   private num: number[];
 
   public constructor(num: number[], shift: number = 0) {

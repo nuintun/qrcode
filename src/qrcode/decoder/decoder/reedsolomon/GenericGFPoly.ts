@@ -4,9 +4,9 @@
  * @author Cosmo Wolfe
  */
 
-import GenericGF, { addOrSubtractGF } from './GenericGF';
+import { GenericGF, addOrSubtractGF } from './GenericGF';
 
-export default class GenericGFPoly {
+export class GenericGFPoly {
   private field: GenericGF;
   private coefficients: Uint8ClampedArray;
 

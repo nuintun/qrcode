@@ -9,7 +9,7 @@
  * @readonly
  * @enum {L, M, Q, H}
  */
-enum ErrorCorrectionLevel {
+export enum ErrorCorrectionLevel {
   // 7%
   L = 1,
   // 15%
@@ -19,5 +19,3 @@ enum ErrorCorrectionLevel {
   // 30%
   H = 2
 }
-
-export default ErrorCorrectionLevel;

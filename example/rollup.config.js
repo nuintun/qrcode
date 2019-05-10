@@ -1,5 +1,13 @@
-// rollup.config.js
+/**
+ * @module rollup.config
+ * @license MIT
+ * @author nuintun
+ */
+
+import del from 'del';
 import resolve from 'rollup-plugin-node-resolve';
+
+del.sync(['example/qrcode.js'], { force: true });
 
 export default {
   input: 'esnext/index.js',

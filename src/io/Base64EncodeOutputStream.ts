@@ -4,7 +4,7 @@
  * @author Kazuhiko Arase
  */
 
-import OutputStream from './OutputStream';
+import { OutputStream } from './OutputStream';
 
 function encode(ch: number): number {
   if (ch >= 0) {
@@ -29,7 +29,7 @@ function encode(ch: number): number {
   throw `illegal char: ${String.fromCharCode(ch)}`;
 }
 
-export default class Base64EncodeOutputStream extends OutputStream {
+export class Base64EncodeOutputStream extends OutputStream {
   private buffer = 0;
   private length = 0;
   private bufLength = 0;

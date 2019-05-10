@@ -4,7 +4,7 @@
  * @author Cosmo Wolfe
  */
 
-export default class BitStream {
+export class BitStream {
   private bytes: Uint8ClampedArray;
   private byteOffset: number = 0;
   private bitOffset: number = 0;

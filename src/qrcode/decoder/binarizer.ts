@@ -4,7 +4,7 @@
  * @author Cosmo Wolfe
  */
 
-import BitMatrix from './BitMatrix';
+import { BitMatrix } from './BitMatrix';
 
 const REGION_SIZE: number = 8;
 const MIN_DYNAMIC_RANGE: number = 24;
@@ -37,12 +37,7 @@ export interface BinarizeResult {
   binarized: BitMatrix;
 }
 
-export default function binarize(
-  data: Uint8ClampedArray,
-  width: number,
-  height: number,
-  returnInverted: boolean
-): BinarizeResult {
+export function binarize(data: Uint8ClampedArray, width: number, height: number, returnInverted: boolean): BinarizeResult {
   if (data.length !== width * height * 4) {
     throw 'malformed data passed to binarizer';
   }

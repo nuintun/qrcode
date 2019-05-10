@@ -4,9 +4,9 @@
  * @author Cosmo Wolfe
  */
 
-import Point from './Point';
-import BitMatrix from './BitMatrix';
+import { Point } from './Point';
 import { QRLocation } from './locator';
+import { BitMatrix } from './BitMatrix';
 
 interface PerspectiveTransform {
   a11: number;
@@ -98,7 +98,7 @@ function times(a: PerspectiveTransform, b: PerspectiveTransform): PerspectiveTra
   };
 }
 
-export default function extract(image: BitMatrix, location: QRLocation): ExtractResult {
+export function extract(image: BitMatrix, location: QRLocation): ExtractResult {
   const qToS: PerspectiveTransform = quadrilateralToSquare(
     { x: 3.5, y: 3.5 },
     { x: location.dimension - 3.5, y: 3.5 },

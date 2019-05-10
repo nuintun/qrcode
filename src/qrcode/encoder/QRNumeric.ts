@@ -4,10 +4,10 @@
  * @author Kazuhiko Arase
  */
 
-import QRData from './QRData';
-import Mode from '../common/Mode';
-import BitBuffer from './BitBuffer';
-import { default as stringToBytes } from '../../encoding/UTF16';
+import { QRData } from './QRData';
+import { Mode } from '../common/Mode';
+import { BitBuffer } from './BitBuffer';
+import { UTF16 as stringToBytes } from '../../encoding/UTF16';
 
 function getCode(byte: number): number {
   // 0 - 9
@@ -29,7 +29,7 @@ function getBatchCode(bytes: number[]): number {
   return num;
 }
 
-export default class QRNumeric extends QRData {
+export class QRNumeric extends QRData {
   /**
    * @constructor
    * @param {string} data

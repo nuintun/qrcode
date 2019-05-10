@@ -4,8 +4,8 @@
  * @author Cosmo Wolfe
  */
 
-import Point from './Point';
-import BitMatrix from './BitMatrix';
+import { Point } from './Point';
+import { BitMatrix } from './BitMatrix';
 
 const MIN_QUAD_RATIO: number = 0.5;
 const MAX_QUAD_RATIO: number = 1.5;
@@ -280,7 +280,7 @@ interface AlignmentPattern extends Point {
   score: number;
 }
 
-export default function locate(matrix: BitMatrix): QRLocation {
+export function locate(matrix: BitMatrix): QRLocation {
   const finderPatternQuads: Quad[] = [];
   const alignmentPatternQuads: Quad[] = [];
   let activeFinderPatternQuads: Quad[] = [];

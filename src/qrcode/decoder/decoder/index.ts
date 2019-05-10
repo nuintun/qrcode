@@ -4,12 +4,14 @@
  * @author Cosmo Wolfe
  */
 
-import rsDecode from './reedsolomon';
-import BitMatrix from '../BitMatrix';
+import { rsDecode } from './reedsolomon';
+import { BitMatrix } from '../BitMatrix';
+import { bytesDecode, DecodeResult } from './decode';
 import { Version, VERSIONS, ECLevel } from './version';
-import { decode as decodeBytes, DecodeResult } from './decode';
-import getMaskFunc, { maskFunc } from '../../common/MaskPattern';
-import ErrorCorrectionLevel from '../../common/ErrorCorrectionLevel';
+import { getMaskFunc, maskFunc } from '../../common/MaskPattern';
+import { ErrorCorrectionLevel } from '../../common/ErrorCorrectionLevel';
+
+export { DecodeResult };
 
 function numBitsDiffering(x: number, y: number): number {
   let z: number = x ^ y;
@@ -370,13 +372,13 @@ function decodeMatrix(matrix: BitMatrix): DecodeResult {
   }
 
   try {
-    return decodeBytes(resultBytes, version.versionNumber, formatInfo.errorCorrectionLevel);
+    return bytesDecode(resultBytes, version.versionNumber, formatInfo.errorCorrectionLevel);
   } catch {
     return null;
   }
 }
 
-export default function decode(matrix: BitMatrix): DecodeResult {
+export function decode(matrix: BitMatrix): DecodeResult {
   if (matrix == null) {
     return null;
   }
