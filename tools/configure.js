@@ -88,6 +88,11 @@ function extract(node, code) {
   }
 }
 
+/***
+ * @function treeShake
+ * @description Fixed tree shaking for typescript and rollup preserve modules
+ * @see https://github.com/GiG/rollup-plugin-rename-extensions
+ */
 function treeShake() {
   return {
     name: 'rollup-plugin-tree-shake',
@@ -141,12 +146,12 @@ export default function configure(esnext) {
     external: ['tslib'],
     input: 'src/index.ts',
     preserveModules: true,
-    output: { format: esnext ? 'esm' : 'cjs', dir: esnext ? 'esnext' : 'es5' },
-    plugins: [typescript({ tsconfigOverride, clean: true, useTsconfigDeclarationDir: true }), treeShake()],
     onwarn(error, warn) {
       if (error.code !== 'CIRCULAR_DEPENDENCY') {
         warn(error);
       }
-    }
+    },
+    output: { format: esnext ? 'esm' : 'cjs', dir: esnext ? 'esnext' : 'es5' },
+    plugins: [typescript({ tsconfigOverride, clean: true, useTsconfigDeclarationDir: true }), treeShake()]
   };
 }
