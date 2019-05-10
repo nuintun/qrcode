@@ -4597,6 +4597,4 @@
     exports.QRKanji = QRKanji;
     exports.QRNumeric = QRNumeric;
 
-    Object.defineProperty(exports, '__esModule', { value: true });
-
 }));

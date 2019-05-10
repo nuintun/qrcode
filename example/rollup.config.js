@@ -14,6 +14,7 @@ export default {
   output: {
     format: 'umd',
     name: 'QRCode',
+    esModule: false,
     amd: { id: 'qrcode' },
     file: 'example/qrcode.js'
   },
