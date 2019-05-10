@@ -92,9 +92,9 @@ function treeShake() {
   return {
     name: 'rollup-plugin-tree-shake',
     generateBundle(options, bundle) {
-      const files = Object.values(bundle);
+      const files = Object.entries(bundle);
 
-      for (const file of files) {
+      for (const [key, file] of files) {
         if (!file.isAsset) {
           const code = new MagicString(file.code);
           const ast = this.parse(file.code, {
@@ -119,7 +119,15 @@ function treeShake() {
             ExportNamedDeclaration: walk
           });
 
+          if (options.sourcemap) {
+            file.map = code.generateMap();
+          }
+
           file.code = code.toString();
+
+          delete bundle[key];
+
+          bundle[rewrite(key)] = file;
         }
       }
     }
