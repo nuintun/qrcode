@@ -321,16 +321,16 @@
                 return this;
             }
             var ratio = glog(this.getAt(0)) - glog(e.getAt(0));
-            // create copy
+            // Create copy
             var num = [];
             for (var i = 0; i < tLength; i++) {
                 num.push(this.getAt(i));
             }
-            // subtract and calc rest.
+            // Subtract and calc rest.
             for (var i = 0; i < eLength; i++) {
                 num[i] ^= gexp(glog(e.getAt(i)) + ratio);
             }
-            // call recursively
+            // Call recursively
             return new Polynomial(num).mod(e);
         };
         return Polynomial;
@@ -840,7 +840,7 @@
             }
         };
         OutputStream.prototype.flush = function () {
-            // flush
+            // The flush method
         };
         OutputStream.prototype.close = function () {
             this.flush();
@@ -928,7 +928,7 @@
                 this.bufLength = 0;
             }
             if (this.length % 3 != 0) {
-                // padding
+                // Padding
                 var pad = 3 - (this.length % 3);
                 for (var i = 0; i < pad; i++) {
                     // =
@@ -1021,6 +1021,59 @@
                 this.data[i] = 0;
             }
         }
+        GIFImage.prototype.getLZWRaster = function (lzwMinCodeSize) {
+            var clearCode = 1 << lzwMinCodeSize;
+            var endCode = (1 << lzwMinCodeSize) + 1;
+            // Setup LZWTable
+            var table = new LZWTable();
+            for (var i = 0; i < clearCode; i++) {
+                table.add(String.fromCharCode(i));
+            }
+            table.add(String.fromCharCode(clearCode));
+            table.add(String.fromCharCode(endCode));
+            var byteOutput = new ByteArrayOutputStream();
+            var bitOutput = new BitOutputStream(byteOutput);
+            var bitLength = lzwMinCodeSize + 1;
+            try {
+                // clear code
+                bitOutput.write(clearCode, bitLength);
+                var dataIndex = 0;
+                var s = String.fromCharCode(this.data[dataIndex++]);
+                var length_1 = this.data.length;
+                while (dataIndex < length_1) {
+                    var c = String.fromCharCode(this.data[dataIndex++]);
+                    if (table.contains(s + c)) {
+                        s = s + c;
+                    }
+                    else {
+                        bitOutput.write(table.indexOf(s), bitLength);
+                        if (table.getSize() < 0xfff) {
+                            if (table.getSize() === 1 << bitLength) {
+                                bitLength++;
+                            }
+                            table.add(s + c);
+                        }
+                        s = c;
+                    }
+                }
+                bitOutput.write(table.indexOf(s), bitLength);
+                // end code
+                bitOutput.write(endCode, bitLength);
+            }
+            finally {
+                bitOutput.close();
+            }
+            return byteOutput.toByteArray();
+        };
+        GIFImage.prototype.writeWord = function (output, i) {
+            output.writeByte(i & 0xff);
+            output.writeByte((i >>> 8) & 0xff);
+        };
+        GIFImage.prototype.writeBytes = function (output, bytes, off, length) {
+            for (var i = 0; i < length; i++) {
+                output.writeByte(bytes[i + off]);
+            }
+        };
         GIFImage.prototype.setPixel = function (x, y, pixel) {
             if (x < 0 || this.width <= x)
                 throw "illegal x axis: " + x;
@@ -1083,59 +1136,6 @@
             output.writeByte(0x00);
             // GIF Terminator
             output.writeByte(0x3b); // ;
-        };
-        GIFImage.prototype.getLZWRaster = function (lzwMinCodeSize) {
-            var clearCode = 1 << lzwMinCodeSize;
-            var endCode = (1 << lzwMinCodeSize) + 1;
-            // Setup LZWTable
-            var table = new LZWTable();
-            for (var i = 0; i < clearCode; i++) {
-                table.add(String.fromCharCode(i));
-            }
-            table.add(String.fromCharCode(clearCode));
-            table.add(String.fromCharCode(endCode));
-            var byteOutput = new ByteArrayOutputStream();
-            var bitOutput = new BitOutputStream(byteOutput);
-            var bitLength = lzwMinCodeSize + 1;
-            try {
-                // clear code
-                bitOutput.write(clearCode, bitLength);
-                var dataIndex = 0;
-                var s = String.fromCharCode(this.data[dataIndex++]);
-                var length_1 = this.data.length;
-                while (dataIndex < length_1) {
-                    var c = String.fromCharCode(this.data[dataIndex++]);
-                    if (table.contains(s + c)) {
-                        s = s + c;
-                    }
-                    else {
-                        bitOutput.write(table.indexOf(s), bitLength);
-                        if (table.getSize() < 0xfff) {
-                            if (table.getSize() === 1 << bitLength) {
-                                bitLength++;
-                            }
-                            table.add(s + c);
-                        }
-                        s = c;
-                    }
-                }
-                bitOutput.write(table.indexOf(s), bitLength);
-                // end code
-                bitOutput.write(endCode, bitLength);
-            }
-            finally {
-                bitOutput.close();
-            }
-            return byteOutput.toByteArray();
-        };
-        GIFImage.prototype.writeWord = function (output, i) {
-            output.writeByte(i & 0xff);
-            output.writeByte((i >>> 8) & 0xff);
-        };
-        GIFImage.prototype.writeBytes = function (output, bytes, off, length) {
-            for (var i = 0; i < length; i++) {
-                output.writeByte(bytes[i + off]);
-            }
         };
         GIFImage.prototype.toDataURL = function () {
             var output = new ByteArrayOutputStream();
@@ -1220,7 +1220,7 @@
         for (var i = 0; i < dLength; i++) {
             var data = chunks[i];
             var mode = data.getMode();
-            // default set encoding UTF-8 when has encoding hint
+            // Default set encoding UTF-8 when has encoding hint
             if (hasEncodingHint && mode === exports.Mode.Byte) {
                 appendECI(data.encoding, buffer);
             }
@@ -1228,7 +1228,7 @@
             buffer.put(data.getLength(), data.getLengthInBits(version));
             data.write(buffer);
         }
-        // calc max data count
+        // Calc max data count
         var maxDataCount = 0;
         var rLength = rsBlocks.length;
         for (var i = 0; i < rLength; i++) {
@@ -1288,15 +1288,15 @@
         if (buffer.getLengthInBits() > maxDataCount) {
             throw "data overflow: " + buffer.getLengthInBits() + " > " + maxDataCount;
         }
-        // end
+        // End
         if (buffer.getLengthInBits() + 4 <= maxDataCount) {
             buffer.put(0, 4);
         }
-        // padding
+        // Padding
         while (buffer.getLengthInBits() % 8 !== 0) {
             buffer.putBit(false);
         }
-        // padding
+        // Padding
         while (true) {
             if (buffer.getLengthInBits() >= maxDataCount) {
                 break;
@@ -1484,7 +1484,7 @@
             var moduleCount = this.moduleCount;
             for (var i = 0; i < 15; i++) {
                 var bit = ((bits >> i) & 1) === 1;
-                // vertical
+                // Vertical
                 if (i < 6) {
                     this.modules[i][8] = bit;
                 }
@@ -1494,7 +1494,7 @@
                 else {
                     this.modules[moduleCount - 15 + i][8] = bit;
                 }
-                // horizontal
+                // Horizontal
                 if (i < 8) {
                     this.modules[8][moduleCount - i - 1] = bit;
                 }
@@ -1505,7 +1505,7 @@
                     this.modules[8][15 - i - 1] = bit;
                 }
             }
-            // fixed point
+            // Fixed point
             this.modules[moduleCount - 8][8] = true;
         };
         Encoder.prototype.setupVersionInfo = function () {
@@ -1520,23 +1520,23 @@
             }
         };
         Encoder.prototype.setupCodewords = function (data, maskPattern) {
-            // bit index into the data
+            // Bit index into the data
             var bitIndex = 0;
             var moduleCount = this.moduleCount;
             var bitLength = data.getLengthInBits();
-            // do the funny zigzag scan
+            // Do the funny zigzag scan
             for (var right = moduleCount - 1; right >= 1; right -= 2) {
-                // index of right column in each column pair
+                // Index of right column in each column pair
                 if (right === 6) {
                     right = 5;
                 }
                 for (var vert = 0; vert < moduleCount; vert++) {
-                    // vertical counter
+                    // Vertical counter
                     for (var j = 0; j < 2; j++) {
-                        // actual x coordinate
+                        // Actual x coordinate
                         var x = right - j;
                         var upward = ((right + 1) & 2) === 0;
-                        // actual y coordinate
+                        // Actual y coordinate
                         var y = upward ? moduleCount - 1 - vert : vert;
                         if (this.modules[y][x] !== null) {
                             continue;
@@ -1556,7 +1556,7 @@
             }
         };
         Encoder.prototype.buildMatrix = function (data, maskPattern) {
-            // initialize modules
+            // Initialize modules
             this.modules = [];
             var moduleCount = this.moduleCount;
             for (var row = 0; row < moduleCount; row++) {
@@ -1565,19 +1565,19 @@
                     this.modules[row][col] = null;
                 }
             }
-            // setup finder pattern
+            // Setup finder pattern
             this.setupFinderPattern(0, 0);
             this.setupFinderPattern(moduleCount - 7, 0);
             this.setupFinderPattern(0, moduleCount - 7);
-            // setup alignment pattern
+            // Setup alignment pattern
             this.setupAlignmentPattern();
-            // setup timing pattern
+            // Setup timing pattern
             this.setupTimingPattern();
-            // setup format info
+            // Setup format info
             this.setupFormatInfo(maskPattern);
-            // setup version info
+            // Setup version info
             this.setupVersionInfo();
-            // setup codewords
+            // Setup codewords
             this.setupCodewords(data, maskPattern);
         };
         /**
@@ -1601,13 +1601,13 @@
             else {
                 _b = prepareData(this.version, errorCorrectionLevel, this.hasEncodingHint, chunks), buffer = _b[0], rsBlocks = _b[1], maxDataCount = _b[2];
             }
-            // calc module count
+            // Calc module count
             this.moduleCount = this.version * 4 + 17;
             var matrices = [];
             var data = createData(buffer, rsBlocks, maxDataCount);
             var bestMaskPattern = -1;
             var minPenalty = Number.MAX_VALUE;
-            // choose best mask pattern
+            // Choose best mask pattern
             for (var maskPattern = 0; maskPattern < 8; maskPattern++) {
                 this.buildMatrix(data, maskPattern);
                 matrices.push(this.modules);
@@ -2555,7 +2555,7 @@
             var code = str.charCodeAt(i);
             var byte = UTF8_TO_SJIS[code];
             if (byte != null) {
-                // 2bytes
+                // 2 bytes
                 bytes.push(byte >> 8);
                 bytes.push(byte & 0xff);
             }
@@ -4343,7 +4343,7 @@
             var _this = this;
             return new Promise(function (resolve, reject) {
                 var image = new Image();
-                // image cross origin
+                // Image cross origin
                 image.crossOrigin = 'anonymous';
                 image.onload = function () {
                     disposeImageEvents(image);

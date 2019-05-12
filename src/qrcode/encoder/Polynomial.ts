@@ -67,19 +67,19 @@ export class Polynomial {
 
     const ratio: number = QRMath.glog(this.getAt(0)) - QRMath.glog(e.getAt(0));
 
-    // create copy
+    // Create copy
     const num: number[] = [];
 
     for (let i: number = 0; i < tLength; i++) {
       num.push(this.getAt(i));
     }
 
-    // subtract and calc rest.
+    // Subtract and calc rest.
     for (let i: number = 0; i < eLength; i++) {
       num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i)) + ratio);
     }
 
-    // call recursively
+    // Call recursively
     return new Polynomial(num).mod(e);
   }
 }

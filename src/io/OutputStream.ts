@@ -16,7 +16,7 @@ export abstract class OutputStream {
   }
 
   public flush(): void {
-    // flush
+    // The flush method
   }
 
   public close(): void {

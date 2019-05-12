@@ -60,7 +60,7 @@ function prepareData(
     const data: QRData = chunks[i];
     const mode: Mode = data.getMode();
 
-    // default set encoding UTF-8 when has encoding hint
+    // Default set encoding UTF-8 when has encoding hint
     if (hasEncodingHint && mode === Mode.Byte) {
       appendECI((data as QRByte).encoding, buffer);
     }
@@ -70,7 +70,7 @@ function prepareData(
     data.write(buffer);
   }
 
-  // calc max data count
+  // Calc max data count
   let maxDataCount: number = 0;
   const rLength: number = rsBlocks.length;
 
@@ -149,17 +149,17 @@ function createData(buffer: BitBuffer, rsBlocks: RSBlock[], maxDataCount: number
     throw `data overflow: ${buffer.getLengthInBits()} > ${maxDataCount}`;
   }
 
-  // end
+  // End
   if (buffer.getLengthInBits() + 4 <= maxDataCount) {
     buffer.put(0, 4);
   }
 
-  // padding
+  // Padding
   while (buffer.getLengthInBits() % 8 !== 0) {
     buffer.putBit(false);
   }
 
-  // padding
+  // Padding
   while (true) {
     if (buffer.getLengthInBits() >= maxDataCount) {
       break;
@@ -372,7 +372,7 @@ export class Encoder {
     for (let i: number = 0; i < 15; i++) {
       const bit: boolean = ((bits >> i) & 1) === 1;
 
-      // vertical
+      // Vertical
       if (i < 6) {
         this.modules[i][8] = bit;
       } else if (i < 8) {
@@ -381,7 +381,7 @@ export class Encoder {
         this.modules[moduleCount - 15 + i][8] = bit;
       }
 
-      // horizontal
+      // Horizontal
       if (i < 8) {
         this.modules[8][moduleCount - i - 1] = bit;
       } else if (i < 9) {
@@ -391,7 +391,7 @@ export class Encoder {
       }
     }
 
-    // fixed point
+    // Fixed point
     this.modules[moduleCount - 8][8] = true;
   }
 
@@ -410,25 +410,25 @@ export class Encoder {
   }
 
   private setupCodewords(data: BitBuffer, maskPattern: number): void {
-    // bit index into the data
+    // Bit index into the data
     let bitIndex: number = 0;
     const moduleCount: number = this.moduleCount;
     const bitLength: number = data.getLengthInBits();
 
-    // do the funny zigzag scan
+    // Do the funny zigzag scan
     for (let right: number = moduleCount - 1; right >= 1; right -= 2) {
-      // index of right column in each column pair
+      // Index of right column in each column pair
       if (right === 6) {
         right = 5;
       }
 
       for (let vert: number = 0; vert < moduleCount; vert++) {
-        // vertical counter
+        // Vertical counter
         for (let j: number = 0; j < 2; j++) {
-          // actual x coordinate
+          // Actual x coordinate
           const x: number = right - j;
           const upward: boolean = ((right + 1) & 2) === 0;
-          // actual y coordinate
+          // Actual y coordinate
           const y: number = upward ? moduleCount - 1 - vert : vert;
 
           if (this.modules[y][x] !== null) {
@@ -455,7 +455,7 @@ export class Encoder {
   }
 
   private buildMatrix(data: BitBuffer, maskPattern: number): void {
-    // initialize modules
+    // Initialize modules
     this.modules = [];
 
     const moduleCount: number = this.moduleCount;
@@ -468,24 +468,24 @@ export class Encoder {
       }
     }
 
-    // setup finder pattern
+    // Setup finder pattern
     this.setupFinderPattern(0, 0);
     this.setupFinderPattern(moduleCount - 7, 0);
     this.setupFinderPattern(0, moduleCount - 7);
 
-    // setup alignment pattern
+    // Setup alignment pattern
     this.setupAlignmentPattern();
 
-    // setup timing pattern
+    // Setup timing pattern
     this.setupTimingPattern();
 
-    // setup format info
+    // Setup format info
     this.setupFormatInfo(maskPattern);
 
-    // setup version info
+    // Setup version info
     this.setupVersionInfo();
 
-    // setup codewords
+    // Setup codewords
     this.setupCodewords(data, maskPattern);
   }
 
@@ -511,7 +511,7 @@ export class Encoder {
       [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, this.hasEncodingHint, chunks);
     }
 
-    // calc module count
+    // Calc module count
     this.moduleCount = this.version * 4 + 17;
 
     const matrices: boolean[][][] = [];
@@ -520,7 +520,7 @@ export class Encoder {
     let bestMaskPattern: number = -1;
     let minPenalty: number = Number.MAX_VALUE;
 
-    // choose best mask pattern
+    // Choose best mask pattern
     for (let maskPattern: number = 0; maskPattern < 8; maskPattern++) {
       this.buildMatrix(data, maskPattern);
 

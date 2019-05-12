@@ -65,7 +65,7 @@ export class Base64EncodeOutputStream extends OutputStream {
     }
 
     if (this.length % 3 != 0) {
-      // padding
+      // Padding
       const pad: number = 3 - (this.length % 3);
 
       for (let i: number = 0; i < pad; i++) {

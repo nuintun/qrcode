@@ -115,7 +115,7 @@ export class Decoder {
     return new Promise((resolve, reject) => {
       const image: HTMLImageElement = new Image();
 
-      // image cross origin
+      // Image cross origin
       image.crossOrigin = 'anonymous';
 
       image.onload = () => {

@@ -106,6 +106,76 @@ export class GIFImage {
     }
   }
 
+  private getLZWRaster(lzwMinCodeSize: number): number[] {
+    const clearCode: number = 1 << lzwMinCodeSize;
+    const endCode: number = (1 << lzwMinCodeSize) + 1;
+
+    // Setup LZWTable
+    const table: LZWTable = new LZWTable();
+
+    for (let i: number = 0; i < clearCode; i++) {
+      table.add(String.fromCharCode(i));
+    }
+
+    table.add(String.fromCharCode(clearCode));
+    table.add(String.fromCharCode(endCode));
+
+    const byteOutput: ByteArrayOutputStream = new ByteArrayOutputStream();
+    const bitOutput: BitOutputStream = new BitOutputStream(byteOutput);
+
+    let bitLength: number = lzwMinCodeSize + 1;
+
+    try {
+      // clear code
+      bitOutput.write(clearCode, bitLength);
+
+      let dataIndex: number = 0;
+      let s: string = String.fromCharCode(this.data[dataIndex++]);
+
+      const length: number = this.data.length;
+
+      while (dataIndex < length) {
+        const c: string = String.fromCharCode(this.data[dataIndex++]);
+
+        if (table.contains(s + c)) {
+          s = s + c;
+        } else {
+          bitOutput.write(table.indexOf(s), bitLength);
+
+          if (table.getSize() < 0xfff) {
+            if (table.getSize() === 1 << bitLength) {
+              bitLength++;
+            }
+
+            table.add(s + c);
+          }
+
+          s = c;
+        }
+      }
+
+      bitOutput.write(table.indexOf(s), bitLength);
+
+      // end code
+      bitOutput.write(endCode, bitLength);
+    } finally {
+      bitOutput.close();
+    }
+
+    return byteOutput.toByteArray();
+  }
+
+  private writeWord(output: OutputStream, i: number) {
+    output.writeByte(i & 0xff);
+    output.writeByte((i >>> 8) & 0xff);
+  }
+
+  private writeBytes(output: OutputStream, bytes: number[], off: number, length: number) {
+    for (let i: number = 0; i < length; i++) {
+      output.writeByte(bytes[i + off]);
+    }
+  }
+
   public setPixel(x: number, y: number, pixel: number): void {
     if (x < 0 || this.width <= x) throw `illegal x axis: ${x}`;
 
@@ -188,76 +258,6 @@ export class GIFImage {
 
     // GIF Terminator
     output.writeByte(0x3b); // ;
-  }
-
-  private getLZWRaster(lzwMinCodeSize: number): number[] {
-    const clearCode: number = 1 << lzwMinCodeSize;
-    const endCode: number = (1 << lzwMinCodeSize) + 1;
-
-    // Setup LZWTable
-    const table: LZWTable = new LZWTable();
-
-    for (let i: number = 0; i < clearCode; i++) {
-      table.add(String.fromCharCode(i));
-    }
-
-    table.add(String.fromCharCode(clearCode));
-    table.add(String.fromCharCode(endCode));
-
-    const byteOutput: ByteArrayOutputStream = new ByteArrayOutputStream();
-    const bitOutput: BitOutputStream = new BitOutputStream(byteOutput);
-
-    let bitLength: number = lzwMinCodeSize + 1;
-
-    try {
-      // clear code
-      bitOutput.write(clearCode, bitLength);
-
-      let dataIndex: number = 0;
-      let s: string = String.fromCharCode(this.data[dataIndex++]);
-
-      const length: number = this.data.length;
-
-      while (dataIndex < length) {
-        const c: string = String.fromCharCode(this.data[dataIndex++]);
-
-        if (table.contains(s + c)) {
-          s = s + c;
-        } else {
-          bitOutput.write(table.indexOf(s), bitLength);
-
-          if (table.getSize() < 0xfff) {
-            if (table.getSize() === 1 << bitLength) {
-              bitLength++;
-            }
-
-            table.add(s + c);
-          }
-
-          s = c;
-        }
-      }
-
-      bitOutput.write(table.indexOf(s), bitLength);
-
-      // end code
-      bitOutput.write(endCode, bitLength);
-    } finally {
-      bitOutput.close();
-    }
-
-    return byteOutput.toByteArray();
-  }
-
-  private writeWord(output: OutputStream, i: number) {
-    output.writeByte(i & 0xff);
-    output.writeByte((i >>> 8) & 0xff);
-  }
-
-  private writeBytes(output: OutputStream, bytes: number[], off: number, length: number) {
-    for (let i: number = 0; i < length; i++) {
-      output.writeByte(bytes[i + off]);
-    }
   }
 
   public toDataURL(): string {

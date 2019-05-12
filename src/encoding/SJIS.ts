@@ -149,7 +149,7 @@ export function SJIS(str: string): number[] {
     const byte: number = UTF8_TO_SJIS[code];
 
     if (byte != null) {
-      // 2bytes
+      // 2 bytes
       bytes.push(byte >> 8);
       bytes.push(byte & 0xff);
     } else {
