@@ -47,7 +47,7 @@ console.log(qrcode.toDataURL());
 
 - setVersion(version: number): void
 
-  - Set qrcode version, if set `-1` the version will be set automatically.
+  - Set qrcode version, if set `0` the version will be set automatically.
 
 - getVersion(): number
 
