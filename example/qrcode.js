@@ -1035,7 +1035,7 @@
             var bitOutput = new BitOutputStream(byteOutput);
             var bitLength = lzwMinCodeSize + 1;
             try {
-                // clear code
+                // Clear code
                 bitOutput.write(clearCode, bitLength);
                 var dataIndex = 0;
                 var s = String.fromCharCode(this.data[dataIndex++]);
@@ -1057,7 +1057,7 @@
                     }
                 }
                 bitOutput.write(table.indexOf(s), bitLength);
-                // end code
+                // End code
                 bitOutput.write(endCode, bitLength);
             }
             finally {
@@ -1103,11 +1103,11 @@
             output.writeByte(0);
             output.writeByte(0);
             // Global Color Map
-            // black
+            // Black
             output.writeByte(0x00);
             output.writeByte(0x00);
             output.writeByte(0x00);
-            // white
+            // White
             output.writeByte(0xff);
             output.writeByte(0xff);
             output.writeByte(0xff);

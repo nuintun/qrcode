@@ -126,7 +126,7 @@ export class GIFImage {
     let bitLength: number = lzwMinCodeSize + 1;
 
     try {
-      // clear code
+      // Clear code
       bitOutput.write(clearCode, bitLength);
 
       let dataIndex: number = 0;
@@ -156,7 +156,7 @@ export class GIFImage {
 
       bitOutput.write(table.indexOf(s), bitLength);
 
-      // end code
+      // End code
       bitOutput.write(endCode, bitLength);
     } finally {
       bitOutput.close();
@@ -210,12 +210,12 @@ export class GIFImage {
     output.writeByte(0);
 
     // Global Color Map
-    // black
+    // Black
     output.writeByte(0x00);
     output.writeByte(0x00);
     output.writeByte(0x00);
 
-    // white
+    // White
     output.writeByte(0xff);
     output.writeByte(0xff);
     output.writeByte(0xff);
