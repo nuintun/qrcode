@@ -69,7 +69,7 @@ console.log(qrcode.toDataURL());
 
   - Get qrcode encoding hint.
 
-- write(data: string : QRByte | QRKanji | QRNumeric | QRAlphanumeric): void
+- write(data: string | QRByte | QRKanji | QRNumeric | QRAlphanumeric): void
 
   - Add qrcode data, if string will use `QRByte` by default.
 
@@ -81,7 +81,7 @@ console.log(qrcode.toDataURL());
 
   - Make qrcode matrix.
 
-- toDataURL(moduleSize: number, margin: number): string
+- toDataURL(moduleSize?: number, margin?: number): string
 
   - Output qrcode base64 gif image.
 
@@ -96,11 +96,14 @@ qrcode.setEncodingHint(true);
 
 // Custom your own encode function return bytes and encoding
 // The encoding value must a valid ECI value
+// Custom ECI only support QRByte mode
 // https://github.com/zxing/zxing/blob/master/core/src/main/java/com/google/zxing/common/CharacterSetECI.java
-qrcode.write(new QRByte('hello world', data => ({
-  encoding: 26,
-  bytes: [104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100]
-})));
+qrcode.write(
+  new QRByte('hello world', data => ({
+    encoding: 26,
+    bytes: [104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100]
+  }))
+);
 
 qrcode.make();
 
