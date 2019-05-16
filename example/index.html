@@ -57,6 +57,21 @@
       </ul>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <script type="text/javascript">
+      if (!Uint8ClampedArray.from) {
+        Uint8ClampedArray.from = function(array) {
+          return new Uint8ClampedArray(array);
+        };
+      }
+
+      if (!Uint8ClampedArray.prototype.forEach) {
+        var APForEach = Array.prototype.forEach;
+
+        Uint8ClampedArray.prototype.forEach = function(callback, context) {
+          return APForEach.call(this, callback, context);
+        };
+      }
+    </script>
     <script type="text/javascript" src="./qrcode.js"></script>
     <script type="text/javascript">
       // Tab 切换
