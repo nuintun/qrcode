@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>QRCode</title>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" type="text/css" href="./default.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="./favicon.ico" />
+  </head>
+  <body>
+    <div class="main">
+      <ul class="tabs clearfix">
+        <li class="selected">编码</li>
+        <li>解码</li>
+      </ul>
+      <ul class="content clearfix">
+        <li class="encode selected">
+          <p>二维码内容：</p>
+          <div><textarea id="encode-text">https://github.com/nuintun/qrcode</textarea></div>
+          <p>
+            <label>纠错等级：</label>
+            <select id="encode-eclevel">
+              <option value="L">Level L (7%)</option>
+              <option value="M" selected>Level M (15%)</option>
+              <option value="Q">Level Q (25%)</option>
+              <option value="H">Level H (30%)</option>
+            </select>
+            <label class="indent">支持 ECI：</label>
+            <input id="encoding-hint" type="checkbox" />
+            <label class="indent">编码方式：</label>
+            <select id="encode-mode">
+              <option value="Auto" selected>Auto</option>
+              <option value="QRByte">Byte</option>
+              <option value="QRAlphanumeric">Alphanumeric</option>
+              <option value="QRNumeric">Numeric</option>
+              <option value="QRKanji">Kanji</option>
+            </select>
+            <label class="indent">色块大小：</label>
+            <input id="encode-msize" type="number" min="1" max="10" value="3" />
+            <label class="indent">留白大小：</label>
+            <input id="encode-margin" type="number" min="0" max="40" value="12" />
+          </p>
+          <p>
+            <button id="encode-btn">编码</button>
+          </p>
+          <div id="encode-result" class="encode-result hide"></div>
+        </li>
+        <li class="decode">
+          <p><label>二维码图片：</label><input type="file" accept="image/*" id="decode-file" /></p>
+          <div>
+            <canvas id="decode-canvas"></canvas>
+          </div>
+          <p>
+            <button id="decode-btn">解码</button>
+          </p>
+          <p id="decode-text" class="hide">解码值为：<br /><br /><textarea readonly></textarea></p>
+        </li>
+      </ul>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <script type="text/javascript">
+      // Tab 切换
+      var nav = $('.tabs li');
+      var content = $('.content li');
+      var encoder = new Worker('./worker-encoder.js');
+      var decoder = new Worker('./worker-decoder.js');
+
+      encoder.onmessage = function(e) {
+        var data = e.data;
+
+        if (data.ok) {
+          encodeResult.html('<img src="' + data.src + '" />');
+          encodeResult.removeClass('hide');
+        } else {
+          encodeResult.addClass('hide');
+
+          alert(data.message);
+        }
+      };
+
+      decoder.onmessage = function(e) {
+        var data = e.data;
+
+        if (data.ok) {
+          decodeResult.val(data.text);
+          decodeText.removeClass('hide');
+
+          markQRCodeArea(data.location, data.moduleSize);
+        } else {
+          alert(data.message);
+        }
+      };
+
+      nav.on('click', function() {
+        var target = $(this);
+
+        nav.removeClass('selected');
+
+        target.addClass('selected');
+
+        content
+          .removeClass('selected')
+          .eq(target.index())
+          .addClass('selected');
+      });
+
+      var encodeText = $('#encode-text');
+      var encodeMode = $('#encode-mode');
+      var encodingHint = $('#encoding-hint');
+      var encodeECLevel = $('#encode-eclevel');
+      var encodeMargin = $('#encode-margin');
+      var encodeMSize = $('#encode-msize');
+      var encodeResult = $('#encode-result');
+
+      // 生成二维码
+      $('#encode-btn').on('click', function() {
+        var data = encodeText.val();
+        var mode = encodeMode.val();
+        var ecLevel = encodeECLevel.val();
+        var margin = Number(encodeMargin.val());
+        var moduleSize = Number(encodeMSize.val());
+        var hasEncodingHint = encodingHint.prop('checked');
+
+        if (!data) {
+          encodeResult.addClass('hide');
+
+          return alert('请输入二维码内容');
+        }
+
+        encoder.postMessage({
+          mode: mode,
+          text: data,
+          margin: margin,
+          ecLevel: ecLevel,
+          moduleSize: moduleSize,
+          hasEncodingHint: hasEncodingHint
+        });
+      });
+
+      var hasImage = false;
+      var imageData = null;
+      var decodeText = $('#decode-text');
+      var canvas = $('#decode-canvas')[0];
+      var context = canvas.getContext('2d');
+      var decodeResult = decodeText.find('textarea');
+
+      function resetDecoder() {
+        hasImage = false;
+        imageData = null;
+
+        decodeResult.val('');
+        decodeText.addClass('hide');
+      }
+
+      function drawImage(src) {
+        var img = new Image();
+
+        img.crossOrigin = 'anonymous';
+
+        img.onload = function() {
+          var width = img.width;
+          var height = img.height;
+          var actualWidth = Math.min(960, width);
+          var actualHeight = height * (actualWidth / width);
+
+          hasImage = true;
+          canvas.width = actualWidth;
+          canvas.height = actualHeight;
+
+          context.drawImage(img, 0, 0, width, height, 0, 0, actualWidth, actualHeight);
+
+          imageData = context.getImageData(0, 0, actualWidth, actualHeight);
+        };
+
+        img.src = src;
+      }
+
+      // 二维码加载
+      $('#decode-file').on('change', function(e) {
+        var file = e.target.files[0];
+
+        if (file) {
+          resetDecoder();
+
+          var reader = new FileReader();
+
+          reader.onload = function(e) {
+            drawImage(e.target.result);
+          };
+
+          reader.readAsDataURL(file);
+        }
+      });
+
+      function getImageData() {
+        imageData && context.putImageData(imageData, 0, 0);
+
+        return imageData || context.getImageData(0, 0, canvas.width, canvas.height);
+      }
+
+      function getModuleSize(location, version) {
+        var topLeft = location.topLeft;
+        var topRight = location.topRight;
+        var a = Math.abs(topRight.x - topLeft.x);
+        var b = Math.abs(topRight.y - topLeft.y);
+        var c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+
+        return c / (version * 4 + 17);
+      }
+
+      function markFinderPattern(x, y, moduleSize) {
+        context.fillStyle = '#00ff00';
+
+        context.beginPath();
+        context.arc(x, y, moduleSize * 0.75, 0, 2 * Math.PI);
+        context.fill();
+      }
+
+      function markQRCodeArea(location, moduleSize) {
+        context.lineWidth = 2;
+        context.strokeStyle = '#00ff00';
+
+        context.beginPath();
+        context.moveTo(location.topLeft.x, location.topLeft.y);
+        context.lineTo(location.topRight.x, location.topRight.y);
+        context.lineTo(location.bottomRight.x, location.bottomRight.y);
+        context.lineTo(location.bottomLeft.x, location.bottomLeft.y);
+        context.lineTo(location.topLeft.x, location.topLeft.y);
+        context.stroke();
+
+        markFinderPattern(location.topLeftFinder.x, location.topLeftFinder.y, moduleSize);
+        markFinderPattern(location.topRightFinder.x, location.topRightFinder.y, moduleSize);
+        markFinderPattern(location.bottomLeftFinder.x, location.bottomLeftFinder.y, moduleSize);
+      }
+
+      $('#decode-btn').on('click', function() {
+        if (!hasImage) {
+          return alert('请选择二维码图片');
+        }
+
+        var imageData = getImageData();
+
+        decoder.postMessage({
+          image: imageData.data,
+          width: imageData.width,
+          height: imageData.height
+        });
+      });
+
+      /https?:/i.test(location.protocol) && drawImage('./qrcode.jpg');
+    </script>
+  </body>
+</html>

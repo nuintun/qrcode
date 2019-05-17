@@ -11,7 +11,9 @@
 
 > [QRCode guide](https://nuintun.github.io/qrcode/qrcode.pdf)
 >
-> [QRCode demo](https://nuintun.github.io/qrcode/example/index.html)
+> [QRCode example](https://nuintun.github.io/qrcode/example/index.html)
+>
+> [QRCode example use worker](https://nuintun.github.io/qrcode/example/worker.html)
 >
 > Modify from [kazuhikoarase/qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) and [cozmo/jsQR](https://github.com/cozmo/jsQR)
 
