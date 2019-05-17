@@ -131,7 +131,7 @@ export class Decoder {
 
         context.drawImage(image, 0, 0);
 
-        const data: Uint8ClampedArray = context.getImageData(0, 0, width, height).data;
+        const { data }: ImageData = context.getImageData(0, 0, width, height);
         const result: DecoderResult = this.decode(data, width, height);
 
         if (result) {
