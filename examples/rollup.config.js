@@ -7,7 +7,7 @@
 import del from 'del';
 import resolve from 'rollup-plugin-node-resolve';
 
-del.sync(['example/qrcode.js'], { force: true });
+del.sync(['examples/qrcode.js'], { force: true });
 
 export default {
   input: 'esnext/index.js',
@@ -16,7 +16,7 @@ export default {
     name: 'QRCode',
     esModule: false,
     amd: { id: 'qrcode' },
-    file: 'example/qrcode.js'
+    file: 'examples/qrcode.js'
   },
   plugins: [resolve()],
   onwarn(error, warn) {
