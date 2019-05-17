@@ -95,7 +95,7 @@ tsconfig.json
 src/
 
 # example file
-example/
+examples/
 
 # qrcode guide
 qrcode.pdf
