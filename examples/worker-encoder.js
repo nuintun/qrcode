@@ -35,7 +35,6 @@ self.onmessage = function(e) {
 
     self.postMessage({
       ok: true,
-      text: data.text,
       src: qrcode.toDataURL(data.moduleSize, data.margin)
     });
 
