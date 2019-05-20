@@ -1,6 +1,6 @@
 importScripts('./qrcode.js');
 
-if (Uint8ClampedArray) {
+if (self.Uint8ClampedArray) {
   if (!Uint8ClampedArray.from) {
     Uint8ClampedArray.from = function(array) {
       return new Uint8ClampedArray(array);
