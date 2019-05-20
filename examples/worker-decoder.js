@@ -1,17 +1,19 @@
 importScripts('./qrcode.js');
 
-if (!Uint8ClampedArray.from) {
-  Uint8ClampedArray.from = function(array) {
-    return new Uint8ClampedArray(array);
-  };
-}
+if (Uint8ClampedArray) {
+  if (!Uint8ClampedArray.from) {
+    Uint8ClampedArray.from = function(array) {
+      return new Uint8ClampedArray(array);
+    };
+  }
 
-if (!Uint8ClampedArray.prototype.forEach) {
-  var APForEach = Array.prototype.forEach;
+  if (!Uint8ClampedArray.prototype.forEach) {
+    var APForEach = Array.prototype.forEach;
 
-  Uint8ClampedArray.prototype.forEach = function(callback, context) {
-    return APForEach.call(this, callback, context);
-  };
+    Uint8ClampedArray.prototype.forEach = function(callback, context) {
+      return APForEach.call(this, callback, context);
+    };
+  }
 }
 
 function getModuleSize(location, version) {
