@@ -48,7 +48,7 @@ console.log(qrcode.toDataURL());
 
   - Get qrcode module count.
 
-- setVersion(version: number): void
+- setVersion(version: number): Encoder
 
   - Set qrcode version, if set `0` the version will be set automatically.
 
@@ -56,7 +56,7 @@ console.log(qrcode.toDataURL());
 
   - Get qrcode version.
 
-- setErrorCorrectionLevel(errorCorrectionLevel: ErrorCorrectionLevel): void
+- setErrorCorrectionLevel(errorCorrectionLevel: ErrorCorrectionLevel): Encoder
 
   - Set qrcode error correction level.
 
@@ -64,7 +64,7 @@ console.log(qrcode.toDataURL());
 
   - Get qrcode error correction level.
 
-- setEncodingHint(hasEncodingHint: boolean): void
+- setEncodingHint(hasEncodingHint: boolean): Encoder
 
   - Set qrcode encoding hint, it will add ECI in qrcode.
 
@@ -72,7 +72,7 @@ console.log(qrcode.toDataURL());
 
   - Get qrcode encoding hint.
 
-- write(data: string | QRByte | QRKanji | QRNumeric | QRAlphanumeric): void
+- write(data: string | QRByte | QRKanji | QRNumeric | QRAlphanumeric): Encoder
 
   - Add qrcode data, if string will use `QRByte` by default.
 
@@ -80,7 +80,7 @@ console.log(qrcode.toDataURL());
 
   - Get byte with row and col.
 
-- make(): void
+- make(): Encoder
 
   - Make qrcode matrix.
 
@@ -132,12 +132,12 @@ qrcode
 
 ###### Methods
 
-- setOptions(options: Optins): void
+- setOptions(options: Optins): Decoder
 
   - Set decode options.
-    - canOverwriteImage: boolean
-    - inversionAttempts: 'dontInvert' | 'onlyInvert' | 'attemptBoth' | 'invertFirst'
-    - greyScaleWeights: { red: number, green: number, blue: number, useIntegerApproximation: boolean }
+    - canOverwriteImage?: boolean
+    - inversionAttempts?: 'dontInvert' | 'onlyInvert' | 'attemptBoth' | 'invertFirst'
+    - greyScaleWeights?: { red: number, green: number, blue: number, useIntegerApproximation?: boolean }
 
 - scan(src: string): Promise\<DecoderResult>
 
