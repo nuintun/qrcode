@@ -26,12 +26,10 @@ self.onmessage = function(e) {
   var qrcode = new QRCode.Encoder();
   var errorCorrectionLevel = QRCode.ErrorCorrectionLevel[data.ecLevel];
 
-  qrcode.setEncodingHint(data.hasEncodingHint);
-  qrcode.setErrorCorrectionLevel(errorCorrectionLevel);
+  qrcode.setEncodingHint(data.hasEncodingHint).setErrorCorrectionLevel(errorCorrectionLevel);
 
   try {
-    qrcode.write(chooseBestModeData(data.mode, data.text));
-    qrcode.make();
+    qrcode.write(chooseBestModeData(data.mode, data.text)).make();
 
     self.postMessage({
       ok: true,

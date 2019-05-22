@@ -217,9 +217,11 @@ export class Encoder {
    * @method setVersion
    * @param {number} version
    */
-  public setVersion(version: number): void {
+  public setVersion(version: number): Encoder {
     this.version = Math.min(40, Math.max(0, version >> 0));
     this.autoVersion = this.version === 0;
+
+    return this;
   }
 
   /**
@@ -236,7 +238,7 @@ export class Encoder {
    * @method setErrorCorrectionLevel
    * @param {ErrorCorrectionLevel} errorCorrectionLevel
    */
-  public setErrorCorrectionLevel(errorCorrectionLevel: ErrorCorrectionLevel): void {
+  public setErrorCorrectionLevel(errorCorrectionLevel: ErrorCorrectionLevel): Encoder {
     switch (errorCorrectionLevel) {
       case ErrorCorrectionLevel.L:
       case ErrorCorrectionLevel.M:
@@ -244,6 +246,8 @@ export class Encoder {
       case ErrorCorrectionLevel.H:
         this.errorCorrectionLevel = errorCorrectionLevel;
     }
+
+    return this;
   }
 
   /**
@@ -260,8 +264,10 @@ export class Encoder {
    * @method setEncodingHint
    * @param {boolean} hasEncodingHint
    */
-  public setEncodingHint(hasEncodingHint: boolean): void {
+  public setEncodingHint(hasEncodingHint: boolean): Encoder {
     this.hasEncodingHint = hasEncodingHint;
+
+    return this;
   }
 
   /**
@@ -269,7 +275,7 @@ export class Encoder {
    * @method write
    * @param {QRData} data
    */
-  public write(data: QRData | string): void {
+  public write(data: QRData | string): Encoder {
     if (data instanceof QRData) {
       this.chunks.push(data);
     } else {
@@ -281,6 +287,8 @@ export class Encoder {
         throw `illegal data: ${data}`;
       }
     }
+
+    return this;
   }
 
   /**
@@ -493,7 +501,7 @@ export class Encoder {
    * @public
    * @method make
    */
-  public make(): void {
+  public make(): Encoder {
     let buffer: BitBuffer;
     let rsBlocks: RSBlock[];
     let maxDataCount: number;
@@ -535,6 +543,8 @@ export class Encoder {
     }
 
     this.modules = matrices[bestMaskPattern];
+
+    return this;
   }
 
   /**

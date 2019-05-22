@@ -1350,6 +1350,7 @@
         Encoder.prototype.setVersion = function (version) {
             this.version = Math.min(40, Math.max(0, version >> 0));
             this.autoVersion = this.version === 0;
+            return this;
         };
         /**
          * @public
@@ -1372,6 +1373,7 @@
                 case exports.ErrorCorrectionLevel.H:
                     this.errorCorrectionLevel = errorCorrectionLevel;
             }
+            return this;
         };
         /**
          * @public
@@ -1388,6 +1390,7 @@
          */
         Encoder.prototype.setEncodingHint = function (hasEncodingHint) {
             this.hasEncodingHint = hasEncodingHint;
+            return this;
         };
         /**
          * @public
@@ -1407,6 +1410,7 @@
                     throw "illegal data: " + data;
                 }
             }
+            return this;
         };
         /**
          * @public
@@ -1618,6 +1622,7 @@
                 }
             }
             this.modules = matrices[bestMaskPattern];
+            return this;
         };
         /**
          * @public
@@ -4162,9 +4167,13 @@
     }
     // Like BitMatrix but accepts arbitry Uint8 values
     var Matrix = /*#__PURE__*/ (function () {
-        function Matrix(width, height) {
+        function Matrix(width, height, buffer) {
             this.width = width;
-            this.data = new Uint8ClampedArray(width * height);
+            var bufferSize = width * height;
+            if (buffer && buffer.length !== bufferSize) {
+                throw 'wrong buffer size';
+            }
+            this.data = buffer || new Uint8ClampedArray(bufferSize);
         }
         Matrix.prototype.get = function (x, y) {
             return this.data[y * this.width + x];
@@ -4174,23 +4183,39 @@
         };
         return Matrix;
     }());
-    function binarize(data, width, height, returnInverted) {
-        if (data.length !== width * height * 4) {
+    function binarize(data, width, height, returnInverted, greyscaleWeights, canOverwriteImage) {
+        var pixelCount = width * height;
+        if (data.length !== pixelCount * 4) {
             throw 'malformed data passed to binarizer';
         }
+        // Assign the greyscale and binary image within the rgba buffer as the rgba image will not be needed after conversion
+        var bufferOffset = 0;
         // Convert image to greyscale
-        var greyscalePixels = new Matrix(width, height);
-        for (var x = 0; x < width; x++) {
-            for (var y = 0; y < height; y++) {
-                var r = data[(y * width + x) * 4 + 0];
-                var g = data[(y * width + x) * 4 + 1];
-                var b = data[(y * width + x) * 4 + 2];
-                greyscalePixels.set(x, y, 0.2126 * r + 0.7152 * g + 0.0722 * b);
+        var greyscaleBuffer;
+        if (canOverwriteImage) {
+            greyscaleBuffer = new Uint8ClampedArray(data.buffer, bufferOffset, pixelCount);
+            bufferOffset += pixelCount;
+        }
+        var greyscalePixels = new Matrix(width, height, greyscaleBuffer);
+        for (var y = 0; y < height; y++) {
+            for (var x = 0; x < width; x++) {
+                var position = (y * width + x) * 4;
+                var r = data[position];
+                var g = data[position + 1];
+                var b = data[position + 2];
+                var value = greyscaleWeights.red * r + greyscaleWeights.green * g + greyscaleWeights.blue * b;
+                greyscalePixels.set(x, y, greyscaleWeights.useIntegerApproximation ? (value + 128) >> 8 : value);
             }
         }
         var horizontalRegionCount = Math.ceil(width / REGION_SIZE);
         var verticalRegionCount = Math.ceil(height / REGION_SIZE);
-        var blackPoints = new Matrix(horizontalRegionCount, verticalRegionCount);
+        var blackPointsCount = horizontalRegionCount * verticalRegionCount;
+        var blackPointsBuffer;
+        if (canOverwriteImage) {
+            blackPointsBuffer = new Uint8ClampedArray(data.buffer, bufferOffset, blackPointsCount);
+            bufferOffset += blackPointsCount;
+        }
+        var blackPoints = new Matrix(horizontalRegionCount, verticalRegionCount, blackPointsBuffer);
         for (var verticalRegion = 0; verticalRegion < verticalRegionCount; verticalRegion++) {
             for (var hortizontalRegion = 0; hortizontalRegion < horizontalRegionCount; hortizontalRegion++) {
                 var sum = 0;
@@ -4231,10 +4256,24 @@
                 blackPoints.set(hortizontalRegion, verticalRegion, average);
             }
         }
+        var binarized;
+        if (canOverwriteImage) {
+            var binarizedBuffer = new Uint8ClampedArray(data.buffer, bufferOffset, pixelCount);
+            bufferOffset += pixelCount;
+            binarized = new BitMatrix(binarizedBuffer, width);
+        }
+        else {
+            binarized = BitMatrix.createEmpty(width, height);
+        }
         var inverted = null;
-        var binarized = BitMatrix.createEmpty(width, height);
         if (returnInverted) {
-            inverted = BitMatrix.createEmpty(width, height);
+            if (canOverwriteImage) {
+                var invertedBuffer = new Uint8ClampedArray(data.buffer, bufferOffset, pixelCount);
+                inverted = new BitMatrix(invertedBuffer, width);
+            }
+            else {
+                inverted = BitMatrix.createEmpty(width, height);
+            }
         }
         for (var verticalRegion = 0; verticalRegion < verticalRegionCount; verticalRegion++) {
             for (var hortizontalRegion = 0; hortizontalRegion < horizontalRegionCount; hortizontalRegion++) {
@@ -4294,6 +4333,13 @@
             } });
     }
     var defaultOptions = {
+        canOverwriteImage: true,
+        greyScaleWeights: {
+            red: 0.2126,
+            green: 0.7152,
+            blue: 0.0722,
+            useIntegerApproximation: false
+        },
         inversionAttempts: 'attemptBoth'
     };
     function disposeImageEvents(image) {
@@ -4313,6 +4359,7 @@
             if (options === void 0) { options = {}; }
             options = options || {};
             this.options = __assign({}, defaultOptions, options);
+            return this;
         };
         /**
          * @public
@@ -4324,11 +4371,12 @@
          */
         Decoder.prototype.decode = function (data, width, height) {
             var options = this.options;
-            var shouldInvert = options.inversionAttempts === 'attemptBoth' || options.inversionAttempts === 'invertFirst';
-            var tryInvertedFirst = options.inversionAttempts === 'onlyInvert' || options.inversionAttempts === 'invertFirst';
-            var _a = binarize(data, width, height, shouldInvert), binarized = _a.binarized, inverted = _a.inverted;
+            var canOverwriteImage = options.canOverwriteImage, greyScaleWeights = options.greyScaleWeights, inversionAttempts = options.inversionAttempts;
+            var invert = inversionAttempts === 'attemptBoth' || inversionAttempts === 'invertFirst';
+            var tryInvertedFirst = inversionAttempts === 'onlyInvert' || inversionAttempts === 'invertFirst';
+            var _a = binarize(data, width, height, invert, greyScaleWeights, canOverwriteImage), binarized = _a.binarized, inverted = _a.inverted;
             var result = scan(tryInvertedFirst ? inverted : binarized);
-            if (!result && (options.inversionAttempts === 'attemptBoth' || options.inversionAttempts === 'invertFirst')) {
+            if (!result && invert) {
                 result = scan(tryInvertedFirst ? binarized : inverted);
             }
             return result;

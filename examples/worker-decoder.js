@@ -28,7 +28,7 @@ function getModuleSize(location, version) {
 
 self.onmessage = function(e) {
   var data = e.data;
-  var result = new QRCode.Decoder().decode(data.image, data.width, data.height);
+  var result = new QRCode.Decoder().setOptions({ canOverwriteImage: false }).decode(data.image, data.width, data.height);
 
   if (result) {
     self.postMessage({

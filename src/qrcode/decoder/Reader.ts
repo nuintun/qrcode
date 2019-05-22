@@ -9,7 +9,7 @@ import { BitMatrix } from './BitMatrix';
 import { locate, QRLocation } from './locator';
 import { decode, DecodeResult } from './decoder';
 import { extract, ExtractResult } from './extractor';
-import { binarize, BinarizeResult } from './binarizer';
+import { binarize, BinarizeResult, GreyscaleWeights } from './binarizer';
 
 export interface DecoderResult extends DecodeResult {
   location: {
@@ -56,10 +56,19 @@ function scan(matrix: BitMatrix): DecoderResult {
 }
 
 export interface Options {
+  canOverwriteImage?: boolean;
+  greyScaleWeights?: GreyscaleWeights;
   inversionAttempts?: 'dontInvert' | 'onlyInvert' | 'attemptBoth' | 'invertFirst';
 }
 
 const defaultOptions: Options = {
+  canOverwriteImage: true,
+  greyScaleWeights: {
+    red: 0.2126,
+    green: 0.7152,
+    blue: 0.0722,
+    useIntegerApproximation: false
+  },
   inversionAttempts: 'attemptBoth'
 };
 
@@ -76,10 +85,12 @@ export class Decoder {
    * @method setOptions
    * @param {object} options
    */
-  public setOptions(options: Options = {}): void {
+  public setOptions(options: Options = {}): Decoder {
     options = options || {};
 
     this.options = { ...defaultOptions, ...options };
+
+    return this;
   }
 
   /**
@@ -92,13 +103,14 @@ export class Decoder {
    */
   public decode(data: Uint8ClampedArray, width: number, height: number): DecoderResult {
     const options: Options = this.options;
-    const shouldInvert: boolean = options.inversionAttempts === 'attemptBoth' || options.inversionAttempts === 'invertFirst';
-    const tryInvertedFirst: boolean = options.inversionAttempts === 'onlyInvert' || options.inversionAttempts === 'invertFirst';
-    const { binarized, inverted }: BinarizeResult = binarize(data, width, height, shouldInvert);
+    const { canOverwriteImage, greyScaleWeights, inversionAttempts }: Options = options;
+    const invert: boolean = inversionAttempts === 'attemptBoth' || inversionAttempts === 'invertFirst';
+    const tryInvertedFirst: boolean = inversionAttempts === 'onlyInvert' || inversionAttempts === 'invertFirst';
+    const { binarized, inverted }: BinarizeResult = binarize(data, width, height, invert, greyScaleWeights, canOverwriteImage);
 
     let result: DecoderResult = scan(tryInvertedFirst ? inverted : binarized);
 
-    if (!result && (options.inversionAttempts === 'attemptBoth' || options.inversionAttempts === 'invertFirst')) {
+    if (!result && invert) {
       result = scan(tryInvertedFirst ? binarized : inverted);
     }
 

@@ -132,9 +132,12 @@ qrcode
 
 ###### Methods
 
-- setOptions(options: { inversionAttempts: 'dontInvert' | 'onlyInvert' | 'attemptBoth' | 'invertFirst' }): void
+- setOptions(options: Optins): void
 
   - Set decode options.
+    - canOverwriteImage: boolean
+    - inversionAttempts: 'dontInvert' | 'onlyInvert' | 'attemptBoth' | 'invertFirst'
+    - greyScaleWeights: { red: number, green: number, blue: number, useIntegerApproximation: boolean }
 
 - scan(src: string): Promise\<DecoderResult>
 

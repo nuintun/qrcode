@@ -136,14 +136,12 @@
         var qrcode = new QRCode.Encoder();
         var errorCorrectionLevel = QRCode.ErrorCorrectionLevel[ecLevel];
 
-        qrcode.setEncodingHint(hasEncodingHint);
-        qrcode.setErrorCorrectionLevel(errorCorrectionLevel);
+        qrcode.setEncodingHint(hasEncodingHint).setErrorCorrectionLevel(errorCorrectionLevel);
 
         try {
           var data = mode === 'Auto' ? chooseBestModeData(data) : new QRCode[mode](data);
 
-          qrcode.write(data);
-          qrcode.make();
+          qrcode.write(data).make();
 
           encodeResult.html('<img src="' + qrcode.toDataURL(moduleSize, margin) + '" />');
           encodeResult.removeClass('hide');
@@ -260,7 +258,9 @@
         }
 
         var imageData = getImageData();
-        var result = new QRCode.Decoder().decode(imageData.data, imageData.width, imageData.height);
+        var result = new QRCode.Decoder()
+          .setOptions({ canOverwriteImage: false })
+          .decode(imageData.data, imageData.width, imageData.height);
 
         if (result) {
           decodeResult.val(result.data);
