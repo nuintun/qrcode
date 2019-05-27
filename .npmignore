@@ -106,3 +106,6 @@ _config.yml
 
 # build tools
 tools/
+
+# github
+.github/
