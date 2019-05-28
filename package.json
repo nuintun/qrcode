@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "del": "^4.1.1",
-    "rollup": "^1.12.3",
+    "rollup": "^1.12.4",
     "typescript": "^3.4.5",
     "acorn-walk": "^6.1.1",
     "magic-string": "^0.25.2",
