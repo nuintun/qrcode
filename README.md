@@ -126,7 +126,7 @@ qrcode
     console.log(result.data);
   })
   .catch(error => {
-    console.error(result.data);
+    console.error(error);
   });
 ```
 
