@@ -31,12 +31,12 @@
   },
   "devDependencies": {
     "del": "^4.1.1",
-    "rollup": "^1.12.5",
+    "rollup": "^1.13.0",
     "typescript": "^3.5.1",
     "acorn-walk": "^6.1.1",
     "magic-string": "^0.25.2",
     "rollup-plugin-typescript2": "^0.21.1",
-    "rollup-plugin-node-resolve": "^5.0.0"
+    "rollup-plugin-node-resolve": "^5.0.1"
   },
   "homepage": "https://github.com/nuintun/qrcode#readme"
 }
