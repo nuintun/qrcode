@@ -1,6 +1,6 @@
 {
   "name": "@nuintun/qrcode",
-  "version": "0.34.0",
+  "version": "0.35.0",
   "description": "A pure JavaScript QRCode encode and decode library.",
   "main": "es5/index.js",
   "module": "esnext/index.js",
@@ -13,6 +13,7 @@
     "qrcode",
     "zxing"
   ],
+  "sideEffects": false,
   "author": "nuintun",
   "license": "MIT",
   "bugs": {
@@ -31,7 +32,7 @@
   },
   "devDependencies": {
     "del": "^4.1.1",
-    "rollup": "^1.13.0",
+    "rollup": "^1.14.2",
     "typescript": "^3.5.1",
     "acorn-walk": "^6.1.1",
     "magic-string": "^0.25.2",
