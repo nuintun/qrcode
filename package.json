@@ -31,7 +31,7 @@
     "tslib": "^1.10.0"
   },
   "devDependencies": {
-    "del": "^4.1.1",
+    "del": "^5.0.0",
     "rollup": "^1.15.2",
     "typescript": "^3.5.1",
     "acorn-walk": "^6.1.1",
