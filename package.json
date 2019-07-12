@@ -1,6 +1,6 @@
 {
   "name": "@nuintun/qrcode",
-  "version": "0.36.0",
+  "version": "0.36.1",
   "description": "A pure JavaScript QRCode encode and decode library.",
   "main": "es5/index.js",
   "module": "esnext/index.js",
@@ -31,13 +31,13 @@
     "tslib": "^1.10.0"
   },
   "devDependencies": {
-    "del": "^4.1.1",
-    "rollup": "^1.15.2",
-    "typescript": "^3.5.1",
-    "acorn-walk": "^6.1.1",
-    "magic-string": "^0.25.2",
-    "rollup-plugin-typescript2": "^0.21.1",
-    "rollup-plugin-node-resolve": "^5.0.2"
+    "del": "^5.0.0",
+    "rollup": "^1.16.7",
+    "typescript": "^3.5.3",
+    "acorn-walk": "^6.2.0",
+    "magic-string": "^0.25.3",
+    "rollup-plugin-typescript2": "^0.22.0",
+    "rollup-plugin-node-resolve": "^5.2.0"
   },
   "homepage": "https://github.com/nuintun/qrcode#readme"
 }
