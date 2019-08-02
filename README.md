@@ -142,6 +142,7 @@ qrcode
 - scan(src: string): Promise\<DecoderResult>
 
   - Decode a qrcode from image src.
+  - `Notice: support browser environment only.`
 
 - decode(data: Uint8ClampedArray, width: number, height: number): DecoderResult
 
