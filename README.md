@@ -72,7 +72,7 @@ console.log(qrcode.toDataURL());
 
   - Get qrcode encoding hint.
 
-- write(data: string | QRByte | QRKanji | QRNumeric | QRAlphanumeric): Encoder
+- write(data: string \| QRByte \| QRKanji \| QRNumeric \| QRAlphanumeric): Encoder
 
   - Add qrcode data, if string will use `QRByte` by default.
 
@@ -136,7 +136,7 @@ qrcode
 
   - Set decode options.
     - canOverwriteImage?: boolean
-    - inversionAttempts?: 'dontInvert' | 'onlyInvert' | 'attemptBoth' | 'invertFirst'
+    - inversionAttempts?: 'dontInvert' \| 'onlyInvert' \| 'attemptBoth' \| 'invertFirst'
     - greyScaleWeights?: { red: number, green: number, blue: number, useIntegerApproximation?: boolean }
 
 - scan(src: string): Promise\<DecoderResult>
