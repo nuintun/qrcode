@@ -4633,11 +4633,6 @@
         return QRAlphanumeric;
     }(QRData));
 
-    /**
-     * @module index
-     * @author nuintun
-     */
-
     exports.Decoder = Decoder;
     exports.Encoder = Encoder;
     exports.QRAlphanumeric = QRAlphanumeric;
