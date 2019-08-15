@@ -2681,7 +2681,7 @@
         return output;
     }
     /**
-     * @function decodeByteAsUTF8
+     * @function decodeByteAsSJIS
      * @param {number[]} bytes
      * @returns {string}
      * @see https://github.com/narirou/jconv/blob/master/jconv.js
