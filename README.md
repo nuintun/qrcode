@@ -121,7 +121,7 @@ import { Decoder } from '@nuintun/qrcode';
 const qrcode = new Decoder();
 
 qrcode
-  .scan('https://nuintun.github.io/qrcode/example/qrcode.jpg')
+  .scan('https://nuintun.github.io/qrcode/examples/qrcode.jpg')
   .then(result => {
     console.log(result.data);
   })
