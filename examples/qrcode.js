@@ -4321,7 +4321,7 @@
             return null;
         }
         var dimension = location.dimension;
-        return __assign({}, decoded, { location: {
+        return __assign(__assign({}, decoded), { location: {
                 topLeft: extracted.mappingFunction(0, 0),
                 topRight: extracted.mappingFunction(dimension, 0),
                 bottomLeft: extracted.mappingFunction(0, dimension),
@@ -4358,7 +4358,7 @@
         Decoder.prototype.setOptions = function (options) {
             if (options === void 0) { options = {}; }
             options = options || {};
-            this.options = __assign({}, defaultOptions, options);
+            this.options = __assign(__assign({}, defaultOptions), options);
             return this;
         };
         /**
