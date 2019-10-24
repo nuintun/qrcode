@@ -2,7 +2,7 @@
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
     typeof define === 'function' && define.amd ? define('qrcode', ['exports'], factory) :
     (global = global || self, factory(global.QRCode = {}));
-}(this, function (exports) { 'use strict';
+}(this, (function (exports) { 'use strict';
 
     /**
      * @module Mode
@@ -4640,4 +4640,4 @@
     exports.QRKanji = QRKanji;
     exports.QRNumeric = QRNumeric;
 
-}));
+})));
