@@ -1,6 +1,6 @@
 {
   "name": "@nuintun/qrcode",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A pure JavaScript QRCode encode and decode library.",
   "main": "es5/index.js",
   "module": "esnext/index.js",
@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "del": "^5.1.0",
-    "rollup": "^1.26.3",
+    "rollup": "^1.27.2",
     "typescript": "^3.7.2",
     "acorn-walk": "^7.0.0",
     "magic-string": "^0.25.4",

@@ -4372,11 +4372,11 @@
         Decoder.prototype.decode = function (data, width, height) {
             var options = this.options;
             var canOverwriteImage = options.canOverwriteImage, greyScaleWeights = options.greyScaleWeights, inversionAttempts = options.inversionAttempts;
-            var invert = inversionAttempts === 'attemptBoth' || inversionAttempts === 'invertFirst';
             var tryInvertedFirst = inversionAttempts === 'onlyInvert' || inversionAttempts === 'invertFirst';
+            var invert = inversionAttempts === 'attemptBoth' || tryInvertedFirst;
             var _a = binarize(data, width, height, invert, greyScaleWeights, canOverwriteImage), binarized = _a.binarized, inverted = _a.inverted;
             var result = scan(tryInvertedFirst ? inverted : binarized);
-            if (!result && invert) {
+            if (!result && (options.inversionAttempts === 'attemptBoth' || options.inversionAttempts === 'invertFirst')) {
                 result = scan(tryInvertedFirst ? binarized : inverted);
             }
             return result;

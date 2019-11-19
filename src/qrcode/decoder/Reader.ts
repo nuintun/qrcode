@@ -104,13 +104,13 @@ export class Decoder {
   public decode(data: Uint8ClampedArray, width: number, height: number): DecoderResult {
     const options: Options = this.options;
     const { canOverwriteImage, greyScaleWeights, inversionAttempts }: Options = options;
-    const invert: boolean = inversionAttempts === 'attemptBoth' || inversionAttempts === 'invertFirst';
     const tryInvertedFirst: boolean = inversionAttempts === 'onlyInvert' || inversionAttempts === 'invertFirst';
+    const invert: boolean = inversionAttempts === 'attemptBoth' || tryInvertedFirst;
     const { binarized, inverted }: BinarizeResult = binarize(data, width, height, invert, greyScaleWeights, canOverwriteImage);
 
     let result: DecoderResult = scan(tryInvertedFirst ? inverted : binarized);
 
-    if (!result && invert) {
+    if (!result && (options.inversionAttempts === 'attemptBoth' || options.inversionAttempts === 'invertFirst')) {
       result = scan(tryInvertedFirst ? binarized : inverted);
     }
 
