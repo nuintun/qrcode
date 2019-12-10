@@ -2,17 +2,16 @@
   "compileOnSave": false,
   "compilerOptions": {
     "pretty": true,
-    "target": "es5",
+    "target": "ES5",
     "newLine": "LF",
-    "module": "esnext",
+    "module": "ESNext",
     "declaration": false,
     "alwaysStrict": true,
     "importHelpers": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,
-    "moduleResolution": "node",
-    "forceConsistentCasingInFileNames": true,
-    "lib": ["es5", "esnext", "dom", "scripthost"]
+    "moduleResolution": "Node",
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]
