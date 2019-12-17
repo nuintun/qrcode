@@ -5,7 +5,7 @@
  */
 
 import del from 'del';
-import resolve from 'rollup-plugin-node-resolve';
+import resolve from '@rollup/plugin-node-resolve';
 
 del.sync(['examples/qrcode.js'], { force: true });
 

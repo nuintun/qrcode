@@ -32,11 +32,11 @@
   },
   "devDependencies": {
     "del": "^5.1.0",
-    "rollup": "^1.27.9",
+    "rollup": "^1.27.13",
     "typescript": "^3.7.3",
     "magic-string": "^0.25.4",
     "rollup-plugin-typescript2": "^0.25.3",
-    "rollup-plugin-node-resolve": "^5.2.0"
+    "@rollup/plugin-node-resolve": "^6.0.0"
   },
   "homepage": "https://github.com/nuintun/qrcode#readme"
 }
