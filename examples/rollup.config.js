@@ -5,13 +5,25 @@
  */
 
 import del from 'del';
+const pkg = require('../package.json');
 import resolve from '@rollup/plugin-node-resolve';
+
+const banner = `/**
+ * @module QRCode
+ * @license ${pkg.license}
+ * @version ${pkg.version}
+ * @author ${pkg.author.name}
+ * @description ${pkg.description}
+ * @see ${pkg.homepage}
+ */
+`;
 
 del.sync(['examples/qrcode.js'], { force: true });
 
 export default {
   input: 'esnext/index.js',
   output: {
+    banner,
     format: 'umd',
     name: 'QRCode',
     esModule: false,
