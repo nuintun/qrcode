@@ -165,12 +165,12 @@ export class GIFImage {
     return byteOutput.toByteArray();
   }
 
-  private writeWord(output: OutputStream, i: number) {
+  private writeWord(output: OutputStream, i: number): void {
     output.writeByte(i & 0xff);
     output.writeByte((i >>> 8) & 0xff);
   }
 
-  private writeBytes(output: OutputStream, bytes: number[], off: number, length: number) {
+  private writeBytes(output: OutputStream, bytes: number[], off: number, length: number): void {
     for (let i: number = 0; i < length; i++) {
       output.writeByte(bytes[i + off]);
     }
