@@ -30,11 +30,11 @@ class Matrix {
     this.data = buffer || new Uint8ClampedArray(bufferSize);
   }
 
-  public get(x: number, y: number) {
+  public get(x: number, y: number): number {
     return this.data[y * this.width + x];
   }
 
-  public set(x: number, y: number, value: number) {
+  public set(x: number, y: number, value: number): void {
     this.data[y * this.width + x] = value;
   }
 }

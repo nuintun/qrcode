@@ -70,8 +70,9 @@ interface Dimension {
 
 // Computes the dimension (number of modules on a side) of the QR Code based on the position of the finder patterns
 function computeDimension(topLeft: Point, topRight: Point, bottomLeft: Point, matrix: BitMatrix): Dimension {
+  // Divide by 7 since the ratio is 1:1:3:1:1
   const moduleSize: number =
-    (sum(countBlackWhiteRun(topLeft, bottomLeft, matrix, 5)) / 7 + // Divide by 7 since the ratio is 1:1:3:1:1
+    (sum(countBlackWhiteRun(topLeft, bottomLeft, matrix, 5)) / 7 +
       sum(countBlackWhiteRun(topLeft, topRight, matrix, 5)) / 7 +
       sum(countBlackWhiteRun(bottomLeft, topLeft, matrix, 5)) / 7 +
       sum(countBlackWhiteRun(topRight, topLeft, matrix, 5)) / 7) /
@@ -123,11 +124,11 @@ function countBlackWhiteRunTowardsPoint(origin: Point, end: Point, matrix: BitMa
 
   const dx: number = Math.abs(toX - fromX);
   const dy: number = Math.abs(toY - fromY);
-  let error: number = Math.floor(-dx / 2);
   const xStep: number = fromX < toX ? 1 : -1;
   const yStep: number = fromY < toY ? 1 : -1;
 
   let currentPixel: boolean = true;
+  let error: number = Math.floor(-dx / 2);
 
   // Loop up until x == toX, but not beyond
   for (let x: number = fromX, y: number = fromY; x !== toX + xStep; x += xStep) {
@@ -333,8 +334,8 @@ export function locate(matrix: BitMatrix): QRLocation {
               (endX >= q.bottom.startX && startX <= q.bottom.endX) ||
               (startX <= q.bottom.startX &&
                 endX >= q.bottom.endX &&
-                (scans[2] / (q.bottom.endX - q.bottom.startX) < MAX_QUAD_RATIO &&
-                  scans[2] / (q.bottom.endX - q.bottom.startX) > MIN_QUAD_RATIO))
+                scans[2] / (q.bottom.endX - q.bottom.startX) < MAX_QUAD_RATIO &&
+                scans[2] / (q.bottom.endX - q.bottom.startX) > MIN_QUAD_RATIO)
           );
 
           if (matchingQuads.length > 0) {
@@ -358,8 +359,8 @@ export function locate(matrix: BitMatrix): QRLocation {
               (endX >= q.bottom.startX && startX <= q.bottom.endX) ||
               (startX <= q.bottom.startX &&
                 endX >= q.bottom.endX &&
-                (scans[2] / (q.bottom.endX - q.bottom.startX) < MAX_QUAD_RATIO &&
-                  scans[2] / (q.bottom.endX - q.bottom.startX) > MIN_QUAD_RATIO))
+                scans[2] / (q.bottom.endX - q.bottom.startX) < MAX_QUAD_RATIO &&
+                scans[2] / (q.bottom.endX - q.bottom.startX) > MIN_QUAD_RATIO)
           );
 
           if (matchingQuads.length > 0) {

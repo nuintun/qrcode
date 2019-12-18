@@ -133,8 +133,5 @@ export function extract(image: BitMatrix, location: QRLocation): ExtractResult {
     }
   }
 
-  return {
-    matrix,
-    mappingFunction
-  };
+  return { matrix, mappingFunction };
 }

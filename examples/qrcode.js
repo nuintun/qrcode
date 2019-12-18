@@ -1711,7 +1711,8 @@
     }
     // Computes the dimension (number of modules on a side) of the QR Code based on the position of the finder patterns
     function computeDimension(topLeft, topRight, bottomLeft, matrix) {
-        var moduleSize = (sum(countBlackWhiteRun(topLeft, bottomLeft, matrix, 5)) / 7 + // Divide by 7 since the ratio is 1:1:3:1:1
+        // Divide by 7 since the ratio is 1:1:3:1:1
+        var moduleSize = (sum(countBlackWhiteRun(topLeft, bottomLeft, matrix, 5)) / 7 +
             sum(countBlackWhiteRun(topLeft, topRight, matrix, 5)) / 7 +
             sum(countBlackWhiteRun(bottomLeft, topLeft, matrix, 5)) / 7 +
             sum(countBlackWhiteRun(topRight, topLeft, matrix, 5)) / 7) /
@@ -1756,10 +1757,10 @@
         }
         var dx = Math.abs(toX - fromX);
         var dy = Math.abs(toY - fromY);
-        var error = Math.floor(-dx / 2);
         var xStep = fromX < toX ? 1 : -1;
         var yStep = fromY < toY ? 1 : -1;
         var currentPixel = true;
+        var error = Math.floor(-dx / 2);
         // Loop up until x == toX, but not beyond
         for (var x = fromX, y = fromY; x !== toX + xStep; x += xStep) {
             // Does current pixel mean we have moved white to black or vice versa?
@@ -1898,8 +1899,8 @@
                                 (endX_1 >= q.bottom.startX && startX_1 <= q.bottom.endX) ||
                                 (startX_1 <= q.bottom.startX &&
                                     endX_1 >= q.bottom.endX &&
-                                    (scans[2] / (q.bottom.endX - q.bottom.startX) < MAX_QUAD_RATIO &&
-                                        scans[2] / (q.bottom.endX - q.bottom.startX) > MIN_QUAD_RATIO));
+                                    scans[2] / (q.bottom.endX - q.bottom.startX) < MAX_QUAD_RATIO &&
+                                    scans[2] / (q.bottom.endX - q.bottom.startX) > MIN_QUAD_RATIO);
                         });
                         if (matchingQuads.length > 0) {
                             matchingQuads[0].bottom = line;
@@ -1920,8 +1921,8 @@
                                 (endX_2 >= q.bottom.startX && startX_2 <= q.bottom.endX) ||
                                 (startX_2 <= q.bottom.startX &&
                                     endX_2 >= q.bottom.endX &&
-                                    (scans[2] / (q.bottom.endX - q.bottom.startX) < MAX_QUAD_RATIO &&
-                                        scans[2] / (q.bottom.endX - q.bottom.startX) > MIN_QUAD_RATIO));
+                                    scans[2] / (q.bottom.endX - q.bottom.startX) < MAX_QUAD_RATIO &&
+                                    scans[2] / (q.bottom.endX - q.bottom.startX) > MIN_QUAD_RATIO);
                         });
                         if (matchingQuads.length > 0) {
                             matchingQuads[0].bottom = line;
@@ -4158,10 +4159,7 @@
                 matrix.set(x, y, image.get(Math.floor(sourcePixel.x), Math.floor(sourcePixel.y)));
             }
         }
-        return {
-            matrix: matrix,
-            mappingFunction: mappingFunction
-        };
+        return { matrix: matrix, mappingFunction: mappingFunction };
     }
 
     /**
