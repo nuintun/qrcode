@@ -3,12 +3,12 @@
  * @author nuintun
  */
 
-export function UTF16(str: string): number[] {
+export function UTF16(text: string): number[] {
   const bytes: number[] = [];
-  const length: number = str.length;
+  const length: number = text.length;
 
   for (let i: number = 0; i < length; i++) {
-    bytes.push(str.charCodeAt(i));
+    bytes.push(text.charCodeAt(i));
   }
 
   return bytes;

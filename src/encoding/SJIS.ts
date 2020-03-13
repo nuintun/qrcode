@@ -136,16 +136,16 @@ export function getTables(): SJISTables {
 
 /**
  * @function SJIS
- * @param {string} str
+ * @param {string} text
  * @returns {number[]}
  */
-export function SJIS(str: string): number[] {
+export function SJIS(text: string): number[] {
   const bytes: number[] = [];
-  const length: number = str.length;
+  const length: number = text.length;
   const { UTF8_TO_SJIS }: SJISTables = getTables();
 
   for (let i: number = 0; i < length; i++) {
-    const code: number = str.charCodeAt(i);
+    const code: number = text.charCodeAt(i);
     const byte: number = UTF8_TO_SJIS[code];
 
     if (byte != null) {
