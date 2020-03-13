@@ -146,16 +146,16 @@
      */
     /**
      * @function UTF8
-     * @param {string} str
+     * @param {string} text
      * @returns {number[]}
      * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
      */
-    function UTF8(str) {
+    function UTF8(text) {
         var pos = 0;
         var bytes = [];
-        var length = str.length;
+        var length = text.length;
         for (var i = 0; i < length; i++) {
-            var code = str.charCodeAt(i);
+            var code = text.charCodeAt(i);
             if (code < 128) {
                 bytes[pos++] = code;
             }
@@ -163,9 +163,9 @@
                 bytes[pos++] = (code >> 6) | 192;
                 bytes[pos++] = (code & 63) | 128;
             }
-            else if ((code & 0xfc00) === 0xd800 && i + 1 < length && (str.charCodeAt(i + 1) & 0xfc00) === 0xdc00) {
+            else if ((code & 0xfc00) === 0xd800 && i + 1 < length && (text.charCodeAt(i + 1) & 0xfc00) === 0xdc00) {
                 // Surrogate Pair
-                code = 0x10000 + ((code & 0x03ff) << 10) + (str.charCodeAt(++i) & 0x03ff);
+                code = 0x10000 + ((code & 0x03ff) << 10) + (text.charCodeAt(++i) & 0x03ff);
                 bytes[pos++] = (code >> 18) | 240;
                 bytes[pos++] = ((code >> 12) & 63) | 128;
                 bytes[pos++] = ((code >> 6) & 63) | 128;
@@ -2559,15 +2559,15 @@
     }
     /**
      * @function SJIS
-     * @param {string} str
+     * @param {string} text
      * @returns {number[]}
      */
-    function SJIS(str) {
+    function SJIS(text) {
         var bytes = [];
-        var length = str.length;
+        var length = text.length;
         var UTF8_TO_SJIS = getTables().UTF8_TO_SJIS;
         for (var i = 0; i < length; i++) {
-            var code = str.charCodeAt(i);
+            var code = text.charCodeAt(i);
             var byte = UTF8_TO_SJIS[code];
             if (byte != null) {
                 // 2 bytes
@@ -4480,11 +4480,11 @@
      * @module UTF16
      * @author nuintun
      */
-    function UTF16(str) {
+    function UTF16(text) {
         var bytes = [];
-        var length = str.length;
+        var length = text.length;
         for (var i = 0; i < length; i++) {
-            bytes.push(str.charCodeAt(i));
+            bytes.push(text.charCodeAt(i));
         }
         return bytes;
     }
