@@ -10,9 +10,10 @@
  * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
  */
 export function UTF8(text: string): number[] {
-  let pos: number = 0;
   const bytes: number[] = [];
   const length: number = text.length;
+
+  let pos: number = 0;
 
   for (let i: number = 0; i < length; i++) {
     let code: number = text.charCodeAt(i);

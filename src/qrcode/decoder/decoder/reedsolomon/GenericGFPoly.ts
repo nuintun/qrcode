@@ -4,7 +4,7 @@
  * @author Cosmo Wolfe
  */
 
-import { GenericGF, addOrSubtractGF } from './GenericGF';
+import { addOrSubtractGF, GenericGF } from './GenericGF';
 
 export class GenericGFPoly {
   private field: GenericGF;

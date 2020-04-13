@@ -5,6 +5,9 @@
  * @author Kazuhiko Arase
  */
 
+/**
+ * @readonly
+ */
 export enum Mode {
   Terminator = 0x0,
   Numeric = 0x1,

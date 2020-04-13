@@ -7,7 +7,7 @@
 import { rsDecode } from './reedsolomon';
 import { BitMatrix } from '../BitMatrix';
 import { bytesDecode, DecodeResult } from './decode';
-import { Version, VERSIONS, ECLevel } from './version';
+import { ECLevel, Version, VERSIONS } from './version';
 import { getMaskFunc, maskFunc } from '../../common/MaskPattern';
 import { ErrorCorrectionLevel } from '../../common/ErrorCorrectionLevel';
 

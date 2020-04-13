@@ -7,7 +7,6 @@
 
 /**
  * @readonly
- * @enum {L, M, Q, H}
  */
 export enum ErrorCorrectionLevel {
   // 7%

@@ -3,6 +3,11 @@
  * @author nuintun
  */
 
+/**
+ * @function UTF16
+ * @param {string} text
+ * @returns {number[]}
+ */
 export function UTF16(text: string): number[] {
   const bytes: number[] = [];
   const length: number = text.length;
