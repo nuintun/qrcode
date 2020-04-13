@@ -1,7 +1,7 @@
 /**
  * @module QRCode
  * @license MIT
- * @version 2.0.0
+ * @version 2.0.1
  * @author nuintun
  * @description A pure JavaScript QRCode encode and decode library.
  * @see https://github.com/nuintun/qrcode#readme
@@ -1240,7 +1240,7 @@
       buffer.put(encoding, 21);
     }
   }
-  function prepareData(version, errorCorrectionLevel, hasEncodingHint, chunks) {
+  function prepareData(version, errorCorrectionLevel, encodingHint, chunks) {
     var dLength = chunks.length;
     var buffer = new BitBuffer();
     var rsBlocks = RSBlock.getRSBlocks(version, errorCorrectionLevel);
@@ -1248,7 +1248,7 @@
       var data = chunks[i];
       var mode = data.getMode();
       // Default set encoding UTF-8 when has encoding hint
-      if (hasEncodingHint && mode === exports.Mode.Byte) {
+      if (encodingHint && mode === exports.Mode.Byte) {
         appendECI(data.encoding, buffer);
       }
       buffer.put(mode, 4);
@@ -1342,7 +1342,7 @@
       this.chunks = [];
       this.matrixSize = 0;
       this.matrix = [];
-      this.hasEncodingHint = false;
+      this.encodingHint = false;
       this.auto = this.version === 0;
       this.errorCorrectionLevel = exports.ErrorCorrectionLevel.L;
     }
@@ -1410,16 +1410,16 @@
      * @returns {boolean}
      */
     Encoder.prototype.getEncodingHint = function () {
-      return this.hasEncodingHint;
+      return this.encodingHint;
     };
     /**
      * @public
      * @method setEncodingHint
-     * @param {boolean} hasEncodingHint
+     * @param {boolean} encodingHint
      * @returns {Encoder}
      */
-    Encoder.prototype.setEncodingHint = function (hasEncodingHint) {
-      this.hasEncodingHint = hasEncodingHint;
+    Encoder.prototype.setEncodingHint = function (encodingHint) {
+      this.encodingHint = encodingHint;
       return this;
     };
     /**
@@ -1622,14 +1622,14 @@
       var errorCorrectionLevel = this.errorCorrectionLevel;
       if (this.auto) {
         for (this.version = 1; this.version <= 40; this.version++) {
-          (_a = prepareData(this.version, errorCorrectionLevel, this.hasEncodingHint, chunks)),
+          (_a = prepareData(this.version, errorCorrectionLevel, this.encodingHint, chunks)),
             (buffer = _a[0]),
             (rsBlocks = _a[1]),
             (maxDataCount = _a[2]);
           if (buffer.getLengthInBits() <= maxDataCount) break;
         }
       } else {
-        (_b = prepareData(this.version, errorCorrectionLevel, this.hasEncodingHint, chunks)),
+        (_b = prepareData(this.version, errorCorrectionLevel, this.encodingHint, chunks)),
           (buffer = _b[0]),
           (rsBlocks = _b[1]),
           (maxDataCount = _b[2]);

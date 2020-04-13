@@ -49,7 +49,7 @@ function appendECI(encoding: number, buffer: BitBuffer) {
 function prepareData(
   version: number,
   errorCorrectionLevel: ErrorCorrectionLevel,
-  hasEncodingHint: boolean,
+  encodingHint: boolean,
   chunks: QRData[]
 ): prepareData {
   const dLength: number = chunks.length;
@@ -61,7 +61,7 @@ function prepareData(
     const mode: Mode = data.getMode();
 
     // Default set encoding UTF-8 when has encoding hint
-    if (hasEncodingHint && mode === Mode.Byte) {
+    if (encodingHint && mode === Mode.Byte) {
       appendECI((data as QRByte).encoding, buffer);
     }
 
@@ -182,7 +182,7 @@ export class Encoder {
   private chunks: QRData[] = [];
   private matrixSize: number = 0;
   private matrix: boolean[][] = [];
-  private hasEncodingHint: boolean = false;
+  private encodingHint: boolean = false;
   private auto: boolean = this.version === 0;
   private errorCorrectionLevel: ErrorCorrectionLevel = ErrorCorrectionLevel.L;
 
@@ -258,17 +258,17 @@ export class Encoder {
    * @returns {boolean}
    */
   public getEncodingHint(): boolean {
-    return this.hasEncodingHint;
+    return this.encodingHint;
   }
 
   /**
    * @public
    * @method setEncodingHint
-   * @param {boolean} hasEncodingHint
+   * @param {boolean} encodingHint
    * @returns {Encoder}
    */
-  public setEncodingHint(hasEncodingHint: boolean): Encoder {
-    this.hasEncodingHint = hasEncodingHint;
+  public setEncodingHint(encodingHint: boolean): Encoder {
+    this.encodingHint = encodingHint;
 
     return this;
   }
@@ -517,12 +517,12 @@ export class Encoder {
 
     if (this.auto) {
       for (this.version = 1; this.version <= 40; this.version++) {
-        [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, this.hasEncodingHint, chunks);
+        [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, this.encodingHint, chunks);
 
         if (buffer.getLengthInBits() <= maxDataCount) break;
       }
     } else {
-      [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, this.hasEncodingHint, chunks);
+      [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, this.encodingHint, chunks);
     }
 
     // Calc module count
