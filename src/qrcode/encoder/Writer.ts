@@ -180,27 +180,28 @@ function createData(buffer: BitBuffer, rsBlocks: RSBlock[], maxDataCount: number
 export class Encoder {
   private version: number = 0;
   private chunks: QRData[] = [];
-  private moduleCount: number = 0;
-  private modules: boolean[][] = [];
+  private matrixSize: number = 0;
+  private matrix: boolean[][] = [];
   private hasEncodingHint: boolean = false;
-  private autoVersion: boolean = this.version === 0;
+  private auto: boolean = this.version === 0;
   private errorCorrectionLevel: ErrorCorrectionLevel = ErrorCorrectionLevel.L;
 
   /**
    * @public
-   * @method getModules
+   * @method getMatrix
    * @returns {boolean[][]}
    */
-  public getModules(): boolean[][] {
-    return this.modules;
+  public getMatrix(): boolean[][] {
+    return this.matrix;
   }
 
   /**
    * @public
-   * @method getModuleCount
+   * @method getMatrixSize
+   * @returns {number}
    */
-  public getModuleCount(): number {
-    return this.moduleCount;
+  public getMatrixSize(): number {
+    return this.matrixSize;
   }
 
   /**
@@ -216,10 +217,11 @@ export class Encoder {
    * @public
    * @method setVersion
    * @param {number} version
+   * @returns {Encoder}
    */
   public setVersion(version: number): Encoder {
     this.version = Math.min(40, Math.max(0, version >> 0));
-    this.autoVersion = this.version === 0;
+    this.auto = this.version === 0;
 
     return this;
   }
@@ -263,6 +265,7 @@ export class Encoder {
    * @public
    * @method setEncodingHint
    * @param {boolean} hasEncodingHint
+   * @returns {Encoder}
    */
   public setEncodingHint(hasEncodingHint: boolean): Encoder {
     this.hasEncodingHint = hasEncodingHint;
@@ -274,6 +277,7 @@ export class Encoder {
    * @public
    * @method write
    * @param {QRData} data
+   * @returns {Encoder}
    */
   public write(data: QRData | string): Encoder {
     if (data instanceof QRData) {
@@ -299,19 +303,19 @@ export class Encoder {
    * @returns {boolean}
    */
   public isDark(row: number, col: number): boolean {
-    if (this.modules[row][col] !== null) {
-      return this.modules[row][col];
+    if (this.matrix[row][col] !== null) {
+      return this.matrix[row][col];
     } else {
       return false;
     }
   }
 
   private setupFinderPattern(row: number, col: number): void {
-    const moduleCount: number = this.moduleCount;
+    const matrixSize: number = this.matrixSize;
 
     for (let r: number = -1; r <= 7; r++) {
       for (let c: number = -1; c <= 7; c++) {
-        if (row + r <= -1 || moduleCount <= row + r || col + c <= -1 || moduleCount <= col + c) {
+        if (row + r <= -1 || matrixSize <= row + r || col + c <= -1 || matrixSize <= col + c) {
           continue;
         }
 
@@ -320,9 +324,9 @@ export class Encoder {
           (0 <= c && c <= 6 && (r === 0 || r === 6)) ||
           (2 <= r && r <= 4 && 2 <= c && c <= 4)
         ) {
-          this.modules[row + r][col + c] = true;
+          this.matrix[row + r][col + c] = true;
         } else {
-          this.modules[row + r][col + c] = false;
+          this.matrix[row + r][col + c] = false;
         }
       }
     }
@@ -337,16 +341,16 @@ export class Encoder {
         const row: number = pos[i];
         const col: number = pos[j];
 
-        if (this.modules[row][col] !== null) {
+        if (this.matrix[row][col] !== null) {
           continue;
         }
 
         for (let r: number = -2; r <= 2; r++) {
           for (let c: number = -2; c <= 2; c++) {
             if (r === -2 || r === 2 || c === -2 || c === 2 || (r === 0 && c === 0)) {
-              this.modules[row + r][col + c] = true;
+              this.matrix[row + r][col + c] = true;
             } else {
-              this.modules[row + r][col + c] = false;
+              this.matrix[row + r][col + c] = false;
             }
           }
         }
@@ -355,19 +359,19 @@ export class Encoder {
   }
 
   private setupTimingPattern(): void {
-    const count: number = this.moduleCount - 8;
+    const count: number = this.matrixSize - 8;
 
     for (let i: number = 8; i < count; i++) {
       const bit: boolean = i % 2 === 0;
 
       // vertical
-      if (this.modules[i][6] === null) {
-        this.modules[i][6] = bit;
+      if (this.matrix[i][6] === null) {
+        this.matrix[i][6] = bit;
       }
 
       // horizontal
-      if (this.modules[6][i] === null) {
-        this.modules[6][i] = bit;
+      if (this.matrix[6][i] === null) {
+        this.matrix[6][i] = bit;
       }
     }
   }
@@ -375,71 +379,72 @@ export class Encoder {
   private setupFormatInfo(maskPattern: number): void {
     const data: number = (this.errorCorrectionLevel << 3) | maskPattern;
     const bits: number = QRUtil.getBCHVersionInfo(data);
-    const moduleCount: number = this.moduleCount;
+    const matrixSize: number = this.matrixSize;
 
     for (let i: number = 0; i < 15; i++) {
       const bit: boolean = ((bits >> i) & 1) === 1;
 
       // Vertical
       if (i < 6) {
-        this.modules[i][8] = bit;
+        this.matrix[i][8] = bit;
       } else if (i < 8) {
-        this.modules[i + 1][8] = bit;
+        this.matrix[i + 1][8] = bit;
       } else {
-        this.modules[moduleCount - 15 + i][8] = bit;
+        this.matrix[matrixSize - 15 + i][8] = bit;
       }
 
       // Horizontal
       if (i < 8) {
-        this.modules[8][moduleCount - i - 1] = bit;
+        this.matrix[8][matrixSize - i - 1] = bit;
       } else if (i < 9) {
-        this.modules[8][15 - i - 1 + 1] = bit;
+        this.matrix[8][15 - i - 1 + 1] = bit;
       } else {
-        this.modules[8][15 - i - 1] = bit;
+        this.matrix[8][15 - i - 1] = bit;
       }
     }
 
     // Fixed point
-    this.modules[moduleCount - 8][8] = true;
+    this.matrix[matrixSize - 8][8] = true;
   }
 
   private setupVersionInfo(): void {
     if (this.version >= 7) {
-      const moduleCount: number = this.moduleCount;
+      const matrixSize: number = this.matrixSize;
       const bits: number = QRUtil.getBCHVersion(this.version);
 
       for (let i: number = 0; i < 18; i++) {
         const bit: boolean = ((bits >> i) & 1) === 1;
 
-        this.modules[(i / 3) >> 0][(i % 3) + moduleCount - 8 - 3] = bit;
-        this.modules[(i % 3) + moduleCount - 8 - 3][(i / 3) >> 0] = bit;
+        this.matrix[(i / 3) >> 0][(i % 3) + matrixSize - 8 - 3] = bit;
+        this.matrix[(i % 3) + matrixSize - 8 - 3][(i / 3) >> 0] = bit;
       }
     }
   }
 
   private setupCodewords(data: BitBuffer, maskPattern: number): void {
-    // Bit index into the data
-    let bitIndex: number = 0;
-    const moduleCount: number = this.moduleCount;
+    const matrixSize: number = this.matrixSize;
     const bitLength: number = data.getLengthInBits();
 
+    // Bit index into the data
+    let bitIndex: number = 0;
+
     // Do the funny zigzag scan
-    for (let right: number = moduleCount - 1; right >= 1; right -= 2) {
+    for (let right: number = matrixSize - 1; right >= 1; right -= 2) {
       // Index of right column in each column pair
       if (right === 6) {
         right = 5;
       }
 
-      for (let vert: number = 0; vert < moduleCount; vert++) {
+      for (let vert: number = 0; vert < matrixSize; vert++) {
         // Vertical counter
         for (let j: number = 0; j < 2; j++) {
           // Actual x coordinate
           const x: number = right - j;
           const upward: boolean = ((right + 1) & 2) === 0;
           // Actual y coordinate
-          const y: number = upward ? moduleCount - 1 - vert : vert;
+          const y: number = upward ? matrixSize - 1 - vert : vert;
 
-          if (this.modules[y][x] !== null) {
+          if (this.matrix[y][x] !== null) {
             continue;
           }
 
@@ -456,30 +461,30 @@ export class Encoder {
             bit = !bit;
           }
 
-          this.modules[y][x] = bit;
+          this.matrix[y][x] = bit;
         }
       }
     }
   }
 
   private buildMatrix(data: BitBuffer, maskPattern: number): void {
-    // Initialize modules
-    this.modules = [];
+    // Initialize matrix
+    this.matrix = [];
 
-    const moduleCount: number = this.moduleCount;
+    const matrixSize: number = this.matrixSize;
 
-    for (let row: number = 0; row < moduleCount; row++) {
-      this.modules[row] = [];
+    for (let row: number = 0; row < matrixSize; row++) {
+      this.matrix[row] = [];
 
-      for (let col: number = 0; col < moduleCount; col++) {
-        this.modules[row][col] = null;
+      for (let col: number = 0; col < matrixSize; col++) {
+        this.matrix[row][col] = null;
       }
     }
 
     // Setup finder pattern
     this.setupFinderPattern(0, 0);
-    this.setupFinderPattern(moduleCount - 7, 0);
-    this.setupFinderPattern(0, moduleCount - 7);
+    this.setupFinderPattern(matrixSize - 7, 0);
+    this.setupFinderPattern(0, matrixSize - 7);
 
     // Setup alignment pattern
     this.setupAlignmentPattern();
@@ -500,6 +505,7 @@ export class Encoder {
   /**
    * @public
    * @method make
+   * @returns {Encoder}
    */
   public make(): Encoder {
     let buffer: BitBuffer;
@@ -509,7 +515,7 @@ export class Encoder {
     const chunks: QRData[] = this.chunks;
     const errorCorrectionLevel: ErrorCorrectionLevel = this.errorCorrectionLevel;
 
-    if (this.autoVersion) {
+    if (this.auto) {
       for (this.version = 1; this.version <= 40; this.version++) {
         [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, this.hasEncodingHint, chunks);
 
@@ -520,7 +526,7 @@ export class Encoder {
     }
 
     // Calc module count
-    this.moduleCount = this.version * 4 + 17;
+    this.matrixSize = this.version * 4 + 17;
 
     const matrices: boolean[][][] = [];
     const data: BitBuffer = createData(buffer, rsBlocks, maxDataCount);
@@ -532,7 +538,7 @@ export class Encoder {
     for (let maskPattern: number = 0; maskPattern < 8; maskPattern++) {
       this.buildMatrix(data, maskPattern);
 
-      matrices.push(this.modules);
+      matrices.push(this.matrix);
 
       const penalty: number = QRUtil.calculateMaskPenalty(this);
 
@@ -542,7 +548,7 @@ export class Encoder {
       }
     }
 
-    this.modules = matrices[bestMaskPattern];
+    this.matrix = matrices[bestMaskPattern];
 
     return this;
   }
@@ -558,8 +564,8 @@ export class Encoder {
     moduleSize = Math.max(1, moduleSize >> 0);
     margin = Math.max(0, margin >> 0);
 
-    const moduleCount: number = this.moduleCount;
-    const size: number = moduleSize * moduleCount + margin * 2;
+    const matrixSize: number = this.matrixSize;
+    const size: number = moduleSize * matrixSize + margin * 2;
     const gif: GIFImage = new GIFImage(size, size);
 
     for (let y: number = 0; y < size; y++) {

@@ -114,14 +114,15 @@ export function getBCHVersionInfo(data: number): number {
 }
 
 function applyMaskPenaltyRule1Internal(qrcode: Encoder, isHorizontal: boolean): number {
-  let penalty: number = 0;
-  const moduleCount: number = qrcode.getModuleCount();
+  const matrixSize: number = qrcode.getMatrixSize();
 
-  for (let i: number = 0; i < moduleCount; i++) {
+  let penalty: number = 0;
+
+  for (let i: number = 0; i < matrixSize; i++) {
     let prevBit: boolean = null;
     let numSameBitCells: number = 0;
 
-    for (let j: number = 0; j < moduleCount; j++) {
+    for (let j: number = 0; j < matrixSize; j++) {
       const bit: boolean = isHorizontal ? qrcode.isDark(i, j) : qrcode.isDark(j, i);
 
       if (bit === prevBit) {
@@ -149,11 +150,12 @@ function applyMaskPenaltyRule1(qrcode: Encoder): number {
 }
 
 function applyMaskPenaltyRule2(qrcode: Encoder): number {
-  let penalty: number = 0;
-  const moduleCount: number = qrcode.getModuleCount();
+  const matrixSize: number = qrcode.getMatrixSize();
 
-  for (let y: number = 0; y < moduleCount - 1; y++) {
-    for (let x: number = 0; x < moduleCount - 1; x++) {
+  let penalty: number = 0;
+
+  for (let y: number = 0; y < matrixSize - 1; y++) {
+    for (let x: number = 0; x < matrixSize - 1; x++) {
       const value: boolean = qrcode.isDark(y, x);
 
       if (value === qrcode.isDark(y, x + 1) && value === qrcode.isDark(y + 1, x) && value === qrcode.isDark(y + 1, x + 1)) {
@@ -167,7 +169,7 @@ function applyMaskPenaltyRule2(qrcode: Encoder): number {
 
 function isFourWhite(qrcode: Encoder, rangeIndex: number, from: number, to: number, isHorizontal: boolean): boolean {
   from = Math.max(from, 0);
-  to = Math.min(to, qrcode.getModuleCount());
+  to = Math.min(to, qrcode.getMatrixSize());
 
   for (let i: number = from; i < to; i++) {
     const value: boolean = isHorizontal ? qrcode.isDark(rangeIndex, i) : qrcode.isDark(i, rangeIndex);
@@ -181,13 +183,14 @@ function isFourWhite(qrcode: Encoder, rangeIndex: number, from: number, to: numb
 }
 
 function applyMaskPenaltyRule3(qrcode: Encoder): number {
-  let penalty: number = 0;
-  const moduleCount: number = qrcode.getModuleCount();
+  const matrixSize: number = qrcode.getMatrixSize();
 
-  for (let y: number = 0; y < moduleCount; y++) {
-    for (let x: number = 0; x < moduleCount; x++) {
+  let penalty: number = 0;
+
+  for (let y: number = 0; y < matrixSize; y++) {
+    for (let x: number = 0; x < matrixSize; x++) {
       if (
-        x + 6 < moduleCount &&
+        x + 6 < matrixSize &&
         qrcode.isDark(y, x) &&
         !qrcode.isDark(y, x + 1) &&
         qrcode.isDark(y, x + 2) &&
@@ -201,7 +204,7 @@ function applyMaskPenaltyRule3(qrcode: Encoder): number {
       }
 
       if (
-        y + 6 < moduleCount &&
+        y + 6 < matrixSize &&
         qrcode.isDark(y, x) &&
         !qrcode.isDark(y + 1, x) &&
         qrcode.isDark(y + 2, x) &&
@@ -220,18 +223,19 @@ function applyMaskPenaltyRule3(qrcode: Encoder): number {
 }
 
 function applyMaskPenaltyRule4(qrcode: Encoder): number {
-  let numDarkCells: number = 0;
-  const moduleCount: number = qrcode.getModuleCount();
+  const matrixSize: number = qrcode.getMatrixSize();
 
-  for (let y: number = 0; y < moduleCount; y++) {
-    for (let x: number = 0; x < moduleCount; x++) {
+  let numDarkCells: number = 0;
+
+  for (let y: number = 0; y < matrixSize; y++) {
+    for (let x: number = 0; x < matrixSize; x++) {
       if (qrcode.isDark(y, x)) {
         numDarkCells++;
       }
     }
   }
 
-  const numTotalCells: number = moduleCount * moduleCount;
+  const numTotalCells: number = matrixSize * matrixSize;
   const fivePercentVariances: number = Math.floor(Math.abs(numDarkCells * 20 - numTotalCells * 10) / numTotalCells);
 
   return fivePercentVariances * N4;

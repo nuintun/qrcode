@@ -40,13 +40,13 @@ console.log(qrcode.toDataURL());
 
 ###### Methods
 
-- getModules(): boolean[][]
+- getMatrix(): boolean[][]
 
   - Get qrcode modules matrix.
 
-- getModuleCount(): number
+- getMatrixSize(): number
 
-  - Get qrcode module count.
+  - Get qrcode module matrix size.
 
 - setVersion(version: number): Encoder
 

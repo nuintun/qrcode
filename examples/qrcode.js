@@ -1,7 +1,7 @@
 /**
  * @module QRCode
  * @license MIT
- * @version 1.0.5
+ * @version 2.0.0
  * @author nuintun
  * @description A pure JavaScript QRCode encode and decode library.
  * @see https://github.com/nuintun/qrcode#readme
@@ -436,12 +436,12 @@
         return ((data << 10) | offset) ^ G15_MASK;
     }
     function applyMaskPenaltyRule1Internal(qrcode, isHorizontal) {
+        var matrixSize = qrcode.getMatrixSize();
         var penalty = 0;
-        var moduleCount = qrcode.getModuleCount();
-        for (var i = 0; i < moduleCount; i++) {
+        for (var i = 0; i < matrixSize; i++) {
             var prevBit = null;
             var numSameBitCells = 0;
-            for (var j = 0; j < moduleCount; j++) {
+            for (var j = 0; j < matrixSize; j++) {
                 var bit = isHorizontal ? qrcode.isDark(i, j) : qrcode.isDark(j, i);
                 if (bit === prevBit) {
                     numSameBitCells++;
@@ -466,10 +466,10 @@
         return applyMaskPenaltyRule1Internal(qrcode, true) + applyMaskPenaltyRule1Internal(qrcode, false);
     }
     function applyMaskPenaltyRule2(qrcode) {
+        var matrixSize = qrcode.getMatrixSize();
         var penalty = 0;
-        var moduleCount = qrcode.getModuleCount();
-        for (var y = 0; y < moduleCount - 1; y++) {
-            for (var x = 0; x < moduleCount - 1; x++) {
+        for (var y = 0; y < matrixSize - 1; y++) {
+            for (var x = 0; x < matrixSize - 1; x++) {
                 var value = qrcode.isDark(y, x);
                 if (value === qrcode.isDark(y, x + 1) && value === qrcode.isDark(y + 1, x) && value === qrcode.isDark(y + 1, x + 1)) {
                     penalty += N2;
@@ -480,7 +480,7 @@
     }
     function isFourWhite(qrcode, rangeIndex, from, to, isHorizontal) {
         from = Math.max(from, 0);
-        to = Math.min(to, qrcode.getModuleCount());
+        to = Math.min(to, qrcode.getMatrixSize());
         for (var i = from; i < to; i++) {
             var value = isHorizontal ? qrcode.isDark(rangeIndex, i) : qrcode.isDark(i, rangeIndex);
             if (value) {
@@ -490,11 +490,11 @@
         return true;
     }
     function applyMaskPenaltyRule3(qrcode) {
+        var matrixSize = qrcode.getMatrixSize();
         var penalty = 0;
-        var moduleCount = qrcode.getModuleCount();
-        for (var y = 0; y < moduleCount; y++) {
-            for (var x = 0; x < moduleCount; x++) {
-                if (x + 6 < moduleCount &&
+        for (var y = 0; y < matrixSize; y++) {
+            for (var x = 0; x < matrixSize; x++) {
+                if (x + 6 < matrixSize &&
                     qrcode.isDark(y, x) &&
                     !qrcode.isDark(y, x + 1) &&
                     qrcode.isDark(y, x + 2) &&
@@ -505,7 +505,7 @@
                     (isFourWhite(qrcode, y, x - 4, x, true) || isFourWhite(qrcode, y, x + 7, x + 11, true))) {
                     penalty += N3;
                 }
-                if (y + 6 < moduleCount &&
+                if (y + 6 < matrixSize &&
                     qrcode.isDark(y, x) &&
                     !qrcode.isDark(y + 1, x) &&
                     qrcode.isDark(y + 2, x) &&
@@ -521,16 +521,16 @@
         return penalty;
     }
     function applyMaskPenaltyRule4(qrcode) {
+        var matrixSize = qrcode.getMatrixSize();
         var numDarkCells = 0;
-        var moduleCount = qrcode.getModuleCount();
-        for (var y = 0; y < moduleCount; y++) {
-            for (var x = 0; x < moduleCount; x++) {
+        for (var y = 0; y < matrixSize; y++) {
+            for (var x = 0; x < matrixSize; x++) {
                 if (qrcode.isDark(y, x)) {
                     numDarkCells++;
                 }
             }
         }
-        var numTotalCells = moduleCount * moduleCount;
+        var numTotalCells = matrixSize * matrixSize;
         var fivePercentVariances = Math.floor(Math.abs(numDarkCells * 20 - numTotalCells * 10) / numTotalCells);
         return fivePercentVariances * N4;
     }
@@ -1324,26 +1324,27 @@
         function Encoder() {
             this.version = 0;
             this.chunks = [];
-            this.moduleCount = 0;
-            this.modules = [];
+            this.matrixSize = 0;
+            this.matrix = [];
             this.hasEncodingHint = false;
-            this.autoVersion = this.version === 0;
+            this.auto = this.version === 0;
             this.errorCorrectionLevel = exports.ErrorCorrectionLevel.L;
         }
         /**
          * @public
-         * @method getModules
+         * @method getMatrix
          * @returns {boolean[][]}
          */
-        Encoder.prototype.getModules = function () {
-            return this.modules;
+        Encoder.prototype.getMatrix = function () {
+            return this.matrix;
         };
         /**
          * @public
-         * @method getModuleCount
+         * @method getMatrixSize
+         * @returns {number}
          */
-        Encoder.prototype.getModuleCount = function () {
-            return this.moduleCount;
+        Encoder.prototype.getMatrixSize = function () {
+            return this.matrixSize;
         };
         /**
          * @public
@@ -1357,10 +1358,11 @@
          * @public
          * @method setVersion
          * @param {number} version
+         * @returns {Encoder}
          */
         Encoder.prototype.setVersion = function (version) {
             this.version = Math.min(40, Math.max(0, version >> 0));
-            this.autoVersion = this.version === 0;
+            this.auto = this.version === 0;
             return this;
         };
         /**
@@ -1398,6 +1400,7 @@
          * @public
          * @method setEncodingHint
          * @param {boolean} hasEncodingHint
+         * @returns {Encoder}
          */
         Encoder.prototype.setEncodingHint = function (hasEncodingHint) {
             this.hasEncodingHint = hasEncodingHint;
@@ -1407,6 +1410,7 @@
          * @public
          * @method write
          * @param {QRData} data
+         * @returns {Encoder}
          */
         Encoder.prototype.write = function (data) {
             if (data instanceof QRData) {
@@ -1431,27 +1435,27 @@
          * @returns {boolean}
          */
         Encoder.prototype.isDark = function (row, col) {
-            if (this.modules[row][col] !== null) {
-                return this.modules[row][col];
+            if (this.matrix[row][col] !== null) {
+                return this.matrix[row][col];
             }
             else {
                 return false;
             }
         };
         Encoder.prototype.setupFinderPattern = function (row, col) {
-            var moduleCount = this.moduleCount;
+            var matrixSize = this.matrixSize;
             for (var r = -1; r <= 7; r++) {
                 for (var c = -1; c <= 7; c++) {
-                    if (row + r <= -1 || moduleCount <= row + r || col + c <= -1 || moduleCount <= col + c) {
+                    if (row + r <= -1 || matrixSize <= row + r || col + c <= -1 || matrixSize <= col + c) {
                         continue;
                     }
                     if ((0 <= r && r <= 6 && (c === 0 || c === 6)) ||
                         (0 <= c && c <= 6 && (r === 0 || r === 6)) ||
                         (2 <= r && r <= 4 && 2 <= c && c <= 4)) {
-                        this.modules[row + r][col + c] = true;
+                        this.matrix[row + r][col + c] = true;
                     }
                     else {
-                        this.modules[row + r][col + c] = false;
+                        this.matrix[row + r][col + c] = false;
                     }
                 }
             }
@@ -1463,16 +1467,16 @@
                 for (var j = 0; j < length; j++) {
                     var row = pos[i];
                     var col = pos[j];
-                    if (this.modules[row][col] !== null) {
+                    if (this.matrix[row][col] !== null) {
                         continue;
                     }
                     for (var r = -2; r <= 2; r++) {
                         for (var c = -2; c <= 2; c++) {
                             if (r === -2 || r === 2 || c === -2 || c === 2 || (r === 0 && c === 0)) {
-                                this.modules[row + r][col + c] = true;
+                                this.matrix[row + r][col + c] = true;
                             }
                             else {
-                                this.modules[row + r][col + c] = false;
+                                this.matrix[row + r][col + c] = false;
                             }
                         }
                     }
@@ -1480,80 +1484,80 @@
             }
         };
         Encoder.prototype.setupTimingPattern = function () {
-            var count = this.moduleCount - 8;
+            var count = this.matrixSize - 8;
             for (var i = 8; i < count; i++) {
                 var bit = i % 2 === 0;
                 // vertical
-                if (this.modules[i][6] === null) {
-                    this.modules[i][6] = bit;
+                if (this.matrix[i][6] === null) {
+                    this.matrix[i][6] = bit;
                 }
                 // horizontal
-                if (this.modules[6][i] === null) {
-                    this.modules[6][i] = bit;
+                if (this.matrix[6][i] === null) {
+                    this.matrix[6][i] = bit;
                 }
             }
         };
         Encoder.prototype.setupFormatInfo = function (maskPattern) {
             var data = (this.errorCorrectionLevel << 3) | maskPattern;
             var bits = getBCHVersionInfo(data);
-            var moduleCount = this.moduleCount;
+            var matrixSize = this.matrixSize;
             for (var i = 0; i < 15; i++) {
                 var bit = ((bits >> i) & 1) === 1;
                 // Vertical
                 if (i < 6) {
-                    this.modules[i][8] = bit;
+                    this.matrix[i][8] = bit;
                 }
                 else if (i < 8) {
-                    this.modules[i + 1][8] = bit;
+                    this.matrix[i + 1][8] = bit;
                 }
                 else {
-                    this.modules[moduleCount - 15 + i][8] = bit;
+                    this.matrix[matrixSize - 15 + i][8] = bit;
                 }
                 // Horizontal
                 if (i < 8) {
-                    this.modules[8][moduleCount - i - 1] = bit;
+                    this.matrix[8][matrixSize - i - 1] = bit;
                 }
                 else if (i < 9) {
-                    this.modules[8][15 - i - 1 + 1] = bit;
+                    this.matrix[8][15 - i - 1 + 1] = bit;
                 }
                 else {
-                    this.modules[8][15 - i - 1] = bit;
+                    this.matrix[8][15 - i - 1] = bit;
                 }
             }
             // Fixed point
-            this.modules[moduleCount - 8][8] = true;
+            this.matrix[matrixSize - 8][8] = true;
         };
         Encoder.prototype.setupVersionInfo = function () {
             if (this.version >= 7) {
-                var moduleCount = this.moduleCount;
+                var matrixSize = this.matrixSize;
                 var bits = getBCHVersion(this.version);
                 for (var i = 0; i < 18; i++) {
                     var bit = ((bits >> i) & 1) === 1;
-                    this.modules[(i / 3) >> 0][(i % 3) + moduleCount - 8 - 3] = bit;
-                    this.modules[(i % 3) + moduleCount - 8 - 3][(i / 3) >> 0] = bit;
+                    this.matrix[(i / 3) >> 0][(i % 3) + matrixSize - 8 - 3] = bit;
+                    this.matrix[(i % 3) + matrixSize - 8 - 3][(i / 3) >> 0] = bit;
                 }
             }
         };
         Encoder.prototype.setupCodewords = function (data, maskPattern) {
+            var matrixSize = this.matrixSize;
+            var bitLength = data.getLengthInBits();
             // Bit index into the data
             var bitIndex = 0;
-            var moduleCount = this.moduleCount;
-            var bitLength = data.getLengthInBits();
             // Do the funny zigzag scan
-            for (var right = moduleCount - 1; right >= 1; right -= 2) {
+            for (var right = matrixSize - 1; right >= 1; right -= 2) {
                 // Index of right column in each column pair
                 if (right === 6) {
                     right = 5;
                 }
-                for (var vert = 0; vert < moduleCount; vert++) {
+                for (var vert = 0; vert < matrixSize; vert++) {
                     // Vertical counter
                     for (var j = 0; j < 2; j++) {
                         // Actual x coordinate
                         var x = right - j;
                         var upward = ((right + 1) & 2) === 0;
                         // Actual y coordinate
-                        var y = upward ? moduleCount - 1 - vert : vert;
-                        if (this.modules[y][x] !== null) {
+                        var y = upward ? matrixSize - 1 - vert : vert;
+                        if (this.matrix[y][x] !== null) {
                             continue;
                         }
                         var bit = false;
@@ -1565,25 +1569,25 @@
                         if (invert) {
                             bit = !bit;
                         }
-                        this.modules[y][x] = bit;
+                        this.matrix[y][x] = bit;
                     }
                 }
             }
         };
         Encoder.prototype.buildMatrix = function (data, maskPattern) {
-            // Initialize modules
-            this.modules = [];
-            var moduleCount = this.moduleCount;
-            for (var row = 0; row < moduleCount; row++) {
-                this.modules[row] = [];
-                for (var col = 0; col < moduleCount; col++) {
-                    this.modules[row][col] = null;
+            // Initialize matrix
+            this.matrix = [];
+            var matrixSize = this.matrixSize;
+            for (var row = 0; row < matrixSize; row++) {
+                this.matrix[row] = [];
+                for (var col = 0; col < matrixSize; col++) {
+                    this.matrix[row][col] = null;
                 }
             }
             // Setup finder pattern
             this.setupFinderPattern(0, 0);
-            this.setupFinderPattern(moduleCount - 7, 0);
-            this.setupFinderPattern(0, moduleCount - 7);
+            this.setupFinderPattern(matrixSize - 7, 0);
+            this.setupFinderPattern(0, matrixSize - 7);
             // Setup alignment pattern
             this.setupAlignmentPattern();
             // Setup timing pattern
@@ -1598,6 +1602,7 @@
         /**
          * @public
          * @method make
+         * @returns {Encoder}
          */
         Encoder.prototype.make = function () {
             var _a, _b;
@@ -1606,7 +1611,7 @@
             var maxDataCount;
             var chunks = this.chunks;
             var errorCorrectionLevel = this.errorCorrectionLevel;
-            if (this.autoVersion) {
+            if (this.auto) {
                 for (this.version = 1; this.version <= 40; this.version++) {
                     _a = prepareData(this.version, errorCorrectionLevel, this.hasEncodingHint, chunks), buffer = _a[0], rsBlocks = _a[1], maxDataCount = _a[2];
                     if (buffer.getLengthInBits() <= maxDataCount)
@@ -1617,7 +1622,7 @@
                 _b = prepareData(this.version, errorCorrectionLevel, this.hasEncodingHint, chunks), buffer = _b[0], rsBlocks = _b[1], maxDataCount = _b[2];
             }
             // Calc module count
-            this.moduleCount = this.version * 4 + 17;
+            this.matrixSize = this.version * 4 + 17;
             var matrices = [];
             var data = createData(buffer, rsBlocks, maxDataCount);
             var bestMaskPattern = -1;
@@ -1625,14 +1630,14 @@
             // Choose best mask pattern
             for (var maskPattern = 0; maskPattern < 8; maskPattern++) {
                 this.buildMatrix(data, maskPattern);
-                matrices.push(this.modules);
+                matrices.push(this.matrix);
                 var penalty = calculateMaskPenalty(this);
                 if (penalty < minPenalty) {
                     minPenalty = penalty;
                     bestMaskPattern = maskPattern;
                 }
             }
-            this.modules = matrices[bestMaskPattern];
+            this.matrix = matrices[bestMaskPattern];
             return this;
         };
         /**
@@ -1647,8 +1652,8 @@
             if (margin === void 0) { margin = moduleSize * 4; }
             moduleSize = Math.max(1, moduleSize >> 0);
             margin = Math.max(0, margin >> 0);
-            var moduleCount = this.moduleCount;
-            var size = moduleSize * moduleCount + margin * 2;
+            var matrixSize = this.matrixSize;
+            var size = moduleSize * matrixSize + margin * 2;
             var gif = new GIFImage(size, size);
             for (var y = 0; y < size; y++) {
                 for (var x = 0; x < size; x++) {
