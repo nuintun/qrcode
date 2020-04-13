@@ -46,7 +46,7 @@ console.log(qrcode.toDataURL());
 
 - getMatrixSize(): number
 
-  - Get qrcode module matrix size.
+  - Get qrcode modules matrix size.
 
 - setVersion(version: number): Encoder
 
