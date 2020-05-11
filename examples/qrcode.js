@@ -1,7 +1,7 @@
 /**
  * @module QRCode
  * @license MIT
- * @version 2.0.1
+ * @version 2.1.0
  * @author nuintun
  * @description A pure JavaScript QRCode encode and decode library.
  * @see https://github.com/nuintun/qrcode#readme
@@ -39,18 +39,18 @@
   })(exports.Mode || (exports.Mode = {}));
 
   /*! *****************************************************************************
-    Copyright (c) Microsoft Corporation. All rights reserved.
-    Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-    this file except in compliance with the License. You may obtain a copy of the
-    License at http://www.apache.org/licenses/LICENSE-2.0
+    Copyright (c) Microsoft Corporation.
 
-    THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-    WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-    MERCHANTABLITY OR NON-INFRINGEMENT.
+    Permission to use, copy, modify, and/or distribute this software for any
+    purpose with or without fee is hereby granted.
 
-    See the Apache Version 2.0 License for specific language governing permissions
-    and limitations under the License.
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+    AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+    LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+    OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+    PERFORMANCE OF THIS SOFTWARE.
     ***************************************************************************** */
   /* global Reflect, Promise */
 
@@ -1696,6 +1696,7 @@
    * @module locator
    * @author nuintun
    * @author Cosmo Wolfe
+   * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
    */
   var MIN_QUAD_RATIO = 0.5;
   var MAX_QUAD_RATIO = 1.5;
@@ -1885,8 +1886,74 @@
       return Infinity;
     }
   }
-  function locate(matrix) {
+  function recenterLocation(matrix, point) {
+    var leftX = Math.round(point.x);
+    while (matrix.get(leftX, Math.round(point.y))) {
+      leftX--;
+    }
+    var rightX = Math.round(point.x);
+    while (matrix.get(rightX, Math.round(point.y))) {
+      rightX++;
+    }
+    var x = (leftX + rightX) / 2;
+    var topY = Math.round(point.y);
+    while (matrix.get(Math.round(x), topY)) {
+      topY--;
+    }
+    var bottomY = Math.round(point.y);
+    while (matrix.get(Math.round(x), bottomY)) {
+      bottomY++;
+    }
+    var y = (topY + bottomY) / 2;
+    return { x: x, y: y };
+  }
+  function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, bottomLeft) {
     var _a;
+    // Now that we've found the three finder patterns we can determine the blockSize and the size of the QR code.
+    // We'll use these to help find the alignment pattern but also later when we do the extraction.
+    var dimension;
+    var moduleSize;
+    try {
+      (_a = computeDimension(topLeft, topRight, bottomLeft, matrix)), (dimension = _a.dimension), (moduleSize = _a.moduleSize);
+    } catch (e) {
+      return null;
+    }
+    // Now find the alignment pattern
+    var bottomRightFinderPattern = {
+      // Best guess at where a bottomRight finder pattern would be
+      x: topRight.x - topLeft.x + bottomLeft.x,
+      y: topRight.y - topLeft.y + bottomLeft.y
+    };
+    var modulesBetweenFinderPatterns = (distance(topLeft, bottomLeft) + distance(topLeft, topRight)) / 2 / moduleSize;
+    var correctionToTopLeft = 1 - 3 / modulesBetweenFinderPatterns;
+    var expectedAlignmentPattern = {
+      x: topLeft.x + correctionToTopLeft * (bottomRightFinderPattern.x - topLeft.x),
+      y: topLeft.y + correctionToTopLeft * (bottomRightFinderPattern.y - topLeft.y)
+    };
+    var alignmentPatterns = alignmentPatternQuads
+      .map(function (q) {
+        var x = (q.top.startX + q.top.endX + q.bottom.startX + q.bottom.endX) / 4;
+        var y = (q.top.y + q.bottom.y + 1) / 2;
+        if (!matrix.get(Math.floor(x), Math.floor(y))) {
+          return;
+        }
+        var sizeScore = scorePattern({ x: Math.floor(x), y: Math.floor(y) }, [1, 1, 1], matrix);
+        var score = sizeScore + distance({ x: x, y: y }, expectedAlignmentPattern);
+        return { x: x, y: y, score: score };
+      })
+      .filter(function (v) {
+        return !!v;
+      })
+      .sort(function (a, b) {
+        return a.score - b.score;
+      });
+    // If there are less than 15 modules between finder patterns it's a version 1 QR code and as such has no alignmemnt pattern
+    // so we can only use our best guess.
+    var alignmentPattern =
+      modulesBetweenFinderPatterns >= 15 && alignmentPatterns.length ? alignmentPatterns[0] : expectedAlignmentPattern;
+    return { alignmentPattern: alignmentPattern, dimension: dimension };
+  }
+  function locate(matrix) {
     var finderPatternQuads = [];
     var alignmentPatternQuads = [];
     var activeFinderPatternQuads = [];
@@ -2051,69 +2118,54 @@
     if (finderPatternGroups.length === 0) {
       return null;
     }
-    var _b = reorderFinderPatterns(
+    var _a = reorderFinderPatterns(
         finderPatternGroups[0].points[0],
         finderPatternGroups[0].points[1],
         finderPatternGroups[0].points[2]
       ),
-      topRight = _b.topRight,
-      topLeft = _b.topLeft,
-      bottomLeft = _b.bottomLeft;
-    // Now that we've found the three finder patterns we can determine the blockSize and the size of the QR code.
-    // We'll use these to help find the alignment pattern but also later when we do the extraction.
-    var dimension;
-    var moduleSize;
-    try {
-      (_a = computeDimension(topLeft, topRight, bottomLeft, matrix)), (dimension = _a.dimension), (moduleSize = _a.moduleSize);
-    } catch (e) {
+      topRight = _a.topRight,
+      topLeft = _a.topLeft,
+      bottomLeft = _a.bottomLeft;
+    var result = [];
+    var alignment = findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, bottomLeft);
+    if (alignment) {
+      result.push({
+        alignmentPattern: { x: alignment.alignmentPattern.x, y: alignment.alignmentPattern.y },
+        bottomLeft: { x: bottomLeft.x, y: bottomLeft.y },
+        dimension: alignment.dimension,
+        topLeft: { x: topLeft.x, y: topLeft.y },
+        topRight: { x: topRight.x, y: topRight.y }
+      });
+    }
+    // We normally use the center of the quads as the location of the tracking points, which is optimal for most cases and will account
+    // for a skew in the image. However, In some cases, a slight skew might not be real and instead be caused by image compression
+    // errors and/or low resolution. For those cases, we'd be better off centering the point exactly in the middle of the black area. We
+    // compute and return the location data for the naively centered points as it is little additional work and allows for multiple
+    // attempts at decoding harder images.
+    var midTopRight = recenterLocation(matrix, topRight);
+    var midTopLeft = recenterLocation(matrix, topLeft);
+    var midBottomLeft = recenterLocation(matrix, bottomLeft);
+    var centeredAlignment = findAlignmentPattern(matrix, alignmentPatternQuads, midTopRight, midTopLeft, midBottomLeft);
+    if (centeredAlignment) {
+      result.push({
+        alignmentPattern: { x: centeredAlignment.alignmentPattern.x, y: centeredAlignment.alignmentPattern.y },
+        bottomLeft: { x: midBottomLeft.x, y: midBottomLeft.y },
+        topLeft: { x: midTopLeft.x, y: midTopLeft.y },
+        topRight: { x: midTopRight.x, y: midTopRight.y },
+        dimension: centeredAlignment.dimension
+      });
+    }
+    if (result.length === 0) {
       return null;
     }
-    // Now find the alignment pattern
-    var bottomRightFinderPattern = {
-      // Best guess at where a bottomRight finder pattern would be
-      x: topRight.x - topLeft.x + bottomLeft.x,
-      y: topRight.y - topLeft.y + bottomLeft.y
-    };
-    var modulesBetweenFinderPatterns = (distance(topLeft, bottomLeft) + distance(topLeft, topRight)) / 2 / moduleSize;
-    var correctionToTopLeft = 1 - 3 / modulesBetweenFinderPatterns;
-    var expectedAlignmentPattern = {
-      x: topLeft.x + correctionToTopLeft * (bottomRightFinderPattern.x - topLeft.x),
-      y: topLeft.y + correctionToTopLeft * (bottomRightFinderPattern.y - topLeft.y)
-    };
-    var alignmentPatterns = alignmentPatternQuads
-      .map(function (q) {
-        var x = (q.top.startX + q.top.endX + q.bottom.startX + q.bottom.endX) / 4;
-        var y = (q.top.y + q.bottom.y + 1) / 2;
-        if (!matrix.get(Math.floor(x), Math.floor(y))) {
-          return;
-        }
-        var sizeScore = scorePattern({ x: Math.floor(x), y: Math.floor(y) }, [1, 1, 1], matrix);
-        var score = sizeScore + distance({ x: x, y: y }, expectedAlignmentPattern);
-        return { x: x, y: y, score: score };
-      })
-      .filter(function (v) {
-        return !!v;
-      })
-      .sort(function (a, b) {
-        return a.score - b.score;
-      });
-    // If there are less than 15 modules between finder patterns it's a version 1 QR code and as such has no alignmemnt pattern
-    // so we can only use our best guess.
-    var hasAlignmentPatterns = modulesBetweenFinderPatterns >= 15 && alignmentPatterns.length;
-    var alignmentPattern = hasAlignmentPatterns ? alignmentPatterns[0] : expectedAlignmentPattern;
-    return {
-      dimension: dimension,
-      topLeft: { x: topLeft.x, y: topLeft.y },
-      topRight: { x: topRight.x, y: topRight.y },
-      bottomLeft: { x: bottomLeft.x, y: bottomLeft.y },
-      alignmentPattern: { x: alignmentPattern.x, y: alignmentPattern.y }
-    };
+    return result;
   }
 
   /**
    * @module GenericGFPoly
    * @author nuintun
    * @author Cosmo Wolfe
+   * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
    */
   var GenericGFPoly = /*#__PURE__*/ (function () {
     function GenericGFPoly(field, coefficients) {
@@ -2244,6 +2296,7 @@
    * @module GenericGF
    * @author nuintun
    * @author Cosmo Wolfe
+   * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
    */
   function addOrSubtractGF(a, b) {
     return a ^ b;
@@ -2309,6 +2362,7 @@
    * @module index
    * @author nuintun
    * @author Cosmo Wolfe
+   * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
    */
   function runEuclideanAlgorithm(field, a, b, R) {
     var _a;
@@ -2432,6 +2486,7 @@
    * @module BitMatrix
    * @author nuintun
    * @author Cosmo Wolfe
+   * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
    */
   var BitMatrix = /*#__PURE__*/ (function () {
     function BitMatrix(data, width) {
@@ -2465,6 +2520,7 @@
    * @module BitStream
    * @author nuintun
    * @author Cosmo Wolfe
+   * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
    */
   var BitStream = /*#__PURE__*/ (function () {
     function BitStream(bytes) {
@@ -2661,6 +2717,7 @@
    * @module index
    * @author nuintun
    * @author Cosmo Wolfe
+   * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
    */
   function decodeNumeric(stream, size) {
     var data = '';
@@ -2900,6 +2957,7 @@
    * @module Version
    * @author nuintun
    * @author Cosmo Wolfe
+   * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
    */
   var VERSIONS = [
     {
@@ -4212,6 +4270,7 @@
    * @module index
    * @author nuintun
    * @author Cosmo Wolfe
+   * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
    */
   function numBitsDiffering(x, y) {
     var z = x ^ y;
@@ -4519,6 +4578,7 @@
    * @module extractor
    * @author nuintun
    * @author Cosmo Wolfe
+   * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
    */
   function squareToQuadrilateral(p1, p2, p3, p4) {
     var dx3 = p1.x - p2.x + p3.x - p4.x;
@@ -4617,6 +4677,7 @@
    * @module binarizer
    * @author nuintun
    * @author Cosmo Wolfe
+   * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
    */
   var REGION_SIZE = 8;
   var MIN_DYNAMIC_RANGE = 24;
@@ -4766,30 +4827,33 @@
    * @module QRCode
    * @author nuintun
    * @author Cosmo Wolfe
+   * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
    */
   function scan(matrix) {
-    var location = locate(matrix);
-    if (!location) {
+    var locations = locate(matrix);
+    if (!locations) {
       return null;
     }
-    var extracted = extract(matrix, location);
-    var decoded = decode(extracted.matrix);
-    if (!decoded) {
-      return null;
-    }
-    var dimension = location.dimension;
-    return __assign(__assign({}, decoded), {
-      location: {
-        topLeft: extracted.mappingFunction(0, 0),
-        topRight: extracted.mappingFunction(dimension, 0),
-        bottomLeft: extracted.mappingFunction(0, dimension),
-        bottomRight: extracted.mappingFunction(dimension, dimension),
-        topLeftFinder: location.topLeft,
-        topRightFinder: location.topRight,
-        bottomLeftFinder: location.bottomLeft,
-        bottomRightAlignment: decoded.version > 1 ? location.alignmentPattern : null
+    for (var _i = 0, locations_1 = locations; _i < locations_1.length; _i++) {
+      var location_1 = locations_1[_i];
+      var extracted = extract(matrix, location_1);
+      var decoded = decode(extracted.matrix);
+      if (decoded) {
+        var dimension = location_1.dimension;
+        return __assign(__assign({}, decoded), {
+          location: {
+            topLeft: extracted.mappingFunction(0, 0),
+            topRight: extracted.mappingFunction(dimension, 0),
+            bottomLeft: extracted.mappingFunction(0, dimension),
+            bottomRight: extracted.mappingFunction(dimension, dimension),
+            topLeftFinder: location_1.topLeft,
+            topRightFinder: location_1.topRight,
+            bottomLeftFinder: location_1.bottomLeft,
+            bottomRightAlignment: decoded.version > 1 ? location_1.alignmentPattern : null
+          }
+        });
       }
-    });
+    }
   }
   var defaultOptions = {
     canOverwriteImage: true,

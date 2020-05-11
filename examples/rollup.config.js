@@ -4,7 +4,7 @@
  * @author nuintun
  */
 
-import del from 'del';
+import rimraf from 'rimraf';
 const pkg = require('../package.json');
 import resolve from '@rollup/plugin-node-resolve';
 
@@ -18,7 +18,7 @@ const banner = `/**
  */
 `;
 
-del.sync(['examples/qrcode.js'], { force: true });
+rimraf.sync('examples/qrcode.js');
 
 export default {
   input: 'esnext/index.js',

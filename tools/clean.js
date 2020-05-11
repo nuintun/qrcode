@@ -4,6 +4,6 @@
  * @author nuintun
  */
 
-const del = require('del');
+const rimraf = require('rimraf');
 
-del.sync(['es5', 'esnext', 'typings'], { force: true });
+['es5', 'esnext', 'typings'].forEach(path => rimraf.sync(path));
