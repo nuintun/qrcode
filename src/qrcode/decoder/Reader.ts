@@ -106,7 +106,7 @@ export class Decoder {
     const options: Options = this.options;
     const { canOverwriteImage, greyScaleWeights, inversionAttempts }: Options = options;
     const tryInvertedFirst: boolean = inversionAttempts === 'onlyInvert' || inversionAttempts === 'invertFirst';
-    const invert: boolean = inversionAttempts === 'attemptBoth' || tryInvertedFirst;
+    const invert: boolean = tryInvertedFirst || inversionAttempts === 'attemptBoth';
     const { binarized, inverted }: BinarizeResult = binarize(data, width, height, invert, greyScaleWeights, canOverwriteImage);
 
     let result: DecoderResult = scan(tryInvertedFirst ? inverted : binarized);
