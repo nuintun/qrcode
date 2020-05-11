@@ -4900,7 +4900,7 @@
         greyScaleWeights = options.greyScaleWeights,
         inversionAttempts = options.inversionAttempts;
       var tryInvertedFirst = inversionAttempts === 'onlyInvert' || inversionAttempts === 'invertFirst';
-      var invert = inversionAttempts === 'attemptBoth' || tryInvertedFirst;
+      var invert = tryInvertedFirst || inversionAttempts === 'attemptBoth';
       var _a = binarize(data, width, height, invert, greyScaleWeights, canOverwriteImage),
         binarized = _a.binarized,
         inverted = _a.inverted;
