@@ -2,6 +2,7 @@
  * @module extractor
  * @author nuintun
  * @author Cosmo Wolfe
+ * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
  */
 
 import { Point } from './Point';

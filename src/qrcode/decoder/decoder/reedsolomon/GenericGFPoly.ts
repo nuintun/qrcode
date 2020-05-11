@@ -2,6 +2,7 @@
  * @module GenericGFPoly
  * @author nuintun
  * @author Cosmo Wolfe
+ * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
  */
 
 import { addOrSubtractGF, GenericGF } from './GenericGF';

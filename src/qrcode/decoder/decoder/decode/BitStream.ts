@@ -2,6 +2,7 @@
  * @module BitStream
  * @author nuintun
  * @author Cosmo Wolfe
+ * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
  */
 
 export class BitStream {

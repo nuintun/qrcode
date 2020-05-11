@@ -2,6 +2,7 @@
  * @module QRCode
  * @author nuintun
  * @author Cosmo Wolfe
+ * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
  */
 
 import { Point } from './Point';
@@ -25,34 +26,34 @@ export interface DecoderResult extends DecodeResult {
 }
 
 function scan(matrix: BitMatrix): DecoderResult {
-  const location: QRLocation = locate(matrix);
+  const locations: QRLocation[] = locate(matrix);
 
-  if (!location) {
+  if (!locations) {
     return null;
   }
 
-  const extracted: ExtractResult = extract(matrix, location);
-  const decoded: DecodeResult = decode(extracted.matrix);
+  for (const location of locations) {
+    const extracted: ExtractResult = extract(matrix, location);
+    const decoded: DecodeResult = decode(extracted.matrix);
 
-  if (!decoded) {
-    return null;
-  }
+    if (decoded) {
+      const dimension: number = location.dimension;
 
-  const dimension: number = location.dimension;
-
-  return {
-    ...decoded,
-    location: {
-      topLeft: extracted.mappingFunction(0, 0),
-      topRight: extracted.mappingFunction(dimension, 0),
-      bottomLeft: extracted.mappingFunction(0, dimension),
-      bottomRight: extracted.mappingFunction(dimension, dimension),
-      topLeftFinder: location.topLeft,
-      topRightFinder: location.topRight,
-      bottomLeftFinder: location.bottomLeft,
-      bottomRightAlignment: decoded.version > 1 ? location.alignmentPattern : null
+      return {
+        ...decoded,
+        location: {
+          topLeft: extracted.mappingFunction(0, 0),
+          topRight: extracted.mappingFunction(dimension, 0),
+          bottomLeft: extracted.mappingFunction(0, dimension),
+          bottomRight: extracted.mappingFunction(dimension, dimension),
+          topLeftFinder: location.topLeft,
+          topRightFinder: location.topRight,
+          bottomLeftFinder: location.bottomLeft,
+          bottomRightAlignment: decoded.version > 1 ? location.alignmentPattern : null
+        }
+      };
     }
-  };
+  }
 }
 
 export interface Options {

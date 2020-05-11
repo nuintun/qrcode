@@ -2,6 +2,7 @@
  * @module GenericGF
  * @author nuintun
  * @author Cosmo Wolfe
+ * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
  */
 
 import { GenericGFPoly } from './GenericGFPoly';

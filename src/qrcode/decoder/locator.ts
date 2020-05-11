@@ -2,6 +2,7 @@
  * @module locator
  * @author nuintun
  * @author Cosmo Wolfe
+ * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
  */
 
 import { Point } from './Point';
@@ -10,6 +11,41 @@ import { BitMatrix } from './BitMatrix';
 const MIN_QUAD_RATIO: number = 0.5;
 const MAX_QUAD_RATIO: number = 1.5;
 const MAX_FINDERPATTERNS_TO_SEARCH: number = 4;
+
+interface Dimension {
+  dimension: number;
+  moduleSize: number;
+}
+
+interface QuadPoint {
+  startX: number;
+  endX: number;
+  y: number;
+}
+
+interface Quad {
+  top: QuadPoint;
+  bottom: QuadPoint;
+}
+
+interface FinderPattern extends Point {
+  size: number;
+  score: number;
+}
+
+interface FinderPatternGroup {
+  score: number;
+  points: FinderPattern[];
+}
+
+interface AlignmentPoint extends Point {
+  score: number;
+}
+
+interface AlignmentPattern {
+  dimension: number;
+  alignmentPattern: Point;
+}
 
 export interface QRLocation {
   topLeft: Point;
@@ -61,11 +97,6 @@ function reorderFinderPatterns(pattern1: Point, pattern2: Point, pattern3: Point
   }
 
   return { bottomLeft, topLeft, topRight };
-}
-
-interface Dimension {
-  dimension: number;
-  moduleSize: number;
 }
 
 // Computes the dimension (number of modules on a side) of the QR Code based on the position of the finder patterns
@@ -256,34 +287,98 @@ function scorePattern(point: Point, ratios: number[], matrix: BitMatrix): number
   }
 }
 
-interface QuadPoint {
-  startX: number;
-  endX: number;
-  y: number;
+function recenterLocation(matrix: BitMatrix, point: Point): Point {
+  let leftX: number = Math.round(point.x);
+
+  while (matrix.get(leftX, Math.round(point.y))) {
+    leftX--;
+  }
+
+  let rightX: number = Math.round(point.x);
+
+  while (matrix.get(rightX, Math.round(point.y))) {
+    rightX++;
+  }
+
+  const x: number = (leftX + rightX) / 2;
+
+  let topY: number = Math.round(point.y);
+
+  while (matrix.get(Math.round(x), topY)) {
+    topY--;
+  }
+
+  let bottomY: number = Math.round(point.y);
+
+  while (matrix.get(Math.round(x), bottomY)) {
+    bottomY++;
+  }
+
+  const y: number = (topY + bottomY) / 2;
+
+  return { x, y };
 }
 
-interface Quad {
-  top: QuadPoint;
-  bottom: QuadPoint;
+function findAlignmentPattern(
+  matrix: BitMatrix,
+  alignmentPatternQuads: Quad[],
+  topRight: Point,
+  topLeft: Point,
+  bottomLeft: Point
+): AlignmentPattern {
+  // Now that we've found the three finder patterns we can determine the blockSize and the size of the QR code.
+  // We'll use these to help find the alignment pattern but also later when we do the extraction.
+  let dimension: number;
+  let moduleSize: number;
+
+  try {
+    ({ dimension, moduleSize } = computeDimension(topLeft, topRight, bottomLeft, matrix));
+  } catch (e) {
+    return null;
+  }
+
+  // Now find the alignment pattern
+  const bottomRightFinderPattern: Point = {
+    // Best guess at where a bottomRight finder pattern would be
+    x: topRight.x - topLeft.x + bottomLeft.x,
+    y: topRight.y - topLeft.y + bottomLeft.y
+  };
+  const modulesBetweenFinderPatterns: number = (distance(topLeft, bottomLeft) + distance(topLeft, topRight)) / 2 / moduleSize;
+  const correctionToTopLeft: number = 1 - 3 / modulesBetweenFinderPatterns;
+  const expectedAlignmentPattern: Point = {
+    x: topLeft.x + correctionToTopLeft * (bottomRightFinderPattern.x - topLeft.x),
+    y: topLeft.y + correctionToTopLeft * (bottomRightFinderPattern.y - topLeft.y)
+  };
+
+  const alignmentPatterns: AlignmentPoint[] = alignmentPatternQuads
+    .map(q => {
+      const x: number = (q.top.startX + q.top.endX + q.bottom.startX + q.bottom.endX) / 4;
+      const y: number = (q.top.y + q.bottom.y + 1) / 2;
+
+      if (!matrix.get(Math.floor(x), Math.floor(y))) {
+        return;
+      }
+
+      const sizeScore: number = scorePattern({ x: Math.floor(x), y: Math.floor(y) }, [1, 1, 1], matrix);
+      const score: number = sizeScore + distance({ x, y }, expectedAlignmentPattern);
+
+      return { x, y, score };
+    })
+    .filter(v => !!v)
+    .sort((a, b) => a.score - b.score);
+
+  // If there are less than 15 modules between finder patterns it's a version 1 QR code and as such has no alignmemnt pattern
+  // so we can only use our best guess.
+  const alignmentPattern: Point =
+    modulesBetweenFinderPatterns >= 15 && alignmentPatterns.length ? alignmentPatterns[0] : expectedAlignmentPattern;
+
+  return { alignmentPattern, dimension };
 }
 
-interface FinderPattern extends Point {
-  size: number;
-  score: number;
-}
-
-interface FinderPatternGroup {
-  score: number;
-  points: FinderPattern[];
-}
-
-interface AlignmentPattern extends Point {
-  score: number;
-}
-
-export function locate(matrix: BitMatrix): QRLocation {
+export function locate(matrix: BitMatrix): QRLocation[] {
   const finderPatternQuads: Quad[] = [];
   const alignmentPatternQuads: Quad[] = [];
+
   let activeFinderPatternQuads: Quad[] = [];
   let activeAlignmentPatternQuads: Quad[] = [];
 
@@ -435,57 +530,48 @@ export function locate(matrix: BitMatrix): QRLocation {
     finderPatternGroups[0].points[2]
   );
 
-  // Now that we've found the three finder patterns we can determine the blockSize and the size of the QR code.
-  // We'll use these to help find the alignment pattern but also later when we do the extraction.
-  let dimension: number;
-  let moduleSize: number;
+  const result: QRLocation[] = [];
+  const alignment: AlignmentPattern = findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, bottomLeft);
 
-  try {
-    ({ dimension, moduleSize } = computeDimension(topLeft, topRight, bottomLeft, matrix));
-  } catch (e) {
+  if (alignment) {
+    result.push({
+      alignmentPattern: { x: alignment.alignmentPattern.x, y: alignment.alignmentPattern.y },
+      bottomLeft: { x: bottomLeft.x, y: bottomLeft.y },
+      dimension: alignment.dimension,
+      topLeft: { x: topLeft.x, y: topLeft.y },
+      topRight: { x: topRight.x, y: topRight.y }
+    });
+  }
+
+  // We normally use the center of the quads as the location of the tracking points, which is optimal for most cases and will account
+  // for a skew in the image. However, In some cases, a slight skew might not be real and instead be caused by image compression
+  // errors and/or low resolution. For those cases, we'd be better off centering the point exactly in the middle of the black area. We
+  // compute and return the location data for the naively centered points as it is little additional work and allows for multiple
+  // attempts at decoding harder images.
+  const midTopRight: Point = recenterLocation(matrix, topRight);
+  const midTopLeft: Point = recenterLocation(matrix, topLeft);
+  const midBottomLeft: Point = recenterLocation(matrix, bottomLeft);
+  const centeredAlignment: AlignmentPattern = findAlignmentPattern(
+    matrix,
+    alignmentPatternQuads,
+    midTopRight,
+    midTopLeft,
+    midBottomLeft
+  );
+
+  if (centeredAlignment) {
+    result.push({
+      alignmentPattern: { x: centeredAlignment.alignmentPattern.x, y: centeredAlignment.alignmentPattern.y },
+      bottomLeft: { x: midBottomLeft.x, y: midBottomLeft.y },
+      topLeft: { x: midTopLeft.x, y: midTopLeft.y },
+      topRight: { x: midTopRight.x, y: midTopRight.y },
+      dimension: centeredAlignment.dimension
+    });
+  }
+
+  if (result.length === 0) {
     return null;
   }
 
-  // Now find the alignment pattern
-  const bottomRightFinderPattern: Point = {
-    // Best guess at where a bottomRight finder pattern would be
-    x: topRight.x - topLeft.x + bottomLeft.x,
-    y: topRight.y - topLeft.y + bottomLeft.y
-  };
-  const modulesBetweenFinderPatterns: number = (distance(topLeft, bottomLeft) + distance(topLeft, topRight)) / 2 / moduleSize;
-  const correctionToTopLeft: number = 1 - 3 / modulesBetweenFinderPatterns;
-  const expectedAlignmentPattern: Point = {
-    x: topLeft.x + correctionToTopLeft * (bottomRightFinderPattern.x - topLeft.x),
-    y: topLeft.y + correctionToTopLeft * (bottomRightFinderPattern.y - topLeft.y)
-  };
-
-  const alignmentPatterns: AlignmentPattern[] = alignmentPatternQuads
-    .map(q => {
-      const x: number = (q.top.startX + q.top.endX + q.bottom.startX + q.bottom.endX) / 4;
-      const y: number = (q.top.y + q.bottom.y + 1) / 2;
-
-      if (!matrix.get(Math.floor(x), Math.floor(y))) {
-        return;
-      }
-
-      const sizeScore: number = scorePattern({ x: Math.floor(x), y: Math.floor(y) }, [1, 1, 1], matrix);
-      const score: number = sizeScore + distance({ x, y }, expectedAlignmentPattern);
-
-      return { x, y, score };
-    })
-    .filter(v => !!v)
-    .sort((a, b) => a.score - b.score);
-
-  // If there are less than 15 modules between finder patterns it's a version 1 QR code and as such has no alignmemnt pattern
-  // so we can only use our best guess.
-  const hasAlignmentPatterns: false | number = modulesBetweenFinderPatterns >= 15 && alignmentPatterns.length;
-  const alignmentPattern: Point = hasAlignmentPatterns ? alignmentPatterns[0] : expectedAlignmentPattern;
-
-  return {
-    dimension,
-    topLeft: { x: topLeft.x, y: topLeft.y },
-    topRight: { x: topRight.x, y: topRight.y },
-    bottomLeft: { x: bottomLeft.x, y: bottomLeft.y },
-    alignmentPattern: { x: alignmentPattern.x, y: alignmentPattern.y }
-  };
+  return result;
 }
