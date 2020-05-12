@@ -64,7 +64,7 @@ console.log(qrcode.toDataURL());
 
   - Get qrcode error correction level.
 
-- setEncodingHint(hasEncodingHint: boolean): Encoder
+- setEncodingHint(encodingHint: boolean): Encoder
 
   - Set qrcode encoding hint, it will add ECI in qrcode.
 
