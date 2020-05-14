@@ -26,6 +26,7 @@ export default {
     banner,
     format: 'umd',
     name: 'QRCode',
+    interop: false,
     esModule: false,
     amd: { id: 'qrcode' },
     file: 'examples/qrcode.js'

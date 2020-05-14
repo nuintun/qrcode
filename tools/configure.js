@@ -42,19 +42,21 @@ function treeShake() {
   };
 }
 
+function onwarn(error, warn) {
+  if (error.code !== 'CIRCULAR_DEPENDENCY') {
+    warn(error);
+  }
+}
+
 export default function configure(esnext) {
   let tsconfigOverride = esnext && { compilerOptions: { declaration: true, declarationDir: 'typings' } };
 
   return {
+    onwarn,
     external: ['tslib'],
     input: 'src/index.ts',
     preserveModules: true,
-    onwarn(error, warn) {
-      if (error.code !== 'CIRCULAR_DEPENDENCY') {
-        warn(error);
-      }
-    },
-    output: { format: esnext ? 'esm' : 'cjs', dir: esnext ? 'esnext' : 'es5' },
-    plugins: [typescript({ tsconfigOverride, clean: true, useTsconfigDeclarationDir: true }), treeShake()]
+    plugins: [typescript({ tsconfigOverride, clean: true, useTsconfigDeclarationDir: true }), treeShake()],
+    output: { interop: false, esModule: false, format: esnext ? 'esm' : 'cjs', dir: esnext ? 'esnext' : 'es5' }
   };
 }
