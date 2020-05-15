@@ -4,8 +4,8 @@
 >
 > [![NPM Version][npm-image]][npm-url]
 > [![Download Status][download-image]][npm-url]
-> [![Side Effect][side-effect-image]][bundle-phobia-url]
 > [![Tree Shakeable][tree-shakeable-image]][bundle-phobia-url]
+> [![Side Effect][side-effect-image]][bundle-phobia-url]
 > [![Snyk Vulnerabilities][snyk-image]][snyk-url]
 > [![Dependencies][david-image]][david-url]
 
