@@ -6,6 +6,8 @@
 > [![Download Status][download-image]][npm-url]
 > [![Snyk Vulnerabilities][snyk-image]][snyk-url]
 > [![Dependencies][david-image]][david-url]
+> [![Tree Shakeable][tree-shakeable-image]][bundle-phobia-url]
+> [![Side Effect][side-effect-image]][bundle-phobia-url]
 
 ### QRCode guide and demo
 
@@ -155,3 +157,6 @@ qrcode
 [snyk-url]: https://snyk.io/test/github/nuintun/qrcode
 [david-image]: https://img.shields.io/david/nuintun/qrcode.svg?style=flat-square
 [david-url]: https://david-dm.org/nuintun/qrcode
+[tree-shakeable-image]: https://img.shields.io/badge/tree--shakeable-true-green?style=flat-square
+[side-effect-image]: https://img.shields.io/badge/side--effect-free-green?style=flat-square
+[bundle-phobia-url]: https://bundlephobia.com/result?p=@nuintun/vlist
