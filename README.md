@@ -155,8 +155,8 @@ qrcode
 [download-image]: https://img.shields.io/npm/dm/@nuintun/qrcode.svg?style=flat-square
 [snyk-image]: https://img.shields.io/snyk/vulnerabilities/github/nuintun/qrcode.svg?style=flat-square
 [snyk-url]: https://snyk.io/test/github/nuintun/qrcode
-[side-effect-image]: https://img.shields.io/badge/side--effect-free-green?style=flat-square
-[tree-shakeable-image]: https://img.shields.io/badge/tree--shakeable-true-green?style=flat-square
+[side-effect-image]: https://img.shields.io/badge/side--effect-free-brightgreen?style=flat-square
+[tree-shakeable-image]: https://img.shields.io/badge/tree--shakeable-true-brightgreen?style=flat-square
 [bundle-phobia-url]: https://bundlephobia.com/result?p=@nuintun/qrcode
 [david-image]: https://img.shields.io/david/nuintun/qrcode.svg?style=flat-square
 [david-url]: https://david-dm.org/nuintun/qrcode
