@@ -4,9 +4,9 @@
 >
 > [![NPM Version][npm-image]][npm-url]
 > [![Download Status][download-image]][npm-url]
-> [![Snyk Vulnerabilities][snyk-image]][snyk-url]
 > [![Side Effect][side-effect-image]][bundle-phobia-url]
 > [![Tree Shakeable][tree-shakeable-image]][bundle-phobia-url]
+> [![Snyk Vulnerabilities][snyk-image]][snyk-url]
 > [![Dependencies][david-image]][david-url]
 
 ### QRCode guide and demo
@@ -153,10 +153,10 @@ qrcode
 [npm-image]: https://img.shields.io/npm/v/@nuintun/qrcode.svg?style=flat-square
 [npm-url]: https://www.npmjs.org/package/@nuintun/qrcode
 [download-image]: https://img.shields.io/npm/dm/@nuintun/qrcode.svg?style=flat-square
+[tree-shakeable-image]: https://img.shields.io/badge/tree--shakeable-true-brightgreen?style=flat-square
+[side-effect-image]: https://img.shields.io/badge/side--effect-free-brightgreen?style=flat-square
+[bundle-phobia-url]: https://bundlephobia.com/result?p=@nuintun/qrcode
 [snyk-image]: https://img.shields.io/snyk/vulnerabilities/github/nuintun/qrcode.svg?style=flat-square
 [snyk-url]: https://snyk.io/test/github/nuintun/qrcode
-[side-effect-image]: https://img.shields.io/badge/side--effect-free-brightgreen?style=flat-square
-[tree-shakeable-image]: https://img.shields.io/badge/tree--shakeable-true-brightgreen?style=flat-square
-[bundle-phobia-url]: https://bundlephobia.com/result?p=@nuintun/qrcode
 [david-image]: https://img.shields.io/david/nuintun/qrcode.svg?style=flat-square
 [david-url]: https://david-dm.org/nuintun/qrcode
