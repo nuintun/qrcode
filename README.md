@@ -159,4 +159,4 @@ qrcode
 [david-url]: https://david-dm.org/nuintun/qrcode
 [tree-shakeable-image]: https://img.shields.io/badge/tree--shakeable-true-green?style=flat-square
 [side-effect-image]: https://img.shields.io/badge/side--effect-free-green?style=flat-square
-[bundle-phobia-url]: https://bundlephobia.com/result?p=@nuintun/vlist
+[bundle-phobia-url]: https://bundlephobia.com/result?p=@nuintun/qrcode
