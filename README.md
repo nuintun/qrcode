@@ -134,7 +134,7 @@ qrcode
 
 ###### Methods
 
-- setOptions(options: Optins): Decoder
+- setOptions(options: Options): Decoder
 
   - Set decode options.
     - canOverwriteImage?: boolean
