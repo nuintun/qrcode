@@ -970,11 +970,8 @@
   function encodeToBase64(data) {
     var output = new ByteArrayOutputStream();
     var stream = new Base64EncodeOutputStream(output);
-    try {
-      stream.writeBytes(data);
-    } finally {
-      stream.close();
-    }
+    stream.writeBytes(data);
+    stream.close();
     output.close();
     return output.toByteArray();
   }
