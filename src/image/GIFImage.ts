@@ -42,7 +42,7 @@ class LZWTable {
   }
 
   public contains(key: string): boolean {
-    return this.map.hasOwnProperty(key);
+    return this.map[key] >= 0;
   }
 }
 

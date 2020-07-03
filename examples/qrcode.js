@@ -995,7 +995,7 @@
       return this.map[key];
     };
     LZWTable.prototype.contains = function (key) {
-      return this.map.hasOwnProperty(key);
+      return this.map[key] >= 0;
     };
     return LZWTable;
   })();
