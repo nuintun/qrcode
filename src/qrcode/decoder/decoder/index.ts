@@ -110,6 +110,7 @@ function readCodewords(matrix: BitMatrix, version: Version, formatInfo: FormatIn
 
   let bitsRead: number = 0;
   let currentByte: number = 0;
+
   const codewords: number[] = [];
 
   // Read columns in pairs, from right to left
@@ -228,6 +229,7 @@ function readFormatInformation(matrix: BitMatrix): FormatInformation {
   }
 
   const dimension: number = matrix.height;
+
   let topRightBottomRightFormatInfoBits: number = 0;
 
   for (let y: number = dimension - 1; y >= dimension - 7; y--) {

@@ -258,6 +258,7 @@ export function bytesDecode(
   errorCorrectionLevel: ErrorCorrectionLevel
 ): DecodeResult {
   let encoding: number = EncodingHint.UTF8;
+
   const stream: BitStream = new BitStream(data);
   // There are 3 'sizes' based on the version. 1-9 is small (0), 10-26 is medium (1) and 27-40 is large (2).
   const size: number = version <= 9 ? 0 : version <= 26 ? 1 : 2;
