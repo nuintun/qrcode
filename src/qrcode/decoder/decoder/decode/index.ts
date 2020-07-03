@@ -15,6 +15,7 @@ interface ByteChunk {
   mode: Mode.Numeric | Mode.Alphanumeric | Mode.Byte | Mode.Kanji;
   data: string;
   bytes: number[];
+  encoding?: number;
 }
 
 interface ECIChunk {
@@ -257,7 +258,7 @@ export function bytesDecode(
   version: number,
   errorCorrectionLevel: ErrorCorrectionLevel
 ): DecodeResult {
-  let encoding: number = EncodingHint.UTF8;
+  let encoding: number = -1;
 
   const stream: BitStream = new BitStream(data);
   // There are 3 'sizes' based on the version. 1-9 is small (0), 10-26 is medium (1) and 27-40 is large (2).
@@ -272,19 +273,13 @@ export function bytesDecode(
     } else if (mode === Mode.ECI) {
       if (stream.readBits(1) === 0) {
         encoding = stream.readBits(7);
-
-        result.chunks.push({ mode: Mode.ECI, encoding });
       } else if (stream.readBits(1) === 0) {
         encoding = stream.readBits(14);
-
-        result.chunks.push({ mode: Mode.ECI, encoding });
       } else if (stream.readBits(1) === 0) {
         encoding = stream.readBits(21);
-
-        result.chunks.push({ mode: Mode.ECI, encoding });
       } else {
         // ECI data seems corrupted
-        result.chunks.push({ mode: Mode.ECI, encoding: -1 });
+        encoding = -1;
       }
     } else if (mode === Mode.Numeric) {
       const numericResult: DecodeData = decodeNumeric(stream, size);
@@ -323,6 +318,7 @@ export function bytesDecode(
       result.data += byteResult.data;
 
       result.chunks.push({
+        encoding,
         mode: Mode.Byte,
         data: byteResult.data,
         bytes: byteResult.bytes

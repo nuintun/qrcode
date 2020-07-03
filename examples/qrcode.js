@@ -2875,7 +2875,7 @@
   }
   function bytesDecode(data, version, errorCorrectionLevel) {
     var _a, _b, _c, _d;
-    var encoding = 26; /* UTF8 */
+    var encoding = -1;
     var stream = new BitStream(data);
     // There are 3 'sizes' based on the version. 1-9 is small (0), 10-26 is medium (1) and 27-40 is large (2).
     var size = version <= 9 ? 0 : version <= 26 ? 1 : 2;
@@ -2887,16 +2887,13 @@
       } else if (mode === exports.Mode.ECI) {
         if (stream.readBits(1) === 0) {
           encoding = stream.readBits(7);
-          result.chunks.push({ mode: exports.Mode.ECI, encoding: encoding });
         } else if (stream.readBits(1) === 0) {
           encoding = stream.readBits(14);
-          result.chunks.push({ mode: exports.Mode.ECI, encoding: encoding });
         } else if (stream.readBits(1) === 0) {
           encoding = stream.readBits(21);
-          result.chunks.push({ mode: exports.Mode.ECI, encoding: encoding });
         } else {
           // ECI data seems corrupted
-          result.chunks.push({ mode: exports.Mode.ECI, encoding: -1 });
+          encoding = -1;
         }
       } else if (mode === exports.Mode.Numeric) {
         var numericResult = decodeNumeric(stream, size);
@@ -2928,6 +2925,7 @@
         var byteResult = decodeByte(stream, size, encoding);
         result.data += byteResult.data;
         result.chunks.push({
+          encoding: encoding,
           mode: exports.Mode.Byte,
           data: byteResult.data,
           bytes: byteResult.bytes
