@@ -67,6 +67,7 @@ function prepareData(
 
     buffer.put(mode, 4);
     buffer.put(data.getLength(), data.getLengthInBits(version));
+
     data.write(buffer);
   }
 
