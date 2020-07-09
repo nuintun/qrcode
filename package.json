@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "rimraf": "^3.0.2",
-    "rollup": "^2.19.0",
+    "rollup": "^2.21.0",
     "typescript": "^3.9.6",
     "magic-string": "^0.25.7",
     "rollup-plugin-typescript2": "^0.27.1",
