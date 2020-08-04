@@ -12,7 +12,7 @@
     ? factory(exports)
     : typeof define === 'function' && define.amd
     ? define('qrcode', ['exports'], factory)
-    : ((global = global || self), factory((global.QRCode = {})));
+    : ((global = typeof globalThis !== 'undefined' ? globalThis : global || self), factory((global.QRCode = {})));
 })(this, function (exports) {
   'use strict';
 
