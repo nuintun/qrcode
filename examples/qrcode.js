@@ -917,7 +917,7 @@
         return 0x2f;
       }
     }
-    throw 'illegal char: ' + String.fromCharCode(ch);
+    throw new Error('illegal char: ' + String.fromCharCode(ch));
   }
   var Base64EncodeOutputStream = /*#__PURE__*/ (function (_super) {
     __extends(Base64EncodeOutputStream, _super);
@@ -1003,7 +1003,7 @@
     }
     BitOutputStream.prototype.write = function (data, length) {
       if (data >>> length !== 0) {
-        throw 'length overflow';
+        throw new Error('length overflow');
       }
       while (this.bitLength + length >= 8) {
         this.output.writeByte(0xff & ((data << this.bitLength) | this.bitBuffer));
@@ -1089,13 +1089,13 @@
       }
     };
     GIFImage.prototype.setPixel = function (x, y, pixel) {
-      if (x < 0 || this.width <= x) throw 'illegal x axis: ' + x;
-      if (y < 0 || this.height <= y) throw 'illegal y axis: ' + y;
+      if (x < 0 || this.width <= x) throw new Error('illegal x axis: ' + x);
+      if (y < 0 || this.height <= y) throw new Error('illegal y axis: ' + y);
       this.data[y * this.width + x] = pixel;
     };
     GIFImage.prototype.getPixel = function (x, y) {
-      if (x < 0 || this.width <= x) throw 'illegal x axis: ' + x;
-      if (y < 0 || this.height <= y) throw 'illegal x axis: ' + y;
+      if (x < 0 || this.width <= x) throw new Error('illegal x axis: ' + x);
+      if (y < 0 || this.height <= y) throw new Error('illegal x axis: ' + y);
       return this.data[y * this.width + x];
     };
     GIFImage.prototype.write = function (output) {
@@ -2704,7 +2704,7 @@
         bytes.push(byte >> 8);
         bytes.push(byte & 0xff);
       } else {
-        throw 'illegal char: ' + String.fromCharCode(code);
+        throw new Error('illegal char: ' + String.fromCharCode(code));
       }
     }
     return bytes;

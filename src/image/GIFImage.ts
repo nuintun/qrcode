@@ -55,7 +55,7 @@ class BitOutputStream {
 
   public write(data: number, length: number): void {
     if (data >>> length !== 0) {
-      throw 'length overflow';
+      throw new Error('length overflow');
     }
 
     while (this.bitLength + length >= 8) {
@@ -174,17 +174,17 @@ export class GIFImage {
   }
 
   public setPixel(x: number, y: number, pixel: number): void {
-    if (x < 0 || this.width <= x) throw `illegal x axis: ${x}`;
+    if (x < 0 || this.width <= x) throw new Error(`illegal x axis: ${x}`);
 
-    if (y < 0 || this.height <= y) throw `illegal y axis: ${y}`;
+    if (y < 0 || this.height <= y) throw new Error(`illegal y axis: ${y}`);
 
     this.data[y * this.width + x] = pixel;
   }
 
   public getPixel(x: number, y: number): number {
-    if (x < 0 || this.width <= x) throw `illegal x axis: ${x}`;
+    if (x < 0 || this.width <= x) throw new Error(`illegal x axis: ${x}`);
 
-    if (y < 0 || this.height <= y) throw `illegal x axis: ${y}`;
+    if (y < 0 || this.height <= y) throw new Error(`illegal y axis: ${y}`);
 
     return this.data[y * this.width + x];
   }

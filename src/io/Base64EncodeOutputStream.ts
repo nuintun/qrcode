@@ -26,7 +26,7 @@ function encode(ch: number): number {
     }
   }
 
-  throw `illegal char: ${String.fromCharCode(ch)}`;
+  throw new Error(`illegal char: ${String.fromCharCode(ch)}`);
 }
 
 export class Base64EncodeOutputStream extends OutputStream {

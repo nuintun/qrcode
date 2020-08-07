@@ -153,7 +153,7 @@ export function SJIS(text: string): number[] {
       bytes.push(byte >> 8);
       bytes.push(byte & 0xff);
     } else {
-      throw `illegal char: ${String.fromCharCode(code)}`;
+      throw new Error(`illegal char: ${String.fromCharCode(code)}`);
     }
   }
 
