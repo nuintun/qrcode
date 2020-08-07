@@ -45,6 +45,6 @@ export function getMaskFunc(maskPattern: number): maskFunc {
     case MaskPattern.PATTERN111:
       return (x: number, y: number): boolean => ((((x * y) % 3) + ((x + y) & 0x1)) & 0x1) === 0;
     default:
-      throw `illegal mask: ${maskPattern}`;
+      throw new Error(`illegal mask: ${maskPattern}`);
   }
 }

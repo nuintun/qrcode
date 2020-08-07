@@ -1,6 +1,6 @@
 {
   "name": "@nuintun/qrcode",
-  "version": "2.1.1",
+  "version": "3.0.0",
   "description": "A pure JavaScript QRCode encode and decode library.",
   "main": "es5/index.js",
   "module": "esnext/index.js",
@@ -31,7 +31,7 @@
     "build": "npm run clean & npm run build:es5 & npm run build:esnext"
   },
   "dependencies": {
-    "tslib": "^2.0.0"
+    "tslib": "^2.0.1"
   },
   "devDependencies": {
     "rimraf": "^3.0.2",

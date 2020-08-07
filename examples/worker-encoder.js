@@ -21,7 +21,7 @@ function chooseBestModeData(mode, data) {
   }
 }
 
-self.onmessage = function(e) {
+self.onmessage = function (e) {
   var data = e.data;
   var qrcode = new QRCode.Encoder();
   var errorCorrectionLevel = QRCode.ErrorCorrectionLevel[data.ecLevel];
@@ -40,7 +40,7 @@ self.onmessage = function(e) {
   } catch (error) {
     self.postMessage({
       ok: false,
-      message: error
+      message: error.message
     });
   }
 };

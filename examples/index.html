@@ -60,7 +60,7 @@
     <script type="text/javascript">
       if (self.Uint8ClampedArray) {
         if (!Uint8ClampedArray.from) {
-          Uint8ClampedArray.from = function(array) {
+          Uint8ClampedArray.from = function (array) {
             return new Uint8ClampedArray(array);
           };
         }
@@ -68,7 +68,7 @@
         if (!Uint8ClampedArray.prototype.forEach) {
           var APForEach = Array.prototype.forEach;
 
-          Uint8ClampedArray.prototype.forEach = function(callback, context) {
+          Uint8ClampedArray.prototype.forEach = function (callback, context) {
             return APForEach.call(this, callback, context);
           };
         }
@@ -80,17 +80,14 @@
       var nav = $('.tabs li');
       var content = $('.content li');
 
-      nav.on('click', function() {
+      nav.on('click', function () {
         var target = $(this);
 
         nav.removeClass('selected');
 
         target.addClass('selected');
 
-        content
-          .removeClass('selected')
-          .eq(target.index())
-          .addClass('selected');
+        content.removeClass('selected').eq(target.index()).addClass('selected');
       });
 
       var TEST_NUMERIC = /^\d+$/;
@@ -119,7 +116,7 @@
       var encodeResult = $('#encode-result');
 
       // 生成二维码
-      $('#encode-btn').on('click', function() {
+      $('#encode-btn').on('click', function () {
         var data = encodeText.val();
         var mode = encodeMode.val();
         var ecLevel = encodeECLevel.val();
@@ -150,7 +147,7 @@
         } catch (error) {
           encodeResult.addClass('hide');
 
-          alert(error);
+          alert(error.message);
         }
       });
 
@@ -174,7 +171,7 @@
 
         img.crossOrigin = 'anonymous';
 
-        img.onload = function() {
+        img.onload = function () {
           var width = img.width;
           var height = img.height;
           var actualWidth = Math.min(960, width);
@@ -193,7 +190,7 @@
       }
 
       // 二维码加载
-      $('#decode-file').on('change', function(e) {
+      $('#decode-file').on('change', function (e) {
         var file = e.target.files[0];
 
         if (file) {
@@ -201,7 +198,7 @@
 
           var reader = new FileReader();
 
-          reader.onload = function(e) {
+          reader.onload = function (e) {
             drawImage(e.target.result);
           };
 
@@ -252,7 +249,7 @@
         markFinderPattern(location.bottomLeftFinder.x, location.bottomLeftFinder.y, moduleSize);
       }
 
-      $('#decode-btn').on('click', function() {
+      $('#decode-btn').on('click', function () {
         if (!hasImage) {
           return alert('请选择二维码图片');
         }

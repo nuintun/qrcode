@@ -25,7 +25,7 @@ class Matrix {
     const bufferSize: number = width * height;
 
     if (buffer && buffer.length !== bufferSize) {
-      throw 'wrong buffer size';
+      throw new Error('wrong buffer size');
     }
 
     this.data = buffer || new Uint8ClampedArray(bufferSize);
@@ -63,7 +63,7 @@ export function binarize(
   const pixelCount: number = width * height;
 
   if (data.length !== pixelCount * 4) {
-    throw 'malformed data passed to binarizer';
+    throw new Error('malformed data passed to binarizer');
   }
 
   // Assign the greyscale and binary image within the rgba buffer as the rgba image will not be needed after conversion

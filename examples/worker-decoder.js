@@ -2,7 +2,7 @@ importScripts('./qrcode.js');
 
 if (self.Uint8ClampedArray) {
   if (!Uint8ClampedArray.from) {
-    Uint8ClampedArray.from = function(array) {
+    Uint8ClampedArray.from = function (array) {
       return new Uint8ClampedArray(array);
     };
   }
@@ -10,7 +10,7 @@ if (self.Uint8ClampedArray) {
   if (!Uint8ClampedArray.prototype.forEach) {
     var APForEach = Array.prototype.forEach;
 
-    Uint8ClampedArray.prototype.forEach = function(callback, context) {
+    Uint8ClampedArray.prototype.forEach = function (callback, context) {
       return APForEach.call(this, callback, context);
     };
   }
@@ -26,7 +26,7 @@ function getModuleSize(location, version) {
   return c / (version * 4 + 17);
 }
 
-self.onmessage = function(e) {
+self.onmessage = function (e) {
   var data = e.data;
   var result = new QRCode.Decoder().setOptions({ canOverwriteImage: false }).decode(data.image, data.width, data.height);
 

@@ -27,7 +27,7 @@ export abstract class QRData {
 
   public getLengthInBits(version: number): number {
     const mode: Mode = this.mode;
-    const error: string = `illegal mode: ${mode}`;
+    const error: Error = new Error(`illegal mode: ${mode}`);
 
     if (1 <= version && version < 10) {
       // 1 - 9
@@ -72,7 +72,7 @@ export abstract class QRData {
           throw error;
       }
     } else {
-      throw `illegal version: ${version}`;
+      throw new Error(`illegal version: ${version}`);
     }
   }
 }

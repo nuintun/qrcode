@@ -15,7 +15,7 @@ function getCode(byte: number): number {
     return byte - 0x30;
   }
 
-  throw `illegal char: ${String.fromCharCode(byte)}`;
+  throw new Error(`illegal char: ${String.fromCharCode(byte)}`);
 }
 
 function getBatchCode(bytes: number[]): number {

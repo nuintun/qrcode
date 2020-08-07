@@ -56,7 +56,7 @@ function decodeNumeric(stream: BitStream, size: number): DecodeData {
     const num: number = stream.readBits(10);
 
     if (num >= 1000) {
-      throw 'invalid numeric value above 999';
+      throw new Error('invalid numeric value above 999');
     }
 
     const a: number = Math.floor(num / 100);
@@ -75,7 +75,7 @@ function decodeNumeric(stream: BitStream, size: number): DecodeData {
     const num: number = stream.readBits(7);
 
     if (num >= 100) {
-      throw 'invalid numeric value above 99';
+      throw new Error('invalid numeric value above 99');
     }
 
     const a: number = Math.floor(num / 10);
@@ -88,7 +88,7 @@ function decodeNumeric(stream: BitStream, size: number): DecodeData {
     const num: number = stream.readBits(4);
 
     if (num >= 10) {
-      throw 'invalid numeric value above 9';
+      throw new Error('invalid numeric value above 9');
     }
 
     bytes.push(48 + num);

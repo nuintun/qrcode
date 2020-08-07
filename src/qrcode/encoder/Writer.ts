@@ -30,7 +30,7 @@ type prepareData = [BitBuffer, RSBlock[], number];
  */
 function appendECI(encoding: number, buffer: BitBuffer) {
   if (encoding < 0 || encoding >= 1000000) {
-    throw 'byte mode encoding hint out of range';
+    throw new Error('byte mode encoding hint out of range');
   }
 
   buffer.put(Mode.ECI, 4);
@@ -147,7 +147,7 @@ function createBytes(buffer: BitBuffer, rsBlocks: RSBlock[]): BitBuffer {
 
 function createData(buffer: BitBuffer, rsBlocks: RSBlock[], maxDataCount: number): BitBuffer {
   if (buffer.getLengthInBits() > maxDataCount) {
-    throw `data overflow: ${buffer.getLengthInBits()} > ${maxDataCount}`;
+    throw new Error(`data overflow: ${buffer.getLengthInBits()} > ${maxDataCount}`);
   }
 
   // End
@@ -289,7 +289,7 @@ export class Encoder {
       if (type === '[object String]') {
         this.chunks.push(new QRByte(data));
       } else {
-        throw `illegal data: ${data}`;
+        throw new Error(`illegal data: ${data}`);
       }
     }
 

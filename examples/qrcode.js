@@ -1,7 +1,7 @@
 /**
  * @module QRCode
  * @license MIT
- * @version 2.1.1
+ * @version 3.0.0
  * @author nuintun
  * @description A pure JavaScript QRCode encode and decode library.
  * @see https://github.com/nuintun/qrcode#readme
@@ -62,7 +62,7 @@
           d.__proto__ = b;
         }) ||
       function (d, b) {
-        for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+        for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
       };
     return extendStatics(d, b);
   };
@@ -103,7 +103,7 @@
     };
     QRData.prototype.getLengthInBits = function (version) {
       var mode = this.mode;
-      var error = 'illegal mode: ' + mode;
+      var error = new Error('illegal mode: ' + mode);
       if (1 <= version && version < 10) {
         // 1 - 9
         switch (mode) {
@@ -147,7 +147,7 @@
             throw error;
         }
       } else {
-        throw 'illegal version: ' + version;
+        throw new Error('illegal version: ' + version);
       }
     };
     return QRData;
@@ -276,7 +276,7 @@
   }
   function glog(n) {
     if (n < 1) {
-      throw 'illegal log: ' + n;
+      throw new Error('illegal log: ' + n);
     }
     return LOG_TABLE[n];
   }
@@ -602,7 +602,7 @@
         case exports.ErrorCorrectionLevel.H:
           return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 3];
         default:
-          throw 'illegal error correction level: ' + errorCorrectionLevel;
+          throw new Error('illegal error correction level: ' + errorCorrectionLevel);
       }
     };
     RSBlock.RS_BLOCK_TABLE = [
@@ -1203,7 +1203,7 @@
           return ((((x * y) % 3) + ((x + y) & 0x1)) & 0x1) === 0;
         };
       default:
-        throw 'illegal mask: ' + maskPattern;
+        throw new Error('illegal mask: ' + maskPattern);
     }
   }
 
@@ -1224,7 +1224,7 @@
    */
   function appendECI(encoding, buffer) {
     if (encoding < 0 || encoding >= 1000000) {
-      throw 'byte mode encoding hint out of range';
+      throw new Error('byte mode encoding hint out of range');
     }
     buffer.put(exports.Mode.ECI, 4);
     if (encoding < 1 << 7) {
@@ -1310,7 +1310,7 @@
   }
   function createData(buffer, rsBlocks, maxDataCount) {
     if (buffer.getLengthInBits() > maxDataCount) {
-      throw 'data overflow: ' + buffer.getLengthInBits() + ' > ' + maxDataCount;
+      throw new Error('data overflow: ' + buffer.getLengthInBits() + ' > ' + maxDataCount);
     }
     // End
     if (buffer.getLengthInBits() + 4 <= maxDataCount) {
@@ -1433,7 +1433,7 @@
         if (type === '[object String]') {
           this.chunks.push(new QRByte(data));
         } else {
-          throw 'illegal data: ' + data;
+          throw new Error('illegal data: ' + data);
         }
       }
       return this;
@@ -1742,7 +1742,7 @@
         sum(countBlackWhiteRun(topRight, topLeft, matrix, 5)) / 7) /
       4;
     if (moduleSize < 1) {
-      throw 'invalid module size';
+      throw new Error('invalid module size');
     }
     var topDimension = Math.round(distance(topLeft, topRight) / moduleSize);
     var sideDimension = Math.round(distance(topLeft, bottomLeft) / moduleSize);
@@ -2167,7 +2167,7 @@
   var GenericGFPoly = /*#__PURE__*/ (function () {
     function GenericGFPoly(field, coefficients) {
       if (coefficients.length === 0) {
-        throw 'no coefficients';
+        throw new Error('no coefficients');
       }
       this.field = field;
       var coefficientsLength = coefficients.length;
@@ -2254,7 +2254,7 @@
     };
     GenericGFPoly.prototype.multiplyByMonomial = function (degree, coefficient) {
       if (degree < 0) {
-        throw 'invalid degree less than 0';
+        throw new Error('invalid degree less than 0');
       }
       if (coefficient === 0) {
         return this.field.zero;
@@ -2328,13 +2328,13 @@
     };
     GenericGF.prototype.inverse = function (a) {
       if (a === 0) {
-        throw "can't invert 0";
+        throw new Error("can't invert 0");
       }
       return this.expTable[this.size - this.logTable[a] - 1];
     };
     GenericGF.prototype.buildMonomial = function (degree, coefficient) {
       if (degree < 0) {
-        throw 'invalid monomial degree less than 0';
+        throw new Error('invalid monomial degree less than 0');
       }
       if (coefficient === 0) {
         return this.zero;
@@ -2345,7 +2345,7 @@
     };
     GenericGF.prototype.log = function (a) {
       if (a === 0) {
-        throw "can't take log(0)";
+        throw new Error("can't take log(0)");
       }
       return this.logTable[a];
     };
@@ -2527,7 +2527,7 @@
     }
     BitStream.prototype.readBits = function (numBits) {
       if (numBits < 1 || numBits > 32 || numBits > this.available()) {
-        throw "can't read " + numBits + ' bits';
+        throw new Error("can't read " + numBits + ' bits');
       }
       var result = 0;
       // First, read remainder from current byte
@@ -2725,7 +2725,7 @@
     while (length >= 3) {
       var num = stream.readBits(10);
       if (num >= 1000) {
-        throw 'invalid numeric value above 999';
+        throw new Error('invalid numeric value above 999');
       }
       var a = Math.floor(num / 100);
       var b = Math.floor(num / 10) % 10;
@@ -2738,7 +2738,7 @@
     if (length === 2) {
       var num = stream.readBits(7);
       if (num >= 100) {
-        throw 'invalid numeric value above 99';
+        throw new Error('invalid numeric value above 99');
       }
       var a = Math.floor(num / 10);
       var b = num % 10;
@@ -2747,7 +2747,7 @@
     } else if (length === 1) {
       var num = stream.readBits(4);
       if (num >= 10) {
-        throw 'invalid numeric value above 9';
+        throw new Error('invalid numeric value above 9');
       }
       bytes.push(48 + num);
       data += num.toString();
@@ -4685,7 +4685,7 @@
       this.width = width;
       var bufferSize = width * height;
       if (buffer && buffer.length !== bufferSize) {
-        throw 'wrong buffer size';
+        throw new Error('wrong buffer size');
       }
       this.data = buffer || new Uint8ClampedArray(bufferSize);
     }
@@ -4700,7 +4700,7 @@
   function binarize(data, width, height, returnInverted, greyscaleWeights, canOverwriteImage) {
     var pixelCount = width * height;
     if (data.length !== pixelCount * 4) {
-      throw 'malformed data passed to binarizer';
+      throw new Error('malformed data passed to binarizer');
     }
     // Assign the greyscale and binary image within the rgba buffer as the rgba image will not be needed after conversion
     var bufferOffset = 0;
@@ -5020,7 +5020,7 @@
     if (0x30 <= byte && byte <= 0x39) {
       return byte - 0x30;
     }
-    throw 'illegal char: ' + String.fromCharCode(byte);
+    throw new Error('illegal char: ' + String.fromCharCode(byte));
   }
   function getBatchCode(bytes) {
     var num = 0;
@@ -5115,7 +5115,7 @@
         case 0x3a:
           return 44;
         default:
-          throw 'illegal char: ' + String.fromCharCode(byte);
+          throw new Error('illegal char: ' + String.fromCharCode(byte));
       }
     }
   }

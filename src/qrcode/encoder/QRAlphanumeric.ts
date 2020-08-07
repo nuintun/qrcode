@@ -46,7 +46,7 @@ function getCode(byte: number): number {
       case 0x3a:
         return 44;
       default:
-        throw `illegal char: ${String.fromCharCode(byte)}`;
+        throw new Error(`illegal char: ${String.fromCharCode(byte)}`);
     }
   }
 }

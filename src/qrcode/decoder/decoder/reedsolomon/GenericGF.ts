@@ -60,7 +60,7 @@ export class GenericGF {
 
   public inverse(a: number): number {
     if (a === 0) {
-      throw "can't invert 0";
+      throw new Error("can't invert 0");
     }
 
     return this.expTable[this.size - this.logTable[a] - 1];
@@ -68,7 +68,7 @@ export class GenericGF {
 
   public buildMonomial(degree: number, coefficient: number): GenericGFPoly {
     if (degree < 0) {
-      throw 'invalid monomial degree less than 0';
+      throw new Error('invalid monomial degree less than 0');
     }
 
     if (coefficient === 0) {
@@ -84,7 +84,7 @@ export class GenericGF {
 
   public log(a: number): number {
     if (a === 0) {
-      throw "can't take log(0)";
+      throw new Error("can't take log(0)");
     }
 
     return this.logTable[a];

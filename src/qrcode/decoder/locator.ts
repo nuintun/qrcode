@@ -110,11 +110,12 @@ function computeDimension(topLeft: Point, topRight: Point, bottomLeft: Point, ma
     4;
 
   if (moduleSize < 1) {
-    throw 'invalid module size';
+    throw new Error('invalid module size');
   }
 
   const topDimension: number = Math.round(distance(topLeft, topRight) / moduleSize);
   const sideDimension: number = Math.round(distance(topLeft, bottomLeft) / moduleSize);
+
   let dimension: number = Math.floor((topDimension + sideDimension) / 2) + 7;
 
   switch (dimension % 4) {
