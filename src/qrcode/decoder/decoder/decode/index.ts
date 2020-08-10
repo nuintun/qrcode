@@ -18,11 +18,6 @@ interface ByteChunk {
   encoding?: number;
 }
 
-interface ECIChunk {
-  mode: Mode.ECI;
-  encoding: number;
-}
-
 interface StructuredAppend {
   symbols: number[];
   parity: number;
@@ -37,7 +32,7 @@ interface DecodeData {
   bytes: number[];
 }
 
-type Chunks = Array<ByteChunk | ECIChunk | StructuredAppendChunk>;
+type Chunks = Array<ByteChunk | StructuredAppendChunk>;
 
 export interface DecodeResult extends DecodeData {
   chunks: Chunks;
