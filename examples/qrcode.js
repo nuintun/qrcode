@@ -1095,7 +1095,7 @@
     };
     GIFImage.prototype.getPixel = function (x, y) {
       if (x < 0 || this.width <= x) throw new Error('illegal x axis: ' + x);
-      if (y < 0 || this.height <= y) throw new Error('illegal x axis: ' + y);
+      if (y < 0 || this.height <= y) throw new Error('illegal y axis: ' + y);
       return this.data[y * this.width + x];
     };
     GIFImage.prototype.write = function (output) {
