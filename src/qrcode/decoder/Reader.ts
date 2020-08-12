@@ -151,13 +151,13 @@ export class Decoder {
           return resolve(result);
         }
 
-        return reject('failed to decode image');
+        return reject(new Error('failed to decode image'));
       };
 
       image.onerror = () => {
         disposeImageEvents(image);
 
-        reject(`failed to load image: ${src}`);
+        reject(new Error(`failed to load image: ${src}`));
       };
 
       image.src = src;
