@@ -1,7 +1,7 @@
 /**
  * @module QRCode
  * @license MIT
- * @version 3.0.0
+ * @version 3.0.1
  * @author nuintun
  * @description A pure JavaScript QRCode encode and decode library.
  * @see https://github.com/nuintun/qrcode#readme
@@ -4931,11 +4931,11 @@
           if (result) {
             return resolve(result);
           }
-          return reject('failed to decode image');
+          return reject(new Error('failed to decode image'));
         };
         image.onerror = function () {
           disposeImageEvents(image);
-          reject('failed to load image: ' + src);
+          reject(new Error('failed to load image: ' + src));
         };
         image.src = src;
       });
