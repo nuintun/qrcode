@@ -5015,18 +5015,18 @@
    * @author nuintun
    * @author Kazuhiko Arase
    */
-  function getCode(byte) {
+  function getByte(byte) {
     // 0 - 9
     if (0x30 <= byte && byte <= 0x39) {
       return byte - 0x30;
     }
     throw new Error('illegal char: ' + String.fromCharCode(byte));
   }
-  function getBatchCode(bytes) {
+  function getBytes(bytes) {
     var num = 0;
     var length = bytes.length;
     for (var i = 0; i < length; i++) {
-      num = num * 10 + getCode(bytes[i]);
+      num = num * 10 + getByte(bytes[i]);
     }
     return num;
   }
@@ -5051,14 +5051,14 @@
       var bytes = this.bytes;
       var length = bytes.length;
       while (i + 2 < length) {
-        buffer.put(getBatchCode([bytes[i], bytes[i + 1], bytes[i + 2]]), 10);
+        buffer.put(getBytes([bytes[i], bytes[i + 1], bytes[i + 2]]), 10);
         i += 3;
       }
       if (i < length) {
         if (length - i === 1) {
-          buffer.put(getBatchCode([bytes[i]]), 4);
+          buffer.put(getBytes([bytes[i]]), 4);
         } else if (length - i === 2) {
-          buffer.put(getBatchCode([bytes[i], bytes[i + 1]]), 7);
+          buffer.put(getBytes([bytes[i], bytes[i + 1]]), 7);
         }
       }
     };
@@ -5078,7 +5078,7 @@
    * @author nuintun
    * @author Kazuhiko Arase
    */
-  function getCode$1(byte) {
+  function getByte$1(byte) {
     if (0x30 <= byte && byte <= 0x39) {
       // 0 - 9
       return byte - 0x30;
@@ -5140,11 +5140,11 @@
       var bytes = this.bytes;
       var length = bytes.length;
       while (i + 1 < length) {
-        buffer.put(getCode$1(bytes[i]) * 45 + getCode$1(bytes[i + 1]), 11);
+        buffer.put(getByte$1(bytes[i]) * 45 + getByte$1(bytes[i + 1]), 11);
         i += 2;
       }
       if (i < length) {
-        buffer.put(getCode$1(bytes[i]), 6);
+        buffer.put(getByte$1(bytes[i]), 6);
       }
     };
     /**

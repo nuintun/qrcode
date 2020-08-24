@@ -9,7 +9,7 @@ import { Mode } from '../common/Mode';
 import { BitBuffer } from './BitBuffer';
 import { UTF16 as stringToBytes } from '../../encoding/UTF16';
 
-function getCode(byte: number): number {
+function getByte(byte: number): number {
   if (0x30 <= byte && byte <= 0x39) {
     // 0 - 9
     return byte - 0x30;
@@ -73,13 +73,13 @@ export class QRAlphanumeric extends QRData {
     const length: number = bytes.length;
 
     while (i + 1 < length) {
-      buffer.put(getCode(bytes[i]) * 45 + getCode(bytes[i + 1]), 11);
+      buffer.put(getByte(bytes[i]) * 45 + getByte(bytes[i + 1]), 11);
 
       i += 2;
     }
 
     if (i < length) {
-      buffer.put(getCode(bytes[i]), 6);
+      buffer.put(getByte(bytes[i]), 6);
     }
   }
 

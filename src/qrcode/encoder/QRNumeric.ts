@@ -9,7 +9,7 @@ import { Mode } from '../common/Mode';
 import { BitBuffer } from './BitBuffer';
 import { UTF16 as stringToBytes } from '../../encoding/UTF16';
 
-function getCode(byte: number): number {
+function getByte(byte: number): number {
   // 0 - 9
   if (0x30 <= byte && byte <= 0x39) {
     return byte - 0x30;
@@ -18,12 +18,12 @@ function getCode(byte: number): number {
   throw new Error(`illegal char: ${String.fromCharCode(byte)}`);
 }
 
-function getBatchCode(bytes: number[]): number {
+function getBytes(bytes: number[]): number {
   let num: number = 0;
   const length: number = bytes.length;
 
   for (let i: number = 0; i < length; i++) {
-    num = num * 10 + getCode(bytes[i]);
+    num = num * 10 + getByte(bytes[i]);
   }
 
   return num;
@@ -51,16 +51,16 @@ export class QRNumeric extends QRData {
     const length: number = bytes.length;
 
     while (i + 2 < length) {
-      buffer.put(getBatchCode([bytes[i], bytes[i + 1], bytes[i + 2]]), 10);
+      buffer.put(getBytes([bytes[i], bytes[i + 1], bytes[i + 2]]), 10);
 
       i += 3;
     }
 
     if (i < length) {
       if (length - i === 1) {
-        buffer.put(getBatchCode([bytes[i]]), 4);
+        buffer.put(getBytes([bytes[i]]), 4);
       } else if (length - i === 2) {
-        buffer.put(getBatchCode([bytes[i], bytes[i + 1]]), 7);
+        buffer.put(getBytes([bytes[i], bytes[i + 1]]), 7);
       }
     }
   }
