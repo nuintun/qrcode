@@ -136,16 +136,18 @@ export class Decoder {
 
         const width: number = image.width;
         const height: number = image.height;
+        const actualWidth = Math.min(960, width);
+        const actualHeight = height * (actualWidth / width);
         const canvas: HTMLCanvasElement = document.createElement('canvas');
         const context: CanvasRenderingContext2D = canvas.getContext('2d');
 
-        canvas.width = width;
-        canvas.height = height;
+        canvas.width = actualWidth;
+        canvas.height = actualHeight;
 
-        context.drawImage(image, 0, 0);
+        context.drawImage(image, 0, 0, width, height, 0, 0, actualWidth, actualHeight);
 
-        const { data }: ImageData = context.getImageData(0, 0, width, height);
-        const result: DecoderResult = this.decode(data, width, height);
+        const imageData = context.getImageData(0, 0, actualWidth, actualHeight);
+        const result: DecoderResult = this.decode(imageData.data, imageData.width, imageData.height);
 
         if (result) {
           return resolve(result);
