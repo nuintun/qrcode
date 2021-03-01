@@ -5017,7 +5017,7 @@
    * @author nuintun
    * @author Kazuhiko Arase
    */
-  function getByte(byte) {
+  function getByte$1(byte) {
     // 0 - 9
     if (0x30 <= byte && byte <= 0x39) {
       return byte - 0x30;
@@ -5028,7 +5028,7 @@
     var num = 0;
     var length = bytes.length;
     for (var i = 0; i < length; i++) {
-      num = num * 10 + getByte(bytes[i]);
+      num = num * 10 + getByte$1(bytes[i]);
     }
     return num;
   }
@@ -5080,7 +5080,7 @@
    * @author nuintun
    * @author Kazuhiko Arase
    */
-  function getByte$1(byte) {
+  function getByte(byte) {
     if (0x30 <= byte && byte <= 0x39) {
       // 0 - 9
       return byte - 0x30;
@@ -5142,11 +5142,11 @@
       var bytes = this.bytes;
       var length = bytes.length;
       while (i + 1 < length) {
-        buffer.put(getByte$1(bytes[i]) * 45 + getByte$1(bytes[i + 1]), 11);
+        buffer.put(getByte(bytes[i]) * 45 + getByte(bytes[i + 1]), 11);
         i += 2;
       }
       if (i < length) {
-        buffer.put(getByte$1(bytes[i]), 6);
+        buffer.put(getByte(bytes[i]), 6);
       }
     };
     /**
