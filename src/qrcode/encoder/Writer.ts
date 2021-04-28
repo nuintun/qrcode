@@ -425,6 +425,7 @@ export class Encoder {
   private setupCodewords(data: BitBuffer, maskPattern: number): void {
     const matrixSize: number = this.matrixSize;
     const bitLength: number = data.getLengthInBits();
+    const maskFunc: maskFunc = getMaskFunc(maskPattern);
 
     // Bit index into the data
     let bitIndex: number = 0;
@@ -455,7 +456,6 @@ export class Encoder {
             bit = data.getBit(bitIndex++);
           }
 
-          const maskFunc: maskFunc = getMaskFunc(maskPattern);
           const invert: boolean = maskFunc(x, y);
 
           if (invert) {
