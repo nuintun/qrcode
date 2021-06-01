@@ -1549,6 +1549,7 @@
     Encoder.prototype.setupCodewords = function (data, maskPattern) {
       var matrixSize = this.matrixSize;
       var bitLength = data.getLengthInBits();
+      var maskFunc = getMaskFunc(maskPattern);
       // Bit index into the data
       var bitIndex = 0;
       // Do the funny zigzag scan
@@ -1572,7 +1573,6 @@
             if (bitIndex < bitLength) {
               bit = data.getBit(bitIndex++);
             }
-            var maskFunc = getMaskFunc(maskPattern);
             var invert = maskFunc(x, y);
             if (invert) {
               bit = !bit;
