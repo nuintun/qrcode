@@ -8,7 +8,7 @@ import { QRData } from './QRData';
 import { Mode } from '../common/Mode';
 import { BitBuffer } from './BitBuffer';
 import { EncodingHint } from '../common/EncodingHint';
-import { UTF8 as stringToBytes } from '../../encoding/UTF8';
+import { encode as stringToBytes } from '../../encoding/UTF8';
 
 interface EncodeResult {
   bytes: number[];

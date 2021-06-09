@@ -8,8 +8,9 @@
 import { BitStream } from './BitStream';
 import { Mode } from '../../../common/Mode';
 import { EncodingHint } from '../../../common/EncodingHint';
-import { getTables, SJISTables } from '../../../../encoding/SJIS';
+import { decode as decodeUTF8 } from '../../../../encoding/UTF8';
 import { ErrorCorrectionLevel } from '../../../common/ErrorCorrectionLevel';
+import { decode as decodeSJIS, getTables, SJISTables } from '../../../../encoding/SJIS';
 
 interface ByteChunk {
   mode: Mode.Numeric | Mode.Alphanumeric | Mode.Byte | Mode.Kanji;
@@ -133,81 +134,6 @@ function decodeAlphanumeric(stream: BitStream, size: number): DecodeData {
   return { bytes, data };
 }
 
-/**
- * @function decodeByteAsUTF8
- * @param {number[]} bytes
- * @returns {string}
- * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
- */
-function decodeByteAsUTF8(bytes: number[]): string {
-  // TODO(user): Use native implementations if/when available
-  let pos: number = 0;
-  let output: string = '';
-  const length: number = bytes.length;
-
-  while (pos < length) {
-    const c1: number = bytes[pos++];
-
-    if (c1 < 128) {
-      output += String.fromCharCode(c1);
-    } else if (c1 > 191 && c1 < 224) {
-      const c2: number = bytes[pos++];
-
-      output += String.fromCharCode(((c1 & 31) << 6) | (c2 & 63));
-    } else if (c1 > 239 && c1 < 365) {
-      // Surrogate Pair
-      const c2: number = bytes[pos++];
-      const c3: number = bytes[pos++];
-      const c4: number = bytes[pos++];
-      const u: number = (((c1 & 7) << 18) | ((c2 & 63) << 12) | ((c3 & 63) << 6) | (c4 & 63)) - 0x10000;
-
-      output += String.fromCharCode(0xd800 + (u >> 10));
-      output += String.fromCharCode(0xdc00 + (u & 1023));
-    } else {
-      const c2: number = bytes[pos++];
-      const c3: number = bytes[pos++];
-
-      output += String.fromCharCode(((c1 & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
-    }
-  }
-
-  return output;
-}
-
-/**
- * @function decodeByteAsSJIS
- * @param {number[]} bytes
- * @returns {string}
- * @see https://github.com/narirou/jconv/blob/master/jconv.js
- */
-function decodeByteAsSJIS(bytes: number[]): string {
-  let pos: number = 0;
-  let output: string = '';
-  const length: number = bytes.length;
-  const { SJIS_TO_UTF8 }: SJISTables = getTables();
-
-  while (pos < length) {
-    const byte: number = bytes[pos++];
-
-    if (byte < 0x80) {
-      // ASCII
-      output += String.fromCharCode(byte);
-    } else if (0xa0 <= byte && byte <= 0xdf) {
-      // HALFWIDTH_KATAKANA
-      output += String.fromCharCode(byte + 0xfec0);
-    } else {
-      // KANJI
-      let code: number = (byte << 8) + bytes[pos++];
-
-      code = SJIS_TO_UTF8[code];
-
-      output += code != null ? String.fromCharCode(code) : '?';
-    }
-  }
-
-  return output;
-}
-
 function decodeByte(stream: BitStream, size: number, encoding: number): DecodeData {
   const bytes: number[] = [];
   const characterCountSize: number = [8, 16, 16][size];
@@ -217,7 +143,7 @@ function decodeByte(stream: BitStream, size: number, encoding: number): DecodeDa
     bytes.push(stream.readBits(8));
   }
 
-  return { bytes, data: encoding === EncodingHint.SJIS ? decodeByteAsSJIS(bytes) : decodeByteAsUTF8(bytes) };
+  return { bytes, data: encoding === EncodingHint.SJIS ? decodeSJIS(bytes) : decodeUTF8(bytes) };
 }
 
 function decodeKanji(stream: BitStream, size: number): DecodeData {

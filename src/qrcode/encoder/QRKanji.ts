@@ -8,7 +8,7 @@
 import { QRData } from './QRData';
 import { Mode } from '../common/Mode';
 import { BitBuffer } from './BitBuffer';
-import { SJIS as stringToBytes } from '../../encoding/SJIS';
+import { encode as stringToBytes } from '../../encoding/SJIS';
 
 export class QRKanji extends QRData {
   /**

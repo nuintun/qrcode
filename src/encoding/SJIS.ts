@@ -135,11 +135,11 @@ export function getTables(): SJISTables {
 }
 
 /**
- * @function SJIS
+ * @function encode
  * @param {string} text
  * @returns {number[]}
  */
-export function SJIS(text: string): number[] {
+export function encode(text: string): number[] {
   const bytes: number[] = [];
   const length: number = text.length;
   const { UTF8_TO_SJIS }: SJISTables = getTables();
@@ -158,4 +158,39 @@ export function SJIS(text: string): number[] {
   }
 
   return bytes;
+}
+
+/**
+ * @function decode
+ * @param {number[]} bytes
+ * @returns {string}
+ * @see https://github.com/narirou/jconv/blob/master/jconv.js
+ */
+export function decode(bytes: number[]): string {
+  let pos: number = 0;
+  let output: string = '';
+
+  const length: number = bytes.length;
+  const { SJIS_TO_UTF8 }: SJISTables = getTables();
+
+  while (pos < length) {
+    const byte: number = bytes[pos++];
+
+    if (byte < 0x80) {
+      // ASCII
+      output += String.fromCharCode(byte);
+    } else if (0xa0 <= byte && byte <= 0xdf) {
+      // HALFWIDTH_KATAKANA
+      output += String.fromCharCode(byte + 0xfec0);
+    } else {
+      // KANJI
+      let code: number = (byte << 8) + bytes[pos++];
+
+      code = SJIS_TO_UTF8[code];
+
+      output += code != null ? String.fromCharCode(code) : '?';
+    }
+  }
+
+  return output;
 }

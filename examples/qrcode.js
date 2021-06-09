@@ -1,7 +1,7 @@
 /**
  * @module QRCode
  * @license MIT
- * @version 3.0.1
+ * @version 4.0.0
  * @author nuintun
  * @description A pure JavaScript QRCode encode and decode library.
  * @see https://github.com/nuintun/qrcode#readme
@@ -161,15 +161,15 @@
    * @author nuintun
    */
   /**
-   * @function UTF8
+   * @function encode
    * @param {string} text
    * @returns {number[]}
    * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
    */
-  function UTF8(text) {
+  function encode$2(text) {
+    var pos = 0;
     var bytes = [];
     var length = text.length;
-    var pos = 0;
     for (var i = 0; i < length; i++) {
       var code = text.charCodeAt(i);
       if (code < 128) {
@@ -192,6 +192,39 @@
     }
     return bytes;
   }
+  /**
+   * @function decode
+   * @param {number[]} bytes
+   * @returns {string}
+   * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
+   */
+  function decode$2(bytes) {
+    var pos = 0;
+    var output = '';
+    var length = bytes.length;
+    while (pos < length) {
+      var c1 = bytes[pos++];
+      if (c1 < 128) {
+        output += String.fromCharCode(c1);
+      } else if (c1 > 191 && c1 < 224) {
+        var c2 = bytes[pos++];
+        output += String.fromCharCode(((c1 & 31) << 6) | (c2 & 63));
+      } else if (c1 > 239 && c1 < 365) {
+        // Surrogate Pair
+        var c2 = bytes[pos++];
+        var c3 = bytes[pos++];
+        var c4 = bytes[pos++];
+        var u = (((c1 & 7) << 18) | ((c2 & 63) << 12) | ((c3 & 63) << 6) | (c4 & 63)) - 0x10000;
+        output += String.fromCharCode(0xd800 + (u >> 10));
+        output += String.fromCharCode(0xdc00 + (u & 1023));
+      } else {
+        var c2 = bytes[pos++];
+        var c3 = bytes[pos++];
+        output += String.fromCharCode(((c1 & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+      }
+    }
+    return output;
+  }
 
   /**
    * @module QR8BitByte
@@ -204,17 +237,17 @@
      * @constructor
      * @param {string} data
      */
-    function QRByte(data, encode) {
+    function QRByte(data, encode$1) {
       var _this = _super.call(this, exports.Mode.Byte, data) || this;
       _this.encoding = -1;
-      if (typeof encode === 'function') {
-        var _a = encode(data),
+      if (typeof encode$1 === 'function') {
+        var _a = encode$1(data),
           encoding = _a.encoding,
           bytes = _a.bytes;
         _this.bytes = bytes;
         _this.encoding = encoding;
       } else {
-        _this.bytes = UTF8(data);
+        _this.bytes = encode$2(data);
         _this.encoding = 26 /* UTF8 */;
       }
       return _this;
@@ -893,7 +926,7 @@
    * @author nuintun
    * @author Kazuhiko Arase
    */
-  function encode(ch) {
+  function encode$1(ch) {
     if (ch >= 0) {
       if (ch < 26) {
         // A
@@ -952,7 +985,7 @@
       }
     };
     Base64EncodeOutputStream.prototype.writeEncoded = function (byte) {
-      this.stream.writeByte(encode(byte & 0x3f));
+      this.stream.writeByte(encode$1(byte & 0x3f));
     };
     return Base64EncodeOutputStream;
   })(OutputStream);
@@ -2688,11 +2721,11 @@
     return tables;
   }
   /**
-   * @function SJIS
+   * @function encode
    * @param {string} text
    * @returns {number[]}
    */
-  function SJIS(text) {
+  function encode(text) {
     var bytes = [];
     var length = text.length;
     var UTF8_TO_SJIS = getTables().UTF8_TO_SJIS;
@@ -2708,6 +2741,34 @@
       }
     }
     return bytes;
+  }
+  /**
+   * @function decode
+   * @param {number[]} bytes
+   * @returns {string}
+   * @see https://github.com/narirou/jconv/blob/master/jconv.js
+   */
+  function decode$1(bytes) {
+    var pos = 0;
+    var output = '';
+    var length = bytes.length;
+    var SJIS_TO_UTF8 = getTables().SJIS_TO_UTF8;
+    while (pos < length) {
+      var byte = bytes[pos++];
+      if (byte < 0x80) {
+        // ASCII
+        output += String.fromCharCode(byte);
+      } else if (0xa0 <= byte && byte <= 0xdf) {
+        // HALFWIDTH_KATAKANA
+        output += String.fromCharCode(byte + 0xfec0);
+      } else {
+        // KANJI
+        var code = (byte << 8) + bytes[pos++];
+        code = SJIS_TO_UTF8[code];
+        output += code != null ? String.fromCharCode(code) : '?';
+      }
+    }
+    return output;
   }
 
   /**
@@ -2782,68 +2843,6 @@
     }
     return { bytes: bytes, data: data };
   }
-  /**
-   * @function decodeByteAsUTF8
-   * @param {number[]} bytes
-   * @returns {string}
-   * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
-   */
-  function decodeByteAsUTF8(bytes) {
-    // TODO(user): Use native implementations if/when available
-    var pos = 0;
-    var output = '';
-    var length = bytes.length;
-    while (pos < length) {
-      var c1 = bytes[pos++];
-      if (c1 < 128) {
-        output += String.fromCharCode(c1);
-      } else if (c1 > 191 && c1 < 224) {
-        var c2 = bytes[pos++];
-        output += String.fromCharCode(((c1 & 31) << 6) | (c2 & 63));
-      } else if (c1 > 239 && c1 < 365) {
-        // Surrogate Pair
-        var c2 = bytes[pos++];
-        var c3 = bytes[pos++];
-        var c4 = bytes[pos++];
-        var u = (((c1 & 7) << 18) | ((c2 & 63) << 12) | ((c3 & 63) << 6) | (c4 & 63)) - 0x10000;
-        output += String.fromCharCode(0xd800 + (u >> 10));
-        output += String.fromCharCode(0xdc00 + (u & 1023));
-      } else {
-        var c2 = bytes[pos++];
-        var c3 = bytes[pos++];
-        output += String.fromCharCode(((c1 & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
-      }
-    }
-    return output;
-  }
-  /**
-   * @function decodeByteAsSJIS
-   * @param {number[]} bytes
-   * @returns {string}
-   * @see https://github.com/narirou/jconv/blob/master/jconv.js
-   */
-  function decodeByteAsSJIS(bytes) {
-    var pos = 0;
-    var output = '';
-    var length = bytes.length;
-    var SJIS_TO_UTF8 = getTables().SJIS_TO_UTF8;
-    while (pos < length) {
-      var byte = bytes[pos++];
-      if (byte < 0x80) {
-        // ASCII
-        output += String.fromCharCode(byte);
-      } else if (0xa0 <= byte && byte <= 0xdf) {
-        // HALFWIDTH_KATAKANA
-        output += String.fromCharCode(byte + 0xfec0);
-      } else {
-        // KANJI
-        var code = (byte << 8) + bytes[pos++];
-        code = SJIS_TO_UTF8[code];
-        output += code != null ? String.fromCharCode(code) : '?';
-      }
-    }
-    return output;
-  }
   function decodeByte(stream, size, encoding) {
     var bytes = [];
     var characterCountSize = [8, 16, 16][size];
@@ -2851,7 +2850,7 @@
     for (var i = 0; i < length; i++) {
       bytes.push(stream.readBits(8));
     }
-    return { bytes: bytes, data: encoding === 20 /* SJIS */ ? decodeByteAsSJIS(bytes) : decodeByteAsUTF8(bytes) };
+    return { bytes: bytes, data: encoding === 20 /* SJIS */ ? decode$1(bytes) : decode$2(bytes) };
   }
   function decodeKanji(stream, size) {
     var data = '';
@@ -4957,7 +4956,7 @@
      */
     function QRKanji(data) {
       var _this = _super.call(this, exports.Mode.Kanji, data) || this;
-      _this.bytes = SJIS(data);
+      _this.bytes = encode(data);
       return _this;
     }
     /**
