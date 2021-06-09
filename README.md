@@ -90,6 +90,10 @@ console.log(qrcode.toDataURL());
 
   - Output qrcode base64 gif image.
 
+- clear(): void
+
+  - Clear written data.
+
 ###### Custom ECI
 
 ```js
