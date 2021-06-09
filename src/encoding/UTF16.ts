@@ -4,11 +4,11 @@
  */
 
 /**
- * @function UTF16
+ * @function encode
  * @param {string} text
  * @returns {number[]}
  */
-export function UTF16(text: string): number[] {
+export function encode(text: string): number[] {
   const bytes: number[] = [];
   const length: number = text.length;
 

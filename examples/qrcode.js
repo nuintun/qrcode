@@ -166,7 +166,7 @@
    * @returns {number[]}
    * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
    */
-  function encode$2(text) {
+  function encode$3(text) {
     var pos = 0;
     var bytes = [];
     var length = text.length;
@@ -247,7 +247,7 @@
         _this.bytes = bytes;
         _this.encoding = encoding;
       } else {
-        _this.bytes = encode$2(data);
+        _this.bytes = encode$3(data);
         _this.encoding = 26 /* UTF8 */;
       }
       return _this;
@@ -926,7 +926,7 @@
    * @author nuintun
    * @author Kazuhiko Arase
    */
-  function encode$1(ch) {
+  function encode$2(ch) {
     if (ch >= 0) {
       if (ch < 26) {
         // A
@@ -985,7 +985,7 @@
       }
     };
     Base64EncodeOutputStream.prototype.writeEncoded = function (byte) {
-      this.stream.writeByte(encode$1(byte & 0x3f));
+      this.stream.writeByte(encode$2(byte & 0x3f));
     };
     return Base64EncodeOutputStream;
   })(OutputStream);
@@ -2725,7 +2725,7 @@
    * @param {string} text
    * @returns {number[]}
    */
-  function encode(text) {
+  function encode$1(text) {
     var bytes = [];
     var length = text.length;
     var UTF8_TO_SJIS = getTables().UTF8_TO_SJIS;
@@ -4956,7 +4956,7 @@
      */
     function QRKanji(data) {
       var _this = _super.call(this, exports.Mode.Kanji, data) || this;
-      _this.bytes = encode(data);
+      _this.bytes = encode$1(data);
       return _this;
     }
     /**
@@ -4996,11 +4996,11 @@
    * @author nuintun
    */
   /**
-   * @function UTF16
+   * @function encode
    * @param {string} text
    * @returns {number[]}
    */
-  function UTF16(text) {
+  function encode(text) {
     var bytes = [];
     var length = text.length;
     for (var i = 0; i < length; i++) {
@@ -5037,7 +5037,7 @@
      */
     function QRNumeric(data) {
       var _this = _super.call(this, exports.Mode.Numeric, data) || this;
-      _this.bytes = UTF16(data);
+      _this.bytes = encode(data);
       return _this;
     }
     /**
@@ -5118,7 +5118,7 @@
      */
     function QRAlphanumeric(data) {
       var _this = _super.call(this, exports.Mode.Alphanumeric, data) || this;
-      _this.bytes = UTF16(data);
+      _this.bytes = encode(data);
       return _this;
     }
     /**

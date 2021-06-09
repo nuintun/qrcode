@@ -8,7 +8,7 @@ import { QRData } from './QRData';
 import { Mode } from '../common/Mode';
 import { BitBuffer } from './BitBuffer';
 import { EncodingHint } from '../common/EncodingHint';
-import { encode as stringToBytes } from '../../encoding/UTF8';
+import { encode as encodeUTF8 } from '../../encoding/UTF8';
 
 interface EncodeResult {
   bytes: number[];
@@ -33,7 +33,7 @@ export class QRByte extends QRData {
       this.bytes = bytes;
       this.encoding = encoding;
     } else {
-      this.bytes = stringToBytes(data);
+      this.bytes = encodeUTF8(data);
       this.encoding = EncodingHint.UTF8;
     }
   }

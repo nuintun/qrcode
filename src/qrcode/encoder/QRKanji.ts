@@ -8,7 +8,7 @@
 import { QRData } from './QRData';
 import { Mode } from '../common/Mode';
 import { BitBuffer } from './BitBuffer';
-import { encode as stringToBytes } from '../../encoding/SJIS';
+import { encode } from '../../encoding/SJIS';
 
 export class QRKanji extends QRData {
   /**
@@ -18,7 +18,7 @@ export class QRKanji extends QRData {
   constructor(data: string) {
     super(Mode.Kanji, data);
 
-    this.bytes = stringToBytes(data);
+    this.bytes = encode(data);
   }
 
   /**

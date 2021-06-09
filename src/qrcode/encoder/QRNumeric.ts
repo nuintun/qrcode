@@ -7,7 +7,7 @@
 import { QRData } from './QRData';
 import { Mode } from '../common/Mode';
 import { BitBuffer } from './BitBuffer';
-import { UTF16 as stringToBytes } from '../../encoding/UTF16';
+import { encode } from '../../encoding/UTF16';
 
 function getByte(byte: number): number {
   // 0 - 9
@@ -36,7 +36,7 @@ export class QRNumeric extends QRData {
   constructor(data: string) {
     super(Mode.Numeric, data);
 
-    this.bytes = stringToBytes(data);
+    this.bytes = encode(data);
   }
 
   /**
