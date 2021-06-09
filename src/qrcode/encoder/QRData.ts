@@ -8,20 +8,18 @@ import { Mode } from '../common/Mode';
 import { BitBuffer } from './BitBuffer';
 
 export abstract class QRData {
-  protected mode: Mode;
-  protected data: string;
-  protected bytes: number[];
+  public readonly mode: Mode;
+  protected bytes: number[] = [];
+  protected readonly data: string;
 
   constructor(mode: Mode, data: string) {
     this.mode = mode;
     this.data = data;
   }
 
-  public getMode(): Mode {
-    return this.mode;
+  public getLength(): number {
+    return this.bytes.length;
   }
-
-  public abstract getLength(): number;
 
   public abstract write(buffer: BitBuffer): void;
 

@@ -18,7 +18,7 @@ interface EncodeResult {
 type encode = (data: string) => EncodeResult;
 
 export class QRByte extends QRData {
-  public encoding: number = -1;
+  public readonly encoding: number = -1;
 
   /**
    * @constructor
@@ -45,19 +45,9 @@ export class QRByte extends QRData {
    */
   public write(buffer: BitBuffer): void {
     const bytes: number[] = this.bytes;
-    const length: number = bytes.length;
 
-    for (let i: number = 0; i < length; i++) {
-      buffer.put(bytes[i], 8);
+    for (const byte of bytes) {
+      buffer.put(byte, 8);
     }
-  }
-
-  /**
-   * @public
-   * @method getLength
-   * @returns {number}
-   */
-  public getLength(): number {
-    return this.bytes.length;
   }
 }

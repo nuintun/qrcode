@@ -20,10 +20,9 @@ function getByte(byte: number): number {
 
 function getBytes(bytes: number[]): number {
   let num: number = 0;
-  const length: number = bytes.length;
 
-  for (let i: number = 0; i < length; i++) {
-    num = num * 10 + getByte(bytes[i]);
+  for (const byte of bytes) {
+    num = num * 10 + getByte(byte);
   }
 
   return num;
@@ -63,14 +62,5 @@ export class QRNumeric extends QRData {
         buffer.put(getBytes([bytes[i], bytes[i + 1]]), 7);
       }
     }
-  }
-
-  /**
-   * @public
-   * @method getLength
-   * @returns {number}
-   */
-  public getLength(): number {
-    return this.bytes.length;
   }
 }

@@ -52,13 +52,11 @@ function prepareData(
   encodingHint: boolean,
   chunks: QRData[]
 ): prepareData {
-  const dLength: number = chunks.length;
   const buffer: BitBuffer = new BitBuffer();
   const rsBlocks: RSBlock[] = RSBlock.getRSBlocks(version, errorCorrectionLevel);
 
-  for (let i: number = 0; i < dLength; i++) {
-    const data: QRData = chunks[i];
-    const mode: Mode = data.getMode();
+  for (const data of chunks) {
+    const mode: Mode = data.mode;
 
     // Default set encoding UTF-8 when has encoding hint
     if (encodingHint && mode === Mode.Byte) {
@@ -73,10 +71,9 @@ function prepareData(
 
   // Calc max data count
   let maxDataCount: number = 0;
-  const rLength: number = rsBlocks.length;
 
-  for (let i: number = 0; i < rLength; i++) {
-    maxDataCount += rsBlocks[i].getDataCount();
+  for (const rsBlock of rsBlocks) {
+    maxDataCount += rsBlock.getDataCount();
   }
 
   maxDataCount *= 8;
@@ -586,5 +583,12 @@ export class Encoder {
     }
 
     return gif.toDataURL();
+  }
+
+  /**
+   * @method clear
+   */
+  public clear() {
+    this.chunks = [];
   }
 }

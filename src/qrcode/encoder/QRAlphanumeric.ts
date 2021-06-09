@@ -82,13 +82,4 @@ export class QRAlphanumeric extends QRData {
       buffer.put(getByte(bytes[i]), 6);
     }
   }
-
-  /**
-   * @public
-   * @method getLength
-   * @returns {number}
-   */
-  public getLength(): number {
-    return this.bytes.length;
-  }
 }

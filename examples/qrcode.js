@@ -97,11 +97,12 @@
    */
   var QRData = /*#__PURE__*/ (function () {
     function QRData(mode, data) {
+      this.bytes = [];
       this.mode = mode;
       this.data = data;
     }
-    QRData.prototype.getMode = function () {
-      return this.mode;
+    QRData.prototype.getLength = function () {
+      return this.bytes.length;
     };
     QRData.prototype.getLengthInBits = function (version) {
       var mode = this.mode;
@@ -225,18 +226,10 @@
      */
     QRByte.prototype.write = function (buffer) {
       var bytes = this.bytes;
-      var length = bytes.length;
-      for (var i = 0; i < length; i++) {
-        buffer.put(bytes[i], 8);
+      for (var _i = 0, bytes_1 = bytes; _i < bytes_1.length; _i++) {
+        var byte = bytes_1[_i];
+        buffer.put(byte, 8);
       }
-    };
-    /**
-     * @public
-     * @method getLength
-     * @returns {number}
-     */
-    QRByte.prototype.getLength = function () {
-      return this.bytes.length;
     };
     return QRByte;
   })(QRData);
@@ -860,9 +853,9 @@
   var OutputStream = /*#__PURE__*/ (function () {
     function OutputStream() {}
     OutputStream.prototype.writeBytes = function (bytes) {
-      var length = bytes.length;
-      for (var i = 0; i < length; i++) {
-        this.writeByte(bytes[i]);
+      for (var _i = 0, bytes_1 = bytes; _i < bytes_1.length; _i++) {
+        var byte = bytes_1[_i];
+        this.writeByte(byte);
       }
     };
     OutputStream.prototype.flush = function () {
@@ -1240,12 +1233,11 @@
     }
   }
   function prepareData(version, errorCorrectionLevel, encodingHint, chunks) {
-    var dLength = chunks.length;
     var buffer = new BitBuffer();
     var rsBlocks = RSBlock.getRSBlocks(version, errorCorrectionLevel);
-    for (var i = 0; i < dLength; i++) {
-      var data = chunks[i];
-      var mode = data.getMode();
+    for (var _i = 0, chunks_1 = chunks; _i < chunks_1.length; _i++) {
+      var data = chunks_1[_i];
+      var mode = data.mode;
       // Default set encoding UTF-8 when has encoding hint
       if (encodingHint && mode === exports.Mode.Byte) {
         appendECI(data.encoding, buffer);
@@ -1256,9 +1248,9 @@
     }
     // Calc max data count
     var maxDataCount = 0;
-    var rLength = rsBlocks.length;
-    for (var i = 0; i < rLength; i++) {
-      maxDataCount += rsBlocks[i].getDataCount();
+    for (var _a = 0, rsBlocks_1 = rsBlocks; _a < rsBlocks_1.length; _a++) {
+      var rsBlock = rsBlocks_1[_a];
+      maxDataCount += rsBlock.getDataCount();
     }
     maxDataCount *= 8;
     return [buffer, rsBlocks, maxDataCount];
@@ -1687,6 +1679,12 @@
         }
       }
       return gif.toDataURL();
+    };
+    /**
+     * @method clear
+     */
+    Encoder.prototype.clear = function () {
+      this.chunks = [];
     };
     return Encoder;
   })();
@@ -5026,9 +5024,9 @@
   }
   function getBytes(bytes) {
     var num = 0;
-    var length = bytes.length;
-    for (var i = 0; i < length; i++) {
-      num = num * 10 + getByte$1(bytes[i]);
+    for (var _i = 0, bytes_1 = bytes; _i < bytes_1.length; _i++) {
+      var byte = bytes_1[_i];
+      num = num * 10 + getByte$1(byte);
     }
     return num;
   }
@@ -5063,14 +5061,6 @@
           buffer.put(getBytes([bytes[i], bytes[i + 1]]), 7);
         }
       }
-    };
-    /**
-     * @public
-     * @method getLength
-     * @returns {number}
-     */
-    QRNumeric.prototype.getLength = function () {
-      return this.bytes.length;
     };
     return QRNumeric;
   })(QRData);
@@ -5148,14 +5138,6 @@
       if (i < length) {
         buffer.put(getByte(bytes[i]), 6);
       }
-    };
-    /**
-     * @public
-     * @method getLength
-     * @returns {number}
-     */
-    QRAlphanumeric.prototype.getLength = function () {
-      return this.bytes.length;
     };
     return QRAlphanumeric;
   })(QRData);
