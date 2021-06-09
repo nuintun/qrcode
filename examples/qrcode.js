@@ -254,10 +254,10 @@
     }
     /**
      * @public
-     * @method write
+     * @method writeTo
      * @param {BitBuffer} buffer
      */
-    QRByte.prototype.write = function (buffer) {
+    QRByte.prototype.writeTo = function (buffer) {
       var bytes = this.bytes;
       for (var _i = 0, bytes_1 = bytes; _i < bytes_1.length; _i++) {
         var byte = bytes_1[_i];
@@ -1277,7 +1277,7 @@
       }
       buffer.put(mode, 4);
       buffer.put(data.getLength(), data.getLengthInBits(version));
-      data.write(buffer);
+      data.writeTo(buffer);
     }
     // Calc max data count
     var maxDataCount = 0;
@@ -1714,6 +1714,7 @@
       return gif.toDataURL();
     };
     /**
+     * @public
      * @method clear
      */
     Encoder.prototype.clear = function () {
@@ -4961,10 +4962,10 @@
     }
     /**
      * @public
-     * @method write
+     * @method writeTo
      * @param {BitBuffer} buffer
      */
-    QRKanji.prototype.write = function (buffer) {
+    QRKanji.prototype.writeTo = function (buffer) {
       var index = 0;
       var bytes = this.bytes;
       var length = bytes.length;
@@ -5042,10 +5043,10 @@
     }
     /**
      * @public
-     * @method write
+     * @method writeTo
      * @param {BitBuffer} buffer
      */
-    QRNumeric.prototype.write = function (buffer) {
+    QRNumeric.prototype.writeTo = function (buffer) {
       var i = 0;
       var bytes = this.bytes;
       var length = bytes.length;
@@ -5123,10 +5124,10 @@
     }
     /**
      * @public
-     * @method write
+     * @method writeTo
      * @param {BitBuffer} buffer
      */
-    QRAlphanumeric.prototype.write = function (buffer) {
+    QRAlphanumeric.prototype.writeTo = function (buffer) {
       var i = 0;
       var bytes = this.bytes;
       var length = bytes.length;

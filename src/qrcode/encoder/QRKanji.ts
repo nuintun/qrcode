@@ -23,10 +23,10 @@ export class QRKanji extends QRData {
 
   /**
    * @public
-   * @method write
+   * @method writeTo
    * @param {BitBuffer} buffer
    */
-  public write(buffer: BitBuffer): void {
+  public writeTo(buffer: BitBuffer): void {
     let index: number = 0;
     const bytes: number[] = this.bytes;
     const length: number = bytes.length;

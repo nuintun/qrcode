@@ -40,10 +40,10 @@ export class QRByte extends QRData {
 
   /**
    * @public
-   * @method write
+   * @method writeTo
    * @param {BitBuffer} buffer
    */
-  public write(buffer: BitBuffer): void {
+  public writeTo(buffer: BitBuffer): void {
     const bytes: number[] = this.bytes;
 
     for (const byte of bytes) {

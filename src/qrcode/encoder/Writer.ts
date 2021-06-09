@@ -66,7 +66,7 @@ function prepareData(
     buffer.put(mode, 4);
     buffer.put(data.getLength(), data.getLengthInBits(version));
 
-    data.write(buffer);
+    data.writeTo(buffer);
   }
 
   // Calc max data count
@@ -586,6 +586,7 @@ export class Encoder {
   }
 
   /**
+   * @public
    * @method clear
    */
   public clear() {

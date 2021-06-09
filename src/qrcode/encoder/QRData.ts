@@ -21,7 +21,7 @@ export abstract class QRData {
     return this.bytes.length;
   }
 
-  public abstract write(buffer: BitBuffer): void;
+  public abstract writeTo(buffer: BitBuffer): void;
 
   public getLengthInBits(version: number): number {
     const mode: Mode = this.mode;
