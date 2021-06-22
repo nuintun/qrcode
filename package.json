@@ -24,9 +24,9 @@
   },
   "scripts": {
     "clean": "node tools/clean.js",
-    "format": "prettier --write src",
     "prepublishOnly": "npm run build",
     "build:es5": "rollup -c tools/rollup.es5.js",
+    "format": "prettier --write src tools examples",
     "examples": "rollup -c examples/rollup.config.js",
     "build:esnext": "rollup -c tools/rollup.esnext.js",
     "build": "npm run clean & npm run build:es5 & npm run build:esnext"
