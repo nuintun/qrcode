@@ -57,6 +57,6 @@ export default function configure(esnext) {
     input: 'src/index.ts',
     preserveModules: true,
     plugins: [typescript({ tsconfigOverride, clean: true, useTsconfigDeclarationDir: true }), treeShake()],
-    output: { interop: false, esModule: false, format: esnext ? 'esm' : 'cjs', dir: esnext ? 'esnext' : 'es5' }
+    output: { interop: false, esModule: false, format: esnext ? 'esm' : 'cjs', dir: esnext ? 'esm' : 'cjs' }
   };
 }

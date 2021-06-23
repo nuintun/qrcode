@@ -21,7 +21,7 @@ const banner = `/**
 rimraf.sync('examples/qrcode.js');
 
 export default {
-  input: 'esnext/index.js',
+  input: 'esm/index.js',
   output: {
     banner,
     format: 'umd',

@@ -5,7 +5,11 @@
   "trailingComma": "none",
   "overrides": [
     {
-      "files": ["*.css", "*.less", "*.scss"],
+      "files": [
+        "*.css",
+        "*.less",
+        "*.scss"
+      ],
       "options": {
         "singleQuote": false
       }

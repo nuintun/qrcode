@@ -33,8 +33,8 @@ bower_components
 build/Release
 
 # Dependency directories
-node_modules/
-jspm_packages/
+node_modules
+jspm_packages
 
 # Optional npm cache directory
 .npm
@@ -91,11 +91,11 @@ yarn.lock
 # typescript configuration
 tsconfig.json
 
-# src file
-src/
+# src directories
+src
 
-# example file
-examples/
+# example directories
+examples
 
 # qrcode guide
 qrcode.pdf
@@ -104,8 +104,8 @@ qrcode.png
 # github pages
 _config.yml
 
-# build tools
-tools/
+# build tools directories
+tools
 
 # github
-.github/
+.github

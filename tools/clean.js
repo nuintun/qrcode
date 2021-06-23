@@ -6,4 +6,4 @@
 
 const rimraf = require('rimraf');
 
-['es5', 'esnext', 'typings'].forEach(path => rimraf.sync(path));
+['cjs', 'esm', 'typings'].forEach(path => rimraf.sync(path));

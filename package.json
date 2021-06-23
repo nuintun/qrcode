@@ -2,8 +2,8 @@
   "name": "@nuintun/qrcode",
   "version": "4.0.0",
   "description": "A pure JavaScript QRCode encode and decode library.",
-  "main": "es5/index.js",
-  "module": "esnext/index.js",
+  "main": "cjs/index.js",
+  "module": "esm/index.js",
   "typings": "typings/index.d.ts",
   "repository": {
     "type": "git",
@@ -23,18 +23,20 @@
     "url": "https://github.com/nuintun/qrcode/issues"
   },
   "scripts": {
+    "prepare": "husky install",
     "clean": "node tools/clean.js",
     "prepublishOnly": "npm run build",
-    "build:es5": "rollup -c tools/rollup.es5.js",
+    "build:cjs": "rollup -c tools/rollup.cjs.js",
+    "build:esm": "rollup -c tools/rollup.esm.js",
     "format": "prettier --write src tools examples",
     "examples": "rollup -c examples/rollup.config.js",
-    "build:esnext": "rollup -c tools/rollup.esnext.js",
-    "build": "npm run clean & npm run build:es5 & npm run build:esnext"
+    "build": "npm run clean & npm run build:cjs & npm run build:esm && npm run examples"
   },
   "dependencies": {
     "tslib": "^2.3.0"
   },
   "devDependencies": {
+    "husky": "^6.0.0",
     "rimraf": "^3.0.2",
     "rollup": "^2.52.2",
     "prettier": "^2.3.1",

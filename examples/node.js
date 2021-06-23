@@ -1,4 +1,4 @@
-const { Encoder, QRByte, QRKanji } = require('../es5');
+const { Encoder, QRByte, QRKanji } = require('../cjs');
 
 const qrcode = new Encoder();
 

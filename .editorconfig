@@ -1,7 +1,8 @@
 # http://editorconfig.org
 root = true
 
-[*.{js,jsx,ts,tsx,html,css,less,sass}]
+# Default files
+[*.{js,jsx,ts,tsx,json,svg,html,css,less,sass}]
 indent_size = 2
 charset = utf-8
 end_of_line = lf
@@ -9,35 +10,11 @@ indent_style = space
 insert_final_newline = true
 trim_trailing_whitespace = true
 
-# Use 4 spaces for the Python files
-[*.py]
-indent_size = 4
-max_line_length = 80
-
-# The svg files contain newlines inconsistently
-[*.svg]
+# NPM package files
+[package.json]
 insert_final_newline = false
 
-# The json files contain newlines inconsistently
-[*.json]
-insert_final_newline = false
-
-# Minified JavaScript files shouldn't be changed
-[*.min.js]
+# Minified files
+[*.min.{js,css,svg}]
 indent_style = false
-insert_final_newline = false
-
-# Makefiles always use tabs for indentation
-[Makefile]
-indent_style = tab
-
-# Batch files use tabs for indentation
-[*.bat]
-indent_style = tab
-
-[*.md]
-insert_final_newline = true
-trim_trailing_whitespace = false
-
-[*.key]
 insert_final_newline = false
