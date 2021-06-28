@@ -301,11 +301,7 @@ export class Encoder {
    * @returns {boolean}
    */
   public isDark(row: number, col: number): boolean {
-    if (this.matrix[row][col] !== null) {
-      return this.matrix[row][col];
-    } else {
-      return false;
-    }
+    return this.matrix[row][col] === true;
   }
 
   private setupFinderPattern(row: number, col: number): void {

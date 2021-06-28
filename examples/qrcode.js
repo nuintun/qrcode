@@ -1473,11 +1473,7 @@
      * @returns {boolean}
      */
     Encoder.prototype.isDark = function (row, col) {
-      if (this.matrix[row][col] !== null) {
-        return this.matrix[row][col];
-      } else {
-        return false;
-      }
+      return this.matrix[row][col] === true;
     };
     Encoder.prototype.setupFinderPattern = function (row, col) {
       var matrixSize = this.matrixSize;
