@@ -30,7 +30,7 @@
     "build:esm": "rollup -c tools/rollup.esm.js",
     "format": "prettier --write src tools examples",
     "examples": "rollup -c examples/rollup.config.js",
-    "build": "npm run clean & npm run build:cjs & npm run build:esm && npm run examples"
+    "build": "npm run clean & npm run build:cjs & npm run build:esm && npm run examples && npm run format"
   },
   "dependencies": {
     "tslib": "^2.3.0"
