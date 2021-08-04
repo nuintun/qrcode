@@ -2,7 +2,7 @@
 root = true
 
 # Default files
-[*.{js,jsx,ts,tsx,json,svg,html,css,less,sass,md}]
+[*]
 indent_size = 2
 charset = utf-8
 end_of_line = lf
@@ -10,11 +10,27 @@ indent_style = space
 insert_final_newline = true
 trim_trailing_whitespace = true
 
+# Python files
+[*.py]
+indent_size = 4
+
+# Makefile files
+[Makefile]
+indent_style = tab
+
+# Minified files
+[*.min.*]
+indent_style = false
+insert_final_newline = false
+
 # NPM package files
 [package.json]
 insert_final_newline = false
 
-# Minified files
-[*.min.{js,css,svg}]
-indent_style = false
+# Typescript configure files
+[tsconfig.json]
+insert_final_newline = false
+
+# VSCode setting files
+[.vscode/**/*.json]
 insert_final_newline = false

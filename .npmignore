@@ -17,7 +17,7 @@ lib-cov
 # Coverage directory used by tools like istanbul
 coverage
 
-# nyc test coverage
+# Nyc test coverage
 .nyc_output
 
 # Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
@@ -26,7 +26,7 @@ coverage
 # Bower dependency directory (https://bower.io/)
 bower_components
 
-# node-waf configuration
+# Node-waf configuration
 .lock-wscript
 
 # Compiled binary addons (http://nodejs.org/api/addons.html)
@@ -51,61 +51,69 @@ jspm_packages
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
+# Dotenv environment variables file
 .env
 
-# next.js build output
+# Next.js build output
 .next
 
-# git ignore configuration
+# Git ignore configuration
 .gitignore
 
-# npm ignore configuration
+# Npm ignore configuration
 .npmignore
 
-# travis configuration
+# Travis configuration
 .travis.yml
 
-# appveyor configuration
+# Appveyor configuration
 appveyor.yml
 
-# tests directories
-tests
-test
-
-# npm configuration
-.npmrc
-
-# vscode configuration
-.vscode
-
-# yarn lock file
-yarn.lock
-
-# npm lock file
-package-lock.json
-
-# yarn lock file
-yarn.lock
-
-# typescript configuration
+# Typescript configuration
 tsconfig.json
 
-# src directories
-src
+# Npm configuration
+.npmrc
 
-# example directories
-examples
+# Github
+.github
 
-# qrcode guide
-qrcode.pdf
-qrcode.png
-
-# github pages
+# Github pages
 _config.yml
 
-# build tools directories
+# VSCode configuration
+.vscode
+
+# Yarn lock file
+yarn.lock
+
+# Yarn configure file
+.yarnrc
+
+# Npm lock file
+package-lock.json
+
+# Development directories
+src
 tools
 
-# github
-.github
+# Tests directories
+test
+tests
+
+# Editor config
+.editorconfig
+
+# Prettier files
+.prettierrc
+.prettierignore
+
+# Rollup files
+rollup.config.js
+
+# Example directories
+examples
+
+# Qrcode guide
+qrcode.pdf
+qrcode.png
