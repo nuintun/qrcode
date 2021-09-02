@@ -334,7 +334,7 @@ function findAlignmentPattern(
 
   try {
     ({ dimension, moduleSize } = computeDimension(topLeft, topRight, bottomLeft, matrix));
-  } catch (e) {
+  } catch {
     return null;
   }
 
@@ -506,7 +506,7 @@ export function locate(matrix: BitMatrix): QRLocation[] {
       }
 
       const otherPoints: FinderPattern[] = finderPatterns
-        .filter((p, ii) => i !== ii)
+        .filter((_p, ii) => i !== ii)
         .map(p => ({ x: p.x, y: p.y, score: p.score + (p.size - point.size) ** 2 / point.size, size: p.size }))
         .sort((a, b) => a.score - b.score);
 

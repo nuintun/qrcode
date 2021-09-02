@@ -2,17 +2,22 @@
   "compileOnSave": false,
   "compilerOptions": {
     "pretty": true,
+    "strict": true,
     "target": "ES5",
     "newLine": "LF",
     "module": "ESNext",
     "declaration": false,
-    "alwaysStrict": true,
     "importHelpers": true,
-    "noImplicitAny": true,
     "noUnusedLocals": true,
+    "strictNullChecks": false,
+    "noUnusedParameters": true,
     "moduleResolution": "Node",
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

@@ -209,6 +209,8 @@ function readVersion(matrix: BitMatrix): Version {
   if (bestDifference <= 3) {
     return bestVersion;
   }
+
+  return null;
 }
 
 function readFormatInformation(matrix: BitMatrix): FormatInformation {

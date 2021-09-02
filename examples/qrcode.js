@@ -1203,11 +1203,11 @@
           return ((x + y) & 0x1) === 0;
         };
       case 1 /* PATTERN001 */:
-        return function (x, y) {
+        return function (_x, y) {
           return (y & 0x1) === 0;
         };
       case 2 /* PATTERN010 */:
-        return function (x, y) {
+        return function (x, _y) {
           return x % 3 === 0;
         };
       case 3 /* PATTERN011 */:
@@ -2121,7 +2121,7 @@
           return null;
         }
         var otherPoints = finderPatterns
-          .filter(function (p, ii) {
+          .filter(function (_p, ii) {
             return i !== ii;
           })
           .map(function (p) {
@@ -2952,7 +2952,7 @@
    */
   var VERSIONS = [
     {
-      infoBits: null,
+      infoBits: 0x00000,
       versionNumber: 1,
       alignmentPatternCenters: [],
       errorCorrectionLevels: [
@@ -2975,7 +2975,7 @@
       ]
     },
     {
-      infoBits: null,
+      infoBits: 0x00000,
       versionNumber: 2,
       alignmentPatternCenters: [6, 18],
       errorCorrectionLevels: [
@@ -2998,7 +2998,7 @@
       ]
     },
     {
-      infoBits: null,
+      infoBits: 0x00000,
       versionNumber: 3,
       alignmentPatternCenters: [6, 22],
       errorCorrectionLevels: [
@@ -3021,7 +3021,7 @@
       ]
     },
     {
-      infoBits: null,
+      infoBits: 0x00000,
       versionNumber: 4,
       alignmentPatternCenters: [6, 26],
       errorCorrectionLevels: [
@@ -3044,7 +3044,7 @@
       ]
     },
     {
-      infoBits: null,
+      infoBits: 0x00000,
       versionNumber: 5,
       alignmentPatternCenters: [6, 30],
       errorCorrectionLevels: [
@@ -3073,7 +3073,7 @@
       ]
     },
     {
-      infoBits: null,
+      infoBits: 0x00000,
       versionNumber: 6,
       alignmentPatternCenters: [6, 34],
       errorCorrectionLevels: [
@@ -4413,6 +4413,7 @@
     if (bestDifference <= 3) {
       return bestVersion;
     }
+    return null;
   }
   function readFormatInformation(matrix) {
     var topLeftFormatInfoBits = 0;

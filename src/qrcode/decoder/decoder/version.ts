@@ -24,7 +24,7 @@ export interface Version {
 
 export const VERSIONS: Version[] = [
   {
-    infoBits: null,
+    infoBits: 0x00000,
     versionNumber: 1,
     alignmentPatternCenters: [],
     errorCorrectionLevels: [
@@ -47,7 +47,7 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: null,
+    infoBits: 0x00000,
     versionNumber: 2,
     alignmentPatternCenters: [6, 18],
     errorCorrectionLevels: [
@@ -70,7 +70,7 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: null,
+    infoBits: 0x00000,
     versionNumber: 3,
     alignmentPatternCenters: [6, 22],
     errorCorrectionLevels: [
@@ -93,7 +93,7 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: null,
+    infoBits: 0x00000,
     versionNumber: 4,
     alignmentPatternCenters: [6, 26],
     errorCorrectionLevels: [
@@ -116,7 +116,7 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: null,
+    infoBits: 0x00000,
     versionNumber: 5,
     alignmentPatternCenters: [6, 30],
     errorCorrectionLevels: [
@@ -145,7 +145,7 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: null,
+    infoBits: 0x00000,
     versionNumber: 6,
     alignmentPatternCenters: [6, 34],
     errorCorrectionLevels: [
