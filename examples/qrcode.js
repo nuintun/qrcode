@@ -1942,7 +1942,7 @@
     var moduleSize;
     try {
       (_a = computeDimension(topLeft, topRight, bottomLeft, matrix)), (dimension = _a.dimension), (moduleSize = _a.moduleSize);
-    } catch (e) {
+    } catch (_b) {
       return null;
     }
     // Now find the alignment pattern
