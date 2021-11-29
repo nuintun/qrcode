@@ -106,7 +106,7 @@
     };
     QRData.prototype.getLengthInBits = function (version) {
       var mode = this.mode;
-      var error = new Error('illegal mode: ' + mode);
+      var error = new Error('illegal mode: '.concat(mode));
       if (1 <= version && version < 10) {
         // 1 - 9
         switch (mode) {
@@ -150,7 +150,7 @@
             throw error;
         }
       } else {
-        throw new Error('illegal version: ' + version);
+        throw new Error('illegal version: '.concat(version));
       }
     };
     return QRData;
@@ -283,7 +283,7 @@
   }
   function glog(n) {
     if (n < 1) {
-      throw new Error('illegal log: ' + n);
+      throw new Error('illegal log: '.concat(n));
     }
     return LOG_TABLE[n];
   }
@@ -630,7 +630,7 @@
         case exports.ErrorCorrectionLevel.H:
           return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 3];
         default:
-          throw new Error('illegal error correction level: ' + errorCorrectionLevel);
+          throw new Error('illegal error correction level: '.concat(errorCorrectionLevel));
       }
     };
     RSBlock.RS_BLOCK_TABLE = [
@@ -945,7 +945,7 @@
         return 0x2f;
       }
     }
-    throw new Error('illegal char: ' + String.fromCharCode(ch));
+    throw new Error('illegal char: '.concat(String.fromCharCode(ch)));
   }
   var Base64EncodeOutputStream = /*#__PURE__*/ (function (_super) {
     __extends(Base64EncodeOutputStream, _super);
@@ -1117,13 +1117,13 @@
       }
     };
     GIFImage.prototype.setPixel = function (x, y, pixel) {
-      if (x < 0 || this.width <= x) throw new Error('illegal x axis: ' + x);
-      if (y < 0 || this.height <= y) throw new Error('illegal y axis: ' + y);
+      if (x < 0 || this.width <= x) throw new Error('illegal x axis: '.concat(x));
+      if (y < 0 || this.height <= y) throw new Error('illegal y axis: '.concat(y));
       this.data[y * this.width + x] = pixel;
     };
     GIFImage.prototype.getPixel = function (x, y) {
-      if (x < 0 || this.width <= x) throw new Error('illegal x axis: ' + x);
-      if (y < 0 || this.height <= y) throw new Error('illegal y axis: ' + y);
+      if (x < 0 || this.width <= x) throw new Error('illegal x axis: '.concat(x));
+      if (y < 0 || this.height <= y) throw new Error('illegal y axis: '.concat(y));
       return this.data[y * this.width + x];
     };
     GIFImage.prototype.write = function (output) {
@@ -1231,7 +1231,7 @@
           return ((((x * y) % 3) + ((x + y) & 0x1)) & 0x1) === 0;
         };
       default:
-        throw new Error('illegal mask: ' + maskPattern);
+        throw new Error('illegal mask: '.concat(maskPattern));
     }
   }
 
@@ -1337,7 +1337,7 @@
   }
   function createData(buffer, rsBlocks, maxDataCount) {
     if (buffer.getLengthInBits() > maxDataCount) {
-      throw new Error('data overflow: ' + buffer.getLengthInBits() + ' > ' + maxDataCount);
+      throw new Error('data overflow: '.concat(buffer.getLengthInBits(), ' > ').concat(maxDataCount));
     }
     // End
     if (buffer.getLengthInBits() + 4 <= maxDataCount) {
@@ -1460,7 +1460,7 @@
         if (type === '[object String]') {
           this.chunks.push(new QRByte(data));
         } else {
-          throw new Error('illegal data: ' + data);
+          throw new Error('illegal data: '.concat(data));
         }
       }
       return this;
@@ -2557,7 +2557,7 @@
     }
     BitStream.prototype.readBits = function (numBits) {
       if (numBits < 1 || numBits > 32 || numBits > this.available()) {
-        throw new Error("can't read " + numBits + ' bits');
+        throw new Error("can't read ".concat(numBits, ' bits'));
       }
       var result = 0;
       // First, read remainder from current byte
@@ -2734,7 +2734,7 @@
         bytes.push(byte >> 8);
         bytes.push(byte & 0xff);
       } else {
-        throw new Error('illegal char: ' + String.fromCharCode(code));
+        throw new Error('illegal char: '.concat(String.fromCharCode(code)));
       }
     }
     return bytes;
@@ -4932,7 +4932,7 @@
         };
         image.onerror = function () {
           disposeImageEvents(image);
-          reject(new Error('failed to load image: ' + src));
+          reject(new Error('failed to load image: '.concat(src)));
         };
         image.src = src;
       });
@@ -5017,7 +5017,7 @@
     if (0x30 <= byte && byte <= 0x39) {
       return byte - 0x30;
     }
-    throw new Error('illegal char: ' + String.fromCharCode(byte));
+    throw new Error('illegal char: '.concat(String.fromCharCode(byte)));
   }
   function getBytes(bytes) {
     var num = 0;
@@ -5104,7 +5104,7 @@
         case 0x3a:
           return 44;
         default:
-          throw new Error('illegal char: ' + String.fromCharCode(byte));
+          throw new Error('illegal char: '.concat(String.fromCharCode(byte)));
       }
     }
   }
