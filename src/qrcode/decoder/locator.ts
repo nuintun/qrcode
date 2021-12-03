@@ -351,23 +351,6 @@ function findAlignmentPattern(
     y: topLeft.y + correctionToTopLeft * (bottomRightFinderPattern.y - topLeft.y)
   };
 
-  // const alignmentPatterns: AlignmentPoint[] = alignmentPatternQuads
-  //   .filter(({ top, bottom }) => {
-  //     const x: number = (top.startX + top.endX + bottom.startX + bottom.endX) / 4;
-  //     const y: number = (top.y + bottom.y + 1) / 2;
-
-  //     return matrix.get(Math.floor(x), Math.floor(y));
-  //   })
-  //   .map(({ top, bottom }) => {
-  //     const x: number = (top.startX + top.endX + bottom.startX + bottom.endX) / 4;
-  //     const y: number = (top.y + bottom.y + 1) / 2;
-  //     const sizeScore: number = scorePattern({ x: Math.floor(x), y: Math.floor(y) }, [1, 1, 1], matrix);
-  //     const score: number = sizeScore + distance({ x, y }, expectedAlignmentPattern);
-
-  //     return { x, y, score };
-  //   })
-  //   .sort((a, b) => a.score - b.score);
-
   const alignmentPatterns: AlignmentPoint[] = alignmentPatternQuads
     .reduce<AlignmentPoint[]>((quads, { top, bottom }) => {
       const x: number = (top.startX + top.endX + bottom.startX + bottom.endX) / 4;
@@ -497,47 +480,6 @@ export function locate(matrix: BitMatrix): QRLocation[] | null {
 
   finderPatternQuads.push(...activeFinderPatternQuads.filter(q => q.bottom.y - q.top.y >= 2));
   alignmentPatternQuads.push(...activeAlignmentPatternQuads);
-
-  // const finderPatternGroups: FinderPatternGroup[] = finderPatternQuads
-  //   .filter(q => q.bottom.y - q.top.y >= 2) // All quads must be at least 2px tall since the center square is larger than a block
-  //   .map(q => {
-  //     // Initial scoring of finder pattern quads by looking at their ratios, not taking into account position
-  //     const x: number = (q.top.startX + q.top.endX + q.bottom.startX + q.bottom.endX) / 4;
-  //     const y: number = (q.top.y + q.bottom.y + 1) / 2;
-
-  //     if (!matrix.get(Math.round(x), Math.round(y))) {
-  //       return;
-  //     }
-
-  //     const lengths: number[] = [q.top.endX - q.top.startX, q.bottom.endX - q.bottom.startX, q.bottom.y - q.top.y + 1];
-  //     const size: number = sum(lengths) / lengths.length;
-  //     const score: number = scorePattern({ x: Math.round(x), y: Math.round(y) }, [1, 1, 3, 1, 1], matrix);
-
-  //     return { score, x, y, size };
-  //   })
-  //   .filter(q => !!q) // Filter out any rejected quads from above
-  //   .sort((a, b) => a.score - b.score)
-  //   // Now take the top finder pattern options and try to find 2 other options with a similar size.
-  //   .map((point, i, finderPatterns) => {
-  //     if (i > MAX_FINDERPATTERNS_TO_SEARCH) {
-  //       return null;
-  //     }
-
-  //     const otherPoints: FinderPattern[] = finderPatterns
-  //       .filter((_p, ii) => i !== ii)
-  //       .map(p => ({ x: p.x, y: p.y, score: p.score + (p.size - point.size) ** 2 / point.size, size: p.size }))
-  //       .sort((a, b) => a.score - b.score);
-
-  //     if (otherPoints.length < 2) {
-  //       return null;
-  //     }
-
-  //     const score: number = point.score + otherPoints[0].score + otherPoints[1].score;
-
-  //     return { points: [point].concat(otherPoints.slice(0, 2)), score };
-  //   })
-  //   .filter(q => !!q) // Filter out any rejected finder patterns from above
-  //   .sort((a, b) => a.score - b.score);
 
   const finderPatterns: FinderPattern[] = finderPatternQuads
     .reduce<FinderPattern[]>((quads, { top, bottom }) => {
