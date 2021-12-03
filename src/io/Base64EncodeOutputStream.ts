@@ -64,13 +64,15 @@ export class Base64EncodeOutputStream extends OutputStream {
       this.bufLength = 0;
     }
 
+    const { stream } = this;
+
     if (this.length % 3 != 0) {
       // Padding
       const pad: number = 3 - (this.length % 3);
 
       for (let i: number = 0; i < pad; i++) {
         // =
-        this.stream.writeByte(0x3d);
+        stream.writeByte(0x3d);
       }
     }
   }

@@ -57,8 +57,14 @@ export function binarize(
   width: number,
   height: number,
   returnInverted: boolean,
-  greyscaleWeights: GreyscaleWeights,
-  canOverwriteImage: boolean
+
+  greyscaleWeights: GreyscaleWeights = {
+    red: 0.2126,
+    green: 0.7152,
+    blue: 0.0722,
+    useIntegerApproximation: false
+  },
+  canOverwriteImage: boolean = true
 ): BinarizeResult {
   const pixelCount: number = width * height;
 
@@ -69,7 +75,7 @@ export function binarize(
   // Assign the greyscale and binary image within the rgba buffer as the rgba image will not be needed after conversion
   let bufferOffset = 0;
   // Convert image to greyscale
-  let greyscaleBuffer: Uint8ClampedArray;
+  let greyscaleBuffer!: Uint8ClampedArray;
 
   if (canOverwriteImage) {
     greyscaleBuffer = new Uint8ClampedArray(data.buffer, bufferOffset, pixelCount);
@@ -94,7 +100,7 @@ export function binarize(
   const verticalRegionCount: number = Math.ceil(height / REGION_SIZE);
   const blackPointsCount: number = horizontalRegionCount * verticalRegionCount;
 
-  let blackPointsBuffer: Uint8ClampedArray;
+  let blackPointsBuffer!: Uint8ClampedArray;
 
   if (canOverwriteImage) {
     blackPointsBuffer = new Uint8ClampedArray(data.buffer, bufferOffset, blackPointsCount);
@@ -167,7 +173,7 @@ export function binarize(
     binarized = BitMatrix.createEmpty(width, height);
   }
 
-  let inverted: BitMatrix = null;
+  let inverted!: BitMatrix;
 
   if (returnInverted) {
     if (canOverwriteImage) {

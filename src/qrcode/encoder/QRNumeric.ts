@@ -46,8 +46,8 @@ export class QRNumeric extends QRData {
    */
   public writeTo(buffer: BitBuffer): void {
     let i: number = 0;
-    const bytes: number[] = this.bytes;
-    const length: number = bytes.length;
+    const { bytes } = this;
+    const { length } = bytes;
 
     while (i + 2 < length) {
       buffer.put(getBytes([bytes[i], bytes[i + 1], bytes[i + 2]]), 10);

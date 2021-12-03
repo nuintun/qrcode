@@ -4,12 +4,11 @@
     "pretty": true,
     "strict": true,
     "target": "ES5",
-    "newLine": "LF",
+    "newLine": "lf",
     "module": "ESNext",
     "declaration": false,
     "importHelpers": true,
     "noUnusedLocals": true,
-    "strictNullChecks": false,
     "noUnusedParameters": true,
     "moduleResolution": "Node",
     "forceConsistentCasingInFileNames": true

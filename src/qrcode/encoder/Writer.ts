@@ -19,7 +19,7 @@ const PAD0: number = 0xec;
 const PAD1: number = 0x11;
 const toString: () => string = Object.prototype.toString;
 
-type prepareData = [BitBuffer, RSBlock[], number];
+type PrepareData = [BitBuffer, RSBlock[], number];
 
 /**
  * @function appendECI
@@ -51,7 +51,7 @@ function prepareData(
   errorCorrectionLevel: ErrorCorrectionLevel,
   encodingHint: boolean,
   chunks: QRData[]
-): prepareData {
+): PrepareData {
   const buffer: BitBuffer = new BitBuffer();
   const rsBlocks: RSBlock[] = RSBlock.getRSBlocks(version, errorCorrectionLevel);
 
@@ -85,6 +85,7 @@ function createBytes(buffer: BitBuffer, rsBlocks: RSBlock[]): BitBuffer {
   let offset: number = 0;
   let maxDcCount: number = 0;
   let maxEcCount: number = 0;
+
   const dcData: number[][] = [];
   const ecData: number[][] = [];
   const rsLength: number = rsBlocks.length;
@@ -143,10 +144,6 @@ function createBytes(buffer: BitBuffer, rsBlocks: RSBlock[]): BitBuffer {
 }
 
 function createData(buffer: BitBuffer, rsBlocks: RSBlock[], maxDataCount: number): BitBuffer {
-  if (buffer.getLengthInBits() > maxDataCount) {
-    throw new Error(`data overflow: ${buffer.getLengthInBits()} > ${maxDataCount}`);
-  }
-
   // End
   if (buffer.getLengthInBits() + 4 <= maxDataCount) {
     buffer.put(0, 4);
@@ -278,13 +275,15 @@ export class Encoder {
    * @returns {Encoder}
    */
   public write(data: QRData | string): Encoder {
+    const { chunks } = this;
+
     if (data instanceof QRData) {
-      this.chunks.push(data);
+      chunks.push(data);
     } else {
       const type: string = toString.call(data);
 
       if (type === '[object String]') {
-        this.chunks.push(new QRByte(data));
+        chunks.push(new QRByte(data));
       } else {
         throw new Error(`illegal data: ${data}`);
       }
@@ -305,6 +304,7 @@ export class Encoder {
   }
 
   private setupFinderPattern(row: number, col: number): void {
+    const { matrix } = this;
     const matrixSize: number = this.matrixSize;
 
     for (let r: number = -1; r <= 7; r++) {
@@ -318,33 +318,34 @@ export class Encoder {
           (0 <= c && c <= 6 && (r === 0 || r === 6)) ||
           (2 <= r && r <= 4 && 2 <= c && c <= 4)
         ) {
-          this.matrix[row + r][col + c] = true;
+          matrix[row + r][col + c] = true;
         } else {
-          this.matrix[row + r][col + c] = false;
+          matrix[row + r][col + c] = false;
         }
       }
     }
   }
 
   private setupAlignmentPattern(): void {
+    const { matrix } = this;
     const pos: number[] = QRUtil.getAlignmentPattern(this.version);
-    const length: number = pos.length;
+    const { length } = pos;
 
     for (let i: number = 0; i < length; i++) {
       for (let j: number = 0; j < length; j++) {
         const row: number = pos[i];
         const col: number = pos[j];
 
-        if (this.matrix[row][col] !== null) {
+        if (matrix[row][col] !== null) {
           continue;
         }
 
         for (let r: number = -2; r <= 2; r++) {
           for (let c: number = -2; c <= 2; c++) {
             if (r === -2 || r === 2 || c === -2 || c === 2 || (r === 0 && c === 0)) {
-              this.matrix[row + r][col + c] = true;
+              matrix[row + r][col + c] = true;
             } else {
-              this.matrix[row + r][col + c] = false;
+              matrix[row + r][col + c] = false;
             }
           }
         }
@@ -353,24 +354,26 @@ export class Encoder {
   }
 
   private setupTimingPattern(): void {
+    const { matrix } = this;
     const count: number = this.matrixSize - 8;
 
     for (let i: number = 8; i < count; i++) {
       const bit: boolean = i % 2 === 0;
 
       // vertical
-      if (this.matrix[i][6] === null) {
-        this.matrix[i][6] = bit;
+      if (matrix[i][6] === null) {
+        matrix[i][6] = bit;
       }
 
       // horizontal
-      if (this.matrix[6][i] === null) {
-        this.matrix[6][i] = bit;
+      if (matrix[6][i] === null) {
+        matrix[6][i] = bit;
       }
     }
   }
 
   private setupFormatInfo(maskPattern: number): void {
+    const { matrix } = this;
     const data: number = (this.errorCorrectionLevel << 3) | maskPattern;
     const bits: number = QRUtil.getBCHVersionInfo(data);
     const matrixSize: number = this.matrixSize;
@@ -380,42 +383,44 @@ export class Encoder {
 
       // Vertical
       if (i < 6) {
-        this.matrix[i][8] = bit;
+        matrix[i][8] = bit;
       } else if (i < 8) {
-        this.matrix[i + 1][8] = bit;
+        matrix[i + 1][8] = bit;
       } else {
-        this.matrix[matrixSize - 15 + i][8] = bit;
+        matrix[matrixSize - 15 + i][8] = bit;
       }
 
       // Horizontal
       if (i < 8) {
-        this.matrix[8][matrixSize - i - 1] = bit;
+        matrix[8][matrixSize - i - 1] = bit;
       } else if (i < 9) {
-        this.matrix[8][15 - i - 1 + 1] = bit;
+        matrix[8][15 - i - 1 + 1] = bit;
       } else {
-        this.matrix[8][15 - i - 1] = bit;
+        matrix[8][15 - i - 1] = bit;
       }
     }
 
     // Fixed point
-    this.matrix[matrixSize - 8][8] = true;
+    matrix[matrixSize - 8][8] = true;
   }
 
   private setupVersionInfo(): void {
     if (this.version >= 7) {
+      const { matrix } = this;
       const matrixSize: number = this.matrixSize;
       const bits: number = QRUtil.getBCHVersion(this.version);
 
       for (let i: number = 0; i < 18; i++) {
         const bit: boolean = ((bits >> i) & 1) === 1;
 
-        this.matrix[(i / 3) >> 0][(i % 3) + matrixSize - 8 - 3] = bit;
-        this.matrix[(i % 3) + matrixSize - 8 - 3][(i / 3) >> 0] = bit;
+        matrix[(i / 3) >> 0][(i % 3) + matrixSize - 8 - 3] = bit;
+        matrix[(i % 3) + matrixSize - 8 - 3][(i / 3) >> 0] = bit;
       }
     }
   }
 
   private setupCodewords(data: BitBuffer, maskPattern: number): void {
+    const { matrix } = this;
     const matrixSize: number = this.matrixSize;
     const bitLength: number = data.getLengthInBits();
     const maskFunc: maskFunc = getMaskFunc(maskPattern);
@@ -439,7 +444,7 @@ export class Encoder {
           // Actual y coordinate
           const y: number = upward ? matrixSize - 1 - vert : vert;
 
-          if (this.matrix[y][x] !== null) {
+          if (matrix[y][x] !== null) {
             continue;
           }
 
@@ -455,7 +460,7 @@ export class Encoder {
             bit = !bit;
           }
 
-          this.matrix[y][x] = bit;
+          matrix[y][x] = bit;
         }
       }
     }
@@ -463,17 +468,19 @@ export class Encoder {
 
   private buildMatrix(data: BitBuffer, maskPattern: number): void {
     // Initialize matrix
-    this.matrix = [];
+    const matrix: boolean[][] = [];
 
     const matrixSize: number = this.matrixSize;
 
     for (let row: number = 0; row < matrixSize; row++) {
-      this.matrix[row] = [];
+      matrix[row] = [];
 
       for (let col: number = 0; col < matrixSize; col++) {
-        this.matrix[row][col] = null;
+        matrix[row][col] = false;
       }
     }
+
+    this.matrix = matrix;
 
     // Setup finder pattern
     this.setupFinderPattern(0, 0);
@@ -502,19 +509,28 @@ export class Encoder {
    * @returns {Encoder}
    */
   public make(): Encoder {
-    let buffer: BitBuffer;
-    let rsBlocks: RSBlock[];
-    let maxDataCount: number;
+    let buffer!: BitBuffer;
+    let rsBlocks!: RSBlock[];
+    let maxDataCount!: number;
 
-    const chunks: QRData[] = this.chunks;
-    const errorCorrectionLevel: ErrorCorrectionLevel = this.errorCorrectionLevel;
+    const { chunks, errorCorrectionLevel } = this;
 
     if (this.auto) {
-      for (this.version = 1; this.version <= 40; this.version++) {
-        [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, this.encodingHint, chunks);
+      let version = 1;
+
+      for (; version <= 40; version++) {
+        [buffer, rsBlocks, maxDataCount] = prepareData(version, errorCorrectionLevel, this.encodingHint, chunks);
 
         if (buffer.getLengthInBits() <= maxDataCount) break;
       }
+
+      const dataLengthInBits = buffer.getLengthInBits();
+
+      if (dataLengthInBits > maxDataCount) {
+        throw new Error(`data overflow: ${dataLengthInBits} > ${maxDataCount}`);
+      }
+
+      this.version = version;
     } else {
       [buffer, rsBlocks, maxDataCount] = prepareData(this.version, errorCorrectionLevel, this.encodingHint, chunks);
     }

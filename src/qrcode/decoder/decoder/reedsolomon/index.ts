@@ -8,7 +8,7 @@
 import { GenericGFPoly } from './GenericGFPoly';
 import { addOrSubtractGF, GenericGF } from './GenericGF';
 
-function runEuclideanAlgorithm(field: GenericGF, a: GenericGFPoly, b: GenericGFPoly, R: number): GenericGFPoly[] {
+function runEuclideanAlgorithm(field: GenericGF, a: GenericGFPoly, b: GenericGFPoly, R: number): GenericGFPoly[] | null {
   // Assume a's degree is >= b's
   if (a.degree() < b.degree()) {
     [a, b] = [b, a];
@@ -65,7 +65,7 @@ function runEuclideanAlgorithm(field: GenericGF, a: GenericGFPoly, b: GenericGFP
   return [t.multiply(inverse), r.multiply(inverse)];
 }
 
-function findErrorLocations(field: GenericGF, errorLocator: GenericGFPoly): number[] {
+function findErrorLocations(field: GenericGF, errorLocator: GenericGFPoly): number[] | null {
   // This is a direct application of Chien's search
   const numErrors: number = errorLocator.degree();
 
@@ -115,7 +115,7 @@ function findErrorMagnitudes(field: GenericGF, errorEvaluator: GenericGFPoly, er
   return result;
 }
 
-export function rsDecode(bytes: number[], twoS: number): Uint8ClampedArray {
+export function rsDecode(bytes: number[], twoS: number): Uint8ClampedArray | null {
   const outputBytes: Uint8ClampedArray = new Uint8ClampedArray(bytes.length);
 
   outputBytes.set(bytes);
@@ -141,13 +141,13 @@ export function rsDecode(bytes: number[], twoS: number): Uint8ClampedArray {
   }
 
   const syndrome: GenericGFPoly = new GenericGFPoly(field, syndromeCoefficients);
-  const sigmaOmega: GenericGFPoly[] = runEuclideanAlgorithm(field, field.buildMonomial(twoS, 1), syndrome, twoS);
+  const sigmaOmega: GenericGFPoly[] | null = runEuclideanAlgorithm(field, field.buildMonomial(twoS, 1), syndrome, twoS);
 
   if (sigmaOmega === null) {
     return null;
   }
 
-  const errorLocations: number[] = findErrorLocations(field, sigmaOmega[0]);
+  const errorLocations: number[] | null = findErrorLocations(field, sigmaOmega[0]);
 
   if (errorLocations == null) {
     return null;

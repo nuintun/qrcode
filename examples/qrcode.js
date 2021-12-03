@@ -307,19 +307,20 @@
       if (shift === void 0) {
         shift = 0;
       }
-      this.num = [];
       var offset = 0;
       var length = num.length;
       while (offset < length && num[offset] === 0) {
         offset++;
       }
       length -= offset;
+      var numbers = [];
       for (var i = 0; i < length; i++) {
-        this.num.push(num[offset + i]);
+        numbers.push(num[offset + i]);
       }
       for (var i = 0; i < shift; i++) {
-        this.num.push(0);
+        numbers.push(0);
       }
+      this.num = numbers;
     }
     Polynomial.prototype.getAt = function (index) {
       return this.num[index];
@@ -456,7 +457,7 @@
     var matrixSize = qrcode.getMatrixSize();
     var penalty = 0;
     for (var i = 0; i < matrixSize; i++) {
-      var prevBit = null;
+      var prevBit = false;
       var numSameBitCells = 0;
       for (var j = 0; j < matrixSize; j++) {
         var bit = isHorizontal ? qrcode.isDark(i, j) : qrcode.isDark(j, i);
@@ -867,11 +868,12 @@
       }
     };
     BitBuffer.prototype.putBit = function (bit) {
-      if (this.length === this.buffer.length * 8) {
-        this.buffer.push(0);
+      var buffer = this.buffer;
+      if (this.length === buffer.length * 8) {
+        buffer.push(0);
       }
       if (bit) {
-        this.buffer[(this.length / 8) >> 0] |= 0x80 >>> this.length % 8;
+        buffer[(this.length / 8) >> 0] |= 0x80 >>> this.length % 8;
       }
       this.length++;
     };
@@ -975,12 +977,13 @@
         this.buffer = 0;
         this.bufLength = 0;
       }
+      var stream = this.stream;
       if (this.length % 3 != 0) {
         // Padding
         var pad = 3 - (this.length % 3);
         for (var i = 0; i < pad; i++) {
           // =
-          this.stream.writeByte(0x3d);
+          stream.writeByte(0x3d);
         }
       }
     };
@@ -1028,13 +1031,15 @@
     function BitOutputStream(output) {
       this.output = output;
       this.bitLength = 0;
+      this.bitBuffer = 0;
     }
     BitOutputStream.prototype.write = function (data, length) {
       if (data >>> length !== 0) {
         throw new Error('length overflow');
       }
+      var output = this.output;
       while (this.bitLength + length >= 8) {
-        this.output.writeByte(0xff & ((data << this.bitLength) | this.bitBuffer));
+        output.writeByte(0xff & ((data << this.bitLength) | this.bitBuffer));
         length -= 8 - this.bitLength;
         data >>>= 8 - this.bitLength;
         this.bitBuffer = 0;
@@ -1044,10 +1049,11 @@
       this.bitLength = this.bitLength + length;
     };
     BitOutputStream.prototype.flush = function () {
+      var output = this.output;
       if (this.bitLength > 0) {
-        this.output.writeByte(this.bitBuffer);
+        output.writeByte(this.bitBuffer);
       }
-      this.output.flush();
+      output.flush();
     };
     BitOutputStream.prototype.close = function () {
       this.flush();
@@ -1066,40 +1072,43 @@
       }
     }
     GIFImage.prototype.getLZWRaster = function (lzwMinCodeSize) {
+      // Setup LZWTable
+      var fromCharCode = String.fromCharCode;
+      var table = new LZWTable();
       var clearCode = 1 << lzwMinCodeSize;
       var endCode = (1 << lzwMinCodeSize) + 1;
-      // Setup LZWTable
-      var table = new LZWTable();
       for (var i = 0; i < clearCode; i++) {
-        table.add(String.fromCharCode(i));
+        table.add(fromCharCode(i));
       }
-      table.add(String.fromCharCode(clearCode));
-      table.add(String.fromCharCode(endCode));
+      table.add(fromCharCode(clearCode));
+      table.add(fromCharCode(endCode));
+      var bitLength = lzwMinCodeSize + 1;
       var byteOutput = new ByteArrayOutputStream();
       var bitOutput = new BitOutputStream(byteOutput);
-      var bitLength = lzwMinCodeSize + 1;
       try {
+        var data = this.data;
+        var length_1 = data.length;
+        var fromCharCode_1 = String.fromCharCode;
         // Clear code
         bitOutput.write(clearCode, bitLength);
         var dataIndex = 0;
-        var s = String.fromCharCode(this.data[dataIndex++]);
-        var length_1 = this.data.length;
+        var words = fromCharCode_1(data[dataIndex++]);
         while (dataIndex < length_1) {
-          var c = String.fromCharCode(this.data[dataIndex++]);
-          if (table.contains(s + c)) {
-            s = s + c;
+          var char = fromCharCode_1(data[dataIndex++]);
+          if (table.contains(words + char)) {
+            words += char;
           } else {
-            bitOutput.write(table.indexOf(s), bitLength);
+            bitOutput.write(table.indexOf(words), bitLength);
             if (table.getSize() < 0xfff) {
               if (table.getSize() === 1 << bitLength) {
                 bitLength++;
               }
-              table.add(s + c);
+              table.add(words + char);
             }
-            s = c;
+            words = char;
           }
         }
-        bitOutput.write(table.indexOf(s), bitLength);
+        bitOutput.write(table.indexOf(words), bitLength);
         // End code
         bitOutput.write(endCode, bitLength);
       } finally {
@@ -1117,16 +1126,25 @@
       }
     };
     GIFImage.prototype.setPixel = function (x, y, pixel) {
-      if (x < 0 || this.width <= x) throw new Error('illegal x axis: '.concat(x));
-      if (y < 0 || this.height <= y) throw new Error('illegal y axis: '.concat(y));
-      this.data[y * this.width + x] = pixel;
+      var _a = this,
+        width = _a.width,
+        height = _a.height;
+      if (x < 0 || width <= x) throw new Error('illegal x axis: '.concat(x));
+      if (y < 0 || height <= y) throw new Error('illegal y axis: '.concat(y));
+      this.data[y * width + x] = pixel;
     };
     GIFImage.prototype.getPixel = function (x, y) {
-      if (x < 0 || this.width <= x) throw new Error('illegal x axis: '.concat(x));
-      if (y < 0 || this.height <= y) throw new Error('illegal y axis: '.concat(y));
-      return this.data[y * this.width + x];
+      var _a = this,
+        width = _a.width,
+        height = _a.height;
+      if (x < 0 || width <= x) throw new Error('illegal x axis: '.concat(x));
+      if (y < 0 || height <= y) throw new Error('illegal y axis: '.concat(y));
+      return this.data[y * width + x];
     };
     GIFImage.prototype.write = function (output) {
+      var _a = this,
+        width = _a.width,
+        height = _a.height;
       // GIF Signature
       output.writeByte(0x47); // G
       output.writeByte(0x49); // I
@@ -1135,8 +1153,8 @@
       output.writeByte(0x37); // 7
       output.writeByte(0x61); // a
       // Screen Descriptor
-      this.writeWord(output, this.width);
-      this.writeWord(output, this.height);
+      this.writeWord(output, width);
+      this.writeWord(output, height);
       output.writeByte(0x80); // 2bit
       output.writeByte(0);
       output.writeByte(0);
@@ -1153,8 +1171,8 @@
       output.writeByte(0x2c); // ,
       this.writeWord(output, 0);
       this.writeWord(output, 0);
-      this.writeWord(output, this.width);
-      this.writeWord(output, this.height);
+      this.writeWord(output, width);
+      this.writeWord(output, height);
       output.writeByte(0);
       // Local Color Map
       // Raster Data
@@ -1180,10 +1198,11 @@
       this.write(output);
       var bytes = encodeToBase64(output.toByteArray());
       output.close();
-      var url = 'data:image/gif;base64,';
       var length = bytes.length;
+      var fromCharCode = String.fromCharCode;
+      var url = 'data:image/gif;base64,';
       for (var i = 0; i < length; i++) {
-        url += String.fromCharCode(bytes[i]);
+        url += fromCharCode(bytes[i]);
       }
       return url;
     };
@@ -1336,9 +1355,6 @@
     return buffer;
   }
   function createData(buffer, rsBlocks, maxDataCount) {
-    if (buffer.getLengthInBits() > maxDataCount) {
-      throw new Error('data overflow: '.concat(buffer.getLengthInBits(), ' > ').concat(maxDataCount));
-    }
     // End
     if (buffer.getLengthInBits() + 4 <= maxDataCount) {
       buffer.put(0, 4);
@@ -1453,12 +1469,13 @@
      * @returns {Encoder}
      */
     Encoder.prototype.write = function (data) {
+      var chunks = this.chunks;
       if (data instanceof QRData) {
-        this.chunks.push(data);
+        chunks.push(data);
       } else {
         var type = toString.call(data);
         if (type === '[object String]') {
-          this.chunks.push(new QRByte(data));
+          chunks.push(new QRByte(data));
         } else {
           throw new Error('illegal data: '.concat(data));
         }
@@ -1476,6 +1493,7 @@
       return this.matrix[row][col] === true;
     };
     Encoder.prototype.setupFinderPattern = function (row, col) {
+      var matrix = this.matrix;
       var matrixSize = this.matrixSize;
       for (var r = -1; r <= 7; r++) {
         for (var c = -1; c <= 7; c++) {
@@ -1487,29 +1505,30 @@
             (0 <= c && c <= 6 && (r === 0 || r === 6)) ||
             (2 <= r && r <= 4 && 2 <= c && c <= 4)
           ) {
-            this.matrix[row + r][col + c] = true;
+            matrix[row + r][col + c] = true;
           } else {
-            this.matrix[row + r][col + c] = false;
+            matrix[row + r][col + c] = false;
           }
         }
       }
     };
     Encoder.prototype.setupAlignmentPattern = function () {
+      var matrix = this.matrix;
       var pos = getAlignmentPattern(this.version);
       var length = pos.length;
       for (var i = 0; i < length; i++) {
         for (var j = 0; j < length; j++) {
           var row = pos[i];
           var col = pos[j];
-          if (this.matrix[row][col] !== null) {
+          if (matrix[row][col] !== null) {
             continue;
           }
           for (var r = -2; r <= 2; r++) {
             for (var c = -2; c <= 2; c++) {
               if (r === -2 || r === 2 || c === -2 || c === 2 || (r === 0 && c === 0)) {
-                this.matrix[row + r][col + c] = true;
+                matrix[row + r][col + c] = true;
               } else {
-                this.matrix[row + r][col + c] = false;
+                matrix[row + r][col + c] = false;
               }
             }
           }
@@ -1517,20 +1536,22 @@
       }
     };
     Encoder.prototype.setupTimingPattern = function () {
+      var matrix = this.matrix;
       var count = this.matrixSize - 8;
       for (var i = 8; i < count; i++) {
         var bit = i % 2 === 0;
         // vertical
-        if (this.matrix[i][6] === null) {
-          this.matrix[i][6] = bit;
+        if (matrix[i][6] === null) {
+          matrix[i][6] = bit;
         }
         // horizontal
-        if (this.matrix[6][i] === null) {
-          this.matrix[6][i] = bit;
+        if (matrix[6][i] === null) {
+          matrix[6][i] = bit;
         }
       }
     };
     Encoder.prototype.setupFormatInfo = function (maskPattern) {
+      var matrix = this.matrix;
       var data = (this.errorCorrectionLevel << 3) | maskPattern;
       var bits = getBCHVersionInfo(data);
       var matrixSize = this.matrixSize;
@@ -1538,36 +1559,38 @@
         var bit = ((bits >> i) & 1) === 1;
         // Vertical
         if (i < 6) {
-          this.matrix[i][8] = bit;
+          matrix[i][8] = bit;
         } else if (i < 8) {
-          this.matrix[i + 1][8] = bit;
+          matrix[i + 1][8] = bit;
         } else {
-          this.matrix[matrixSize - 15 + i][8] = bit;
+          matrix[matrixSize - 15 + i][8] = bit;
         }
         // Horizontal
         if (i < 8) {
-          this.matrix[8][matrixSize - i - 1] = bit;
+          matrix[8][matrixSize - i - 1] = bit;
         } else if (i < 9) {
-          this.matrix[8][15 - i - 1 + 1] = bit;
+          matrix[8][15 - i - 1 + 1] = bit;
         } else {
-          this.matrix[8][15 - i - 1] = bit;
+          matrix[8][15 - i - 1] = bit;
         }
       }
       // Fixed point
-      this.matrix[matrixSize - 8][8] = true;
+      matrix[matrixSize - 8][8] = true;
     };
     Encoder.prototype.setupVersionInfo = function () {
       if (this.version >= 7) {
+        var matrix = this.matrix;
         var matrixSize = this.matrixSize;
         var bits = getBCHVersion(this.version);
         for (var i = 0; i < 18; i++) {
           var bit = ((bits >> i) & 1) === 1;
-          this.matrix[(i / 3) >> 0][(i % 3) + matrixSize - 8 - 3] = bit;
-          this.matrix[(i % 3) + matrixSize - 8 - 3][(i / 3) >> 0] = bit;
+          matrix[(i / 3) >> 0][(i % 3) + matrixSize - 8 - 3] = bit;
+          matrix[(i % 3) + matrixSize - 8 - 3][(i / 3) >> 0] = bit;
         }
       }
     };
     Encoder.prototype.setupCodewords = function (data, maskPattern) {
+      var matrix = this.matrix;
       var matrixSize = this.matrixSize;
       var bitLength = data.getLengthInBits();
       var maskFunc = getMaskFunc(maskPattern);
@@ -1587,7 +1610,7 @@
             var upward = ((right + 1) & 2) === 0;
             // Actual y coordinate
             var y = upward ? matrixSize - 1 - vert : vert;
-            if (this.matrix[y][x] !== null) {
+            if (matrix[y][x] !== null) {
               continue;
             }
             var bit = false;
@@ -1598,21 +1621,22 @@
             if (invert) {
               bit = !bit;
             }
-            this.matrix[y][x] = bit;
+            matrix[y][x] = bit;
           }
         }
       }
     };
     Encoder.prototype.buildMatrix = function (data, maskPattern) {
       // Initialize matrix
-      this.matrix = [];
+      var matrix = [];
       var matrixSize = this.matrixSize;
       for (var row = 0; row < matrixSize; row++) {
-        this.matrix[row] = [];
+        matrix[row] = [];
         for (var col = 0; col < matrixSize; col++) {
-          this.matrix[row][col] = null;
+          matrix[row][col] = false;
         }
       }
+      this.matrix = matrix;
       // Setup finder pattern
       this.setupFinderPattern(0, 0);
       this.setupFinderPattern(matrixSize - 7, 0);
@@ -1638,16 +1662,23 @@
       var buffer;
       var rsBlocks;
       var maxDataCount;
-      var chunks = this.chunks;
-      var errorCorrectionLevel = this.errorCorrectionLevel;
+      var _c = this,
+        chunks = _c.chunks,
+        errorCorrectionLevel = _c.errorCorrectionLevel;
       if (this.auto) {
-        for (this.version = 1; this.version <= 40; this.version++) {
-          (_a = prepareData(this.version, errorCorrectionLevel, this.encodingHint, chunks)),
+        var version = 1;
+        for (; version <= 40; version++) {
+          (_a = prepareData(version, errorCorrectionLevel, this.encodingHint, chunks)),
             (buffer = _a[0]),
             (rsBlocks = _a[1]),
             (maxDataCount = _a[2]);
           if (buffer.getLengthInBits() <= maxDataCount) break;
         }
+        var dataLengthInBits = buffer.getLengthInBits();
+        if (dataLengthInBits > maxDataCount) {
+          throw new Error('data overflow: '.concat(dataLengthInBits, ' > ').concat(maxDataCount));
+        }
+        this.version = version;
       } else {
         (_b = prepareData(this.version, errorCorrectionLevel, this.encodingHint, chunks)),
           (buffer = _b[0]),
@@ -1957,20 +1988,35 @@
       x: topLeft.x + correctionToTopLeft * (bottomRightFinderPattern.x - topLeft.x),
       y: topLeft.y + correctionToTopLeft * (bottomRightFinderPattern.y - topLeft.y)
     };
+    // const alignmentPatterns: AlignmentPoint[] = alignmentPatternQuads
+    //   .filter(({ top, bottom }) => {
+    //     const x: number = (top.startX + top.endX + bottom.startX + bottom.endX) / 4;
+    //     const y: number = (top.y + bottom.y + 1) / 2;
+    //     return matrix.get(Math.floor(x), Math.floor(y));
+    //   })
+    //   .map(({ top, bottom }) => {
+    //     const x: number = (top.startX + top.endX + bottom.startX + bottom.endX) / 4;
+    //     const y: number = (top.y + bottom.y + 1) / 2;
+    //     const sizeScore: number = scorePattern({ x: Math.floor(x), y: Math.floor(y) }, [1, 1, 1], matrix);
+    //     const score: number = sizeScore + distance({ x, y }, expectedAlignmentPattern);
+    //     return { x, y, score };
+    //   })
+    //   .sort((a, b) => a.score - b.score);
     var alignmentPatterns = alignmentPatternQuads
-      .map(function (q) {
-        var x = (q.top.startX + q.top.endX + q.bottom.startX + q.bottom.endX) / 4;
-        var y = (q.top.y + q.bottom.y + 1) / 2;
-        if (!matrix.get(Math.floor(x), Math.floor(y))) {
-          return;
+      .reduce(function (quads, _a) {
+        var top = _a.top,
+          bottom = _a.bottom;
+        var x = (top.startX + top.endX + bottom.startX + bottom.endX) / 4;
+        var y = (top.y + bottom.y + 1) / 2;
+        var intX = Math.floor(x);
+        var intY = Math.floor(y);
+        if (matrix.get(intX, intY)) {
+          var sizeScore = scorePattern({ x: intX, y: intY }, [1, 1, 1], matrix);
+          var score = sizeScore + distance({ x: x, y: y }, expectedAlignmentPattern);
+          quads.push({ x: x, y: y, score: score });
         }
-        var sizeScore = scorePattern({ x: Math.floor(x), y: Math.floor(y) }, [1, 1, 1], matrix);
-        var score = sizeScore + distance({ x: x, y: y }, expectedAlignmentPattern);
-        return { x: x, y: y, score: score };
-      })
-      .filter(function (v) {
-        return !!v;
-      })
+        return quads;
+      }, [])
       .sort(function (a, b) {
         return a.score - b.score;
       });
@@ -2093,52 +2139,91 @@
       })
     );
     alignmentPatternQuads.push.apply(alignmentPatternQuads, activeAlignmentPatternQuads);
-    var finderPatternGroups = finderPatternQuads
-      .filter(function (q) {
-        return q.bottom.y - q.top.y >= 2;
-      }) // All quads must be at least 2px tall since the center square is larger than a block
-      .map(function (q) {
-        // Initial scoring of finder pattern quads by looking at their ratios, not taking into account position
-        var x = (q.top.startX + q.top.endX + q.bottom.startX + q.bottom.endX) / 4;
-        var y = (q.top.y + q.bottom.y + 1) / 2;
-        if (!matrix.get(Math.round(x), Math.round(y))) {
-          return;
+    // const finderPatternGroups: FinderPatternGroup[] = finderPatternQuads
+    //   .filter(q => q.bottom.y - q.top.y >= 2) // All quads must be at least 2px tall since the center square is larger than a block
+    //   .map(q => {
+    //     // Initial scoring of finder pattern quads by looking at their ratios, not taking into account position
+    //     const x: number = (q.top.startX + q.top.endX + q.bottom.startX + q.bottom.endX) / 4;
+    //     const y: number = (q.top.y + q.bottom.y + 1) / 2;
+    //     if (!matrix.get(Math.round(x), Math.round(y))) {
+    //       return;
+    //     }
+    //     const lengths: number[] = [q.top.endX - q.top.startX, q.bottom.endX - q.bottom.startX, q.bottom.y - q.top.y + 1];
+    //     const size: number = sum(lengths) / lengths.length;
+    //     const score: number = scorePattern({ x: Math.round(x), y: Math.round(y) }, [1, 1, 3, 1, 1], matrix);
+    //     return { score, x, y, size };
+    //   })
+    //   .filter(q => !!q) // Filter out any rejected quads from above
+    //   .sort((a, b) => a.score - b.score)
+    //   // Now take the top finder pattern options and try to find 2 other options with a similar size.
+    //   .map((point, i, finderPatterns) => {
+    //     if (i > MAX_FINDERPATTERNS_TO_SEARCH) {
+    //       return null;
+    //     }
+    //     const otherPoints: FinderPattern[] = finderPatterns
+    //       .filter((_p, ii) => i !== ii)
+    //       .map(p => ({ x: p.x, y: p.y, score: p.score + (p.size - point.size) ** 2 / point.size, size: p.size }))
+    //       .sort((a, b) => a.score - b.score);
+    //     if (otherPoints.length < 2) {
+    //       return null;
+    //     }
+    //     const score: number = point.score + otherPoints[0].score + otherPoints[1].score;
+    //     return { points: [point].concat(otherPoints.slice(0, 2)), score };
+    //   })
+    //   .filter(q => !!q) // Filter out any rejected finder patterns from above
+    //   .sort((a, b) => a.score - b.score);
+    var finderPatterns = finderPatternQuads
+      .reduce(function (quads, _a) {
+        var top = _a.top,
+          bottom = _a.bottom;
+        // All quads must be at least 2px tall since the center square is larger than a block
+        if (bottom.y - top.y >= 2) {
+          // Initial scoring of finder pattern quads by looking at their ratios, not taking into account position
+          var x = (top.startX + top.endX + bottom.startX + bottom.endX) / 4;
+          var y = (top.y + bottom.y + 1) / 2;
+          var intX = Math.round(x);
+          var intY = Math.round(y);
+          if (matrix.get(intX, intY)) {
+            var lengths = [top.endX - top.startX, bottom.endX - bottom.startX, bottom.y - top.y + 1];
+            var size = sum(lengths) / lengths.length;
+            var score = scorePattern({ x: intX, y: intY }, [1, 1, 3, 1, 1], matrix);
+            quads.push({ x: x, y: y, size: size, score: score });
+          }
         }
-        var lengths = [q.top.endX - q.top.startX, q.bottom.endX - q.bottom.startX, q.bottom.y - q.top.y + 1];
-        var size = sum(lengths) / lengths.length;
-        var score = scorePattern({ x: Math.round(x), y: Math.round(y) }, [1, 1, 3, 1, 1], matrix);
-        return { score: score, x: x, y: y, size: size };
-      })
-      .filter(function (q) {
-        return !!q;
-      }) // Filter out any rejected quads from above
+        return quads;
+      }, [])
       .sort(function (a, b) {
         return a.score - b.score;
-      })
-      // Now take the top finder pattern options and try to find 2 other options with a similar size.
-      .map(function (point, i, finderPatterns) {
-        if (i > MAX_FINDERPATTERNS_TO_SEARCH) {
-          return null;
+      });
+    var finderPatternGroups = finderPatterns
+      .reduce(function (points, point, index, finderPatterns) {
+        if (index <= MAX_FINDERPATTERNS_TO_SEARCH) {
+          var otherPoints = finderPatterns.reduce(function (points, _a, oIndex) {
+            var x = _a.x,
+              y = _a.y,
+              size = _a.size,
+              score = _a.score;
+            if (index !== oIndex) {
+              points.push({ x: x, y: y, size: size, score: score + Math.pow(size - point.size, 2) / point.size });
+            }
+            return points;
+          }, []);
+          if (otherPoints.length >= 2) {
+            var score = point.score + otherPoints[0].score + otherPoints[1].score;
+            points.push({
+              points: [point].concat(
+                otherPoints
+                  .sort(function (a, b) {
+                    return a.score - b.score;
+                  })
+                  .slice(0, 2)
+              ),
+              score: score
+            });
+          }
         }
-        var otherPoints = finderPatterns
-          .filter(function (_p, ii) {
-            return i !== ii;
-          })
-          .map(function (p) {
-            return { x: p.x, y: p.y, score: p.score + Math.pow(p.size - point.size, 2) / point.size, size: p.size };
-          })
-          .sort(function (a, b) {
-            return a.score - b.score;
-          });
-        if (otherPoints.length < 2) {
-          return null;
-        }
-        var score = point.score + otherPoints[0].score + otherPoints[1].score;
-        return { points: [point].concat(otherPoints.slice(0, 2)), score: score };
-      })
-      .filter(function (q) {
-        return !!q;
-      }) // Filter out any rejected finder patterns from above
+        return points;
+      }, [])
       .sort(function (a, b) {
         return a.score - b.score;
       });
@@ -2155,7 +2240,7 @@
       bottomLeft = _a.bottomLeft;
     var result = [];
     var alignment = findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, bottomLeft);
-    if (alignment) {
+    if (alignment !== null) {
       result.push({
         alignmentPattern: { x: alignment.alignmentPattern.x, y: alignment.alignmentPattern.y },
         bottomLeft: { x: bottomLeft.x, y: bottomLeft.y },
@@ -2173,7 +2258,7 @@
     var midTopLeft = recenterLocation(matrix, topLeft);
     var midBottomLeft = recenterLocation(matrix, bottomLeft);
     var centeredAlignment = findAlignmentPattern(matrix, alignmentPatternQuads, midTopRight, midTopLeft, midBottomLeft);
-    if (centeredAlignment) {
+    if (centeredAlignment !== null) {
       result.push({
         alignmentPattern: { x: centeredAlignment.alignmentPattern.x, y: centeredAlignment.alignmentPattern.y },
         bottomLeft: { x: midBottomLeft.x, y: midBottomLeft.y },
@@ -2942,6 +3027,7 @@
     if (stream.available() === 0 || stream.readBits(stream.available()) === 0) {
       return result;
     }
+    return null;
   }
 
   /**
@@ -4390,8 +4476,8 @@
         bottomLeftVersionBits = pushBit(matrix.get(x, y), bottomLeftVersionBits);
       }
     }
-    var bestVersion;
     var bestDifference = Infinity;
+    var bestVersion = null;
     for (var _i = 0, VERSIONS_1 = VERSIONS; _i < VERSIONS_1.length; _i++) {
       var version = VERSIONS_1[_i];
       if (version.infoBits === topRightVersionBits || version.infoBits === bottomLeftVersionBits) {
@@ -4512,16 +4598,16 @@
   }
   function decodeMatrix(matrix) {
     var version = readVersion(matrix);
-    if (!version) {
+    if (version === null) {
       return null;
     }
     var formatInfo = readFormatInformation(matrix);
-    if (!formatInfo) {
+    if (formatInfo === null) {
       return null;
     }
     var codewords = readCodewords(matrix, version, formatInfo);
     var dataBlocks = getDataBlocks(codewords, version, formatInfo.errorCorrectionLevel);
-    if (!dataBlocks) {
+    if (dataBlocks === null) {
       return null;
     }
     // Count total number of data bytes
@@ -4533,7 +4619,7 @@
     for (var _i = 0, dataBlocks_3 = dataBlocks; _i < dataBlocks_3.length; _i++) {
       var dataBlock = dataBlocks_3[_i];
       var correctedBytes = rsDecode(dataBlock.codewords, dataBlock.codewords.length - dataBlock.numDataCodewords);
-      if (!correctedBytes) {
+      if (correctedBytes === null) {
         return null;
       }
       for (var i = 0; i < dataBlock.numDataCodewords; i++) {
@@ -4547,11 +4633,8 @@
     }
   }
   function decode(matrix) {
-    if (matrix == null) {
-      return null;
-    }
     var result = decodeMatrix(matrix);
-    if (result) {
+    if (result !== null) {
       return result;
     }
     // Decoding didn't work, try mirroring the QR across the topLeft -> bottomRight line.
@@ -4695,6 +4778,17 @@
     return Matrix;
   })();
   function binarize(data, width, height, returnInverted, greyscaleWeights, canOverwriteImage) {
+    if (greyscaleWeights === void 0) {
+      greyscaleWeights = {
+        red: 0.2126,
+        green: 0.7152,
+        blue: 0.0722,
+        useIntegerApproximation: false
+      };
+    }
+    if (canOverwriteImage === void 0) {
+      canOverwriteImage = true;
+    }
     var pixelCount = width * height;
     if (data.length !== pixelCount * 4) {
       throw new Error('malformed data passed to binarizer');
@@ -4776,7 +4870,7 @@
     } else {
       binarized = BitMatrix.createEmpty(width, height);
     }
-    var inverted = null;
+    var inverted;
     if (returnInverted) {
       if (canOverwriteImage) {
         var invertedBuffer = new Uint8ClampedArray(data.buffer, bufferOffset, pixelCount);
@@ -4823,14 +4917,14 @@
    */
   function scan(matrix) {
     var locations = locate(matrix);
-    if (!locations) {
+    if (locations === null) {
       return null;
     }
     for (var _i = 0, locations_1 = locations; _i < locations_1.length; _i++) {
       var location_1 = locations_1[_i];
       var extracted = extract(matrix, location_1);
       var decoded = decode(extracted.matrix);
-      if (decoded) {
+      if (decoded !== null) {
         var dimension = location_1.dimension;
         return __assign(__assign({}, decoded), {
           location: {
@@ -4846,24 +4940,18 @@
         });
       }
     }
+    return null;
   }
-  var defaultOptions = {
-    canOverwriteImage: true,
-    greyScaleWeights: {
-      red: 0.2126,
-      green: 0.7152,
-      blue: 0.0722,
-      useIntegerApproximation: false
-    },
-    inversionAttempts: 'attemptBoth'
-  };
   function disposeImageEvents(image) {
     image.onload = null;
     image.onerror = null;
   }
   var Decoder = /*#__PURE__*/ (function () {
-    function Decoder() {
-      this.options = defaultOptions;
+    function Decoder(options) {
+      if (options === void 0) {
+        options = {};
+      }
+      this.options = options;
     }
     /**
      * @public
@@ -4874,8 +4962,7 @@
       if (options === void 0) {
         options = {};
       }
-      options = options || {};
-      this.options = __assign(__assign({}, defaultOptions), options);
+      this.options = options;
       return this;
     };
     /**
@@ -4890,14 +4977,15 @@
       var options = this.options;
       var canOverwriteImage = options.canOverwriteImage,
         greyScaleWeights = options.greyScaleWeights,
-        inversionAttempts = options.inversionAttempts;
+        _a = options.inversionAttempts,
+        inversionAttempts = _a === void 0 ? 'attemptBoth' : _a;
       var tryInvertedFirst = inversionAttempts === 'onlyInvert' || inversionAttempts === 'invertFirst';
       var invert = tryInvertedFirst || inversionAttempts === 'attemptBoth';
-      var _a = binarize(data, width, height, invert, greyScaleWeights, canOverwriteImage),
-        binarized = _a.binarized,
-        inverted = _a.inverted;
+      var _b = binarize(data, width, height, invert, greyScaleWeights, canOverwriteImage),
+        binarized = _b.binarized,
+        inverted = _b.inverted;
       var result = scan(tryInvertedFirst ? inverted : binarized);
-      if (!result && (options.inversionAttempts === 'attemptBoth' || options.inversionAttempts === 'invertFirst')) {
+      if (result !== null && (options.inversionAttempts === 'attemptBoth' || options.inversionAttempts === 'invertFirst')) {
         result = scan(tryInvertedFirst ? binarized : inverted);
       }
       return result;
@@ -4920,12 +5008,15 @@
           var height = image.height;
           var canvas = document.createElement('canvas');
           var context = canvas.getContext('2d');
+          if (context === null) {
+            return reject(new Error("browser does not support canvas.getContext('2d')"));
+          }
           canvas.width = width;
           canvas.height = height;
           context.drawImage(image, 0, 0);
           var data = context.getImageData(0, 0, width, height).data;
           var result = _this.decode(data, width, height);
-          if (result) {
+          if (result !== null) {
             return resolve(result);
           }
           return reject(new Error('failed to decode image'));

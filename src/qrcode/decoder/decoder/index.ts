@@ -156,7 +156,7 @@ function readCodewords(matrix: BitMatrix, version: Version, formatInfo: FormatIn
   return codewords;
 }
 
-function readVersion(matrix: BitMatrix): Version {
+function readVersion(matrix: BitMatrix): Version | null {
   const dimension: number = matrix.height;
   const provisionalVersion: number = Math.floor((dimension - 17) / 4);
 
@@ -181,8 +181,8 @@ function readVersion(matrix: BitMatrix): Version {
     }
   }
 
-  let bestVersion: Version;
   let bestDifference: number = Infinity;
+  let bestVersion: Version | null = null;
 
   for (const version of VERSIONS) {
     if (version.infoBits === topRightVersionBits || version.infoBits === bottomLeftVersionBits) {
@@ -213,7 +213,7 @@ function readVersion(matrix: BitMatrix): Version {
   return null;
 }
 
-function readFormatInformation(matrix: BitMatrix): FormatInformation {
+function readFormatInformation(matrix: BitMatrix): FormatInformation | null {
   let topLeftFormatInfoBits: number = 0;
 
   for (let x: number = 0; x <= 8; x++) {
@@ -245,7 +245,7 @@ function readFormatInformation(matrix: BitMatrix): FormatInformation {
   }
 
   let bestDifference: number = Infinity;
-  let bestFormatInfo: FormatInformation = null;
+  let bestFormatInfo: FormatInformation | null = null;
 
   for (const { bits, formatInfo } of FORMAT_INFO_TABLE) {
     if (bits === topLeftFormatInfoBits || bits === topRightBottomRightFormatInfoBits) {
@@ -283,7 +283,7 @@ interface DataBlock {
   numDataCodewords: number;
 }
 
-function getDataBlocks(codewords: number[], version: Version, errorCorrectionLevel: number): DataBlock[] {
+function getDataBlocks(codewords: number[], version: Version, errorCorrectionLevel: number): DataBlock[] | null {
   const dataBlocks: DataBlock[] = [];
   const ecInfo: ECLevel = version.errorCorrectionLevels[errorCorrectionLevel];
 
@@ -311,7 +311,7 @@ function getDataBlocks(codewords: number[], version: Version, errorCorrectionLev
   // Pull codewords to fill the blocks up to the minimum size
   for (let i: number = 0; i < shortBlockSize; i++) {
     for (const dataBlock of dataBlocks) {
-      dataBlock.codewords.push(codewords.shift());
+      dataBlock.codewords.push(codewords.shift() as number);
     }
   }
 
@@ -321,37 +321,37 @@ function getDataBlocks(codewords: number[], version: Version, errorCorrectionLev
     const largeBlockCount: number = ecInfo.ecBlocks[1].numBlocks;
 
     for (let i: number = 0; i < largeBlockCount; i++) {
-      dataBlocks[smallBlockCount + i].codewords.push(codewords.shift());
+      dataBlocks[smallBlockCount + i].codewords.push(codewords.shift() as number);
     }
   }
 
   // Add the rest of the codewords to the blocks. These are the error correction codewords.
   while (codewords.length > 0) {
     for (const dataBlock of dataBlocks) {
-      dataBlock.codewords.push(codewords.shift());
+      dataBlock.codewords.push(codewords.shift() as number);
     }
   }
 
   return dataBlocks;
 }
 
-function decodeMatrix(matrix: BitMatrix): DecodeResult {
-  const version: Version = readVersion(matrix);
+function decodeMatrix(matrix: BitMatrix): DecodeResult | null {
+  const version: Version | null = readVersion(matrix);
 
-  if (!version) {
+  if (version === null) {
     return null;
   }
 
-  const formatInfo: FormatInformation = readFormatInformation(matrix);
+  const formatInfo: FormatInformation | null = readFormatInformation(matrix);
 
-  if (!formatInfo) {
+  if (formatInfo === null) {
     return null;
   }
 
   const codewords: number[] = readCodewords(matrix, version, formatInfo);
-  const dataBlocks: DataBlock[] = getDataBlocks(codewords, version, formatInfo.errorCorrectionLevel);
+  const dataBlocks: DataBlock[] | null = getDataBlocks(codewords, version, formatInfo.errorCorrectionLevel);
 
-  if (!dataBlocks) {
+  if (dataBlocks === null) {
     return null;
   }
 
@@ -362,12 +362,12 @@ function decodeMatrix(matrix: BitMatrix): DecodeResult {
   let resultIndex: number = 0;
 
   for (const dataBlock of dataBlocks) {
-    const correctedBytes: Uint8ClampedArray = rsDecode(
+    const correctedBytes: Uint8ClampedArray | null = rsDecode(
       dataBlock.codewords,
       dataBlock.codewords.length - dataBlock.numDataCodewords
     );
 
-    if (!correctedBytes) {
+    if (correctedBytes === null) {
       return null;
     }
 
@@ -383,14 +383,10 @@ function decodeMatrix(matrix: BitMatrix): DecodeResult {
   }
 }
 
-export function decode(matrix: BitMatrix): DecodeResult {
-  if (matrix == null) {
-    return null;
-  }
+export function decode(matrix: BitMatrix): DecodeResult | null {
+  const result: DecodeResult | null = decodeMatrix(matrix);
 
-  const result: DecodeResult = decodeMatrix(matrix);
-
-  if (result) {
+  if (result !== null) {
     return result;
   }
 

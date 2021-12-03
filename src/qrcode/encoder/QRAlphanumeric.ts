@@ -69,8 +69,9 @@ export class QRAlphanumeric extends QRData {
    */
   public writeTo(buffer: BitBuffer): void {
     let i: number = 0;
-    const bytes: number[] = this.bytes;
-    const length: number = bytes.length;
+
+    const { bytes } = this;
+    const { length } = bytes;
 
     while (i + 1 < length) {
       buffer.put(getByte(bytes[i]) * 45 + getByte(bytes[i + 1]), 11);

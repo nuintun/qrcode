@@ -25,18 +25,18 @@ export interface DecoderResult extends DecodeResult {
   };
 }
 
-function scan(matrix: BitMatrix): DecoderResult {
-  const locations: QRLocation[] = locate(matrix);
+function scan(matrix: BitMatrix): DecoderResult | null {
+  const locations: QRLocation[] | null = locate(matrix);
 
-  if (!locations) {
+  if (locations === null) {
     return null;
   }
 
   for (const location of locations) {
     const extracted: ExtractResult = extract(matrix, location);
-    const decoded: DecodeResult = decode(extracted.matrix);
+    const decoded: DecodeResult | null = decode(extracted.matrix);
 
-    if (decoded) {
+    if (decoded !== null) {
       const dimension: number = location.dimension;
 
       return {
@@ -54,6 +54,8 @@ function scan(matrix: BitMatrix): DecoderResult {
       };
     }
   }
+
+  return null;
 }
 
 export interface Options {
@@ -62,24 +64,13 @@ export interface Options {
   inversionAttempts?: 'dontInvert' | 'onlyInvert' | 'attemptBoth' | 'invertFirst';
 }
 
-const defaultOptions: Options = {
-  canOverwriteImage: true,
-  greyScaleWeights: {
-    red: 0.2126,
-    green: 0.7152,
-    blue: 0.0722,
-    useIntegerApproximation: false
-  },
-  inversionAttempts: 'attemptBoth'
-};
-
 function disposeImageEvents(image: HTMLImageElement): void {
   image.onload = null;
   image.onerror = null;
 }
 
 export class Decoder {
-  private options: Options = defaultOptions;
+  constructor(private options: Options = {}) {}
 
   /**
    * @public
@@ -87,9 +78,7 @@ export class Decoder {
    * @param {object} options
    */
   public setOptions(options: Options = {}): Decoder {
-    options = options || {};
-
-    this.options = { ...defaultOptions, ...options };
+    this.options = options;
 
     return this;
   }
@@ -102,17 +91,17 @@ export class Decoder {
    * @param {number} height
    * @returns {DecoderResult}
    */
-  public decode(data: Uint8ClampedArray, width: number, height: number): DecoderResult {
+  public decode(data: Uint8ClampedArray, width: number, height: number): DecoderResult | null {
     const options: Options = this.options;
-    const { canOverwriteImage, greyScaleWeights, inversionAttempts }: Options = options;
+    const { canOverwriteImage, greyScaleWeights, inversionAttempts = 'attemptBoth' }: Options = options;
     const tryInvertedFirst: boolean = inversionAttempts === 'onlyInvert' || inversionAttempts === 'invertFirst';
     const invert: boolean = tryInvertedFirst || inversionAttempts === 'attemptBoth';
     const { binarized, inverted }: BinarizeResult = binarize(data, width, height, invert, greyScaleWeights, canOverwriteImage);
 
-    let result: DecoderResult = scan(tryInvertedFirst ? inverted : binarized);
+    let result: DecoderResult | null = scan(tryInvertedFirst ? (inverted as BitMatrix) : binarized);
 
-    if (!result && (options.inversionAttempts === 'attemptBoth' || options.inversionAttempts === 'invertFirst')) {
-      result = scan(tryInvertedFirst ? binarized : inverted);
+    if (result !== null && (options.inversionAttempts === 'attemptBoth' || options.inversionAttempts === 'invertFirst')) {
+      result = scan(tryInvertedFirst ? binarized : (inverted as BitMatrix));
     }
 
     return result;
@@ -137,7 +126,11 @@ export class Decoder {
         const width: number = image.width;
         const height: number = image.height;
         const canvas: HTMLCanvasElement = document.createElement('canvas');
-        const context: CanvasRenderingContext2D = canvas.getContext('2d');
+        const context: CanvasRenderingContext2D | null = canvas.getContext('2d');
+
+        if (context === null) {
+          return reject(new Error(`browser does not support canvas.getContext('2d')`));
+        }
 
         canvas.width = width;
         canvas.height = height;
@@ -145,9 +138,9 @@ export class Decoder {
         context.drawImage(image, 0, 0);
 
         const { data }: ImageData = context.getImageData(0, 0, width, height);
-        const result: DecoderResult = this.decode(data, width, height);
+        const result: DecoderResult | null = this.decode(data, width, height);
 
-        if (result) {
+        if (result !== null) {
           return resolve(result);
         }
 

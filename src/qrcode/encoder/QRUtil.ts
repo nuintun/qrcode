@@ -119,7 +119,7 @@ function applyMaskPenaltyRule1Internal(qrcode: Encoder, isHorizontal: boolean): 
   let penalty: number = 0;
 
   for (let i: number = 0; i < matrixSize; i++) {
-    let prevBit: boolean = null;
+    let prevBit: boolean = false;
     let numSameBitCells: number = 0;
 
     for (let j: number = 0; j < matrixSize; j++) {

@@ -28,8 +28,8 @@ export class QRKanji extends QRData {
    */
   public writeTo(buffer: BitBuffer): void {
     let index: number = 0;
-    const bytes: number[] = this.bytes;
-    const length: number = bytes.length;
+    const { bytes } = this;
+    const { length } = bytes;
 
     while (index + 1 < length) {
       let code: number = ((0xff & bytes[index]) << 8) | (0xff & bytes[index + 1]);

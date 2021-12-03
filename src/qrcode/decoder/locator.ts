@@ -220,7 +220,7 @@ function countBlackWhiteRun(origin: Point, end: Point, matrix: BitMatrix, length
     Math.ceil(length / 2)
   );
 
-  const middleValue: number = towardsEnd.shift() + awayFromEnd.shift() - 1; // Substract one so we don't double count a pixel
+  const middleValue: number = (towardsEnd.shift() as number) + (awayFromEnd.shift() as number) - 1; // Substract one so we don't double count a pixel
 
   return awayFromEnd.concat(middleValue).concat(...towardsEnd);
 }
@@ -326,7 +326,7 @@ function findAlignmentPattern(
   topRight: Point,
   topLeft: Point,
   bottomLeft: Point
-): AlignmentPattern {
+): AlignmentPattern | null {
   // Now that we've found the three finder patterns we can determine the blockSize and the size of the QR code.
   // We'll use these to help find the alignment pattern but also later when we do the extraction.
   let dimension: number;
@@ -351,21 +351,39 @@ function findAlignmentPattern(
     y: topLeft.y + correctionToTopLeft * (bottomRightFinderPattern.y - topLeft.y)
   };
 
-  const alignmentPatterns: AlignmentPoint[] = alignmentPatternQuads
-    .map(q => {
-      const x: number = (q.top.startX + q.top.endX + q.bottom.startX + q.bottom.endX) / 4;
-      const y: number = (q.top.y + q.bottom.y + 1) / 2;
+  // const alignmentPatterns: AlignmentPoint[] = alignmentPatternQuads
+  //   .filter(({ top, bottom }) => {
+  //     const x: number = (top.startX + top.endX + bottom.startX + bottom.endX) / 4;
+  //     const y: number = (top.y + bottom.y + 1) / 2;
 
-      if (!matrix.get(Math.floor(x), Math.floor(y))) {
-        return;
+  //     return matrix.get(Math.floor(x), Math.floor(y));
+  //   })
+  //   .map(({ top, bottom }) => {
+  //     const x: number = (top.startX + top.endX + bottom.startX + bottom.endX) / 4;
+  //     const y: number = (top.y + bottom.y + 1) / 2;
+  //     const sizeScore: number = scorePattern({ x: Math.floor(x), y: Math.floor(y) }, [1, 1, 1], matrix);
+  //     const score: number = sizeScore + distance({ x, y }, expectedAlignmentPattern);
+
+  //     return { x, y, score };
+  //   })
+  //   .sort((a, b) => a.score - b.score);
+
+  const alignmentPatterns: AlignmentPoint[] = alignmentPatternQuads
+    .reduce<AlignmentPoint[]>((quads, { top, bottom }) => {
+      const x: number = (top.startX + top.endX + bottom.startX + bottom.endX) / 4;
+      const y: number = (top.y + bottom.y + 1) / 2;
+      const intX = Math.floor(x);
+      const intY = Math.floor(y);
+
+      if (matrix.get(intX, intY)) {
+        const sizeScore: number = scorePattern({ x: intX, y: intY }, [1, 1, 1], matrix);
+        const score: number = sizeScore + distance({ x, y }, expectedAlignmentPattern);
+
+        quads.push({ x, y, score });
       }
 
-      const sizeScore: number = scorePattern({ x: Math.floor(x), y: Math.floor(y) }, [1, 1, 1], matrix);
-      const score: number = sizeScore + distance({ x, y }, expectedAlignmentPattern);
-
-      return { x, y, score };
-    })
-    .filter(v => !!v)
+      return quads;
+    }, [])
     .sort((a, b) => a.score - b.score);
 
   // If there are less than 15 modules between finder patterns it's a version 1 QR code and as such has no alignmemnt pattern
@@ -376,7 +394,7 @@ function findAlignmentPattern(
   return { alignmentPattern, dimension };
 }
 
-export function locate(matrix: BitMatrix): QRLocation[] {
+export function locate(matrix: BitMatrix): QRLocation[] | null {
   const finderPatternQuads: Quad[] = [];
   const alignmentPatternQuads: Quad[] = [];
 
@@ -480,45 +498,89 @@ export function locate(matrix: BitMatrix): QRLocation[] {
   finderPatternQuads.push(...activeFinderPatternQuads.filter(q => q.bottom.y - q.top.y >= 2));
   alignmentPatternQuads.push(...activeAlignmentPatternQuads);
 
-  const finderPatternGroups: FinderPatternGroup[] = finderPatternQuads
-    .filter(q => q.bottom.y - q.top.y >= 2) // All quads must be at least 2px tall since the center square is larger than a block
-    .map(q => {
-      // Initial scoring of finder pattern quads by looking at their ratios, not taking into account position
-      const x: number = (q.top.startX + q.top.endX + q.bottom.startX + q.bottom.endX) / 4;
-      const y: number = (q.top.y + q.bottom.y + 1) / 2;
+  // const finderPatternGroups: FinderPatternGroup[] = finderPatternQuads
+  //   .filter(q => q.bottom.y - q.top.y >= 2) // All quads must be at least 2px tall since the center square is larger than a block
+  //   .map(q => {
+  //     // Initial scoring of finder pattern quads by looking at their ratios, not taking into account position
+  //     const x: number = (q.top.startX + q.top.endX + q.bottom.startX + q.bottom.endX) / 4;
+  //     const y: number = (q.top.y + q.bottom.y + 1) / 2;
 
-      if (!matrix.get(Math.round(x), Math.round(y))) {
-        return;
+  //     if (!matrix.get(Math.round(x), Math.round(y))) {
+  //       return;
+  //     }
+
+  //     const lengths: number[] = [q.top.endX - q.top.startX, q.bottom.endX - q.bottom.startX, q.bottom.y - q.top.y + 1];
+  //     const size: number = sum(lengths) / lengths.length;
+  //     const score: number = scorePattern({ x: Math.round(x), y: Math.round(y) }, [1, 1, 3, 1, 1], matrix);
+
+  //     return { score, x, y, size };
+  //   })
+  //   .filter(q => !!q) // Filter out any rejected quads from above
+  //   .sort((a, b) => a.score - b.score)
+  //   // Now take the top finder pattern options and try to find 2 other options with a similar size.
+  //   .map((point, i, finderPatterns) => {
+  //     if (i > MAX_FINDERPATTERNS_TO_SEARCH) {
+  //       return null;
+  //     }
+
+  //     const otherPoints: FinderPattern[] = finderPatterns
+  //       .filter((_p, ii) => i !== ii)
+  //       .map(p => ({ x: p.x, y: p.y, score: p.score + (p.size - point.size) ** 2 / point.size, size: p.size }))
+  //       .sort((a, b) => a.score - b.score);
+
+  //     if (otherPoints.length < 2) {
+  //       return null;
+  //     }
+
+  //     const score: number = point.score + otherPoints[0].score + otherPoints[1].score;
+
+  //     return { points: [point].concat(otherPoints.slice(0, 2)), score };
+  //   })
+  //   .filter(q => !!q) // Filter out any rejected finder patterns from above
+  //   .sort((a, b) => a.score - b.score);
+
+  const finderPatterns: FinderPattern[] = finderPatternQuads
+    .reduce<FinderPattern[]>((quads, { top, bottom }) => {
+      // All quads must be at least 2px tall since the center square is larger than a block
+      if (bottom.y - top.y >= 2) {
+        // Initial scoring of finder pattern quads by looking at their ratios, not taking into account position
+        const x: number = (top.startX + top.endX + bottom.startX + bottom.endX) / 4;
+        const y: number = (top.y + bottom.y + 1) / 2;
+        const intX = Math.round(x);
+        const intY = Math.round(y);
+
+        if (matrix.get(intX, intY)) {
+          const lengths: number[] = [top.endX - top.startX, bottom.endX - bottom.startX, bottom.y - top.y + 1];
+          const size: number = sum(lengths) / lengths.length;
+          const score: number = scorePattern({ x: intX, y: intY }, [1, 1, 3, 1, 1], matrix);
+
+          quads.push({ x, y, size, score });
+        }
       }
 
-      const lengths: number[] = [q.top.endX - q.top.startX, q.bottom.endX - q.bottom.startX, q.bottom.y - q.top.y + 1];
-      const size: number = sum(lengths) / lengths.length;
-      const score: number = scorePattern({ x: Math.round(x), y: Math.round(y) }, [1, 1, 3, 1, 1], matrix);
+      return quads;
+    }, [])
+    .sort((a, b) => a.score - b.score);
 
-      return { score, x, y, size };
-    })
-    .filter(q => !!q) // Filter out any rejected quads from above
-    .sort((a, b) => a.score - b.score)
-    // Now take the top finder pattern options and try to find 2 other options with a similar size.
-    .map((point, i, finderPatterns) => {
-      if (i > MAX_FINDERPATTERNS_TO_SEARCH) {
-        return null;
+  const finderPatternGroups: FinderPatternGroup[] = finderPatterns
+    .reduce<FinderPatternGroup[]>((points, point, index, finderPatterns) => {
+      if (index <= MAX_FINDERPATTERNS_TO_SEARCH) {
+        const otherPoints: FinderPattern[] = finderPatterns.reduce<FinderPattern[]>((points, { x, y, size, score }, oIndex) => {
+          if (index !== oIndex) {
+            points.push({ x, y, size, score: score + (size - point.size) ** 2 / point.size });
+          }
+
+          return points;
+        }, []);
+        if (otherPoints.length >= 2) {
+          const score: number = point.score + otherPoints[0].score + otherPoints[1].score;
+
+          points.push({ points: [point].concat(otherPoints.sort((a, b) => a.score - b.score).slice(0, 2)), score });
+        }
       }
 
-      const otherPoints: FinderPattern[] = finderPatterns
-        .filter((_p, ii) => i !== ii)
-        .map(p => ({ x: p.x, y: p.y, score: p.score + (p.size - point.size) ** 2 / point.size, size: p.size }))
-        .sort((a, b) => a.score - b.score);
-
-      if (otherPoints.length < 2) {
-        return null;
-      }
-
-      const score: number = point.score + otherPoints[0].score + otherPoints[1].score;
-
-      return { points: [point].concat(otherPoints.slice(0, 2)), score };
-    })
-    .filter(q => !!q) // Filter out any rejected finder patterns from above
+      return points;
+    }, [])
     .sort((a, b) => a.score - b.score);
 
   if (finderPatternGroups.length === 0) {
@@ -532,9 +594,9 @@ export function locate(matrix: BitMatrix): QRLocation[] {
   );
 
   const result: QRLocation[] = [];
-  const alignment: AlignmentPattern = findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, bottomLeft);
+  const alignment: AlignmentPattern | null = findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, bottomLeft);
 
-  if (alignment) {
+  if (alignment !== null) {
     result.push({
       alignmentPattern: { x: alignment.alignmentPattern.x, y: alignment.alignmentPattern.y },
       bottomLeft: { x: bottomLeft.x, y: bottomLeft.y },
@@ -552,7 +614,7 @@ export function locate(matrix: BitMatrix): QRLocation[] {
   const midTopRight: Point = recenterLocation(matrix, topRight);
   const midTopLeft: Point = recenterLocation(matrix, topLeft);
   const midBottomLeft: Point = recenterLocation(matrix, bottomLeft);
-  const centeredAlignment: AlignmentPattern = findAlignmentPattern(
+  const centeredAlignment: AlignmentPattern | null = findAlignmentPattern(
     matrix,
     alignmentPatternQuads,
     midTopRight,
@@ -560,7 +622,7 @@ export function locate(matrix: BitMatrix): QRLocation[] {
     midBottomLeft
   );
 
-  if (centeredAlignment) {
+  if (centeredAlignment !== null) {
     result.push({
       alignmentPattern: { x: centeredAlignment.alignmentPattern.x, y: centeredAlignment.alignmentPattern.y },
       bottomLeft: { x: midBottomLeft.x, y: midBottomLeft.y },

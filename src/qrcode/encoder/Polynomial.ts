@@ -10,8 +10,6 @@ export class Polynomial {
   private num: number[];
 
   public constructor(num: number[], shift: number = 0) {
-    this.num = [];
-
     let offset: number = 0;
     let length: number = num.length;
 
@@ -21,13 +19,17 @@ export class Polynomial {
 
     length -= offset;
 
+    const numbers = [];
+
     for (let i: number = 0; i < length; i++) {
-      this.num.push(num[offset + i]);
+      numbers.push(num[offset + i]);
     }
 
     for (let i: number = 0; i < shift; i++) {
-      this.num.push(0);
+      numbers.push(0);
     }
+
+    this.num = numbers;
   }
 
   public getAt(index: number): number {

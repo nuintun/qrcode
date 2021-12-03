@@ -178,7 +178,7 @@ export function bytesDecode(
   data: Uint8ClampedArray,
   version: number,
   errorCorrectionLevel: ErrorCorrectionLevel
-): DecodeResult {
+): DecodeResult | null {
   let encoding: number = -1;
 
   const stream: BitStream = new BitStream(data);
@@ -263,4 +263,6 @@ export function bytesDecode(
   if (stream.available() === 0 || stream.readBits(stream.available()) === 0) {
     return result;
   }
+
+  return null;
 }

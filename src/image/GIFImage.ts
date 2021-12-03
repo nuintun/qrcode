@@ -44,22 +44,20 @@ class LZWTable {
 }
 
 class BitOutputStream {
-  private bitLength: number;
-  private bitBuffer: number;
-  private output: OutputStream;
+  private bitLength: number = 0;
+  private bitBuffer: number = 0;
 
-  constructor(output: OutputStream) {
-    this.output = output;
-    this.bitLength = 0;
-  }
+  constructor(private output: OutputStream) {}
 
   public write(data: number, length: number): void {
     if (data >>> length !== 0) {
       throw new Error('length overflow');
     }
 
+    const { output } = this;
+
     while (this.bitLength + length >= 8) {
-      this.output.writeByte(0xff & ((data << this.bitLength) | this.bitBuffer));
+      output.writeByte(0xff & ((data << this.bitLength) | this.bitBuffer));
 
       length -= 8 - this.bitLength;
       data >>>= 8 - this.bitLength;
@@ -73,11 +71,13 @@ class BitOutputStream {
   }
 
   public flush(): void {
+    const { output } = this;
+
     if (this.bitLength > 0) {
-      this.output.writeByte(this.bitBuffer);
+      output.writeByte(this.bitBuffer);
     }
 
-    this.output.flush();
+    output.flush();
   }
 
   public close(): void {
@@ -104,55 +104,56 @@ export class GIFImage {
   }
 
   private getLZWRaster(lzwMinCodeSize: number): number[] {
+    // Setup LZWTable
+    const { fromCharCode } = String;
+    const table: LZWTable = new LZWTable();
     const clearCode: number = 1 << lzwMinCodeSize;
     const endCode: number = (1 << lzwMinCodeSize) + 1;
 
-    // Setup LZWTable
-    const table: LZWTable = new LZWTable();
-
     for (let i: number = 0; i < clearCode; i++) {
-      table.add(String.fromCharCode(i));
+      table.add(fromCharCode(i));
     }
 
-    table.add(String.fromCharCode(clearCode));
-    table.add(String.fromCharCode(endCode));
+    table.add(fromCharCode(clearCode));
+    table.add(fromCharCode(endCode));
+
+    let bitLength: number = lzwMinCodeSize + 1;
 
     const byteOutput: ByteArrayOutputStream = new ByteArrayOutputStream();
     const bitOutput: BitOutputStream = new BitOutputStream(byteOutput);
 
-    let bitLength: number = lzwMinCodeSize + 1;
-
     try {
+      const { data } = this;
+      const { length } = data;
+      const { fromCharCode } = String;
+
       // Clear code
       bitOutput.write(clearCode, bitLength);
 
       let dataIndex: number = 0;
-      let s: string = String.fromCharCode(this.data[dataIndex++]);
-
-      const length: number = this.data.length;
+      let words: string = fromCharCode(data[dataIndex++]);
 
       while (dataIndex < length) {
-        const c: string = String.fromCharCode(this.data[dataIndex++]);
+        const char: string = fromCharCode(data[dataIndex++]);
 
-        if (table.contains(s + c)) {
-          s = s + c;
+        if (table.contains(words + char)) {
+          words += char;
         } else {
-          bitOutput.write(table.indexOf(s), bitLength);
+          bitOutput.write(table.indexOf(words), bitLength);
 
           if (table.getSize() < 0xfff) {
             if (table.getSize() === 1 << bitLength) {
               bitLength++;
             }
 
-            table.add(s + c);
+            table.add(words + char);
           }
 
-          s = c;
+          words = char;
         }
       }
 
-      bitOutput.write(table.indexOf(s), bitLength);
-
+      bitOutput.write(table.indexOf(words), bitLength);
       // End code
       bitOutput.write(endCode, bitLength);
     } finally {
@@ -174,22 +175,28 @@ export class GIFImage {
   }
 
   public setPixel(x: number, y: number, pixel: number): void {
-    if (x < 0 || this.width <= x) throw new Error(`illegal x axis: ${x}`);
+    const { width, height } = this;
 
-    if (y < 0 || this.height <= y) throw new Error(`illegal y axis: ${y}`);
+    if (x < 0 || width <= x) throw new Error(`illegal x axis: ${x}`);
 
-    this.data[y * this.width + x] = pixel;
+    if (y < 0 || height <= y) throw new Error(`illegal y axis: ${y}`);
+
+    this.data[y * width + x] = pixel;
   }
 
   public getPixel(x: number, y: number): number {
-    if (x < 0 || this.width <= x) throw new Error(`illegal x axis: ${x}`);
+    const { width, height } = this;
 
-    if (y < 0 || this.height <= y) throw new Error(`illegal y axis: ${y}`);
+    if (x < 0 || width <= x) throw new Error(`illegal x axis: ${x}`);
 
-    return this.data[y * this.width + x];
+    if (y < 0 || height <= y) throw new Error(`illegal y axis: ${y}`);
+
+    return this.data[y * width + x];
   }
 
   public write(output: OutputStream): void {
+    const { width, height } = this;
+
     // GIF Signature
     output.writeByte(0x47); // G
     output.writeByte(0x49); // I
@@ -199,8 +206,8 @@ export class GIFImage {
     output.writeByte(0x61); // a
 
     // Screen Descriptor
-    this.writeWord(output, this.width);
-    this.writeWord(output, this.height);
+    this.writeWord(output, width);
+    this.writeWord(output, height);
 
     output.writeByte(0x80); // 2bit
     output.writeByte(0);
@@ -222,8 +229,8 @@ export class GIFImage {
 
     this.writeWord(output, 0);
     this.writeWord(output, 0);
-    this.writeWord(output, this.width);
-    this.writeWord(output, this.height);
+    this.writeWord(output, width);
+    this.writeWord(output, height);
 
     output.writeByte(0);
 
@@ -266,12 +273,13 @@ export class GIFImage {
 
     output.close();
 
+    const { length } = bytes;
+    const { fromCharCode } = String;
+
     let url: string = 'data:image/gif;base64,';
 
-    const length: number = bytes.length;
-
     for (let i: number = 0; i < length; i++) {
-      url += String.fromCharCode(bytes[i]);
+      url += fromCharCode(bytes[i]);
     }
 
     return url;

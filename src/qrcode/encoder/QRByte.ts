@@ -44,7 +44,7 @@ export class QRByte extends QRData {
    * @param {BitBuffer} buffer
    */
   public writeTo(buffer: BitBuffer): void {
-    const bytes: number[] = this.bytes;
+    const { bytes } = this;
 
     for (const byte of bytes) {
       buffer.put(byte, 8);

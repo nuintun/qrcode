@@ -23,6 +23,7 @@
     "url": "https://github.com/nuintun/qrcode/issues"
   },
   "scripts": {
+    "lint": "tsc --noEmit",
     "clean": "node tools/clean.js",
     "prepublishOnly": "npm run build",
     "build:cjs": "rollup -c tools/rollup.cjs.js",
