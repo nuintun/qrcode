@@ -476,7 +476,7 @@ export class Encoder {
       matrix[row] = [];
 
       for (let col: number = 0; col < matrixSize; col++) {
-        matrix[row][col] = false;
+        matrix[row][col] = null as any;
       }
     }
 

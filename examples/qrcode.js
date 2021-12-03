@@ -1633,7 +1633,7 @@
       for (var row = 0; row < matrixSize; row++) {
         matrix[row] = [];
         for (var col = 0; col < matrixSize; col++) {
-          matrix[row][col] = false;
+          matrix[row][col] = null;
         }
       }
       this.matrix = matrix;
