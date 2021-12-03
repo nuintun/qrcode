@@ -8,12 +8,12 @@ import * as QRMath from './QRMath';
 import { Encoder } from './Writer';
 import { Polynomial } from './Polynomial';
 
-const N1: number = 3;
-const N2: number = 3;
-const N3: number = 40;
-const N4: number = 10;
+const N1 = 3;
+const N2 = 3;
+const N3 = 40;
+const N4 = 10;
 
-const ALIGNMENT_PATTERN_TABLE: number[][] = [
+const ALIGNMENT_PATTERN_TABLE = [
   [],
   [6, 18],
   [6, 22],
@@ -56,22 +56,20 @@ const ALIGNMENT_PATTERN_TABLE: number[][] = [
   [6, 30, 58, 86, 114, 142, 170]
 ];
 
-const G15_MASK: number = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+const G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
 
-const G15: number = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+const G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
 
-const G18: number = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
-
-export type maskFunc = (x: number, y: number) => boolean;
+const G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
 
 export function getAlignmentPattern(version: number): number[] {
   return ALIGNMENT_PATTERN_TABLE[version - 1];
 }
 
 export function getErrorCorrectionPolynomial(errorCorrectionLength: number): Polynomial {
-  let e: Polynomial = new Polynomial([1]);
+  let e = new Polynomial([1]);
 
-  for (let i: number = 0; i < errorCorrectionLength; i++) {
+  for (let i = 0; i < errorCorrectionLength; i++) {
     e = e.multiply(new Polynomial([1, QRMath.gexp(i)]));
   }
 
@@ -79,7 +77,7 @@ export function getErrorCorrectionPolynomial(errorCorrectionLength: number): Pol
 }
 
 function getBCHDigit(data: number): number {
-  let digit: number = 0;
+  let digit = 0;
 
   while (data !== 0) {
     digit++;
@@ -89,10 +87,10 @@ function getBCHDigit(data: number): number {
   return digit;
 }
 
-const G18_BCH: number = getBCHDigit(G18);
+const G18_BCH = getBCHDigit(G18);
 
 export function getBCHVersion(data: number): number {
-  let offset: number = data << 12;
+  let offset = data << 12;
 
   while (getBCHDigit(offset) - G18_BCH >= 0) {
     offset ^= G18 << (getBCHDigit(offset) - G18_BCH);
@@ -101,10 +99,10 @@ export function getBCHVersion(data: number): number {
   return (data << 12) | offset;
 }
 
-const G15_BCH: number = getBCHDigit(G15);
+const G15_BCH = getBCHDigit(G15);
 
 export function getBCHVersionInfo(data: number): number {
-  let offset: number = data << 10;
+  let offset = data << 10;
 
   while (getBCHDigit(offset) - G15_BCH >= 0) {
     offset ^= G15 << (getBCHDigit(offset) - G15_BCH);
@@ -114,16 +112,16 @@ export function getBCHVersionInfo(data: number): number {
 }
 
 function applyMaskPenaltyRule1Internal(qrcode: Encoder, isHorizontal: boolean): number {
-  const matrixSize: number = qrcode.getMatrixSize();
+  const matrixSize = qrcode.getMatrixSize();
 
-  let penalty: number = 0;
+  let penalty = 0;
 
-  for (let i: number = 0; i < matrixSize; i++) {
-    let prevBit: boolean = false;
-    let numSameBitCells: number = 0;
+  for (let i = 0; i < matrixSize; i++) {
+    let prevBit = false;
+    let numSameBitCells = 0;
 
-    for (let j: number = 0; j < matrixSize; j++) {
-      const bit: boolean = isHorizontal ? qrcode.isDark(i, j) : qrcode.isDark(j, i);
+    for (let j = 0; j < matrixSize; j++) {
+      const bit = isHorizontal ? qrcode.isDark(i, j) : qrcode.isDark(j, i);
 
       if (bit === prevBit) {
         numSameBitCells++;
@@ -150,13 +148,13 @@ function applyMaskPenaltyRule1(qrcode: Encoder): number {
 }
 
 function applyMaskPenaltyRule2(qrcode: Encoder): number {
-  const matrixSize: number = qrcode.getMatrixSize();
+  const matrixSize = qrcode.getMatrixSize();
 
-  let penalty: number = 0;
+  let penalty = 0;
 
-  for (let y: number = 0; y < matrixSize - 1; y++) {
-    for (let x: number = 0; x < matrixSize - 1; x++) {
-      const value: boolean = qrcode.isDark(y, x);
+  for (let y = 0; y < matrixSize - 1; y++) {
+    for (let x = 0; x < matrixSize - 1; x++) {
+      const value = qrcode.isDark(y, x);
 
       if (value === qrcode.isDark(y, x + 1) && value === qrcode.isDark(y + 1, x) && value === qrcode.isDark(y + 1, x + 1)) {
         penalty += N2;
@@ -171,8 +169,8 @@ function isFourWhite(qrcode: Encoder, rangeIndex: number, from: number, to: numb
   from = Math.max(from, 0);
   to = Math.min(to, qrcode.getMatrixSize());
 
-  for (let i: number = from; i < to; i++) {
-    const value: boolean = isHorizontal ? qrcode.isDark(rangeIndex, i) : qrcode.isDark(i, rangeIndex);
+  for (let i = from; i < to; i++) {
+    const value = isHorizontal ? qrcode.isDark(rangeIndex, i) : qrcode.isDark(i, rangeIndex);
 
     if (value) {
       return false;
@@ -183,12 +181,12 @@ function isFourWhite(qrcode: Encoder, rangeIndex: number, from: number, to: numb
 }
 
 function applyMaskPenaltyRule3(qrcode: Encoder): number {
-  const matrixSize: number = qrcode.getMatrixSize();
+  const matrixSize = qrcode.getMatrixSize();
 
-  let penalty: number = 0;
+  let penalty = 0;
 
-  for (let y: number = 0; y < matrixSize; y++) {
-    for (let x: number = 0; x < matrixSize; x++) {
+  for (let y = 0; y < matrixSize; y++) {
+    for (let x = 0; x < matrixSize; x++) {
       if (
         x + 6 < matrixSize &&
         qrcode.isDark(y, x) &&
@@ -223,20 +221,20 @@ function applyMaskPenaltyRule3(qrcode: Encoder): number {
 }
 
 function applyMaskPenaltyRule4(qrcode: Encoder): number {
-  const matrixSize: number = qrcode.getMatrixSize();
+  const matrixSize = qrcode.getMatrixSize();
 
-  let numDarkCells: number = 0;
+  let numDarkCells = 0;
 
-  for (let y: number = 0; y < matrixSize; y++) {
-    for (let x: number = 0; x < matrixSize; x++) {
+  for (let y = 0; y < matrixSize; y++) {
+    for (let x = 0; x < matrixSize; x++) {
       if (qrcode.isDark(y, x)) {
         numDarkCells++;
       }
     }
   }
 
-  const numTotalCells: number = matrixSize * matrixSize;
-  const fivePercentVariances: number = Math.floor(Math.abs(numDarkCells * 20 - numTotalCells * 10) / numTotalCells);
+  const numTotalCells = matrixSize * matrixSize;
+  const fivePercentVariances = Math.floor(Math.abs(numDarkCells * 20 - numTotalCells * 10) / numTotalCells);
 
   return fivePercentVariances * N4;
 }

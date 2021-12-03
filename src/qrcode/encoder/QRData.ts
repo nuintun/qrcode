@@ -24,8 +24,8 @@ export abstract class QRData {
   public abstract writeTo(buffer: BitBuffer): void;
 
   public getLengthInBits(version: number): number {
-    const mode: Mode = this.mode;
-    const error: Error = new Error(`illegal mode: ${mode}`);
+    const mode = this.mode;
+    const error = new Error(`illegal mode: ${mode}`);
 
     if (1 <= version && version < 10) {
       // 1 - 9

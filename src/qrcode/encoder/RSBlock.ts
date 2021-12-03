@@ -272,15 +272,15 @@ export class RSBlock {
 
   public static getRSBlocks(version: number, errorCorrectionLevel: ErrorCorrectionLevel): RSBlock[] {
     const rsBlocks: RSBlock[] = [];
-    const rsBlock: number[] = RSBlock.getRSBlockTable(version, errorCorrectionLevel);
-    const length: number = rsBlock.length / 3;
+    const rsBlock = RSBlock.getRSBlockTable(version, errorCorrectionLevel);
+    const length = rsBlock.length / 3;
 
-    for (let i: number = 0; i < length; i++) {
-      const count: number = rsBlock[i * 3 + 0];
-      const totalCount: number = rsBlock[i * 3 + 1];
-      const dataCount: number = rsBlock[i * 3 + 2];
+    for (let i = 0; i < length; i++) {
+      const count = rsBlock[i * 3 + 0];
+      const totalCount = rsBlock[i * 3 + 1];
+      const dataCount = rsBlock[i * 3 + 2];
 
-      for (let j: number = 0; j < count; j++) {
+      for (let j = 0; j < count; j++) {
         rsBlocks.push(new RSBlock(totalCount, dataCount));
       }
     }

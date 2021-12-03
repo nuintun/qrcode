@@ -18,11 +18,11 @@ export class GenericGFPoly {
 
     this.field = field;
 
-    const coefficientsLength: number = coefficients.length;
+    const coefficientsLength = coefficients.length;
 
     if (coefficientsLength > 1 && coefficients[0] === 0) {
       // Leading term must be non-zero for anything except the constant polynomial "0"
-      let firstNonZero: number = 1;
+      let firstNonZero = 1;
 
       while (firstNonZero < coefficientsLength && coefficients[firstNonZero] === 0) {
         firstNonZero++;
@@ -33,7 +33,7 @@ export class GenericGFPoly {
       } else {
         this.coefficients = new Uint8ClampedArray(coefficientsLength - firstNonZero);
 
-        for (let i: number = 0; i < this.coefficients.length; i++) {
+        for (let i = 0; i < this.coefficients.length; i++) {
           this.coefficients[i] = coefficients[firstNonZero + i];
         }
       }
@@ -63,21 +63,21 @@ export class GenericGFPoly {
       return this;
     }
 
-    let smallerCoefficients: Uint8ClampedArray = this.coefficients;
-    let largerCoefficients: Uint8ClampedArray = other.coefficients;
+    let smallerCoefficients = this.coefficients;
+    let largerCoefficients = other.coefficients;
 
     if (smallerCoefficients.length > largerCoefficients.length) {
       [smallerCoefficients, largerCoefficients] = [largerCoefficients, smallerCoefficients];
     }
 
-    const sumDiff: Uint8ClampedArray = new Uint8ClampedArray(largerCoefficients.length);
-    const lengthDiff: number = largerCoefficients.length - smallerCoefficients.length;
+    const sumDiff = new Uint8ClampedArray(largerCoefficients.length);
+    const lengthDiff = largerCoefficients.length - smallerCoefficients.length;
 
-    for (let i: number = 0; i < lengthDiff; i++) {
+    for (let i = 0; i < lengthDiff; i++) {
       sumDiff[i] = largerCoefficients[i];
     }
 
-    for (let i: number = lengthDiff; i < largerCoefficients.length; i++) {
+    for (let i = lengthDiff; i < largerCoefficients.length; i++) {
       sumDiff[i] = addOrSubtractGF(smallerCoefficients[i - lengthDiff], largerCoefficients[i]);
     }
 
@@ -93,10 +93,10 @@ export class GenericGFPoly {
       return this;
     }
 
-    const size: number = this.coefficients.length;
-    const product: Uint8ClampedArray = new Uint8ClampedArray(size);
+    const size = this.coefficients.length;
+    const product = new Uint8ClampedArray(size);
 
-    for (let i: number = 0; i < size; i++) {
+    for (let i = 0; i < size; i++) {
       product[i] = this.field.multiply(this.coefficients[i], scalar);
     }
 
@@ -108,16 +108,16 @@ export class GenericGFPoly {
       return this.field.zero;
     }
 
-    const aCoefficients: Uint8ClampedArray = this.coefficients;
-    const aLength: number = aCoefficients.length;
-    const bCoefficients: Uint8ClampedArray = other.coefficients;
-    const bLength: number = bCoefficients.length;
-    const product: Uint8ClampedArray = new Uint8ClampedArray(aLength + bLength - 1);
+    const aCoefficients = this.coefficients;
+    const aLength = aCoefficients.length;
+    const bCoefficients = other.coefficients;
+    const bLength = bCoefficients.length;
+    const product = new Uint8ClampedArray(aLength + bLength - 1);
 
-    for (let i: number = 0; i < aLength; i++) {
-      const aCoeff: number = aCoefficients[i];
+    for (let i = 0; i < aLength; i++) {
+      const aCoeff = aCoefficients[i];
 
-      for (let j: number = 0; j < bLength; j++) {
+      for (let j = 0; j < bLength; j++) {
         product[i + j] = addOrSubtractGF(product[i + j], this.field.multiply(aCoeff, bCoefficients[j]));
       }
     }
@@ -134,10 +134,10 @@ export class GenericGFPoly {
       return this.field.zero;
     }
 
-    const size: number = this.coefficients.length;
-    const product: Uint8ClampedArray = new Uint8ClampedArray(size + degree);
+    const size = this.coefficients.length;
+    const product = new Uint8ClampedArray(size + degree);
 
-    for (let i: number = 0; i < size; i++) {
+    for (let i = 0; i < size; i++) {
       product[i] = this.field.multiply(this.coefficients[i], coefficient);
     }
 
@@ -145,14 +145,14 @@ export class GenericGFPoly {
   }
 
   public evaluateAt(a: number): number {
-    let result: number = 0;
+    let result = 0;
 
     if (a === 0) {
       // Just return the x^0 coefficient
       return this.getCoefficient(0);
     }
 
-    const size: number = this.coefficients.length;
+    const size = this.coefficients.length;
 
     if (a === 1) {
       // Just the sum of the coefficients
@@ -165,7 +165,7 @@ export class GenericGFPoly {
 
     result = this.coefficients[0];
 
-    for (let i: number = 1; i < size; i++) {
+    for (let i = 1; i < size; i++) {
       result = addOrSubtractGF(this.field.multiply(a, result), this.coefficients[i]);
     }
 

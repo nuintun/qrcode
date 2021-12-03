@@ -9,8 +9,8 @@ import { ByteArrayOutputStream } from '../io/ByteArrayOutputStream';
 import { Base64EncodeOutputStream } from '../io/Base64EncodeOutputStream';
 
 function encodeToBase64(data: number[]): number[] {
-  const output: ByteArrayOutputStream = new ByteArrayOutputStream();
-  const stream: Base64EncodeOutputStream = new Base64EncodeOutputStream(output);
+  const output = new ByteArrayOutputStream();
+  const stream = new Base64EncodeOutputStream(output);
 
   stream.writeBytes(data);
   stream.close();
@@ -21,8 +21,8 @@ function encodeToBase64(data: number[]): number[] {
 }
 
 class LZWTable {
-  private size: number = 0;
-  private map: { [key: string]: number } = {};
+  private size = 0;
+  private map: Record<string, number> = {};
 
   public add(key: string): void {
     if (!this.contains(key)) {
@@ -44,8 +44,8 @@ class LZWTable {
 }
 
 class BitOutputStream {
-  private bitLength: number = 0;
-  private bitBuffer: number = 0;
+  private bitLength = 0;
+  private bitBuffer = 0;
 
   constructor(private output: OutputStream) {}
 
@@ -96,31 +96,31 @@ export class GIFImage {
     this.width = width;
     this.height = height;
 
-    const size: number = width * height;
+    const size = width * height;
 
-    for (let i: number = 0; i < size; i++) {
+    for (let i = 0; i < size; i++) {
       this.data[i] = 0;
     }
   }
 
   private getLZWRaster(lzwMinCodeSize: number): number[] {
     // Setup LZWTable
+    const table = new LZWTable();
     const { fromCharCode } = String;
-    const table: LZWTable = new LZWTable();
-    const clearCode: number = 1 << lzwMinCodeSize;
-    const endCode: number = (1 << lzwMinCodeSize) + 1;
+    const clearCode = 1 << lzwMinCodeSize;
+    const endCode = (1 << lzwMinCodeSize) + 1;
 
-    for (let i: number = 0; i < clearCode; i++) {
+    for (let i = 0; i < clearCode; i++) {
       table.add(fromCharCode(i));
     }
 
     table.add(fromCharCode(clearCode));
     table.add(fromCharCode(endCode));
 
-    let bitLength: number = lzwMinCodeSize + 1;
+    let bitLength = lzwMinCodeSize + 1;
 
-    const byteOutput: ByteArrayOutputStream = new ByteArrayOutputStream();
-    const bitOutput: BitOutputStream = new BitOutputStream(byteOutput);
+    const byteOutput = new ByteArrayOutputStream();
+    const bitOutput = new BitOutputStream(byteOutput);
 
     try {
       const { data } = this;
@@ -130,11 +130,11 @@ export class GIFImage {
       // Clear code
       bitOutput.write(clearCode, bitLength);
 
-      let dataIndex: number = 0;
-      let words: string = fromCharCode(data[dataIndex++]);
+      let dataIndex = 0;
+      let words = fromCharCode(data[dataIndex++]);
 
       while (dataIndex < length) {
-        const char: string = fromCharCode(data[dataIndex++]);
+        const char = fromCharCode(data[dataIndex++]);
 
         if (table.contains(words + char)) {
           words += char;
@@ -169,7 +169,7 @@ export class GIFImage {
   }
 
   private writeBytes(output: OutputStream, bytes: number[], off: number, length: number): void {
-    for (let i: number = 0; i < length; i++) {
+    for (let i = 0; i < length; i++) {
       output.writeByte(bytes[i + off]);
     }
   }
@@ -236,13 +236,13 @@ export class GIFImage {
 
     // Local Color Map
     // Raster Data
-    const lzwMinCodeSize: number = 2;
-    const raster: number[] = this.getLZWRaster(lzwMinCodeSize);
-    const raLength: number = raster.length;
+    const lzwMinCodeSize = 2;
+    const raster = this.getLZWRaster(lzwMinCodeSize);
+    const raLength = raster.length;
 
     output.writeByte(lzwMinCodeSize);
 
-    let offset: number = 0;
+    let offset = 0;
 
     while (raLength - offset > 255) {
       output.writeByte(255);
@@ -252,7 +252,7 @@ export class GIFImage {
       offset += 255;
     }
 
-    const length: number = raLength - offset;
+    const length = raLength - offset;
 
     output.writeByte(length);
 
@@ -265,20 +265,20 @@ export class GIFImage {
   }
 
   public toDataURL(): string {
-    const output: ByteArrayOutputStream = new ByteArrayOutputStream();
+    const output = new ByteArrayOutputStream();
 
     this.write(output);
 
-    const bytes: number[] = encodeToBase64(output.toByteArray());
+    const bytes = encodeToBase64(output.toByteArray());
 
     output.close();
 
     const { length } = bytes;
     const { fromCharCode } = String;
 
-    let url: string = 'data:image/gif;base64,';
+    let url = 'data:image/gif;base64,';
 
-    for (let i: number = 0; i < length; i++) {
+    for (let i = 0; i < length; i++) {
       url += fromCharCode(bytes[i]);
     }
 

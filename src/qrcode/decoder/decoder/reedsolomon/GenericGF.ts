@@ -29,9 +29,9 @@ export class GenericGF {
     this.expTable = [];
     this.logTable = [];
 
-    let x: number = 1;
+    let x = 1;
 
-    for (let i: number = 0; i < this.size; i++) {
+    for (let i = 0; i < this.size; i++) {
       this.logTable[i] = 0;
       this.expTable[i] = x;
 
@@ -42,7 +42,7 @@ export class GenericGF {
       }
     }
 
-    for (let i: number = 0; i < this.size - 1; i++) {
+    for (let i = 0; i < this.size - 1; i++) {
       this.logTable[this.expTable[i]] = i;
     }
 
@@ -75,7 +75,7 @@ export class GenericGF {
       return this.zero;
     }
 
-    const coefficients: Uint8ClampedArray = new Uint8ClampedArray(degree + 1);
+    const coefficients = new Uint8ClampedArray(degree + 1);
 
     coefficients[0] = coefficient;
 

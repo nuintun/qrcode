@@ -14,15 +14,15 @@ function runEuclideanAlgorithm(field: GenericGF, a: GenericGFPoly, b: GenericGFP
     [a, b] = [b, a];
   }
 
-  let rLast: GenericGFPoly = a;
-  let r: GenericGFPoly = b;
-  let tLast: GenericGFPoly = field.zero;
-  let t: GenericGFPoly = field.one;
+  let rLast = a;
+  let r = b;
+  let tLast = field.zero;
+  let t = field.one;
 
   // Run Euclidean algorithm until r's degree is less than R/2
   while (r.degree() >= R / 2) {
-    const rLastLast: GenericGFPoly = rLast;
-    const tLastLast: GenericGFPoly = tLast;
+    const rLastLast = rLast;
+    const tLastLast = tLast;
 
     rLast = r;
     tLast = t;
@@ -35,13 +35,14 @@ function runEuclideanAlgorithm(field: GenericGF, a: GenericGFPoly, b: GenericGFP
 
     r = rLastLast;
 
-    let q: GenericGFPoly = field.zero;
-    const denominatorLeadingTerm: number = rLast.getCoefficient(rLast.degree());
-    const dltInverse: number = field.inverse(denominatorLeadingTerm);
+    let q = field.zero;
+
+    const denominatorLeadingTerm = rLast.getCoefficient(rLast.degree());
+    const dltInverse = field.inverse(denominatorLeadingTerm);
 
     while (r.degree() >= rLast.degree() && !r.isZero()) {
-      const degreeDiff: number = r.degree() - rLast.degree();
-      const scale: number = field.multiply(r.getCoefficient(r.degree()), dltInverse);
+      const degreeDiff = r.degree() - rLast.degree();
+      const scale = field.multiply(r.getCoefficient(r.degree()), dltInverse);
 
       q = q.addOrSubtract(field.buildMonomial(degreeDiff, scale));
       r = r.addOrSubtract(rLast.multiplyByMonomial(degreeDiff, scale));
@@ -54,29 +55,30 @@ function runEuclideanAlgorithm(field: GenericGF, a: GenericGFPoly, b: GenericGFP
     }
   }
 
-  const sigmaTildeAtZero: number = t.getCoefficient(0);
+  const sigmaTildeAtZero = t.getCoefficient(0);
 
   if (sigmaTildeAtZero === 0) {
     return null;
   }
 
-  const inverse: number = field.inverse(sigmaTildeAtZero);
+  const inverse = field.inverse(sigmaTildeAtZero);
 
   return [t.multiply(inverse), r.multiply(inverse)];
 }
 
 function findErrorLocations(field: GenericGF, errorLocator: GenericGFPoly): number[] | null {
   // This is a direct application of Chien's search
-  const numErrors: number = errorLocator.degree();
+  const numErrors = errorLocator.degree();
 
   if (numErrors === 1) {
     return [errorLocator.getCoefficient(1)];
   }
 
-  let errorCount: number = 0;
+  let errorCount = 0;
+
   const result: number[] = new Array(numErrors);
 
-  for (let i: number = 1; i < field.size && errorCount < numErrors; i++) {
+  for (let i = 1; i < field.size && errorCount < numErrors; i++) {
     if (errorLocator.evaluateAt(i) === 0) {
       result[errorCount] = field.inverse(i);
       errorCount++;
@@ -92,14 +94,14 @@ function findErrorLocations(field: GenericGF, errorLocator: GenericGFPoly): numb
 
 function findErrorMagnitudes(field: GenericGF, errorEvaluator: GenericGFPoly, errorLocations: number[]): number[] {
   // This is directly applying Forney's Formula
-  const s: number = errorLocations.length;
+  const s = errorLocations.length;
   const result: number[] = new Array(s);
 
-  for (let i: number = 0; i < s; i++) {
-    let denominator: number = 1;
-    const xiInverse: number = field.inverse(errorLocations[i]);
+  for (let i = 0; i < s; i++) {
+    let denominator = 1;
+    const xiInverse = field.inverse(errorLocations[i]);
 
-    for (let j: number = 0; j < s; j++) {
+    for (let j = 0; j < s; j++) {
       if (i !== j) {
         denominator = field.multiply(denominator, addOrSubtractGF(1, field.multiply(errorLocations[j], xiInverse)));
       }
@@ -116,18 +118,18 @@ function findErrorMagnitudes(field: GenericGF, errorEvaluator: GenericGFPoly, er
 }
 
 export function rsDecode(bytes: number[], twoS: number): Uint8ClampedArray | null {
-  const outputBytes: Uint8ClampedArray = new Uint8ClampedArray(bytes.length);
+  const outputBytes = new Uint8ClampedArray(bytes.length);
 
   outputBytes.set(bytes);
 
-  const field: GenericGF = new GenericGF(0x011d, 256, 0); // x^8 + x^4 + x^3 + x^2 + 1
-  const poly: GenericGFPoly = new GenericGFPoly(field, outputBytes);
-  const syndromeCoefficients: Uint8ClampedArray = new Uint8ClampedArray(twoS);
+  const field = new GenericGF(0x011d, 256, 0); // x^8 + x^4 + x^3 + x^2 + 1
+  const poly = new GenericGFPoly(field, outputBytes);
+  const syndromeCoefficients = new Uint8ClampedArray(twoS);
 
-  let error: boolean = false;
+  let error = false;
 
-  for (let s: number = 0; s < twoS; s++) {
-    const evaluation: number = poly.evaluateAt(field.exp(s + field.generatorBase));
+  for (let s = 0; s < twoS; s++) {
+    const evaluation = poly.evaluateAt(field.exp(s + field.generatorBase));
 
     syndromeCoefficients[syndromeCoefficients.length - 1 - s] = evaluation;
 
@@ -140,23 +142,23 @@ export function rsDecode(bytes: number[], twoS: number): Uint8ClampedArray | nul
     return outputBytes;
   }
 
-  const syndrome: GenericGFPoly = new GenericGFPoly(field, syndromeCoefficients);
-  const sigmaOmega: GenericGFPoly[] | null = runEuclideanAlgorithm(field, field.buildMonomial(twoS, 1), syndrome, twoS);
+  const syndrome = new GenericGFPoly(field, syndromeCoefficients);
+  const sigmaOmega = runEuclideanAlgorithm(field, field.buildMonomial(twoS, 1), syndrome, twoS);
 
   if (sigmaOmega === null) {
     return null;
   }
 
-  const errorLocations: number[] | null = findErrorLocations(field, sigmaOmega[0]);
+  const errorLocations = findErrorLocations(field, sigmaOmega[0]);
 
   if (errorLocations == null) {
     return null;
   }
 
-  const errorMagnitudes: number[] = findErrorMagnitudes(field, sigmaOmega[1], errorLocations);
+  const errorMagnitudes = findErrorMagnitudes(field, sigmaOmega[1], errorLocations);
 
-  for (let i: number = 0; i < errorLocations.length; i++) {
-    const position: number = outputBytes.length - 1 - field.log(errorLocations[i]);
+  for (let i = 0; i < errorLocations.length; i++) {
+    const position = outputBytes.length - 1 - field.log(errorLocations[i]);
 
     if (position < 0) {
       return null;

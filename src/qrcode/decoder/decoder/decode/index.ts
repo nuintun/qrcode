@@ -10,7 +10,7 @@ import { Mode } from '../../../common/Mode';
 import { EncodingHint } from '../../../common/EncodingHint';
 import { decode as decodeUTF8 } from '../../../../encoding/UTF8';
 import { ErrorCorrectionLevel } from '../../../common/ErrorCorrectionLevel';
-import { decode as decodeSJIS, getTables, SJISTables } from '../../../../encoding/SJIS';
+import { decode as decodeSJIS, getTables } from '../../../../encoding/SJIS';
 
 interface ByteChunk {
   mode: Mode.Numeric | Mode.Alphanumeric | Mode.Byte | Mode.Kanji;
@@ -42,22 +42,22 @@ export interface DecodeResult extends DecodeData {
 }
 
 function decodeNumeric(stream: BitStream, size: number): DecodeData {
-  let data: string = '';
+  let data = '';
   const bytes: number[] = [];
-  const characterCountSize: number = [10, 12, 14][size];
-  let length: number = stream.readBits(characterCountSize);
+  const characterCountSize = [10, 12, 14][size];
+  let length = stream.readBits(characterCountSize);
 
   // Read digits in groups of 3
   while (length >= 3) {
-    const num: number = stream.readBits(10);
+    const num = stream.readBits(10);
 
     if (num >= 1000) {
       throw new Error('invalid numeric value above 999');
     }
 
-    const a: number = Math.floor(num / 100);
-    const b: number = Math.floor(num / 10) % 10;
-    const c: number = num % 10;
+    const a = Math.floor(num / 100);
+    const b = Math.floor(num / 10) % 10;
+    const c = num % 10;
 
     bytes.push(48 + a, 48 + b, 48 + c);
 
@@ -68,20 +68,20 @@ function decodeNumeric(stream: BitStream, size: number): DecodeData {
 
   // If the number of digits aren't a multiple of 3, the remaining digits are special cased.
   if (length === 2) {
-    const num: number = stream.readBits(7);
+    const num = stream.readBits(7);
 
     if (num >= 100) {
       throw new Error('invalid numeric value above 99');
     }
 
-    const a: number = Math.floor(num / 10);
-    const b: number = num % 10;
+    const a = Math.floor(num / 10);
+    const b = num % 10;
 
     bytes.push(48 + a, 48 + b);
 
     data += a.toString() + b.toString();
   } else if (length === 1) {
-    const num: number = stream.readBits(4);
+    const num = stream.readBits(4);
 
     if (num >= 10) {
       throw new Error('invalid numeric value above 9');
@@ -105,16 +105,16 @@ const AlphanumericCharacterCodes: string[]= [
 ];
 
 function decodeAlphanumeric(stream: BitStream, size: number): DecodeData {
-  let data: string = '';
   const bytes: number[] = [];
-  const characterCountSize: number = [9, 11, 13][size];
-  let length: number = stream.readBits(characterCountSize);
+  const characterCountSize = [9, 11, 13][size];
+
+  let data = '';
+  let length = stream.readBits(characterCountSize);
 
   while (length >= 2) {
-    const v: number = stream.readBits(11);
-
-    const a: number = Math.floor(v / 45);
-    const b: number = v % 45;
+    const v = stream.readBits(11);
+    const a = Math.floor(v / 45);
+    const b = v % 45;
 
     bytes.push(AlphanumericCharacterCodes[a].charCodeAt(0), AlphanumericCharacterCodes[b].charCodeAt(0));
 
@@ -124,7 +124,7 @@ function decodeAlphanumeric(stream: BitStream, size: number): DecodeData {
   }
 
   if (length === 1) {
-    const a: number = stream.readBits(6);
+    const a = stream.readBits(6);
 
     bytes.push(AlphanumericCharacterCodes[a].charCodeAt(0));
 
@@ -136,10 +136,10 @@ function decodeAlphanumeric(stream: BitStream, size: number): DecodeData {
 
 function decodeByte(stream: BitStream, size: number, encoding: number): DecodeData {
   const bytes: number[] = [];
-  const characterCountSize: number = [8, 16, 16][size];
-  const length: number = stream.readBits(characterCountSize);
+  const characterCountSize = [8, 16, 16][size];
+  const length = stream.readBits(characterCountSize);
 
-  for (let i: number = 0; i < length; i++) {
+  for (let i = 0; i < length; i++) {
     bytes.push(stream.readBits(8));
   }
 
@@ -147,16 +147,18 @@ function decodeByte(stream: BitStream, size: number, encoding: number): DecodeDa
 }
 
 function decodeKanji(stream: BitStream, size: number): DecodeData {
-  let data: string = '';
+  let data = '';
+
   const bytes: number[] = [];
-  const { SJIS_TO_UTF8 }: SJISTables = getTables();
-  const characterCountSize: number = [8, 10, 12][size];
-  const length: number = stream.readBits(characterCountSize);
+  const { fromCharCode } = String;
+  const { SJIS_TO_UTF8 } = getTables();
+  const characterCountSize = [8, 10, 12][size];
+  const length = stream.readBits(characterCountSize);
 
-  for (let i: number = 0; i < length; i++) {
-    const k: number = stream.readBits(13);
+  for (let i = 0; i < length; i++) {
+    const k = stream.readBits(13);
 
-    let c: number = (Math.floor(k / 0xc0) << 8) | k % 0xc0;
+    let c = (Math.floor(k / 0xc0) << 8) | k % 0xc0;
 
     if (c < 0x1f00) {
       c += 0x8140;
@@ -166,9 +168,9 @@ function decodeKanji(stream: BitStream, size: number): DecodeData {
 
     bytes.push(c >> 8, c & 0xff);
 
-    const b: number = SJIS_TO_UTF8[c];
+    const b = SJIS_TO_UTF8[c];
 
-    data += String.fromCharCode(b != null ? b : c);
+    data += fromCharCode(b != null ? b : c);
   }
 
   return { bytes, data };
@@ -179,15 +181,15 @@ export function bytesDecode(
   version: number,
   errorCorrectionLevel: ErrorCorrectionLevel
 ): DecodeResult | null {
-  let encoding: number = -1;
+  let encoding = -1;
 
-  const stream: BitStream = new BitStream(data);
+  const stream = new BitStream(data);
   // There are 3 'sizes' based on the version. 1-9 is small (0), 10-26 is medium (1) and 27-40 is large (2).
-  const size: number = version <= 9 ? 0 : version <= 26 ? 1 : 2;
+  const size = version <= 9 ? 0 : version <= 26 ? 1 : 2;
   const result: DecodeResult = { data: '', bytes: [], chunks: [], version, errorCorrectionLevel };
 
   while (stream.available() >= 4) {
-    const mode: number = stream.readBits(4);
+    const mode = stream.readBits(4);
 
     if (mode === Mode.Terminator) {
       return result;
@@ -203,7 +205,7 @@ export function bytesDecode(
         encoding = -1;
       }
     } else if (mode === Mode.Numeric) {
-      const numericResult: DecodeData = decodeNumeric(stream, size);
+      const numericResult = decodeNumeric(stream, size);
 
       result.data += numericResult.data;
 
@@ -214,7 +216,7 @@ export function bytesDecode(
       });
       result.bytes.push(...numericResult.bytes);
     } else if (mode === Mode.Alphanumeric) {
-      const alphanumericResult: DecodeData = decodeAlphanumeric(stream, size);
+      const alphanumericResult = decodeAlphanumeric(stream, size);
 
       result.data += alphanumericResult.data;
 
@@ -234,7 +236,7 @@ export function bytesDecode(
 
       result.chunks.push({ mode: Mode.StructuredAppend, ...structuredAppend });
     } else if (mode === Mode.Byte) {
-      const byteResult: DecodeData = decodeByte(stream, size, encoding);
+      const byteResult = decodeByte(stream, size, encoding);
 
       result.data += byteResult.data;
 
@@ -246,7 +248,7 @@ export function bytesDecode(
       });
       result.bytes.push(...byteResult.bytes);
     } else if (mode === Mode.Kanji) {
-      const kanjiResult: DecodeData = decodeKanji(stream, size);
+      const kanjiResult = decodeKanji(stream, size);
 
       result.data += kanjiResult.data;
 

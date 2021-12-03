@@ -33,8 +33,8 @@ export class BitMatrix {
   }
 
   public setRegion(left: number, top: number, width: number, height: number, v: boolean): void {
-    for (let y: number = top; y < top + height; y++) {
-      for (let x: number = left; x < left + width; x++) {
+    for (let y = top; y < top + height; y++) {
+      for (let x = left; x < left + width; x++) {
         this.set(x, y, !!v);
       }
     }

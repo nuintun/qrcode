@@ -10,8 +10,8 @@ export class Polynomial {
   private num: number[];
 
   public constructor(num: number[], shift: number = 0) {
-    let offset: number = 0;
-    let length: number = num.length;
+    let offset = 0;
+    let { length } = num;
 
     while (offset < length && num[offset] === 0) {
       offset++;
@@ -19,13 +19,13 @@ export class Polynomial {
 
     length -= offset;
 
-    const numbers = [];
+    const numbers: number[] = [];
 
-    for (let i: number = 0; i < length; i++) {
+    for (let i = 0; i < length; i++) {
       numbers.push(num[offset + i]);
     }
 
-    for (let i: number = 0; i < shift; i++) {
+    for (let i = 0; i < shift; i++) {
       numbers.push(0);
     }
 
@@ -42,16 +42,16 @@ export class Polynomial {
 
   public multiply(e: Polynomial): Polynomial {
     const num: number[] = [];
-    const eLength: number = e.getLength();
-    const tLength: number = this.getLength();
-    const dLength: number = tLength + eLength - 1;
+    const eLength = e.getLength();
+    const tLength = this.getLength();
+    const dLength = tLength + eLength - 1;
 
-    for (let i: number = 0; i < dLength; i++) {
+    for (let i = 0; i < dLength; i++) {
       num.push(0);
     }
 
-    for (let i: number = 0; i < tLength; i++) {
-      for (let j: number = 0; j < eLength; j++) {
+    for (let i = 0; i < tLength; i++) {
+      for (let j = 0; j < eLength; j++) {
         num[i + j] ^= QRMath.gexp(QRMath.glog(this.getAt(i)) + QRMath.glog(e.getAt(j)));
       }
     }
@@ -60,24 +60,24 @@ export class Polynomial {
   }
 
   public mod(e: Polynomial): Polynomial {
-    const eLength: number = e.getLength();
-    const tLength: number = this.getLength();
+    const eLength = e.getLength();
+    const tLength = this.getLength();
 
     if (tLength - eLength < 0) {
       return this;
     }
 
-    const ratio: number = QRMath.glog(this.getAt(0)) - QRMath.glog(e.getAt(0));
+    const ratio = QRMath.glog(this.getAt(0)) - QRMath.glog(e.getAt(0));
 
     // Create copy
     const num: number[] = [];
 
-    for (let i: number = 0; i < tLength; i++) {
+    for (let i = 0; i < tLength; i++) {
       num.push(this.getAt(i));
     }
 
     // Subtract and calc rest.
-    for (let i: number = 0; i < eLength; i++) {
+    for (let i = 0; i < eLength; i++) {
       num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i)) + ratio);
     }
 

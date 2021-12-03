@@ -27,12 +27,13 @@ export class QRKanji extends QRData {
    * @param {BitBuffer} buffer
    */
   public writeTo(buffer: BitBuffer): void {
-    let index: number = 0;
+    let index = 0;
+
     const { bytes } = this;
     const { length } = bytes;
 
     while (index + 1 < length) {
-      let code: number = ((0xff & bytes[index]) << 8) | (0xff & bytes[index + 1]);
+      let code = ((0xff & bytes[index]) << 8) | (0xff & bytes[index + 1]);
 
       if (0x8140 <= code && code <= 0x9ffc) {
         code -= 0x8140;

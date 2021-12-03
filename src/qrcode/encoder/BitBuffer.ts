@@ -21,7 +21,7 @@ export class BitBuffer {
   }
 
   public put(num: number, length: number): void {
-    for (let i: number = 0; i < length; i++) {
+    for (let i = 0; i < length; i++) {
       this.putBit(((num >>> (length - i - 1)) & 1) === 1);
     }
   }

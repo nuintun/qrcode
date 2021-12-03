@@ -10,13 +10,13 @@
  * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
  */
 export function encode(text: string): number[] {
-  let pos: number = 0;
+  let pos = 0;
 
+  const { length } = text;
   const bytes: number[] = [];
-  const length: number = text.length;
 
-  for (let i: number = 0; i < length; i++) {
-    let code: number = text.charCodeAt(i);
+  for (let i = 0; i < length; i++) {
+    let code = text.charCodeAt(i);
 
     if (code < 128) {
       bytes[pos++] = code;
@@ -48,34 +48,35 @@ export function encode(text: string): number[] {
  * @see https://github.com/google/closure-library/blob/master/closure/goog/crypt/crypt.js
  */
 export function decode(bytes: number[]): string {
-  let pos: number = 0;
-  let output: string = '';
+  let pos = 0;
+  let output = '';
 
-  const length: number = bytes.length;
+  const { length } = bytes;
+  const { fromCharCode } = String;
 
   while (pos < length) {
-    const c1: number = bytes[pos++];
+    const c1 = bytes[pos++];
 
     if (c1 < 128) {
-      output += String.fromCharCode(c1);
+      output += fromCharCode(c1);
     } else if (c1 > 191 && c1 < 224) {
-      const c2: number = bytes[pos++];
+      const c2 = bytes[pos++];
 
-      output += String.fromCharCode(((c1 & 31) << 6) | (c2 & 63));
+      output += fromCharCode(((c1 & 31) << 6) | (c2 & 63));
     } else if (c1 > 239 && c1 < 365) {
       // Surrogate Pair
-      const c2: number = bytes[pos++];
-      const c3: number = bytes[pos++];
-      const c4: number = bytes[pos++];
-      const u: number = (((c1 & 7) << 18) | ((c2 & 63) << 12) | ((c3 & 63) << 6) | (c4 & 63)) - 0x10000;
+      const c2 = bytes[pos++];
+      const c3 = bytes[pos++];
+      const c4 = bytes[pos++];
+      const u = (((c1 & 7) << 18) | ((c2 & 63) << 12) | ((c3 & 63) << 6) | (c4 & 63)) - 0x10000;
 
-      output += String.fromCharCode(0xd800 + (u >> 10));
-      output += String.fromCharCode(0xdc00 + (u & 1023));
+      output += fromCharCode(0xd800 + (u >> 10));
+      output += fromCharCode(0xdc00 + (u & 1023));
     } else {
-      const c2: number = bytes[pos++];
-      const c3: number = bytes[pos++];
+      const c2 = bytes[pos++];
+      const c3 = bytes[pos++];
 
-      output += String.fromCharCode(((c1 & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+      output += fromCharCode(((c1 & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
     }
   }
 

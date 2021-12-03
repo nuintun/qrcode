@@ -7,12 +7,12 @@
 const EXP_TABLE: number[] = [];
 const LOG_TABLE: number[] = [];
 
-for (let i: number = 0; i < 256; i++) {
+for (let i = 0; i < 256; i++) {
   LOG_TABLE[i] = 0;
   EXP_TABLE[i] = i < 8 ? 1 << i : EXP_TABLE[i - 4] ^ EXP_TABLE[i - 5] ^ EXP_TABLE[i - 6] ^ EXP_TABLE[i - 8];
 }
 
-for (let i: number = 0; i < 255; i++) {
+for (let i = 0; i < 255; i++) {
   LOG_TABLE[EXP_TABLE[i]] = i;
 }
 

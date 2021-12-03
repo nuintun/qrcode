@@ -28,7 +28,7 @@ export class QRByte extends QRData {
     super(Mode.Byte, data);
 
     if (typeof encode === 'function') {
-      const { encoding, bytes }: EncodeResult = encode(data);
+      const { encoding, bytes } = encode(data);
 
       this.bytes = bytes;
       this.encoding = encoding;

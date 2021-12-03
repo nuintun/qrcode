@@ -19,14 +19,14 @@ export class BitStream {
       throw new Error(`can't read ${numBits} bits`);
     }
 
-    let result: number = 0;
+    let result = 0;
 
     // First, read remainder from current byte
     if (this.bitOffset > 0) {
-      const bitsLeft: number = 8 - this.bitOffset;
-      const toRead: number = numBits < bitsLeft ? numBits : bitsLeft;
-      const bitsToNotRead: number = bitsLeft - toRead;
-      const mask: number = (0xff >> (8 - toRead)) << bitsToNotRead;
+      const bitsLeft = 8 - this.bitOffset;
+      const toRead = numBits < bitsLeft ? numBits : bitsLeft;
+      const bitsToNotRead = bitsLeft - toRead;
+      const mask = (0xff >> (8 - toRead)) << bitsToNotRead;
 
       result = (this.bytes[this.byteOffset] & mask) >> bitsToNotRead;
       numBits -= toRead;
@@ -51,8 +51,8 @@ export class BitStream {
 
       // Finally read a partial byte
       if (numBits > 0) {
-        const bitsToNotRead: number = 8 - numBits;
-        const mask: number = (0xff >> bitsToNotRead) << bitsToNotRead;
+        const bitsToNotRead = 8 - numBits;
+        const mask = (0xff >> bitsToNotRead) << bitsToNotRead;
 
         result = (result << numBits) | ((this.bytes[this.byteOffset] & mask) >> bitsToNotRead);
 

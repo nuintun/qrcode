@@ -19,7 +19,7 @@ function getByte(byte: number): number {
 }
 
 function getBytes(bytes: number[]): number {
-  let num: number = 0;
+  let num = 0;
 
   for (const byte of bytes) {
     num = num * 10 + getByte(byte);
@@ -45,7 +45,8 @@ export class QRNumeric extends QRData {
    * @param {BitBuffer} buffer
    */
   public writeTo(buffer: BitBuffer): void {
-    let i: number = 0;
+    let i = 0;
+
     const { bytes } = this;
     const { length } = bytes;
 

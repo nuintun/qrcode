@@ -6,11 +6,11 @@
  */
 
 import { Point } from './Point';
+import { locate } from './locator';
+import { extract } from './extractor';
 import { BitMatrix } from './BitMatrix';
-import { locate, QRLocation } from './locator';
 import { decode, DecodeResult } from './decoder';
-import { extract, ExtractResult } from './extractor';
-import { binarize, BinarizeResult, GreyscaleWeights } from './binarizer';
+import { binarize, GreyscaleWeights } from './binarizer';
 
 export interface DecoderResult extends DecodeResult {
   location: {
@@ -26,18 +26,18 @@ export interface DecoderResult extends DecodeResult {
 }
 
 function scan(matrix: BitMatrix): DecoderResult | null {
-  const locations: QRLocation[] | null = locate(matrix);
+  const locations = locate(matrix);
 
   if (locations === null) {
     return null;
   }
 
   for (const location of locations) {
-    const extracted: ExtractResult = extract(matrix, location);
-    const decoded: DecodeResult | null = decode(extracted.matrix);
+    const extracted = extract(matrix, location);
+    const decoded = decode(extracted.matrix);
 
     if (decoded !== null) {
-      const dimension: number = location.dimension;
+      const dimension = location.dimension;
 
       return {
         ...decoded,
@@ -92,13 +92,13 @@ export class Decoder {
    * @returns {DecoderResult}
    */
   public decode(data: Uint8ClampedArray, width: number, height: number): DecoderResult | null {
-    const options: Options = this.options;
-    const { canOverwriteImage, greyScaleWeights, inversionAttempts = 'attemptBoth' }: Options = options;
-    const tryInvertedFirst: boolean = inversionAttempts === 'onlyInvert' || inversionAttempts === 'invertFirst';
-    const invert: boolean = tryInvertedFirst || inversionAttempts === 'attemptBoth';
-    const { binarized, inverted }: BinarizeResult = binarize(data, width, height, invert, greyScaleWeights, canOverwriteImage);
+    const { options } = this;
+    const { canOverwriteImage, greyScaleWeights, inversionAttempts = 'attemptBoth' } = options;
+    const tryInvertedFirst = inversionAttempts === 'onlyInvert' || inversionAttempts === 'invertFirst';
+    const invert = tryInvertedFirst || inversionAttempts === 'attemptBoth';
+    const { binarized, inverted } = binarize(data, width, height, invert, greyScaleWeights, canOverwriteImage);
 
-    let result: DecoderResult | null = scan(tryInvertedFirst ? (inverted as BitMatrix) : binarized);
+    let result = scan(tryInvertedFirst ? (inverted as BitMatrix) : binarized);
 
     if (result !== null && (options.inversionAttempts === 'attemptBoth' || options.inversionAttempts === 'invertFirst')) {
       result = scan(tryInvertedFirst ? binarized : (inverted as BitMatrix));
@@ -115,7 +115,7 @@ export class Decoder {
    */
   public scan(src: string): Promise<DecoderResult> {
     return new Promise((resolve, reject) => {
-      const image: HTMLImageElement = new Image();
+      const image = new Image();
 
       // Image cross origin
       image.crossOrigin = 'anonymous';
@@ -123,10 +123,10 @@ export class Decoder {
       image.onload = () => {
         disposeImageEvents(image);
 
-        const width: number = image.width;
-        const height: number = image.height;
-        const canvas: HTMLCanvasElement = document.createElement('canvas');
-        const context: CanvasRenderingContext2D | null = canvas.getContext('2d');
+        const width = image.width;
+        const height = image.height;
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
 
         if (context === null) {
           return reject(new Error(`browser does not support canvas.getContext('2d')`));
@@ -137,8 +137,8 @@ export class Decoder {
 
         context.drawImage(image, 0, 0);
 
-        const { data }: ImageData = context.getImageData(0, 0, width, height);
-        const result: DecoderResult | null = this.decode(data, width, height);
+        const { data } = context.getImageData(0, 0, width, height);
+        const result = this.decode(data, width, height);
 
         if (result !== null) {
           return resolve(result);

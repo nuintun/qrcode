@@ -9,10 +9,10 @@
  * @returns {number[]}
  */
 export function encode(text: string): number[] {
+  const { length } = text;
   const bytes: number[] = [];
-  const length: number = text.length;
 
-  for (let i: number = 0; i < length; i++) {
+  for (let i = 0; i < length; i++) {
     bytes.push(text.charCodeAt(i));
   }
 
