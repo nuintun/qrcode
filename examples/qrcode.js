@@ -1378,14 +1378,22 @@
     return createBytes(buffer, rsBlocks);
   }
   var Encoder = /*#__PURE__*/ (function () {
-    function Encoder() {
-      this.version = 0;
+    function Encoder(options) {
+      if (options === void 0) {
+        options = {};
+      }
       this.matrixSize = 0;
-      this.encodingHint = false;
       this.chunks = [];
       this.matrix = [];
-      this.auto = this.version === 0;
-      this.errorCorrectionLevel = exports.ErrorCorrectionLevel.L;
+      var _a = options.version,
+        version = _a === void 0 ? 0 : _a,
+        _b = options.encodingHint,
+        encodingHint = _b === void 0 ? false : _b,
+        _c = options.errorCorrectionLevel,
+        errorCorrectionLevel = _c === void 0 ? exports.ErrorCorrectionLevel.L : _c;
+      this.setVersion(version);
+      this.setEncodingHint(encodingHint);
+      this.setErrorCorrectionLevel(errorCorrectionLevel);
     }
     /**
      * @public
@@ -4914,10 +4922,7 @@
      * @param {object} options
      */
     Decoder.prototype.setOptions = function (options) {
-      if (options === void 0) {
-        options = {};
-      }
-      this.options = options;
+      this.options = __assign(__assign({}, this.options), options);
       return this;
     };
     /**

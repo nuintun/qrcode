@@ -172,14 +172,28 @@ function createData(buffer: BitBuffer, rsBlocks: RSBlock[], maxDataCount: number
   return createBytes(buffer, rsBlocks);
 }
 
+export interface Options {
+  version?: number;
+  encodingHint?: boolean;
+  errorCorrectionLevel?: ErrorCorrectionLevel;
+}
+
 export class Encoder {
-  private version = 0;
   private matrixSize = 0;
-  private encodingHint = false;
+  private auto!: boolean;
+  private version!: number;
   private chunks: QRData[] = [];
+  private encodingHint!: boolean;
   private matrix: boolean[][] = [];
-  private auto = this.version === 0;
-  private errorCorrectionLevel = ErrorCorrectionLevel.L;
+  private errorCorrectionLevel!: ErrorCorrectionLevel;
+
+  constructor(options: Options = {}) {
+    const { version = 0, encodingHint = false, errorCorrectionLevel = ErrorCorrectionLevel.L } = options;
+
+    this.setVersion(version);
+    this.setEncodingHint(encodingHint);
+    this.setErrorCorrectionLevel(errorCorrectionLevel);
+  }
 
   /**
    * @public

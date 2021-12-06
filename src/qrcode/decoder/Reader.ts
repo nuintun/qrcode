@@ -77,8 +77,8 @@ export class Decoder {
    * @method setOptions
    * @param {object} options
    */
-  public setOptions(options: Options = {}): Decoder {
-    this.options = options;
+  public setOptions(options: Options): Decoder {
+    this.options = { ...this.options, ...options };
 
     return this;
   }
