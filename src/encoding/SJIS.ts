@@ -140,20 +140,20 @@ export function getTables(): SJISTables {
  * @returns {number[]}
  */
 export function encode(text: string): number[] {
+  const { length } = text;
   const bytes: number[] = [];
-  const length: number = text.length;
-  const { UTF8_TO_SJIS }: SJISTables = getTables();
+  const { fromCharCode } = String;
+  const { UTF8_TO_SJIS } = getTables();
 
-  for (let i: number = 0; i < length; i++) {
-    const code: number = text.charCodeAt(i);
-    const byte: number = UTF8_TO_SJIS[code];
+  for (let i = 0; i < length; i++) {
+    const code = text.charCodeAt(i);
+    const byte = UTF8_TO_SJIS[code];
 
     if (byte != null) {
       // 2 bytes
-      bytes.push(byte >> 8);
-      bytes.push(byte & 0xff);
+      bytes.push(byte >> 8, byte & 0xff);
     } else {
-      throw new Error(`illegal char: ${String.fromCharCode(code)}`);
+      throw new Error(`illegal char: ${fromCharCode(code)}`);
     }
   }
 
@@ -167,28 +167,27 @@ export function encode(text: string): number[] {
  * @see https://github.com/narirou/jconv/blob/master/jconv.js
  */
 export function decode(bytes: number[]): string {
-  let pos: number = 0;
-  let output: string = '';
+  let pos = 0;
+  let output = '';
 
-  const length: number = bytes.length;
-  const { SJIS_TO_UTF8 }: SJISTables = getTables();
+  const { length } = bytes;
+  const { fromCharCode } = String;
+  const { SJIS_TO_UTF8 } = getTables();
 
   while (pos < length) {
-    const byte: number = bytes[pos++];
+    const byte = bytes[pos++];
 
     if (byte < 0x80) {
       // ASCII
-      output += String.fromCharCode(byte);
+      output += fromCharCode(byte);
     } else if (0xa0 <= byte && byte <= 0xdf) {
       // HALFWIDTH_KATAKANA
-      output += String.fromCharCode(byte + 0xfec0);
+      output += fromCharCode(byte + 0xfec0);
     } else {
       // KANJI
-      let code: number = (byte << 8) + bytes[pos++];
+      const code = SJIS_TO_UTF8[(byte << 8) + bytes[pos++]];
 
-      code = SJIS_TO_UTF8[code];
-
-      output += code != null ? String.fromCharCode(code) : '?';
+      output += code != null ? fromCharCode(code) : '?';
     }
   }
 

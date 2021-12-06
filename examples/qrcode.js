@@ -4174,18 +4174,18 @@
    * @returns {number[]}
    */
   function encode$1(text) {
-    var bytes = [];
     var length = text.length;
+    var bytes = [];
+    var fromCharCode = String.fromCharCode;
     var UTF8_TO_SJIS = getTables().UTF8_TO_SJIS;
     for (var i = 0; i < length; i++) {
       var code = text.charCodeAt(i);
       var byte = UTF8_TO_SJIS[code];
       if (byte != null) {
         // 2 bytes
-        bytes.push(byte >> 8);
-        bytes.push(byte & 0xff);
+        bytes.push(byte >> 8, byte & 0xff);
       } else {
-        throw new Error('illegal char: '.concat(String.fromCharCode(code)));
+        throw new Error('illegal char: '.concat(fromCharCode(code)));
       }
     }
     return bytes;
@@ -4200,20 +4200,20 @@
     var pos = 0;
     var output = '';
     var length = bytes.length;
+    var fromCharCode = String.fromCharCode;
     var SJIS_TO_UTF8 = getTables().SJIS_TO_UTF8;
     while (pos < length) {
       var byte = bytes[pos++];
       if (byte < 0x80) {
         // ASCII
-        output += String.fromCharCode(byte);
+        output += fromCharCode(byte);
       } else if (0xa0 <= byte && byte <= 0xdf) {
         // HALFWIDTH_KATAKANA
-        output += String.fromCharCode(byte + 0xfec0);
+        output += fromCharCode(byte + 0xfec0);
       } else {
         // KANJI
-        var code = (byte << 8) + bytes[pos++];
-        code = SJIS_TO_UTF8[code];
-        output += code != null ? String.fromCharCode(code) : '?';
+        var code = SJIS_TO_UTF8[(byte << 8) + bytes[pos++]];
+        output += code != null ? fromCharCode(code) : '?';
       }
     }
     return output;
