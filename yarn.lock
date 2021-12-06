@@ -31,13 +31,13 @@
     estree-walker "^2.0.1"
     picomatch "^2.2.2"
 
-"@ts-type/package-dts@^1.0.54":
-  version "1.0.54"
-  resolved "https://registry.yarnpkg.com/@ts-type/package-dts/-/package-dts-1.0.54.tgz#c6bcf02464bb4bfb4bfdd1bd12c400458082af75"
-  integrity sha512-lJWJBVfPCbPBdSWM3PGkooYl9p273n7A1nXB93vyHQIO+LWVXFi70ajj5GdgLU0cs+pwjdCE+1RoK/1EfC6a/A==
+"@ts-type/package-dts@^1.0.56":
+  version "1.0.56"
+  resolved "https://registry.yarnpkg.com/@ts-type/package-dts/-/package-dts-1.0.56.tgz#b4870cdb54dbd3130c1ef3085765a431919bc45d"
+  integrity sha512-nBjbCaVV+R81jk7q/6sRuNYOhDAbBOmaCkPI2quK0Rnye2f4FUHX+4JL+3rDPiRPHxgX3pNfVKKHBlPAHiRddw==
   dependencies:
     "@types/semver" "^7.3.9"
-    ts-type "^2.0.3"
+    ts-type "^2.1.2"
 
 "@types/bluebird@3.5.36":
   version "3.5.36"
@@ -67,11 +67,11 @@
   integrity sha512-L/TMpyURfBkf+o/526Zb6kd/tchUP3iBDEPjqjb+U2MAJhVRxxrmr2fwpe08E7QsV7YLcpq0tUaQ9O9x97ZIxQ==
 
 "@yarn-tool/resolve-package@^1.0.36":
-  version "1.0.39"
-  resolved "https://registry.yarnpkg.com/@yarn-tool/resolve-package/-/resolve-package-1.0.39.tgz#73705894d0116b9533f2149fde3dce880789e27c"
-  integrity sha512-Muv+aW1tcyPhkwG4db3fP/KjknzJMidykLbrwEdU0fI0C6DFzBehhLLu9Z/rIO26OoJWqprxyR27w+SgNXNOoQ==
+  version "1.0.40"
+  resolved "https://registry.yarnpkg.com/@yarn-tool/resolve-package/-/resolve-package-1.0.40.tgz#71fc0d43d9f2f4bb3006569e5b8b9758f3a53765"
+  integrity sha512-5kKRhGb8OCdpzuoGkb9BQw6biyY0zYesV3VyvEzRtb/cqZ7AR6o0ajR6q83jTaCJfYUaJaUPyXVOSZAUjWJQDQ==
   dependencies:
-    "@ts-type/package-dts" "^1.0.54"
+    "@ts-type/package-dts" "^1.0.56"
     pkg-dir "< 6 >= 5"
     tslib "^2.3.1"
     upath2 "^3.1.10"
@@ -352,10 +352,10 @@ pkg-dir@^4.1.0:
   dependencies:
     find-up "^4.0.0"
 
-prettier@^2.5.0:
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.5.0.tgz#a6370e2d4594e093270419d9cc47f7670488f893"
-  integrity sha512-FM/zAKgWTxj40rH03VxzIPdXmj39SwSjwG0heUcNFwI+EMZJnY93yAiKXM3dObIKAM5TA88werc8T/EwhB45eg==
+prettier@^2.5.1:
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.5.1.tgz#fff75fa9d519c54cf0fce328c1017d94546bc56a"
+  integrity sha512-vBZcPRUR5MZJwoyi3ZoyQlc1rXeEck8KgeC9AwwOn+exuxLxq5toTRDTSaVrXHxelDMHy9zlicw8u66yxoSUFg==
 
 resolve@1.20.0, resolve@^1.19.0:
   version "1.20.0"
@@ -406,10 +406,10 @@ ts-toolbelt@9.6.0:
   resolved "https://registry.yarnpkg.com/ts-toolbelt/-/ts-toolbelt-9.6.0.tgz#50a25426cfed500d4a09bd1b3afb6f28879edfd5"
   integrity sha512-nsZd8ZeNUzukXPlJmTBwUAuABDe/9qtVDelJeT/qW0ow3ZS3BsQJtNkan1802aM9Uf68/Y8ljw86Hu0h5IUW3w==
 
-ts-type@^2.0.3:
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/ts-type/-/ts-type-2.0.3.tgz#1e9002dcf8d5052e27e77a8f6c9565030c4bd3c3"
-  integrity sha512-Cc2kgkUwmCK/h2m/sVbr2piqOGE+Hs4qAgJ7CiI4OSMJFWorE6f6yoisjSBE5izGb2/VZnHSN2CcOQR6/Yfazw==
+ts-type@^2.1.2:
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/ts-type/-/ts-type-2.1.2.tgz#2e7734e729806729d41b4071b4fd513c9cd5cfac"
+  integrity sha512-64/2XoaipFXa/bidwXChQCSJ3VaCUVKrEaRPXiP5gLIlkPoAHfnwOMC0EWr42DsTm/+qYYuNwzxc0VQroeDs+g==
   dependencies:
     tslib "^2.3.1"
     typedarray-dts "^1.0.0"
