@@ -513,6 +513,7 @@ export function locate(matrix: BitMatrix): QRLocation[] | null {
 
           return points;
         }, []);
+
         if (otherPoints.length >= 2) {
           const score = point.score + otherPoints[0].score + otherPoints[1].score;
 
