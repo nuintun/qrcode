@@ -1,9 +1,13 @@
 /**
  * @module clean
- * @license MIT
- * @author nuintun
  */
 
 const rimraf = require('rimraf');
 
-['cjs', 'esm', 'typings'].forEach(path => rimraf.sync(path));
+function clean(paths) {
+  paths = Array.isArray(paths) ? paths : [paths];
+
+  paths.forEach(path => rimraf.sync(path));
+}
+
+clean(['cjs', 'esm', 'typings', 'examples/qrcode.js']);

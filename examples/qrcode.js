@@ -238,11 +238,11 @@
      * @constructor
      * @param {string} data
      */
-    function QRByte(data, encode$1) {
+    function QRByte(data, encode) {
       var _this = _super.call(this, exports.Mode.Byte, data) || this;
       _this.encoding = -1;
-      if (typeof encode$1 === 'function') {
-        var _a = encode$1(data),
+      if (typeof encode === 'function') {
+        var _a = encode(data),
           encoding = _a.encoding,
           bytes = _a.bytes;
         _this.bytes = bytes;

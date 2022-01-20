@@ -1,9 +1,7 @@
 /**
- * @module rollup.es5
- * @license MIT
- * @author nuintun
+ * @module rollup.cjs
  */
 
-import configure from './configure';
+import rollup from './rollup.base';
 
-export default configure();
+export default rollup();

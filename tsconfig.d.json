@@ -5,6 +5,7 @@
     "newLine": "lf",
     "target": "ES5",
     "module": "ESNext",
+    "declaration": true,
     "skipLibCheck": true,
     "importHelpers": true,
     "noUnusedLocals": true,
@@ -12,12 +13,13 @@
     "resolveJsonModule": true,
     "moduleResolution": "Node",
     "noUnusedParameters": true,
+    "declarationDir": "typings",
+    "emitDeclarationOnly": true,
     "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "src/**/*",
-    "examples/**/*"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules"
