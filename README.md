@@ -1,5 +1,6 @@
 # QRCode
 
+<!-- prettier-ignore -->
 > A pure JavaScript QRCode encode and decode library.
 >
 > [![NPM Version][npm-image]][npm-url]
@@ -7,10 +8,11 @@
 > [![Tree Shakeable][tree-shakeable-image]][bundle-phobia-url]
 > [![Side Effect][side-effect-image]][bundle-phobia-url]
 > [![Snyk Vulnerabilities][snyk-image]][snyk-url]
-> [![Dependencies][david-image]][david-url]
+> [![License][license-image]][license-url]
 
 ### QRCode guide and demo
 
+<!-- prettier-ignore -->
 > [QRCode guide](https://nuintun.github.io/qrcode/qrcode.pdf)
 >
 > [QRCode example](https://nuintun.github.io/qrcode/examples/index.html)
@@ -39,6 +41,14 @@ qrcode.make();
 
 console.log(qrcode.toDataURL());
 ```
+
+###### Constructor
+
+- new Encoder(options?: Options): Encoder
+
+  - version?: number;
+  - encodingHint?: boolean;
+  - errorCorrectionLevel?: ErrorCorrectionLevel;
 
 ###### Methods
 
@@ -91,7 +101,6 @@ console.log(qrcode.toDataURL());
   - Output qrcode base64 gif image.
 
 - clear(): void
-
   - Clear written data.
 
 ###### Custom ECI
@@ -136,6 +145,14 @@ qrcode
   });
 ```
 
+###### Constructor
+
+- new Decoder(options?: Options): Decoder
+
+  - canOverwriteImage?: boolean
+  - inversionAttempts?: 'dontInvert' \| 'onlyInvert' \| 'attemptBoth' \| 'invertFirst'
+  - greyScaleWeights?: { red: number, green: number, blue: number, useIntegerApproximation?: boolean }
+
 ###### Methods
 
 - setOptions(options: Options): Decoder
@@ -162,5 +179,5 @@ qrcode
 [bundle-phobia-url]: https://bundlephobia.com/result?p=@nuintun/qrcode
 [snyk-image]: https://img.shields.io/snyk/vulnerabilities/github/nuintun/qrcode?style=flat-square
 [snyk-url]: https://snyk.io/test/github/nuintun/qrcode
-[david-image]: https://img.shields.io/david/nuintun/qrcode?style=flat-square
-[david-url]: https://david-dm.org/nuintun/qrcode
+[license-image]: https://img.shields.io/github/license/nuintun/qrcode?style=flat-square
+[license-url]: https://github.com/nuintun/qrcode/blob/master/LICENSE

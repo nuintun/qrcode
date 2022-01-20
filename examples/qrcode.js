@@ -1,7 +1,7 @@
 /**
  * @module QRCode
  * @license MIT
- * @version 4.0.0
+ * @version 3.1.0
  * @author nuintun
  * @description A pure JavaScript QRCode encode and decode library.
  * @see https://github.com/nuintun/qrcode#readme
