@@ -888,10 +888,15 @@
    */
   var OutputStream = /*#__PURE__*/ (function () {
     function OutputStream() {}
-    OutputStream.prototype.writeBytes = function (bytes) {
-      for (var _i = 0, bytes_1 = bytes; _i < bytes_1.length; _i++) {
-        var byte = bytes_1[_i];
-        this.writeByte(byte);
+    OutputStream.prototype.writeBytes = function (bytes, offset, length) {
+      if (offset === void 0) {
+        offset = 0;
+      }
+      if (length === void 0) {
+        length = bytes.length;
+      }
+      for (var i = 0; i < length; i++) {
+        this.writeByte(bytes[i + offset]);
       }
     };
     OutputStream.prototype.flush = function () {
@@ -917,6 +922,9 @@
     }
     ByteArrayOutputStream.prototype.writeByte = function (byte) {
       this.bytes.push(byte);
+    };
+    ByteArrayOutputStream.prototype.writeInt16 = function (byte) {
+      this.bytes.push(byte, byte >>> 8);
     };
     ByteArrayOutputStream.prototype.toByteArray = function () {
       return this.bytes;
@@ -1117,15 +1125,6 @@
       }
       return byteOutput.toByteArray();
     };
-    GIFImage.prototype.writeWord = function (output, i) {
-      output.writeByte(i & 0xff);
-      output.writeByte((i >>> 8) & 0xff);
-    };
-    GIFImage.prototype.writeBytes = function (output, bytes, off, length) {
-      for (var i = 0; i < length; i++) {
-        output.writeByte(bytes[i + off]);
-      }
-    };
     GIFImage.prototype.setPixel = function (x, y, pixel) {
       var _a = this,
         width = _a.width,
@@ -1154,8 +1153,8 @@
       output.writeByte(0x37); // 7
       output.writeByte(0x61); // a
       // Screen Descriptor
-      this.writeWord(output, width);
-      this.writeWord(output, height);
+      output.writeInt16(width);
+      output.writeInt16(height);
       output.writeByte(0x80); // 2bit
       output.writeByte(0);
       output.writeByte(0);
@@ -1170,10 +1169,10 @@
       output.writeByte(0xff);
       // Image Descriptor
       output.writeByte(0x2c); // ,
-      this.writeWord(output, 0);
-      this.writeWord(output, 0);
-      this.writeWord(output, width);
-      this.writeWord(output, height);
+      output.writeInt16(0);
+      output.writeInt16(0);
+      output.writeInt16(width);
+      output.writeInt16(height);
       output.writeByte(0);
       // Local Color Map
       // Raster Data
@@ -1184,12 +1183,12 @@
       var offset = 0;
       while (raLength - offset > 255) {
         output.writeByte(255);
-        this.writeBytes(output, raster, offset, 255);
+        output.writeBytes(raster, offset, 255);
         offset += 255;
       }
       var length = raLength - offset;
       output.writeByte(length);
-      this.writeBytes(output, raster, offset, length);
+      output.writeBytes(raster, offset, length);
       output.writeByte(0x00);
       // GIF Terminator
       output.writeByte(0x3b); // ;
@@ -1731,17 +1730,15 @@
       margin = Math.max(0, margin >> 0);
       var matrixSize = this.matrixSize;
       var size = moduleSize * matrixSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
       var gif = new GIFImage(size, size);
       for (var y = 0; y < size; y++) {
         for (var x = 0; x < size; x++) {
-          if (
-            margin <= x &&
-            x < size - margin &&
-            margin <= y &&
-            y < size - margin &&
-            this.isDark(((y - margin) / moduleSize) >> 0, ((x - margin) / moduleSize) >> 0)
-          ) {
-            gif.setPixel(x, y, 0);
+          if (min <= x && x < max && min <= y && y < max) {
+            var col = ((x - min) / moduleSize) >> 0;
+            var row = ((y - min) / moduleSize) >> 0;
+            gif.setPixel(x, y, this.isDark(row, col) ? 0 : 1);
           } else {
             gif.setPixel(x, y, 1);
           }

@@ -163,17 +163,6 @@ export class GIFImage {
     return byteOutput.toByteArray();
   }
 
-  private writeWord(output: OutputStream, i: number): void {
-    output.writeByte(i & 0xff);
-    output.writeByte((i >>> 8) & 0xff);
-  }
-
-  private writeBytes(output: OutputStream, bytes: number[], off: number, length: number): void {
-    for (let i = 0; i < length; i++) {
-      output.writeByte(bytes[i + off]);
-    }
-  }
-
   public setPixel(x: number, y: number, pixel: number): void {
     const { width, height } = this;
 
@@ -194,7 +183,7 @@ export class GIFImage {
     return this.data[y * width + x];
   }
 
-  public write(output: OutputStream): void {
+  public write(output: ByteArrayOutputStream): void {
     const { width, height } = this;
 
     // GIF Signature
@@ -206,8 +195,8 @@ export class GIFImage {
     output.writeByte(0x61); // a
 
     // Screen Descriptor
-    this.writeWord(output, width);
-    this.writeWord(output, height);
+    output.writeInt16(width);
+    output.writeInt16(height);
 
     output.writeByte(0x80); // 2bit
     output.writeByte(0);
@@ -227,10 +216,10 @@ export class GIFImage {
     // Image Descriptor
     output.writeByte(0x2c); // ,
 
-    this.writeWord(output, 0);
-    this.writeWord(output, 0);
-    this.writeWord(output, width);
-    this.writeWord(output, height);
+    output.writeInt16(0);
+    output.writeInt16(0);
+    output.writeInt16(width);
+    output.writeInt16(height);
 
     output.writeByte(0);
 
@@ -247,7 +236,7 @@ export class GIFImage {
     while (raLength - offset > 255) {
       output.writeByte(255);
 
-      this.writeBytes(output, raster, offset, 255);
+      output.writeBytes(raster, offset, 255);
 
       offset += 255;
     }
@@ -256,7 +245,7 @@ export class GIFImage {
 
     output.writeByte(length);
 
-    this.writeBytes(output, raster, offset, length);
+    output.writeBytes(raster, offset, length);
 
     output.writeByte(0x00);
 

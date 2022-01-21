@@ -13,6 +13,10 @@ export class ByteArrayOutputStream extends OutputStream {
     this.bytes.push(byte);
   }
 
+  public writeInt16(byte: number): void {
+    this.bytes.push(byte, byte >>> 8);
+  }
+
   public toByteArray(): number[] {
     return this.bytes;
   }

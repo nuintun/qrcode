@@ -589,18 +589,18 @@ export class Encoder {
 
     const matrixSize = this.matrixSize;
     const size = moduleSize * matrixSize + margin * 2;
+
+    const min = margin;
+    const max = size - margin;
     const gif = new GIFImage(size, size);
 
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < size; x++) {
-        if (
-          margin <= x &&
-          x < size - margin &&
-          margin <= y &&
-          y < size - margin &&
-          this.isDark(((y - margin) / moduleSize) >> 0, ((x - margin) / moduleSize) >> 0)
-        ) {
-          gif.setPixel(x, y, 0);
+        if (min <= x && x < max && min <= y && y < max) {
+          const col = ((x - min) / moduleSize) >> 0;
+          const row = ((y - min) / moduleSize) >> 0;
+
+          gif.setPixel(x, y, this.isDark(row, col) ? 0 : 1);
         } else {
           gif.setPixel(x, y, 1);
         }
