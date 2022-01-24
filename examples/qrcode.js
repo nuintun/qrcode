@@ -1736,8 +1736,8 @@
       for (var y = 0; y < size; y++) {
         for (var x = 0; x < size; x++) {
           if (min <= x && x < max && min <= y && y < max) {
-            var col = ((x - min) / moduleSize) >> 0;
             var row = ((y - min) / moduleSize) >> 0;
+            var col = ((x - min) / moduleSize) >> 0;
             gif.setPixel(x, y, this.isDark(row, col) ? 0 : 1);
           } else {
             gif.setPixel(x, y, 1);
