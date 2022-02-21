@@ -26,12 +26,12 @@
     "lint": "tsc --noEmit",
     "clean": "node tools/clean.js",
     "prepublishOnly": "npm run build",
-    "build:typings": "tsc -p tsconfig.d.json",
     "build:cjs": "rollup -c tools/rollup.cjs.js",
     "build:esm": "rollup -c tools/rollup.esm.js",
     "format": "prettier --write tools src examples",
     "build:examples": "rollup -c tools/rollup.examples.js",
     "build:main": "npm run build:cjs && npm run build:esm && npm run build:typings",
+    "build:typings": "tsc --declaration --emitDeclarationOnly --declarationDir typings",
     "build": "npm run clean && npm run build:main && npm run build:examples && npm run format"
   },
   "dependencies": {
