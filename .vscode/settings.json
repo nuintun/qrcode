@@ -31,22 +31,22 @@
   ],
   "todo-tree.highlights.customHighlight": {
     "BUG": {
-      "borderRadius": 0,
+      "borderRadius": "0px",
       "fontStyle": "italic",
       "type": "text-and-comment"
     },
     "HACK": {
-      "borderRadius": 0,
+      "borderRadius": "0px",
       "fontStyle": "italic",
       "type": "text-and-comment"
     },
     "FIXME": {
-      "borderRadius": 0,
+      "borderRadius": "0px",
       "fontStyle": "italic",
       "type": "text-and-comment"
     },
     "TODO": {
-      "borderRadius": 0,
+      "borderRadius": "0px",
       "fontStyle": "italic",
       "type": "text-and-comment"
     },
