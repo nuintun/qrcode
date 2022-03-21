@@ -10,6 +10,7 @@ export default function rollup(esnext) {
     input: 'src/index.ts',
     output: {
       interop: false,
+      exports: 'auto',
       esModule: false,
       dir: esnext ? 'esm' : 'cjs',
       format: esnext ? 'esm' : 'cjs'
