@@ -1,17 +1,32 @@
 {
-  "[javascriptreact]": {
+  "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "[javascript]": {
+  "[javascriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "[yaml]": {
+  "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[less]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[sass]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[scss]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[yaml]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[markdown]": {
@@ -23,6 +38,19 @@
   "[jsonc]": {
     "editor.defaultFormatter": "vscode.json-language-features"
   },
+  "todo-tree.filtering.excludeGlobs": [
+    "**/*.map",
+    "**/*.min.*",
+    "**/dist/**",
+    "**/build/**",
+    "**/vendor/**",
+    "**/.vscode/**",
+    "**/.github/**",
+    "**/_output/**",
+    "**/node_modules/**",
+    "**/bower_components/**"
+  ],
+  "todo-tree.general.statusBar": "total",
   "todo-tree.general.tags": [
     "BUG",
     "HACK",
@@ -31,22 +59,22 @@
   ],
   "todo-tree.highlights.customHighlight": {
     "BUG": {
-      "borderRadius": "0px",
+      "borderRadius": "0",
       "fontStyle": "italic",
       "type": "text-and-comment"
     },
     "HACK": {
-      "borderRadius": "0px",
+      "borderRadius": "0",
       "fontStyle": "italic",
       "type": "text-and-comment"
     },
     "FIXME": {
-      "borderRadius": "0px",
+      "borderRadius": "0",
       "fontStyle": "italic",
       "type": "text-and-comment"
     },
     "TODO": {
-      "borderRadius": "0px",
+      "borderRadius": "0",
       "fontStyle": "italic",
       "type": "text-and-comment"
     },
