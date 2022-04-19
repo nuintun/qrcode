@@ -38,11 +38,11 @@ bower_components
 build/Release
 
 # Dependency directories
-node_modules
-jspm_packages
+node_modules/
+jspm_packages/
 
 # TypeScript v1 declaration files
-typings
+typings/
 
 # TypeScript cache
 *.tsbuildinfo
@@ -54,10 +54,10 @@ typings
 .eslintcache
 
 # Microbundle cache
-.rpt2_cache
-.rts2_cache_cjs
-.rts2_cache_es
-.rts2_cache_umd
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
 
 # Optional REPL history
 .node_repl_history
@@ -83,7 +83,7 @@ typings
 dist
 
 # Gatsby files
-.cache
+.cache/
 # Comment in the public line in if your project uses Gatsby and *not* Next.js
 # https://nextjs.org/blog/next-9-1#public-directory-support
 # public
@@ -92,17 +92,17 @@ dist
 .vuepress/dist
 
 # Serverless directories
-.serverless
+.serverless/
 
 # FuseBox cache
-.fusebox
+.fusebox/
 
 # DynamoDB Local files
-.dynamodb
+.dynamodb/
 
 # TernJS port file
 .tern-port
 
-# Build directories
-cjs
-esm
+# Build dist
+/cjs/
+/esm/

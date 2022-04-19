@@ -34,3 +34,7 @@ insert_final_newline = false
 # VSCode setting files
 [.vscode/**/*.json]
 insert_final_newline = false
+
+# Prettier setting files
+[.prettierrc]
+insert_final_newline = false
