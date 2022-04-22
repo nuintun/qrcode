@@ -25,7 +25,7 @@ type PrepareData = [BitBuffer, RSBlock[], number];
  * @function appendECI
  * @param {number} encoding
  * @param {BitBuffer} buffer
- * @see https://github.com/nayuki/QR-Code-generator/blob/master/typescript/qrcodegen.ts
+ * @see https://github.com/nayuki/QR-Code-generator/blob/master/typescript-javascript/qrcodegen.ts
  * @see https://github.com/zxing/zxing/blob/master/core/src/main/java/com/google/zxing/qrcode/encoder/Encoder.java
  */
 function appendECI(encoding: number, buffer: BitBuffer) {
