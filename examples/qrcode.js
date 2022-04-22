@@ -1,7 +1,7 @@
 /**
  * @module QRCode
  * @license MIT
- * @version 3.1.2
+ * @version 3.1.3
  * @author nuintun
  * @description A pure JavaScript QRCode encode and decode library.
  * @see https://github.com/nuintun/qrcode#readme
@@ -38,7 +38,7 @@
     // FNC1SecondPosition = 0x9
   })(exports.Mode || (exports.Mode = {}));
 
-  /*! *****************************************************************************
+  /******************************************************************************
     Copyright (c) Microsoft Corporation.
 
     Permission to use, copy, modify, and/or distribute this software for any
@@ -1266,7 +1266,7 @@
    * @function appendECI
    * @param {number} encoding
    * @param {BitBuffer} buffer
-   * @see https://github.com/nayuki/QR-Code-generator/blob/master/typescript/qrcodegen.ts
+   * @see https://github.com/nayuki/QR-Code-generator/blob/master/typescript-javascript/qrcodegen.ts
    * @see https://github.com/zxing/zxing/blob/master/core/src/main/java/com/google/zxing/qrcode/encoder/Encoder.java
    */
   function appendECI(encoding, buffer) {
