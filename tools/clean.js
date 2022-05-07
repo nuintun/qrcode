@@ -10,4 +10,4 @@ function clean(paths) {
   paths.forEach(path => rimraf.sync(path));
 }
 
-clean(['cjs', 'esm', 'typings', 'examples/qrcode.js']);
+clean(['cjs', 'esm', 'types', 'examples/qrcode.js']);

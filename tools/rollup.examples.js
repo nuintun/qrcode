@@ -9,9 +9,10 @@ import typescript from '@rollup/plugin-typescript';
 
 const banner = `/**
  * @module QRCode
+ * @package ${pkg.name}
  * @license ${pkg.license}
  * @version ${pkg.version}
- * @author ${pkg.author.name}
+ * @author ${pkg.author.name} <${pkg.author.email}>
  * @description ${pkg.description}
  * @see ${pkg.homepage}
  */
