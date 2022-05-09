@@ -1,10 +1,15 @@
 {
   "name": "@nuintun/qrcode",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "A pure JavaScript QRCode encode and decode library.",
-  "main": "cjs/index.js",
+  "type": "module",
+  "main": "cjs/index.cjs",
   "module": "esm/index.js",
   "types": "types/index.d.ts",
+  "exports": {
+    "import": "./esm/index.js",
+    "require": "./cjs/index.cjs"
+  },
   "files": [
     "cjs",
     "esm",
