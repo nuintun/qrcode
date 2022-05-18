@@ -35,11 +35,11 @@
   "scripts": {
     "lint": "tsc --noEmit",
     "clean": "node tools/clean.js",
+    "format": "prettier --write .",
     "prepublishOnly": "npm run build",
     "build:cjs": "rollup -c tools/rollup.cjs.js",
     "build:esm": "rollup -c tools/rollup.esm.js",
     "build:examples": "rollup -c tools/rollup.examples.js",
-    "format": "prettier --write tools src examples cjs esm types",
     "build:main": "npm run build:cjs && npm run build:esm && npm run build:types",
     "build:types": "tsc --declaration --emitDeclarationOnly --declarationDir types",
     "build": "npm run clean && npm run build:main && npm run build:examples && npm run format"
@@ -53,7 +53,7 @@
     "magic-string": "^0.26.2",
     "prettier": "^2.6.2",
     "rimraf": "^3.0.2",
-    "rollup": "^2.72.1",
+    "rollup": "^2.73.0",
     "typescript": "^4.6.4"
   },
   "homepage": "https://github.com/nuintun/qrcode#readme"

@@ -77,7 +77,7 @@
       "borderRadius": "0",
       "fontStyle": "italic",
       "type": "text-and-comment"
-    },
+    }
   },
   "editor.formatOnSave": true,
   "todo-tree.highlights.useColourScheme": true,

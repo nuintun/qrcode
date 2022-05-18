@@ -22,19 +22,3 @@ indent_style = tab
 [*.min.*]
 indent_style = false
 insert_final_newline = false
-
-# NPM package files
-[package.json]
-insert_final_newline = false
-
-# Typescript configure files
-[tsconfig.json]
-insert_final_newline = false
-
-# VSCode setting files
-[.vscode/**/*.json]
-insert_final_newline = false
-
-# Prettier setting files
-[.prettierrc]
-insert_final_newline = false

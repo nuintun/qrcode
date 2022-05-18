@@ -6,6 +6,15 @@
   "overrides": [
     {
       "files": [
+        "*.json",
+        ".prettierrc"
+      ],
+      "options": {
+        "parser": "json-stringify"
+      }
+    },
+    {
+      "files": [
         "*.css",
         "*.less",
         "*.scss"
