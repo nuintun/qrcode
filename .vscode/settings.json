@@ -53,9 +53,9 @@
   "todo-tree.general.statusBar": "total",
   "todo-tree.general.tags": [
     "BUG",
+    "TODO",
     "HACK",
-    "FIXME",
-    "TODO"
+    "FIXME"
   ],
   "todo-tree.highlights.customHighlight": {
     "BUG": {
