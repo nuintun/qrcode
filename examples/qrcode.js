@@ -250,7 +250,7 @@
         _this.encoding = encoding;
       } else {
         _this.bytes = encode$3(data);
-        _this.encoding = 26 /* UTF8 */;
+        _this.encoding = 26 /* EncodingHint.UTF8 */;
       }
       return _this;
     }
@@ -1218,35 +1218,35 @@
    */
   function getMaskFunc(maskPattern) {
     switch (maskPattern) {
-      case 0 /* PATTERN000 */:
+      case 0 /* MaskPattern.PATTERN000 */:
         return function (x, y) {
           return ((x + y) & 0x1) === 0;
         };
-      case 1 /* PATTERN001 */:
+      case 1 /* MaskPattern.PATTERN001 */:
         return function (_x, y) {
           return (y & 0x1) === 0;
         };
-      case 2 /* PATTERN010 */:
+      case 2 /* MaskPattern.PATTERN010 */:
         return function (x, _y) {
           return x % 3 === 0;
         };
-      case 3 /* PATTERN011 */:
+      case 3 /* MaskPattern.PATTERN011 */:
         return function (x, y) {
           return (x + y) % 3 === 0;
         };
-      case 4 /* PATTERN100 */:
+      case 4 /* MaskPattern.PATTERN100 */:
         return function (x, y) {
           return ((((x / 3) >> 0) + ((y / 2) >> 0)) & 0x1) === 0;
         };
-      case 5 /* PATTERN101 */:
+      case 5 /* MaskPattern.PATTERN101 */:
         return function (x, y) {
           return ((x * y) & 0x1) + ((x * y) % 3) === 0;
         };
-      case 6 /* PATTERN110 */:
+      case 6 /* MaskPattern.PATTERN110 */:
         return function (x, y) {
           return ((((x * y) & 0x1) + ((x * y) % 3)) & 0x1) === 0;
         };
-      case 7 /* PATTERN111 */:
+      case 7 /* MaskPattern.PATTERN111 */:
         return function (x, y) {
           return ((((x * y) % 3) + ((x + y) & 0x1)) & 0x1) === 0;
         };
@@ -4304,7 +4304,7 @@
     for (var i = 0; i < length; i++) {
       bytes.push(stream.readBits(8));
     }
-    return { bytes: bytes, data: encoding === 20 /* SJIS */ ? decode$1(bytes) : decode$2(bytes) };
+    return { bytes: bytes, data: encoding === 20 /* EncodingHint.SJIS */ ? decode$1(bytes) : decode$2(bytes) };
   }
   function decodeKanji(stream, size) {
     var data = '';
