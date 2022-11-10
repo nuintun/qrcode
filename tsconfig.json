@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
-    "strict": true,
+    "lib": [
+      "DOM",
+      "ES2015"
+    ],
     "pretty": true,
+    "strict": true,
     "newLine": "lf",
     "target": "ES5",
     "module": "ESNext",
@@ -19,6 +23,6 @@
     "src/**/*"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules/**/*"
   ]
 }

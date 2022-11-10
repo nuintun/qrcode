@@ -2,10 +2,12 @@
  * @module rollup.examples
  */
 
-import pkg from '../package.json';
-import treeShake from './plugins/tree-shake';
+import { createRequire } from 'module';
+import treeShake from './plugins/tree-shake.js';
 import resolve from '@rollup/plugin-node-resolve';
 import typescript from '@rollup/plugin-typescript';
+
+const pkg = createRequire(import.meta.url)('../package.json');
 
 const banner = `/**
  * @module QRCode
@@ -24,7 +26,7 @@ export default {
     banner,
     format: 'umd',
     name: 'QRCode',
-    interop: false,
+    interop: 'auto',
     exports: 'auto',
     esModule: false,
     amd: { id: 'qrcode' },

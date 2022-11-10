@@ -114,7 +114,7 @@ export class Decoder {
    * @returns {Promise}
    */
   public scan(src: string): Promise<DecoderResult> {
-    return new Promise((resolve, reject) => {
+    return new Promise<DecoderResult>((resolve, reject) => {
       const image = new Image();
 
       // Image cross origin
