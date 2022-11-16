@@ -4518,11 +4518,12 @@
     return codewords;
   }
   function readVersion(matrix) {
+    var _a;
     var dimension = matrix.height;
     var provisionalVersion = Math.floor((dimension - 17) / 4);
     if (provisionalVersion <= 6) {
       // 6 and under dont have version info in the QR code
-      return VERSIONS[provisionalVersion - 1];
+      return (_a = VERSIONS[provisionalVersion - 1]) !== null && _a !== void 0 ? _a : null;
     }
     var topRightVersionBits = 0;
     for (var y = 5; y >= 0; y--) {

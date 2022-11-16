@@ -162,7 +162,7 @@ function readVersion(matrix: BitMatrix): Version | null {
 
   if (provisionalVersion <= 6) {
     // 6 and under dont have version info in the QR code
-    return VERSIONS[provisionalVersion - 1];
+    return VERSIONS[provisionalVersion - 1] ?? null;
   }
 
   let topRightVersionBits = 0;
