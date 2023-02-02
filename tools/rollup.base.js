@@ -19,6 +19,11 @@ const banner = `/**
  */
 `;
 
+/**
+ * @function rollup
+ * @param esnext
+ * @return {import('rollup').RollupOptions}
+ */
 export default function rollup(esnext) {
   return {
     input: 'src/index.ts',
