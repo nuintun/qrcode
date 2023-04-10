@@ -49,12 +49,12 @@
     "tslib": "^2.5.0"
   },
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "^15.0.1",
-    "@rollup/plugin-typescript": "^11.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.2",
+    "@rollup/plugin-typescript": "^11.1.0",
     "magic-string": "^0.30.0",
-    "prettier": "^2.8.6",
-    "rimraf": "^4.4.1",
-    "rollup": "^3.20.1",
-    "typescript": "^5.0.2"
+    "prettier": "^2.8.7",
+    "rimraf": "^5.0.0",
+    "rollup": "^3.20.2",
+    "typescript": "^5.0.4"
   }
 }
