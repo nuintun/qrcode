@@ -9,7 +9,8 @@
   "types": "types/index.d.ts",
   "exports": {
     "import": "./esm/index.js",
-    "require": "./cjs/index.cjs"
+    "require": "./cjs/index.cjs",
+    "types": "./types/index.d.ts"
   },
   "files": [
     "cjs",
