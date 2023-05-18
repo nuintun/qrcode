@@ -7,7 +7,7 @@ import MagicString from 'magic-string';
 /***
  * @function treeShake
  * @description Fixed tree shaking for typescript and rollup preserve modules
- * @see https://github.com/GiG/rollup-plugin-rename-extensions
+ * @return {import('rollup').Plugin}
  */
 export default function treeShake() {
   return {
