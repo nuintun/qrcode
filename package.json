@@ -47,15 +47,15 @@
     "build": "npm run clean && npm run build:main && npm run build:examples && npm run format"
   },
   "dependencies": {
-    "tslib": "^2.5.0"
+    "tslib": "^2.5.1"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.0.2",
-    "@rollup/plugin-typescript": "^11.1.0",
+    "@rollup/plugin-typescript": "^11.1.1",
     "magic-string": "^0.30.0",
     "prettier": "^2.8.8",
-    "rimraf": "^5.0.0",
-    "rollup": "^3.21.6",
+    "rimraf": "^5.0.1",
+    "rollup": "^3.22.0",
     "typescript": "^5.0.4"
   }
 }
