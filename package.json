@@ -47,7 +47,7 @@
     "build": "npm run clean && npm run build:main && npm run build:examples && npm run format"
   },
   "dependencies": {
-    "tslib": "^2.5.1"
+    "tslib": "^2.5.2"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.0.2",
