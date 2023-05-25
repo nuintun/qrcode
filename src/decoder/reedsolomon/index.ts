@@ -14,10 +14,10 @@ function runEuclideanAlgorithm(field: GenericGF, a: GenericGFPoly, b: GenericGFP
     [a, b] = [b, a];
   }
 
-  let rLast = a;
   let r = b;
-  let tLast = field.zero;
+  let rLast = a;
   let t = field.one;
+  let tLast = field.zero;
 
   // Run Euclidean algorithm until r's degree is less than R/2
   while (r.degree() >= R / 2) {

@@ -1,5 +1,5 @@
 /**
- * @module ErrorCorrectionLevel
+ * @module ECLevel
  * @author nuintun
  * @author Cosmo Wolfe
  * @author Kazuhiko Arase
@@ -8,7 +8,7 @@
 /**
  * @readonly
  */
-export enum ErrorCorrectionLevel {
+export enum ECLevel {
   // 7%
   L = 1,
   // 15%

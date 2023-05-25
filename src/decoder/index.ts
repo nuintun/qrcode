@@ -5,12 +5,12 @@
  * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
  */
 
+import { ECLevel } from '/common/ECLevel';
 import { Version, VERSIONS } from './version';
 import { BitMatrix } from '/decoder/BitMatrix';
 import { rsDecode } from '/decoder/reedsolomon';
 import { getMaskFunc } from '/common/MaskPattern';
 import { DecodeResult, decodeText } from './decode';
-import { ErrorCorrectionLevel } from '/common/ErrorCorrectionLevel';
 
 function numBitsDiffering(x: number, y: number): number {
   let z = x ^ y;
@@ -29,8 +29,8 @@ function pushBit(bit: boolean, byte: number): number {
 }
 
 interface FormatInformation {
+  level: ECLevel;
   dataMask: number;
-  errorCorrectionLevel: ErrorCorrectionLevel;
 }
 
 interface FormatItem {
@@ -39,42 +39,42 @@ interface FormatItem {
 }
 
 const FORMAT_INFO_TABLE: FormatItem[] = [
-  { bits: 0x5412, formatInfo: { errorCorrectionLevel: 0, dataMask: 0 } },
-  { bits: 0x5125, formatInfo: { errorCorrectionLevel: 0, dataMask: 1 } },
-  { bits: 0x5e7c, formatInfo: { errorCorrectionLevel: 0, dataMask: 2 } },
-  { bits: 0x5b4b, formatInfo: { errorCorrectionLevel: 0, dataMask: 3 } },
-  { bits: 0x45f9, formatInfo: { errorCorrectionLevel: 0, dataMask: 4 } },
-  { bits: 0x40ce, formatInfo: { errorCorrectionLevel: 0, dataMask: 5 } },
-  { bits: 0x4f97, formatInfo: { errorCorrectionLevel: 0, dataMask: 6 } },
-  { bits: 0x4aa0, formatInfo: { errorCorrectionLevel: 0, dataMask: 7 } },
-  { bits: 0x77c4, formatInfo: { errorCorrectionLevel: 1, dataMask: 0 } },
-  { bits: 0x72f3, formatInfo: { errorCorrectionLevel: 1, dataMask: 1 } },
-  { bits: 0x7daa, formatInfo: { errorCorrectionLevel: 1, dataMask: 2 } },
-  { bits: 0x789d, formatInfo: { errorCorrectionLevel: 1, dataMask: 3 } },
-  { bits: 0x662f, formatInfo: { errorCorrectionLevel: 1, dataMask: 4 } },
-  { bits: 0x6318, formatInfo: { errorCorrectionLevel: 1, dataMask: 5 } },
-  { bits: 0x6c41, formatInfo: { errorCorrectionLevel: 1, dataMask: 6 } },
-  { bits: 0x6976, formatInfo: { errorCorrectionLevel: 1, dataMask: 7 } },
-  { bits: 0x1689, formatInfo: { errorCorrectionLevel: 2, dataMask: 0 } },
-  { bits: 0x13be, formatInfo: { errorCorrectionLevel: 2, dataMask: 1 } },
-  { bits: 0x1ce7, formatInfo: { errorCorrectionLevel: 2, dataMask: 2 } },
-  { bits: 0x19d0, formatInfo: { errorCorrectionLevel: 2, dataMask: 3 } },
-  { bits: 0x0762, formatInfo: { errorCorrectionLevel: 2, dataMask: 4 } },
-  { bits: 0x0255, formatInfo: { errorCorrectionLevel: 2, dataMask: 5 } },
-  { bits: 0x0d0c, formatInfo: { errorCorrectionLevel: 2, dataMask: 6 } },
-  { bits: 0x083b, formatInfo: { errorCorrectionLevel: 2, dataMask: 7 } },
-  { bits: 0x355f, formatInfo: { errorCorrectionLevel: 3, dataMask: 0 } },
-  { bits: 0x3068, formatInfo: { errorCorrectionLevel: 3, dataMask: 1 } },
-  { bits: 0x3f31, formatInfo: { errorCorrectionLevel: 3, dataMask: 2 } },
-  { bits: 0x3a06, formatInfo: { errorCorrectionLevel: 3, dataMask: 3 } },
-  { bits: 0x24b4, formatInfo: { errorCorrectionLevel: 3, dataMask: 4 } },
-  { bits: 0x2183, formatInfo: { errorCorrectionLevel: 3, dataMask: 5 } },
-  { bits: 0x2eda, formatInfo: { errorCorrectionLevel: 3, dataMask: 6 } },
-  { bits: 0x2bed, formatInfo: { errorCorrectionLevel: 3, dataMask: 7 } }
+  { bits: 0x5412, formatInfo: { level: 0, dataMask: 0 } },
+  { bits: 0x5125, formatInfo: { level: 0, dataMask: 1 } },
+  { bits: 0x5e7c, formatInfo: { level: 0, dataMask: 2 } },
+  { bits: 0x5b4b, formatInfo: { level: 0, dataMask: 3 } },
+  { bits: 0x45f9, formatInfo: { level: 0, dataMask: 4 } },
+  { bits: 0x40ce, formatInfo: { level: 0, dataMask: 5 } },
+  { bits: 0x4f97, formatInfo: { level: 0, dataMask: 6 } },
+  { bits: 0x4aa0, formatInfo: { level: 0, dataMask: 7 } },
+  { bits: 0x77c4, formatInfo: { level: 1, dataMask: 0 } },
+  { bits: 0x72f3, formatInfo: { level: 1, dataMask: 1 } },
+  { bits: 0x7daa, formatInfo: { level: 1, dataMask: 2 } },
+  { bits: 0x789d, formatInfo: { level: 1, dataMask: 3 } },
+  { bits: 0x662f, formatInfo: { level: 1, dataMask: 4 } },
+  { bits: 0x6318, formatInfo: { level: 1, dataMask: 5 } },
+  { bits: 0x6c41, formatInfo: { level: 1, dataMask: 6 } },
+  { bits: 0x6976, formatInfo: { level: 1, dataMask: 7 } },
+  { bits: 0x1689, formatInfo: { level: 2, dataMask: 0 } },
+  { bits: 0x13be, formatInfo: { level: 2, dataMask: 1 } },
+  { bits: 0x1ce7, formatInfo: { level: 2, dataMask: 2 } },
+  { bits: 0x19d0, formatInfo: { level: 2, dataMask: 3 } },
+  { bits: 0x0762, formatInfo: { level: 2, dataMask: 4 } },
+  { bits: 0x0255, formatInfo: { level: 2, dataMask: 5 } },
+  { bits: 0x0d0c, formatInfo: { level: 2, dataMask: 6 } },
+  { bits: 0x083b, formatInfo: { level: 2, dataMask: 7 } },
+  { bits: 0x355f, formatInfo: { level: 3, dataMask: 0 } },
+  { bits: 0x3068, formatInfo: { level: 3, dataMask: 1 } },
+  { bits: 0x3f31, formatInfo: { level: 3, dataMask: 2 } },
+  { bits: 0x3a06, formatInfo: { level: 3, dataMask: 3 } },
+  { bits: 0x24b4, formatInfo: { level: 3, dataMask: 4 } },
+  { bits: 0x2183, formatInfo: { level: 3, dataMask: 5 } },
+  { bits: 0x2eda, formatInfo: { level: 3, dataMask: 6 } },
+  { bits: 0x2bed, formatInfo: { level: 3, dataMask: 7 } }
 ];
 
-function buildFunctionPatternMask(version: Version): BitMatrix {
-  const dimension = 17 + 4 * version.versionNumber;
+function buildFunctionPatternMask({ version, alignmentPatternCenters }: Version): BitMatrix {
+  const dimension = 17 + 4 * version;
   const matrix = BitMatrix.createEmpty(dimension, dimension);
 
   matrix.setRegion(0, 0, 9, 9, true); // Top left finder pattern + separator + format
@@ -82,8 +82,8 @@ function buildFunctionPatternMask(version: Version): BitMatrix {
   matrix.setRegion(0, dimension - 8, 9, 8, true); // Bottom left finder pattern + separator + format
 
   // Alignment patterns
-  for (const x of version.alignmentPatternCenters) {
-    for (const y of version.alignmentPatternCenters) {
+  for (const x of alignmentPatternCenters) {
+    for (const y of alignmentPatternCenters) {
       if (!((x === 6 && y === 6) || (x === 6 && y === dimension - 7) || (x === dimension - 7 && y === 6))) {
         matrix.setRegion(x - 2, y - 2, 5, 5, true);
       }
@@ -93,7 +93,7 @@ function buildFunctionPatternMask(version: Version): BitMatrix {
   matrix.setRegion(6, 9, 1, dimension - 17, true); // Vertical timing pattern
   matrix.setRegion(9, 6, dimension - 17, 1, true); // Horizontal timing pattern
 
-  if (version.versionNumber > 6) {
+  if (version > 6) {
     matrix.setRegion(dimension - 11, 0, 3, 6, true); // Version info, top right
     matrix.setRegion(0, dimension - 11, 6, 3, true); // Version info, bottom left
   }
@@ -183,18 +183,20 @@ function readVersion(matrix: BitMatrix): Version | never {
   let bestVersion: Version | null = null;
 
   for (const version of VERSIONS) {
-    if (version.infoBits === topRightVersionBits || version.infoBits === bottomLeftVersionBits) {
+    const { bits } = version;
+
+    if (bits === topRightVersionBits || bits === bottomLeftVersionBits) {
       return version;
     }
 
-    let difference = numBitsDiffering(topRightVersionBits, version.infoBits);
+    let difference = numBitsDiffering(topRightVersionBits, bits);
 
     if (difference < bestDifference) {
       bestVersion = version;
       bestDifference = difference;
     }
 
-    difference = numBitsDiffering(bottomLeftVersionBits, version.infoBits);
+    difference = numBitsDiffering(bottomLeftVersionBits, bits);
 
     if (difference < bestDifference) {
       bestVersion = version;
@@ -281,17 +283,17 @@ interface DataBlock {
   numDataCodewords: number;
 }
 
-function getDataBlocks(codewords: number[], version: Version, errorCorrectionLevel: number): DataBlock[] | never {
-  const dataBlocks: DataBlock[] = [];
-  const ecInfo = version.errorCorrectionLevels[errorCorrectionLevel];
-
+function getDataBlocks(codewords: number[], version: Version, level: number): DataBlock[] | never {
   let totalCodewords = 0;
 
-  ecInfo.ecBlocks.forEach(block => {
-    for (let i = 0; i < block.numBlocks; i++) {
-      dataBlocks.push({ numDataCodewords: block.dataCodewordsPerBlock, codewords: [] });
+  const dataBlocks: DataBlock[] = [];
+  const { ecBlocks, ecCodewordsPerBlock } = version.ecLevels[level];
 
-      totalCodewords += block.dataCodewordsPerBlock + ecInfo.ecCodewordsPerBlock;
+  ecBlocks.forEach(({ numBlocks, dataCodewordsPerBlock }) => {
+    for (let i = 0; i < numBlocks; i++) {
+      dataBlocks.push({ numDataCodewords: dataCodewordsPerBlock, codewords: [] });
+
+      totalCodewords += dataCodewordsPerBlock + ecCodewordsPerBlock;
     }
   });
 
@@ -304,7 +306,7 @@ function getDataBlocks(codewords: number[], version: Version, errorCorrectionLev
 
   codewords = codewords.slice(0, totalCodewords);
 
-  const shortBlockSize = ecInfo.ecBlocks[0].dataCodewordsPerBlock;
+  const shortBlockSize = ecBlocks[0].dataCodewordsPerBlock;
 
   // Pull codewords to fill the blocks up to the minimum size
   for (let i = 0; i < shortBlockSize; i++) {
@@ -314,9 +316,9 @@ function getDataBlocks(codewords: number[], version: Version, errorCorrectionLev
   }
 
   // If there are any large blocks, pull codewords to fill the last element of those
-  if (ecInfo.ecBlocks.length > 1) {
-    const smallBlockCount = ecInfo.ecBlocks[0].numBlocks;
-    const largeBlockCount = ecInfo.ecBlocks[1].numBlocks;
+  if (ecBlocks.length > 1) {
+    const smallBlockCount = ecBlocks[0].numBlocks;
+    const largeBlockCount = ecBlocks[1].numBlocks;
 
     for (let i = 0; i < largeBlockCount; i++) {
       dataBlocks[smallBlockCount + i].codewords.push(codewords.shift() as number);
@@ -337,23 +339,22 @@ function decodeMatrix(matrix: BitMatrix): DecodeResult | never {
   const version = readVersion(matrix);
   const formatInfo = readFormatInformation(matrix);
   const codewords = readCodewords(matrix, version, formatInfo);
-  const dataBlocks = getDataBlocks(codewords, version, formatInfo.errorCorrectionLevel);
-
-  // Count total number of data bytes
+  const dataBlocks = getDataBlocks(codewords, version, formatInfo.level);
   const totalBytes = dataBlocks.reduce((a, b) => a + b.numDataCodewords, 0);
-  const resultBytes = new Uint8ClampedArray(totalBytes);
 
   let resultIndex = 0;
 
-  for (const dataBlock of dataBlocks) {
-    const correctedBytes = rsDecode(dataBlock.codewords, dataBlock.codewords.length - dataBlock.numDataCodewords);
+  const resultBytes = new Uint8ClampedArray(totalBytes);
 
-    for (let i = 0; i < dataBlock.numDataCodewords; i++) {
+  for (const { codewords, numDataCodewords } of dataBlocks) {
+    const correctedBytes = rsDecode(codewords, codewords.length - numDataCodewords);
+
+    for (let i = 0; i < numDataCodewords; i++) {
       resultBytes[resultIndex++] = correctedBytes[i];
     }
   }
 
-  return decodeText(resultBytes, version.versionNumber, formatInfo.errorCorrectionLevel);
+  return decodeText(resultBytes, version.version, formatInfo.level);
 }
 
 export function decode(matrix: BitMatrix): DecodeResult | never {

@@ -16,18 +16,18 @@ export interface ECLevel {
 }
 
 export interface Version {
-  infoBits: number;
-  versionNumber: number;
-  errorCorrectionLevels: ECLevel[];
+  bits: number;
+  version: number;
+  ecLevels: ECLevel[];
   alignmentPatternCenters: number[];
 }
 
 export const VERSIONS: Version[] = [
   {
-    infoBits: 0x00000,
-    versionNumber: 1,
+    version: 1,
+    bits: 0x00000,
     alignmentPatternCenters: [],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 10,
         ecBlocks: [{ numBlocks: 1, dataCodewordsPerBlock: 16 }]
@@ -47,10 +47,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x00000,
-    versionNumber: 2,
+    version: 2,
+    bits: 0x00000,
     alignmentPatternCenters: [6, 18],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 16,
         ecBlocks: [{ numBlocks: 1, dataCodewordsPerBlock: 28 }]
@@ -70,10 +70,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x00000,
-    versionNumber: 3,
+    version: 3,
+    bits: 0x00000,
     alignmentPatternCenters: [6, 22],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 26,
         ecBlocks: [{ numBlocks: 1, dataCodewordsPerBlock: 44 }]
@@ -93,10 +93,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x00000,
-    versionNumber: 4,
+    version: 4,
+    bits: 0x00000,
     alignmentPatternCenters: [6, 26],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 18,
         ecBlocks: [{ numBlocks: 2, dataCodewordsPerBlock: 32 }]
@@ -116,10 +116,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x00000,
-    versionNumber: 5,
+    version: 5,
+    bits: 0x00000,
     alignmentPatternCenters: [6, 30],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 24,
         ecBlocks: [{ numBlocks: 2, dataCodewordsPerBlock: 43 }]
@@ -145,10 +145,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x00000,
-    versionNumber: 6,
+    version: 6,
+    bits: 0x00000,
     alignmentPatternCenters: [6, 34],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 16,
         ecBlocks: [{ numBlocks: 4, dataCodewordsPerBlock: 27 }]
@@ -168,10 +168,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x07c94,
-    versionNumber: 7,
+    version: 7,
+    bits: 0x07c94,
     alignmentPatternCenters: [6, 22, 38],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 18,
         ecBlocks: [{ numBlocks: 4, dataCodewordsPerBlock: 31 }]
@@ -197,10 +197,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x085bc,
-    versionNumber: 8,
+    version: 8,
+    bits: 0x085bc,
     alignmentPatternCenters: [6, 24, 42],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 22,
         ecBlocks: [
@@ -229,10 +229,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x09a99,
-    versionNumber: 9,
+    version: 9,
+    bits: 0x09a99,
     alignmentPatternCenters: [6, 26, 46],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 22,
         ecBlocks: [
@@ -261,10 +261,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x0a4d3,
-    versionNumber: 10,
+    version: 10,
+    bits: 0x0a4d3,
     alignmentPatternCenters: [6, 28, 50],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 26,
         ecBlocks: [
@@ -296,10 +296,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x0bbf6,
-    versionNumber: 11,
+    version: 11,
+    bits: 0x0bbf6,
     alignmentPatternCenters: [6, 30, 54],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 30,
         ecBlocks: [
@@ -328,10 +328,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x0c762,
-    versionNumber: 12,
+    version: 12,
+    bits: 0x0c762,
     alignmentPatternCenters: [6, 32, 58],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 22,
         ecBlocks: [
@@ -363,10 +363,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x0d847,
-    versionNumber: 13,
+    version: 13,
+    bits: 0x0d847,
     alignmentPatternCenters: [6, 34, 62],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 22,
         ecBlocks: [
@@ -395,10 +395,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x0e60d,
-    versionNumber: 14,
+    version: 14,
+    bits: 0x0e60d,
     alignmentPatternCenters: [6, 26, 46, 66],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 24,
         ecBlocks: [
@@ -430,10 +430,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x0f928,
-    versionNumber: 15,
+    version: 15,
+    bits: 0x0f928,
     alignmentPatternCenters: [6, 26, 48, 70],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 24,
         ecBlocks: [
@@ -465,10 +465,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x10b78,
-    versionNumber: 16,
+    version: 16,
+    bits: 0x10b78,
     alignmentPatternCenters: [6, 26, 50, 74],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [
@@ -500,10 +500,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x1145d,
-    versionNumber: 17,
+    version: 17,
+    bits: 0x1145d,
     alignmentPatternCenters: [6, 30, 54, 78],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [
@@ -535,10 +535,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x12a17,
-    versionNumber: 18,
+    version: 18,
+    bits: 0x12a17,
     alignmentPatternCenters: [6, 30, 56, 82],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 26,
         ecBlocks: [
@@ -570,10 +570,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x13532,
-    versionNumber: 19,
+    version: 19,
+    bits: 0x13532,
     alignmentPatternCenters: [6, 30, 58, 86],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 26,
         ecBlocks: [
@@ -605,10 +605,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x149a6,
-    versionNumber: 20,
+    version: 20,
+    bits: 0x149a6,
     alignmentPatternCenters: [6, 34, 62, 90],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 26,
         ecBlocks: [
@@ -640,10 +640,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x15683,
-    versionNumber: 21,
+    version: 21,
+    bits: 0x15683,
     alignmentPatternCenters: [6, 28, 50, 72, 94],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 26,
         ecBlocks: [{ numBlocks: 17, dataCodewordsPerBlock: 42 }]
@@ -672,10 +672,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x168c9,
-    versionNumber: 22,
+    version: 22,
+    bits: 0x168c9,
     alignmentPatternCenters: [6, 26, 50, 74, 98],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [{ numBlocks: 17, dataCodewordsPerBlock: 46 }]
@@ -701,10 +701,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x177ec,
-    versionNumber: 23,
+    version: 23,
+    bits: 0x177ec,
     alignmentPatternCenters: [6, 30, 54, 74, 102],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [
@@ -737,10 +737,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x18ec4,
-    versionNumber: 24,
+    version: 24,
+    bits: 0x18ec4,
     alignmentPatternCenters: [6, 28, 54, 80, 106],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [
@@ -772,10 +772,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x191e1,
-    versionNumber: 25,
+    version: 25,
+    bits: 0x191e1,
     alignmentPatternCenters: [6, 32, 58, 84, 110],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [
@@ -807,10 +807,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x1afab,
-    versionNumber: 26,
+    version: 26,
+    bits: 0x1afab,
     alignmentPatternCenters: [6, 30, 58, 86, 114],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [
@@ -842,10 +842,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x1b08e,
-    versionNumber: 27,
+    version: 27,
+    bits: 0x1b08e,
     alignmentPatternCenters: [6, 34, 62, 90, 118],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [
@@ -877,10 +877,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x1cc1a,
-    versionNumber: 28,
+    version: 28,
+    bits: 0x1cc1a,
     alignmentPatternCenters: [6, 26, 50, 74, 98, 122],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [
@@ -912,10 +912,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x1d33f,
-    versionNumber: 29,
+    version: 29,
+    bits: 0x1d33f,
     alignmentPatternCenters: [6, 30, 54, 78, 102, 126],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [
@@ -947,10 +947,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x1ed75,
-    versionNumber: 30,
+    version: 30,
+    bits: 0x1ed75,
     alignmentPatternCenters: [6, 26, 52, 78, 104, 130],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [
@@ -982,10 +982,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x1f250,
-    versionNumber: 31,
+    version: 31,
+    bits: 0x1f250,
     alignmentPatternCenters: [6, 30, 56, 82, 108, 134],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [
@@ -1017,10 +1017,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x209d5,
-    versionNumber: 32,
+    version: 32,
+    bits: 0x209d5,
     alignmentPatternCenters: [6, 34, 60, 86, 112, 138],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [
@@ -1049,10 +1049,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x216f0,
-    versionNumber: 33,
+    version: 33,
+    bits: 0x216f0,
     alignmentPatternCenters: [6, 30, 58, 86, 114, 142],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [
@@ -1084,10 +1084,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x228ba,
-    versionNumber: 34,
+    version: 34,
+    bits: 0x228ba,
     alignmentPatternCenters: [6, 34, 62, 90, 118, 146],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [
@@ -1119,10 +1119,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x2379f,
-    versionNumber: 35,
+    version: 35,
+    bits: 0x2379f,
     alignmentPatternCenters: [6, 30, 54, 78, 102, 126, 150],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [
@@ -1154,10 +1154,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x24b0b,
-    versionNumber: 36,
+    version: 36,
+    bits: 0x24b0b,
     alignmentPatternCenters: [6, 24, 50, 76, 102, 128, 154],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [
@@ -1189,10 +1189,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x2542e,
-    versionNumber: 37,
+    version: 37,
+    bits: 0x2542e,
     alignmentPatternCenters: [6, 28, 54, 80, 106, 132, 158],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [
@@ -1224,10 +1224,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x26a64,
-    versionNumber: 38,
+    version: 38,
+    bits: 0x26a64,
     alignmentPatternCenters: [6, 32, 58, 84, 110, 136, 162],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [
@@ -1259,10 +1259,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x27541,
-    versionNumber: 39,
+    version: 39,
+    bits: 0x27541,
     alignmentPatternCenters: [6, 26, 54, 82, 110, 138, 166],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [
@@ -1294,10 +1294,10 @@ export const VERSIONS: Version[] = [
     ]
   },
   {
-    infoBits: 0x28c69,
-    versionNumber: 40,
+    version: 40,
+    bits: 0x28c69,
     alignmentPatternCenters: [6, 30, 58, 86, 114, 142, 170],
-    errorCorrectionLevels: [
+    ecLevels: [
       {
         ecCodewordsPerBlock: 28,
         ecBlocks: [
