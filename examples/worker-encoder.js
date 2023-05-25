@@ -23,13 +23,13 @@ function chooseBestModeData(mode, data) {
 
 self.onmessage = function (e) {
   var data = e.data;
-  var qrcode = new QRCode.Encoder();
-  var errorCorrectionLevel = QRCode.ErrorCorrectionLevel[data.ecLevel];
-
-  qrcode.setEncodingHint(data.hasEncodingHint).setErrorCorrectionLevel(errorCorrectionLevel);
+  var qrcode = new QRCode.Writer({
+    hint: data.hasEncodingHint,
+    level: QRCode.ErrorCorrectionLevel[data.ecLevel]
+  });
 
   try {
-    qrcode.write(chooseBestModeData(data.mode, data.text)).make();
+    qrcode.write(chooseBestModeData(data.mode, data.text)).encode();
 
     self.postMessage({
       ok: true,

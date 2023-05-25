@@ -4,10 +4,11 @@
       "DOM",
       "ES2015"
     ],
+    "baseUrl": ".",
     "pretty": true,
     "strict": true,
     "newLine": "lf",
-    "target": "ES5",
+    "target": "ES2015",
     "module": "ESNext",
     "skipLibCheck": true,
     "importHelpers": true,
@@ -17,7 +18,12 @@
     "moduleResolution": "node",
     "noUnusedParameters": true,
     "experimentalDecorators": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "/*": [
+        "src/*"
+      ]
+    }
   },
   "include": [
     "src/**/*"

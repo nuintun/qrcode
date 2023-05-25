@@ -1,18 +1,16 @@
 /**
- * @module index
+ * @module decoder
  * @author nuintun
  * @author Cosmo Wolfe
  * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
  */
 
-import { rsDecode } from './reedsolomon';
-import { BitMatrix } from '../BitMatrix';
 import { Version, VERSIONS } from './version';
-import { bytesDecode, DecodeResult } from './decode';
-import { getMaskFunc } from '../../common/MaskPattern';
-import { ErrorCorrectionLevel } from '../../common/ErrorCorrectionLevel';
-
-export { DecodeResult };
+import { BitMatrix } from '/decoder/BitMatrix';
+import { rsDecode } from '/decoder/reedsolomon';
+import { getMaskFunc } from '/common/MaskPattern';
+import { DecodeResult, decodeText } from './decode';
+import { ErrorCorrectionLevel } from '/common/ErrorCorrectionLevel';
 
 function numBitsDiffering(x: number, y: number): number {
   let z = x ^ y;
@@ -156,7 +154,7 @@ function readCodewords(matrix: BitMatrix, version: Version, formatInfo: FormatIn
   return codewords;
 }
 
-function readVersion(matrix: BitMatrix): Version | null {
+function readVersion(matrix: BitMatrix): Version | never {
   const dimension = matrix.height;
   const provisionalVersion = Math.floor((dimension - 17) / 4);
 
@@ -206,14 +204,14 @@ function readVersion(matrix: BitMatrix): Version | null {
 
   // We can tolerate up to 3 bits of error since no two version info codewords will
   // differ in less than 8 bits.
-  if (bestDifference <= 3) {
+  if (bestVersion !== null && bestDifference <= 3) {
     return bestVersion;
   }
 
-  return null;
+  throw new Error('failed to read version');
 }
 
-function readFormatInformation(matrix: BitMatrix): FormatInformation | null {
+function readFormatInformation(matrix: BitMatrix): FormatInformation | never {
   let topLeftFormatInfoBits = 0;
 
   for (let x = 0; x <= 8; x++) {
@@ -271,11 +269,11 @@ function readFormatInformation(matrix: BitMatrix): FormatInformation | null {
   }
 
   // Hamming distance of the 32 masked codes is 7, by construction, so <= 3 bits differing means we found a match
-  if (bestDifference <= 3) {
+  if (bestFormatInfo !== null && bestDifference <= 3) {
     return bestFormatInfo;
   }
 
-  return null;
+  throw new Error('failed to read format information');
 }
 
 interface DataBlock {
@@ -283,7 +281,7 @@ interface DataBlock {
   numDataCodewords: number;
 }
 
-function getDataBlocks(codewords: number[], version: Version, errorCorrectionLevel: number): DataBlock[] | null {
+function getDataBlocks(codewords: number[], version: Version, errorCorrectionLevel: number): DataBlock[] | never {
   const dataBlocks: DataBlock[] = [];
   const ecInfo = version.errorCorrectionLevels[errorCorrectionLevel];
 
@@ -301,7 +299,7 @@ function getDataBlocks(codewords: number[], version: Version, errorCorrectionLev
   // If we pull off less there's nothing we can do.
   // If we pull off more we can safely truncate
   if (codewords.length < totalCodewords) {
-    return null;
+    throw new Error('failed to get data blocks');
   }
 
   codewords = codewords.slice(0, totalCodewords);
@@ -335,25 +333,11 @@ function getDataBlocks(codewords: number[], version: Version, errorCorrectionLev
   return dataBlocks;
 }
 
-function decodeMatrix(matrix: BitMatrix): DecodeResult | null {
+function decodeMatrix(matrix: BitMatrix): DecodeResult | never {
   const version = readVersion(matrix);
-
-  if (version === null) {
-    return null;
-  }
-
   const formatInfo = readFormatInformation(matrix);
-
-  if (formatInfo === null) {
-    return null;
-  }
-
   const codewords = readCodewords(matrix, version, formatInfo);
   const dataBlocks = getDataBlocks(codewords, version, formatInfo.errorCorrectionLevel);
-
-  if (dataBlocks === null) {
-    return null;
-  }
 
   // Count total number of data bytes
   const totalBytes = dataBlocks.reduce((a, b) => a + b.numDataCodewords, 0);
@@ -364,38 +348,30 @@ function decodeMatrix(matrix: BitMatrix): DecodeResult | null {
   for (const dataBlock of dataBlocks) {
     const correctedBytes = rsDecode(dataBlock.codewords, dataBlock.codewords.length - dataBlock.numDataCodewords);
 
-    if (correctedBytes === null) {
-      return null;
-    }
-
     for (let i = 0; i < dataBlock.numDataCodewords; i++) {
       resultBytes[resultIndex++] = correctedBytes[i];
     }
   }
 
-  try {
-    return bytesDecode(resultBytes, version.versionNumber, formatInfo.errorCorrectionLevel);
-  } catch {
-    return null;
-  }
+  return decodeText(resultBytes, version.versionNumber, formatInfo.errorCorrectionLevel);
 }
 
-export function decode(matrix: BitMatrix): DecodeResult | null {
-  const result = decodeMatrix(matrix);
-
-  if (result !== null) {
-    return result;
-  }
-
-  // Decoding didn't work, try mirroring the QR across the topLeft -> bottomRight line.
-  for (let x = 0; x < matrix.width; x++) {
-    for (let y = x + 1; y < matrix.height; y++) {
-      if (matrix.get(x, y) !== matrix.get(y, x)) {
-        matrix.set(x, y, !matrix.get(x, y));
-        matrix.set(y, x, !matrix.get(y, x));
+export function decode(matrix: BitMatrix): DecodeResult | never {
+  try {
+    return decodeMatrix(matrix);
+  } catch {
+    // Decoding didn't work, try mirroring the QR across the topLeft -> bottomRight line.
+    for (let x = 0; x < matrix.width; x++) {
+      for (let y = x + 1; y < matrix.height; y++) {
+        if (matrix.get(x, y) !== matrix.get(y, x)) {
+          matrix.set(x, y, !matrix.get(x, y));
+          matrix.set(y, x, !matrix.get(y, x));
+        }
       }
     }
-  }
 
-  return decodeMatrix(matrix);
+    return decodeMatrix(matrix);
+  }
 }
+
+export { DecodeResult };

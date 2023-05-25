@@ -130,15 +130,15 @@
           return alert('请输入二维码内容');
         }
 
-        var qrcode = new QRCode.Encoder();
-        var errorCorrectionLevel = QRCode.ErrorCorrectionLevel[ecLevel];
-
-        qrcode.setEncodingHint(hasEncodingHint).setErrorCorrectionLevel(errorCorrectionLevel);
+        var qrcode = new QRCode.Writer({
+          hint: hasEncodingHint,
+          level: QRCode.ErrorCorrectionLevel[ecLevel]
+        });
 
         try {
           var data = mode === 'Auto' ? chooseBestModeData(data) : new QRCode[mode](data);
 
-          qrcode.write(data).make();
+          qrcode.write(data).encode();
 
           encodeResult.html('<img src="' + qrcode.toDataURL(moduleSize, margin) + '" />');
           encodeResult.removeClass('hide');

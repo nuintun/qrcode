@@ -6,9 +6,9 @@
  */
 
 import { QRData } from './QRData';
-import { Mode } from '../common/Mode';
+import { Mode } from '/common/Mode';
 import { BitBuffer } from './BitBuffer';
-import { encode } from '../../encoding/SJIS';
+import { encode } from '/encoding/SJIS';
 
 export class QRKanji extends QRData {
   /**

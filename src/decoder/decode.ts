@@ -5,12 +5,12 @@
  * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
  */
 
+import { Mode } from '/common/Mode';
 import { BitStream } from './BitStream';
-import { Mode } from '../../../common/Mode';
-import { EncodingHint } from '../../../common/EncodingHint';
-import { decode as decodeUTF8 } from '../../../../encoding/UTF8';
-import { ErrorCorrectionLevel } from '../../../common/ErrorCorrectionLevel';
-import { decode as decodeSJIS, getTables } from '../../../../encoding/SJIS';
+import { EncodingHint } from '/common/EncodingHint';
+import { decode as decodeUTF8 } from '/encoding/UTF8';
+import { decode as decodeSJIS, getTables } from '/encoding/SJIS';
+import { ErrorCorrectionLevel } from '/common/ErrorCorrectionLevel';
 
 interface ByteChunk {
   mode: Mode.Numeric | Mode.Alphanumeric | Mode.Byte | Mode.Kanji;
@@ -176,14 +176,14 @@ function decodeKanji(stream: BitStream, size: number): DecodeData {
   return { bytes, data };
 }
 
-export function bytesDecode(
-  data: Uint8ClampedArray,
+export function decodeText(
+  bytes: Uint8ClampedArray,
   version: number,
   errorCorrectionLevel: ErrorCorrectionLevel
-): DecodeResult | null {
+): DecodeResult | never {
   let encoding = -1;
 
-  const stream = new BitStream(data);
+  const stream = new BitStream(bytes);
   // There are 3 'sizes' based on the version. 1-9 is small (0), 10-26 is medium (1) and 27-40 is large (2).
   const size = version <= 9 ? 0 : version <= 26 ? 1 : 2;
   const result: DecodeResult = { data: '', bytes: [], chunks: [], version, errorCorrectionLevel };
@@ -266,5 +266,5 @@ export function bytesDecode(
     return result;
   }
 
-  return null;
+  throw new Error('failed to decode bytes');
 }

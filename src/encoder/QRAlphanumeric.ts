@@ -7,7 +7,7 @@
 import { QRData } from './QRData';
 import { Mode } from '../common/Mode';
 import { BitBuffer } from './BitBuffer';
-import { encode } from '../../encoding/UTF16';
+import { encode } from '/encoding/UTF16';
 
 function getByte(byte: number): number {
   if (0x30 <= byte && byte <= 0x39) {

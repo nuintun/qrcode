@@ -8,7 +8,7 @@
 import { GenericGFPoly } from './GenericGFPoly';
 import { addOrSubtractGF, GenericGF } from './GenericGF';
 
-function runEuclideanAlgorithm(field: GenericGF, a: GenericGFPoly, b: GenericGFPoly, R: number): GenericGFPoly[] | null {
+function runEuclideanAlgorithm(field: GenericGF, a: GenericGFPoly, b: GenericGFPoly, R: number): GenericGFPoly[] | never {
   // Assume a's degree is >= b's
   if (a.degree() < b.degree()) {
     [a, b] = [b, a];
@@ -30,7 +30,7 @@ function runEuclideanAlgorithm(field: GenericGF, a: GenericGFPoly, b: GenericGFP
     // Divide rLastLast by rLast, with quotient in q and remainder in r
     if (rLast.isZero()) {
       // Euclidean algorithm already terminated?
-      return null;
+      throw new Error();
     }
 
     r = rLastLast;
@@ -51,14 +51,14 @@ function runEuclideanAlgorithm(field: GenericGF, a: GenericGFPoly, b: GenericGFP
     t = q.multiplyPoly(tLast).addOrSubtract(tLastLast);
 
     if (r.degree() >= rLast.degree()) {
-      return null;
+      throw new Error();
     }
   }
 
   const sigmaTildeAtZero = t.getCoefficient(0);
 
   if (sigmaTildeAtZero === 0) {
-    return null;
+    throw new Error();
   }
 
   const inverse = field.inverse(sigmaTildeAtZero);
@@ -66,7 +66,7 @@ function runEuclideanAlgorithm(field: GenericGF, a: GenericGFPoly, b: GenericGFP
   return [t.multiply(inverse), r.multiply(inverse)];
 }
 
-function findErrorLocations(field: GenericGF, errorLocator: GenericGFPoly): number[] | null {
+function findErrorLocations(field: GenericGF, errorLocator: GenericGFPoly): number[] | never {
   // This is a direct application of Chien's search
   const numErrors = errorLocator.degree();
 
@@ -86,7 +86,7 @@ function findErrorLocations(field: GenericGF, errorLocator: GenericGFPoly): numb
   }
 
   if (errorCount !== numErrors) {
-    return null;
+    throw new Error();
   }
 
   return result;
@@ -117,7 +117,7 @@ function findErrorMagnitudes(field: GenericGF, errorEvaluator: GenericGFPoly, er
   return result;
 }
 
-export function rsDecode(bytes: number[], twoS: number): Uint8ClampedArray | null {
+export function rsDecode(bytes: number[], twoS: number): Uint8ClampedArray | never {
   const outputBytes = new Uint8ClampedArray(bytes.length);
 
   outputBytes.set(bytes);
@@ -146,13 +146,13 @@ export function rsDecode(bytes: number[], twoS: number): Uint8ClampedArray | nul
   const sigmaOmega = runEuclideanAlgorithm(field, field.buildMonomial(twoS, 1), syndrome, twoS);
 
   if (sigmaOmega === null) {
-    return null;
+    throw new Error();
   }
 
   const errorLocations = findErrorLocations(field, sigmaOmega[0]);
 
   if (errorLocations == null) {
-    return null;
+    throw new Error();
   }
 
   const errorMagnitudes = findErrorMagnitudes(field, sigmaOmega[1], errorLocations);
@@ -161,7 +161,7 @@ export function rsDecode(bytes: number[], twoS: number): Uint8ClampedArray | nul
     const position = outputBytes.length - 1 - field.log(errorLocations[i]);
 
     if (position < 0) {
-      return null;
+      throw new Error();
     }
 
     outputBytes[position] = addOrSubtractGF(outputBytes[position], errorMagnitudes[i]);

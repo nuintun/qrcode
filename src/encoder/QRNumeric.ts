@@ -5,9 +5,9 @@
  */
 
 import { QRData } from './QRData';
-import { Mode } from '../common/Mode';
+import { Mode } from '/common/Mode';
 import { BitBuffer } from './BitBuffer';
-import { encode } from '../../encoding/UTF16';
+import { encode } from '/encoding/UTF16';
 
 function getByte(byte: number): number {
   // 0 - 9

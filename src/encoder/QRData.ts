@@ -4,7 +4,7 @@
  * @author Kazuhiko Arase
  */
 
-import { Mode } from '../common/Mode';
+import { Mode } from '/common/Mode';
 import { BitBuffer } from './BitBuffer';
 
 export abstract class QRData {
