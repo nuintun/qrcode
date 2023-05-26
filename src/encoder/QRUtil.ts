@@ -66,10 +66,10 @@ export function getAlignmentPattern(version: number): number[] {
   return ALIGNMENT_PATTERN_TABLE[version - 1];
 }
 
-export function getErrorCorrectionPolynomial(errorCorrectionLength: number): Polynomial {
+export function getECPolynomial(level: number): Polynomial {
   let e = new Polynomial([1]);
 
-  for (let i = 0; i < errorCorrectionLength; i++) {
+  for (let i = 0; i < level; i++) {
     e = e.multiply(new Polynomial([1, QRMath.gexp(i)]));
   }
 
@@ -243,15 +243,15 @@ function applyMaskPenaltyRule4(encoder: Encoder): number {
 
 /**
  * @function calculateMaskPenalty
- * @param {Encoder} qrcode
+ * @param {Encoder} encoder
  * @see https://www.thonky.com/qr-code-tutorial/data-masking
  * @see https://github.com/zxing/zxing/blob/master/core/src/main/java/com/google/zxing/qrcode/encoder/MaskUtil.java
  */
-export function calculateMaskPenalty(qrcode: Encoder): number {
+export function calculateMaskPenalty(encoder: Encoder): number {
   return (
-    applyMaskPenaltyRule1(qrcode) +
-    applyMaskPenaltyRule2(qrcode) +
-    applyMaskPenaltyRule3(qrcode) +
-    applyMaskPenaltyRule4(qrcode)
+    applyMaskPenaltyRule1(encoder) +
+    applyMaskPenaltyRule2(encoder) +
+    applyMaskPenaltyRule3(encoder) +
+    applyMaskPenaltyRule4(encoder)
   );
 }

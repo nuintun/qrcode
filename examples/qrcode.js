@@ -363,9 +363,9 @@
   function getAlignmentPattern(version) {
     return ALIGNMENT_PATTERN_TABLE[version - 1];
   }
-  function getErrorCorrectionPolynomial(errorCorrectionLength) {
+  function getECPolynomial(level) {
     let e = new Polynomial([1]);
-    for (let i = 0; i < errorCorrectionLength; i++) {
+    for (let i = 0; i < level; i++) {
       e = e.multiply(new Polynomial([1, gexp(i)]));
     }
     return e;
@@ -502,16 +502,16 @@
   }
   /**
    * @function calculateMaskPenalty
-   * @param {Encoder} qrcode
+   * @param {Encoder} encoder
    * @see https://www.thonky.com/qr-code-tutorial/data-masking
    * @see https://github.com/zxing/zxing/blob/master/core/src/main/java/com/google/zxing/qrcode/encoder/MaskUtil.java
    */
-  function calculateMaskPenalty(qrcode) {
+  function calculateMaskPenalty(encoder) {
     return (
-      applyMaskPenaltyRule1(qrcode) +
-      applyMaskPenaltyRule2(qrcode) +
-      applyMaskPenaltyRule3(qrcode) +
-      applyMaskPenaltyRule4(qrcode)
+      applyMaskPenaltyRule1(encoder) +
+      applyMaskPenaltyRule2(encoder) +
+      applyMaskPenaltyRule3(encoder) +
+      applyMaskPenaltyRule4(encoder)
     );
   }
 
@@ -858,7 +858,7 @@
    * @author nuintun
    * @author Kazuhiko Arase
    */
-  var _Encoder_size, _Encoder_auto, _Encoder_hint, _Encoder_level, _Encoder_version, _Encoder_chunks, _Encoder_matrix;
+  var _Encoder_size, _Encoder_hint, _Encoder_level, _Encoder_semver, _Encoder_version, _Encoder_chunks, _Encoder_matrix;
   const PAD0 = 0xec;
   const PAD1 = 0x11;
   const { toString } = Object.prototype;
@@ -924,7 +924,7 @@
         dcData[i][j] = 0xff & bufferData[j + offset];
       }
       offset += dcCount;
-      const rsPoly = getErrorCorrectionPolynomial(ecCount);
+      const rsPoly = getECPolynomial(ecCount);
       const ecLength = rsPoly.getLength() - 1;
       const rawPoly = new Polynomial(dcData[i], ecLength);
       const modPoly = rawPoly.mod(rsPoly);
@@ -977,9 +977,9 @@
   class Encoder {
     constructor(options = {}) {
       _Encoder_size.set(this, 0);
-      _Encoder_auto.set(this, void 0);
       _Encoder_hint.set(this, void 0);
       _Encoder_level.set(this, void 0);
+      _Encoder_semver.set(this, void 0);
       _Encoder_version.set(this, void 0);
       _Encoder_chunks.set(this, []);
       _Encoder_matrix.set(this, []);
@@ -1021,8 +1021,8 @@
       if (version < 0 || version > 40) {
         throw new RangeError('version invalid, must be in range [0 - 40]');
       }
+      __classPrivateFieldSet(this, _Encoder_semver, version, 'f');
       __classPrivateFieldSet(this, _Encoder_version, version, 'f');
-      __classPrivateFieldSet(this, _Encoder_auto, version === 0, 'f');
     }
     /**
      * @public
@@ -1261,7 +1261,7 @@
       let maxDataCount;
       const level = __classPrivateFieldGet(this, _Encoder_level, 'f');
       const chunks = __classPrivateFieldGet(this, _Encoder_chunks, 'f');
-      if (__classPrivateFieldGet(this, _Encoder_auto, 'f')) {
+      if (__classPrivateFieldGet(this, _Encoder_semver, 'f') === 0) {
         let version = 1;
         for (; version <= 40; version++) {
           [buffer, rsBlocks, maxDataCount] = prepareData(
@@ -1310,14 +1310,16 @@
      * @method flush
      */
     flush() {
+      __classPrivateFieldSet(this, _Encoder_size, 0, 'f');
       __classPrivateFieldSet(this, _Encoder_chunks, [], 'f');
       __classPrivateFieldSet(this, _Encoder_matrix, [], 'f');
+      __classPrivateFieldSet(this, _Encoder_version, __classPrivateFieldGet(this, _Encoder_semver, 'f'), 'f');
     }
   }
   (_Encoder_size = new WeakMap()),
-    (_Encoder_auto = new WeakMap()),
     (_Encoder_hint = new WeakMap()),
     (_Encoder_level = new WeakMap()),
+    (_Encoder_semver = new WeakMap()),
     (_Encoder_version = new WeakMap()),
     (_Encoder_chunks = new WeakMap()),
     (_Encoder_matrix = new WeakMap());

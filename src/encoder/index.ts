@@ -101,7 +101,7 @@ function createBytes(buffer: BitBuffer, rsBlocks: RSBlock[]): BitBuffer {
 
     offset += dcCount;
 
-    const rsPoly = QRUtil.getErrorCorrectionPolynomial(ecCount);
+    const rsPoly = QRUtil.getECPolynomial(ecCount);
     const ecLength = rsPoly.getLength() - 1;
     const rawPoly = new Polynomial(dcData[i], ecLength);
     const modPoly = rawPoly.mod(rsPoly);
@@ -174,9 +174,9 @@ export interface Options {
 
 export class Encoder {
   #size = 0;
-  #auto!: boolean;
   #hint!: boolean;
   #level!: ECLevel;
+  #semver!: number;
   #version!: number;
   #chunks: QRData[] = [];
   #matrix: boolean[][] = [];
@@ -226,8 +226,8 @@ export class Encoder {
       throw new RangeError('version invalid, must be in range [0 - 40]');
     }
 
+    this.#semver = version;
     this.#version = version;
-    this.#auto = version === 0;
   }
 
   /**
@@ -518,7 +518,7 @@ export class Encoder {
     const level = this.#level;
     const chunks = this.#chunks;
 
-    if (this.#auto) {
+    if (this.#semver === 0) {
       let version = 1;
 
       for (; version <= 40; version++) {
@@ -573,7 +573,9 @@ export class Encoder {
    * @method flush
    */
   public flush() {
+    this.#size = 0;
     this.#chunks = [];
     this.#matrix = [];
+    this.#version = this.#semver;
   }
 }
