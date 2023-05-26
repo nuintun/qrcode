@@ -8,9 +8,9 @@
 import { ECLevel } from '/common/ECLevel';
 import { Version, VERSIONS } from './version';
 import { BitMatrix } from '/decoder/BitMatrix';
-import { rsDecode } from '/decoder/reedsolomon';
 import { getMaskFunc } from '/common/MaskPattern';
 import { DecodeResult, decodeText } from './decode';
+import { Decoder as ReedSolomonDecoder } from '/decoder/reedsolomon';
 
 function numBitsDiffering(x: number, y: number): number {
   let z = x ^ y;
@@ -335,6 +335,8 @@ function getDataBlocks(codewords: number[], version: Version, level: number): Da
   return dataBlocks;
 }
 
+const rsDecoder = new ReedSolomonDecoder();
+
 function decodeMatrix(matrix: BitMatrix): DecodeResult | never {
   const version = readVersion(matrix);
   const formatInfo = readFormatInformation(matrix);
@@ -347,7 +349,7 @@ function decodeMatrix(matrix: BitMatrix): DecodeResult | never {
   const resultBytes = new Uint8ClampedArray(totalBytes);
 
   for (const { codewords, numDataCodewords } of dataBlocks) {
-    const correctedBytes = rsDecode(codewords, codewords.length - numDataCodewords);
+    const correctedBytes = rsDecoder.decode(codewords, codewords.length - numDataCodewords);
 
     for (let i = 0; i < numDataCodewords; i++) {
       resultBytes[resultIndex++] = correctedBytes[i];

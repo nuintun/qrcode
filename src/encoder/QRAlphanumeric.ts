@@ -57,7 +57,7 @@ export class QRAlphanumeric extends QRData {
    * @param {string} data
    */
   constructor(data: string) {
-    super(Mode.Alphanumeric, data);
+    super(Mode.ALPHANUMERIC, data);
 
     this.bytes = encode(data);
   }

@@ -13,19 +13,19 @@ import { decode as decodeUTF8 } from '/encoding/UTF8';
 import { decode as decodeSJIS, getTables } from '/encoding/SJIS';
 
 interface ByteChunk {
-  mode: Mode.Numeric | Mode.Alphanumeric | Mode.Byte | Mode.Kanji;
   data: string;
   bytes: number[];
   encoding?: number;
+  mode: Mode.NUMERIC | Mode.ALPHANUMERIC | Mode.BYTE | Mode.KANJI;
 }
 
 interface StructuredAppend {
-  symbols: number[];
   parity: number;
+  symbols: number[];
 }
 
 interface StructuredAppendChunk extends StructuredAppend {
-  mode: Mode.StructuredAppend;
+  mode: Mode.STRUCTURED_APPEND;
 }
 
 interface DecodeData {
@@ -189,7 +189,7 @@ export function decodeText(bytes: Uint8ClampedArray, version: number, level: ECL
   while (stream.available() >= 4) {
     const mode = stream.readBits(4);
 
-    if (mode === Mode.Terminator) {
+    if (mode === Mode.TERMINATOR) {
       return result;
     } else if (mode === Mode.ECI) {
       if (stream.readBits(1) === 0) {
@@ -202,29 +202,29 @@ export function decodeText(bytes: Uint8ClampedArray, version: number, level: ECL
         // ECI data seems corrupted
         encoding = -1;
       }
-    } else if (mode === Mode.Numeric) {
+    } else if (mode === Mode.NUMERIC) {
       const numericResult = decodeNumeric(stream, size);
 
       result.data += numericResult.data;
 
       result.chunks.push({
-        mode: Mode.Numeric,
+        mode: Mode.NUMERIC,
         data: numericResult.data,
         bytes: numericResult.bytes
       });
       result.bytes.push(...numericResult.bytes);
-    } else if (mode === Mode.Alphanumeric) {
+    } else if (mode === Mode.ALPHANUMERIC) {
       const alphanumericResult = decodeAlphanumeric(stream, size);
 
       result.data += alphanumericResult.data;
 
       result.chunks.push({
-        mode: Mode.Alphanumeric,
+        mode: Mode.ALPHANUMERIC,
         data: alphanumericResult.data,
         bytes: alphanumericResult.bytes
       });
       result.bytes.push(...alphanumericResult.bytes);
-    } else if (mode === Mode.StructuredAppend) {
+    } else if (mode === Mode.STRUCTURED_APPEND) {
       // QR Standard section 9.2
       const structuredAppend: StructuredAppend = {
         // [current, total]
@@ -232,26 +232,26 @@ export function decodeText(bytes: Uint8ClampedArray, version: number, level: ECL
         parity: stream.readBits(8)
       };
 
-      result.chunks.push({ mode: Mode.StructuredAppend, ...structuredAppend });
-    } else if (mode === Mode.Byte) {
+      result.chunks.push({ mode: Mode.STRUCTURED_APPEND, ...structuredAppend });
+    } else if (mode === Mode.BYTE) {
       const byteResult = decodeByte(stream, size, encoding);
 
       result.data += byteResult.data;
 
       result.chunks.push({
         encoding,
-        mode: Mode.Byte,
+        mode: Mode.BYTE,
         data: byteResult.data,
         bytes: byteResult.bytes
       });
       result.bytes.push(...byteResult.bytes);
-    } else if (mode === Mode.Kanji) {
+    } else if (mode === Mode.KANJI) {
       const kanjiResult = decodeKanji(stream, size);
 
       result.data += kanjiResult.data;
 
       result.chunks.push({
-        mode: Mode.Kanji,
+        mode: Mode.KANJI,
         data: kanjiResult.data,
         bytes: kanjiResult.bytes
       });

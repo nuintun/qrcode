@@ -30,13 +30,13 @@ export abstract class QRData {
     if (1 <= version && version < 10) {
       // 1 - 9
       switch (mode) {
-        case Mode.Numeric:
+        case Mode.NUMERIC:
           return 10;
-        case Mode.Alphanumeric:
+        case Mode.ALPHANUMERIC:
           return 9;
-        case Mode.Byte:
+        case Mode.BYTE:
           return 8;
-        case Mode.Kanji:
+        case Mode.KANJI:
           return 8;
         default:
           throw error;
@@ -44,13 +44,13 @@ export abstract class QRData {
     } else if (version < 27) {
       // 10 - 26
       switch (mode) {
-        case Mode.Numeric:
+        case Mode.NUMERIC:
           return 12;
-        case Mode.Alphanumeric:
+        case Mode.ALPHANUMERIC:
           return 11;
-        case Mode.Byte:
+        case Mode.BYTE:
           return 16;
-        case Mode.Kanji:
+        case Mode.KANJI:
           return 10;
         default:
           throw error;
@@ -58,13 +58,13 @@ export abstract class QRData {
     } else if (version < 41) {
       // 27 - 40
       switch (mode) {
-        case Mode.Numeric:
+        case Mode.NUMERIC:
           return 14;
-        case Mode.Alphanumeric:
+        case Mode.ALPHANUMERIC:
           return 13;
-        case Mode.Byte:
+        case Mode.BYTE:
           return 16;
-        case Mode.Kanji:
+        case Mode.KANJI:
           return 12;
         default:
           throw error;

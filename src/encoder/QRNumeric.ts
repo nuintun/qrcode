@@ -34,7 +34,7 @@ export class QRNumeric extends QRData {
    * @param {string} data
    */
   constructor(data: string) {
-    super(Mode.Numeric, data);
+    super(Mode.NUMERIC, data);
 
     this.bytes = encode(data);
   }

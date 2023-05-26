@@ -16,7 +16,7 @@ export class QRKanji extends QRData {
    * @param {string} data
    */
   constructor(data: string) {
-    super(Mode.Kanji, data);
+    super(Mode.KANJI, data);
 
     this.bytes = encode(data);
   }

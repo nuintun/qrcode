@@ -25,7 +25,7 @@ export class QRByte extends QRData {
    * @param {string} data
    */
   constructor(data: string, encode?: encode) {
-    super(Mode.Byte, data);
+    super(Mode.BYTE, data);
 
     if (typeof encode === 'function') {
       const { encoding, bytes } = encode(data);

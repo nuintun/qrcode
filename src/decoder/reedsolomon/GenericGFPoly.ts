@@ -9,11 +9,11 @@ import { addOrSubtractGF, GenericGF } from './GenericGF';
 
 export class GenericGFPoly {
   private field: GenericGF;
-  private coefficients: Uint8ClampedArray;
+  private coefficients: Uint8Array;
 
-  constructor(field: GenericGF, coefficients: Uint8ClampedArray) {
+  constructor(field: GenericGF, coefficients: Uint8Array) {
     if (coefficients.length === 0) {
-      throw new Error('no coefficients');
+      throw new Error(`coefficient cannot be empty`);
     }
 
     this.field = field;
@@ -31,7 +31,7 @@ export class GenericGFPoly {
       if (firstNonZero === coefficientsLength) {
         this.coefficients = field.zero.coefficients;
       } else {
-        this.coefficients = new Uint8ClampedArray(coefficientsLength - firstNonZero);
+        this.coefficients = new Uint8Array(coefficientsLength - firstNonZero);
 
         for (let i = 0; i < this.coefficients.length; i++) {
           this.coefficients[i] = coefficients[firstNonZero + i];
@@ -42,12 +42,12 @@ export class GenericGFPoly {
     }
   }
 
-  public degree(): number {
-    return this.coefficients.length - 1;
-  }
-
   public isZero(): boolean {
     return this.coefficients[0] === 0;
+  }
+
+  public getDegree(): number {
+    return this.coefficients.length - 1;
   }
 
   public getCoefficient(degree: number): number {
@@ -70,7 +70,7 @@ export class GenericGFPoly {
       [smallerCoefficients, largerCoefficients] = [largerCoefficients, smallerCoefficients];
     }
 
-    const sumDiff = new Uint8ClampedArray(largerCoefficients.length);
+    const sumDiff = new Uint8Array(largerCoefficients.length);
     const lengthDiff = largerCoefficients.length - smallerCoefficients.length;
 
     for (let i = 0; i < lengthDiff; i++) {
@@ -94,7 +94,7 @@ export class GenericGFPoly {
     }
 
     const size = this.coefficients.length;
-    const product = new Uint8ClampedArray(size);
+    const product = new Uint8Array(size);
 
     for (let i = 0; i < size; i++) {
       product[i] = this.field.multiply(this.coefficients[i], scalar);
@@ -112,7 +112,7 @@ export class GenericGFPoly {
     const aLength = aCoefficients.length;
     const bCoefficients = other.coefficients;
     const bLength = bCoefficients.length;
-    const product = new Uint8ClampedArray(aLength + bLength - 1);
+    const product = new Uint8Array(aLength + bLength - 1);
 
     for (let i = 0; i < aLength; i++) {
       const aCoeff = aCoefficients[i];
@@ -135,7 +135,7 @@ export class GenericGFPoly {
     }
 
     const size = this.coefficients.length;
-    const product = new Uint8ClampedArray(size + degree);
+    const product = new Uint8Array(size + degree);
 
     for (let i = 0; i < size; i++) {
       product[i] = this.field.multiply(this.coefficients[i], coefficient);

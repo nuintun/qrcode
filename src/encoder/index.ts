@@ -53,7 +53,7 @@ function prepareData(version: number, level: ECLevel, hint: boolean, chunks: QRD
     const mode = data.mode;
 
     // Default set encoding UTF-8 when has encoding hint
-    if (hint && mode === Mode.Byte) {
+    if (hint && mode === Mode.BYTE) {
       appendECI((data as QRByte).encoding, buffer);
     }
 

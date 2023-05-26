@@ -12,18 +12,18 @@ export function addOrSubtractGF(a: number, b: number): number {
 }
 
 export class GenericGF {
-  public primitive: number;
   public size: number;
-  public generatorBase: number;
-  public zero: GenericGFPoly;
+  public primitive: number;
   public one: GenericGFPoly;
+  public zero: GenericGFPoly;
+  public generatorBase: number;
 
   private expTable: number[];
   private logTable: number[];
 
   constructor(primitive: number, size: number, generatorBase: number) {
-    this.primitive = primitive;
     this.size = size;
+    this.primitive = primitive;
     this.generatorBase = generatorBase;
 
     this.expTable = [];
@@ -46,8 +46,8 @@ export class GenericGF {
       this.logTable[this.expTable[i]] = i;
     }
 
-    this.zero = new GenericGFPoly(this, Uint8ClampedArray.from([0]));
-    this.one = new GenericGFPoly(this, Uint8ClampedArray.from([1]));
+    this.zero = new GenericGFPoly(this, Uint8Array.from([0]));
+    this.one = new GenericGFPoly(this, Uint8Array.from([1]));
   }
 
   public multiply(a: number, b: number): number {
@@ -59,10 +59,6 @@ export class GenericGF {
   }
 
   public inverse(a: number): number {
-    if (a === 0) {
-      throw new Error("can't invert 0");
-    }
-
     return this.expTable[this.size - this.logTable[a] - 1];
   }
 
@@ -75,7 +71,7 @@ export class GenericGF {
       return this.zero;
     }
 
-    const coefficients = new Uint8ClampedArray(degree + 1);
+    const coefficients = new Uint8Array(degree + 1);
 
     coefficients[0] = coefficient;
 
