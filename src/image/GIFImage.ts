@@ -166,9 +166,13 @@ export class GIFImage {
   public setPixel(x: number, y: number, pixel: number): void {
     const { width, height } = this;
 
-    if (x < 0 || width <= x) throw new Error(`illegal x axis: ${x}`);
+    if (x < 0 || width <= x) {
+      throw new Error(`illegal x axis: ${x}`);
+    }
 
-    if (y < 0 || height <= y) throw new Error(`illegal y axis: ${y}`);
+    if (y < 0 || height <= y) {
+      throw new Error(`illegal y axis: ${y}`);
+    }
 
     this.data[y * width + x] = pixel;
   }
@@ -176,9 +180,13 @@ export class GIFImage {
   public getPixel(x: number, y: number): number {
     const { width, height } = this;
 
-    if (x < 0 || width <= x) throw new Error(`illegal x axis: ${x}`);
+    if (x < 0 || width <= x) {
+      throw new Error(`illegal x axis: ${x}`);
+    }
 
-    if (y < 0 || height <= y) throw new Error(`illegal y axis: ${y}`);
+    if (y < 0 || height <= y) {
+      throw new Error(`illegal y axis: ${y}`);
+    }
 
     return this.data[y * width + x];
   }

@@ -121,22 +121,24 @@ function applyMaskPenaltyRule1Internal(encoder: Encoder, isHorizontal: boolean):
     let numSameBitCells = 0;
 
     for (let j = 0; j < size; j++) {
-      const bit = isHorizontal ? encoder.isDark(i, j) : encoder.isDark(j, i);
+      const bit = isHorizontal ? encoder.isDark(j, i) : encoder.isDark(i, j);
 
       if (bit === prevBit) {
         numSameBitCells++;
-
-        if (numSameBitCells === 5) {
-          penalty += N1;
-        } else if (numSameBitCells > 5) {
-          penalty++;
-        }
       } else {
+        if (numSameBitCells >= 5) {
+          penalty += N1 + (numSameBitCells - 5);
+        }
+
         // set prev bit
         prevBit = bit;
         // include the cell itself
         numSameBitCells = 1;
       }
+    }
+
+    if (numSameBitCells >= 5) {
+      penalty += N1 + (numSameBitCells - 5);
     }
   }
 
@@ -152,11 +154,11 @@ function applyMaskPenaltyRule2(encoder: Encoder): number {
 
   const { size } = encoder;
 
-  for (let y = 0; y < size - 1; y++) {
-    for (let x = 0; x < size - 1; x++) {
-      const value = encoder.isDark(y, x);
+  for (let i = 0; i < size - 1; i++) {
+    for (let j = 0; j < size - 1; j++) {
+      const value = encoder.isDark(j, i);
 
-      if (value === encoder.isDark(y, x + 1) && value === encoder.isDark(y + 1, x) && value === encoder.isDark(y + 1, x + 1)) {
+      if (value === encoder.isDark(j + 1, i) && value === encoder.isDark(j, i + 1) && value === encoder.isDark(j + 1, i + 1)) {
         penalty += N2;
       }
     }
@@ -165,12 +167,12 @@ function applyMaskPenaltyRule2(encoder: Encoder): number {
   return penalty;
 }
 
-function isFourWhite(encoder: Encoder, rangeIndex: number, from: number, to: number, isHorizontal: boolean): boolean {
+function isFourWhite(encoder: Encoder, index: number, from: number, to: number, isHorizontal: boolean): boolean {
   from = Math.max(from, 0);
   to = Math.min(to, encoder.size);
 
   for (let i = from; i < to; i++) {
-    const value = isHorizontal ? encoder.isDark(rangeIndex, i) : encoder.isDark(i, rangeIndex);
+    const value = isHorizontal ? encoder.isDark(i, index) : encoder.isDark(index, i);
 
     if (value) {
       return false;
@@ -181,43 +183,43 @@ function isFourWhite(encoder: Encoder, rangeIndex: number, from: number, to: num
 }
 
 function applyMaskPenaltyRule3(encoder: Encoder): number {
-  let penalty = 0;
+  let numPenalties = 0;
 
   const { size } = encoder;
 
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
+  for (let i = 0; i < size; i++) {
+    for (let j = 0; j < size; j++) {
       if (
-        x + 6 < size &&
-        encoder.isDark(y, x) &&
-        !encoder.isDark(y, x + 1) &&
-        encoder.isDark(y, x + 2) &&
-        encoder.isDark(y, x + 3) &&
-        encoder.isDark(y, x + 4) &&
-        !encoder.isDark(y, x + 5) &&
-        encoder.isDark(y, x + 6) &&
-        (isFourWhite(encoder, y, x - 4, x, true) || isFourWhite(encoder, y, x + 7, x + 11, true))
+        j + 6 < size &&
+        encoder.isDark(j, i) &&
+        !encoder.isDark(j + 1, i) &&
+        encoder.isDark(j + 2, i) &&
+        encoder.isDark(j + 3, i) &&
+        encoder.isDark(j + 4, i) &&
+        !encoder.isDark(j + 5, i) &&
+        encoder.isDark(j + 6, i) &&
+        (isFourWhite(encoder, i, j - 4, j, true) || isFourWhite(encoder, i, j + 7, j + 11, true))
       ) {
-        penalty += N3;
+        numPenalties++;
       }
 
       if (
-        y + 6 < size &&
-        encoder.isDark(y, x) &&
-        !encoder.isDark(y + 1, x) &&
-        encoder.isDark(y + 2, x) &&
-        encoder.isDark(y + 3, x) &&
-        encoder.isDark(y + 4, x) &&
-        !encoder.isDark(y + 5, x) &&
-        encoder.isDark(y + 6, x) &&
-        (isFourWhite(encoder, x, y - 4, y, false) || isFourWhite(encoder, x, y + 7, y + 11, false))
+        i + 6 < size &&
+        encoder.isDark(j, i) &&
+        !encoder.isDark(j, i + 1) &&
+        encoder.isDark(j, i + 2) &&
+        encoder.isDark(j, i + 3) &&
+        encoder.isDark(j, i + 4) &&
+        !encoder.isDark(j, i + 5) &&
+        encoder.isDark(j, i + 6) &&
+        (isFourWhite(encoder, j, i - 4, i, false) || isFourWhite(encoder, j, i + 7, i + 11, false))
       ) {
-        penalty += N3;
+        numPenalties++;
       }
     }
   }
 
-  return penalty;
+  return numPenalties * N3;
 }
 
 function applyMaskPenaltyRule4(encoder: Encoder): number {
@@ -225,16 +227,16 @@ function applyMaskPenaltyRule4(encoder: Encoder): number {
 
   const { size } = encoder;
 
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      if (encoder.isDark(y, x)) {
+  for (let i = 0; i < size; i++) {
+    for (let j = 0; j < size; j++) {
+      if (encoder.isDark(j, i)) {
         numDarkCells++;
       }
     }
   }
 
   const numTotalCells = size * size;
-  const fivePercentVariances = Math.floor(Math.abs(numDarkCells * 20 - numTotalCells * 10) / numTotalCells);
+  const fivePercentVariances = (Math.abs(numDarkCells * 2 - numTotalCells) * 10) / numTotalCells;
 
   return fivePercentVariances * N4;
 }

@@ -132,7 +132,7 @@
 
         var qrcode = new QRCode.Writer({
           hint: hasEncodingHint,
-          level: QRCode.ErrorCorrectionLevel[ecLevel]
+          level: QRCode.ECLevel[ecLevel]
         });
 
         try {

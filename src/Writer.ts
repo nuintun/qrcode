@@ -24,15 +24,15 @@ export class Writer extends Encoder {
     const max = size - margin;
     const gif = new GIFImage(size, size);
 
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
-        if (min <= x && x < max && min <= y && y < max) {
-          const row = ((y - min) / moduleSize) >> 0;
-          const col = ((x - min) / moduleSize) >> 0;
+    for (let i = 0; i < size; i++) {
+      for (let j = 0; j < size; j++) {
+        if (min <= j && j < max && min <= i && i < max) {
+          const x = ((j - min) / moduleSize) >> 0;
+          const y = ((i - min) / moduleSize) >> 0;
 
-          gif.setPixel(x, y, this.isDark(row, col) ? 0 : 1);
+          gif.setPixel(j, i, this.isDark(x, y) ? 0 : 1);
         } else {
-          gif.setPixel(x, y, 1);
+          gif.setPixel(j, i, 1);
         }
       }
     }

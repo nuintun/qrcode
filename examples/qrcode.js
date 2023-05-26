@@ -401,20 +401,21 @@
       let prevBit = false;
       let numSameBitCells = 0;
       for (let j = 0; j < size; j++) {
-        const bit = isHorizontal ? encoder.isDark(i, j) : encoder.isDark(j, i);
+        const bit = isHorizontal ? encoder.isDark(j, i) : encoder.isDark(i, j);
         if (bit === prevBit) {
           numSameBitCells++;
-          if (numSameBitCells === 5) {
-            penalty += N1;
-          } else if (numSameBitCells > 5) {
-            penalty++;
-          }
         } else {
+          if (numSameBitCells >= 5) {
+            penalty += N1 + (numSameBitCells - 5);
+          }
           // set prev bit
           prevBit = bit;
           // include the cell itself
           numSameBitCells = 1;
         }
+      }
+      if (numSameBitCells >= 5) {
+        penalty += N1 + (numSameBitCells - 5);
       }
     }
     return penalty;
@@ -425,13 +426,13 @@
   function applyMaskPenaltyRule2(encoder) {
     let penalty = 0;
     const { size } = encoder;
-    for (let y = 0; y < size - 1; y++) {
-      for (let x = 0; x < size - 1; x++) {
-        const value = encoder.isDark(y, x);
+    for (let i = 0; i < size - 1; i++) {
+      for (let j = 0; j < size - 1; j++) {
+        const value = encoder.isDark(j, i);
         if (
-          value === encoder.isDark(y, x + 1) &&
-          value === encoder.isDark(y + 1, x) &&
-          value === encoder.isDark(y + 1, x + 1)
+          value === encoder.isDark(j + 1, i) &&
+          value === encoder.isDark(j, i + 1) &&
+          value === encoder.isDark(j + 1, i + 1)
         ) {
           penalty += N2;
         }
@@ -439,11 +440,11 @@
     }
     return penalty;
   }
-  function isFourWhite(encoder, rangeIndex, from, to, isHorizontal) {
+  function isFourWhite(encoder, index, from, to, isHorizontal) {
     from = Math.max(from, 0);
     to = Math.min(to, encoder.size);
     for (let i = from; i < to; i++) {
-      const value = isHorizontal ? encoder.isDark(rangeIndex, i) : encoder.isDark(i, rangeIndex);
+      const value = isHorizontal ? encoder.isDark(i, index) : encoder.isDark(index, i);
       if (value) {
         return false;
       }
@@ -451,52 +452,52 @@
     return true;
   }
   function applyMaskPenaltyRule3(encoder) {
-    let penalty = 0;
+    let numPenalties = 0;
     const { size } = encoder;
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
+    for (let i = 0; i < size; i++) {
+      for (let j = 0; j < size; j++) {
         if (
-          x + 6 < size &&
-          encoder.isDark(y, x) &&
-          !encoder.isDark(y, x + 1) &&
-          encoder.isDark(y, x + 2) &&
-          encoder.isDark(y, x + 3) &&
-          encoder.isDark(y, x + 4) &&
-          !encoder.isDark(y, x + 5) &&
-          encoder.isDark(y, x + 6) &&
-          (isFourWhite(encoder, y, x - 4, x, true) || isFourWhite(encoder, y, x + 7, x + 11, true))
+          j + 6 < size &&
+          encoder.isDark(j, i) &&
+          !encoder.isDark(j + 1, i) &&
+          encoder.isDark(j + 2, i) &&
+          encoder.isDark(j + 3, i) &&
+          encoder.isDark(j + 4, i) &&
+          !encoder.isDark(j + 5, i) &&
+          encoder.isDark(j + 6, i) &&
+          (isFourWhite(encoder, i, j - 4, j, true) || isFourWhite(encoder, i, j + 7, j + 11, true))
         ) {
-          penalty += N3;
+          numPenalties++;
         }
         if (
-          y + 6 < size &&
-          encoder.isDark(y, x) &&
-          !encoder.isDark(y + 1, x) &&
-          encoder.isDark(y + 2, x) &&
-          encoder.isDark(y + 3, x) &&
-          encoder.isDark(y + 4, x) &&
-          !encoder.isDark(y + 5, x) &&
-          encoder.isDark(y + 6, x) &&
-          (isFourWhite(encoder, x, y - 4, y, false) || isFourWhite(encoder, x, y + 7, y + 11, false))
+          i + 6 < size &&
+          encoder.isDark(j, i) &&
+          !encoder.isDark(j, i + 1) &&
+          encoder.isDark(j, i + 2) &&
+          encoder.isDark(j, i + 3) &&
+          encoder.isDark(j, i + 4) &&
+          !encoder.isDark(j, i + 5) &&
+          encoder.isDark(j, i + 6) &&
+          (isFourWhite(encoder, j, i - 4, i, false) || isFourWhite(encoder, j, i + 7, i + 11, false))
         ) {
-          penalty += N3;
+          numPenalties++;
         }
       }
     }
-    return penalty;
+    return numPenalties * N3;
   }
   function applyMaskPenaltyRule4(encoder) {
     let numDarkCells = 0;
     const { size } = encoder;
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
-        if (encoder.isDark(y, x)) {
+    for (let i = 0; i < size; i++) {
+      for (let j = 0; j < size; j++) {
+        if (encoder.isDark(j, i)) {
           numDarkCells++;
         }
       }
     }
     const numTotalCells = size * size;
-    const fivePercentVariances = Math.floor(Math.abs(numDarkCells * 20 - numTotalCells * 10) / numTotalCells);
+    const fivePercentVariances = (Math.abs(numDarkCells * 2 - numTotalCells) * 10) / numTotalCells;
     return fivePercentVariances * N4;
   }
   /**
@@ -515,7 +516,7 @@
   }
 
   /**
-   * @module ErrorCorrectionLevel
+   * @module ECLevel
    * @author nuintun
    * @author Cosmo Wolfe
    * @author Kazuhiko Arase
@@ -523,17 +524,17 @@
   /**
    * @readonly
    */
-  exports.ErrorCorrectionLevel = void 0;
-  (function (ErrorCorrectionLevel) {
+  exports.ECLevel = void 0;
+  (function (ECLevel) {
     // 7%
-    ErrorCorrectionLevel[(ErrorCorrectionLevel['L'] = 1)] = 'L';
+    ECLevel[(ECLevel['L'] = 1)] = 'L';
     // 15%
-    ErrorCorrectionLevel[(ErrorCorrectionLevel['M'] = 0)] = 'M';
+    ECLevel[(ECLevel['M'] = 0)] = 'M';
     // 25%
-    ErrorCorrectionLevel[(ErrorCorrectionLevel['Q'] = 3)] = 'Q';
+    ECLevel[(ECLevel['Q'] = 3)] = 'Q';
     // 30%
-    ErrorCorrectionLevel[(ErrorCorrectionLevel['H'] = 2)] = 'H';
-  })(exports.ErrorCorrectionLevel || (exports.ErrorCorrectionLevel = {}));
+    ECLevel[(ECLevel['H'] = 2)] = 'H';
+  })(exports.ECLevel || (exports.ECLevel = {}));
 
   /**
    * @module RSBlock
@@ -551,12 +552,12 @@
     getTotalCount() {
       return this.totalCount;
     }
-    static getRSBlocks(version, errorCorrectionLevel) {
+    static getRSBlocks(version, level) {
       const rsBlocks = [];
-      const rsBlock = RSBlock.getRSBlockTable(version, errorCorrectionLevel);
+      const rsBlock = RSBlock.getRSBlockTable(version, level);
       const length = rsBlock.length / 3;
       for (let i = 0; i < length; i++) {
-        const count = rsBlock[i * 3 + 0];
+        const count = rsBlock[i * 3];
         const totalCount = rsBlock[i * 3 + 1];
         const dataCount = rsBlock[i * 3 + 2];
         for (let j = 0; j < count; j++) {
@@ -565,18 +566,18 @@
       }
       return rsBlocks;
     }
-    static getRSBlockTable(version, errorCorrectionLevel) {
-      switch (errorCorrectionLevel) {
-        case exports.ErrorCorrectionLevel.L:
+    static getRSBlockTable(version, level) {
+      switch (level) {
+        case exports.ECLevel.L:
           return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 0];
-        case exports.ErrorCorrectionLevel.M:
+        case exports.ECLevel.M:
           return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 1];
-        case exports.ErrorCorrectionLevel.Q:
+        case exports.ECLevel.Q:
           return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 2];
-        case exports.ErrorCorrectionLevel.H:
+        case exports.ECLevel.H:
           return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 3];
         default:
-          throw new Error(`illegal error correction level: ${errorCorrectionLevel}`);
+          throw new Error(`illegal error correction level: ${level}`);
       }
     }
   }
@@ -857,7 +858,7 @@
    * @author nuintun
    * @author Kazuhiko Arase
    */
-  var _Encoder_size, _Encoder_auto, _Encoder_hint, _Encoder_version, _Encoder_chunks, _Encoder_matrix, _Encoder_level;
+  var _Encoder_size, _Encoder_auto, _Encoder_hint, _Encoder_level, _Encoder_version, _Encoder_chunks, _Encoder_matrix;
   const PAD0 = 0xec;
   const PAD1 = 0x11;
   const { toString } = Object.prototype;
@@ -912,40 +913,40 @@
     const ecData = [];
     const rsLength = rsBlocks.length;
     const bufferData = buffer.getBuffer();
-    for (let r = 0; r < rsLength; r++) {
-      const rsBlock = rsBlocks[r];
+    for (let i = 0; i < rsLength; i++) {
+      const rsBlock = rsBlocks[i];
       const dcCount = rsBlock.getDataCount();
       const ecCount = rsBlock.getTotalCount() - dcCount;
       maxDcCount = Math.max(maxDcCount, dcCount);
       maxEcCount = Math.max(maxEcCount, ecCount);
-      dcData[r] = [];
-      for (let i = 0; i < dcCount; i++) {
-        dcData[r][i] = 0xff & bufferData[i + offset];
+      dcData[i] = [];
+      for (let j = 0; j < dcCount; j++) {
+        dcData[i][j] = 0xff & bufferData[j + offset];
       }
       offset += dcCount;
       const rsPoly = getErrorCorrectionPolynomial(ecCount);
       const ecLength = rsPoly.getLength() - 1;
-      const rawPoly = new Polynomial(dcData[r], ecLength);
+      const rawPoly = new Polynomial(dcData[i], ecLength);
       const modPoly = rawPoly.mod(rsPoly);
       const mpLength = modPoly.getLength();
-      ecData[r] = [];
-      for (let i = 0; i < ecLength; i++) {
-        const modIndex = i + mpLength - ecLength;
-        ecData[r][i] = modIndex >= 0 ? modPoly.getAt(modIndex) : 0;
+      ecData[i] = [];
+      for (let j = 0; j < ecLength; j++) {
+        const modIndex = j + mpLength - ecLength;
+        ecData[i][j] = modIndex >= 0 ? modPoly.getAt(modIndex) : 0;
       }
     }
     buffer = new BitBuffer();
     for (let i = 0; i < maxDcCount; i++) {
-      for (let r = 0; r < rsLength; r++) {
-        if (i < dcData[r].length) {
-          buffer.put(dcData[r][i], 8);
+      for (let j = 0; j < rsLength; j++) {
+        if (i < dcData[j].length) {
+          buffer.put(dcData[j][i], 8);
         }
       }
     }
     for (let i = 0; i < maxEcCount; i++) {
-      for (let r = 0; r < rsLength; r++) {
-        if (i < ecData[r].length) {
-          buffer.put(ecData[r][i], 8);
+      for (let j = 0; j < rsLength; j++) {
+        if (i < ecData[j].length) {
+          buffer.put(ecData[j][i], 8);
         }
       }
     }
@@ -978,13 +979,13 @@
       _Encoder_size.set(this, 0);
       _Encoder_auto.set(this, void 0);
       _Encoder_hint.set(this, void 0);
+      _Encoder_level.set(this, void 0);
       _Encoder_version.set(this, void 0);
       _Encoder_chunks.set(this, []);
       _Encoder_matrix.set(this, []);
-      _Encoder_level.set(this, void 0);
       this.hint = options.hint || false;
       this.version = options.version || 0;
-      this.level = options.level || exports.ErrorCorrectionLevel.L;
+      this.level = options.level || exports.ECLevel.L;
     }
     /**
      * @public
@@ -1026,7 +1027,7 @@
     /**
      * @public
      * @property level
-     * @return {ErrorCorrectionLevel}
+     * @return {ECLevel}
      */
     get level() {
       return __classPrivateFieldGet(this, _Encoder_level, 'f');
@@ -1034,14 +1035,14 @@
     /**
      * @public
      * @property level
-     * @param {ErrorCorrectionLevel} level
+     * @param {ECLevel} level
      */
     set level(level) {
       switch (level) {
-        case exports.ErrorCorrectionLevel.L:
-        case exports.ErrorCorrectionLevel.M:
-        case exports.ErrorCorrectionLevel.Q:
-        case exports.ErrorCorrectionLevel.H:
+        case exports.ECLevel.L:
+        case exports.ECLevel.M:
+        case exports.ECLevel.Q:
+        case exports.ECLevel.H:
           __classPrivateFieldSet(this, _Encoder_level, level, 'f');
       }
     }
@@ -1083,29 +1084,29 @@
     /**
      * @public
      * @method isDark
-     * @param {number} row
-     * @param {number} col
+     * @param {number} x
+     * @param {number} y
      * @returns {boolean}
      */
-    isDark(row, col) {
-      return __classPrivateFieldGet(this, _Encoder_matrix, 'f')[row][col] === true;
+    isDark(x, y) {
+      return __classPrivateFieldGet(this, _Encoder_matrix, 'f')[y][x] === true;
     }
-    setupFinderPattern(row, col) {
+    setupFinderPattern(x, y) {
       const size = __classPrivateFieldGet(this, _Encoder_size, 'f');
       const matrix = __classPrivateFieldGet(this, _Encoder_matrix, 'f');
-      for (let r = -1; r <= 7; r++) {
-        for (let c = -1; c <= 7; c++) {
-          if (row + r <= -1 || size <= row + r || col + c <= -1 || size <= col + c) {
+      for (let i = -1; i <= 7; i++) {
+        for (let j = -1; j <= 7; j++) {
+          if (y + i <= -1 || size <= y + i || x + j <= -1 || size <= x + j) {
             continue;
           }
           if (
-            (0 <= r && r <= 6 && (c === 0 || c === 6)) ||
-            (0 <= c && c <= 6 && (r === 0 || r === 6)) ||
-            (2 <= r && r <= 4 && 2 <= c && c <= 4)
+            (0 <= i && i <= 6 && (j === 0 || j === 6)) ||
+            (0 <= j && j <= 6 && (i === 0 || i === 6)) ||
+            (2 <= i && i <= 4 && 2 <= j && j <= 4)
           ) {
-            matrix[row + r][col + c] = true;
+            matrix[y + i][x + j] = true;
           } else {
-            matrix[row + r][col + c] = false;
+            matrix[y + i][x + j] = false;
           }
         }
       }
@@ -1116,17 +1117,17 @@
       const { length } = pos;
       for (let i = 0; i < length; i++) {
         for (let j = 0; j < length; j++) {
-          const row = pos[i];
-          const col = pos[j];
-          if (matrix[row][col] !== null) {
+          const x = pos[j];
+          const y = pos[i];
+          if (matrix[y][x] !== null) {
             continue;
           }
-          for (let r = -2; r <= 2; r++) {
-            for (let c = -2; c <= 2; c++) {
-              if (r === -2 || r === 2 || c === -2 || c === 2 || (r === 0 && c === 0)) {
-                matrix[row + r][col + c] = true;
+          for (let i = -2; i <= 2; i++) {
+            for (let j = -2; j <= 2; j++) {
+              if (i === -2 || i === 2 || j === -2 || j === 2 || (i === 0 && j === 0)) {
+                matrix[y + i][x + j] = true;
               } else {
-                matrix[row + r][col + c] = false;
+                matrix[y + i][x + j] = false;
               }
             }
           }
@@ -1227,17 +1228,17 @@
       const size = __classPrivateFieldGet(this, _Encoder_size, 'f');
       // Initialize matrix
       const matrix = [];
-      for (let row = 0; row < size; row++) {
-        matrix[row] = [];
-        for (let col = 0; col < size; col++) {
-          matrix[row][col] = null;
+      for (let i = 0; i < size; i++) {
+        matrix[i] = [];
+        for (let j = 0; j < size; j++) {
+          matrix[i][j] = null;
         }
       }
       __classPrivateFieldSet(this, _Encoder_matrix, matrix, 'f');
       // Setup finder pattern
       this.setupFinderPattern(0, 0);
-      this.setupFinderPattern(size - 7, 0);
       this.setupFinderPattern(0, size - 7);
+      this.setupFinderPattern(size - 7, 0);
       // Setup alignment pattern
       this.setupAlignmentPattern();
       // Setup timing pattern
@@ -1316,10 +1317,10 @@
   (_Encoder_size = new WeakMap()),
     (_Encoder_auto = new WeakMap()),
     (_Encoder_hint = new WeakMap()),
+    (_Encoder_level = new WeakMap()),
     (_Encoder_version = new WeakMap()),
     (_Encoder_chunks = new WeakMap()),
-    (_Encoder_matrix = new WeakMap()),
-    (_Encoder_level = new WeakMap());
+    (_Encoder_matrix = new WeakMap());
 
   /**
    * @module OutputStream
@@ -1551,14 +1552,22 @@
     }
     setPixel(x, y, pixel) {
       const { width, height } = this;
-      if (x < 0 || width <= x) throw new Error(`illegal x axis: ${x}`);
-      if (y < 0 || height <= y) throw new Error(`illegal y axis: ${y}`);
+      if (x < 0 || width <= x) {
+        throw new Error(`illegal x axis: ${x}`);
+      }
+      if (y < 0 || height <= y) {
+        throw new Error(`illegal y axis: ${y}`);
+      }
       this.data[y * width + x] = pixel;
     }
     getPixel(x, y) {
       const { width, height } = this;
-      if (x < 0 || width <= x) throw new Error(`illegal x axis: ${x}`);
-      if (y < 0 || height <= y) throw new Error(`illegal y axis: ${y}`);
+      if (x < 0 || width <= x) {
+        throw new Error(`illegal x axis: ${x}`);
+      }
+      if (y < 0 || height <= y) {
+        throw new Error(`illegal y axis: ${y}`);
+      }
       return this.data[y * width + x];
     }
     write(output) {
@@ -1645,14 +1654,14 @@
       const min = margin;
       const max = size - margin;
       const gif = new GIFImage(size, size);
-      for (let y = 0; y < size; y++) {
-        for (let x = 0; x < size; x++) {
-          if (min <= x && x < max && min <= y && y < max) {
-            const row = ((y - min) / moduleSize) >> 0;
-            const col = ((x - min) / moduleSize) >> 0;
-            gif.setPixel(x, y, this.isDark(row, col) ? 0 : 1);
+      for (let i = 0; i < size; i++) {
+        for (let j = 0; j < size; j++) {
+          if (min <= j && j < max && min <= i && i < max) {
+            const x = ((j - min) / moduleSize) >> 0;
+            const y = ((i - min) / moduleSize) >> 0;
+            gif.setPixel(j, i, this.isDark(x, y) ? 0 : 1);
           } else {
-            gif.setPixel(x, y, 1);
+            gif.setPixel(j, i, 1);
           }
         }
       }

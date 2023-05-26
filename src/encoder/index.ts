@@ -10,9 +10,9 @@ import * as QRUtil from './QRUtil';
 import { Mode } from '/common/Mode';
 import { RSBlock } from './RSBlock';
 import { BitBuffer } from './BitBuffer';
+import { ECLevel } from '/common/ECLevel';
 import { Polynomial } from './Polynomial';
 import { getMaskFunc } from '/common/MaskPattern';
-import { ErrorCorrectionLevel } from '/common/ErrorCorrectionLevel';
 
 const PAD0 = 0xec;
 const PAD1 = 0x11;
@@ -45,7 +45,7 @@ function appendECI(encoding: number, buffer: BitBuffer) {
   }
 }
 
-function prepareData(version: number, level: ErrorCorrectionLevel, hint: boolean, chunks: QRData[]): PrepareData {
+function prepareData(version: number, level: ECLevel, hint: boolean, chunks: QRData[]): PrepareData {
   const buffer = new BitBuffer();
   const rsBlocks = RSBlock.getRSBlocks(version, level);
 
@@ -85,51 +85,51 @@ function createBytes(buffer: BitBuffer, rsBlocks: RSBlock[]): BitBuffer {
   const rsLength = rsBlocks.length;
   const bufferData = buffer.getBuffer();
 
-  for (let r = 0; r < rsLength; r++) {
-    const rsBlock = rsBlocks[r];
+  for (let i = 0; i < rsLength; i++) {
+    const rsBlock = rsBlocks[i];
     const dcCount = rsBlock.getDataCount();
     const ecCount = rsBlock.getTotalCount() - dcCount;
 
     maxDcCount = Math.max(maxDcCount, dcCount);
     maxEcCount = Math.max(maxEcCount, ecCount);
 
-    dcData[r] = [];
+    dcData[i] = [];
 
-    for (let i = 0; i < dcCount; i++) {
-      dcData[r][i] = 0xff & bufferData[i + offset];
+    for (let j = 0; j < dcCount; j++) {
+      dcData[i][j] = 0xff & bufferData[j + offset];
     }
 
     offset += dcCount;
 
     const rsPoly = QRUtil.getErrorCorrectionPolynomial(ecCount);
     const ecLength = rsPoly.getLength() - 1;
-    const rawPoly = new Polynomial(dcData[r], ecLength);
+    const rawPoly = new Polynomial(dcData[i], ecLength);
     const modPoly = rawPoly.mod(rsPoly);
     const mpLength = modPoly.getLength();
 
-    ecData[r] = [];
+    ecData[i] = [];
 
-    for (let i = 0; i < ecLength; i++) {
-      const modIndex = i + mpLength - ecLength;
+    for (let j = 0; j < ecLength; j++) {
+      const modIndex = j + mpLength - ecLength;
 
-      ecData[r][i] = modIndex >= 0 ? modPoly.getAt(modIndex) : 0;
+      ecData[i][j] = modIndex >= 0 ? modPoly.getAt(modIndex) : 0;
     }
   }
 
   buffer = new BitBuffer();
 
   for (let i = 0; i < maxDcCount; i++) {
-    for (let r = 0; r < rsLength; r++) {
-      if (i < dcData[r].length) {
-        buffer.put(dcData[r][i], 8);
+    for (let j = 0; j < rsLength; j++) {
+      if (i < dcData[j].length) {
+        buffer.put(dcData[j][i], 8);
       }
     }
   }
 
   for (let i = 0; i < maxEcCount; i++) {
-    for (let r = 0; r < rsLength; r++) {
-      if (i < ecData[r].length) {
-        buffer.put(ecData[r][i], 8);
+    for (let j = 0; j < rsLength; j++) {
+      if (i < ecData[j].length) {
+        buffer.put(ecData[j][i], 8);
       }
     }
   }
@@ -168,23 +168,23 @@ function createData(buffer: BitBuffer, rsBlocks: RSBlock[], maxDataCount: number
 
 export interface Options {
   hint?: boolean;
+  level?: ECLevel;
   version?: number;
-  level?: ErrorCorrectionLevel;
 }
 
 export class Encoder {
   #size = 0;
   #auto!: boolean;
   #hint!: boolean;
+  #level!: ECLevel;
   #version!: number;
   #chunks: QRData[] = [];
   #matrix: boolean[][] = [];
-  #level!: ErrorCorrectionLevel;
 
   constructor(options: Options = {}) {
     this.hint = options.hint || false;
     this.version = options.version || 0;
-    this.level = options.level || ErrorCorrectionLevel.L;
+    this.level = options.level || ECLevel.L;
   }
 
   /**
@@ -233,23 +233,23 @@ export class Encoder {
   /**
    * @public
    * @property level
-   * @return {ErrorCorrectionLevel}
+   * @return {ECLevel}
    */
-  public get level(): ErrorCorrectionLevel {
+  public get level(): ECLevel {
     return this.#level;
   }
 
   /**
    * @public
    * @property level
-   * @param {ErrorCorrectionLevel} level
+   * @param {ECLevel} level
    */
-  public set level(level: ErrorCorrectionLevel) {
+  public set level(level: ECLevel) {
     switch (level) {
-      case ErrorCorrectionLevel.L:
-      case ErrorCorrectionLevel.M:
-      case ErrorCorrectionLevel.Q:
-      case ErrorCorrectionLevel.H:
+      case ECLevel.L:
+      case ECLevel.M:
+      case ECLevel.Q:
+      case ECLevel.H:
         this.#level = level;
     }
   }
@@ -298,32 +298,32 @@ export class Encoder {
   /**
    * @public
    * @method isDark
-   * @param {number} row
-   * @param {number} col
+   * @param {number} x
+   * @param {number} y
    * @returns {boolean}
    */
-  public isDark(row: number, col: number): boolean {
-    return this.#matrix[row][col] === true;
+  public isDark(x: number, y: number): boolean {
+    return this.#matrix[y][x] === true;
   }
 
-  private setupFinderPattern(row: number, col: number): void {
+  private setupFinderPattern(x: number, y: number): void {
     const size = this.#size;
     const matrix = this.#matrix;
 
-    for (let r = -1; r <= 7; r++) {
-      for (let c = -1; c <= 7; c++) {
-        if (row + r <= -1 || size <= row + r || col + c <= -1 || size <= col + c) {
+    for (let i = -1; i <= 7; i++) {
+      for (let j = -1; j <= 7; j++) {
+        if (y + i <= -1 || size <= y + i || x + j <= -1 || size <= x + j) {
           continue;
         }
 
         if (
-          (0 <= r && r <= 6 && (c === 0 || c === 6)) ||
-          (0 <= c && c <= 6 && (r === 0 || r === 6)) ||
-          (2 <= r && r <= 4 && 2 <= c && c <= 4)
+          (0 <= i && i <= 6 && (j === 0 || j === 6)) ||
+          (0 <= j && j <= 6 && (i === 0 || i === 6)) ||
+          (2 <= i && i <= 4 && 2 <= j && j <= 4)
         ) {
-          matrix[row + r][col + c] = true;
+          matrix[y + i][x + j] = true;
         } else {
-          matrix[row + r][col + c] = false;
+          matrix[y + i][x + j] = false;
         }
       }
     }
@@ -337,19 +337,19 @@ export class Encoder {
 
     for (let i = 0; i < length; i++) {
       for (let j = 0; j < length; j++) {
-        const row = pos[i];
-        const col = pos[j];
+        const x = pos[j];
+        const y = pos[i];
 
-        if (matrix[row][col] !== null) {
+        if (matrix[y][x] !== null) {
           continue;
         }
 
-        for (let r = -2; r <= 2; r++) {
-          for (let c = -2; c <= 2; c++) {
-            if (r === -2 || r === 2 || c === -2 || c === 2 || (r === 0 && c === 0)) {
-              matrix[row + r][col + c] = true;
+        for (let i = -2; i <= 2; i++) {
+          for (let j = -2; j <= 2; j++) {
+            if (i === -2 || i === 2 || j === -2 || j === 2 || (i === 0 && j === 0)) {
+              matrix[y + i][x + j] = true;
             } else {
-              matrix[row + r][col + c] = false;
+              matrix[y + i][x + j] = false;
             }
           }
         }
@@ -474,11 +474,11 @@ export class Encoder {
     // Initialize matrix
     const matrix: boolean[][] = [];
 
-    for (let row = 0; row < size; row++) {
-      matrix[row] = [];
+    for (let i = 0; i < size; i++) {
+      matrix[i] = [];
 
-      for (let col = 0; col < size; col++) {
-        matrix[row][col] = null as any;
+      for (let j = 0; j < size; j++) {
+        matrix[i][j] = null as any;
       }
     }
 
@@ -486,8 +486,8 @@ export class Encoder {
 
     // Setup finder pattern
     this.setupFinderPattern(0, 0);
-    this.setupFinderPattern(size - 7, 0);
     this.setupFinderPattern(0, size - 7);
+    this.setupFinderPattern(size - 7, 0);
 
     // Setup alignment pattern
     this.setupAlignmentPattern();
