@@ -8,6 +8,8 @@ import { OutputStream } from '/io/OutputStream';
 import { ByteArrayOutputStream } from '/io/ByteArrayOutputStream';
 import { Base64EncodeOutputStream } from '/io/Base64EncodeOutputStream';
 
+type PixelColor = 0 | 1;
+
 function encodeToBase64(data: number[]): number[] {
   const output = new ByteArrayOutputStream();
   const stream = new Base64EncodeOutputStream(output);
@@ -89,17 +91,17 @@ class BitOutputStream {
 export class GIFImage {
   private width: number;
   private height: number;
-  private data: number[];
+  private pixels: PixelColor[];
 
   constructor(width: number, height: number) {
-    this.data = [];
+    this.pixels = [];
     this.width = width;
     this.height = height;
 
     const size = width * height;
 
     for (let i = 0; i < size; i++) {
-      this.data[i] = 0;
+      this.pixels[i] = 0;
     }
   }
 
@@ -123,18 +125,18 @@ export class GIFImage {
     const bitOutput = new BitOutputStream(byteOutput);
 
     try {
-      const { data } = this;
-      const { length } = data;
+      const { pixels } = this;
+      const { length } = pixels;
       const { fromCharCode } = String;
 
       // Clear code
       bitOutput.write(clearCode, bitLength);
 
       let dataIndex = 0;
-      let words = fromCharCode(data[dataIndex++]);
+      let words = fromCharCode(pixels[dataIndex++]);
 
       while (dataIndex < length) {
-        const char = fromCharCode(data[dataIndex++]);
+        const char = fromCharCode(pixels[dataIndex++]);
 
         if (table.contains(words + char)) {
           words += char;
@@ -163,32 +165,14 @@ export class GIFImage {
     return byteOutput.toByteArray();
   }
 
-  public setPixel(x: number, y: number, pixel: number): void {
-    const { width, height } = this;
-
-    if (x < 0 || width <= x) {
-      throw new Error(`illegal x axis: ${x}`);
-    }
-
-    if (y < 0 || height <= y) {
-      throw new Error(`illegal y axis: ${y}`);
-    }
-
-    this.data[y * width + x] = pixel;
-  }
-
-  public getPixel(x: number, y: number): number {
-    const { width, height } = this;
-
-    if (x < 0 || width <= x) {
-      throw new Error(`illegal x axis: ${x}`);
-    }
-
-    if (y < 0 || height <= y) {
-      throw new Error(`illegal y axis: ${y}`);
-    }
-
-    return this.data[y * width + x];
+  /**
+   * @function setPixel
+   * @param x x point
+   * @param y y point
+   * @param color pixel color 0: Black 1: White
+   */
+  public setPixel(x: number, y: number, color: PixelColor): void {
+    this.pixels[y * this.width + x] = color;
   }
 
   public write(output: ByteArrayOutputStream): void {

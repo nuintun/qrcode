@@ -1497,12 +1497,12 @@
   }
   class GIFImage {
     constructor(width, height) {
-      this.data = [];
+      this.pixels = [];
       this.width = width;
       this.height = height;
       const size = width * height;
       for (let i = 0; i < size; i++) {
-        this.data[i] = 0;
+        this.pixels[i] = 0;
       }
     }
     getLZWRaster(lzwMinCodeSize) {
@@ -1520,15 +1520,15 @@
       const byteOutput = new ByteArrayOutputStream();
       const bitOutput = new BitOutputStream(byteOutput);
       try {
-        const { data } = this;
-        const { length } = data;
+        const { pixels } = this;
+        const { length } = pixels;
         const { fromCharCode } = String;
         // Clear code
         bitOutput.write(clearCode, bitLength);
         let dataIndex = 0;
-        let words = fromCharCode(data[dataIndex++]);
+        let words = fromCharCode(pixels[dataIndex++]);
         while (dataIndex < length) {
-          const char = fromCharCode(data[dataIndex++]);
+          const char = fromCharCode(pixels[dataIndex++]);
           if (table.contains(words + char)) {
             words += char;
           } else {
@@ -1550,25 +1550,14 @@
       }
       return byteOutput.toByteArray();
     }
-    setPixel(x, y, pixel) {
-      const { width, height } = this;
-      if (x < 0 || width <= x) {
-        throw new Error(`illegal x axis: ${x}`);
-      }
-      if (y < 0 || height <= y) {
-        throw new Error(`illegal y axis: ${y}`);
-      }
-      this.data[y * width + x] = pixel;
-    }
-    getPixel(x, y) {
-      const { width, height } = this;
-      if (x < 0 || width <= x) {
-        throw new Error(`illegal x axis: ${x}`);
-      }
-      if (y < 0 || height <= y) {
-        throw new Error(`illegal y axis: ${y}`);
-      }
-      return this.data[y * width + x];
+    /**
+     * @function setPixel
+     * @param x x point
+     * @param y y point
+     * @param color pixel color 0: Black 1: White
+     */
+    setPixel(x, y, color) {
+      this.pixels[y * this.width + x] = color;
     }
     write(output) {
       const { width, height } = this;
