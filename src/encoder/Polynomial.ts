@@ -7,39 +7,39 @@
 import { gexp, glog } from './math';
 
 export class Polynomial {
-  private numbers: number[];
+  private factors: number[];
 
-  public constructor(num: number[], shift: number = 0) {
+  public constructor(numbers: number[], shift: number = 0) {
     let offset = 0;
-    let { length } = num;
+    let { length } = numbers;
 
-    while (offset < length && num[offset] === 0) {
+    while (offset < length && numbers[offset] === 0) {
       offset++;
     }
 
     length -= offset;
 
-    const numbers: number[] = [];
+    const factors: number[] = [];
 
     for (let i = 0; i < length; i++) {
-      numbers.push(num[offset + i]);
+      factors.push(numbers[offset + i]);
     }
 
     for (let i = 0; i < shift; i++) {
-      numbers.push(0);
+      factors.push(0);
     }
 
-    this.numbers = numbers;
+    this.factors = factors;
   }
 
   public get length(): number {
-    return this.numbers.length;
+    return this.factors.length;
   }
 
   public at(index: number): number {
-    const { numbers } = this;
+    const { factors } = this;
 
-    return numbers[index < 0 ? numbers.length + index : index];
+    return factors[index < 0 ? factors.length + index : index];
   }
 
   public multiply(e: Polynomial): Polynomial {

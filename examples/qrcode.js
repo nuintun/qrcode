@@ -113,28 +113,28 @@
    * @author Kazuhiko Arase
    */
   class Polynomial {
-    constructor(num, shift = 0) {
+    constructor(numbers, shift = 0) {
       let offset = 0;
-      let { length } = num;
-      while (offset < length && num[offset] === 0) {
+      let { length } = numbers;
+      while (offset < length && numbers[offset] === 0) {
         offset++;
       }
       length -= offset;
-      const numbers = [];
+      const factors = [];
       for (let i = 0; i < length; i++) {
-        numbers.push(num[offset + i]);
+        factors.push(numbers[offset + i]);
       }
       for (let i = 0; i < shift; i++) {
-        numbers.push(0);
+        factors.push(0);
       }
-      this.numbers = numbers;
+      this.factors = factors;
     }
     get length() {
-      return this.numbers.length;
+      return this.factors.length;
     }
     at(index) {
-      const { numbers } = this;
-      return numbers[index < 0 ? numbers.length + index : index];
+      const { factors } = this;
+      return factors[index < 0 ? factors.length + index : index];
     }
     multiply(e) {
       const eLength = e.length;
