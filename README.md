@@ -35,8 +35,6 @@ qrcode.write('你好世界\n');
 qrcode.write(new Byte('hello world\n'));
 qrcode.write(new Kanji('こんにちは世界'));
 
-qrcode.encode();
-
 console.log(qrcode.toDataURL());
 ```
 
