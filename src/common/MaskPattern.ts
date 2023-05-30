@@ -24,27 +24,40 @@ const enum MaskPattern {
   PATTERN111 = 0b111
 }
 
-export type MaskFunc = (x: number, y: number) => boolean;
+export function getMaskBit(maskPattern: number, x: number, y: number): boolean {
+  let temp: number;
+  let intermediate: number;
 
-export function getMaskFunc(maskPattern: number): MaskFunc {
   switch (maskPattern) {
     case MaskPattern.PATTERN000:
-      return (x: number, y: number): boolean => ((x + y) & 0x1) === 0;
+      intermediate = (y + x) & 0x1;
+      break;
     case MaskPattern.PATTERN001:
-      return (_x: number, y: number): boolean => (y & 0x1) === 0;
+      intermediate = y & 0x1;
+      break;
     case MaskPattern.PATTERN010:
-      return (x: number, _y: number): boolean => x % 3 === 0;
+      intermediate = x % 3;
+      break;
     case MaskPattern.PATTERN011:
-      return (x: number, y: number): boolean => (x + y) % 3 === 0;
+      intermediate = (y + x) % 3;
+      break;
     case MaskPattern.PATTERN100:
-      return (x: number, y: number): boolean => ((((x / 3) >> 0) + ((y / 2) >> 0)) & 0x1) === 0;
+      intermediate = (y / 2 + x / 3) & 0x1;
+      break;
     case MaskPattern.PATTERN101:
-      return (x: number, y: number): boolean => ((x * y) & 0x1) + ((x * y) % 3) === 0;
+      temp = y * x;
+      intermediate = (temp & 0x1) + (temp % 3);
+      break;
     case MaskPattern.PATTERN110:
-      return (x: number, y: number): boolean => ((((x * y) & 0x1) + ((x * y) % 3)) & 0x1) === 0;
+      temp = y * x;
+      intermediate = ((temp & 0x1) + (temp % 3)) & 0x1;
+      break;
     case MaskPattern.PATTERN111:
-      return (x: number, y: number): boolean => ((((x * y) % 3) + ((x + y) & 0x1)) & 0x1) === 0;
+      intermediate = (((y * x) % 3) + ((y + x) & 0x1)) & 0x1;
+      break;
     default:
       throw new Error(`illegal mask: ${maskPattern}`);
   }
+
+  return intermediate === 0;
 }

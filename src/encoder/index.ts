@@ -21,7 +21,7 @@ import { ECLevel } from '/common/ECLevel';
 import { EncodeHint } from './EncodeHint';
 import { Polynomial } from './Polynomial';
 import { isEmpty, Matrix } from './Matrix';
-import { getMaskFunc } from '/common/MaskPattern';
+import { getMaskBit } from '/common/MaskPattern';
 
 const PAD0 = 0xec;
 const PAD1 = 0x11;
@@ -297,7 +297,6 @@ function setupVersionInfo(matrix: Matrix, version: number): void {
 function setupCodewords(matrix: Matrix, buffer: BitBuffer, mask: number): void {
   const { size } = matrix;
   const bitLength = buffer.length;
-  const maskFunc = getMaskFunc(mask);
 
   // Bit index into the data
   let bitIndex = 0;
@@ -325,7 +324,7 @@ function setupCodewords(matrix: Matrix, buffer: BitBuffer, mask: number): void {
             bit = buffer.getBit(bitIndex++);
           }
 
-          const invert = maskFunc(x, y);
+          const invert = getMaskBit(mask, x, y);
 
           if (invert) {
             bit = !bit;

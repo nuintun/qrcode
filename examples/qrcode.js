@@ -881,27 +881,40 @@
    * @author Cosmo Wolfe
    * @author Kazuhiko Arase
    */
-  function getMaskFunc(maskPattern) {
+  function getMaskBit(maskPattern, x, y) {
+    let temp;
+    let intermediate;
     switch (maskPattern) {
       case 0 /* MaskPattern.PATTERN000 */:
-        return (x, y) => ((x + y) & 0x1) === 0;
+        intermediate = (y + x) & 0x1;
+        break;
       case 1 /* MaskPattern.PATTERN001 */:
-        return (_x, y) => (y & 0x1) === 0;
+        intermediate = y & 0x1;
+        break;
       case 2 /* MaskPattern.PATTERN010 */:
-        return (x, _y) => x % 3 === 0;
+        intermediate = x % 3;
+        break;
       case 3 /* MaskPattern.PATTERN011 */:
-        return (x, y) => (x + y) % 3 === 0;
+        intermediate = (y + x) % 3;
+        break;
       case 4 /* MaskPattern.PATTERN100 */:
-        return (x, y) => ((((x / 3) >> 0) + ((y / 2) >> 0)) & 0x1) === 0;
+        intermediate = (y / 2 + x / 3) & 0x1;
+        break;
       case 5 /* MaskPattern.PATTERN101 */:
-        return (x, y) => ((x * y) & 0x1) + ((x * y) % 3) === 0;
+        temp = y * x;
+        intermediate = (temp & 0x1) + (temp % 3);
+        break;
       case 6 /* MaskPattern.PATTERN110 */:
-        return (x, y) => ((((x * y) & 0x1) + ((x * y) % 3)) & 0x1) === 0;
+        temp = y * x;
+        intermediate = ((temp & 0x1) + (temp % 3)) & 0x1;
+        break;
       case 7 /* MaskPattern.PATTERN111 */:
-        return (x, y) => ((((x * y) % 3) + ((x + y) & 0x1)) & 0x1) === 0;
+        intermediate = (((y * x) % 3) + ((y + x) & 0x1)) & 0x1;
+        break;
       default:
         throw new Error(`illegal mask: ${maskPattern}`);
     }
+    return intermediate === 0;
   }
 
   /**
@@ -1127,7 +1140,6 @@
   function setupCodewords(matrix, buffer, mask) {
     const { size } = matrix;
     const bitLength = buffer.length;
-    const maskFunc = getMaskFunc(mask);
     // Bit index into the data
     let bitIndex = 0;
     // Do the funny zigzag scan
@@ -1149,7 +1161,7 @@
             if (bitIndex < bitLength) {
               bit = buffer.getBit(bitIndex++);
             }
-            const invert = maskFunc(x, y);
+            const invert = getMaskBit(mask, x, y);
             if (invert) {
               bit = !bit;
             }

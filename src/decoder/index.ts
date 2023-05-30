@@ -8,7 +8,7 @@
 import { ECLevel } from '/common/ECLevel';
 import { Version, VERSIONS } from './version';
 import { BitMatrix } from '/decoder/BitMatrix';
-import { getMaskFunc } from '/common/MaskPattern';
+import { getMaskBit } from '/common/MaskPattern';
 import { DecodeResult, decodeText } from './decode';
 import { Decoder as ReedSolomonDecoder } from '/decoder/reedsolomon';
 
@@ -29,8 +29,8 @@ function pushBit(bit: boolean, byte: number): number {
 }
 
 interface FormatInformation {
+  mask: number;
   level: ECLevel;
-  dataMask: number;
 }
 
 interface FormatItem {
@@ -39,38 +39,38 @@ interface FormatItem {
 }
 
 const FORMAT_INFO_TABLE: FormatItem[] = [
-  { bits: 0x5412, formatInfo: { level: 0, dataMask: 0 } },
-  { bits: 0x5125, formatInfo: { level: 0, dataMask: 1 } },
-  { bits: 0x5e7c, formatInfo: { level: 0, dataMask: 2 } },
-  { bits: 0x5b4b, formatInfo: { level: 0, dataMask: 3 } },
-  { bits: 0x45f9, formatInfo: { level: 0, dataMask: 4 } },
-  { bits: 0x40ce, formatInfo: { level: 0, dataMask: 5 } },
-  { bits: 0x4f97, formatInfo: { level: 0, dataMask: 6 } },
-  { bits: 0x4aa0, formatInfo: { level: 0, dataMask: 7 } },
-  { bits: 0x77c4, formatInfo: { level: 1, dataMask: 0 } },
-  { bits: 0x72f3, formatInfo: { level: 1, dataMask: 1 } },
-  { bits: 0x7daa, formatInfo: { level: 1, dataMask: 2 } },
-  { bits: 0x789d, formatInfo: { level: 1, dataMask: 3 } },
-  { bits: 0x662f, formatInfo: { level: 1, dataMask: 4 } },
-  { bits: 0x6318, formatInfo: { level: 1, dataMask: 5 } },
-  { bits: 0x6c41, formatInfo: { level: 1, dataMask: 6 } },
-  { bits: 0x6976, formatInfo: { level: 1, dataMask: 7 } },
-  { bits: 0x1689, formatInfo: { level: 2, dataMask: 0 } },
-  { bits: 0x13be, formatInfo: { level: 2, dataMask: 1 } },
-  { bits: 0x1ce7, formatInfo: { level: 2, dataMask: 2 } },
-  { bits: 0x19d0, formatInfo: { level: 2, dataMask: 3 } },
-  { bits: 0x0762, formatInfo: { level: 2, dataMask: 4 } },
-  { bits: 0x0255, formatInfo: { level: 2, dataMask: 5 } },
-  { bits: 0x0d0c, formatInfo: { level: 2, dataMask: 6 } },
-  { bits: 0x083b, formatInfo: { level: 2, dataMask: 7 } },
-  { bits: 0x355f, formatInfo: { level: 3, dataMask: 0 } },
-  { bits: 0x3068, formatInfo: { level: 3, dataMask: 1 } },
-  { bits: 0x3f31, formatInfo: { level: 3, dataMask: 2 } },
-  { bits: 0x3a06, formatInfo: { level: 3, dataMask: 3 } },
-  { bits: 0x24b4, formatInfo: { level: 3, dataMask: 4 } },
-  { bits: 0x2183, formatInfo: { level: 3, dataMask: 5 } },
-  { bits: 0x2eda, formatInfo: { level: 3, dataMask: 6 } },
-  { bits: 0x2bed, formatInfo: { level: 3, dataMask: 7 } }
+  { bits: 0x5412, formatInfo: { level: 0, mask: 0 } },
+  { bits: 0x5125, formatInfo: { level: 0, mask: 1 } },
+  { bits: 0x5e7c, formatInfo: { level: 0, mask: 2 } },
+  { bits: 0x5b4b, formatInfo: { level: 0, mask: 3 } },
+  { bits: 0x45f9, formatInfo: { level: 0, mask: 4 } },
+  { bits: 0x40ce, formatInfo: { level: 0, mask: 5 } },
+  { bits: 0x4f97, formatInfo: { level: 0, mask: 6 } },
+  { bits: 0x4aa0, formatInfo: { level: 0, mask: 7 } },
+  { bits: 0x77c4, formatInfo: { level: 1, mask: 0 } },
+  { bits: 0x72f3, formatInfo: { level: 1, mask: 1 } },
+  { bits: 0x7daa, formatInfo: { level: 1, mask: 2 } },
+  { bits: 0x789d, formatInfo: { level: 1, mask: 3 } },
+  { bits: 0x662f, formatInfo: { level: 1, mask: 4 } },
+  { bits: 0x6318, formatInfo: { level: 1, mask: 5 } },
+  { bits: 0x6c41, formatInfo: { level: 1, mask: 6 } },
+  { bits: 0x6976, formatInfo: { level: 1, mask: 7 } },
+  { bits: 0x1689, formatInfo: { level: 2, mask: 0 } },
+  { bits: 0x13be, formatInfo: { level: 2, mask: 1 } },
+  { bits: 0x1ce7, formatInfo: { level: 2, mask: 2 } },
+  { bits: 0x19d0, formatInfo: { level: 2, mask: 3 } },
+  { bits: 0x0762, formatInfo: { level: 2, mask: 4 } },
+  { bits: 0x0255, formatInfo: { level: 2, mask: 5 } },
+  { bits: 0x0d0c, formatInfo: { level: 2, mask: 6 } },
+  { bits: 0x083b, formatInfo: { level: 2, mask: 7 } },
+  { bits: 0x355f, formatInfo: { level: 3, mask: 0 } },
+  { bits: 0x3068, formatInfo: { level: 3, mask: 1 } },
+  { bits: 0x3f31, formatInfo: { level: 3, mask: 2 } },
+  { bits: 0x3a06, formatInfo: { level: 3, mask: 3 } },
+  { bits: 0x24b4, formatInfo: { level: 3, mask: 4 } },
+  { bits: 0x2183, formatInfo: { level: 3, mask: 5 } },
+  { bits: 0x2eda, formatInfo: { level: 3, mask: 6 } },
+  { bits: 0x2bed, formatInfo: { level: 3, mask: 7 } }
 ];
 
 function buildFunctionPatternMask({ version, alignmentPatternCenters }: Version): BitMatrix {
@@ -102,8 +102,8 @@ function buildFunctionPatternMask({ version, alignmentPatternCenters }: Version)
 }
 
 function readCodewords(matrix: BitMatrix, version: Version, formatInfo: FormatInformation): number[] {
+  const { mask } = formatInfo;
   const dimension = matrix.height;
-  const maskFunc = getMaskFunc(formatInfo.dataMask);
   const functionPatternMask = buildFunctionPatternMask(version);
 
   let bitsRead = 0;
@@ -131,7 +131,7 @@ function readCodewords(matrix: BitMatrix, version: Version, formatInfo: FormatIn
 
           let bit = matrix.get(x, y);
 
-          if (maskFunc(x, y)) {
+          if (getMaskBit(mask, x, y)) {
             bit = !bit;
           }
 
