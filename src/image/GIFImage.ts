@@ -166,12 +166,13 @@ export class GIFImage {
   }
 
   /**
-   * @function setPixel
+   * @function set
+   * @description set pixel of point
    * @param x x point
    * @param y y point
    * @param color pixel color 0: Black 1: White
    */
-  public setPixel(x: number, y: number, color: PixelColor): void {
+  public set(x: number, y: number, color: PixelColor): void {
     this.pixels[y * this.width + x] = color;
   }
 

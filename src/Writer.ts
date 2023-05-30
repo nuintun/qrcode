@@ -21,9 +21,6 @@ export class Writer extends Encoder {
     const matrix = this.encode();
     const matrixSize = matrix.size;
     const size = moduleSize * matrixSize + margin * 2;
-
-    console.log(matrix);
-
     const min = margin;
     const max = size - margin;
     const gif = new GIFImage(size, size);
@@ -34,9 +31,9 @@ export class Writer extends Encoder {
           const x = ((j - min) / moduleSize) >> 0;
           const y = ((i - min) / moduleSize) >> 0;
 
-          gif.setPixel(j, i, isDark(matrix, x, y) ? 0 : 1);
+          gif.set(j, i, isDark(matrix, x, y) ? 0 : 1);
         } else {
-          gif.setPixel(j, i, 1);
+          gif.set(j, i, 1);
         }
       }
     }
