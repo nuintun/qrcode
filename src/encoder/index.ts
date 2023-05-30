@@ -186,20 +186,21 @@ function createData(buffer: BitBuffer, rsBlocks: RSBlock[], maxDataCount: number
 function setupFinderPattern(matrix: Matrix, x: number, y: number): void {
   const { size } = matrix;
 
-  for (let i = -1; i <= 7; i++) {
-    for (let j = -1; j <= 7; j++) {
-      if (y + i <= -1 || size <= y + i || x + j <= -1 || size <= x + j) {
-        continue;
-      }
+  for (let i = -1; i < 8; i++) {
+    for (let j = -1; j < 8; j++) {
+      const c = x + j;
+      const r = y + i;
 
-      if (
-        (0 <= i && i <= 6 && (j === 0 || j === 6)) ||
-        (0 <= j && j <= 6 && (i === 0 || i === 6)) ||
-        (2 <= i && i <= 4 && 2 <= j && j <= 4)
-      ) {
-        matrix.set(x + j, y + i, 1);
-      } else {
-        matrix.set(x + j, y + i, 0);
+      if (c >= 0 && c < size && r >= 0 && r < size) {
+        if (
+          (0 <= i && i <= 6 && (j === 0 || j === 6)) ||
+          (0 <= j && j <= 6 && (i === 0 || i === 6)) ||
+          (2 <= i && i <= 4 && 2 <= j && j <= 4)
+        ) {
+          matrix.set(c, r, 1);
+        } else {
+          matrix.set(c, r, 0);
+        }
       }
     }
   }
@@ -207,13 +208,12 @@ function setupFinderPattern(matrix: Matrix, x: number, y: number): void {
 
 function setupAlignmentPattern(matrix: Matrix, version: number): void {
   const points = getAlignmentPattern(version);
-
   const { length } = points;
 
-  for (let i = 0; i < length; i++) {
-    for (let j = 0; j < length; j++) {
-      const x = points[j];
-      const y = points[i];
+  for (let r = 0; r < length; r++) {
+    for (let c = 0; c < length; c++) {
+      const x = points[c];
+      const y = points[r];
 
       if (isEmpty(matrix, x, y)) {
         for (let i = -2; i <= 2; i++) {
@@ -234,7 +234,7 @@ function setupTimingPattern(matrix: Matrix): void {
   const length = matrix.size - 8;
 
   for (let i = 8; i < length; i++) {
-    const bit = (i & 1) >>> 0;
+    const bit = (i + 1) & 1;
 
     // Vertical
     if (isEmpty(matrix, i, 6)) {
