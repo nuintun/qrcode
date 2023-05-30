@@ -6,17 +6,17 @@
  */
 
 export class BitStream {
-  private bytes: Uint8ClampedArray;
-  private byteOffset: number = 0;
   private bitOffset: number = 0;
+  private byteOffset: number = 0;
+  private bytes: Uint8ClampedArray;
 
   constructor(bytes: Uint8ClampedArray) {
     this.bytes = bytes;
   }
 
-  public readBits(numBits: number): number {
-    if (numBits < 1 || numBits > 32 || numBits > this.available()) {
-      throw new Error(`can't read ${numBits} bits`);
+  public readBits(length: number): number | never {
+    if (length < 1 || length > 32 || length > this.available()) {
+      throw new Error(`can't read ${length} bits`);
     }
 
     let result = 0;
@@ -24,12 +24,13 @@ export class BitStream {
     // First, read remainder from current byte
     if (this.bitOffset > 0) {
       const bitsLeft = 8 - this.bitOffset;
-      const toRead = numBits < bitsLeft ? numBits : bitsLeft;
+      const toRead = length < bitsLeft ? length : bitsLeft;
       const bitsToNotRead = bitsLeft - toRead;
       const mask = (0xff >> (8 - toRead)) << bitsToNotRead;
 
       result = (this.bytes[this.byteOffset] & mask) >> bitsToNotRead;
-      numBits -= toRead;
+
+      length -= toRead;
 
       this.bitOffset += toRead;
 
@@ -40,23 +41,23 @@ export class BitStream {
     }
 
     // Next read whole bytes
-    if (numBits > 0) {
-      while (numBits >= 8) {
+    if (length > 0) {
+      while (length >= 8) {
         result = (result << 8) | (this.bytes[this.byteOffset] & 0xff);
 
         this.byteOffset++;
 
-        numBits -= 8;
+        length -= 8;
       }
 
       // Finally read a partial byte
-      if (numBits > 0) {
-        const bitsToNotRead = 8 - numBits;
+      if (length > 0) {
+        const bitsToNotRead = 8 - length;
         const mask = (0xff >> bitsToNotRead) << bitsToNotRead;
 
-        result = (result << numBits) | ((this.bytes[this.byteOffset] & mask) >> bitsToNotRead);
+        result = (result << length) | ((this.bytes[this.byteOffset] & mask) >> bitsToNotRead);
 
-        this.bitOffset += numBits;
+        this.bitOffset += length;
       }
     }
 

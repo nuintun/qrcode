@@ -5,19 +5,21 @@
  */
 
 export class BitBuffer {
-  private length: number = 0;
+  public length: number = 0;
   private buffer: number[] = [];
 
-  public getBuffer(): number[] {
-    return this.buffer;
-  }
+  public putBit(bit: boolean): void {
+    const { buffer, length } = this;
 
-  public getLengthInBits(): number {
-    return this.length;
-  }
+    if (buffer.length * 8 === length) {
+      buffer.push(0);
+    }
 
-  public getBit(index: number): boolean {
-    return ((this.buffer[(index / 8) >> 0] >>> (7 - (index % 8))) & 1) === 1;
+    if (bit) {
+      buffer[(length / 8) >>> 0] |= 0x80 >>> length % 8;
+    }
+
+    this.length++;
   }
 
   public put(num: number, length: number): void {
@@ -26,17 +28,13 @@ export class BitBuffer {
     }
   }
 
-  public putBit(bit: boolean): void {
+  public at(index: number): number {
     const { buffer } = this;
 
-    if (this.length === buffer.length * 8) {
-      buffer.push(0);
-    }
+    return buffer[index < 0 ? buffer.length + index : index];
+  }
 
-    if (bit) {
-      buffer[(this.length / 8) >> 0] |= 0x80 >>> this.length % 8;
-    }
-
-    this.length++;
+  public getBit(index: number): boolean {
+    return ((this.buffer[(index / 8) >>> 0] >>> (7 - (index % 8))) & 1) === 1;
   }
 }

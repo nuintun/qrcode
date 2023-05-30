@@ -127,7 +127,7 @@ export class GenericGFPoly {
 
   public multiplyByMonomial(degree: number, coefficient: number): GenericGFPoly {
     if (degree < 0) {
-      throw new Error('invalid degree less than 0');
+      throw new Error('illegal degree less than 0');
     }
 
     if (coefficient === 0) {

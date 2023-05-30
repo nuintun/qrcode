@@ -288,7 +288,7 @@ export class RSBlock {
     return rsBlocks;
   }
 
-  private static getRSBlockTable(version: number, level: ECLevel): number[] {
+  private static getRSBlockTable(version: number, level: ECLevel): number[] | never {
     switch (level) {
       case ECLevel.L:
         return RSBlock.RS_BLOCK_TABLE[(version - 1) * 4 + 0];

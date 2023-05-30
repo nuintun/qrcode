@@ -1,12 +1,13 @@
 /**
- * @module QRUtil
+ * @module utils
  * @author nuintun
  * @author Kazuhiko Arase
  */
 
-import { Encoder } from '.';
-import * as QRMath from './QRMath';
+import { gexp } from './math';
+import { Mode } from '/common/Mode';
 import { Polynomial } from './Polynomial';
+import { isDark, Matrix } from './Matrix';
 
 const N1 = 3;
 const N2 = 3;
@@ -70,7 +71,7 @@ export function getECPolynomial(level: number): Polynomial {
   let e = new Polynomial([1]);
 
   for (let i = 0; i < level; i++) {
-    e = e.multiply(new Polynomial([1, QRMath.gexp(i)]));
+    e = e.multiply(new Polynomial([1, gexp(i)]));
   }
 
   return e;
@@ -111,17 +112,17 @@ export function getBCHVersionInfo(data: number): number {
   return ((data << 10) | offset) ^ G15_MASK;
 }
 
-function applyMaskPenaltyRule1Internal(encoder: Encoder, isHorizontal: boolean): number {
+function applyMaskPenaltyRule1Internal(matrix: Matrix, isHorizontal: boolean): number {
   let penalty = 0;
 
-  const { size } = encoder;
+  const { size } = matrix;
 
   for (let i = 0; i < size; i++) {
     let prevBit = false;
     let numSameBitCells = 0;
 
     for (let j = 0; j < size; j++) {
-      const bit = isHorizontal ? encoder.isDark(j, i) : encoder.isDark(i, j);
+      const bit = isHorizontal ? isDark(matrix, j, i) : isDark(matrix, i, j);
 
       if (bit === prevBit) {
         numSameBitCells++;
@@ -145,20 +146,20 @@ function applyMaskPenaltyRule1Internal(encoder: Encoder, isHorizontal: boolean):
   return penalty;
 }
 
-function applyMaskPenaltyRule1(encoder: Encoder): number {
-  return applyMaskPenaltyRule1Internal(encoder, true) + applyMaskPenaltyRule1Internal(encoder, false);
+function applyMaskPenaltyRule1(matrix: Matrix): number {
+  return applyMaskPenaltyRule1Internal(matrix, true) + applyMaskPenaltyRule1Internal(matrix, false);
 }
 
-function applyMaskPenaltyRule2(encoder: Encoder): number {
+function applyMaskPenaltyRule2(matrix: Matrix): number {
   let penalty = 0;
 
-  const { size } = encoder;
+  const { size } = matrix;
 
   for (let i = 0; i < size - 1; i++) {
     for (let j = 0; j < size - 1; j++) {
-      const value = encoder.isDark(j, i);
+      const value = isDark(matrix, j, i);
 
-      if (value === encoder.isDark(j + 1, i) && value === encoder.isDark(j, i + 1) && value === encoder.isDark(j + 1, i + 1)) {
+      if (value === isDark(matrix, j + 1, i) && value === isDark(matrix, j, i + 1) && value === isDark(matrix, j + 1, i + 1)) {
         penalty += N2;
       }
     }
@@ -167,12 +168,12 @@ function applyMaskPenaltyRule2(encoder: Encoder): number {
   return penalty;
 }
 
-function isFourWhite(encoder: Encoder, index: number, from: number, to: number, isHorizontal: boolean): boolean {
+function isFourWhite(matrix: Matrix, index: number, from: number, to: number, isHorizontal: boolean): boolean {
   from = Math.max(from, 0);
-  to = Math.min(to, encoder.size);
+  to = Math.min(to, matrix.size);
 
   for (let i = from; i < to; i++) {
-    const value = isHorizontal ? encoder.isDark(i, index) : encoder.isDark(index, i);
+    const value = isHorizontal ? isDark(matrix, i, index) : isDark(matrix, index, i);
 
     if (value) {
       return false;
@@ -182,37 +183,37 @@ function isFourWhite(encoder: Encoder, index: number, from: number, to: number, 
   return true;
 }
 
-function applyMaskPenaltyRule3(encoder: Encoder): number {
+function applyMaskPenaltyRule3(matrix: Matrix): number {
   let numPenalties = 0;
 
-  const { size } = encoder;
+  const { size } = matrix;
 
   for (let i = 0; i < size; i++) {
     for (let j = 0; j < size; j++) {
       if (
         j + 6 < size &&
-        encoder.isDark(j, i) &&
-        !encoder.isDark(j + 1, i) &&
-        encoder.isDark(j + 2, i) &&
-        encoder.isDark(j + 3, i) &&
-        encoder.isDark(j + 4, i) &&
-        !encoder.isDark(j + 5, i) &&
-        encoder.isDark(j + 6, i) &&
-        (isFourWhite(encoder, i, j - 4, j, true) || isFourWhite(encoder, i, j + 7, j + 11, true))
+        isDark(matrix, j, i) &&
+        !isDark(matrix, j + 1, i) &&
+        isDark(matrix, j + 2, i) &&
+        isDark(matrix, j + 3, i) &&
+        isDark(matrix, j + 4, i) &&
+        !isDark(matrix, j + 5, i) &&
+        isDark(matrix, j + 6, i) &&
+        (isFourWhite(matrix, i, j - 4, j, true) || isFourWhite(matrix, i, j + 7, j + 11, true))
       ) {
         numPenalties++;
       }
 
       if (
         i + 6 < size &&
-        encoder.isDark(j, i) &&
-        !encoder.isDark(j, i + 1) &&
-        encoder.isDark(j, i + 2) &&
-        encoder.isDark(j, i + 3) &&
-        encoder.isDark(j, i + 4) &&
-        !encoder.isDark(j, i + 5) &&
-        encoder.isDark(j, i + 6) &&
-        (isFourWhite(encoder, j, i - 4, i, false) || isFourWhite(encoder, j, i + 7, i + 11, false))
+        isDark(matrix, j, i) &&
+        !isDark(matrix, j, i + 1) &&
+        isDark(matrix, j, i + 2) &&
+        isDark(matrix, j, i + 3) &&
+        isDark(matrix, j, i + 4) &&
+        !isDark(matrix, j, i + 5) &&
+        isDark(matrix, j, i + 6) &&
+        (isFourWhite(matrix, j, i - 4, i, false) || isFourWhite(matrix, j, i + 7, i + 11, false))
       ) {
         numPenalties++;
       }
@@ -222,14 +223,14 @@ function applyMaskPenaltyRule3(encoder: Encoder): number {
   return numPenalties * N3;
 }
 
-function applyMaskPenaltyRule4(encoder: Encoder): number {
+function applyMaskPenaltyRule4(matrix: Matrix): number {
   let numDarkCells = 0;
 
-  const { size } = encoder;
+  const { size } = matrix;
 
   for (let i = 0; i < size; i++) {
     for (let j = 0; j < size; j++) {
-      if (encoder.isDark(j, i)) {
+      if (isDark(matrix, j, i)) {
         numDarkCells++;
       }
     }
@@ -243,15 +244,65 @@ function applyMaskPenaltyRule4(encoder: Encoder): number {
 
 /**
  * @function calculateMaskPenalty
- * @param {Encoder} encoder
+ * @param {Matrix} matrix
  * @see https://www.thonky.com/qr-code-tutorial/data-masking
  * @see https://github.com/zxing/zxing/blob/master/core/src/main/java/com/google/zxing/qrcode/encoder/MaskUtil.java
  */
-export function calculateMaskPenalty(encoder: Encoder): number {
+export function calculateMaskPenalty(matrix: Matrix): number {
   return (
-    applyMaskPenaltyRule1(encoder) +
-    applyMaskPenaltyRule2(encoder) +
-    applyMaskPenaltyRule3(encoder) +
-    applyMaskPenaltyRule4(encoder)
+    applyMaskPenaltyRule1(matrix) +
+    applyMaskPenaltyRule2(matrix) +
+    applyMaskPenaltyRule3(matrix) +
+    applyMaskPenaltyRule4(matrix)
   );
+}
+
+export function getCharacterCountBits(mode: Mode, version: number): number | never {
+  const error = new Error(`illegal mode: ${mode}`);
+
+  if (1 <= version && version < 10) {
+    // 1 - 9
+    switch (mode) {
+      case Mode.NUMERIC:
+        return 10;
+      case Mode.ALPHANUMERIC:
+        return 9;
+      case Mode.BYTE:
+        return 8;
+      case Mode.KANJI:
+        return 8;
+      default:
+        throw error;
+    }
+  } else if (version < 27) {
+    // 10 - 26
+    switch (mode) {
+      case Mode.NUMERIC:
+        return 12;
+      case Mode.ALPHANUMERIC:
+        return 11;
+      case Mode.BYTE:
+        return 16;
+      case Mode.KANJI:
+        return 10;
+      default:
+        throw error;
+    }
+  } else if (version < 41) {
+    // 27 - 40
+    switch (mode) {
+      case Mode.NUMERIC:
+        return 14;
+      case Mode.ALPHANUMERIC:
+        return 13;
+      case Mode.BYTE:
+        return 16;
+      case Mode.KANJI:
+        return 12;
+      default:
+        throw error;
+    }
+  } else {
+    throw new Error(`illegal version: ${version}`);
+  }
 }

@@ -4,21 +4,30 @@
  * @author Kazuhiko Arase
  */
 
-import { QRByte } from './QRByte';
-import { QRData } from './QRData';
-import * as QRUtil from './QRUtil';
+import {
+  calculateMaskPenalty,
+  getAlignmentPattern,
+  getBCHVersion,
+  getBCHVersionInfo,
+  getCharacterCountBits,
+  getECPolynomial
+} from './utils';
 import { Mode } from '/common/Mode';
 import { RSBlock } from './RSBlock';
+import { Segment } from './Segment';
+import { Byte } from './segments/Byte';
 import { BitBuffer } from './BitBuffer';
 import { ECLevel } from '/common/ECLevel';
+import { EncodeHint } from './EncodeHint';
 import { Polynomial } from './Polynomial';
+import { isEmpty, Matrix } from './Matrix';
 import { getMaskFunc } from '/common/MaskPattern';
 
 const PAD0 = 0xec;
 const PAD1 = 0x11;
 const { toString } = Object.prototype;
 
-type PrepareData = [BitBuffer, RSBlock[], number];
+type PrepareData = [buffer: BitBuffer, rsBlocks: RSBlock[], maxDataCount: number];
 
 /**
  * @function appendECI
@@ -29,7 +38,7 @@ type PrepareData = [BitBuffer, RSBlock[], number];
  */
 function appendECI(encoding: number, buffer: BitBuffer) {
   if (encoding < 0 || encoding >= 1000000) {
-    throw new Error('byte mode encoding hint out of range');
+    throw new Error('eci assignment value out of range');
   }
 
   buffer.put(Mode.ECI, 4);
@@ -45,22 +54,31 @@ function appendECI(encoding: number, buffer: BitBuffer) {
   }
 }
 
-function prepareData(version: number, level: ECLevel, hint: boolean, chunks: QRData[]): PrepareData {
+function prepareData(version: number, level: ECLevel, hints: EncodeHint[], segments: Segment[]): PrepareData {
   const buffer = new BitBuffer();
   const rsBlocks = RSBlock.getRSBlocks(version, level);
 
-  for (const data of chunks) {
-    const mode = data.mode;
+  for (const segment of segments) {
+    const mode = segment.mode;
 
-    // Default set encoding UTF-8 when has encoding hint
-    if (hint && mode === Mode.BYTE) {
-      appendECI((data as QRByte).encoding, buffer);
+    // Append ECI segment if applicable
+    if (mode === Mode.BYTE && hints.indexOf(EncodeHint.CHARACTER_SET) >= 0) {
+      appendECI((segment as Byte).encoding, buffer);
     }
 
-    buffer.put(mode, 4);
-    buffer.put(data.getLength(), data.getLengthInBits(version));
+    // Append the FNC1 mode header for GS1 formatted data if applicable
+    if (hints.indexOf(EncodeHint.GS1_FORMAT) >= 0) {
+      // GS1 formatted codes are prefixed with a FNC1 in first position mode header
+      buffer.put(Mode.FNC1_FIRST_POSITION, 4);
+    }
 
-    data.writeTo(buffer);
+    // (With ECI in place,) Write the mode marker
+    buffer.put(mode, 4);
+    // Find "length" of segment and write it
+    buffer.put(segment.length, getCharacterCountBits(mode, version));
+
+    // Put data together into the overall payload
+    segment.writeTo(buffer);
   }
 
   // Calc max data count
@@ -83,7 +101,6 @@ function createBytes(buffer: BitBuffer, rsBlocks: RSBlock[]): BitBuffer {
   const dcData: number[][] = [];
   const ecData: number[][] = [];
   const rsLength = rsBlocks.length;
-  const bufferData = buffer.getBuffer();
 
   for (let i = 0; i < rsLength; i++) {
     const rsBlock = rsBlocks[i];
@@ -96,23 +113,23 @@ function createBytes(buffer: BitBuffer, rsBlocks: RSBlock[]): BitBuffer {
     dcData[i] = [];
 
     for (let j = 0; j < dcCount; j++) {
-      dcData[i][j] = 0xff & bufferData[j + offset];
+      dcData[i][j] = 0xff & buffer.at(j + offset);
     }
 
     offset += dcCount;
 
-    const rsPoly = QRUtil.getECPolynomial(ecCount);
-    const ecLength = rsPoly.getLength() - 1;
+    const rsPoly = getECPolynomial(ecCount);
+    const ecLength = rsPoly.length - 1;
     const rawPoly = new Polynomial(dcData[i], ecLength);
     const modPoly = rawPoly.mod(rsPoly);
-    const mpLength = modPoly.getLength();
+    const mpLength = modPoly.length;
 
     ecData[i] = [];
 
     for (let j = 0; j < ecLength; j++) {
       const modIndex = j + mpLength - ecLength;
 
-      ecData[i][j] = modIndex >= 0 ? modPoly.getAt(modIndex) : 0;
+      ecData[i][j] = modIndex >= 0 ? modPoly.at(modIndex) : 0;
     }
   }
 
@@ -139,24 +156,24 @@ function createBytes(buffer: BitBuffer, rsBlocks: RSBlock[]): BitBuffer {
 
 function createData(buffer: BitBuffer, rsBlocks: RSBlock[], maxDataCount: number): BitBuffer {
   // End
-  if (buffer.getLengthInBits() + 4 <= maxDataCount) {
+  if (buffer.length + 4 <= maxDataCount) {
     buffer.put(0, 4);
   }
 
   // Padding
-  while (buffer.getLengthInBits() % 8 !== 0) {
+  while (buffer.length % 8 !== 0) {
     buffer.putBit(false);
   }
 
   // Padding
   while (true) {
-    if (buffer.getLengthInBits() >= maxDataCount) {
+    if (buffer.length >= maxDataCount) {
       break;
     }
 
     buffer.put(PAD0, 8);
 
-    if (buffer.getLengthInBits() >= maxDataCount) {
+    if (buffer.length >= maxDataCount) {
       break;
     }
 
@@ -166,68 +183,206 @@ function createData(buffer: BitBuffer, rsBlocks: RSBlock[], maxDataCount: number
   return createBytes(buffer, rsBlocks);
 }
 
+function setupFinderPattern(matrix: Matrix, x: number, y: number): void {
+  const { size } = matrix;
+
+  for (let i = -1; i <= 7; i++) {
+    for (let j = -1; j <= 7; j++) {
+      if (y + i <= -1 || size <= y + i || x + j <= -1 || size <= x + j) {
+        continue;
+      }
+
+      if (
+        (0 <= i && i <= 6 && (j === 0 || j === 6)) ||
+        (0 <= j && j <= 6 && (i === 0 || i === 6)) ||
+        (2 <= i && i <= 4 && 2 <= j && j <= 4)
+      ) {
+        matrix.set(x + j, y + i, 1);
+      } else {
+        matrix.set(x + j, y + i, 0);
+      }
+    }
+  }
+}
+
+function setupAlignmentPattern(matrix: Matrix, version: number): void {
+  const points = getAlignmentPattern(version);
+
+  const { length } = points;
+
+  for (let i = 0; i < length; i++) {
+    for (let j = 0; j < length; j++) {
+      const x = points[j];
+      const y = points[i];
+
+      if (isEmpty(matrix, x, y)) {
+        for (let i = -2; i <= 2; i++) {
+          for (let j = -2; j <= 2; j++) {
+            if (i === -2 || i === 2 || j === -2 || j === 2 || (i === 0 && j === 0)) {
+              matrix.set(x + j, y + i, 1);
+            } else {
+              matrix.set(x + j, y + i, 0);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+function setupTimingPattern(matrix: Matrix): void {
+  const length = matrix.size - 8;
+
+  for (let i = 8; i < length; i++) {
+    const bit = (i & 1) >>> 0;
+
+    // Vertical
+    if (isEmpty(matrix, i, 6)) {
+      matrix.set(i, 6, bit);
+    }
+
+    // Horizontal
+    if (isEmpty(matrix, 6, i)) {
+      matrix.set(6, i, bit);
+    }
+  }
+}
+
+function setupFormatInfo(matrix: Matrix, level: ECLevel, mask: number): void {
+  const { size } = matrix;
+  const bits = getBCHVersionInfo((level << 3) | mask);
+
+  for (let i = 0; i < 15; i++) {
+    const bit = (bits >> i) & 1;
+
+    // Vertical
+    if (i < 6) {
+      matrix.set(8, i, bit);
+    } else if (i < 8) {
+      matrix.set(8, i + 1, bit);
+    } else {
+      matrix.set(8, size - 15 + i, bit);
+    }
+
+    // Horizontal
+    if (i < 8) {
+      matrix.set(size - i - 1, 8, bit);
+    } else if (i < 9) {
+      matrix.set(15 - i - 1 + 1, 8, bit);
+    } else {
+      matrix.set(15 - i - 1, 8, bit);
+    }
+  }
+
+  // Fixed point
+  matrix.set(8, size - 8, 1);
+}
+
+function setupVersionInfo(matrix: Matrix, version: number): void {
+  if (version >= 7) {
+    const { size } = matrix;
+    const bits = getBCHVersion(version);
+
+    for (let i = 0; i < 18; i++) {
+      const x = (i / 3) >> 0;
+      const y = (i % 3) + size - 8 - 3;
+      const bit = (bits >> i) & 1;
+
+      matrix.set(x, y, bit);
+      matrix.set(y, x, bit);
+    }
+  }
+}
+
+function setupCodewords(matrix: Matrix, buffer: BitBuffer, mask: number): void {
+  const { size } = matrix;
+  const bitLength = buffer.length;
+  const maskFunc = getMaskFunc(mask);
+
+  // Bit index into the data
+  let bitIndex = 0;
+
+  // Do the funny zigzag scan
+  for (let right = size - 1; right >= 1; right -= 2) {
+    // Index of right column in each column pair
+    if (right === 6) {
+      right = 5;
+    }
+
+    for (let vert = 0; vert < size; vert++) {
+      // Vertical counter
+      for (let j = 0; j < 2; j++) {
+        // Actual x coordinate
+        const x = right - j;
+        const upward = ((right + 1) & 2) === 0;
+        // Actual y coordinate
+        const y = upward ? size - 1 - vert : vert;
+
+        if (isEmpty(matrix, x, y)) {
+          let bit = false;
+
+          if (bitIndex < bitLength) {
+            bit = buffer.getBit(bitIndex++);
+          }
+
+          const invert = maskFunc(x, y);
+
+          if (invert) {
+            bit = !bit;
+          }
+
+          matrix.set(x, y, bit ? 1 : 0);
+        }
+      }
+    }
+  }
+}
+
+function buildMatrix(buffer: BitBuffer, version: number, level: ECLevel, mask: number): Matrix {
+  // Size of matrix
+  const size = version * 4 + 17;
+  // Initialize matrix
+  const matrix = new Matrix(size);
+
+  // Setup finder pattern
+  setupFinderPattern(matrix, 0, 0);
+  setupFinderPattern(matrix, 0, size - 7);
+  setupFinderPattern(matrix, size - 7, 0);
+
+  // Setup alignment pattern
+  setupAlignmentPattern(matrix, version);
+
+  // Setup timing pattern
+  setupTimingPattern(matrix);
+
+  // Setup format info
+  setupFormatInfo(matrix, level, mask);
+
+  // Setup version info
+  setupVersionInfo(matrix, version);
+
+  // Setup codewords
+  setupCodewords(matrix, buffer, mask);
+
+  return matrix;
+}
+
 export interface Options {
-  hint?: boolean;
   level?: ECLevel;
   version?: number;
+  hints?: EncodeHint[];
 }
 
 export class Encoder {
-  #size = 0;
-  #hint!: boolean;
   #level!: ECLevel;
-  #semver!: number;
   #version!: number;
-  #chunks: QRData[] = [];
-  #matrix: boolean[][] = [];
+  #hints!: EncodeHint[];
+  #segments: Segment[] = [];
 
   constructor(options: Options = {}) {
-    this.hint = options.hint || false;
-    this.version = options.version || 0;
-    this.level = options.level || ECLevel.L;
-  }
-
-  /**
-   * @public
-   * @property matrix
-   * @returns {boolean[][]}
-   */
-  public get matrix(): boolean[][] {
-    return this.#matrix;
-  }
-
-  /**
-   * @public
-   * @property size
-   * @return {number}
-   */
-  public get size(): number {
-    return this.#size;
-  }
-
-  /**
-   * @public
-   * @property version
-   * @return {number}
-   */
-  public get version(): number {
-    return this.#version;
-  }
-
-  /**
-   * @public
-   * @property version
-   * @param {number} version
-   */
-  public set version(version: number) {
-    version = version >> 0;
-
-    if (version < 0 || version > 40) {
-      throw new RangeError('version invalid, must be in range [0 - 40]');
-    }
-
-    this.#semver = version;
-    this.#version = version;
+    this.hints = options.hints ?? [];
+    this.version = options.version ?? 0;
+    this.level = options.level ?? ECLevel.L;
   }
 
   /**
@@ -251,24 +406,51 @@ export class Encoder {
       case ECLevel.Q:
       case ECLevel.H:
         this.#level = level;
+        break;
+      default:
+        throw new Error('illegal error correction level');
     }
   }
 
   /**
    * @public
-   * @property hint
+   * @property hints
    * @return {boolean}
    */
-  public get hint(): boolean {
-    return this.#hint;
+  public get hints(): EncodeHint[] {
+    return this.#hints;
   }
 
   /**
    * @public
-   * @property hint
+   * @property hints
    */
-  public set hint(hint: boolean) {
-    this.#hint = hint;
+  public set hints(hints: EncodeHint[]) {
+    this.#hints = hints;
+  }
+
+  /**
+   * @public
+   * @property version
+   * @return {number}
+   */
+  public get version(): number {
+    return this.#version;
+  }
+
+  /**
+   * @public
+   * @property version
+   * @param {number} version
+   */
+  public set version(version: number) {
+    version = version >> 0;
+
+    if (version < 0 || version > 40) {
+      throw new RangeError('illegal version, must be in range [0 - 40]');
+    }
+
+    this.#version = version;
   }
 
   /**
@@ -277,16 +459,16 @@ export class Encoder {
    * @param {QRData} data
    * @returns {Encoder}
    */
-  public write(data: QRData | string): Encoder {
-    const chunks = this.#chunks;
+  public write(data: Segment | string): Encoder {
+    const segments = this.#segments;
 
-    if (data instanceof QRData) {
-      chunks.push(data);
+    if (data instanceof Segment) {
+      segments.push(data);
     } else {
       const type = toString.call(data);
 
       if (type === '[object String]') {
-        chunks.push(new QRByte(data));
+        segments.push(new Byte(data));
       } else {
         throw new Error(`illegal data: ${data}`);
       }
@@ -297,273 +479,57 @@ export class Encoder {
 
   /**
    * @public
-   * @method isDark
-   * @param {number} x
-   * @param {number} y
-   * @returns {boolean}
-   */
-  public isDark(x: number, y: number): boolean {
-    return this.#matrix[y][x] === true;
-  }
-
-  private setupFinderPattern(x: number, y: number): void {
-    const size = this.#size;
-    const matrix = this.#matrix;
-
-    for (let i = -1; i <= 7; i++) {
-      for (let j = -1; j <= 7; j++) {
-        if (y + i <= -1 || size <= y + i || x + j <= -1 || size <= x + j) {
-          continue;
-        }
-
-        if (
-          (0 <= i && i <= 6 && (j === 0 || j === 6)) ||
-          (0 <= j && j <= 6 && (i === 0 || i === 6)) ||
-          (2 <= i && i <= 4 && 2 <= j && j <= 4)
-        ) {
-          matrix[y + i][x + j] = true;
-        } else {
-          matrix[y + i][x + j] = false;
-        }
-      }
-    }
-  }
-
-  private setupAlignmentPattern(): void {
-    const matrix = this.#matrix;
-    const pos = QRUtil.getAlignmentPattern(this.#version);
-
-    const { length } = pos;
-
-    for (let i = 0; i < length; i++) {
-      for (let j = 0; j < length; j++) {
-        const x = pos[j];
-        const y = pos[i];
-
-        if (matrix[y][x] !== null) {
-          continue;
-        }
-
-        for (let i = -2; i <= 2; i++) {
-          for (let j = -2; j <= 2; j++) {
-            if (i === -2 || i === 2 || j === -2 || j === 2 || (i === 0 && j === 0)) {
-              matrix[y + i][x + j] = true;
-            } else {
-              matrix[y + i][x + j] = false;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  private setupTimingPattern(): void {
-    const matrix = this.#matrix;
-    const count = this.#size - 8;
-
-    for (let i = 8; i < count; i++) {
-      const bit = i % 2 === 0;
-
-      // vertical
-      if (matrix[i][6] === null) {
-        matrix[i][6] = bit;
-      }
-
-      // horizontal
-      if (matrix[6][i] === null) {
-        matrix[6][i] = bit;
-      }
-    }
-  }
-
-  private setupFormatInfo(maskPattern: number): void {
-    const size = this.#size;
-    const matrix = this.#matrix;
-    const bits = QRUtil.getBCHVersionInfo((this.#level << 3) | maskPattern);
-
-    for (let i = 0; i < 15; i++) {
-      const bit = ((bits >> i) & 1) === 1;
-
-      // Vertical
-      if (i < 6) {
-        matrix[i][8] = bit;
-      } else if (i < 8) {
-        matrix[i + 1][8] = bit;
-      } else {
-        matrix[size - 15 + i][8] = bit;
-      }
-
-      // Horizontal
-      if (i < 8) {
-        matrix[8][size - i - 1] = bit;
-      } else if (i < 9) {
-        matrix[8][15 - i - 1 + 1] = bit;
-      } else {
-        matrix[8][15 - i - 1] = bit;
-      }
-    }
-
-    // Fixed point
-    matrix[size - 8][8] = true;
-  }
-
-  private setupVersionInfo(): void {
-    if (this.#version >= 7) {
-      const size = this.#size;
-      const matrix = this.#matrix;
-      const bits = QRUtil.getBCHVersion(this.version);
-
-      for (let i = 0; i < 18; i++) {
-        const bit = ((bits >> i) & 1) === 1;
-
-        matrix[(i / 3) >> 0][(i % 3) + size - 8 - 3] = bit;
-        matrix[(i % 3) + size - 8 - 3][(i / 3) >> 0] = bit;
-      }
-    }
-  }
-
-  private setupCodewords(data: BitBuffer, maskPattern: number): void {
-    const size = this.#size;
-    const matrix = this.#matrix;
-    const bitLength = data.getLengthInBits();
-    const maskFunc = getMaskFunc(maskPattern);
-
-    // Bit index into the data
-    let bitIndex = 0;
-
-    // Do the funny zigzag scan
-    for (let right = size - 1; right >= 1; right -= 2) {
-      // Index of right column in each column pair
-      if (right === 6) {
-        right = 5;
-      }
-
-      for (let vert = 0; vert < size; vert++) {
-        // Vertical counter
-        for (let j = 0; j < 2; j++) {
-          // Actual x coordinate
-          const x = right - j;
-          const upward = ((right + 1) & 2) === 0;
-          // Actual y coordinate
-          const y = upward ? size - 1 - vert : vert;
-
-          if (matrix[y][x] !== null) {
-            continue;
-          }
-
-          let bit = false;
-
-          if (bitIndex < bitLength) {
-            bit = data.getBit(bitIndex++);
-          }
-
-          const invert = maskFunc(x, y);
-
-          if (invert) {
-            bit = !bit;
-          }
-
-          matrix[y][x] = bit;
-        }
-      }
-    }
-  }
-
-  private build(data: BitBuffer, maskPattern: number): void {
-    const size = this.#size;
-    // Initialize matrix
-    const matrix: boolean[][] = [];
-
-    for (let i = 0; i < size; i++) {
-      matrix[i] = [];
-
-      for (let j = 0; j < size; j++) {
-        matrix[i][j] = null as any;
-      }
-    }
-
-    this.#matrix = matrix;
-
-    // Setup finder pattern
-    this.setupFinderPattern(0, 0);
-    this.setupFinderPattern(0, size - 7);
-    this.setupFinderPattern(size - 7, 0);
-
-    // Setup alignment pattern
-    this.setupAlignmentPattern();
-
-    // Setup timing pattern
-    this.setupTimingPattern();
-
-    // Setup format info
-    this.setupFormatInfo(maskPattern);
-
-    // Setup version info
-    this.setupVersionInfo();
-
-    // Setup codewords
-    this.setupCodewords(data, maskPattern);
-  }
-
-  /**
-   * @public
    * @method encode
-   * @returns {Encoder}
+   * @returns {Matrix}
    */
-  public encode(): boolean[][] {
+  public encode(): Matrix {
     let buffer!: BitBuffer;
     let rsBlocks!: RSBlock[];
     let maxDataCount!: number;
+    let version = this.#version;
 
+    const hints = this.#hints;
     const level = this.#level;
-    const chunks = this.#chunks;
+    const segments = this.#segments;
 
-    if (this.#semver === 0) {
-      let version = 1;
+    if (version === 0) {
+      for (version = 1; version <= 40; version++) {
+        [buffer, rsBlocks, maxDataCount] = prepareData(version, level, hints, segments);
 
-      for (; version <= 40; version++) {
-        [buffer, rsBlocks, maxDataCount] = prepareData(version, level, this.#hint, chunks);
-
-        if (buffer.getLengthInBits() <= maxDataCount) break;
+        if (buffer.length <= maxDataCount) {
+          break;
+        }
       }
 
-      const dataLengthInBits = buffer.getLengthInBits();
+      const dataBitLength = buffer.length;
 
-      if (dataLengthInBits > maxDataCount) {
-        throw new Error(`data overflow: ${dataLengthInBits} > ${maxDataCount}`);
+      if (dataBitLength > maxDataCount) {
+        throw new Error(`data overflow: ${dataBitLength} > ${maxDataCount}`);
       }
-
-      this.version = version;
     } else {
-      [buffer, rsBlocks, maxDataCount] = prepareData(this.version, level, this.#hint, chunks);
+      [buffer, rsBlocks, maxDataCount] = prepareData(version, level, hints, segments);
     }
 
-    // Calc module count
-    this.#size = this.#version * 4 + 17;
-
-    const matrices: boolean[][][] = [];
+    const matrices: Matrix[] = [];
     const data = createData(buffer, rsBlocks, maxDataCount);
 
     let bestMaskPattern = -1;
     let minPenalty = Number.MAX_VALUE;
 
     // Choose best mask pattern
-    for (let maskPattern = 0; maskPattern < 8; maskPattern++) {
-      this.build(data, maskPattern);
-
-      matrices.push(this.#matrix);
-
-      const penalty = QRUtil.calculateMaskPenalty(this);
+    for (let mask = 0; mask < 8; mask++) {
+      const matrix = buildMatrix(data, version, this.level, mask);
+      const penalty = calculateMaskPenalty(matrix);
 
       if (penalty < minPenalty) {
         minPenalty = penalty;
-        bestMaskPattern = maskPattern;
+        bestMaskPattern = mask;
       }
+
+      matrices.push(matrix);
     }
 
     const matrix = matrices[bestMaskPattern];
-
-    this.#matrix = matrix;
 
     return matrix;
   }
@@ -573,9 +539,6 @@ export class Encoder {
    * @method flush
    */
   public flush() {
-    this.#size = 0;
-    this.#chunks = [];
-    this.#matrix = [];
-    this.#version = this.#semver;
+    this.#segments = [];
   }
 }

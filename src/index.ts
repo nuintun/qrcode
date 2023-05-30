@@ -6,8 +6,9 @@
 export { Reader } from './Reader';
 export { Writer } from './Writer';
 export { Mode } from './common/Mode';
-export { QRByte } from './encoder/QRByte';
 export { ECLevel } from './common/ECLevel';
-export { QRKanji } from './encoder/QRKanji';
-export { QRNumeric } from './encoder/QRNumeric';
-export { QRAlphanumeric } from './encoder/QRAlphanumeric';
+export { Byte } from './encoder/segments/Byte';
+export { Kanji } from './encoder/segments/Kanji';
+export { EncodeHint } from './encoder/EncodeHint';
+export { Numeric } from './encoder/segments/Numeric';
+export { Alphanumeric } from './encoder/segments/Alphanumeric';

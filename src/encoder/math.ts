@@ -1,5 +1,5 @@
 /**
- * @module QRMath
+ * @module math
  * @author nuintun
  * @author Kazuhiko Arase
  */

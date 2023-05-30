@@ -17,8 +17,6 @@
 >
 > [QRCode example](https://nuintun.github.io/qrcode/examples/index.html)
 >
-> [QRCode example use worker](https://nuintun.github.io/qrcode/examples/worker.html)
->
 > Modify from [kazuhikoarase/qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) and [cozmo/jsQR](https://github.com/cozmo/jsQR)
 
 ### Usage
@@ -26,18 +24,18 @@
 #### Encoder
 
 ```js
-import { Encoder, QRByte, QRKanji, ErrorCorrectionLevel } from '@nuintun/qrcode';
+import { Byte, ECLevel, EncodeHint, Encoder, Kanji } from '@nuintun/qrcode';
 
-const qrcode = new Encoder();
-
-qrcode.setEncodingHint(true);
-qrcode.setErrorCorrectionLevel(ErrorCorrectionLevel.H);
+const qrcode = new Encoder({
+  level: ECLevel.H,
+  hints: [EncodeHint.GS1_FORMAT, EncodeHint.CHARACTER_SET]
+});
 
 qrcode.write('你好世界\n');
-qrcode.write(new QRByte('hello world\n'));
-qrcode.write(new QRKanji('こんにちは世界'));
+qrcode.write(new Byte('hello world\n'));
+qrcode.write(new Kanji('こんにちは世界'));
 
-qrcode.make();
+qrcode.encode();
 
 console.log(qrcode.toDataURL());
 ```

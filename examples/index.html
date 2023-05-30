@@ -24,15 +24,19 @@
               <option value="Q">Level Q (25%)</option>
               <option value="H">Level H (30%)</option>
             </select>
+            <label class="indent">支持 GS1：</label>
+            <input id="hint-gs1" type="checkbox" />
             <label class="indent">支持 ECI：</label>
-            <input id="encoding-hint" type="checkbox" />
-            <label class="indent">编码方式：</label>
+            <input id="hint-eci" type="checkbox" />
+          </p>
+          <p>
+            <label>编码方式：</label>
             <select id="encode-mode">
               <option value="Auto" selected>Auto</option>
-              <option value="QRByte">Byte</option>
-              <option value="QRAlphanumeric">Alphanumeric</option>
-              <option value="QRNumeric">Numeric</option>
-              <option value="QRKanji">Kanji</option>
+              <option value="Byte">Byte</option>
+              <option value="Alphanumeric">Alphanumeric</option>
+              <option value="Numeric">Numeric</option>
+              <option value="Kanji">Kanji</option>
             </select>
             <label class="indent">色块大小：</label>
             <input id="encode-msize" type="number" min="1" max="10" value="3" />
@@ -97,23 +101,24 @@
         if (TEST_NUMERIC.test(data)) {
           return new QRCode.QRNumeric(data);
         } else if (TEST_ALPHANUMERIC.test(data)) {
-          return new QRCode.QRAlphanumeric(data);
+          return new QRCode.Alphanumeric(data);
         }
 
         try {
-          return new QRCode.QRKanji(data);
+          return new QRCode.Kanji(data);
         } catch (error) {
-          return new QRCode.QRByte(data);
+          return new QRCode.Byte(data);
         }
       }
 
-      var encodeText = $('#encode-text');
+      var hintEci = $('#hint-eci');
+      var hintGs1 = $('#hint-gs1');
       var encodeMode = $('#encode-mode');
-      var encodingHint = $('#encoding-hint');
-      var encodeECLevel = $('#encode-eclevel');
-      var encodeMargin = $('#encode-margin');
+      var encodeText = $('#encode-text');
       var encodeMSize = $('#encode-msize');
+      var encodeMargin = $('#encode-margin');
       var encodeResult = $('#encode-result');
+      var encodeECLevel = $('#encode-eclevel');
 
       // 生成二维码
       $('#encode-btn').on('click', function () {
@@ -121,8 +126,9 @@
         var mode = encodeMode.val();
         var ecLevel = encodeECLevel.val();
         var margin = Number(encodeMargin.val());
+        var hasGs1Hint = hintGs1.prop('checked');
+        var hasEciHint = hintEci.prop('checked');
         var moduleSize = Number(encodeMSize.val());
-        var hasEncodingHint = encodingHint.prop('checked');
 
         if (!data) {
           encodeResult.addClass('hide');
@@ -130,8 +136,18 @@
           return alert('请输入二维码内容');
         }
 
+        var hints = [];
+
+        if (hasGs1Hint) {
+          hints.push(QRCode.EncodeHint.GS1_FORMAT);
+        }
+
+        if (hasEciHint) {
+          hints.push(QRCode.EncodeHint.CHARACTER_SET);
+        }
+
         var qrcode = new QRCode.Writer({
-          hint: hasEncodingHint,
+          hints: hints,
           level: QRCode.ECLevel[ecLevel]
         });
 
@@ -147,7 +163,7 @@
         } catch (error) {
           encodeResult.addClass('hide');
 
-          alert(error.message);
+          console.error(error.message);
         }
       });
 
@@ -267,7 +283,7 @@
 
           console && console.log(result);
         } else {
-          alert('二维码解码失败');
+          console.error('二维码解码失败');
         }
       });
 

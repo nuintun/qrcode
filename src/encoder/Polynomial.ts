@@ -4,10 +4,10 @@
  * @author Kazuhiko Arase
  */
 
-import * as QRMath from './QRMath';
+import { gexp, glog } from './math';
 
 export class Polynomial {
-  private num: number[];
+  private numbers: number[];
 
   public constructor(num: number[], shift: number = 0) {
     let offset = 0;
@@ -29,59 +29,61 @@ export class Polynomial {
       numbers.push(0);
     }
 
-    this.num = numbers;
+    this.numbers = numbers;
   }
 
-  public getAt(index: number): number {
-    return this.num[index];
+  public get length(): number {
+    return this.numbers.length;
   }
 
-  public getLength(): number {
-    return this.num.length;
+  public at(index: number): number {
+    const { numbers } = this;
+
+    return numbers[index < 0 ? numbers.length + index : index];
   }
 
   public multiply(e: Polynomial): Polynomial {
-    const num: number[] = [];
-    const eLength = e.getLength();
-    const tLength = this.getLength();
+    const eLength = e.length;
+    const tLength = this.length;
+    const numbers: number[] = [];
     const dLength = tLength + eLength - 1;
 
     for (let i = 0; i < dLength; i++) {
-      num.push(0);
+      numbers.push(0);
     }
 
     for (let i = 0; i < tLength; i++) {
       for (let j = 0; j < eLength; j++) {
-        num[i + j] ^= QRMath.gexp(QRMath.glog(this.getAt(i)) + QRMath.glog(e.getAt(j)));
+        numbers[i + j] ^= gexp(glog(this.at(i)) + glog(e.at(j)));
       }
     }
 
-    return new Polynomial(num);
+    return new Polynomial(numbers);
   }
 
   public mod(e: Polynomial): Polynomial {
-    const eLength = e.getLength();
-    const tLength = this.getLength();
+    const eLength = e.length;
+    const tLength = this.length;
 
     if (tLength - eLength < 0) {
       return this;
     }
 
-    const ratio = QRMath.glog(this.getAt(0)) - QRMath.glog(e.getAt(0));
+    const ratio = glog(this.at(0)) - glog(e.at(0));
 
     // Create copy
-    const num: number[] = [];
+    const numbers: number[] = [];
 
     for (let i = 0; i < tLength; i++) {
-      num.push(this.getAt(i));
+      numbers.push(this.at(i));
     }
 
     // Subtract and calc rest.
     for (let i = 0; i < eLength; i++) {
-      num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i)) + ratio);
+      numbers[i] ^= gexp(glog(e.at(i)) + ratio);
     }
 
     // Call recursively
-    return new Polynomial(num).mod(e);
+    return new Polynomial(numbers).mod(e);
   }
 }

@@ -1,13 +1,13 @@
 /**
- * @module QRAlphanumeric
+ * @module Alphanumeric
  * @author nuintun
  * @author Kazuhiko Arase
  */
 
-import { QRData } from './QRData';
-import { Mode } from '../common/Mode';
-import { BitBuffer } from './BitBuffer';
+import { Mode } from '/common/Mode';
 import { encode } from '/encoding/UTF16';
+import { Segment } from '/encoder/Segment';
+import { BitBuffer } from '/encoder/BitBuffer';
 
 function getByte(byte: number): number {
   if (0x30 <= byte && byte <= 0x39) {
@@ -51,15 +51,13 @@ function getByte(byte: number): number {
   }
 }
 
-export class QRAlphanumeric extends QRData {
+export class Alphanumeric extends Segment {
   /**
    * @constructor
-   * @param {string} data
+   * @param {string} text
    */
-  constructor(data: string) {
-    super(Mode.ALPHANUMERIC, data);
-
-    this.bytes = encode(data);
+  constructor(text: string) {
+    super(Mode.ALPHANUMERIC, encode(text));
   }
 
   /**

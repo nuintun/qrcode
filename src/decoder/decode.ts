@@ -5,10 +5,10 @@
  * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
  */
 
+import { ECI } from '/common/ECI';
 import { Mode } from '/common/Mode';
 import { BitStream } from './BitStream';
 import { ECLevel } from '/common/ECLevel';
-import { EncodingHint } from '/common/EncodingHint';
 import { decode as decodeUTF8 } from '/encoding/UTF8';
 import { decode as decodeSJIS, getTables } from '/encoding/SJIS';
 
@@ -54,7 +54,7 @@ function decodeNumeric(stream: BitStream, size: number): DecodeData {
     const num = stream.readBits(10);
 
     if (num >= 1000) {
-      throw new Error('invalid numeric value above 999');
+      throw new Error('illegal numeric value above 999');
     }
 
     const a = Math.floor(num / 100);
@@ -73,7 +73,7 @@ function decodeNumeric(stream: BitStream, size: number): DecodeData {
     const num = stream.readBits(7);
 
     if (num >= 100) {
-      throw new Error('invalid numeric value above 99');
+      throw new Error('illegal numeric value above 99');
     }
 
     const a = Math.floor(num / 10);
@@ -86,7 +86,7 @@ function decodeNumeric(stream: BitStream, size: number): DecodeData {
     const num = stream.readBits(4);
 
     if (num >= 10) {
-      throw new Error('invalid numeric value above 9');
+      throw new Error('illegal numeric value above 9');
     }
 
     bytes.push(48 + num);
@@ -145,7 +145,7 @@ function decodeByte(stream: BitStream, size: number, encoding: number): DecodeDa
     bytes.push(stream.readBits(8));
   }
 
-  return { bytes, data: encoding === EncodingHint.SJIS ? decodeSJIS(bytes) : decodeUTF8(bytes) };
+  return { bytes, data: encoding === ECI.SJIS ? decodeSJIS(bytes) : decodeUTF8(bytes) };
 }
 
 function decodeKanji(stream: BitStream, size: number): DecodeData {

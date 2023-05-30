@@ -1,13 +1,13 @@
 /**
- * @module QRNumeric
+ * @module Numeric
  * @author nuintun
  * @author Kazuhiko Arase
  */
 
-import { QRData } from './QRData';
 import { Mode } from '/common/Mode';
-import { BitBuffer } from './BitBuffer';
 import { encode } from '/encoding/UTF16';
+import { Segment } from '/encoder/Segment';
+import { BitBuffer } from '/encoder/BitBuffer';
 
 function getByte(byte: number): number {
   // 0 - 9
@@ -28,15 +28,13 @@ function getBytes(bytes: number[]): number {
   return num;
 }
 
-export class QRNumeric extends QRData {
+export class Numeric extends Segment {
   /**
    * @constructor
-   * @param {string} data
+   * @param {string} text
    */
-  constructor(data: string) {
-    super(Mode.NUMERIC, data);
-
-    this.bytes = encode(data);
+  constructor(text: string) {
+    super(Mode.NUMERIC, encode(text));
   }
 
   /**

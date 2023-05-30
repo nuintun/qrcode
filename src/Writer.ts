@@ -3,6 +3,7 @@
  */
 
 import { Encoder } from './encoder';
+import { isDark } from './encoder/Matrix';
 import { GIFImage } from '/image/GIFImage';
 
 export class Writer extends Encoder {
@@ -17,8 +18,11 @@ export class Writer extends Encoder {
     moduleSize = Math.max(1, moduleSize >> 0);
     margin = Math.max(0, margin >> 0);
 
-    const matrixSize = this.size;
+    const matrix = this.encode();
+    const matrixSize = matrix.size;
     const size = moduleSize * matrixSize + margin * 2;
+
+    console.log(matrix);
 
     const min = margin;
     const max = size - margin;
@@ -30,7 +34,7 @@ export class Writer extends Encoder {
           const x = ((j - min) / moduleSize) >> 0;
           const y = ((i - min) / moduleSize) >> 0;
 
-          gif.setPixel(j, i, this.isDark(x, y) ? 0 : 1);
+          gif.setPixel(j, i, isDark(matrix, x, y) ? 0 : 1);
         } else {
           gif.setPixel(j, i, 1);
         }

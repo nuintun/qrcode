@@ -8,12 +8,12 @@
 export class BitMatrix {
   public width: number;
   public height: number;
-  private data: Uint8ClampedArray;
+  private matrix: Uint8ClampedArray;
 
-  constructor(data: Uint8ClampedArray, width: number) {
-    this.data = data;
+  constructor(matrix: Uint8ClampedArray, width: number) {
     this.width = width;
-    this.height = data.length / width;
+    this.matrix = matrix;
+    this.height = matrix.length / width;
   }
 
   public static createEmpty(width: number, height: number): BitMatrix {
@@ -25,11 +25,11 @@ export class BitMatrix {
       return false;
     }
 
-    return !!this.data[y * this.width + x];
+    return !!this.matrix[y * this.width + x];
   }
 
-  public set(x: number, y: number, v: boolean): void {
-    this.data[y * this.width + x] = v ? 1 : 0;
+  public set(x: number, y: number, value: boolean): void {
+    this.matrix[y * this.width + x] = value ? 1 : 0;
   }
 
   public setRegion(left: number, top: number, width: number, height: number, value: boolean): void {

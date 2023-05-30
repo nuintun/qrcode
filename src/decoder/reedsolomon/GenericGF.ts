@@ -64,7 +64,7 @@ export class GenericGF {
 
   public buildMonomial(degree: number, coefficient: number): GenericGFPoly {
     if (degree < 0) {
-      throw new Error('invalid monomial degree less than 0');
+      throw new Error('illegal monomial degree less than 0');
     }
 
     if (coefficient === 0) {

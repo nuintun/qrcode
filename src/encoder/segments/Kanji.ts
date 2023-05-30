@@ -1,24 +1,31 @@
 /**
- * @module QRKanji
+ * @module Kanji
  * @author nuintun
  * @author Kazuhiko Arase
  * @description SJIS only
  */
 
-import { QRData } from './QRData';
 import { Mode } from '/common/Mode';
-import { BitBuffer } from './BitBuffer';
 import { encode } from '/encoding/SJIS';
+import { Segment } from '/encoder/Segment';
+import { BitBuffer } from '/encoder/BitBuffer';
 
-export class QRKanji extends QRData {
+export class Kanji extends Segment {
   /**
    * @constructor
-   * @param {string} data
+   * @param {string} text
    */
-  constructor(data: string) {
-    super(Mode.KANJI, data);
+  constructor(text: string) {
+    super(Mode.KANJI, encode(text));
+  }
 
-    this.bytes = encode(data);
+  /**
+   * @public
+   * @method getLength
+   * @returns {number}
+   */
+  public get length(): number {
+    return Math.floor(this.bytes.length / 2);
   }
 
   /**
@@ -47,14 +54,5 @@ export class QRKanji extends QRData {
 
       index += 2;
     }
-  }
-
-  /**
-   * @public
-   * @method getLength
-   * @returns {number}
-   */
-  public getLength(): number {
-    return Math.floor(this.bytes.length / 2);
   }
 }
