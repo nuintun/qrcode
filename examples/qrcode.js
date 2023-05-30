@@ -1557,12 +1557,13 @@
       return byteOutput.toByteArray();
     }
     /**
-     * @function setPixel
+     * @function set
+     * @description set pixel of point
      * @param x x point
      * @param y y point
      * @param color pixel color 0: Black 1: White
      */
-    setPixel(x, y, color) {
+    set(x, y, color) {
       this.pixels[y * this.width + x] = color;
     }
     write(output) {
@@ -1647,7 +1648,6 @@
       const matrix = this.encode();
       const matrixSize = matrix.size;
       const size = moduleSize * matrixSize + margin * 2;
-      console.log(matrix);
       const min = margin;
       const max = size - margin;
       const gif = new GIFImage(size, size);
@@ -1656,9 +1656,9 @@
           if (min <= j && j < max && min <= i && i < max) {
             const x = ((j - min) / moduleSize) >> 0;
             const y = ((i - min) / moduleSize) >> 0;
-            gif.setPixel(j, i, isDark(matrix, x, y) ? 0 : 1);
+            gif.set(j, i, isDark(matrix, x, y) ? 0 : 1);
           } else {
-            gif.setPixel(j, i, 1);
+            gif.set(j, i, 1);
           }
         }
       }
