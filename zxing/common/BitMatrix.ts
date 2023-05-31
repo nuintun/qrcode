@@ -8,16 +8,16 @@ export class BitMatrix {
   #width: number;
   #height: number;
   #rowSize: number;
-  #bits: Uint32Array;
+  #bits: Int32Array;
 
   constructor(dimension: number);
   constructor(width: number, height: number);
-  constructor(width: number, height: number, rowSize: number, bits: Uint32Array);
+  constructor(width: number, height: number, rowSize: number, bits: Int32Array);
   constructor(
     width: number,
     height: number = width,
     rowSize: number = toUInt32((width + 31) / 32),
-    bits: Uint32Array = new Uint32Array(rowSize * height)
+    bits: Int32Array = new Int32Array(rowSize * height)
   ) {
     this.#bits = bits;
     this.#width = width;

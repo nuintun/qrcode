@@ -6,20 +6,20 @@ import { isNumber, toUInt32 } from './utils';
 
 const LOAD_FACTOR = 0.75;
 
-function makeArray(length: number): Uint32Array {
-  return new Uint32Array(toUInt32((length + 31) / 32));
+function makeArray(length: number): Int32Array {
+  return new Int32Array(toUInt32((length + 31) / 32));
 }
 
 export class BitArray {
   #length: number;
-  #bits: Uint32Array;
+  #bits: Int32Array;
 
   constructor(length: number = 0) {
     this.#length = length;
     this.#bits = makeArray(length);
   }
 
-  #offset(index): number {
+  #offset(index: number): number {
     return toUInt32(index / 32);
   }
 
@@ -74,11 +74,11 @@ export class BitArray {
   public append(value: number, length: number): void;
   public append(value: number | boolean | BitArray, length?: number): void {
     if (value instanceof BitArray) {
-      const length = value.#length;
+      const size = value.#length;
 
-      this.#alloc(this.#length + length);
+      this.#alloc(this.#length + size);
 
-      for (let i = 0; i < length; i++) {
+      for (let i = 0; i < size; i++) {
         this.append(value.get(i));
       }
     } else if (isNumber(value)) {
@@ -86,32 +86,32 @@ export class BitArray {
         throw new Error('length must be between 0 and 32');
       }
 
-      let newLength = this.#length;
+      let size = this.#length;
 
-      this.#alloc(newLength + length);
+      this.#alloc(size + length);
 
       const bits = this.#bits;
 
       for (let i = length - 1; i >= 0; i--) {
         if ((value & (1 << i)) !== 0) {
-          bits[this.#offset(newLength)] |= 1 << (newLength & 0x1f);
+          bits[this.#offset(size)] |= 1 << (size & 0x1f);
         }
 
-        newLength++;
+        size++;
       }
 
-      this.#length = newLength;
+      this.#length = size;
     } else {
       const bits = this.#bits;
-      const length = this.#length;
+      const size = this.#length;
 
-      this.#alloc(length + 1);
+      this.#alloc(size + 1);
 
       if (value) {
-        bits[this.#offset(length)] |= 1 << (length & 0x1f);
+        bits[this.#offset(size)] |= 1 << (size & 0x1f);
       }
 
-      this.#length = length + 1;
+      this.#length = size + 1;
     }
   }
 
