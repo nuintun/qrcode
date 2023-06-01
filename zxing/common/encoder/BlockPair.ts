@@ -6,9 +6,9 @@ export class BlockPair {
   #ecBytes: Int8Array;
   #dataBytes: Int8Array;
 
-  constructor(data: Int8Array, ecBytes: Int8Array) {
-    this.#dataBytes = data;
+  constructor(dataBytes: Int8Array, ecBytes: Int8Array) {
     this.#ecBytes = ecBytes;
+    this.#dataBytes = dataBytes;
   }
 
   public get ecBytes() {
