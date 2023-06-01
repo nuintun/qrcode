@@ -44,20 +44,26 @@ export class BitArray {
   }
 
   public set(index: number): void {
-    this.#bits[this.#offset(index)] |= 1 << (index & 0x1f);
+    const offset = this.#offset(index);
+
+    this.#bits[offset] |= 1 << (index & 0x1f);
   }
 
   public get(index: number): boolean {
-    return (this.#bits[this.#offset(index)] & (1 << (index & 0x1f))) !== 0;
+    const offset = this.#offset(index);
+
+    return (this.#bits[offset] & (1 << (index & 0x1f))) !== 0;
   }
 
   public flip(index: number): void {
-    this.#bits[this.#offset(index)] ^= 1 << (index & 0x1f);
+    const offset = this.#offset(index);
+
+    this.#bits[offset] ^= 1 << (index & 0x1f);
   }
 
   public xor(mask: BitArray): void {
     if (this.#length !== mask.#length) {
-      throw new Error("sizes don't match");
+      throw new Error('mask do not have same length');
     }
 
     const bits = this.#bits;
@@ -73,45 +79,48 @@ export class BitArray {
   public append(array: BitArray): void;
   public append(value: number, length: number): void;
   public append(value: number | boolean | BitArray, length?: number): void {
+    let index = this.#length;
+
     if (value instanceof BitArray) {
-      const size = value.#length;
+      length = value.#length;
 
-      this.#alloc(this.#length + size);
+      this.#alloc(index + length);
 
-      for (let i = 0; i < size; i++) {
-        this.append(value.get(i));
+      for (let i = 0; i < length; i++) {
+        if (value.get(i)) {
+          this.set(index);
+        }
+
+        index++;
       }
+
+      this.#length = index;
     } else if (isNumber(value)) {
       if (length == null || length < 0 || length > 32) {
         throw new Error('length must be between 0 and 32');
       }
 
-      let size = this.#length;
-
-      this.#alloc(size + length);
-
-      const bits = this.#bits;
+      this.#alloc(index + length);
 
       for (let i = length - 1; i >= 0; i--) {
         if ((value & (1 << i)) !== 0) {
-          bits[this.#offset(size)] |= 1 << (size & 0x1f);
+          this.set(index);
         }
 
-        size++;
+        index++;
       }
 
-      this.#length = size;
+      this.#length = index;
     } else {
-      const bits = this.#bits;
-      const size = this.#length;
+      length = index + 1;
 
-      this.#alloc(size + 1);
+      this.#alloc(length);
 
       if (value) {
-        bits[this.#offset(size)] |= 1 << (size & 0x1f);
+        this.set(index);
       }
 
-      this.#length = size + 1;
+      this.#length = length;
     }
   }
 

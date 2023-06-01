@@ -68,9 +68,9 @@ export class BitMatrix {
       this.#bits[offset] ^= 1 << (x & 0x1f);
     } else {
       const bits = this.#bits;
-      const max = bits.length;
+      const { length } = bits;
 
-      for (let i = 0; i < max; i++) {
+      for (let i = 0; i < length; i++) {
         bits[i] = ~bits[i];
       }
     }
