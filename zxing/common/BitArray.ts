@@ -67,11 +67,13 @@ export class BitArray {
     }
 
     const bits = this.#bits;
+    const { length } = bits;
+    const maskBits = mask.#bits;
 
-    for (let i = 0, length = bits.length; i < length; i++) {
+    for (let i = 0; i < length; i++) {
       // The last int could be incomplete (i.e. not have 32 bits in
       // it) but there is no problem since 0 XOR 0 == 0.
-      bits[i] ^= mask.#bits[i];
+      bits[i] ^= maskBits[i];
     }
   }
 

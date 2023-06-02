@@ -28,7 +28,7 @@ export class Mode {
     return this.#bits;
   }
 
-  public getCharacterCountBits({ version }: Version) {
+  public getCharacterCountBits({ version }: Version): number {
     let offset;
 
     if (version <= 9) {

@@ -11,11 +11,11 @@ export class BlockPair {
     this.#dataBytes = dataBytes;
   }
 
-  public get ecBytes() {
+  public get ecBytes(): Int8Array {
     return this.#ecBytes;
   }
 
-  public get dataBytes() {
+  public get dataBytes(): Int8Array {
     return this.#dataBytes;
   }
 }

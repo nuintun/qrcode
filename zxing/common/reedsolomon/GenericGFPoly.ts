@@ -36,7 +36,7 @@ export class GenericGFPoly {
     }
   }
 
-  #assertField(other: GenericGFPoly) {
+  #assertField(other: GenericGFPoly): void {
     if (this.#field !== other.#field) {
       throw new Error('GenericGFPolys do not have same GenericGF field');
     }

@@ -23,7 +23,7 @@ export class ByteMatrix {
     return this.#height;
   }
 
-  public set(x: number, y: number, value: number) {
+  public set(x: number, y: number, value: number): void {
     this.#bytes[y * this.#width + x] = value;
   }
 
@@ -31,7 +31,7 @@ export class ByteMatrix {
     return this.#bytes[y * this.#width + x];
   }
 
-  public clear(value: number) {
+  public clear(value: number): void {
     this.#bytes.fill(value);
   }
 }
