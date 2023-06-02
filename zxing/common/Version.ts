@@ -47,7 +47,7 @@ export class Version {
     return 17 + 4 * this.#version;
   }
 
-  public getEcBlocksForLevel(ecLevel: ECLevel): ECBlocks {
+  public getEcBlocksForECLevel(ecLevel: ECLevel): ECBlocks {
     return this.#ecBlocks[ecLevel.level];
   }
 }

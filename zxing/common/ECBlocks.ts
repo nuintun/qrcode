@@ -26,14 +26,14 @@ export class ECBlocks {
 
     const ecBlocks = this.#ecBlocks;
 
-    for (const ecBlock of ecBlocks) {
-      total += ecBlock.count;
+    for (const { count } of ecBlocks) {
+      total += count;
     }
 
     return total;
   }
 
-  public getTotalEcCodewords(): number {
-    return this.#ecCodewordsPerBlock + this.getNumBlocks();
+  public getTotalECCodewords(): number {
+    return this.#ecCodewordsPerBlock * this.getNumBlocks();
   }
 }

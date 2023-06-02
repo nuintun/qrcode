@@ -15,15 +15,16 @@ export class Encoder {
 
   #buildGenerator(degree: number): GenericGFPoly {
     const cachedGenerators = this.#cachedGenerators;
+    const { length } = cachedGenerators;
 
-    if (degree >= cachedGenerators.length) {
+    if (degree >= length) {
       const field = this.#field;
 
-      let lastGenerator = cachedGenerators[cachedGenerators.length - 1];
+      let lastGenerator = cachedGenerators[length - 1];
 
-      for (let d = cachedGenerators.length; d <= degree; d++) {
+      for (let i = length; i <= degree; i++) {
         const nextGenerator = lastGenerator.multiply(
-          new GenericGFPoly(field, Int32Array.from([1, field.exp(d - 1 + field.generatorBase)]))
+          new GenericGFPoly(field, Int32Array.from([1, field.exp(i - 1 + field.generatorBase)]))
         );
 
         cachedGenerators.push(nextGenerator);
@@ -31,6 +32,7 @@ export class Encoder {
         lastGenerator = nextGenerator;
       }
     }
+
     return cachedGenerators[degree];
   }
 

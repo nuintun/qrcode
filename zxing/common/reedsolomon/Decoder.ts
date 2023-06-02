@@ -82,9 +82,10 @@ export class Decoder {
     let e = 0;
 
     const field = this.#field;
+    const { size } = field;
     const result = new Int32Array(numErrors);
 
-    for (let i = 1; i < field.size && e < numErrors; i++) {
+    for (let i = 1; i < size && e < numErrors; i++) {
       if (errorLocator.evaluateAt(i) === 0) {
         result[e] = field.inverse(i);
         e++;

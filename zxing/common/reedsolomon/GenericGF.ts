@@ -46,16 +46,16 @@ export class GenericGF {
     return this.#size;
   }
 
-  public get generatorBase(): number {
-    return this.#generatorBase;
+  public get one(): GenericGFPoly {
+    return this.#one;
   }
 
   public get zero(): GenericGFPoly {
     return this.#zero;
   }
 
-  public get one(): GenericGFPoly {
-    return this.#one;
+  public get generatorBase(): number {
+    return this.#generatorBase;
   }
 
   public buildMonomial(degree: number, coefficient: number): GenericGFPoly {

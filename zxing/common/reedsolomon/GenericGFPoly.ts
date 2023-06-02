@@ -12,20 +12,20 @@ export class GenericGFPoly {
   constructor(field: GenericGF, coefficients: Int32Array) {
     this.#field = field;
 
-    const size = coefficients.length;
+    const { length } = coefficients;
 
-    if (size > 1 && coefficients[0] === 0) {
+    if (length > 1 && coefficients[0] === 0) {
       // Leading term must be non-zero for anything except the constant polynomial "0"
       let firstNonZero = 1;
 
-      while (firstNonZero < size && coefficients[firstNonZero] === 0) {
+      while (firstNonZero < length && coefficients[firstNonZero] === 0) {
         firstNonZero++;
       }
 
-      if (firstNonZero === size) {
+      if (firstNonZero === length) {
         this.#coefficients = new Int32Array([0]);
       } else {
-        const array = new Int32Array(size - firstNonZero);
+        const array = new Int32Array(length - firstNonZero);
 
         array.set(coefficients.subarray(firstNonZero));
 
@@ -84,10 +84,9 @@ export class GenericGFPoly {
     result = coefficients[0];
 
     const field = this.#field;
-    const length = coefficients.length;
 
-    for (let i = 1; i < length; i++) {
-      result = field.multiply(a, result) ^ coefficients[i];
+    for (const coefficient of coefficients) {
+      result = field.multiply(a, result) ^ coefficient;
     }
 
     return result;
@@ -104,21 +103,24 @@ export class GenericGFPoly {
       return this;
     }
 
-    let smallerCoefficients = this.#coefficients;
     let largerCoefficients = other.#coefficients;
+    let largerLength = largerCoefficients.length;
+    let smallerCoefficients = this.#coefficients;
+    let smallerLength = smallerCoefficients.length;
 
-    if (smallerCoefficients.length > largerCoefficients.length) {
+    if (smallerLength > largerLength) {
+      [smallerLength, largerLength] = [largerLength, smallerLength];
       [smallerCoefficients, largerCoefficients] = [largerCoefficients, smallerCoefficients];
     }
 
-    let sumDiff = new Int32Array(largerCoefficients.length);
+    let sumDiff = new Int32Array(largerLength);
 
-    const lengthDiff = largerCoefficients.length - smallerCoefficients.length;
+    const lengthDiff = largerLength - smallerLength;
 
     // Copy high-order terms only found in higher-degree polynomial's coefficients
     sumDiff.set(largerCoefficients.subarray(0, lengthDiff));
 
-    for (let i = lengthDiff; i < largerCoefficients.length; i++) {
+    for (let i = lengthDiff; i < largerLength; i++) {
       sumDiff[i] = smallerCoefficients[i - lengthDiff] ^ largerCoefficients[i];
     }
 
@@ -140,7 +142,7 @@ export class GenericGFPoly {
       }
 
       const coefficients = this.#coefficients;
-      const length = coefficients.length;
+      const { length } = coefficients;
       const product = new Int32Array(length);
 
       for (let i = 0; i < length; i++) {
@@ -157,16 +159,16 @@ export class GenericGFPoly {
     }
 
     const aCoefficients = this.#coefficients;
-    const bCoefficients = other.coefficients;
     const aLength = aCoefficients.length;
+    const bCoefficients = other.#coefficients;
     const bLength = bCoefficients.length;
     const product = new Int32Array(aLength + bLength - 1);
 
     for (let i = 0; i < aLength; i++) {
-      const aCoeff = aCoefficients[i];
+      const aCoefficient = aCoefficients[i];
 
       for (let j = 0; j < bLength; j++) {
-        product[i + j] = product[i + j] ^ field.multiply(aCoeff, bCoefficients[j]);
+        product[i + j] = product[i + j] ^ field.multiply(aCoefficient, bCoefficients[j]);
       }
     }
 
@@ -184,8 +186,8 @@ export class GenericGFPoly {
       return field.zero;
     }
 
-    const coefficients = this.coefficients;
-    const length = coefficients.length;
+    const coefficients = this.#coefficients;
+    const { length } = coefficients;
     const product = new Int32Array(length + degree);
 
     for (let i = 0; i < length; i++) {
