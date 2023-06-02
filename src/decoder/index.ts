@@ -5,12 +5,12 @@
  * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
  */
 
-import { ECLevel } from '/common/ECLevel';
+import { ECLevel } from '../common/ECLevel';
 import { Version, VERSIONS } from './version';
-import { BitMatrix } from '/decoder/BitMatrix';
-import { getMaskBit } from '/common/MaskPattern';
+import { BitMatrix } from '../decoder/BitMatrix';
+import { getMaskBit } from '../common/MaskPattern';
 import { DecodeResult, decodeText } from './decode';
-import { Decoder as ReedSolomonDecoder } from '/decoder/reedsolomon';
+import { Decoder as ReedSolomonDecoder } from '../decoder/reedsolomon';
 
 function numBitsDiffering(x: number, y: number): number {
   let z = x ^ y;

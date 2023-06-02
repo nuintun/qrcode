@@ -3,51 +3,45 @@
  */
 
 import { ECB } from './ECB';
-import { ECBlocks } from './ECBlocks';
 import { ECLevel } from './ECLevel';
+import { ECBlocks } from './ECBlocks';
 
 export class Version {
   #version: number;
+  #dimension: number;
   #ecBlocks: ECBlocks[];
   #totalCodewords: number;
-  #alignmentPatternCenters: Int32Array;
+  #alignmentPatterns: Int32Array;
 
-  constructor(version: number, alignmentPatternCenters: number[], ...ecBlocks: ECBlocks[]) {
-    let totalCodewords = 0;
-
+  constructor(version: number, alignmentPatterns: number[], ...ecBlocks: ECBlocks[]) {
     const [ecBlock] = ecBlocks;
-    const blocks = ecBlock.ecBlocks;
-    const ecCodewords = ecBlock.ecCodewordsPerBlock;
-
-    // Version determines the Total codewords
-    // All ecc level total codewords are equals
-    for (const { count, dataCodewords } of blocks) {
-      totalCodewords += count * (dataCodewords + ecCodewords);
-    }
 
     this.#version = version;
     this.#ecBlocks = ecBlocks;
-    this.#totalCodewords = totalCodewords;
-    this.#alignmentPatternCenters = new Int32Array(alignmentPatternCenters);
+    this.#dimension = 17 + 4 * version;
+    this.#alignmentPatterns = new Int32Array(alignmentPatterns);
+    // Version determines the Total codewords
+    // All ecc level total codewords are equals
+    this.#totalCodewords = ecBlock.totalECCodewords + ecBlock.totalDataCodewords;
   }
 
   public get version(): number {
     return this.#version;
   }
 
+  public get dimension(): number {
+    return this.#dimension;
+  }
+
   public get totalCodewords(): number {
     return this.#totalCodewords;
   }
 
-  public get alignmentPatternCenters(): Int32Array {
-    return this.#alignmentPatternCenters;
+  public get alignmentPatterns(): Int32Array {
+    return this.#alignmentPatterns;
   }
 
-  public getDimensionForVersion(): number {
-    return 17 + 4 * this.#version;
-  }
-
-  public getEcBlocksForECLevel(ecLevel: ECLevel): ECBlocks {
+  public getECBlocksForECLevel(ecLevel: ECLevel): ECBlocks {
     return this.#ecBlocks[ecLevel.level];
   }
 }

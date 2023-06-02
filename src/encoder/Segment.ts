@@ -4,8 +4,8 @@
  * @author Kazuhiko Arase
  */
 
-import { Mode } from '/common/Mode';
-import { BitBuffer } from '/encoder/BitBuffer';
+import { Mode } from '../common/Mode';
+import { BitBuffer } from '../encoder/BitBuffer';
 
 export abstract class Segment {
   #mode: Mode;

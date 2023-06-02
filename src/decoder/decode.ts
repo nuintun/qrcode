@@ -5,12 +5,12 @@
  * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
  */
 
-import { ECI } from '/common/ECI';
-import { Mode } from '/common/Mode';
+import { ECI } from '../common/ECI';
+import { Mode } from '../common/Mode';
 import { BitStream } from './BitStream';
-import { ECLevel } from '/common/ECLevel';
-import { decode as decodeUTF8 } from '/encoding/UTF8';
-import { decode as decodeSJIS, getTables } from '/encoding/SJIS';
+import { ECLevel } from '../common/ECLevel';
+import { decode as decodeUTF8 } from '../encoding/UTF8';
+import { decode as decodeSJIS, getTables } from '../encoding/SJIS';
 
 interface ByteChunk {
   data: string;

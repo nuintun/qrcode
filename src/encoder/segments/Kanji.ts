@@ -5,10 +5,10 @@
  * @description SJIS only
  */
 
-import { Mode } from '/common/Mode';
-import { encode } from '/encoding/SJIS';
-import { Segment } from '/encoder/Segment';
-import { BitBuffer } from '/encoder/BitBuffer';
+import { Mode } from '../../common/Mode';
+import { encode } from '../../encoding/SJIS';
+import { Segment } from '../../encoder/Segment';
+import { BitBuffer } from '../../encoder/BitBuffer';
 
 export class Kanji extends Segment {
   /**

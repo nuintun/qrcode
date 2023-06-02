@@ -4,7 +4,7 @@
  * @author Kazuhiko Arase
  */
 
-import { ECLevel } from '/common/ECLevel';
+import { ECLevel } from '../common/ECLevel';
 
 export class RSBlock {
   private static RS_BLOCK_TABLE = [

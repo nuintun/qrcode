@@ -2,7 +2,7 @@
  * @module AlignmentPatternFinder
  */
 
-import { BitMatrix } from '/decoder/BitMatrix';
+import { BitMatrix } from '../decoder/BitMatrix';
 import { ResultPointCallback } from './ResultPoint';
 import { AlignmentPattern } from './AlignmentPattern';
 

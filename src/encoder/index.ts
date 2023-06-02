@@ -12,16 +12,16 @@ import {
   getCharacterCountBits,
   getECPolynomial
 } from './utils';
-import { Mode } from '/common/Mode';
 import { RSBlock } from './RSBlock';
 import { Segment } from './Segment';
+import { Mode } from '../common/Mode';
 import { Byte } from './segments/Byte';
 import { BitBuffer } from './BitBuffer';
-import { ECLevel } from '/common/ECLevel';
 import { EncodeHint } from './EncodeHint';
 import { Polynomial } from './Polynomial';
 import { isEmpty, Matrix } from './Matrix';
-import { getMaskBit } from '/common/MaskPattern';
+import { ECLevel } from '../common/ECLevel';
+import { getMaskBit } from '../common/MaskPattern';
 
 const PAD0 = 0xec;
 const PAD1 = 0x11;

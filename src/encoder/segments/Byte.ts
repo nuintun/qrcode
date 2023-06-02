@@ -4,11 +4,11 @@
  * @author Kazuhiko Arase
  */
 
-import { ECI } from '/common/ECI';
-import { Mode } from '/common/Mode';
-import { Segment } from '/encoder/Segment';
-import { BitBuffer } from '/encoder/BitBuffer';
-import { encode as encodeUTF8 } from '/encoding/UTF8';
+import { ECI } from '../../common/ECI';
+import { Mode } from '../../common/Mode';
+import { Segment } from '../../encoder/Segment';
+import { BitBuffer } from '../../encoder/BitBuffer';
+import { encode as encodeUTF8 } from '../../encoding/UTF8';
 
 interface EncodeResult {
   readonly bytes: number[];

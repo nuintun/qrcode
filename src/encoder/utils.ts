@@ -5,7 +5,7 @@
  */
 
 import { gexp } from './math';
-import { Mode } from '/common/Mode';
+import { Mode } from '../common/Mode';
 import { Polynomial } from './Polynomial';
 import { isDark, Matrix } from './Matrix';
 

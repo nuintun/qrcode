@@ -4,10 +4,10 @@
  * @author Kazuhiko Arase
  */
 
-import { Mode } from '/common/Mode';
-import { encode } from '/encoding/UTF16';
-import { Segment } from '/encoder/Segment';
-import { BitBuffer } from '/encoder/BitBuffer';
+import { Mode } from '../../common/Mode';
+import { encode } from '../../encoding/UTF16';
+import { Segment } from '../../encoder/Segment';
+import { BitBuffer } from '../../encoder/BitBuffer';
 
 function getByte(byte: number): number {
   // 0 - 9
