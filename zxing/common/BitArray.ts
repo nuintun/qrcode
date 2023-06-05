@@ -37,6 +37,8 @@ export class BitArray {
 
       this.#bits = newBits;
     }
+
+    this.#length = length;
   }
 
   public get length(): number {
@@ -88,8 +90,6 @@ export class BitArray {
 
         index++;
       }
-
-      this.#length = index;
     } else {
       if (length < 1 || length > 32) {
         throw new Error('length must be between 1 and 32');
@@ -104,8 +104,6 @@ export class BitArray {
 
         index++;
       }
-
-      this.#length = index;
     }
   }
 
