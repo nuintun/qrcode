@@ -26,6 +26,14 @@ export class BitMatrix {
   }
 
   #offset(x: number, y: number): number {
+    if (x >= this.#width) {
+      throw new Error('x overflow width');
+    }
+
+    if (y >= this.height) {
+      throw new Error('y overflow height');
+    }
+
     return toUInt32(y * this.#rowSize + x / 32);
   }
 

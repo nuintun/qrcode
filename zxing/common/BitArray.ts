@@ -20,6 +20,10 @@ export class BitArray {
   }
 
   #offset(index: number): number {
+    if (index >= this.#length) {
+      throw new Error('index overflow length');
+    }
+
     return toUInt32(index / 32);
   }
 
