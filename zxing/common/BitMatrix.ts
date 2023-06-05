@@ -47,39 +47,16 @@ export class BitMatrix {
     this.#bits[offset] |= 1 << (x & 0x1f);
   }
 
-  public get(x: number, y: number): boolean {
+  public get(x: number, y: number): number {
     const offset = this.#offset(x, y);
 
-    return ((this.#bits[offset] >>> (x & 0x1f)) & 1) !== 0;
+    return (this.#bits[offset] >>> (x & 0x1f)) & 1;
   }
 
-  public unset(x: number, y: number): void {
+  public flip(x: number, y: number): void {
     const offset = this.#offset(x, y);
 
-    this.#bits[offset] &= ~(1 << (x & 0x1f));
-  }
-
-  public flip(): void;
-  public flip(x: number, y: number): void;
-  public flip(x?: number, y?: number): void {
-    if (x != null && y != null) {
-      const offset = this.#offset(x, y);
-
-      this.#bits[offset] ^= 1 << (x & 0x1f);
-    } else {
-      const bits = this.#bits;
-      const { length } = bits;
-
-      for (let i = 0; i < length; i++) {
-        bits[i] = ~bits[i];
-      }
-    }
-  }
-
-  public xor(mask: BitMatrix): void {
-    if (this.#width != mask.#width || this.#height != mask.#height || this.#rowSize != mask.#rowSize) {
-      throw new Error('input matrix dimensions do not match');
-    }
+    this.#bits[offset] ^= 1 << (x & 0x1f);
   }
 
   public setRegion(left: number, top: number, width: number, height: number): void {

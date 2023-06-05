@@ -162,7 +162,7 @@ export function calculateMaskPenalty(matrix: ByteMatrix): number {
   );
 }
 
-export function getDataMaskBit(mask: number, x: number, y: number): boolean {
+export function getDataMaskBit(mask: number, x: number, y: number): number {
   let temp: number;
   let intermediate: number;
 
@@ -197,5 +197,5 @@ export function getDataMaskBit(mask: number, x: number, y: number): boolean {
       throw new Error(`illegal mask: ${mask}`);
   }
 
-  return intermediate === 0;
+  return intermediate !== 0 ? 0 : 1;
 }

@@ -6,6 +6,7 @@ import { ECLevel } from '/common/ECLevel';
 import { Version } from '/common/Version';
 import { BitArray } from '/common/BitArray';
 import { ByteMatrix } from '/encoder/ByteMatrix';
+import { getDataMaskBit } from './mask';
 
 const TYPE_INFO_POLY = 0x537;
 
@@ -227,10 +228,178 @@ function embedBasicPatterns(matrix: ByteMatrix, version: Version): void {
   embedTimingPatterns(matrix);
 }
 
-function buildMatrix(matrix: ByteMatrix, dataBits: BitArray, version: Version, ecLevel: ECLevel, mask: number): void {
+function findMSBSet(value: number): number {
+  return 32 - Math.clz32(value);
+}
+
+function calculateBCHCode(value: number, poly: number): number {
+  if (poly === 0) {
+    throw new Error('0 polynomial');
+  }
+
+  // If poly is "1 1111 0010 0101" (version info poly), msbSetInPoly is 13. We'll subtract 1
+  // from 13 to make it 12.
+  const msbSetInPoly = findMSBSet(poly);
+
+  value <<= msbSetInPoly - 1;
+
+  // Do the division business using exclusive-or operations.
+  while (findMSBSet(value) >= msbSetInPoly) {
+    value ^= poly << (findMSBSet(value) - msbSetInPoly);
+  }
+
+  // Now the "value" is the remainder (i.e. the BCH code)
+  return value;
+}
+
+function makeTypeInfoBits(bits: BitArray, ecLevel: ECLevel, mask: number): void {
+  const typeInfo = (ecLevel.bits << 3) | mask;
+
+  bits.append(typeInfo, 5);
+
+  const bchCode = calculateBCHCode(typeInfo, TYPE_INFO_POLY);
+
+  bits.append(bchCode, 10);
+
+  const maskBits = new BitArray();
+
+  maskBits.append(TYPE_INFO_MASK_PATTERN, 15);
+
+  bits.xor(maskBits);
+}
+
+function embedTypeInfo(matrix: ByteMatrix, ecLevel: ECLevel, mask: number): void {
+  const typeInfoBits = new BitArray();
+
+  makeTypeInfoBits(typeInfoBits, ecLevel, mask);
+
+  const { length } = typeInfoBits;
+  const { width, height } = matrix;
+
+  for (let i = 0; i < length; i++) {
+    // Place bits in LSB to MSB order.  LSB (least significant bit) is the last value in
+    // "typeInfoBits".
+    const bit = typeInfoBits.get(length - 1 - i);
+    // Type info bits at the left top corner. See 8.9 of JISX0510:2004 (p.46).
+    const [x1, y1] = TYPE_INFO_COORDINATES[i];
+
+    matrix.set(x1, y1, bit);
+
+    let x2;
+    let y2;
+
+    if (i < 8) {
+      // Right top corner.
+      x2 = width - i - 1;
+      y2 = 8;
+    } else {
+      // Left bottom corner.
+      x2 = 8;
+      y2 = height - 7 + (i - 8);
+    }
+
+    matrix.set(x2, y2, bit);
+  }
+}
+
+function makeVersionInfoBits(bits: BitArray, version: number): void {
+  bits.append(version, 6);
+
+  const bchCode = calculateBCHCode(version, VERSION_INFO_POLY);
+
+  bits.append(bchCode, 12);
+}
+
+function embedVersionInfo(matrix: ByteMatrix, { version }: Version): void {
+  if (version >= 7) {
+    const versionInfoBits = new BitArray();
+
+    makeVersionInfoBits(versionInfoBits, version);
+
+    // It will decrease from 17 to 0.
+    let bitIndex = 6 * 3 - 1;
+
+    const { height } = matrix;
+
+    for (let i = 0; i < 6; ++i) {
+      for (let j = 0; j < 3; ++j) {
+        // Place bits in LSB (least significant bit) to MSB order.
+        const bit = versionInfoBits.get(bitIndex);
+
+        bitIndex--;
+
+        // Left bottom corner.
+        matrix.set(i, height - 11 + j, bit);
+        // Right bottom corner.
+        matrix.set(height - 11 + j, i, bit);
+      }
+    }
+  }
+}
+
+function embedDataBits(matrix: ByteMatrix, dataBits: BitArray, mask: number): void {
+  const { length } = dataBits;
+  const { width, height } = matrix;
+
+  let bitIndex = 0;
+  let direction = -1;
+  // Start from the right bottom cell.
+  let x = width - 1;
+  let y = height - 1;
+
+  while (x > 0) {
+    // Skip the vertical timing pattern.
+    if (x === 6) {
+      x -= 1;
+    }
+
+    while (y >= 0 && y < height) {
+      for (let i = 0; i < 2; i++) {
+        const offsetX = x - i;
+
+        // Skip the cell if it's not empty.
+        if (!isEmpty(matrix, offsetX, y)) {
+          continue;
+        }
+
+        let bit: number;
+
+        if (bitIndex < length) {
+          bit = dataBits.get(bitIndex++);
+        } else {
+          // Padding bit. If there is no bit left, we'll fill the left cells with 0, as described
+          // in 8.4.9 of JISX0510:2004 (p. 24).
+          bit = 0;
+        }
+
+        // Apply mask.
+        bit ^= getDataMaskBit(mask, x, y);
+
+        matrix.set(offsetX, y, bit);
+      }
+
+      y += direction;
+    }
+
+    // Reverse the direction.
+    direction = -direction;
+    // Update y.
+    y += direction;
+    // Move to the left.
+    x -= 2;
+  }
+}
+
+export function buildMatrix(matrix: ByteMatrix, dataBits: BitArray, version: Version, ecLevel: ECLevel, mask: number): void {
   // Clear matrix
   matrix.clear(-1);
 
   // Embed basic patterns
   embedBasicPatterns(matrix, version);
+  // Type information appear with any version.
+  embedTypeInfo(matrix, ecLevel, mask);
+  // Version info appear if version >= 7.
+  embedVersionInfo(matrix, version);
+  // Data should be embedded at end.
+  embedDataBits(matrix, dataBits, mask);
 }

@@ -2,7 +2,7 @@
  * @module BitArray
  */
 
-import { isNumber, toUInt32 } from './utils';
+import { toUInt32 } from './utils';
 
 const LOAD_FACTOR = 0.75;
 
@@ -49,26 +49,16 @@ export class BitArray {
     this.#bits[offset] |= 1 << (index & 0x1f);
   }
 
-  public get(index: number): boolean {
+  public get(index: number): number {
     const offset = this.#offset(index);
 
-    return (this.#bits[offset] & (1 << (index & 0x1f))) !== 0;
-  }
-
-  public flip(index: number): void {
-    const offset = this.#offset(index);
-
-    this.#bits[offset] ^= 1 << (index & 0x1f);
+    return (this.#bits[offset] >>> (index & 0x1f)) & 1;
   }
 
   public xor(mask: BitArray): void {
-    if (this.#length !== mask.#length) {
-      throw new Error('mask do not have same length');
-    }
-
     const bits = this.#bits;
-    const { length } = bits;
     const maskBits = mask.#bits;
+    const length = Math.min(this.#length, mask.#length);
 
     for (let i = 0; i < length; i++) {
       // The last int could be incomplete (i.e. not have 32 bits in
@@ -77,10 +67,9 @@ export class BitArray {
     }
   }
 
-  public append(bit: boolean): void;
   public append(array: BitArray): void;
-  public append(value: number, length: number): void;
-  public append(value: number | boolean | BitArray, length?: number): void {
+  public append(value: number, length?: number): void;
+  public append(value: number | BitArray, length: number = 1): void {
     let index = this.#length;
 
     if (value instanceof BitArray) {
@@ -97,9 +86,9 @@ export class BitArray {
       }
 
       this.#length = index;
-    } else if (isNumber(value)) {
-      if (length == null || length < 0 || length > 32) {
-        throw new Error('length must be between 0 and 32');
+    } else {
+      if (length < 1 || length > 32) {
+        throw new Error('length must be between 1 and 32');
       }
 
       this.#alloc(index + length);
@@ -113,16 +102,6 @@ export class BitArray {
       }
 
       this.#length = index;
-    } else {
-      length = index + 1;
-
-      this.#alloc(length);
-
-      if (value) {
-        this.set(index);
-      }
-
-      this.#length = length;
     }
   }
 
