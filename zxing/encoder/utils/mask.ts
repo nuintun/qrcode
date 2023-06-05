@@ -4,15 +4,19 @@
 
 import { ByteMatrix } from '/encoder/ByteMatrix';
 
+// Penalty weights from section 6.8.2.1
 const N1 = 3;
 const N2 = 3;
 const N3 = 40;
 const N4 = 10;
 
+// Is dark point.
 function isDark(matrix: ByteMatrix, x: number, y: number): boolean {
   return matrix.get(x, y) === 1;
 }
 
+// Helper function for applyMaskPenaltyRule1. We need this for doing this calculation in both
+// vertical and horizontal orders respectively.
 function applyMaskPenaltyRule1Internal(matrix: ByteMatrix, isHorizontal: boolean): number {
   let penalty = 0;
   let { width, height } = matrix;
@@ -49,10 +53,15 @@ function applyMaskPenaltyRule1Internal(matrix: ByteMatrix, isHorizontal: boolean
   return penalty;
 }
 
+// Apply mask penalty rule 1 and return the penalty. Find repetitive cells with the same color and
+// give penalty to them. Example: 00000 or 11111.
 function applyMaskPenaltyRule1(matrix: ByteMatrix): number {
   return applyMaskPenaltyRule1Internal(matrix, true) + applyMaskPenaltyRule1Internal(matrix, false);
 }
 
+// Apply mask penalty rule 2 and return the penalty. Find 2x2 blocks with the same color and give
+// penalty to them. This is actually equivalent to the spec's rule, which is to find MxN blocks and give a
+// penalty proportional to (M-1)x(N-1), because this is the number of 2x2 blocks inside such a block.
 function applyMaskPenaltyRule2(matrix: ByteMatrix): number {
   let penalty = 0;
 
@@ -77,6 +86,7 @@ function applyMaskPenaltyRule2(matrix: ByteMatrix): number {
   return penalty;
 }
 
+// Is is four white, check on horizontal and vertical.
 function isFourWhite(matrix: ByteMatrix, offset: number, from: number, to: number, isHorizontal: boolean): boolean {
   from = Math.max(from, 0);
   to = Math.min(to, isHorizontal ? matrix.width : matrix.height);
@@ -92,6 +102,9 @@ function isFourWhite(matrix: ByteMatrix, offset: number, from: number, to: numbe
   return true;
 }
 
+// Apply mask penalty rule 3 and return the penalty. Find consecutive runs of 1:1:3:1:1:4
+// starting with black, or 4:1:1:3:1:1 starting with white, and give penalty to them. If we
+// find patterns like 000010111010000, we give penalty once.
 function applyMaskPenaltyRule3(matrix: ByteMatrix): number {
   let numPenalties = 0;
 
@@ -134,6 +147,8 @@ function applyMaskPenaltyRule3(matrix: ByteMatrix): number {
   return numPenalties * N3;
 }
 
+// Apply mask penalty rule 4 and return the penalty. Calculate the ratio of dark cells and give
+// penalty if the ratio is far from 50%. It gives 10 penalty for 5% distance.
 function applyMaskPenaltyRule4(matrix: ByteMatrix): number {
   let numDarkCells = 0;
 
@@ -153,6 +168,8 @@ function applyMaskPenaltyRule4(matrix: ByteMatrix): number {
   return fivePercentVariances * N4;
 }
 
+// The mask penalty calculation is complicated.  See Table 21 of JISX0510:2004 (p.45) for details.
+// Basically it applies four rules and summate all penalties.
 export function calculateMaskPenalty(matrix: ByteMatrix): number {
   return (
     applyMaskPenaltyRule1(matrix) +
@@ -162,6 +179,8 @@ export function calculateMaskPenalty(matrix: ByteMatrix): number {
   );
 }
 
+// Return the mask bit for "getMaskPattern" at "x" and "y". See 8.8 of JISX0510:2004 for mask
+// pattern conditions.
 export function getDataMaskBit(mask: number, x: number, y: number): number {
   let temp: number;
   let intermediate: number;

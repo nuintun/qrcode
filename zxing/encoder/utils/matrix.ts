@@ -51,6 +51,7 @@ const POSITION_ADJUSTMENT_PATTERN = [
   [1, 1, 1, 1, 1]
 ];
 
+// From Appendix E. Table 1, JIS0510X:2004 (p 71).
 const POSITION_ADJUSTMENT_PATTERN_COORDINATE_TABLE = [
   [], // Version 1
   [6, 18], // Version 2
@@ -94,6 +95,7 @@ const POSITION_ADJUSTMENT_PATTERN_COORDINATE_TABLE = [
   [6, 30, 58, 86, 114, 142, 170] // Version 40
 ];
 
+// Is empty point.
 function isEmpty(matrix: ByteMatrix, x: number, y: number): boolean {
   return matrix.get(x, y) === -1;
 }
@@ -130,10 +132,12 @@ function embedPositionAdjustmentPattern(matrix: ByteMatrix, x: number, y: number
   }
 }
 
+// Embed the lonely dark dot at left bottom corner. JISX0510:2004 (p.46)
 function embedDarkDotAtLeftBottomCorner(matrix: ByteMatrix): void {
   matrix.set(8, matrix.height - 8, 1);
 }
 
+// Embed position detection patterns and surrounding vertical/horizontal separators.
 function embedPositionDetectionPatternsAndSeparators(matrix: ByteMatrix): void {
   // Matrix width
   const { width, height } = matrix;
@@ -195,6 +199,7 @@ function embedTimingPatterns(matrix: ByteMatrix): void {
   }
 }
 
+// Embed position adjustment patterns if need be.
 function embedPositionAdjustmentPatterns(matrix: ByteMatrix, { version }: Version): void {
   if (version >= 2) {
     const coordinates = POSITION_ADJUSTMENT_PATTERN_COORDINATE_TABLE[version - 1];
@@ -217,6 +222,12 @@ function embedPositionAdjustmentPatterns(matrix: ByteMatrix, { version }: Versio
   }
 }
 
+// Embed basic patterns. On success, modify the matrix.
+// The basic patterns are:
+// - Position detection patterns
+// - Timing patterns
+// - Dark dot at the left bottom corner
+// - Position adjustment patterns, if need be
 function embedBasicPatterns(matrix: ByteMatrix, version: Version): void {
   // Let's get started with embedding big squares at corners.
   embedPositionDetectionPatternsAndSeparators(matrix);
@@ -228,10 +239,40 @@ function embedBasicPatterns(matrix: ByteMatrix, version: Version): void {
   embedTimingPatterns(matrix);
 }
 
+// Return the position of the most significant bit set (to one) in the "value". The most
+// significant bit is position 32. If there is no bit set, return 0. Examples:
+// - findMSBSet(0) => 0
+// - findMSBSet(1) => 1
+// - findMSBSet(255) => 8
 function findMSBSet(value: number): number {
   return 32 - Math.clz32(value);
 }
 
+// Calculate BCH (Bose-Chaudhuri-Hocquenghem) code for "value" using polynomial "poly". The BCH
+// code is used for encoding type information and version information.
+// Example: Calculation of version information of 7.
+// f(x) is created from 7.
+//   - 7 = 000111 in 6 bits
+//   - f(x) = x^2 + x^1 + x^0
+// g(x) is given by the standard (p. 67)
+//   - g(x) = x^12 + x^11 + x^10 + x^9 + x^8 + x^5 + x^2 + 1
+// Multiply f(x) by x^(18 - 6)
+//   - f'(x) = f(x) * x^(18 - 6)
+//   - f'(x) = x^14 + x^13 + x^12
+// Calculate the remainder of f'(x) / g(x)
+//         x^2
+//         __________________________________________________
+//   g(x) )x^14 + x^13 + x^12
+//         x^14 + x^13 + x^12 + x^11 + x^10 + x^7 + x^4 + x^2
+//         --------------------------------------------------
+//                              x^11 + x^10 + x^7 + x^4 + x^2
+//
+// The remainder is x^11 + x^10 + x^7 + x^4 + x^2
+// Encode it in binary: 110010010100
+// The return value is 0xc94 (1100 1001 0100)
+//
+// Since all coefficients in the polynomials are 1 or 0, we can do the calculation by bit
+// operations. We don't care if coefficients are positive or negative.
 function calculateBCHCode(value: number, poly: number): number {
   if (poly === 0) {
     throw new Error('0 polynomial');
@@ -252,6 +293,9 @@ function calculateBCHCode(value: number, poly: number): number {
   return value;
 }
 
+// Make bit vector of type information. On success, store the result in "bits".
+// Encode error correction level and mask pattern. See 8.9 of
+// JISX0510:2004 (p.45) for details.
 function makeTypeInfoBits(bits: BitArray, ecLevel: ECLevel, mask: number): void {
   const typeInfo = (ecLevel.bits << 3) | mask;
 
@@ -268,6 +312,7 @@ function makeTypeInfoBits(bits: BitArray, ecLevel: ECLevel, mask: number): void 
   bits.xor(maskBits);
 }
 
+// Embed type information. On success, modify the matrix.
 function embedTypeInfo(matrix: ByteMatrix, ecLevel: ECLevel, mask: number): void {
   const typeInfoBits = new BitArray();
 
@@ -277,7 +322,7 @@ function embedTypeInfo(matrix: ByteMatrix, ecLevel: ECLevel, mask: number): void
   const { width, height } = matrix;
 
   for (let i = 0; i < length; i++) {
-    // Place bits in LSB to MSB order.  LSB (least significant bit) is the last value in
+    // Place bits in LSB to MSB order. LSB (least significant bit) is the last value in
     // "typeInfoBits".
     const bit = typeInfoBits.get(length - 1 - i);
     // Type info bits at the left top corner. See 8.9 of JISX0510:2004 (p.46).
@@ -302,6 +347,8 @@ function embedTypeInfo(matrix: ByteMatrix, ecLevel: ECLevel, mask: number): void
   }
 }
 
+// Make bit vector of version information. On success, store the result in "bits".
+// See 8.10 of JISX0510:2004 (p.45) for details.
 function makeVersionInfoBits(bits: BitArray, version: number): void {
   bits.append(version, 6);
 
@@ -310,6 +357,8 @@ function makeVersionInfoBits(bits: BitArray, version: number): void {
   bits.append(bchCode, 12);
 }
 
+// Embed version information if need be. On success, modify the matrix.
+// See 8.10 of JISX0510:2004 (p.47) for how to embed version information.
 function embedVersionInfo(matrix: ByteMatrix, { version }: Version): void {
   if (version >= 7) {
     const versionInfoBits = new BitArray();
@@ -337,6 +386,8 @@ function embedVersionInfo(matrix: ByteMatrix, { version }: Version): void {
   }
 }
 
+// Embed "dataBits" using "getMaskPattern". On success, modify the matrix.
+// See 8.7 of JISX0510:2004 (p.38) for how to embed data bits.
 function embedDataBits(matrix: ByteMatrix, dataBits: BitArray, mask: number): void {
   const { length } = dataBits;
   const { width, height } = matrix;
@@ -390,6 +441,8 @@ function embedDataBits(matrix: ByteMatrix, dataBits: BitArray, mask: number): vo
   }
 }
 
+// Build 2D matrix of QR Code from "dataBits" with "ecLevel", "version" and "getMaskPattern". On
+// success, store the result in "matrix".
 export function buildMatrix(matrix: ByteMatrix, dataBits: BitArray, version: Version, ecLevel: ECLevel, mask: number): void {
   // Clear matrix
   matrix.clear(-1);
