@@ -22,10 +22,6 @@ export class BitSource {
   }
 
   public read(length: number): number {
-    if (length < 1 || length > 32 || length > this.available()) {
-      throw new Error('read length must be between 1 and 32 and lte available length');
-    }
-
     let result = 0;
     let bitOffset = this.#bitOffset;
     let byteOffset = this.#byteOffset;

@@ -26,14 +26,6 @@ export class BitMatrix {
   }
 
   #offset(x: number, y: number): number {
-    if (x >= this.#width) {
-      throw new Error('x overflow width');
-    }
-
-    if (y >= this.height) {
-      throw new Error('y overflow height');
-    }
-
     return toUInt32(y * this.#rowSize + x / 32);
   }
 
@@ -68,22 +60,9 @@ export class BitMatrix {
   }
 
   public setRegion(left: number, top: number, width: number, height: number): void {
-    if (top < 0 || left < 0) {
-      throw new Error('left and top must be nonnegative');
-    }
-
-    if (height < 1 || width < 1) {
-      throw new Error('height and width must be at least 1');
-    }
-
+    const bits = this.#bits;
     const right = left + width;
     const bottom = top + height;
-
-    if (bottom > this.#height || right > this.#width) {
-      throw new Error('the region must fit inside the matrix');
-    }
-
-    const bits = this.#bits;
     const rowSize = this.#rowSize;
 
     for (let y = top; y < bottom; y++) {
