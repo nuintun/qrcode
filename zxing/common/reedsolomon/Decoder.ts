@@ -53,7 +53,7 @@ export class Decoder {
       t = q.multiply(tLast).addOrSubtract(tLastLast);
 
       if (r.getDegree() >= rLast.getDegree()) {
-        throw new Error('Division algorithm failed to reduce polynomial?');
+        throw new Error('division algorithm failed to reduce polynomial?');
       }
     }
 
@@ -93,7 +93,7 @@ export class Decoder {
     }
 
     if (e !== numErrors) {
-      throw new Error('Error locator degree does not match number of roots');
+      throw new Error('error locator degree does not match number of roots');
     }
 
     return result;
@@ -170,7 +170,7 @@ export class Decoder {
       const position = rLength - 1 - field.log(errorLocations[i]);
 
       if (position < 0) {
-        throw new Error('Bad error location');
+        throw new Error('bad error location');
       }
 
       received[position] = received[position] ^ errorMagnitudes[i];

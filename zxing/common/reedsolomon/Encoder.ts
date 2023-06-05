@@ -38,13 +38,13 @@ export class Encoder {
 
   public encode(received: Int32Array, ecBytes: number): void {
     if (ecBytes === 0) {
-      throw new Error('No error correction bytes');
+      throw new Error('no error correction bytes');
     }
 
     const dataBytes = received.length - ecBytes;
 
     if (dataBytes <= 0) {
-      throw new Error('No data bytes provided');
+      throw new Error('no data bytes provided');
     }
 
     const generator = this.#buildGenerator(ecBytes);

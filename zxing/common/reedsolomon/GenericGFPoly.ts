@@ -38,7 +38,7 @@ export class GenericGFPoly {
 
   #assertField(other: GenericGFPoly): void {
     if (this.#field !== other.#field) {
-      throw new Error('GenericGFPolys do not have same GenericGF field');
+      throw new Error('polys do not have same field');
     }
   }
 
@@ -201,7 +201,7 @@ export class GenericGFPoly {
     this.#assertField(other);
 
     if (other.isZero()) {
-      throw new Error('Divide by 0');
+      throw new Error('divide by 0');
     }
 
     const field = this.#field;
