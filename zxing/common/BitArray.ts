@@ -98,7 +98,7 @@ export class BitArray {
       this.#alloc(index + length);
 
       for (let i = length - 1; i >= 0; i--) {
-        if ((value & (1 << i)) !== 0) {
+        if ((value >>> i) & 1) {
           this.set(index);
         }
 
