@@ -164,9 +164,9 @@ export function interleaveWithECBytes(
 export function terminateBits(bits: BitArray, numDataBytes: number): void {
   const capacity = numDataBytes * 8;
 
-  // if (bits.length > capacity) {
-  //   throw new Error(`data bits cannot fit in the QRCode ${bits.length} > ${capacity}`);
-  // }
+  if (bits.length > capacity) {
+    throw new Error(`data bits cannot fit in the QRCode ${bits.length} > ${capacity}`);
+  }
 
   // Append Mode.TERMINATE if there is enough space (value is 0000)
   for (let i = 0; i < 4 && bits.length < capacity; i++) {

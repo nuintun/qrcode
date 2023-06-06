@@ -702,9 +702,9 @@
     }
     function terminateBits(bits, numDataBytes) {
         const capacity = numDataBytes * 8;
-        // if (bits.length > capacity) {
-        //   throw new Error(`data bits cannot fit in the QRCode ${bits.length} > ${capacity}`);
-        // }
+        if (bits.length > capacity) {
+            throw new Error(`data bits cannot fit in the QRCode ${bits.length} > ${capacity}`);
+        }
         // Append Mode.TERMINATE if there is enough space (value is 0000)
         for (let i = 0; i < 4 && bits.length < capacity; i++) {
             bits.append(0);
@@ -2125,6 +2125,7 @@
             const hints = this.#hints;
             const ecLevel = this.#level;
             const encode = this.#encode;
+            const versionNumber = this.#version;
             const segmentBlocks = [];
             const hasGS1FormatHint = hints.indexOf('GS1_FORMAT') >= 0;
             const hasEncodingHint = hints.indexOf('CHARACTER_SET') >= 0;
@@ -2154,8 +2155,8 @@
                 });
             }
             let version;
-            if (this.#version != null) {
-                version = VERSIONS[this.#version];
+            if (versionNumber != null) {
+                version = VERSIONS[versionNumber - 1];
                 const bitsNeeded = calculateBitsNeeded(segmentBlocks, version);
                 if (!willFit(bitsNeeded, version, ecLevel)) {
                     throw new Error('data too big for requested version');
