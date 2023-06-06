@@ -881,7 +881,7 @@
   /**
    * @module encoder
    */
-  function getNumECAndDataBytes(blockID, numRSBlocks, numDataBytes, numTotalBytes) {
+  function getNumBytesInBlock(blockID, numRSBlocks, numDataBytes, numTotalBytes) {
     if (blockID >= numRSBlocks) {
       throw new Error('block id too large');
     }
@@ -946,7 +946,7 @@
     // Since, we know the number of reedsolmon blocks, we can initialize the vector with the number.
     const blocks = [];
     for (let i = 0; i < numRSBlocks; ++i) {
-      const [numECBytesInBlock, numDataBytesInBlock] = getNumECAndDataBytes(i, numRSBlocks, numDataBytes, numTotalBytes);
+      const [numECBytesInBlock, numDataBytesInBlock] = getNumBytesInBlock(i, numRSBlocks, numDataBytes, numTotalBytes);
       const dataBytes = new Int8Array(numDataBytesInBlock);
       bits.toBytes(8 * dataBytesOffset, dataBytes, 0, numDataBytesInBlock);
       const ecBytes = generateECBytes(dataBytes, numECBytesInBlock);
@@ -960,7 +960,7 @@
     }
     const array = new BitArray();
     // First, place data blocks.
-    for (let i = 0; i < maxNumDataBytes; ++i) {
+    for (let i = 0; i < maxNumDataBytes; i++) {
       for (const { dataBytes } of blocks) {
         if (i < dataBytes.length) {
           array.append(dataBytes[i], 8);
@@ -968,7 +968,7 @@
       }
     }
     // Then, place error correction blocks.
-    for (let i = 0; i < maxNumEcBytes; ++i) {
+    for (let i = 0; i < maxNumEcBytes; i++) {
       for (const { ecBytes } of blocks) {
         if (i < ecBytes.length) {
           array.append(ecBytes[i], 8);
@@ -1632,9 +1632,9 @@
     if (version >= 2) {
       const coordinates = POSITION_ADJUSTMENT_PATTERN_COORDINATE_TABLE[version - 1];
       const { length } = coordinates;
-      for (let i = 0; i !== length; i++) {
+      for (let i = 0; i < length; i++) {
         const y = coordinates[i];
-        for (let j = 0; j !== length; j++) {
+        for (let j = 0; j < length; j++) {
           const x = coordinates[j];
           if (isEmpty(matrix, x, y)) {
             // If the cell is unset, we embed the position adjustment pattern here.
@@ -1721,6 +1721,10 @@
     const maskBits = new BitArray();
     maskBits.append(TYPE_INFO_MASK_PATTERN, 15);
     bits.xor(maskBits);
+    if (bits.length !== 15) {
+      // Just in case.
+      throw new Error(`should not happen but we got: ${bits.length}`);
+    }
   }
   // Embed type information. On success, modify the matrix.
   function embedTypeInfo(matrix, ecLevel, mask) {
@@ -1755,6 +1759,10 @@
     bits.append(version, 6);
     const bchCode = calculateBCHCode(version, VERSION_INFO_POLY);
     bits.append(bchCode, 12);
+    if (bits.length !== 18) {
+      // Just in case.
+      throw new Error(`should not happen but we got: ${bits.length}`);
+    }
   }
   // Embed version information if need be. On success, modify the matrix.
   // See 8.10 of JISX0510:2004 (p.47) for how to embed version information.
@@ -1796,20 +1804,21 @@
         for (let i = 0; i < 2; i++) {
           const offsetX = x - i;
           // Skip the cell if it's not empty.
-          if (!isEmpty(matrix, offsetX, y)) {
-            continue;
+          if (isEmpty(matrix, offsetX, y)) {
+            let bit;
+            if (bitIndex < length) {
+              bit = dataBits.get(bitIndex++);
+            } else {
+              // Padding bit. If there is no bit left, we'll fill the left cells with 0, as described
+              // in 8.4.9 of JISX0510:2004 (p. 24).
+              bit = 0;
+            }
+            // Is apply mask.
+            if (isApplyMask(mask, offsetX, y)) {
+              bit ^= 1;
+            }
+            matrix.set(offsetX, y, bit);
           }
-          let bit;
-          if (bitIndex < length) {
-            bit = dataBits.get(bitIndex++);
-          } else {
-            // Padding bit. If there is no bit left, we'll fill the left cells with 0, as described
-            // in 8.4.9 of JISX0510:2004 (p. 24).
-            bit = 0;
-          }
-          // Apply mask.
-          bit ^= getDataMaskBit(mask, x, y);
-          matrix.set(offsetX, y, bit);
         }
         y += direction;
       }
@@ -1819,6 +1828,10 @@
       y += direction;
       // Move to the left.
       x -= 2;
+    }
+    // All bits should be consumed.
+    if (bitIndex !== length) {
+      throw new Error(`not all bits consumed: ${bitIndex}/${length}`);
     }
   }
   // Build 2D matrix of QR Code from "dataBits" with "ecLevel", "version" and "getMaskPattern". On
@@ -1983,9 +1996,8 @@
       applyMaskPenaltyRule4(matrix)
     );
   }
-  // Return the mask bit for "getMaskPattern" at "x" and "y". See 8.8 of JISX0510:2004 for mask
-  // pattern conditions.
-  function getDataMaskBit(mask, x, y) {
+  // Return is apply mask at "x" and "y". See 8.8 of JISX0510:2004 for mask pattern conditions.
+  function isApplyMask(mask, x, y) {
     let temp;
     let intermediate;
     switch (mask) {
@@ -2018,7 +2030,7 @@
       default:
         throw new Error(`illegal mask: ${mask}`);
     }
-    return intermediate !== 0 ? 0 : 1;
+    return intermediate === 0;
   }
   function chooseMask(matrix, bits, version, ecLevel) {
     let bestMask = -1;

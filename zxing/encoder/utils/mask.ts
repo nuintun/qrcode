@@ -183,9 +183,8 @@ function calculateMaskPenalty(matrix: ByteMatrix): number {
   );
 }
 
-// Return the mask bit for "getMaskPattern" at "x" and "y". See 8.8 of JISX0510:2004 for mask
-// pattern conditions.
-export function getDataMaskBit(mask: number, x: number, y: number): number {
+// Return is apply mask at "x" and "y". See 8.8 of JISX0510:2004 for mask pattern conditions.
+export function isApplyMask(mask: number, x: number, y: number): boolean {
   let temp: number;
   let intermediate: number;
 
@@ -220,7 +219,7 @@ export function getDataMaskBit(mask: number, x: number, y: number): number {
       throw new Error(`illegal mask: ${mask}`);
   }
 
-  return intermediate !== 0 ? 0 : 1;
+  return intermediate === 0;
 }
 
 export function chooseMask(matrix: ByteMatrix, bits: BitArray, version: Version, ecLevel: ECLevel): number {

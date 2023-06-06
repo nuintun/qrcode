@@ -26,7 +26,7 @@ export type EncodeHint = 'GS1_FORMAT' | 'CHARACTER_SET';
 
 export type Segment = Alphanumeric | Byte | Kanji | Numeric;
 
-function getNumECAndDataBytes(
+function getNumBytesInBlock(
   blockID: number,
   numRSBlocks: number,
   numDataBytes: number,
@@ -115,7 +115,7 @@ export function interleaveWithECBytes(
   const blocks: BlockPair[] = [];
 
   for (let i = 0; i < numRSBlocks; ++i) {
-    const [numECBytesInBlock, numDataBytesInBlock] = getNumECAndDataBytes(i, numRSBlocks, numDataBytes, numTotalBytes);
+    const [numECBytesInBlock, numDataBytesInBlock] = getNumBytesInBlock(i, numRSBlocks, numDataBytes, numTotalBytes);
     const dataBytes = new Int8Array(numDataBytesInBlock);
 
     bits.toBytes(8 * dataBytesOffset, dataBytes, 0, numDataBytesInBlock);
@@ -136,7 +136,7 @@ export function interleaveWithECBytes(
   const array = new BitArray();
 
   // First, place data blocks.
-  for (let i = 0; i < maxNumDataBytes; ++i) {
+  for (let i = 0; i < maxNumDataBytes; i++) {
     for (const { dataBytes } of blocks) {
       if (i < dataBytes.length) {
         array.append(dataBytes[i], 8);
@@ -145,7 +145,7 @@ export function interleaveWithECBytes(
   }
 
   // Then, place error correction blocks.
-  for (let i = 0; i < maxNumEcBytes; ++i) {
+  for (let i = 0; i < maxNumEcBytes; i++) {
     for (const { ecBytes } of blocks) {
       if (i < ecBytes.length) {
         array.append(ecBytes[i], 8);

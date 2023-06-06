@@ -2,11 +2,11 @@
  * @module matrix
  */
 
+import { isApplyMask } from './mask';
 import { ECLevel } from '/common/ECLevel';
 import { Version } from '/common/Version';
 import { BitArray } from '/common/BitArray';
 import { ByteMatrix } from '/encoder/ByteMatrix';
-import { getDataMaskBit } from './mask';
 
 const TYPE_INFO_POLY = 0x537;
 
@@ -205,10 +205,10 @@ function embedPositionAdjustmentPatterns(matrix: ByteMatrix, { version }: Versio
     const coordinates = POSITION_ADJUSTMENT_PATTERN_COORDINATE_TABLE[version - 1];
     const { length } = coordinates;
 
-    for (let i = 0; i !== length; i++) {
+    for (let i = 0; i < length; i++) {
       const y = coordinates[i];
 
-      for (let j = 0; j !== length; j++) {
+      for (let j = 0; j < length; j++) {
         const x = coordinates[j];
 
         if (isEmpty(matrix, x, y)) {
@@ -310,6 +310,11 @@ function makeTypeInfoBits(bits: BitArray, ecLevel: ECLevel, mask: number): void 
   maskBits.append(TYPE_INFO_MASK_PATTERN, 15);
 
   bits.xor(maskBits);
+
+  if (bits.length !== 15) {
+    // Just in case.
+    throw new Error(`should not happen but we got: ${bits.length}`);
+  }
 }
 
 // Embed type information. On success, modify the matrix.
@@ -355,6 +360,11 @@ function makeVersionInfoBits(bits: BitArray, version: number): void {
   const bchCode = calculateBCHCode(version, VERSION_INFO_POLY);
 
   bits.append(bchCode, 12);
+
+  if (bits.length !== 18) {
+    // Just in case.
+    throw new Error(`should not happen but we got: ${bits.length}`);
+  }
 }
 
 // Embed version information if need be. On success, modify the matrix.
@@ -407,24 +417,24 @@ function embedDataBits(matrix: ByteMatrix, dataBits: BitArray, mask: number): vo
         const offsetX = x - i;
 
         // Skip the cell if it's not empty.
-        if (!isEmpty(matrix, offsetX, y)) {
-          continue;
+        if (isEmpty(matrix, offsetX, y)) {
+          let bit: number;
+
+          if (bitIndex < length) {
+            bit = dataBits.get(bitIndex++);
+          } else {
+            // Padding bit. If there is no bit left, we'll fill the left cells with 0, as described
+            // in 8.4.9 of JISX0510:2004 (p. 24).
+            bit = 0;
+          }
+
+          // Is apply mask.
+          if (isApplyMask(mask, offsetX, y)) {
+            bit ^= 1;
+          }
+
+          matrix.set(offsetX, y, bit);
         }
-
-        let bit: number;
-
-        if (bitIndex < length) {
-          bit = dataBits.get(bitIndex++);
-        } else {
-          // Padding bit. If there is no bit left, we'll fill the left cells with 0, as described
-          // in 8.4.9 of JISX0510:2004 (p. 24).
-          bit = 0;
-        }
-
-        // Apply mask.
-        bit ^= getDataMaskBit(mask, x, y);
-
-        matrix.set(offsetX, y, bit);
       }
 
       y += direction;
@@ -436,6 +446,11 @@ function embedDataBits(matrix: ByteMatrix, dataBits: BitArray, mask: number): vo
     y += direction;
     // Move to the left.
     x -= 2;
+  }
+
+  // All bits should be consumed.
+  if (bitIndex !== length) {
+    throw new Error(`not all bits consumed: ${bitIndex}/${length}`);
   }
 }
 
