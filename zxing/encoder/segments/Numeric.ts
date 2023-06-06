@@ -5,15 +5,13 @@
 import { Mode } from '/common/Mode';
 import { BitArray } from '/common/BitArray';
 
-function getDigit(character: string): number {
-  const code = character.charCodeAt(0);
-
+function getDigit(code: number): number {
   // 0 - 9
   if (48 <= code && code <= 57) {
     return code - 48;
   }
 
-  throw new Error(`illegal character: ${character}`);
+  throw new Error(`illegal character: ${String.fromCharCode(code)}`);
 }
 
 export class Numeric {
@@ -39,19 +37,19 @@ export class Numeric {
     let i = 0;
 
     while (i < length) {
-      const num1 = getDigit(content.charAt(i));
+      const num1 = getDigit(content.charCodeAt(i));
 
       if (i + 2 < length) {
         // Encode three numeric letters in ten bits.
-        const num2 = getDigit(content.charAt(i + 1));
-        const num3 = getDigit(content.charAt(i + 2));
+        const num2 = getDigit(content.charCodeAt(i + 1));
+        const num3 = getDigit(content.charCodeAt(i + 2));
 
         bits.append(num1 * 100 + num2 * 10 + num3, 10);
 
         i += 3;
       } else if (i + 1 < length) {
         // Encode two numeric letters in seven bits.
-        const num2 = getDigit(content.charAt(i + 1));
+        const num2 = getDigit(content.charCodeAt(i + 1));
 
         bits.append(num1 * 10 + num2, 7);
 

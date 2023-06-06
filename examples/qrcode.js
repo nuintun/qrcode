@@ -2274,13 +2274,12 @@
   /**
    * @module Numeric
    */
-  function getDigit(character) {
-    const code = character.charCodeAt(0);
+  function getDigit(code) {
     // 0 - 9
     if (48 <= code && code <= 57) {
       return code - 48;
     }
-    throw new Error(`illegal character: ${character}`);
+    throw new Error(`illegal character: ${String.fromCharCode(code)}`);
   }
   class Numeric {
     #content;
@@ -2299,16 +2298,16 @@
       const { length } = content;
       let i = 0;
       while (i < length) {
-        const num1 = getDigit(content.charAt(i));
+        const num1 = getDigit(content.charCodeAt(i));
         if (i + 2 < length) {
           // Encode three numeric letters in ten bits.
-          const num2 = getDigit(content.charAt(i + 1));
-          const num3 = getDigit(content.charAt(i + 2));
+          const num2 = getDigit(content.charCodeAt(i + 1));
+          const num3 = getDigit(content.charCodeAt(i + 2));
           bits.append(num1 * 100 + num2 * 10 + num3, 10);
           i += 3;
         } else if (i + 1 < length) {
           // Encode two numeric letters in seven bits.
-          const num2 = getDigit(content.charAt(i + 1));
+          const num2 = getDigit(content.charCodeAt(i + 1));
           bits.append(num1 * 10 + num2, 7);
           i += 2;
         } else {
@@ -2325,24 +2324,21 @@
    * @module Alphanumeric
    */
   const ALPHANUMERIC_TABLE = [
-    // 0x00-0x0f
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    // 0x10-0x1f
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     // 0x20-0x2f
     36, -1, -1, -1, 37, 38, -1, -1, -1, -1, 39, 40, -1, 41, 42, 43,
     // 0x30-0x3f
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 44, -1, -1, -1, -1, -1,
     // 0x40-0x4f
     -1, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-    // 0x50-0x5f
-    25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, -1, -1, -1, -1, -1
+    // 0x50-0x5a
+    25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
   ];
   function getAlphanumericCode(code) {
-    if (code < ALPHANUMERIC_TABLE.length) {
-      return ALPHANUMERIC_TABLE[code];
+    const index = code - 32;
+    if (index < ALPHANUMERIC_TABLE.length) {
+      return ALPHANUMERIC_TABLE[index];
     }
-    return -1;
+    throw new Error(`illegal character: ${String.fromCharCode(code)}`);
   }
   class Alphanumeric {
     #content;
@@ -2362,14 +2358,8 @@
       let i = 0;
       while (i < length) {
         const code1 = getAlphanumericCode(content.charCodeAt(i));
-        if (code1 === -1) {
-          throw new Error(`illegal character: ${content.charAt(i)}`);
-        }
         if (i + 1 < length) {
           const code2 = getAlphanumericCode(content.charCodeAt(i + 1));
-          if (code2 === -1) {
-            throw new Error(`illegal character: ${content.charAt(i)}`);
-          }
           // Encode two alphanumeric letters in 11 bits.
           bits.append(code1 * 45 + code2, 11);
           i += 2;
