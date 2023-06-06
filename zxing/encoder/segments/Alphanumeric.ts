@@ -54,14 +54,14 @@ export class Alphanumeric {
       const code1 = getAlphanumericCode(content.charCodeAt(i));
 
       if (code1 === -1) {
-        throw new Error(`illegal char: ${content.charAt(i)}`);
+        throw new Error(`illegal character: ${content.charAt(i)}`);
       }
 
       if (i + 1 < length) {
         const code2 = getAlphanumericCode(content.charCodeAt(i + 1));
 
         if (code2 === -1) {
-          throw new Error(`illegal char: ${content.charAt(i)}`);
+          throw new Error(`illegal character: ${content.charAt(i)}`);
         }
 
         // Encode two alphanumeric letters in 11 bits.

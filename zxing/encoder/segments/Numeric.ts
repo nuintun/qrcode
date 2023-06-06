@@ -6,7 +6,14 @@ import { Mode } from '/common/Mode';
 import { BitArray } from '/common/BitArray';
 
 function getDigit(character: string): number {
-  return character.charCodeAt(0) - 48;
+  const code = character.charCodeAt(0);
+
+  // 0 - 9
+  if (48 <= code && code <= 57) {
+    return code - 48;
+  }
+
+  throw new Error(`illegal character: ${character}`);
 }
 
 export class Numeric {

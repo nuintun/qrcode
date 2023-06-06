@@ -9,1846 +9,2122 @@
  */
 
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-    typeof define === 'function' && define.amd ? define('qrcode', ['exports'], factory) :
-    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.QRCode = {}));
-})(this, (function (exports) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined'
+    ? factory(exports)
+    : typeof define === 'function' && define.amd
+    ? define('qrcode', ['exports'], factory)
+    : ((global = typeof globalThis !== 'undefined' ? globalThis : global || self), factory((global.QRCode = {})));
+})(this, function (exports) {
+  'use strict';
 
-    /**
-     * @module Mode
-     */
-    class Mode {
-        #bits;
-        #characterCountBitsSet;
-        static TERMINATOR = new Mode([0, 0, 0], 0x00);
-        static NUMERIC = new Mode([10, 12, 14], 0x01);
-        static ALPHANUMERIC = new Mode([9, 11, 13], 0x02);
-        static STRUCTURED_APPEND = new Mode([0, 0, 0], 0x03);
-        static BYTE = new Mode([8, 16, 16], 0x04);
-        static ECI = new Mode([0, 0, 0], 0x07);
-        static KANJI = new Mode([8, 10, 12], 0x08);
-        static FNC1_FIRST_POSITION = new Mode([0, 0, 0], 0x05);
-        static FNC1_SECOND_POSITION = new Mode([0, 0, 0], 0x09);
-        static HANZI = new Mode([8, 10, 12], 0x0d);
-        constructor(characterCountBitsSet, bits) {
-            this.#bits = bits;
-            this.#characterCountBitsSet = new Int32Array(characterCountBitsSet);
-        }
-        get bits() {
-            return this.#bits;
-        }
-        getCharacterCountBits({ version }) {
-            let offset;
-            if (version <= 9) {
-                offset = 0;
-            }
-            else if (version <= 26) {
-                offset = 1;
-            }
-            else {
-                offset = 2;
-            }
-            return this.#characterCountBitsSet[offset];
-        }
+  /**
+   * @module Mode
+   */
+  class Mode {
+    #bits;
+    #characterCountBitsSet;
+    static TERMINATOR = new Mode([0, 0, 0], 0x00);
+    static NUMERIC = new Mode([10, 12, 14], 0x01);
+    static ALPHANUMERIC = new Mode([9, 11, 13], 0x02);
+    static STRUCTURED_APPEND = new Mode([0, 0, 0], 0x03);
+    static BYTE = new Mode([8, 16, 16], 0x04);
+    static ECI = new Mode([0, 0, 0], 0x07);
+    static KANJI = new Mode([8, 10, 12], 0x08);
+    static FNC1_FIRST_POSITION = new Mode([0, 0, 0], 0x05);
+    static FNC1_SECOND_POSITION = new Mode([0, 0, 0], 0x09);
+    static HANZI = new Mode([8, 10, 12], 0x0d);
+    constructor(characterCountBitsSet, bits) {
+      this.#bits = bits;
+      this.#characterCountBitsSet = new Int32Array(characterCountBitsSet);
     }
+    get bits() {
+      return this.#bits;
+    }
+    getCharacterCountBits({ version }) {
+      let offset;
+      if (version <= 9) {
+        offset = 0;
+      } else if (version <= 26) {
+        offset = 1;
+      } else {
+        offset = 2;
+      }
+      return this.#characterCountBitsSet[offset];
+    }
+  }
 
-    /**
-     * @module utils
-     */
-    const { toString } = Object.prototype;
-    function toUInt32(uint32) {
-        // 防止溢出 0-0xffffffff
-        return uint32 >>> 0;
-    }
-    function isNumber(value) {
-        return toString.call(value) === '[object Number]';
-    }
+  /**
+   * @module utils
+   */
+  const { toString } = Object.prototype;
+  function toUInt32(uint32) {
+    // 防止溢出 0-0xffffffff
+    return uint32 >>> 0;
+  }
+  function isNumber(value) {
+    return toString.call(value) === '[object Number]';
+  }
 
-    /**
-     * @module BitArray
-     */
-    const LOAD_FACTOR = 0.75;
-    function makeArray(length) {
-        return new Int32Array(toUInt32((length + 31) / 32));
+  /**
+   * @module BitArray
+   */
+  const LOAD_FACTOR = 0.75;
+  function makeArray(length) {
+    return new Int32Array(toUInt32((length + 31) / 32));
+  }
+  class BitArray {
+    #length;
+    #bits;
+    constructor(length = 0) {
+      this.#length = length;
+      this.#bits = makeArray(length);
     }
-    class BitArray {
-        #length;
-        #bits;
-        constructor(length = 0) {
-            this.#length = length;
-            this.#bits = makeArray(length);
-        }
-        #offset(index) {
-            return toUInt32(index / 32);
-        }
-        #alloc(length) {
-            const bits = this.#bits;
-            if (length > bits.length * 32) {
-                const newBits = makeArray(Math.ceil(length / LOAD_FACTOR));
-                newBits.set(bits);
-                this.#bits = newBits;
-            }
-            this.#length = length;
-        }
-        get length() {
-            return this.#length;
-        }
-        get byteLength() {
-            return toUInt32((this.#length + 7) / 8);
-        }
-        set(index) {
-            const offset = this.#offset(index);
-            this.#bits[offset] |= 1 << (index & 0x1f);
-        }
-        get(index) {
-            const offset = this.#offset(index);
-            return (this.#bits[offset] >>> (index & 0x1f)) & 1;
-        }
-        xor(mask) {
-            const bits = this.#bits;
-            const maskBits = mask.#bits;
-            const length = Math.min(this.#length, mask.#length);
-            for (let i = 0; i < length; i++) {
-                // The last int could be incomplete (i.e. not have 32 bits in
-                // it) but there is no problem since 0 XOR 0 == 0.
-                bits[i] ^= maskBits[i];
-            }
-        }
-        append(value, length = 1) {
-            let index = this.#length;
-            if (value instanceof BitArray) {
-                length = value.#length;
-                this.#alloc(index + length);
-                for (let i = 0; i < length; i++) {
-                    if (value.get(i)) {
-                        this.set(index);
-                    }
-                    index++;
-                }
-            }
-            else {
-                this.#alloc(index + length);
-                for (let i = length - 1; i >= 0; i--) {
-                    if ((value >>> i) & 1) {
-                        this.set(index);
-                    }
-                    index++;
-                }
-            }
-        }
-        toBytes(bitOffset, array, offset, byteLength) {
-            for (let i = 0; i < byteLength; i++) {
-                let byte = 0;
-                for (let j = 0; j < 8; j++) {
-                    if (this.get(bitOffset)) {
-                        byte |= 1 << (7 - j);
-                    }
-                    bitOffset++;
-                }
-                array[offset + i] = byte;
-            }
-        }
-        clear() {
-            this.#bits.fill(0);
-        }
+    #offset(index) {
+      return toUInt32(index / 32);
     }
-
-    /**
-     * @module BlockPair
-     */
-    class BlockPair {
-        #ecBytes;
-        #dataBytes;
-        constructor(dataBytes, ecBytes) {
-            this.#ecBytes = ecBytes;
-            this.#dataBytes = dataBytes;
-        }
-        get ecBytes() {
-            return this.#ecBytes;
-        }
-        get dataBytes() {
-            return this.#dataBytes;
-        }
+    #alloc(length) {
+      const bits = this.#bits;
+      if (length > bits.length * 32) {
+        const newBits = makeArray(Math.ceil(length / LOAD_FACTOR));
+        newBits.set(bits);
+        this.#bits = newBits;
+      }
+      this.#length = length;
     }
-
-    /**
-     * @module ECB
-     */
-    class ECB {
-        #count;
-        #dataCodewords;
-        constructor(count, dataCodewords) {
-            this.#count = count;
-            this.#dataCodewords = dataCodewords;
-        }
-        get count() {
-            return this.#count;
-        }
-        get dataCodewords() {
-            return this.#dataCodewords;
-        }
+    get length() {
+      return this.#length;
     }
-
-    /**
-     * @module ECBlocks
-     */
-    class ECBlocks {
-        #ecBlocks;
-        #numBlocks;
-        #totalECCodewords;
-        #totalDataCodewords;
-        #ecCodewordsPerBlock;
-        constructor(ecCodewordsPerBlock, ...ecBlocks) {
-            let numBlocks = 0;
-            let totalDataCodewords = 0;
-            for (const { count, dataCodewords } of ecBlocks) {
-                numBlocks += count;
-                totalDataCodewords += count * dataCodewords;
-            }
-            this.#ecBlocks = ecBlocks;
-            this.#numBlocks = numBlocks;
-            this.#totalDataCodewords = totalDataCodewords;
-            this.#ecCodewordsPerBlock = ecCodewordsPerBlock;
-            this.#totalECCodewords = ecCodewordsPerBlock * numBlocks;
-        }
-        get ecBlocks() {
-            return this.#ecBlocks;
-        }
-        get numBlocks() {
-            return this.#numBlocks;
-        }
-        get totalECCodewords() {
-            return this.#totalECCodewords;
-        }
-        get totalDataCodewords() {
-            return this.#totalDataCodewords;
-        }
-        get ecCodewordsPerBlock() {
-            return this.#ecCodewordsPerBlock;
-        }
+    get byteLength() {
+      return toUInt32((this.#length + 7) / 8);
     }
-
-    /**
-     * @module Version
-     */
-    class Version {
-        #version;
-        #dimension;
-        #ecBlocks;
-        #totalCodewords;
-        #alignmentPatterns;
-        constructor(version, alignmentPatterns, ...ecBlocks) {
-            const [ecBlock] = ecBlocks;
-            this.#version = version;
-            this.#ecBlocks = ecBlocks;
-            this.#dimension = 17 + 4 * version;
-            this.#alignmentPatterns = new Int32Array(alignmentPatterns);
-            // Version determines the Total codewords
-            // All ecc level total codewords are equals
-            this.#totalCodewords = ecBlock.totalECCodewords + ecBlock.totalDataCodewords;
-        }
-        get version() {
-            return this.#version;
-        }
-        get dimension() {
-            return this.#dimension;
-        }
-        get totalCodewords() {
-            return this.#totalCodewords;
-        }
-        get alignmentPatterns() {
-            return this.#alignmentPatterns;
-        }
-        getECBlocksForECLevel(ecLevel) {
-            return this.#ecBlocks[ecLevel.level];
-        }
+    set(index) {
+      const offset = this.#offset(index);
+      this.#bits[offset] |= 1 << (index & 0x1f);
     }
-    const VERSIONS = [
-        new Version(1, [], new ECBlocks(7, new ECB(1, 19)), new ECBlocks(10, new ECB(1, 16)), new ECBlocks(13, new ECB(1, 13)), new ECBlocks(17, new ECB(1, 9))),
-        new Version(2, [6, 18], new ECBlocks(10, new ECB(1, 34)), new ECBlocks(16, new ECB(1, 28)), new ECBlocks(22, new ECB(1, 22)), new ECBlocks(28, new ECB(1, 16))),
-        new Version(3, [6, 22], new ECBlocks(15, new ECB(1, 55)), new ECBlocks(26, new ECB(1, 44)), new ECBlocks(18, new ECB(2, 17)), new ECBlocks(22, new ECB(2, 13))),
-        new Version(4, [6, 26], new ECBlocks(20, new ECB(1, 80)), new ECBlocks(18, new ECB(2, 32)), new ECBlocks(26, new ECB(2, 24)), new ECBlocks(16, new ECB(4, 9))),
-        new Version(5, [6, 30], new ECBlocks(26, new ECB(1, 108)), new ECBlocks(24, new ECB(2, 43)), new ECBlocks(18, new ECB(2, 15), new ECB(2, 16)), new ECBlocks(22, new ECB(2, 11), new ECB(2, 12))),
-        new Version(6, [6, 34], new ECBlocks(18, new ECB(2, 68)), new ECBlocks(16, new ECB(4, 27)), new ECBlocks(24, new ECB(4, 19)), new ECBlocks(28, new ECB(4, 15))),
-        new Version(7, [6, 22, 38], new ECBlocks(20, new ECB(2, 78)), new ECBlocks(18, new ECB(4, 31)), new ECBlocks(18, new ECB(2, 14), new ECB(4, 15)), new ECBlocks(26, new ECB(4, 13), new ECB(1, 14))),
-        new Version(8, [6, 24, 42], new ECBlocks(24, new ECB(2, 97)), new ECBlocks(22, new ECB(2, 38), new ECB(2, 39)), new ECBlocks(22, new ECB(4, 18), new ECB(2, 19)), new ECBlocks(26, new ECB(4, 14), new ECB(2, 15))),
-        new Version(9, [6, 26, 46], new ECBlocks(30, new ECB(2, 116)), new ECBlocks(22, new ECB(3, 36), new ECB(2, 37)), new ECBlocks(20, new ECB(4, 16), new ECB(4, 17)), new ECBlocks(24, new ECB(4, 12), new ECB(4, 13))),
-        new Version(10, [6, 28, 50], new ECBlocks(18, new ECB(2, 68), new ECB(2, 69)), new ECBlocks(26, new ECB(4, 43), new ECB(1, 44)), new ECBlocks(24, new ECB(6, 19), new ECB(2, 20)), new ECBlocks(28, new ECB(6, 15), new ECB(2, 16))),
-        new Version(11, [6, 30, 54], new ECBlocks(20, new ECB(4, 81)), new ECBlocks(30, new ECB(1, 50), new ECB(4, 51)), new ECBlocks(28, new ECB(4, 22), new ECB(4, 23)), new ECBlocks(24, new ECB(3, 12), new ECB(8, 13))),
-        new Version(12, [6, 32, 58], new ECBlocks(24, new ECB(2, 92), new ECB(2, 93)), new ECBlocks(22, new ECB(6, 36), new ECB(2, 37)), new ECBlocks(26, new ECB(4, 20), new ECB(6, 21)), new ECBlocks(28, new ECB(7, 14), new ECB(4, 15))),
-        new Version(13, [6, 34, 62], new ECBlocks(26, new ECB(4, 107)), new ECBlocks(22, new ECB(8, 37), new ECB(1, 38)), new ECBlocks(24, new ECB(8, 20), new ECB(4, 21)), new ECBlocks(22, new ECB(12, 11), new ECB(4, 12))),
-        new Version(14, [6, 26, 46, 66], new ECBlocks(30, new ECB(3, 115), new ECB(1, 116)), new ECBlocks(24, new ECB(4, 40), new ECB(5, 41)), new ECBlocks(20, new ECB(11, 16), new ECB(5, 17)), new ECBlocks(24, new ECB(11, 12), new ECB(5, 13))),
-        new Version(15, [6, 26, 48, 70], new ECBlocks(22, new ECB(5, 87), new ECB(1, 88)), new ECBlocks(24, new ECB(5, 41), new ECB(5, 42)), new ECBlocks(30, new ECB(5, 24), new ECB(7, 25)), new ECBlocks(24, new ECB(11, 12), new ECB(7, 13))),
-        new Version(16, [6, 26, 50, 74], new ECBlocks(24, new ECB(5, 98), new ECB(1, 99)), new ECBlocks(28, new ECB(7, 45), new ECB(3, 46)), new ECBlocks(24, new ECB(15, 19), new ECB(2, 20)), new ECBlocks(30, new ECB(3, 15), new ECB(13, 16))),
-        new Version(17, [6, 30, 54, 78], new ECBlocks(28, new ECB(1, 107), new ECB(5, 108)), new ECBlocks(28, new ECB(10, 46), new ECB(1, 47)), new ECBlocks(28, new ECB(1, 22), new ECB(15, 23)), new ECBlocks(28, new ECB(2, 14), new ECB(17, 15))),
-        new Version(18, [6, 30, 56, 82], new ECBlocks(30, new ECB(5, 120), new ECB(1, 121)), new ECBlocks(26, new ECB(9, 43), new ECB(4, 44)), new ECBlocks(28, new ECB(17, 22), new ECB(1, 23)), new ECBlocks(28, new ECB(2, 14), new ECB(19, 15))),
-        new Version(19, [6, 30, 58, 86], new ECBlocks(28, new ECB(3, 113), new ECB(4, 114)), new ECBlocks(26, new ECB(3, 44), new ECB(11, 45)), new ECBlocks(26, new ECB(17, 21), new ECB(4, 22)), new ECBlocks(26, new ECB(9, 13), new ECB(16, 14))),
-        new Version(20, [6, 34, 62, 90], new ECBlocks(28, new ECB(3, 107), new ECB(5, 108)), new ECBlocks(26, new ECB(3, 41), new ECB(13, 42)), new ECBlocks(30, new ECB(15, 24), new ECB(5, 25)), new ECBlocks(28, new ECB(15, 15), new ECB(10, 16))),
-        new Version(21, [6, 28, 50, 72, 94], new ECBlocks(28, new ECB(4, 116), new ECB(4, 117)), new ECBlocks(26, new ECB(17, 42)), new ECBlocks(28, new ECB(17, 22), new ECB(6, 23)), new ECBlocks(30, new ECB(19, 16), new ECB(6, 17))),
-        new Version(22, [6, 26, 50, 74, 98], new ECBlocks(28, new ECB(2, 111), new ECB(7, 112)), new ECBlocks(28, new ECB(17, 46)), new ECBlocks(30, new ECB(7, 24), new ECB(16, 25)), new ECBlocks(24, new ECB(34, 13))),
-        new Version(23, [6, 30, 54, 78, 102], new ECBlocks(30, new ECB(4, 121), new ECB(5, 122)), new ECBlocks(28, new ECB(4, 47), new ECB(14, 48)), new ECBlocks(30, new ECB(11, 24), new ECB(14, 25)), new ECBlocks(30, new ECB(16, 15), new ECB(14, 16))),
-        new Version(24, [6, 28, 54, 80, 106], new ECBlocks(30, new ECB(6, 117), new ECB(4, 118)), new ECBlocks(28, new ECB(6, 45), new ECB(14, 46)), new ECBlocks(30, new ECB(11, 24), new ECB(16, 25)), new ECBlocks(30, new ECB(30, 16), new ECB(2, 17))),
-        new Version(25, [6, 32, 58, 84, 110], new ECBlocks(26, new ECB(8, 106), new ECB(4, 107)), new ECBlocks(28, new ECB(8, 47), new ECB(13, 48)), new ECBlocks(30, new ECB(7, 24), new ECB(22, 25)), new ECBlocks(30, new ECB(22, 15), new ECB(13, 16))),
-        new Version(26, [6, 30, 58, 86, 114], new ECBlocks(28, new ECB(10, 114), new ECB(2, 115)), new ECBlocks(28, new ECB(19, 46), new ECB(4, 47)), new ECBlocks(28, new ECB(28, 22), new ECB(6, 23)), new ECBlocks(30, new ECB(33, 16), new ECB(4, 17))),
-        new Version(27, [6, 34, 62, 90, 118], new ECBlocks(30, new ECB(8, 122), new ECB(4, 123)), new ECBlocks(28, new ECB(22, 45), new ECB(3, 46)), new ECBlocks(30, new ECB(8, 23), new ECB(26, 24)), new ECBlocks(30, new ECB(12, 15), new ECB(28, 16))),
-        new Version(28, [6, 26, 50, 74, 98, 122], new ECBlocks(30, new ECB(3, 117), new ECB(10, 118)), new ECBlocks(28, new ECB(3, 45), new ECB(23, 46)), new ECBlocks(30, new ECB(4, 24), new ECB(31, 25)), new ECBlocks(30, new ECB(11, 15), new ECB(31, 16))),
-        new Version(29, [6, 30, 54, 78, 102, 126], new ECBlocks(30, new ECB(7, 116), new ECB(7, 117)), new ECBlocks(28, new ECB(21, 45), new ECB(7, 46)), new ECBlocks(30, new ECB(1, 23), new ECB(37, 24)), new ECBlocks(30, new ECB(19, 15), new ECB(26, 16))),
-        new Version(30, [6, 26, 52, 78, 104, 130], new ECBlocks(30, new ECB(5, 115), new ECB(10, 116)), new ECBlocks(28, new ECB(19, 47), new ECB(10, 48)), new ECBlocks(30, new ECB(15, 24), new ECB(25, 25)), new ECBlocks(30, new ECB(23, 15), new ECB(25, 16))),
-        new Version(31, [6, 30, 56, 82, 108, 134], new ECBlocks(30, new ECB(13, 115), new ECB(3, 116)), new ECBlocks(28, new ECB(2, 46), new ECB(29, 47)), new ECBlocks(30, new ECB(42, 24), new ECB(1, 25)), new ECBlocks(30, new ECB(23, 15), new ECB(28, 16))),
-        new Version(32, [6, 34, 60, 86, 112, 138], new ECBlocks(30, new ECB(17, 115)), new ECBlocks(28, new ECB(10, 46), new ECB(23, 47)), new ECBlocks(30, new ECB(10, 24), new ECB(35, 25)), new ECBlocks(30, new ECB(19, 15), new ECB(35, 16))),
-        new Version(33, [6, 30, 58, 86, 114, 142], new ECBlocks(30, new ECB(17, 115), new ECB(1, 116)), new ECBlocks(28, new ECB(14, 46), new ECB(21, 47)), new ECBlocks(30, new ECB(29, 24), new ECB(19, 25)), new ECBlocks(30, new ECB(11, 15), new ECB(46, 16))),
-        new Version(34, [6, 34, 62, 90, 118, 146], new ECBlocks(30, new ECB(13, 115), new ECB(6, 116)), new ECBlocks(28, new ECB(14, 46), new ECB(23, 47)), new ECBlocks(30, new ECB(44, 24), new ECB(7, 25)), new ECBlocks(30, new ECB(59, 16), new ECB(1, 17))),
-        new Version(35, [6, 30, 54, 78, 102, 126, 150], new ECBlocks(30, new ECB(12, 121), new ECB(7, 122)), new ECBlocks(28, new ECB(12, 47), new ECB(26, 48)), new ECBlocks(30, new ECB(39, 24), new ECB(14, 25)), new ECBlocks(30, new ECB(22, 15), new ECB(41, 16))),
-        new Version(36, [6, 24, 50, 76, 102, 128, 154], new ECBlocks(30, new ECB(6, 121), new ECB(14, 122)), new ECBlocks(28, new ECB(6, 47), new ECB(34, 48)), new ECBlocks(30, new ECB(46, 24), new ECB(10, 25)), new ECBlocks(30, new ECB(2, 15), new ECB(64, 16))),
-        new Version(37, [6, 28, 54, 80, 106, 132, 158], new ECBlocks(30, new ECB(17, 122), new ECB(4, 123)), new ECBlocks(28, new ECB(29, 46), new ECB(14, 47)), new ECBlocks(30, new ECB(49, 24), new ECB(10, 25)), new ECBlocks(30, new ECB(24, 15), new ECB(46, 16))),
-        new Version(38, [6, 32, 58, 84, 110, 136, 162], new ECBlocks(30, new ECB(4, 122), new ECB(18, 123)), new ECBlocks(28, new ECB(13, 46), new ECB(32, 47)), new ECBlocks(30, new ECB(48, 24), new ECB(14, 25)), new ECBlocks(30, new ECB(42, 15), new ECB(32, 16))),
-        new Version(39, [6, 26, 54, 82, 110, 138, 166], new ECBlocks(30, new ECB(20, 117), new ECB(4, 118)), new ECBlocks(28, new ECB(40, 47), new ECB(7, 48)), new ECBlocks(30, new ECB(43, 24), new ECB(22, 25)), new ECBlocks(30, new ECB(10, 15), new ECB(67, 16))),
-        new Version(40, [6, 30, 58, 86, 114, 142, 170], new ECBlocks(30, new ECB(19, 118), new ECB(6, 119)), new ECBlocks(28, new ECB(18, 47), new ECB(31, 48)), new ECBlocks(30, new ECB(34, 24), new ECB(34, 25)), new ECBlocks(30, new ECB(20, 15), new ECB(61, 16)))
-    ];
-
-    /**
-     * @module GenericGFPoly
-     */
-    class GenericGFPoly {
-        #field;
-        #coefficients;
-        constructor(field, coefficients) {
-            this.#field = field;
-            const { length } = coefficients;
-            if (length > 1 && coefficients[0] === 0) {
-                // Leading term must be non-zero for anything except the constant polynomial "0"
-                let firstNonZero = 1;
-                while (firstNonZero < length && coefficients[firstNonZero] === 0) {
-                    firstNonZero++;
-                }
-                if (firstNonZero === length) {
-                    this.#coefficients = new Int32Array([0]);
-                }
-                else {
-                    const array = new Int32Array(length - firstNonZero);
-                    array.set(coefficients.subarray(firstNonZero));
-                    this.#coefficients = array;
-                }
-            }
-            else {
-                this.#coefficients = coefficients;
-            }
-        }
-        #assertField(other) {
-            if (this.#field !== other.#field) {
-                throw new Error('polys do not have same field');
-            }
-        }
-        get coefficients() {
-            return this.#coefficients;
-        }
-        getDegree() {
-            return this.#coefficients.length - 1;
-        }
-        isZero() {
-            return this.#coefficients[0] === 0;
-        }
-        getCoefficient(degree) {
-            const coefficients = this.#coefficients;
-            return coefficients[coefficients.length - 1 - degree];
-        }
-        evaluateAt(a) {
-            if (a === 0) {
-                // Just return the x^0 coefficient
-                return this.getCoefficient(0);
-            }
-            let result;
-            const coefficients = this.#coefficients;
-            if (a === 1) {
-                // Just the sum of the coefficients
-                result = 0;
-                for (const coefficient of coefficients) {
-                    result = result ^ coefficient;
-                }
-                return result;
-            }
-            result = coefficients[0];
-            const field = this.#field;
-            for (const coefficient of coefficients) {
-                result = field.multiply(a, result) ^ coefficient;
-            }
-            return result;
-        }
-        addOrSubtract(other) {
-            this.#assertField(other);
-            if (this.isZero()) {
-                return other;
-            }
-            if (other.isZero()) {
-                return this;
-            }
-            let largerCoefficients = other.#coefficients;
-            let largerLength = largerCoefficients.length;
-            let smallerCoefficients = this.#coefficients;
-            let smallerLength = smallerCoefficients.length;
-            if (smallerLength > largerLength) {
-                [smallerLength, largerLength] = [largerLength, smallerLength];
-                [smallerCoefficients, largerCoefficients] = [largerCoefficients, smallerCoefficients];
-            }
-            let sumDiff = new Int32Array(largerLength);
-            const lengthDiff = largerLength - smallerLength;
-            // Copy high-order terms only found in higher-degree polynomial's coefficients
-            sumDiff.set(largerCoefficients.subarray(0, lengthDiff));
-            for (let i = lengthDiff; i < largerLength; i++) {
-                sumDiff[i] = smallerCoefficients[i - lengthDiff] ^ largerCoefficients[i];
-            }
-            return new GenericGFPoly(this.#field, sumDiff);
-        }
-        multiply(other) {
-            const field = this.#field;
-            if (isNumber(other)) {
-                if (other === 0) {
-                    return field.zero;
-                }
-                if (other === 1) {
-                    return this;
-                }
-                const coefficients = this.#coefficients;
-                const { length } = coefficients;
-                const product = new Int32Array(length);
-                for (let i = 0; i < length; i++) {
-                    product[i] = field.multiply(coefficients[i], other);
-                }
-                return new GenericGFPoly(field, product);
-            }
-            this.#assertField(other);
-            if (this.isZero() || other.isZero()) {
-                return field.zero;
-            }
-            const aCoefficients = this.#coefficients;
-            const aLength = aCoefficients.length;
-            const bCoefficients = other.#coefficients;
-            const bLength = bCoefficients.length;
-            const product = new Int32Array(aLength + bLength - 1);
-            for (let i = 0; i < aLength; i++) {
-                const aCoefficient = aCoefficients[i];
-                for (let j = 0; j < bLength; j++) {
-                    product[i + j] = product[i + j] ^ field.multiply(aCoefficient, bCoefficients[j]);
-                }
-            }
-            return new GenericGFPoly(field, product);
-        }
-        multiplyByMonomial(degree, coefficient) {
-            if (degree < 0) {
-                throw new Error('illegal monomial degree less than 0');
-            }
-            const field = this.#field;
-            if (coefficient === 0) {
-                return field.zero;
-            }
-            const coefficients = this.#coefficients;
-            const { length } = coefficients;
-            const product = new Int32Array(length + degree);
-            for (let i = 0; i < length; i++) {
-                product[i] = field.multiply(coefficients[i], coefficient);
-            }
-            return new GenericGFPoly(field, product);
-        }
-        divide(other) {
-            this.#assertField(other);
-            if (other.isZero()) {
-                throw new Error('divide by 0');
-            }
-            const field = this.#field;
-            let quotient = field.zero;
-            let remainder = this;
-            const denominatorLeadingTerm = other.getCoefficient(other.getDegree());
-            const inverseDenominatorLeadingTerm = field.inverse(denominatorLeadingTerm);
-            while (remainder.getDegree() >= other.getDegree() && !remainder.isZero()) {
-                const degreeDifference = remainder.getDegree() - other.getDegree();
-                const scale = field.multiply(remainder.getCoefficient(remainder.getDegree()), inverseDenominatorLeadingTerm);
-                const term = other.multiplyByMonomial(degreeDifference, scale);
-                const iterationQuotient = field.buildMonomial(degreeDifference, scale);
-                quotient = quotient.addOrSubtract(iterationQuotient);
-                remainder = remainder.addOrSubtract(term);
-            }
-            return [quotient, remainder];
-        }
+    get(index) {
+      const offset = this.#offset(index);
+      return (this.#bits[offset] >>> (index & 0x1f)) & 1;
     }
-
-    /**
-     * @module GenericGF
-     */
-    class GenericGF {
-        #size;
-        #one;
-        #zero;
-        #expTable;
-        #logTable;
-        #generatorBase;
-        constructor(primitive, size, generatorBase) {
-            const expTable = new Int32Array(size);
-            let x = 1;
-            for (let i = 0; i < size; i++) {
-                expTable[i] = x;
-                // We're assuming the generator alpha is 2
-                x *= 2;
-                if (x >= size) {
-                    x ^= primitive;
-                    x &= size - 1;
-                }
-            }
-            const logTable = new Int32Array(size);
-            for (let i = 0; i < size - 1; i++) {
-                logTable[expTable[i]] = i;
-            }
-            this.#size = size;
-            this.#expTable = expTable;
-            this.#logTable = logTable;
-            this.#generatorBase = generatorBase;
-            this.#one = new GenericGFPoly(this, new Int32Array([1]));
-            this.#zero = new GenericGFPoly(this, new Int32Array([0]));
-        }
-        get size() {
-            return this.#size;
-        }
-        get one() {
-            return this.#one;
-        }
-        get zero() {
-            return this.#zero;
-        }
-        get generatorBase() {
-            return this.#generatorBase;
-        }
-        buildMonomial(degree, coefficient) {
-            if (degree < 0) {
-                throw new Error('illegal monomial degree less than 0');
-            }
-            if (coefficient === 0) {
-                return this.#zero;
-            }
-            const coefficients = new Int32Array(degree + 1);
-            coefficients[0] = coefficient;
-            return new GenericGFPoly(this, coefficients);
-        }
-        inverse(a) {
-            if (a === 0) {
-                throw new Error('illegal inverse argument equals 0');
-            }
-            return this.#expTable[this.#size - this.#logTable[a] - 1];
-        }
-        multiply(a, b) {
-            if (a === 0 || b === 0) {
-                return 0;
-            }
-            const logTable = this.#logTable;
-            return this.#expTable[(logTable[a] + logTable[b]) % (this.#size - 1)];
-        }
-        log(a) {
-            if (a === 0) {
-                throw new Error("can't take log(0)");
-            }
-            return this.#logTable[a];
-        }
-        exp(a) {
-            return this.#expTable[a];
-        }
+    xor(mask) {
+      const bits = this.#bits;
+      const maskBits = mask.#bits;
+      const length = Math.min(this.#length, mask.#length);
+      for (let i = 0; i < length; i++) {
+        // The last int could be incomplete (i.e. not have 32 bits in
+        // it) but there is no problem since 0 XOR 0 == 0.
+        bits[i] ^= maskBits[i];
+      }
     }
-    const QR_CODE_FIELD_256 = new GenericGF(0x011d, 256, 0);
-
-    /**
-     * @module Encoder
-     */
-    let Encoder$1 = class Encoder {
-        #cachedGenerators;
-        #field = QR_CODE_FIELD_256;
-        constructor() {
-            this.#cachedGenerators = [new GenericGFPoly(this.#field, new Int32Array([1]))];
-        }
-        #buildGenerator(degree) {
-            const cachedGenerators = this.#cachedGenerators;
-            const { length } = cachedGenerators;
-            if (degree >= length) {
-                const field = this.#field;
-                let lastGenerator = cachedGenerators[length - 1];
-                for (let i = length; i <= degree; i++) {
-                    const nextGenerator = lastGenerator.multiply(new GenericGFPoly(field, Int32Array.from([1, field.exp(i - 1 + field.generatorBase)])));
-                    cachedGenerators.push(nextGenerator);
-                    lastGenerator = nextGenerator;
-                }
-            }
-            return cachedGenerators[degree];
-        }
-        encode(received, ecBytes) {
-            if (ecBytes === 0) {
-                throw new Error('no error correction bytes');
-            }
-            const dataBytes = received.length - ecBytes;
-            if (dataBytes <= 0) {
-                throw new Error('no data bytes provided');
-            }
-            const generator = this.#buildGenerator(ecBytes);
-            const infoCoefficients = new Int32Array(dataBytes);
-            infoCoefficients.set(received.subarray(0, dataBytes));
-            let info = new GenericGFPoly(this.#field, infoCoefficients);
-            info = info.multiplyByMonomial(ecBytes, 1);
-            const remainder = info.divide(generator)[1];
-            const coefficients = remainder.coefficients;
-            const numZeroCoefficients = ecBytes - coefficients.length;
-            for (let i = 0; i < numZeroCoefficients; i++) {
-                received[dataBytes + i] = 0;
-            }
-            received.set(coefficients, dataBytes + numZeroCoefficients);
-        }
-    };
-
-    /**
-     * @module encoder
-     */
-    function getNumECAndDataBytes(blockID, numRSBlocks, numDataBytes, numTotalBytes) {
-        if (blockID >= numRSBlocks) {
-            throw new Error('block id too large');
-        }
-        // numRSBlocksInGroup2 = 196 % 5 = 1
-        const numRSBlocksInGroup2 = numTotalBytes % numRSBlocks;
-        // numRSBlocksInGroup1 = 5 - 1 = 4
-        const numRSBlocksInGroup1 = numRSBlocks - numRSBlocksInGroup2;
-        // numTotalBytesInGroup1 = 196 / 5 = 39
-        const numTotalBytesInGroup1 = toUInt32(numTotalBytes / numRSBlocks);
-        // numTotalBytesInGroup2 = 39 + 1 = 40
-        const numTotalBytesInGroup2 = numTotalBytesInGroup1 + 1;
-        // numDataBytesInGroup1 = 66 / 5 = 13
-        const numDataBytesInGroup1 = toUInt32(numDataBytes / numRSBlocks);
-        // numDataBytesInGroup2 = 13 + 1 = 14
-        const numDataBytesInGroup2 = numDataBytesInGroup1 + 1;
-        // numECBytesInGroup1 = 39 - 13 = 26
-        const numECBytesInGroup1 = numTotalBytesInGroup1 - numDataBytesInGroup1;
-        // numECBytesInGroup2 = 40 - 14 = 26
-        const numECBytesInGroup2 = numTotalBytesInGroup2 - numDataBytesInGroup2;
-        // Sanity checks.
-        // 26 = 26
-        if (numECBytesInGroup1 !== numECBytesInGroup2) {
-            throw new Error('ec bytes mismatch');
-        }
-        // 5 = 4 + 1.
-        if (numRSBlocks !== numRSBlocksInGroup1 + numRSBlocksInGroup2) {
-            throw new Error('rs blocks mismatch');
-        }
-        // 196 = (13 + 26) * 4 + (14 + 26) * 1
-        if (numTotalBytes !==
-            (numDataBytesInGroup1 + numECBytesInGroup1) * numRSBlocksInGroup1 +
-                (numDataBytesInGroup2 + numECBytesInGroup2) * numRSBlocksInGroup2) {
-            throw new Error('total bytes mismatch');
-        }
-        if (blockID < numRSBlocksInGroup1) {
-            return [numECBytesInGroup1, numDataBytesInGroup1];
-        }
-        else {
-            return [numECBytesInGroup2, numDataBytesInGroup2];
-        }
-    }
-    function generateECBytes(dataBytes, numECBytesInBlock) {
-        const numDataBytes = dataBytes.length;
-        const ecBytes = new Int8Array(numECBytesInBlock);
-        const toEncode = new Int32Array(numDataBytes + numECBytesInBlock);
-        toEncode.set(dataBytes);
-        new Encoder$1().encode(toEncode, numECBytesInBlock);
-        ecBytes.set(toEncode.subarray(numDataBytes));
-        return ecBytes;
-    }
-    function interleaveWithECBytes(bits, numRSBlocks, numDataBytes, numTotalBytes) {
-        // "bits" must have "getNumDataBytes" bytes of data.
-        if (bits.byteLength !== numDataBytes) {
-            throw new Error('number of bits and data bytes does not match');
-        }
-        // Step 1.  Divide data bytes into blocks and generate error correction bytes for them. We'll
-        // store the divided data bytes blocks and error correction bytes blocks into "blocks".
-        let maxNumEcBytes = 0;
-        let maxNumDataBytes = 0;
-        let dataBytesOffset = 0;
-        // Since, we know the number of reedsolmon blocks, we can initialize the vector with the number.
-        const blocks = [];
-        for (let i = 0; i < numRSBlocks; ++i) {
-            const [numECBytesInBlock, numDataBytesInBlock] = getNumECAndDataBytes(i, numRSBlocks, numDataBytes, numTotalBytes);
-            const dataBytes = new Int8Array(numDataBytesInBlock);
-            bits.toBytes(8 * dataBytesOffset, dataBytes, 0, numDataBytesInBlock);
-            const ecBytes = generateECBytes(dataBytes, numECBytesInBlock);
-            blocks.push(new BlockPair(dataBytes, ecBytes));
-            maxNumDataBytes = Math.max(maxNumDataBytes, numDataBytesInBlock);
-            maxNumEcBytes = Math.max(maxNumEcBytes, ecBytes.length);
-            dataBytesOffset += numDataBytesInBlock;
-        }
-        if (numDataBytes !== dataBytesOffset) {
-            throw new Error('data bytes does not match offset');
-        }
-        const array = new BitArray();
-        // First, place data blocks.
-        for (let i = 0; i < maxNumDataBytes; ++i) {
-            for (const { dataBytes } of blocks) {
-                if (i < dataBytes.length) {
-                    array.append(dataBytes[i], 8);
-                }
-            }
-        }
-        // Then, place error correction blocks.
-        for (let i = 0; i < maxNumEcBytes; ++i) {
-            for (const { ecBytes } of blocks) {
-                if (i < ecBytes.length) {
-                    array.append(ecBytes[i], 8);
-                }
-            }
-        }
-        if (numTotalBytes !== array.byteLength) {
-            // Should be same.
-            throw new Error(`interleaving error: ${numTotalBytes} and ${array.byteLength} differ`);
-        }
-        return array;
-    }
-    function terminateBits(bits, numDataBytes) {
-        const capacity = numDataBytes * 8;
-        if (bits.length > capacity) {
-            throw new Error(`data bits cannot fit in the QRCode ${bits.length} > ${capacity}`);
-        }
-        // Append Mode.TERMINATE if there is enough space (value is 0000)
-        for (let i = 0; i < 4 && bits.length < capacity; i++) {
-            bits.append(0);
-        }
-        // Append termination bits. See 8.4.8 of JISX0510:2004 (p.24) for details.
-        // If the last byte isn't 8-bit aligned, we'll add padding bits.
-        const numBitsInLastByte = bits.length & 0x07;
-        if (numBitsInLastByte > 0) {
-            for (let i = numBitsInLastByte; i < 8; i++) {
-                bits.append(0);
-            }
-        }
-        // If we have more space, we'll fill the space with padding patterns defined in 8.4.9 (p.24).
-        const numPaddingBytes = numDataBytes - bits.byteLength;
-        for (let i = 0; i < numPaddingBytes; i++) {
-            bits.append((i & 0x01) === 0 ? 0xec : 0x11, 8);
-        }
-        if (bits.length !== capacity) {
-            throw new Error('bits size does not equal capacity');
-        }
-    }
-    function isByteMode(segment) {
-        return segment.mode === Mode.BYTE;
-    }
-    function appendModeInfo(bits, mode) {
-        bits.append(mode.bits, 4);
-    }
-    function appendECI(bits, mode, charset) {
-        appendModeInfo(bits, mode);
-        bits.append(charset.values[0], 8);
-    }
-    function appendLengthInfo(bits, version, mode, numLetters) {
-        const numBits = mode.getCharacterCountBits(version);
-        if (numLetters >= 1 << numBits) {
-            throw new Error(`${numLetters} is bigger than ${(1 << numBits) - 1}`);
-        }
-        bits.append(numLetters, numBits);
-    }
-    function willFit(numInputBits, version, ecLevel) {
-        // In the following comments, we use numbers of Version 7-H.
-        // numBytes = 196
-        const numBytes = version.totalCodewords;
-        const ecBlocks = version.getECBlocksForECLevel(ecLevel);
-        // numECBytes = 130
-        const numECBytes = ecBlocks.totalECCodewords;
-        // numDataBytes = 196 - 130 = 66
-        const numDataBytes = numBytes - numECBytes;
-        const totalInputBytes = (numInputBits + 7) / 8;
-        return numDataBytes >= totalInputBytes;
-    }
-    function chooseVersion(numInputBits, ecLevel) {
-        for (const version of VERSIONS) {
-            if (willFit(numInputBits, version, ecLevel)) {
-                return version;
-            }
-        }
-        throw new Error('data too big');
-    }
-    function calculateBitsNeeded(segmentBlocks, version) {
-        let bitsNeeded = 0;
-        for (const { mode, headerBits, dataBits } of segmentBlocks) {
-            bitsNeeded += headerBits.length + mode.getCharacterCountBits(version) + dataBits.length;
-        }
-        return bitsNeeded;
-    }
-    function recommendVersion(segmentBlocks, ecLevel) {
-        // Hard part: need to know version to know how many bits length takes. But need to know how many
-        // bits it takes to know version. First we take a guess at version by assuming version will be
-        // the minimum, 1:
-        const provisionalBitsNeeded = calculateBitsNeeded(segmentBlocks, VERSIONS[1]);
-        const provisionalVersion = chooseVersion(provisionalBitsNeeded, ecLevel);
-        // Use that guess to calculate the right version. I am still not sure this works in 100% of cases.
-        const bitsNeeded = calculateBitsNeeded(segmentBlocks, provisionalVersion);
-        return chooseVersion(bitsNeeded, ecLevel);
-    }
-
-    /**
-     * @module OutputStream
-     * @author nuintun
-     * @author Kazuhiko Arase
-     */
-    class OutputStream {
-        writeBytes(bytes, offset = 0, length = bytes.length) {
-            for (let i = 0; i < length; i++) {
-                this.writeByte(bytes[i + offset]);
-            }
-        }
-        flush() {
-            // The flush method
-        }
-        close() {
-            this.flush();
-        }
-    }
-
-    /**
-     * @module ByteArrayOutputStream
-     * @author nuintun
-     * @author Kazuhiko Arase
-     */
-    class ByteArrayOutputStream extends OutputStream {
-        bytes = [];
-        writeByte(byte) {
-            this.bytes.push(byte);
-        }
-        writeInt16(byte) {
-            this.bytes.push(byte, byte >>> 8);
-        }
-        toByteArray() {
-            return this.bytes;
-        }
-    }
-
-    /**
-     * @module Base64EncodeOutputStream
-     * @author nuintun
-     * @author Kazuhiko Arase
-     */
-    function encode$1(ch) {
-        if (ch >= 0) {
-            if (ch < 26) {
-                // A
-                return 0x41 + ch;
-            }
-            else if (ch < 52) {
-                // a
-                return 0x61 + (ch - 26);
-            }
-            else if (ch < 62) {
-                // 0
-                return 0x30 + (ch - 52);
-            }
-            else if (ch === 62) {
-                // +
-                return 0x2b;
-            }
-            else if (ch === 63) {
-                // /
-                return 0x2f;
-            }
-        }
-        throw new Error(`illegal char: ${String.fromCharCode(ch)}`);
-    }
-    class Base64EncodeOutputStream extends OutputStream {
-        buffer = 0;
-        length = 0;
-        bufLength = 0;
-        stream;
-        constructor(stream) {
-            super();
-            this.stream = stream;
-        }
-        writeByte(byte) {
-            this.buffer = (this.buffer << 8) | (byte & 0xff);
-            this.bufLength += 8;
-            this.length++;
-            while (this.bufLength >= 6) {
-                this.writeEncoded(this.buffer >>> (this.bufLength - 6));
-                this.bufLength -= 6;
-            }
-        }
-        /**
-         * @override
-         */
-        flush() {
-            if (this.bufLength > 0) {
-                this.writeEncoded(this.buffer << (6 - this.bufLength));
-                this.buffer = 0;
-                this.bufLength = 0;
-            }
-            const { stream } = this;
-            if (this.length % 3 != 0) {
-                // Padding
-                const pad = 3 - (this.length % 3);
-                for (let i = 0; i < pad; i++) {
-                    // =
-                    stream.writeByte(0x3d);
-                }
-            }
-        }
-        writeEncoded(byte) {
-            this.stream.writeByte(encode$1(byte & 0x3f));
-        }
-    }
-
-    /**
-     * @module GIF Image (B/W)
-     * @author nuintun
-     * @author Kazuhiko Arase
-     */
-    function encodeToBase64(data) {
-        const output = new ByteArrayOutputStream();
-        const stream = new Base64EncodeOutputStream(output);
-        stream.writeBytes(data);
-        stream.close();
-        output.close();
-        return output.toByteArray();
-    }
-    class LZWTable {
-        size = 0;
-        map = {};
-        add(key) {
-            if (!this.contains(key)) {
-                this.map[key] = this.size++;
-            }
-        }
-        getSize() {
-            return this.size;
-        }
-        indexOf(key) {
-            return this.map[key];
-        }
-        contains(key) {
-            return this.map[key] >= 0;
-        }
-    }
-    class BitOutputStream {
-        output;
-        bitLength = 0;
-        bitBuffer = 0;
-        constructor(output) {
-            this.output = output;
-        }
-        write(data, length) {
-            if (data >>> length !== 0) {
-                throw new Error('length overflow');
-            }
-            const { output } = this;
-            while (this.bitLength + length >= 8) {
-                output.writeByte(0xff & ((data << this.bitLength) | this.bitBuffer));
-                length -= 8 - this.bitLength;
-                data >>>= 8 - this.bitLength;
-                this.bitBuffer = 0;
-                this.bitLength = 0;
-            }
-            this.bitBuffer = (data << this.bitLength) | this.bitBuffer;
-            this.bitLength = this.bitLength + length;
-        }
-        flush() {
-            const { output } = this;
-            if (this.bitLength > 0) {
-                output.writeByte(this.bitBuffer);
-            }
-            output.flush();
-        }
-        close() {
-            this.flush();
-            this.output.close();
-        }
-    }
-    class GIFImage {
-        width;
-        height;
-        pixels;
-        constructor(width, height) {
-            this.pixels = [];
-            this.width = width;
-            this.height = height;
-            const size = width * height;
-            for (let i = 0; i < size; i++) {
-                this.pixels[i] = 0;
-            }
-        }
-        getLZWRaster(lzwMinCodeSize) {
-            // Setup LZWTable
-            const table = new LZWTable();
-            const { fromCharCode } = String;
-            const clearCode = 1 << lzwMinCodeSize;
-            const endCode = (1 << lzwMinCodeSize) + 1;
-            for (let i = 0; i < clearCode; i++) {
-                table.add(fromCharCode(i));
-            }
-            table.add(fromCharCode(clearCode));
-            table.add(fromCharCode(endCode));
-            let bitLength = lzwMinCodeSize + 1;
-            const byteOutput = new ByteArrayOutputStream();
-            const bitOutput = new BitOutputStream(byteOutput);
-            try {
-                const { pixels } = this;
-                const { length } = pixels;
-                const { fromCharCode } = String;
-                // Clear code
-                bitOutput.write(clearCode, bitLength);
-                let dataIndex = 0;
-                let words = fromCharCode(pixels[dataIndex++]);
-                while (dataIndex < length) {
-                    const char = fromCharCode(pixels[dataIndex++]);
-                    if (table.contains(words + char)) {
-                        words += char;
-                    }
-                    else {
-                        bitOutput.write(table.indexOf(words), bitLength);
-                        if (table.getSize() < 0xfff) {
-                            if (table.getSize() === 1 << bitLength) {
-                                bitLength++;
-                            }
-                            table.add(words + char);
-                        }
-                        words = char;
-                    }
-                }
-                bitOutput.write(table.indexOf(words), bitLength);
-                // End code
-                bitOutput.write(endCode, bitLength);
-            }
-            finally {
-                bitOutput.close();
-            }
-            return byteOutput.toByteArray();
-        }
-        /**
-         * @function set
-         * @description set pixel of point
-         * @param x x point
-         * @param y y point
-         * @param color pixel color 0: Black 1: White
-         */
-        set(x, y, color) {
-            this.pixels[y * this.width + x] = color;
-        }
-        write(output) {
-            const { width, height } = this;
-            // GIF Signature
-            output.writeByte(0x47); // G
-            output.writeByte(0x49); // I
-            output.writeByte(0x46); // F
-            output.writeByte(0x38); // 8
-            output.writeByte(0x37); // 7
-            output.writeByte(0x61); // a
-            // Screen Descriptor
-            output.writeInt16(width);
-            output.writeInt16(height);
-            output.writeByte(0x80); // 2bit
-            output.writeByte(0);
-            output.writeByte(0);
-            // Global Color Map
-            // Black
-            output.writeByte(0x00);
-            output.writeByte(0x00);
-            output.writeByte(0x00);
-            // White
-            output.writeByte(0xff);
-            output.writeByte(0xff);
-            output.writeByte(0xff);
-            // Image Descriptor
-            output.writeByte(0x2c); // ,
-            output.writeInt16(0);
-            output.writeInt16(0);
-            output.writeInt16(width);
-            output.writeInt16(height);
-            output.writeByte(0);
-            // Local Color Map
-            // Raster Data
-            const lzwMinCodeSize = 2;
-            const raster = this.getLZWRaster(lzwMinCodeSize);
-            const raLength = raster.length;
-            output.writeByte(lzwMinCodeSize);
-            let offset = 0;
-            while (raLength - offset > 255) {
-                output.writeByte(255);
-                output.writeBytes(raster, offset, 255);
-                offset += 255;
-            }
-            const length = raLength - offset;
-            output.writeByte(length);
-            output.writeBytes(raster, offset, length);
-            output.writeByte(0x00);
-            // GIF Terminator
-            output.writeByte(0x3b); // ;
-        }
-        toDataURL() {
-            const output = new ByteArrayOutputStream();
-            this.write(output);
-            const bytes = encodeToBase64(output.toByteArray());
-            output.close();
-            const { length } = bytes;
-            const { fromCharCode } = String;
-            let url = 'data:image/gif;base64,';
-            for (let i = 0; i < length; i++) {
-                url += fromCharCode(bytes[i]);
-            }
-            return url;
-        }
-    }
-
-    /**
-     * @module QRCode
-     */
-    class QRCode {
-        #matrix;
-        constructor(matrix) {
-            this.#matrix = matrix;
-        }
-        /**
-         * @public
-         * @method toDataURL
-         * @param {number} moduleSize
-         * @param {number} margin
-         * @returns {string}
-         */
-        toDataURL(moduleSize = 2, margin = moduleSize * 4) {
-            moduleSize = Math.max(1, moduleSize >> 0);
-            margin = Math.max(0, margin >> 0);
-            const matrix = this.#matrix;
-            const matrixSize = matrix.width;
-            const size = moduleSize * matrixSize + margin * 2;
-            const min = margin;
-            const max = size - margin;
-            const gif = new GIFImage(size, size);
-            for (let i = 0; i < size; i++) {
-                for (let j = 0; j < size; j++) {
-                    if (min <= j && j < max && min <= i && i < max) {
-                        const x = ((j - min) / moduleSize) >> 0;
-                        const y = ((i - min) / moduleSize) >> 0;
-                        gif.set(j, i, matrix.get(x, y) ? 0 : 1);
-                    }
-                    else {
-                        gif.set(j, i, 1);
-                    }
-                }
-            }
-            return gif.toDataURL();
-        }
-    }
-
-    /**
-     * @module ByteMatrix
-     */
-    class ByteMatrix {
-        #width;
-        #height;
-        #bytes;
-        constructor(width, height = width) {
-            this.#width = width;
-            this.#height = height;
-            this.#bytes = new Int8Array(width * height);
-        }
-        get width() {
-            return this.#width;
-        }
-        get height() {
-            return this.#height;
-        }
-        set(x, y, value) {
-            this.#bytes[y * this.#width + x] = value;
-        }
-        get(x, y) {
-            return this.#bytes[y * this.#width + x];
-        }
-        clear(value) {
-            this.#bytes.fill(value);
-        }
-    }
-
-    /**
-     * @module ECLevel
-     */
-    class ECLevel {
-        #bits;
-        #level;
-        // L = ~7% correction
-        static L = new ECLevel(0, 0x01);
-        // L = ~15% correction
-        static M = new ECLevel(1, 0x00);
-        // L = ~25% correction
-        static Q = new ECLevel(2, 0x03);
-        // L = ~30% correction
-        static H = new ECLevel(3, 0x02);
-        constructor(level, bits) {
-            this.#bits = bits;
-            this.#level = level;
-        }
-        get bits() {
-            return this.#bits;
-        }
-        get level() {
-            return this.#level;
-        }
-    }
-
-    /**
-     * @module matrix
-     */
-    const TYPE_INFO_POLY = 0x537;
-    // 1 1111 0010 0101
-    const VERSION_INFO_POLY = 0x1f25;
-    const TYPE_INFO_MASK_PATTERN = 0x5412;
-    const TYPE_INFO_COORDINATES = [
-        [8, 0],
-        [8, 1],
-        [8, 2],
-        [8, 3],
-        [8, 4],
-        [8, 5],
-        [8, 7],
-        [8, 8],
-        [7, 8],
-        [5, 8],
-        [4, 8],
-        [3, 8],
-        [2, 8],
-        [1, 8],
-        [0, 8]
-    ];
-    const POSITION_DETECTION_PATTERN = [
-        [1, 1, 1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 1, 1, 1, 0, 1],
-        [1, 0, 1, 1, 1, 0, 1],
-        [1, 0, 1, 1, 1, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1, 1]
-    ];
-    const POSITION_ADJUSTMENT_PATTERN = [
-        [1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 1],
-        [1, 0, 1, 0, 1],
-        [1, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1]
-    ];
-    // From Appendix E. Table 1, JIS0510X:2004 (p 71).
-    const POSITION_ADJUSTMENT_PATTERN_COORDINATE_TABLE = [
-        [],
-        [6, 18],
-        [6, 22],
-        [6, 26],
-        [6, 30],
-        [6, 34],
-        [6, 22, 38],
-        [6, 24, 42],
-        [6, 26, 46],
-        [6, 28, 50],
-        [6, 30, 54],
-        [6, 32, 58],
-        [6, 34, 62],
-        [6, 26, 46, 66],
-        [6, 26, 48, 70],
-        [6, 26, 50, 74],
-        [6, 30, 54, 78],
-        [6, 30, 56, 82],
-        [6, 30, 58, 86],
-        [6, 34, 62, 90],
-        [6, 28, 50, 72, 94],
-        [6, 26, 50, 74, 98],
-        [6, 30, 54, 78, 102],
-        [6, 28, 54, 80, 106],
-        [6, 32, 58, 84, 110],
-        [6, 30, 58, 86, 114],
-        [6, 34, 62, 90, 118],
-        [6, 26, 50, 74, 98, 122],
-        [6, 30, 54, 78, 102, 126],
-        [6, 26, 52, 78, 104, 130],
-        [6, 30, 56, 82, 108, 134],
-        [6, 34, 60, 86, 112, 138],
-        [6, 30, 58, 86, 114, 142],
-        [6, 34, 62, 90, 118, 146],
-        [6, 30, 54, 78, 102, 126, 150],
-        [6, 24, 50, 76, 102, 128, 154],
-        [6, 28, 54, 80, 106, 132, 158],
-        [6, 32, 58, 84, 110, 136, 162],
-        [6, 26, 54, 82, 110, 138, 166],
-        [6, 30, 58, 86, 114, 142, 170] // Version 40
-    ];
-    // Is empty point.
-    function isEmpty(matrix, x, y) {
-        return matrix.get(x, y) === -1;
-    }
-    function embedPositionDetectionPattern(matrix, x, y) {
-        for (let i = 0; i < 7; i++) {
-            const pattern = POSITION_DETECTION_PATTERN[i];
-            for (let j = 0; j < 7; j++) {
-                matrix.set(x + j, y + i, pattern[j]);
-            }
-        }
-    }
-    function embedHorizontalSeparationPattern(matrix, x, y) {
-        for (let j = 0; j < 8; j++) {
-            matrix.set(x + j, y, 0);
-        }
-    }
-    function embedVerticalSeparationPattern(matrix, x, y) {
-        for (let i = 0; i < 7; i++) {
-            matrix.set(x, y + i, 0);
-        }
-    }
-    function embedPositionAdjustmentPattern(matrix, x, y) {
-        for (let i = 0; i < 5; i++) {
-            const pattern = POSITION_ADJUSTMENT_PATTERN[i];
-            for (let j = 0; j < 5; j++) {
-                matrix.set(x + j, y + i, pattern[j]);
-            }
-        }
-    }
-    // Embed the lonely dark dot at left bottom corner. JISX0510:2004 (p.46)
-    function embedDarkDotAtLeftBottomCorner(matrix) {
-        matrix.set(8, matrix.height - 8, 1);
-    }
-    // Embed position detection patterns and surrounding vertical/horizontal separators.
-    function embedPositionDetectionPatternsAndSeparators(matrix) {
-        // Matrix width
-        const { width, height } = matrix;
-        // Embed three big squares at corners.
-        const pdpWidth = POSITION_DETECTION_PATTERN[0].length;
-        // Left top corner.
-        embedPositionDetectionPattern(matrix, 0, 0);
-        // Right top corner.
-        embedPositionDetectionPattern(matrix, width - pdpWidth, 0);
-        // Left bottom corner.
-        embedPositionDetectionPattern(matrix, 0, width - pdpWidth);
-        // Embed horizontal separation patterns around the squares.
-        const hspWidth = 8;
-        // Left top corner.
-        embedHorizontalSeparationPattern(matrix, 0, hspWidth - 1);
-        // Right top corner.
-        embedHorizontalSeparationPattern(matrix, width - hspWidth, hspWidth - 1);
-        // Left bottom corner.
-        embedHorizontalSeparationPattern(matrix, 0, width - hspWidth);
-        // Embed vertical separation patterns around the squares.
-        const vspHeight = 7;
-        // Left top corner.
-        embedVerticalSeparationPattern(matrix, vspHeight, 0);
-        // Right top corner.
-        embedVerticalSeparationPattern(matrix, height - vspHeight - 1, 0);
-        // Left bottom corner.
-        embedVerticalSeparationPattern(matrix, vspHeight, height - vspHeight);
-    }
-    function embedTimingPatterns(matrix) {
-        const width = matrix.width - 8;
-        const height = matrix.height - 8;
-        // -8 is for skipping position detection patterns (7: size)
-        // separation patterns (1: size). Thus, 8 = 7 + 1.
-        for (let i = 8; i < height; i++) {
-            const bit = (i + 1) % 2;
-            // Vertical line.
-            if (isEmpty(matrix, 6, i)) {
-                matrix.set(6, i, bit);
-            }
-        }
-        // -8 is for skipping position detection patterns (7: size)
-        // separation patterns (1: size). Thus, 8 = 7 + 1.
-        for (let j = 8; j < width; j++) {
-            const bit = (j + 1) % 2;
-            // Horizontal line.
-            if (isEmpty(matrix, j, 6)) {
-                matrix.set(j, 6, bit);
-            }
-        }
-    }
-    // Embed position adjustment patterns if need be.
-    function embedPositionAdjustmentPatterns(matrix, { version }) {
-        if (version >= 2) {
-            const coordinates = POSITION_ADJUSTMENT_PATTERN_COORDINATE_TABLE[version - 1];
-            const { length } = coordinates;
-            for (let i = 0; i !== length; i++) {
-                const y = coordinates[i];
-                for (let j = 0; j !== length; j++) {
-                    const x = coordinates[j];
-                    if (isEmpty(matrix, x, y)) {
-                        // If the cell is unset, we embed the position adjustment pattern here.
-                        // -2 is necessary since the x/y coordinates point to the center of the pattern, not the
-                        // left top corner.
-                        embedPositionAdjustmentPattern(matrix, x - 2, y - 2);
-                    }
-                }
-            }
-        }
-    }
-    // Embed basic patterns. On success, modify the matrix.
-    // The basic patterns are:
-    // - Position detection patterns
-    // - Timing patterns
-    // - Dark dot at the left bottom corner
-    // - Position adjustment patterns, if need be
-    function embedBasicPatterns(matrix, version) {
-        // Let's get started with embedding big squares at corners.
-        embedPositionDetectionPatternsAndSeparators(matrix);
-        // Then, embed the dark dot at the left bottom corner.
-        embedDarkDotAtLeftBottomCorner(matrix);
-        // Position adjustment patterns appear if version >= 2.
-        embedPositionAdjustmentPatterns(matrix, version);
-        // Timing patterns should be embedded after position adj. patterns.
-        embedTimingPatterns(matrix);
-    }
-    // Return the position of the most significant bit set (to one) in the "value". The most
-    // significant bit is position 32. If there is no bit set, return 0. Examples:
-    // - findMSBSet(0) => 0
-    // - findMSBSet(1) => 1
-    // - findMSBSet(255) => 8
-    function findMSBSet(value) {
-        return 32 - Math.clz32(value);
-    }
-    // Calculate BCH (Bose-Chaudhuri-Hocquenghem) code for "value" using polynomial "poly". The BCH
-    // code is used for encoding type information and version information.
-    // Example: Calculation of version information of 7.
-    // f(x) is created from 7.
-    //   - 7 = 000111 in 6 bits
-    //   - f(x) = x^2 + x^1 + x^0
-    // g(x) is given by the standard (p. 67)
-    //   - g(x) = x^12 + x^11 + x^10 + x^9 + x^8 + x^5 + x^2 + 1
-    // Multiply f(x) by x^(18 - 6)
-    //   - f'(x) = f(x) * x^(18 - 6)
-    //   - f'(x) = x^14 + x^13 + x^12
-    // Calculate the remainder of f'(x) / g(x)
-    //         x^2
-    //         __________________________________________________
-    //   g(x) )x^14 + x^13 + x^12
-    //         x^14 + x^13 + x^12 + x^11 + x^10 + x^7 + x^4 + x^2
-    //         --------------------------------------------------
-    //                              x^11 + x^10 + x^7 + x^4 + x^2
-    //
-    // The remainder is x^11 + x^10 + x^7 + x^4 + x^2
-    // Encode it in binary: 110010010100
-    // The return value is 0xc94 (1100 1001 0100)
-    //
-    // Since all coefficients in the polynomials are 1 or 0, we can do the calculation by bit
-    // operations. We don't care if coefficients are positive or negative.
-    function calculateBCHCode(value, poly) {
-        if (poly === 0) {
-            throw new Error('0 polynomial');
-        }
-        // If poly is "1 1111 0010 0101" (version info poly), msbSetInPoly is 13. We'll subtract 1
-        // from 13 to make it 12.
-        const msbSetInPoly = findMSBSet(poly);
-        value <<= msbSetInPoly - 1;
-        // Do the division business using exclusive-or operations.
-        while (findMSBSet(value) >= msbSetInPoly) {
-            value ^= poly << (findMSBSet(value) - msbSetInPoly);
-        }
-        // Now the "value" is the remainder (i.e. the BCH code)
-        return value;
-    }
-    // Make bit vector of type information. On success, store the result in "bits".
-    // Encode error correction level and mask pattern. See 8.9 of
-    // JISX0510:2004 (p.45) for details.
-    function makeTypeInfoBits(bits, ecLevel, mask) {
-        const typeInfo = (ecLevel.bits << 3) | mask;
-        bits.append(typeInfo, 5);
-        const bchCode = calculateBCHCode(typeInfo, TYPE_INFO_POLY);
-        bits.append(bchCode, 10);
-        const maskBits = new BitArray();
-        maskBits.append(TYPE_INFO_MASK_PATTERN, 15);
-        bits.xor(maskBits);
-    }
-    // Embed type information. On success, modify the matrix.
-    function embedTypeInfo(matrix, ecLevel, mask) {
-        const typeInfoBits = new BitArray();
-        makeTypeInfoBits(typeInfoBits, ecLevel, mask);
-        const { length } = typeInfoBits;
-        const { width, height } = matrix;
+    append(value, length = 1) {
+      let index = this.#length;
+      if (value instanceof BitArray) {
+        length = value.#length;
+        this.#alloc(index + length);
         for (let i = 0; i < length; i++) {
-            // Type info bits at the left top corner. See 8.9 of JISX0510:2004 (p.46).
-            const [x1, y1] = TYPE_INFO_COORDINATES[i];
-            // Place bits in LSB to MSB order. LSB (least significant bit) is the last value in
-            // "typeInfoBits".
-            const bit = typeInfoBits.get(length - 1 - i);
-            matrix.set(x1, y1, bit);
-            let x2;
-            let y2;
-            if (i < 8) {
-                // Right top corner.
-                x2 = width - i - 1;
-                y2 = 8;
-            }
-            else {
-                // Left bottom corner.
-                x2 = 8;
-                y2 = height - 7 + (i - 8);
-            }
-            matrix.set(x2, y2, bit);
+          if (value.get(i)) {
+            this.set(index);
+          }
+          index++;
         }
-    }
-    // Make bit vector of version information. On success, store the result in "bits".
-    // See 8.10 of JISX0510:2004 (p.45) for details.
-    function makeVersionInfoBits(bits, version) {
-        bits.append(version, 6);
-        const bchCode = calculateBCHCode(version, VERSION_INFO_POLY);
-        bits.append(bchCode, 12);
-    }
-    // Embed version information if need be. On success, modify the matrix.
-    // See 8.10 of JISX0510:2004 (p.47) for how to embed version information.
-    function embedVersionInfo(matrix, { version }) {
-        if (version >= 7) {
-            const versionInfoBits = new BitArray();
-            makeVersionInfoBits(versionInfoBits, version);
-            // It will decrease from 17 to 0.
-            let bitIndex = 6 * 3 - 1;
-            const { height } = matrix;
-            for (let i = 0; i < 6; ++i) {
-                for (let j = 0; j < 3; ++j) {
-                    // Place bits in LSB (least significant bit) to MSB order.
-                    const bit = versionInfoBits.get(bitIndex--);
-                    // Left bottom corner.
-                    matrix.set(i, height - 11 + j, bit);
-                    // Right bottom corner.
-                    matrix.set(height - 11 + j, i, bit);
-                }
-            }
+      } else {
+        this.#alloc(index + length);
+        for (let i = length - 1; i >= 0; i--) {
+          if ((value >>> i) & 1) {
+            this.set(index);
+          }
+          index++;
         }
+      }
     }
-    // Embed "dataBits" using "getMaskPattern". On success, modify the matrix.
-    // See 8.7 of JISX0510:2004 (p.38) for how to embed data bits.
-    function embedDataBits(matrix, dataBits, mask) {
-        const { length } = dataBits;
-        const { width, height } = matrix;
-        let bitIndex = 0;
-        let direction = -1;
-        // Start from the right bottom cell.
-        let x = width - 1;
-        let y = height - 1;
-        while (x > 0) {
-            // Skip the vertical timing pattern.
-            if (x === 6) {
-                x -= 1;
-            }
-            while (y >= 0 && y < height) {
-                for (let i = 0; i < 2; i++) {
-                    const offsetX = x - i;
-                    // Skip the cell if it's not empty.
-                    if (!isEmpty(matrix, offsetX, y)) {
-                        continue;
-                    }
-                    let bit;
-                    if (bitIndex < length) {
-                        bit = dataBits.get(bitIndex++);
-                    }
-                    else {
-                        // Padding bit. If there is no bit left, we'll fill the left cells with 0, as described
-                        // in 8.4.9 of JISX0510:2004 (p. 24).
-                        bit = 0;
-                    }
-                    // Apply mask.
-                    bit ^= getDataMaskBit(mask, x, y);
-                    matrix.set(offsetX, y, bit);
-                }
-                y += direction;
-            }
-            // Reverse the direction.
-            direction = -direction;
-            // Update y.
-            y += direction;
-            // Move to the left.
-            x -= 2;
+    toBytes(bitOffset, array, offset, byteLength) {
+      for (let i = 0; i < byteLength; i++) {
+        let byte = 0;
+        for (let j = 0; j < 8; j++) {
+          if (this.get(bitOffset)) {
+            byte |= 1 << (7 - j);
+          }
+          bitOffset++;
         }
+        array[offset + i] = byte;
+      }
     }
-    // Build 2D matrix of QR Code from "dataBits" with "ecLevel", "version" and "getMaskPattern". On
-    // success, store the result in "matrix".
-    function buildMatrix(matrix, dataBits, version, ecLevel, mask) {
-        // Clear matrix
-        matrix.clear(-1);
-        // Embed basic patterns
-        embedBasicPatterns(matrix, version);
-        // Type information appear with any version.
-        embedTypeInfo(matrix, ecLevel, mask);
-        // Version info appear if version >= 7.
-        embedVersionInfo(matrix, version);
-        // Data should be embedded at end.
-        embedDataBits(matrix, dataBits, mask);
+    clear() {
+      this.#bits.fill(0);
     }
+  }
 
-    /**
-     * @module mask
-     */
-    // Penalty weights from section 6.8.2.1
-    const N1 = 3;
-    const N2 = 3;
-    const N3 = 40;
-    const N4 = 10;
-    // Is dark point.
-    function isDark(matrix, x, y) {
-        return matrix.get(x, y) === 1;
+  /**
+   * @module BlockPair
+   */
+  class BlockPair {
+    #ecBytes;
+    #dataBytes;
+    constructor(dataBytes, ecBytes) {
+      this.#ecBytes = ecBytes;
+      this.#dataBytes = dataBytes;
     }
-    // Helper function for applyMaskPenaltyRule1. We need this for doing this calculation in both
-    // vertical and horizontal orders respectively.
-    function applyMaskPenaltyRule1Internal(matrix, isHorizontal) {
-        let penalty = 0;
-        let { width, height } = matrix;
-        width = isHorizontal ? width : height;
-        height = isHorizontal ? height : width;
-        for (let y = 0; y < height; y++) {
-            let prevBit = false;
-            let numSameBitCells = 0;
-            for (let x = 0; x < width; x++) {
-                const bit = isHorizontal ? isDark(matrix, x, y) : isDark(matrix, y, x);
-                if (bit === prevBit) {
-                    numSameBitCells++;
-                }
-                else {
-                    if (numSameBitCells >= 5) {
-                        penalty += N1 + (numSameBitCells - 5);
-                    }
-                    // set prev bit
-                    prevBit = bit;
-                    // include the cell itself
-                    numSameBitCells = 1;
-                }
-            }
-            if (numSameBitCells >= 5) {
-                penalty += N1 + (numSameBitCells - 5);
-            }
-        }
-        return penalty;
+    get ecBytes() {
+      return this.#ecBytes;
     }
-    // Apply mask penalty rule 1 and return the penalty. Find repetitive cells with the same color and
-    // give penalty to them. Example: 00000 or 11111.
-    function applyMaskPenaltyRule1(matrix) {
-        return applyMaskPenaltyRule1Internal(matrix, true) + applyMaskPenaltyRule1Internal(matrix, false);
+    get dataBytes() {
+      return this.#dataBytes;
     }
-    // Apply mask penalty rule 2 and return the penalty. Find 2x2 blocks with the same color and give
-    // penalty to them. This is actually equivalent to the spec's rule, which is to find MxN blocks and give a
-    // penalty proportional to (M-1)x(N-1), because this is the number of 2x2 blocks inside such a block.
-    function applyMaskPenaltyRule2(matrix) {
-        let penalty = 0;
-        const width = matrix.width - 1;
-        const height = matrix.height - 1;
-        for (let y = 0; y < height; y++) {
-            for (let x = 0; x < width; x++) {
-                const value = isDark(matrix, x, y);
-                if (
-                // Find 2x2 blocks with the same color
-                value === isDark(matrix, x + 1, y) &&
-                    value === isDark(matrix, x, y + 1) &&
-                    value === isDark(matrix, x + 1, y + 1)) {
-                    penalty += N2;
-                }
-            }
-        }
-        return penalty;
-    }
-    // Is is four white, check on horizontal and vertical.
-    function isFourWhite(matrix, offset, from, to, isHorizontal) {
-        from = Math.max(from, 0);
-        to = Math.min(to, isHorizontal ? matrix.width : matrix.height);
-        for (let i = from; i < to; i++) {
-            const value = isHorizontal ? isDark(matrix, i, offset) : isDark(matrix, offset, i);
-            if (value) {
-                return false;
-            }
-        }
-        return true;
-    }
-    // Apply mask penalty rule 3 and return the penalty. Find consecutive runs of 1:1:3:1:1:4
-    // starting with black, or 4:1:1:3:1:1 starting with white, and give penalty to them. If we
-    // find patterns like 000010111010000, we give penalty once.
-    function applyMaskPenaltyRule3(matrix) {
-        let numPenalties = 0;
-        const { width, height } = matrix;
-        for (let y = 0; y < height; y++) {
-            for (let x = 0; x < width; x++) {
-                if (
-                // Find consecutive runs of 1:1:3:1:1:4 or 4:1:1:3:1:1, patterns like 000010111010000
-                x + 6 < width &&
-                    isDark(matrix, x, y) &&
-                    !isDark(matrix, x + 1, y) &&
-                    isDark(matrix, x + 2, y) &&
-                    isDark(matrix, x + 3, y) &&
-                    isDark(matrix, x + 4, y) &&
-                    !isDark(matrix, x + 5, y) &&
-                    isDark(matrix, x + 6, y) &&
-                    (isFourWhite(matrix, y, x - 4, x, true) || isFourWhite(matrix, y, x + 7, x + 11, true))) {
-                    numPenalties++;
-                }
-                if (
-                // Find consecutive runs of 1:1:3:1:1:4 or 4:1:1:3:1:1, patterns like 000010111010000
-                y + 6 < height &&
-                    isDark(matrix, x, y) &&
-                    !isDark(matrix, x, y + 1) &&
-                    isDark(matrix, x, y + 2) &&
-                    isDark(matrix, x, y + 3) &&
-                    isDark(matrix, x, y + 4) &&
-                    !isDark(matrix, x, y + 5) &&
-                    isDark(matrix, x, y + 6) &&
-                    (isFourWhite(matrix, x, y - 4, y, false) || isFourWhite(matrix, x, y + 7, y + 11, false))) {
-                    numPenalties++;
-                }
-            }
-        }
-        return numPenalties * N3;
-    }
-    // Apply mask penalty rule 4 and return the penalty. Calculate the ratio of dark cells and give
-    // penalty if the ratio is far from 50%. It gives 10 penalty for 5% distance.
-    function applyMaskPenaltyRule4(matrix) {
-        let numDarkCells = 0;
-        const { width, height } = matrix;
-        for (let y = 0; y < height; y++) {
-            for (let x = 0; x < width; x++) {
-                if (isDark(matrix, x, y)) {
-                    numDarkCells++;
-                }
-            }
-        }
-        const numTotalCells = width * height;
-        const fivePercentVariances = (Math.abs(numDarkCells * 2 - numTotalCells) * 10) / numTotalCells;
-        return fivePercentVariances * N4;
-    }
-    // The mask penalty calculation is complicated.  See Table 21 of JISX0510:2004 (p.45) for details.
-    // Basically it applies four rules and summate all penalties.
-    function calculateMaskPenalty(matrix) {
-        return (applyMaskPenaltyRule1(matrix) +
-            applyMaskPenaltyRule2(matrix) +
-            applyMaskPenaltyRule3(matrix) +
-            applyMaskPenaltyRule4(matrix));
-    }
-    // Return the mask bit for "getMaskPattern" at "x" and "y". See 8.8 of JISX0510:2004 for mask
-    // pattern conditions.
-    function getDataMaskBit(mask, x, y) {
-        let temp;
-        let intermediate;
-        switch (mask) {
-            case 0:
-                intermediate = (y + x) & 0x1;
-                break;
-            case 1:
-                intermediate = y & 0x1;
-                break;
-            case 2:
-                intermediate = x % 3;
-                break;
-            case 3:
-                intermediate = (y + x) % 3;
-                break;
-            case 4:
-                intermediate = (y / 2 + x / 3) & 0x1;
-                break;
-            case 5:
-                temp = y * x;
-                intermediate = (temp & 0x1) + (temp % 3);
-                break;
-            case 6:
-                temp = y * x;
-                intermediate = ((temp & 0x1) + (temp % 3)) & 0x1;
-                break;
-            case 7:
-                intermediate = (((y * x) % 3) + ((y + x) & 0x1)) & 0x1;
-                break;
-            default:
-                throw new Error(`illegal mask: ${mask}`);
-        }
-        return intermediate !== 0 ? 0 : 1;
-    }
-    function chooseMask(matrix, bits, version, ecLevel) {
-        let bestMask = -1;
-        // Lower penalty is better.
-        let minPenalty = Number.MAX_VALUE;
-        // We try all mask patterns to choose the best one.
-        for (let mask = 0; mask < 8; mask++) {
-            buildMatrix(matrix, bits, version, ecLevel, mask);
-            const penalty = calculateMaskPenalty(matrix);
-            if (penalty < minPenalty) {
-                bestMask = mask;
-                minPenalty = penalty;
-            }
-        }
-        return bestMask;
-    }
+  }
 
-    /**
-     * @module Charset
-     */
-    const NAME_TO_CHARSET = new Map();
-    const VALUES_TO_CHARSET = new Map();
-    class Charset {
-        #label;
-        #values;
-        static CP437 = new Charset('cp437', 0, 2);
-        static ISO_8859_1 = new Charset('iso-8859-1', 1, 3);
-        static ISO_8859_2 = new Charset('iso-8859-2', 4);
-        static ISO_8859_3 = new Charset('iso-8859-3', 5);
-        static ISO_8859_4 = new Charset('iso-8859-4', 6);
-        static ISO_8859_5 = new Charset('iso-8859-5', 7);
-        static ISO_8859_6 = new Charset('iso-8859-6', 8);
-        static ISO_8859_7 = new Charset('iso-8859-7', 9);
-        static ISO_8859_8 = new Charset('iso-8859-8', 10);
-        static ISO_8859_9 = new Charset('iso-8859-9', 11);
-        static ISO_8859_10 = new Charset('iso-8859-10', 12);
-        static ISO_8859_11 = new Charset('iso-8859-11', 13);
-        static ISO_8859_13 = new Charset('iso-8859-13', 15);
-        static ISO_8859_14 = new Charset('iso-8859-14', 16);
-        static ISO_8859_15 = new Charset('iso-8859-15', 17);
-        static ISO_8859_16 = new Charset('iso-8859-16', 18);
-        static SJIS = new Charset('sjis', 20);
-        static CP1250 = new Charset('cp1250', 21);
-        static CP1251 = new Charset('cp1251', 22);
-        static CP1252 = new Charset('cp1252', 23);
-        static CP1256 = new Charset('cp1256', 24);
-        static UTF_16BE = new Charset('utf-16be', 25);
-        static UTF_8 = new Charset('utf-8', 26);
-        static ASCII = new Charset('ascii', 27, 170);
-        static Big5 = new Charset('big5', 28);
-        static GB18030 = new Charset('gb18030', 29);
-        static EUC_KR = new Charset('euc-kr', 30);
-        constructor(label, ...values) {
-            NAME_TO_CHARSET.set(label, this);
-            for (const value of values) {
-                VALUES_TO_CHARSET.set(value, this);
-            }
-            this.#label = label;
-            this.#values = values;
-        }
-        get label() {
-            return this.#label;
-        }
-        get values() {
-            return this.#values;
-        }
+  /**
+   * @module ECB
+   */
+  class ECB {
+    #count;
+    #dataCodewords;
+    constructor(count, dataCodewords) {
+      this.#count = count;
+      this.#dataCodewords = dataCodewords;
     }
-
-    /**
-     * @module Byte
-     */
-    const encoder = new TextEncoder();
-    class Byte {
-        #content;
-        #charset;
-        constructor(content, charset = Charset.UTF_8) {
-            this.#content = content;
-            this.#charset = charset;
-        }
-        get mode() {
-            return Mode.BYTE;
-        }
-        get content() {
-            return this.#content;
-        }
-        get charset() {
-            return this.#charset;
-        }
-        encode(encode = content => encoder.encode(content)) {
-            const bytes = encode(this.#content, this.#charset);
-            const bits = new BitArray();
-            const { length } = bytes;
-            let i = 0;
-            while (i < length) {
-                bits.append(bytes[i++], 8);
-            }
-            return bits;
-        }
+    get count() {
+      return this.#count;
     }
+    get dataCodewords() {
+      return this.#dataCodewords;
+    }
+  }
 
+  /**
+   * @module ECBlocks
+   */
+  class ECBlocks {
+    #ecBlocks;
+    #numBlocks;
+    #totalECCodewords;
+    #totalDataCodewords;
+    #ecCodewordsPerBlock;
+    constructor(ecCodewordsPerBlock, ...ecBlocks) {
+      let numBlocks = 0;
+      let totalDataCodewords = 0;
+      for (const { count, dataCodewords } of ecBlocks) {
+        numBlocks += count;
+        totalDataCodewords += count * dataCodewords;
+      }
+      this.#ecBlocks = ecBlocks;
+      this.#numBlocks = numBlocks;
+      this.#totalDataCodewords = totalDataCodewords;
+      this.#ecCodewordsPerBlock = ecCodewordsPerBlock;
+      this.#totalECCodewords = ecCodewordsPerBlock * numBlocks;
+    }
+    get ecBlocks() {
+      return this.#ecBlocks;
+    }
+    get numBlocks() {
+      return this.#numBlocks;
+    }
+    get totalECCodewords() {
+      return this.#totalECCodewords;
+    }
+    get totalDataCodewords() {
+      return this.#totalDataCodewords;
+    }
+    get ecCodewordsPerBlock() {
+      return this.#ecCodewordsPerBlock;
+    }
+  }
+
+  /**
+   * @module Version
+   */
+  class Version {
+    #version;
+    #dimension;
+    #ecBlocks;
+    #totalCodewords;
+    #alignmentPatterns;
+    constructor(version, alignmentPatterns, ...ecBlocks) {
+      const [ecBlock] = ecBlocks;
+      this.#version = version;
+      this.#ecBlocks = ecBlocks;
+      this.#dimension = 17 + 4 * version;
+      this.#alignmentPatterns = new Int32Array(alignmentPatterns);
+      // Version determines the Total codewords
+      // All ecc level total codewords are equals
+      this.#totalCodewords = ecBlock.totalECCodewords + ecBlock.totalDataCodewords;
+    }
+    get version() {
+      return this.#version;
+    }
+    get dimension() {
+      return this.#dimension;
+    }
+    get totalCodewords() {
+      return this.#totalCodewords;
+    }
+    get alignmentPatterns() {
+      return this.#alignmentPatterns;
+    }
+    getECBlocksForECLevel(ecLevel) {
+      return this.#ecBlocks[ecLevel.level];
+    }
+  }
+  const VERSIONS = [
+    new Version(
+      1,
+      [],
+      new ECBlocks(7, new ECB(1, 19)),
+      new ECBlocks(10, new ECB(1, 16)),
+      new ECBlocks(13, new ECB(1, 13)),
+      new ECBlocks(17, new ECB(1, 9))
+    ),
+    new Version(
+      2,
+      [6, 18],
+      new ECBlocks(10, new ECB(1, 34)),
+      new ECBlocks(16, new ECB(1, 28)),
+      new ECBlocks(22, new ECB(1, 22)),
+      new ECBlocks(28, new ECB(1, 16))
+    ),
+    new Version(
+      3,
+      [6, 22],
+      new ECBlocks(15, new ECB(1, 55)),
+      new ECBlocks(26, new ECB(1, 44)),
+      new ECBlocks(18, new ECB(2, 17)),
+      new ECBlocks(22, new ECB(2, 13))
+    ),
+    new Version(
+      4,
+      [6, 26],
+      new ECBlocks(20, new ECB(1, 80)),
+      new ECBlocks(18, new ECB(2, 32)),
+      new ECBlocks(26, new ECB(2, 24)),
+      new ECBlocks(16, new ECB(4, 9))
+    ),
+    new Version(
+      5,
+      [6, 30],
+      new ECBlocks(26, new ECB(1, 108)),
+      new ECBlocks(24, new ECB(2, 43)),
+      new ECBlocks(18, new ECB(2, 15), new ECB(2, 16)),
+      new ECBlocks(22, new ECB(2, 11), new ECB(2, 12))
+    ),
+    new Version(
+      6,
+      [6, 34],
+      new ECBlocks(18, new ECB(2, 68)),
+      new ECBlocks(16, new ECB(4, 27)),
+      new ECBlocks(24, new ECB(4, 19)),
+      new ECBlocks(28, new ECB(4, 15))
+    ),
+    new Version(
+      7,
+      [6, 22, 38],
+      new ECBlocks(20, new ECB(2, 78)),
+      new ECBlocks(18, new ECB(4, 31)),
+      new ECBlocks(18, new ECB(2, 14), new ECB(4, 15)),
+      new ECBlocks(26, new ECB(4, 13), new ECB(1, 14))
+    ),
+    new Version(
+      8,
+      [6, 24, 42],
+      new ECBlocks(24, new ECB(2, 97)),
+      new ECBlocks(22, new ECB(2, 38), new ECB(2, 39)),
+      new ECBlocks(22, new ECB(4, 18), new ECB(2, 19)),
+      new ECBlocks(26, new ECB(4, 14), new ECB(2, 15))
+    ),
+    new Version(
+      9,
+      [6, 26, 46],
+      new ECBlocks(30, new ECB(2, 116)),
+      new ECBlocks(22, new ECB(3, 36), new ECB(2, 37)),
+      new ECBlocks(20, new ECB(4, 16), new ECB(4, 17)),
+      new ECBlocks(24, new ECB(4, 12), new ECB(4, 13))
+    ),
+    new Version(
+      10,
+      [6, 28, 50],
+      new ECBlocks(18, new ECB(2, 68), new ECB(2, 69)),
+      new ECBlocks(26, new ECB(4, 43), new ECB(1, 44)),
+      new ECBlocks(24, new ECB(6, 19), new ECB(2, 20)),
+      new ECBlocks(28, new ECB(6, 15), new ECB(2, 16))
+    ),
+    new Version(
+      11,
+      [6, 30, 54],
+      new ECBlocks(20, new ECB(4, 81)),
+      new ECBlocks(30, new ECB(1, 50), new ECB(4, 51)),
+      new ECBlocks(28, new ECB(4, 22), new ECB(4, 23)),
+      new ECBlocks(24, new ECB(3, 12), new ECB(8, 13))
+    ),
+    new Version(
+      12,
+      [6, 32, 58],
+      new ECBlocks(24, new ECB(2, 92), new ECB(2, 93)),
+      new ECBlocks(22, new ECB(6, 36), new ECB(2, 37)),
+      new ECBlocks(26, new ECB(4, 20), new ECB(6, 21)),
+      new ECBlocks(28, new ECB(7, 14), new ECB(4, 15))
+    ),
+    new Version(
+      13,
+      [6, 34, 62],
+      new ECBlocks(26, new ECB(4, 107)),
+      new ECBlocks(22, new ECB(8, 37), new ECB(1, 38)),
+      new ECBlocks(24, new ECB(8, 20), new ECB(4, 21)),
+      new ECBlocks(22, new ECB(12, 11), new ECB(4, 12))
+    ),
+    new Version(
+      14,
+      [6, 26, 46, 66],
+      new ECBlocks(30, new ECB(3, 115), new ECB(1, 116)),
+      new ECBlocks(24, new ECB(4, 40), new ECB(5, 41)),
+      new ECBlocks(20, new ECB(11, 16), new ECB(5, 17)),
+      new ECBlocks(24, new ECB(11, 12), new ECB(5, 13))
+    ),
+    new Version(
+      15,
+      [6, 26, 48, 70],
+      new ECBlocks(22, new ECB(5, 87), new ECB(1, 88)),
+      new ECBlocks(24, new ECB(5, 41), new ECB(5, 42)),
+      new ECBlocks(30, new ECB(5, 24), new ECB(7, 25)),
+      new ECBlocks(24, new ECB(11, 12), new ECB(7, 13))
+    ),
+    new Version(
+      16,
+      [6, 26, 50, 74],
+      new ECBlocks(24, new ECB(5, 98), new ECB(1, 99)),
+      new ECBlocks(28, new ECB(7, 45), new ECB(3, 46)),
+      new ECBlocks(24, new ECB(15, 19), new ECB(2, 20)),
+      new ECBlocks(30, new ECB(3, 15), new ECB(13, 16))
+    ),
+    new Version(
+      17,
+      [6, 30, 54, 78],
+      new ECBlocks(28, new ECB(1, 107), new ECB(5, 108)),
+      new ECBlocks(28, new ECB(10, 46), new ECB(1, 47)),
+      new ECBlocks(28, new ECB(1, 22), new ECB(15, 23)),
+      new ECBlocks(28, new ECB(2, 14), new ECB(17, 15))
+    ),
+    new Version(
+      18,
+      [6, 30, 56, 82],
+      new ECBlocks(30, new ECB(5, 120), new ECB(1, 121)),
+      new ECBlocks(26, new ECB(9, 43), new ECB(4, 44)),
+      new ECBlocks(28, new ECB(17, 22), new ECB(1, 23)),
+      new ECBlocks(28, new ECB(2, 14), new ECB(19, 15))
+    ),
+    new Version(
+      19,
+      [6, 30, 58, 86],
+      new ECBlocks(28, new ECB(3, 113), new ECB(4, 114)),
+      new ECBlocks(26, new ECB(3, 44), new ECB(11, 45)),
+      new ECBlocks(26, new ECB(17, 21), new ECB(4, 22)),
+      new ECBlocks(26, new ECB(9, 13), new ECB(16, 14))
+    ),
+    new Version(
+      20,
+      [6, 34, 62, 90],
+      new ECBlocks(28, new ECB(3, 107), new ECB(5, 108)),
+      new ECBlocks(26, new ECB(3, 41), new ECB(13, 42)),
+      new ECBlocks(30, new ECB(15, 24), new ECB(5, 25)),
+      new ECBlocks(28, new ECB(15, 15), new ECB(10, 16))
+    ),
+    new Version(
+      21,
+      [6, 28, 50, 72, 94],
+      new ECBlocks(28, new ECB(4, 116), new ECB(4, 117)),
+      new ECBlocks(26, new ECB(17, 42)),
+      new ECBlocks(28, new ECB(17, 22), new ECB(6, 23)),
+      new ECBlocks(30, new ECB(19, 16), new ECB(6, 17))
+    ),
+    new Version(
+      22,
+      [6, 26, 50, 74, 98],
+      new ECBlocks(28, new ECB(2, 111), new ECB(7, 112)),
+      new ECBlocks(28, new ECB(17, 46)),
+      new ECBlocks(30, new ECB(7, 24), new ECB(16, 25)),
+      new ECBlocks(24, new ECB(34, 13))
+    ),
+    new Version(
+      23,
+      [6, 30, 54, 78, 102],
+      new ECBlocks(30, new ECB(4, 121), new ECB(5, 122)),
+      new ECBlocks(28, new ECB(4, 47), new ECB(14, 48)),
+      new ECBlocks(30, new ECB(11, 24), new ECB(14, 25)),
+      new ECBlocks(30, new ECB(16, 15), new ECB(14, 16))
+    ),
+    new Version(
+      24,
+      [6, 28, 54, 80, 106],
+      new ECBlocks(30, new ECB(6, 117), new ECB(4, 118)),
+      new ECBlocks(28, new ECB(6, 45), new ECB(14, 46)),
+      new ECBlocks(30, new ECB(11, 24), new ECB(16, 25)),
+      new ECBlocks(30, new ECB(30, 16), new ECB(2, 17))
+    ),
+    new Version(
+      25,
+      [6, 32, 58, 84, 110],
+      new ECBlocks(26, new ECB(8, 106), new ECB(4, 107)),
+      new ECBlocks(28, new ECB(8, 47), new ECB(13, 48)),
+      new ECBlocks(30, new ECB(7, 24), new ECB(22, 25)),
+      new ECBlocks(30, new ECB(22, 15), new ECB(13, 16))
+    ),
+    new Version(
+      26,
+      [6, 30, 58, 86, 114],
+      new ECBlocks(28, new ECB(10, 114), new ECB(2, 115)),
+      new ECBlocks(28, new ECB(19, 46), new ECB(4, 47)),
+      new ECBlocks(28, new ECB(28, 22), new ECB(6, 23)),
+      new ECBlocks(30, new ECB(33, 16), new ECB(4, 17))
+    ),
+    new Version(
+      27,
+      [6, 34, 62, 90, 118],
+      new ECBlocks(30, new ECB(8, 122), new ECB(4, 123)),
+      new ECBlocks(28, new ECB(22, 45), new ECB(3, 46)),
+      new ECBlocks(30, new ECB(8, 23), new ECB(26, 24)),
+      new ECBlocks(30, new ECB(12, 15), new ECB(28, 16))
+    ),
+    new Version(
+      28,
+      [6, 26, 50, 74, 98, 122],
+      new ECBlocks(30, new ECB(3, 117), new ECB(10, 118)),
+      new ECBlocks(28, new ECB(3, 45), new ECB(23, 46)),
+      new ECBlocks(30, new ECB(4, 24), new ECB(31, 25)),
+      new ECBlocks(30, new ECB(11, 15), new ECB(31, 16))
+    ),
+    new Version(
+      29,
+      [6, 30, 54, 78, 102, 126],
+      new ECBlocks(30, new ECB(7, 116), new ECB(7, 117)),
+      new ECBlocks(28, new ECB(21, 45), new ECB(7, 46)),
+      new ECBlocks(30, new ECB(1, 23), new ECB(37, 24)),
+      new ECBlocks(30, new ECB(19, 15), new ECB(26, 16))
+    ),
+    new Version(
+      30,
+      [6, 26, 52, 78, 104, 130],
+      new ECBlocks(30, new ECB(5, 115), new ECB(10, 116)),
+      new ECBlocks(28, new ECB(19, 47), new ECB(10, 48)),
+      new ECBlocks(30, new ECB(15, 24), new ECB(25, 25)),
+      new ECBlocks(30, new ECB(23, 15), new ECB(25, 16))
+    ),
+    new Version(
+      31,
+      [6, 30, 56, 82, 108, 134],
+      new ECBlocks(30, new ECB(13, 115), new ECB(3, 116)),
+      new ECBlocks(28, new ECB(2, 46), new ECB(29, 47)),
+      new ECBlocks(30, new ECB(42, 24), new ECB(1, 25)),
+      new ECBlocks(30, new ECB(23, 15), new ECB(28, 16))
+    ),
+    new Version(
+      32,
+      [6, 34, 60, 86, 112, 138],
+      new ECBlocks(30, new ECB(17, 115)),
+      new ECBlocks(28, new ECB(10, 46), new ECB(23, 47)),
+      new ECBlocks(30, new ECB(10, 24), new ECB(35, 25)),
+      new ECBlocks(30, new ECB(19, 15), new ECB(35, 16))
+    ),
+    new Version(
+      33,
+      [6, 30, 58, 86, 114, 142],
+      new ECBlocks(30, new ECB(17, 115), new ECB(1, 116)),
+      new ECBlocks(28, new ECB(14, 46), new ECB(21, 47)),
+      new ECBlocks(30, new ECB(29, 24), new ECB(19, 25)),
+      new ECBlocks(30, new ECB(11, 15), new ECB(46, 16))
+    ),
+    new Version(
+      34,
+      [6, 34, 62, 90, 118, 146],
+      new ECBlocks(30, new ECB(13, 115), new ECB(6, 116)),
+      new ECBlocks(28, new ECB(14, 46), new ECB(23, 47)),
+      new ECBlocks(30, new ECB(44, 24), new ECB(7, 25)),
+      new ECBlocks(30, new ECB(59, 16), new ECB(1, 17))
+    ),
+    new Version(
+      35,
+      [6, 30, 54, 78, 102, 126, 150],
+      new ECBlocks(30, new ECB(12, 121), new ECB(7, 122)),
+      new ECBlocks(28, new ECB(12, 47), new ECB(26, 48)),
+      new ECBlocks(30, new ECB(39, 24), new ECB(14, 25)),
+      new ECBlocks(30, new ECB(22, 15), new ECB(41, 16))
+    ),
+    new Version(
+      36,
+      [6, 24, 50, 76, 102, 128, 154],
+      new ECBlocks(30, new ECB(6, 121), new ECB(14, 122)),
+      new ECBlocks(28, new ECB(6, 47), new ECB(34, 48)),
+      new ECBlocks(30, new ECB(46, 24), new ECB(10, 25)),
+      new ECBlocks(30, new ECB(2, 15), new ECB(64, 16))
+    ),
+    new Version(
+      37,
+      [6, 28, 54, 80, 106, 132, 158],
+      new ECBlocks(30, new ECB(17, 122), new ECB(4, 123)),
+      new ECBlocks(28, new ECB(29, 46), new ECB(14, 47)),
+      new ECBlocks(30, new ECB(49, 24), new ECB(10, 25)),
+      new ECBlocks(30, new ECB(24, 15), new ECB(46, 16))
+    ),
+    new Version(
+      38,
+      [6, 32, 58, 84, 110, 136, 162],
+      new ECBlocks(30, new ECB(4, 122), new ECB(18, 123)),
+      new ECBlocks(28, new ECB(13, 46), new ECB(32, 47)),
+      new ECBlocks(30, new ECB(48, 24), new ECB(14, 25)),
+      new ECBlocks(30, new ECB(42, 15), new ECB(32, 16))
+    ),
+    new Version(
+      39,
+      [6, 26, 54, 82, 110, 138, 166],
+      new ECBlocks(30, new ECB(20, 117), new ECB(4, 118)),
+      new ECBlocks(28, new ECB(40, 47), new ECB(7, 48)),
+      new ECBlocks(30, new ECB(43, 24), new ECB(22, 25)),
+      new ECBlocks(30, new ECB(10, 15), new ECB(67, 16))
+    ),
+    new Version(
+      40,
+      [6, 30, 58, 86, 114, 142, 170],
+      new ECBlocks(30, new ECB(19, 118), new ECB(6, 119)),
+      new ECBlocks(28, new ECB(18, 47), new ECB(31, 48)),
+      new ECBlocks(30, new ECB(34, 24), new ECB(34, 25)),
+      new ECBlocks(30, new ECB(20, 15), new ECB(61, 16))
+    )
+  ];
+
+  /**
+   * @module GenericGFPoly
+   */
+  class GenericGFPoly {
+    #field;
+    #coefficients;
+    constructor(field, coefficients) {
+      this.#field = field;
+      const { length } = coefficients;
+      if (length > 1 && coefficients[0] === 0) {
+        // Leading term must be non-zero for anything except the constant polynomial "0"
+        let firstNonZero = 1;
+        while (firstNonZero < length && coefficients[firstNonZero] === 0) {
+          firstNonZero++;
+        }
+        if (firstNonZero === length) {
+          this.#coefficients = new Int32Array([0]);
+        } else {
+          const array = new Int32Array(length - firstNonZero);
+          array.set(coefficients.subarray(firstNonZero));
+          this.#coefficients = array;
+        }
+      } else {
+        this.#coefficients = coefficients;
+      }
+    }
+    #assertField(other) {
+      if (this.#field !== other.#field) {
+        throw new Error('polys do not have same field');
+      }
+    }
+    get coefficients() {
+      return this.#coefficients;
+    }
+    getDegree() {
+      return this.#coefficients.length - 1;
+    }
+    isZero() {
+      return this.#coefficients[0] === 0;
+    }
+    getCoefficient(degree) {
+      const coefficients = this.#coefficients;
+      return coefficients[coefficients.length - 1 - degree];
+    }
+    evaluateAt(a) {
+      if (a === 0) {
+        // Just return the x^0 coefficient
+        return this.getCoefficient(0);
+      }
+      let result;
+      const coefficients = this.#coefficients;
+      if (a === 1) {
+        // Just the sum of the coefficients
+        result = 0;
+        for (const coefficient of coefficients) {
+          result = result ^ coefficient;
+        }
+        return result;
+      }
+      result = coefficients[0];
+      const field = this.#field;
+      for (const coefficient of coefficients) {
+        result = field.multiply(a, result) ^ coefficient;
+      }
+      return result;
+    }
+    addOrSubtract(other) {
+      this.#assertField(other);
+      if (this.isZero()) {
+        return other;
+      }
+      if (other.isZero()) {
+        return this;
+      }
+      let largerCoefficients = other.#coefficients;
+      let largerLength = largerCoefficients.length;
+      let smallerCoefficients = this.#coefficients;
+      let smallerLength = smallerCoefficients.length;
+      if (smallerLength > largerLength) {
+        [smallerLength, largerLength] = [largerLength, smallerLength];
+        [smallerCoefficients, largerCoefficients] = [largerCoefficients, smallerCoefficients];
+      }
+      let sumDiff = new Int32Array(largerLength);
+      const lengthDiff = largerLength - smallerLength;
+      // Copy high-order terms only found in higher-degree polynomial's coefficients
+      sumDiff.set(largerCoefficients.subarray(0, lengthDiff));
+      for (let i = lengthDiff; i < largerLength; i++) {
+        sumDiff[i] = smallerCoefficients[i - lengthDiff] ^ largerCoefficients[i];
+      }
+      return new GenericGFPoly(this.#field, sumDiff);
+    }
+    multiply(other) {
+      const field = this.#field;
+      if (isNumber(other)) {
+        if (other === 0) {
+          return field.zero;
+        }
+        if (other === 1) {
+          return this;
+        }
+        const coefficients = this.#coefficients;
+        const { length } = coefficients;
+        const product = new Int32Array(length);
+        for (let i = 0; i < length; i++) {
+          product[i] = field.multiply(coefficients[i], other);
+        }
+        return new GenericGFPoly(field, product);
+      }
+      this.#assertField(other);
+      if (this.isZero() || other.isZero()) {
+        return field.zero;
+      }
+      const aCoefficients = this.#coefficients;
+      const aLength = aCoefficients.length;
+      const bCoefficients = other.#coefficients;
+      const bLength = bCoefficients.length;
+      const product = new Int32Array(aLength + bLength - 1);
+      for (let i = 0; i < aLength; i++) {
+        const aCoefficient = aCoefficients[i];
+        for (let j = 0; j < bLength; j++) {
+          product[i + j] = product[i + j] ^ field.multiply(aCoefficient, bCoefficients[j]);
+        }
+      }
+      return new GenericGFPoly(field, product);
+    }
+    multiplyByMonomial(degree, coefficient) {
+      if (degree < 0) {
+        throw new Error('illegal monomial degree less than 0');
+      }
+      const field = this.#field;
+      if (coefficient === 0) {
+        return field.zero;
+      }
+      const coefficients = this.#coefficients;
+      const { length } = coefficients;
+      const product = new Int32Array(length + degree);
+      for (let i = 0; i < length; i++) {
+        product[i] = field.multiply(coefficients[i], coefficient);
+      }
+      return new GenericGFPoly(field, product);
+    }
+    divide(other) {
+      this.#assertField(other);
+      if (other.isZero()) {
+        throw new Error('divide by 0');
+      }
+      const field = this.#field;
+      let quotient = field.zero;
+      let remainder = this;
+      const denominatorLeadingTerm = other.getCoefficient(other.getDegree());
+      const inverseDenominatorLeadingTerm = field.inverse(denominatorLeadingTerm);
+      while (remainder.getDegree() >= other.getDegree() && !remainder.isZero()) {
+        const degreeDifference = remainder.getDegree() - other.getDegree();
+        const scale = field.multiply(remainder.getCoefficient(remainder.getDegree()), inverseDenominatorLeadingTerm);
+        const term = other.multiplyByMonomial(degreeDifference, scale);
+        const iterationQuotient = field.buildMonomial(degreeDifference, scale);
+        quotient = quotient.addOrSubtract(iterationQuotient);
+        remainder = remainder.addOrSubtract(term);
+      }
+      return [quotient, remainder];
+    }
+  }
+
+  /**
+   * @module GenericGF
+   */
+  class GenericGF {
+    #size;
+    #one;
+    #zero;
+    #expTable;
+    #logTable;
+    #generatorBase;
+    constructor(primitive, size, generatorBase) {
+      const expTable = new Int32Array(size);
+      let x = 1;
+      for (let i = 0; i < size; i++) {
+        expTable[i] = x;
+        // We're assuming the generator alpha is 2
+        x *= 2;
+        if (x >= size) {
+          x ^= primitive;
+          x &= size - 1;
+        }
+      }
+      const logTable = new Int32Array(size);
+      for (let i = 0; i < size - 1; i++) {
+        logTable[expTable[i]] = i;
+      }
+      this.#size = size;
+      this.#expTable = expTable;
+      this.#logTable = logTable;
+      this.#generatorBase = generatorBase;
+      this.#one = new GenericGFPoly(this, new Int32Array([1]));
+      this.#zero = new GenericGFPoly(this, new Int32Array([0]));
+    }
+    get size() {
+      return this.#size;
+    }
+    get one() {
+      return this.#one;
+    }
+    get zero() {
+      return this.#zero;
+    }
+    get generatorBase() {
+      return this.#generatorBase;
+    }
+    buildMonomial(degree, coefficient) {
+      if (degree < 0) {
+        throw new Error('illegal monomial degree less than 0');
+      }
+      if (coefficient === 0) {
+        return this.#zero;
+      }
+      const coefficients = new Int32Array(degree + 1);
+      coefficients[0] = coefficient;
+      return new GenericGFPoly(this, coefficients);
+    }
+    inverse(a) {
+      if (a === 0) {
+        throw new Error('illegal inverse argument equals 0');
+      }
+      return this.#expTable[this.#size - this.#logTable[a] - 1];
+    }
+    multiply(a, b) {
+      if (a === 0 || b === 0) {
+        return 0;
+      }
+      const logTable = this.#logTable;
+      return this.#expTable[(logTable[a] + logTable[b]) % (this.#size - 1)];
+    }
+    log(a) {
+      if (a === 0) {
+        throw new Error("can't take log(0)");
+      }
+      return this.#logTable[a];
+    }
+    exp(a) {
+      return this.#expTable[a];
+    }
+  }
+  const QR_CODE_FIELD_256 = new GenericGF(0x011d, 256, 0);
+
+  /**
+   * @module Encoder
+   */
+  let Encoder$1 = class Encoder {
+    #cachedGenerators;
+    #field = QR_CODE_FIELD_256;
+    constructor() {
+      this.#cachedGenerators = [new GenericGFPoly(this.#field, new Int32Array([1]))];
+    }
+    #buildGenerator(degree) {
+      const cachedGenerators = this.#cachedGenerators;
+      const { length } = cachedGenerators;
+      if (degree >= length) {
+        const field = this.#field;
+        let lastGenerator = cachedGenerators[length - 1];
+        for (let i = length; i <= degree; i++) {
+          const nextGenerator = lastGenerator.multiply(
+            new GenericGFPoly(field, Int32Array.from([1, field.exp(i - 1 + field.generatorBase)]))
+          );
+          cachedGenerators.push(nextGenerator);
+          lastGenerator = nextGenerator;
+        }
+      }
+      return cachedGenerators[degree];
+    }
+    encode(received, ecBytes) {
+      if (ecBytes === 0) {
+        throw new Error('no error correction bytes');
+      }
+      const dataBytes = received.length - ecBytes;
+      if (dataBytes <= 0) {
+        throw new Error('no data bytes provided');
+      }
+      const generator = this.#buildGenerator(ecBytes);
+      const infoCoefficients = new Int32Array(dataBytes);
+      infoCoefficients.set(received.subarray(0, dataBytes));
+      let info = new GenericGFPoly(this.#field, infoCoefficients);
+      info = info.multiplyByMonomial(ecBytes, 1);
+      const remainder = info.divide(generator)[1];
+      const coefficients = remainder.coefficients;
+      const numZeroCoefficients = ecBytes - coefficients.length;
+      for (let i = 0; i < numZeroCoefficients; i++) {
+        received[dataBytes + i] = 0;
+      }
+      received.set(coefficients, dataBytes + numZeroCoefficients);
+    }
+  };
+
+  /**
+   * @module encoder
+   */
+  function getNumECAndDataBytes(blockID, numRSBlocks, numDataBytes, numTotalBytes) {
+    if (blockID >= numRSBlocks) {
+      throw new Error('block id too large');
+    }
+    // numRSBlocksInGroup2 = 196 % 5 = 1
+    const numRSBlocksInGroup2 = numTotalBytes % numRSBlocks;
+    // numRSBlocksInGroup1 = 5 - 1 = 4
+    const numRSBlocksInGroup1 = numRSBlocks - numRSBlocksInGroup2;
+    // numTotalBytesInGroup1 = 196 / 5 = 39
+    const numTotalBytesInGroup1 = toUInt32(numTotalBytes / numRSBlocks);
+    // numTotalBytesInGroup2 = 39 + 1 = 40
+    const numTotalBytesInGroup2 = numTotalBytesInGroup1 + 1;
+    // numDataBytesInGroup1 = 66 / 5 = 13
+    const numDataBytesInGroup1 = toUInt32(numDataBytes / numRSBlocks);
+    // numDataBytesInGroup2 = 13 + 1 = 14
+    const numDataBytesInGroup2 = numDataBytesInGroup1 + 1;
+    // numECBytesInGroup1 = 39 - 13 = 26
+    const numECBytesInGroup1 = numTotalBytesInGroup1 - numDataBytesInGroup1;
+    // numECBytesInGroup2 = 40 - 14 = 26
+    const numECBytesInGroup2 = numTotalBytesInGroup2 - numDataBytesInGroup2;
+    // Sanity checks.
+    // 26 = 26
+    if (numECBytesInGroup1 !== numECBytesInGroup2) {
+      throw new Error('ec bytes mismatch');
+    }
+    // 5 = 4 + 1.
+    if (numRSBlocks !== numRSBlocksInGroup1 + numRSBlocksInGroup2) {
+      throw new Error('rs blocks mismatch');
+    }
+    // 196 = (13 + 26) * 4 + (14 + 26) * 1
+    if (
+      numTotalBytes !==
+      (numDataBytesInGroup1 + numECBytesInGroup1) * numRSBlocksInGroup1 +
+        (numDataBytesInGroup2 + numECBytesInGroup2) * numRSBlocksInGroup2
+    ) {
+      throw new Error('total bytes mismatch');
+    }
+    if (blockID < numRSBlocksInGroup1) {
+      return [numECBytesInGroup1, numDataBytesInGroup1];
+    } else {
+      return [numECBytesInGroup2, numDataBytesInGroup2];
+    }
+  }
+  function generateECBytes(dataBytes, numECBytesInBlock) {
+    const numDataBytes = dataBytes.length;
+    const ecBytes = new Int8Array(numECBytesInBlock);
+    const toEncode = new Int32Array(numDataBytes + numECBytesInBlock);
+    toEncode.set(dataBytes);
+    new Encoder$1().encode(toEncode, numECBytesInBlock);
+    ecBytes.set(toEncode.subarray(numDataBytes));
+    return ecBytes;
+  }
+  function interleaveWithECBytes(bits, numRSBlocks, numDataBytes, numTotalBytes) {
+    // "bits" must have "getNumDataBytes" bytes of data.
+    if (bits.byteLength !== numDataBytes) {
+      throw new Error('number of bits and data bytes does not match');
+    }
+    // Step 1.  Divide data bytes into blocks and generate error correction bytes for them. We'll
+    // store the divided data bytes blocks and error correction bytes blocks into "blocks".
+    let maxNumEcBytes = 0;
+    let maxNumDataBytes = 0;
+    let dataBytesOffset = 0;
+    // Since, we know the number of reedsolmon blocks, we can initialize the vector with the number.
+    const blocks = [];
+    for (let i = 0; i < numRSBlocks; ++i) {
+      const [numECBytesInBlock, numDataBytesInBlock] = getNumECAndDataBytes(i, numRSBlocks, numDataBytes, numTotalBytes);
+      const dataBytes = new Int8Array(numDataBytesInBlock);
+      bits.toBytes(8 * dataBytesOffset, dataBytes, 0, numDataBytesInBlock);
+      const ecBytes = generateECBytes(dataBytes, numECBytesInBlock);
+      blocks.push(new BlockPair(dataBytes, ecBytes));
+      maxNumDataBytes = Math.max(maxNumDataBytes, numDataBytesInBlock);
+      maxNumEcBytes = Math.max(maxNumEcBytes, ecBytes.length);
+      dataBytesOffset += numDataBytesInBlock;
+    }
+    if (numDataBytes !== dataBytesOffset) {
+      throw new Error('data bytes does not match offset');
+    }
+    const array = new BitArray();
+    // First, place data blocks.
+    for (let i = 0; i < maxNumDataBytes; ++i) {
+      for (const { dataBytes } of blocks) {
+        if (i < dataBytes.length) {
+          array.append(dataBytes[i], 8);
+        }
+      }
+    }
+    // Then, place error correction blocks.
+    for (let i = 0; i < maxNumEcBytes; ++i) {
+      for (const { ecBytes } of blocks) {
+        if (i < ecBytes.length) {
+          array.append(ecBytes[i], 8);
+        }
+      }
+    }
+    if (numTotalBytes !== array.byteLength) {
+      // Should be same.
+      throw new Error(`interleaving error: ${numTotalBytes} and ${array.byteLength} differ`);
+    }
+    return array;
+  }
+  function terminateBits(bits, numDataBytes) {
+    const capacity = numDataBytes * 8;
+    if (bits.length > capacity) {
+      throw new Error(`data bits cannot fit in the QRCode ${bits.length} > ${capacity}`);
+    }
+    // Append Mode.TERMINATE if there is enough space (value is 0000)
+    for (let i = 0; i < 4 && bits.length < capacity; i++) {
+      bits.append(0);
+    }
+    // Append termination bits. See 8.4.8 of JISX0510:2004 (p.24) for details.
+    // If the last byte isn't 8-bit aligned, we'll add padding bits.
+    const numBitsInLastByte = bits.length & 0x07;
+    if (numBitsInLastByte > 0) {
+      for (let i = numBitsInLastByte; i < 8; i++) {
+        bits.append(0);
+      }
+    }
+    // If we have more space, we'll fill the space with padding patterns defined in 8.4.9 (p.24).
+    const numPaddingBytes = numDataBytes - bits.byteLength;
+    for (let i = 0; i < numPaddingBytes; i++) {
+      bits.append((i & 0x01) === 0 ? 0xec : 0x11, 8);
+    }
+    if (bits.length !== capacity) {
+      throw new Error('bits size does not equal capacity');
+    }
+  }
+  function isByteMode(segment) {
+    return segment.mode === Mode.BYTE;
+  }
+  function appendModeInfo(bits, mode) {
+    bits.append(mode.bits, 4);
+  }
+  function appendECI(bits, mode, charset) {
+    appendModeInfo(bits, mode);
+    bits.append(charset.values[0], 8);
+  }
+  function appendLengthInfo(bits, version, mode, numLetters) {
+    const numBits = mode.getCharacterCountBits(version);
+    if (numLetters >= 1 << numBits) {
+      throw new Error(`${numLetters} is bigger than ${(1 << numBits) - 1}`);
+    }
+    bits.append(numLetters, numBits);
+  }
+  function willFit(numInputBits, version, ecLevel) {
+    // In the following comments, we use numbers of Version 7-H.
+    // numBytes = 196
+    const numBytes = version.totalCodewords;
+    const ecBlocks = version.getECBlocksForECLevel(ecLevel);
+    // numECBytes = 130
+    const numECBytes = ecBlocks.totalECCodewords;
+    // numDataBytes = 196 - 130 = 66
+    const numDataBytes = numBytes - numECBytes;
+    const totalInputBytes = (numInputBits + 7) / 8;
+    return numDataBytes >= totalInputBytes;
+  }
+  function chooseVersion(numInputBits, ecLevel) {
+    for (const version of VERSIONS) {
+      if (willFit(numInputBits, version, ecLevel)) {
+        return version;
+      }
+    }
+    throw new Error('data too big');
+  }
+  function calculateBitsNeeded(segmentBlocks, version) {
+    let bitsNeeded = 0;
+    for (const { mode, headerBits, dataBits } of segmentBlocks) {
+      bitsNeeded += headerBits.length + mode.getCharacterCountBits(version) + dataBits.length;
+    }
+    return bitsNeeded;
+  }
+  function recommendVersion(segmentBlocks, ecLevel) {
+    // Hard part: need to know version to know how many bits length takes. But need to know how many
+    // bits it takes to know version. First we take a guess at version by assuming version will be
+    // the minimum, 1:
+    const provisionalBitsNeeded = calculateBitsNeeded(segmentBlocks, VERSIONS[1]);
+    const provisionalVersion = chooseVersion(provisionalBitsNeeded, ecLevel);
+    // Use that guess to calculate the right version. I am still not sure this works in 100% of cases.
+    const bitsNeeded = calculateBitsNeeded(segmentBlocks, provisionalVersion);
+    return chooseVersion(bitsNeeded, ecLevel);
+  }
+
+  /**
+   * @module OutputStream
+   * @author nuintun
+   * @author Kazuhiko Arase
+   */
+  class OutputStream {
+    writeBytes(bytes, offset = 0, length = bytes.length) {
+      for (let i = 0; i < length; i++) {
+        this.writeByte(bytes[i + offset]);
+      }
+    }
+    flush() {
+      // The flush method
+    }
+    close() {
+      this.flush();
+    }
+  }
+
+  /**
+   * @module ByteArrayOutputStream
+   * @author nuintun
+   * @author Kazuhiko Arase
+   */
+  class ByteArrayOutputStream extends OutputStream {
+    bytes = [];
+    writeByte(byte) {
+      this.bytes.push(byte);
+    }
+    writeInt16(byte) {
+      this.bytes.push(byte, byte >>> 8);
+    }
+    toByteArray() {
+      return this.bytes;
+    }
+  }
+
+  /**
+   * @module Base64EncodeOutputStream
+   * @author nuintun
+   * @author Kazuhiko Arase
+   */
+  function encode$1(ch) {
+    if (ch >= 0) {
+      if (ch < 26) {
+        // A
+        return 0x41 + ch;
+      } else if (ch < 52) {
+        // a
+        return 0x61 + (ch - 26);
+      } else if (ch < 62) {
+        // 0
+        return 0x30 + (ch - 52);
+      } else if (ch === 62) {
+        // +
+        return 0x2b;
+      } else if (ch === 63) {
+        // /
+        return 0x2f;
+      }
+    }
+    throw new Error(`illegal char: ${String.fromCharCode(ch)}`);
+  }
+  class Base64EncodeOutputStream extends OutputStream {
+    buffer = 0;
+    length = 0;
+    bufLength = 0;
+    stream;
+    constructor(stream) {
+      super();
+      this.stream = stream;
+    }
+    writeByte(byte) {
+      this.buffer = (this.buffer << 8) | (byte & 0xff);
+      this.bufLength += 8;
+      this.length++;
+      while (this.bufLength >= 6) {
+        this.writeEncoded(this.buffer >>> (this.bufLength - 6));
+        this.bufLength -= 6;
+      }
+    }
     /**
-     * @module Kanji
+     * @override
      */
-    // prettier-ignore
-    // https://github.com/soldair/node-qrcode/blob/master/helper/to-sjis.js
-    const SJIS_UTF8 = [
+    flush() {
+      if (this.bufLength > 0) {
+        this.writeEncoded(this.buffer << (6 - this.bufLength));
+        this.buffer = 0;
+        this.bufLength = 0;
+      }
+      const { stream } = this;
+      if (this.length % 3 != 0) {
+        // Padding
+        const pad = 3 - (this.length % 3);
+        for (let i = 0; i < pad; i++) {
+          // =
+          stream.writeByte(0x3d);
+        }
+      }
+    }
+    writeEncoded(byte) {
+      this.stream.writeByte(encode$1(byte & 0x3f));
+    }
+  }
+
+  /**
+   * @module GIF Image (B/W)
+   * @author nuintun
+   * @author Kazuhiko Arase
+   */
+  function encodeToBase64(data) {
+    const output = new ByteArrayOutputStream();
+    const stream = new Base64EncodeOutputStream(output);
+    stream.writeBytes(data);
+    stream.close();
+    output.close();
+    return output.toByteArray();
+  }
+  class LZWTable {
+    size = 0;
+    map = {};
+    add(key) {
+      if (!this.contains(key)) {
+        this.map[key] = this.size++;
+      }
+    }
+    getSize() {
+      return this.size;
+    }
+    indexOf(key) {
+      return this.map[key];
+    }
+    contains(key) {
+      return this.map[key] >= 0;
+    }
+  }
+  class BitOutputStream {
+    output;
+    bitLength = 0;
+    bitBuffer = 0;
+    constructor(output) {
+      this.output = output;
+    }
+    write(data, length) {
+      if (data >>> length !== 0) {
+        throw new Error('length overflow');
+      }
+      const { output } = this;
+      while (this.bitLength + length >= 8) {
+        output.writeByte(0xff & ((data << this.bitLength) | this.bitBuffer));
+        length -= 8 - this.bitLength;
+        data >>>= 8 - this.bitLength;
+        this.bitBuffer = 0;
+        this.bitLength = 0;
+      }
+      this.bitBuffer = (data << this.bitLength) | this.bitBuffer;
+      this.bitLength = this.bitLength + length;
+    }
+    flush() {
+      const { output } = this;
+      if (this.bitLength > 0) {
+        output.writeByte(this.bitBuffer);
+      }
+      output.flush();
+    }
+    close() {
+      this.flush();
+      this.output.close();
+    }
+  }
+  class GIFImage {
+    width;
+    height;
+    pixels;
+    constructor(width, height) {
+      this.pixels = [];
+      this.width = width;
+      this.height = height;
+      const size = width * height;
+      for (let i = 0; i < size; i++) {
+        this.pixels[i] = 0;
+      }
+    }
+    getLZWRaster(lzwMinCodeSize) {
+      // Setup LZWTable
+      const table = new LZWTable();
+      const { fromCharCode } = String;
+      const clearCode = 1 << lzwMinCodeSize;
+      const endCode = (1 << lzwMinCodeSize) + 1;
+      for (let i = 0; i < clearCode; i++) {
+        table.add(fromCharCode(i));
+      }
+      table.add(fromCharCode(clearCode));
+      table.add(fromCharCode(endCode));
+      let bitLength = lzwMinCodeSize + 1;
+      const byteOutput = new ByteArrayOutputStream();
+      const bitOutput = new BitOutputStream(byteOutput);
+      try {
+        const { pixels } = this;
+        const { length } = pixels;
+        const { fromCharCode } = String;
+        // Clear code
+        bitOutput.write(clearCode, bitLength);
+        let dataIndex = 0;
+        let words = fromCharCode(pixels[dataIndex++]);
+        while (dataIndex < length) {
+          const char = fromCharCode(pixels[dataIndex++]);
+          if (table.contains(words + char)) {
+            words += char;
+          } else {
+            bitOutput.write(table.indexOf(words), bitLength);
+            if (table.getSize() < 0xfff) {
+              if (table.getSize() === 1 << bitLength) {
+                bitLength++;
+              }
+              table.add(words + char);
+            }
+            words = char;
+          }
+        }
+        bitOutput.write(table.indexOf(words), bitLength);
+        // End code
+        bitOutput.write(endCode, bitLength);
+      } finally {
+        bitOutput.close();
+      }
+      return byteOutput.toByteArray();
+    }
+    /**
+     * @function set
+     * @description set pixel of point
+     * @param x x point
+     * @param y y point
+     * @param color pixel color 0: Black 1: White
+     */
+    set(x, y, color) {
+      this.pixels[y * this.width + x] = color;
+    }
+    write(output) {
+      const { width, height } = this;
+      // GIF Signature
+      output.writeByte(0x47); // G
+      output.writeByte(0x49); // I
+      output.writeByte(0x46); // F
+      output.writeByte(0x38); // 8
+      output.writeByte(0x37); // 7
+      output.writeByte(0x61); // a
+      // Screen Descriptor
+      output.writeInt16(width);
+      output.writeInt16(height);
+      output.writeByte(0x80); // 2bit
+      output.writeByte(0);
+      output.writeByte(0);
+      // Global Color Map
+      // Black
+      output.writeByte(0x00);
+      output.writeByte(0x00);
+      output.writeByte(0x00);
+      // White
+      output.writeByte(0xff);
+      output.writeByte(0xff);
+      output.writeByte(0xff);
+      // Image Descriptor
+      output.writeByte(0x2c); // ,
+      output.writeInt16(0);
+      output.writeInt16(0);
+      output.writeInt16(width);
+      output.writeInt16(height);
+      output.writeByte(0);
+      // Local Color Map
+      // Raster Data
+      const lzwMinCodeSize = 2;
+      const raster = this.getLZWRaster(lzwMinCodeSize);
+      const raLength = raster.length;
+      output.writeByte(lzwMinCodeSize);
+      let offset = 0;
+      while (raLength - offset > 255) {
+        output.writeByte(255);
+        output.writeBytes(raster, offset, 255);
+        offset += 255;
+      }
+      const length = raLength - offset;
+      output.writeByte(length);
+      output.writeBytes(raster, offset, length);
+      output.writeByte(0x00);
+      // GIF Terminator
+      output.writeByte(0x3b); // ;
+    }
+    toDataURL() {
+      const output = new ByteArrayOutputStream();
+      this.write(output);
+      const bytes = encodeToBase64(output.toByteArray());
+      output.close();
+      const { length } = bytes;
+      const { fromCharCode } = String;
+      let url = 'data:image/gif;base64,';
+      for (let i = 0; i < length; i++) {
+        url += fromCharCode(bytes[i]);
+      }
+      return url;
+    }
+  }
+
+  /**
+   * @module QRCode
+   */
+  class QRCode {
+    #matrix;
+    constructor(matrix) {
+      this.#matrix = matrix;
+    }
+    /**
+     * @public
+     * @method toDataURL
+     * @param {number} moduleSize
+     * @param {number} margin
+     * @returns {string}
+     */
+    toDataURL(moduleSize = 2, margin = moduleSize * 4) {
+      moduleSize = Math.max(1, moduleSize >> 0);
+      margin = Math.max(0, margin >> 0);
+      const matrix = this.#matrix;
+      const matrixSize = matrix.width;
+      const size = moduleSize * matrixSize + margin * 2;
+      const min = margin;
+      const max = size - margin;
+      const gif = new GIFImage(size, size);
+      for (let i = 0; i < size; i++) {
+        for (let j = 0; j < size; j++) {
+          if (min <= j && j < max && min <= i && i < max) {
+            const x = ((j - min) / moduleSize) >> 0;
+            const y = ((i - min) / moduleSize) >> 0;
+            gif.set(j, i, matrix.get(x, y) ? 0 : 1);
+          } else {
+            gif.set(j, i, 1);
+          }
+        }
+      }
+      return gif.toDataURL();
+    }
+  }
+
+  /**
+   * @module ByteMatrix
+   */
+  class ByteMatrix {
+    #width;
+    #height;
+    #bytes;
+    constructor(width, height = width) {
+      this.#width = width;
+      this.#height = height;
+      this.#bytes = new Int8Array(width * height);
+    }
+    get width() {
+      return this.#width;
+    }
+    get height() {
+      return this.#height;
+    }
+    set(x, y, value) {
+      this.#bytes[y * this.#width + x] = value;
+    }
+    get(x, y) {
+      return this.#bytes[y * this.#width + x];
+    }
+    clear(value) {
+      this.#bytes.fill(value);
+    }
+  }
+
+  /**
+   * @module ECLevel
+   */
+  class ECLevel {
+    #bits;
+    #level;
+    // L = ~7% correction
+    static L = new ECLevel(0, 0x01);
+    // L = ~15% correction
+    static M = new ECLevel(1, 0x00);
+    // L = ~25% correction
+    static Q = new ECLevel(2, 0x03);
+    // L = ~30% correction
+    static H = new ECLevel(3, 0x02);
+    constructor(level, bits) {
+      this.#bits = bits;
+      this.#level = level;
+    }
+    get bits() {
+      return this.#bits;
+    }
+    get level() {
+      return this.#level;
+    }
+  }
+
+  /**
+   * @module matrix
+   */
+  const TYPE_INFO_POLY = 0x537;
+  // 1 1111 0010 0101
+  const VERSION_INFO_POLY = 0x1f25;
+  const TYPE_INFO_MASK_PATTERN = 0x5412;
+  const TYPE_INFO_COORDINATES = [
+    [8, 0],
+    [8, 1],
+    [8, 2],
+    [8, 3],
+    [8, 4],
+    [8, 5],
+    [8, 7],
+    [8, 8],
+    [7, 8],
+    [5, 8],
+    [4, 8],
+    [3, 8],
+    [2, 8],
+    [1, 8],
+    [0, 8]
+  ];
+  const POSITION_DETECTION_PATTERN = [
+    [1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1]
+  ];
+  const POSITION_ADJUSTMENT_PATTERN = [
+    [1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 1, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1]
+  ];
+  // From Appendix E. Table 1, JIS0510X:2004 (p 71).
+  const POSITION_ADJUSTMENT_PATTERN_COORDINATE_TABLE = [
+    [],
+    [6, 18],
+    [6, 22],
+    [6, 26],
+    [6, 30],
+    [6, 34],
+    [6, 22, 38],
+    [6, 24, 42],
+    [6, 26, 46],
+    [6, 28, 50],
+    [6, 30, 54],
+    [6, 32, 58],
+    [6, 34, 62],
+    [6, 26, 46, 66],
+    [6, 26, 48, 70],
+    [6, 26, 50, 74],
+    [6, 30, 54, 78],
+    [6, 30, 56, 82],
+    [6, 30, 58, 86],
+    [6, 34, 62, 90],
+    [6, 28, 50, 72, 94],
+    [6, 26, 50, 74, 98],
+    [6, 30, 54, 78, 102],
+    [6, 28, 54, 80, 106],
+    [6, 32, 58, 84, 110],
+    [6, 30, 58, 86, 114],
+    [6, 34, 62, 90, 118],
+    [6, 26, 50, 74, 98, 122],
+    [6, 30, 54, 78, 102, 126],
+    [6, 26, 52, 78, 104, 130],
+    [6, 30, 56, 82, 108, 134],
+    [6, 34, 60, 86, 112, 138],
+    [6, 30, 58, 86, 114, 142],
+    [6, 34, 62, 90, 118, 146],
+    [6, 30, 54, 78, 102, 126, 150],
+    [6, 24, 50, 76, 102, 128, 154],
+    [6, 28, 54, 80, 106, 132, 158],
+    [6, 32, 58, 84, 110, 136, 162],
+    [6, 26, 54, 82, 110, 138, 166],
+    [6, 30, 58, 86, 114, 142, 170] // Version 40
+  ];
+  // Is empty point.
+  function isEmpty(matrix, x, y) {
+    return matrix.get(x, y) === -1;
+  }
+  function embedPositionDetectionPattern(matrix, x, y) {
+    for (let i = 0; i < 7; i++) {
+      const pattern = POSITION_DETECTION_PATTERN[i];
+      for (let j = 0; j < 7; j++) {
+        matrix.set(x + j, y + i, pattern[j]);
+      }
+    }
+  }
+  function embedHorizontalSeparationPattern(matrix, x, y) {
+    for (let j = 0; j < 8; j++) {
+      matrix.set(x + j, y, 0);
+    }
+  }
+  function embedVerticalSeparationPattern(matrix, x, y) {
+    for (let i = 0; i < 7; i++) {
+      matrix.set(x, y + i, 0);
+    }
+  }
+  function embedPositionAdjustmentPattern(matrix, x, y) {
+    for (let i = 0; i < 5; i++) {
+      const pattern = POSITION_ADJUSTMENT_PATTERN[i];
+      for (let j = 0; j < 5; j++) {
+        matrix.set(x + j, y + i, pattern[j]);
+      }
+    }
+  }
+  // Embed the lonely dark dot at left bottom corner. JISX0510:2004 (p.46)
+  function embedDarkDotAtLeftBottomCorner(matrix) {
+    matrix.set(8, matrix.height - 8, 1);
+  }
+  // Embed position detection patterns and surrounding vertical/horizontal separators.
+  function embedPositionDetectionPatternsAndSeparators(matrix) {
+    // Matrix width
+    const { width, height } = matrix;
+    // Embed three big squares at corners.
+    const pdpWidth = POSITION_DETECTION_PATTERN[0].length;
+    // Left top corner.
+    embedPositionDetectionPattern(matrix, 0, 0);
+    // Right top corner.
+    embedPositionDetectionPattern(matrix, width - pdpWidth, 0);
+    // Left bottom corner.
+    embedPositionDetectionPattern(matrix, 0, width - pdpWidth);
+    // Embed horizontal separation patterns around the squares.
+    const hspWidth = 8;
+    // Left top corner.
+    embedHorizontalSeparationPattern(matrix, 0, hspWidth - 1);
+    // Right top corner.
+    embedHorizontalSeparationPattern(matrix, width - hspWidth, hspWidth - 1);
+    // Left bottom corner.
+    embedHorizontalSeparationPattern(matrix, 0, width - hspWidth);
+    // Embed vertical separation patterns around the squares.
+    const vspHeight = 7;
+    // Left top corner.
+    embedVerticalSeparationPattern(matrix, vspHeight, 0);
+    // Right top corner.
+    embedVerticalSeparationPattern(matrix, height - vspHeight - 1, 0);
+    // Left bottom corner.
+    embedVerticalSeparationPattern(matrix, vspHeight, height - vspHeight);
+  }
+  function embedTimingPatterns(matrix) {
+    const width = matrix.width - 8;
+    const height = matrix.height - 8;
+    // -8 is for skipping position detection patterns (7: size)
+    // separation patterns (1: size). Thus, 8 = 7 + 1.
+    for (let i = 8; i < height; i++) {
+      const bit = (i + 1) % 2;
+      // Vertical line.
+      if (isEmpty(matrix, 6, i)) {
+        matrix.set(6, i, bit);
+      }
+    }
+    // -8 is for skipping position detection patterns (7: size)
+    // separation patterns (1: size). Thus, 8 = 7 + 1.
+    for (let j = 8; j < width; j++) {
+      const bit = (j + 1) % 2;
+      // Horizontal line.
+      if (isEmpty(matrix, j, 6)) {
+        matrix.set(j, 6, bit);
+      }
+    }
+  }
+  // Embed position adjustment patterns if need be.
+  function embedPositionAdjustmentPatterns(matrix, { version }) {
+    if (version >= 2) {
+      const coordinates = POSITION_ADJUSTMENT_PATTERN_COORDINATE_TABLE[version - 1];
+      const { length } = coordinates;
+      for (let i = 0; i !== length; i++) {
+        const y = coordinates[i];
+        for (let j = 0; j !== length; j++) {
+          const x = coordinates[j];
+          if (isEmpty(matrix, x, y)) {
+            // If the cell is unset, we embed the position adjustment pattern here.
+            // -2 is necessary since the x/y coordinates point to the center of the pattern, not the
+            // left top corner.
+            embedPositionAdjustmentPattern(matrix, x - 2, y - 2);
+          }
+        }
+      }
+    }
+  }
+  // Embed basic patterns. On success, modify the matrix.
+  // The basic patterns are:
+  // - Position detection patterns
+  // - Timing patterns
+  // - Dark dot at the left bottom corner
+  // - Position adjustment patterns, if need be
+  function embedBasicPatterns(matrix, version) {
+    // Let's get started with embedding big squares at corners.
+    embedPositionDetectionPatternsAndSeparators(matrix);
+    // Then, embed the dark dot at the left bottom corner.
+    embedDarkDotAtLeftBottomCorner(matrix);
+    // Position adjustment patterns appear if version >= 2.
+    embedPositionAdjustmentPatterns(matrix, version);
+    // Timing patterns should be embedded after position adj. patterns.
+    embedTimingPatterns(matrix);
+  }
+  // Return the position of the most significant bit set (to one) in the "value". The most
+  // significant bit is position 32. If there is no bit set, return 0. Examples:
+  // - findMSBSet(0) => 0
+  // - findMSBSet(1) => 1
+  // - findMSBSet(255) => 8
+  function findMSBSet(value) {
+    return 32 - Math.clz32(value);
+  }
+  // Calculate BCH (Bose-Chaudhuri-Hocquenghem) code for "value" using polynomial "poly". The BCH
+  // code is used for encoding type information and version information.
+  // Example: Calculation of version information of 7.
+  // f(x) is created from 7.
+  //   - 7 = 000111 in 6 bits
+  //   - f(x) = x^2 + x^1 + x^0
+  // g(x) is given by the standard (p. 67)
+  //   - g(x) = x^12 + x^11 + x^10 + x^9 + x^8 + x^5 + x^2 + 1
+  // Multiply f(x) by x^(18 - 6)
+  //   - f'(x) = f(x) * x^(18 - 6)
+  //   - f'(x) = x^14 + x^13 + x^12
+  // Calculate the remainder of f'(x) / g(x)
+  //         x^2
+  //         __________________________________________________
+  //   g(x) )x^14 + x^13 + x^12
+  //         x^14 + x^13 + x^12 + x^11 + x^10 + x^7 + x^4 + x^2
+  //         --------------------------------------------------
+  //                              x^11 + x^10 + x^7 + x^4 + x^2
+  //
+  // The remainder is x^11 + x^10 + x^7 + x^4 + x^2
+  // Encode it in binary: 110010010100
+  // The return value is 0xc94 (1100 1001 0100)
+  //
+  // Since all coefficients in the polynomials are 1 or 0, we can do the calculation by bit
+  // operations. We don't care if coefficients are positive or negative.
+  function calculateBCHCode(value, poly) {
+    if (poly === 0) {
+      throw new Error('0 polynomial');
+    }
+    // If poly is "1 1111 0010 0101" (version info poly), msbSetInPoly is 13. We'll subtract 1
+    // from 13 to make it 12.
+    const msbSetInPoly = findMSBSet(poly);
+    value <<= msbSetInPoly - 1;
+    // Do the division business using exclusive-or operations.
+    while (findMSBSet(value) >= msbSetInPoly) {
+      value ^= poly << (findMSBSet(value) - msbSetInPoly);
+    }
+    // Now the "value" is the remainder (i.e. the BCH code)
+    return value;
+  }
+  // Make bit vector of type information. On success, store the result in "bits".
+  // Encode error correction level and mask pattern. See 8.9 of
+  // JISX0510:2004 (p.45) for details.
+  function makeTypeInfoBits(bits, ecLevel, mask) {
+    const typeInfo = (ecLevel.bits << 3) | mask;
+    bits.append(typeInfo, 5);
+    const bchCode = calculateBCHCode(typeInfo, TYPE_INFO_POLY);
+    bits.append(bchCode, 10);
+    const maskBits = new BitArray();
+    maskBits.append(TYPE_INFO_MASK_PATTERN, 15);
+    bits.xor(maskBits);
+  }
+  // Embed type information. On success, modify the matrix.
+  function embedTypeInfo(matrix, ecLevel, mask) {
+    const typeInfoBits = new BitArray();
+    makeTypeInfoBits(typeInfoBits, ecLevel, mask);
+    const { length } = typeInfoBits;
+    const { width, height } = matrix;
+    for (let i = 0; i < length; i++) {
+      // Type info bits at the left top corner. See 8.9 of JISX0510:2004 (p.46).
+      const [x1, y1] = TYPE_INFO_COORDINATES[i];
+      // Place bits in LSB to MSB order. LSB (least significant bit) is the last value in
+      // "typeInfoBits".
+      const bit = typeInfoBits.get(length - 1 - i);
+      matrix.set(x1, y1, bit);
+      let x2;
+      let y2;
+      if (i < 8) {
+        // Right top corner.
+        x2 = width - i - 1;
+        y2 = 8;
+      } else {
+        // Left bottom corner.
+        x2 = 8;
+        y2 = height - 7 + (i - 8);
+      }
+      matrix.set(x2, y2, bit);
+    }
+  }
+  // Make bit vector of version information. On success, store the result in "bits".
+  // See 8.10 of JISX0510:2004 (p.45) for details.
+  function makeVersionInfoBits(bits, version) {
+    bits.append(version, 6);
+    const bchCode = calculateBCHCode(version, VERSION_INFO_POLY);
+    bits.append(bchCode, 12);
+  }
+  // Embed version information if need be. On success, modify the matrix.
+  // See 8.10 of JISX0510:2004 (p.47) for how to embed version information.
+  function embedVersionInfo(matrix, { version }) {
+    if (version >= 7) {
+      const versionInfoBits = new BitArray();
+      makeVersionInfoBits(versionInfoBits, version);
+      // It will decrease from 17 to 0.
+      let bitIndex = 6 * 3 - 1;
+      const { height } = matrix;
+      for (let i = 0; i < 6; ++i) {
+        for (let j = 0; j < 3; ++j) {
+          // Place bits in LSB (least significant bit) to MSB order.
+          const bit = versionInfoBits.get(bitIndex--);
+          // Left bottom corner.
+          matrix.set(i, height - 11 + j, bit);
+          // Right bottom corner.
+          matrix.set(height - 11 + j, i, bit);
+        }
+      }
+    }
+  }
+  // Embed "dataBits" using "getMaskPattern". On success, modify the matrix.
+  // See 8.7 of JISX0510:2004 (p.38) for how to embed data bits.
+  function embedDataBits(matrix, dataBits, mask) {
+    const { length } = dataBits;
+    const { width, height } = matrix;
+    let bitIndex = 0;
+    let direction = -1;
+    // Start from the right bottom cell.
+    let x = width - 1;
+    let y = height - 1;
+    while (x > 0) {
+      // Skip the vertical timing pattern.
+      if (x === 6) {
+        x -= 1;
+      }
+      while (y >= 0 && y < height) {
+        for (let i = 0; i < 2; i++) {
+          const offsetX = x - i;
+          // Skip the cell if it's not empty.
+          if (!isEmpty(matrix, offsetX, y)) {
+            continue;
+          }
+          let bit;
+          if (bitIndex < length) {
+            bit = dataBits.get(bitIndex++);
+          } else {
+            // Padding bit. If there is no bit left, we'll fill the left cells with 0, as described
+            // in 8.4.9 of JISX0510:2004 (p. 24).
+            bit = 0;
+          }
+          // Apply mask.
+          bit ^= getDataMaskBit(mask, x, y);
+          matrix.set(offsetX, y, bit);
+        }
+        y += direction;
+      }
+      // Reverse the direction.
+      direction = -direction;
+      // Update y.
+      y += direction;
+      // Move to the left.
+      x -= 2;
+    }
+  }
+  // Build 2D matrix of QR Code from "dataBits" with "ecLevel", "version" and "getMaskPattern". On
+  // success, store the result in "matrix".
+  function buildMatrix(matrix, dataBits, version, ecLevel, mask) {
+    // Clear matrix
+    matrix.clear(-1);
+    // Embed basic patterns
+    embedBasicPatterns(matrix, version);
+    // Type information appear with any version.
+    embedTypeInfo(matrix, ecLevel, mask);
+    // Version info appear if version >= 7.
+    embedVersionInfo(matrix, version);
+    // Data should be embedded at end.
+    embedDataBits(matrix, dataBits, mask);
+  }
+
+  /**
+   * @module mask
+   */
+  // Penalty weights from section 6.8.2.1
+  const N1 = 3;
+  const N2 = 3;
+  const N3 = 40;
+  const N4 = 10;
+  // Is dark point.
+  function isDark(matrix, x, y) {
+    return matrix.get(x, y) === 1;
+  }
+  // Helper function for applyMaskPenaltyRule1. We need this for doing this calculation in both
+  // vertical and horizontal orders respectively.
+  function applyMaskPenaltyRule1Internal(matrix, isHorizontal) {
+    let penalty = 0;
+    let { width, height } = matrix;
+    width = isHorizontal ? width : height;
+    height = isHorizontal ? height : width;
+    for (let y = 0; y < height; y++) {
+      let prevBit = false;
+      let numSameBitCells = 0;
+      for (let x = 0; x < width; x++) {
+        const bit = isHorizontal ? isDark(matrix, x, y) : isDark(matrix, y, x);
+        if (bit === prevBit) {
+          numSameBitCells++;
+        } else {
+          if (numSameBitCells >= 5) {
+            penalty += N1 + (numSameBitCells - 5);
+          }
+          // set prev bit
+          prevBit = bit;
+          // include the cell itself
+          numSameBitCells = 1;
+        }
+      }
+      if (numSameBitCells >= 5) {
+        penalty += N1 + (numSameBitCells - 5);
+      }
+    }
+    return penalty;
+  }
+  // Apply mask penalty rule 1 and return the penalty. Find repetitive cells with the same color and
+  // give penalty to them. Example: 00000 or 11111.
+  function applyMaskPenaltyRule1(matrix) {
+    return applyMaskPenaltyRule1Internal(matrix, true) + applyMaskPenaltyRule1Internal(matrix, false);
+  }
+  // Apply mask penalty rule 2 and return the penalty. Find 2x2 blocks with the same color and give
+  // penalty to them. This is actually equivalent to the spec's rule, which is to find MxN blocks and give a
+  // penalty proportional to (M-1)x(N-1), because this is the number of 2x2 blocks inside such a block.
+  function applyMaskPenaltyRule2(matrix) {
+    let penalty = 0;
+    const width = matrix.width - 1;
+    const height = matrix.height - 1;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const value = isDark(matrix, x, y);
+        if (
+          // Find 2x2 blocks with the same color
+          value === isDark(matrix, x + 1, y) &&
+          value === isDark(matrix, x, y + 1) &&
+          value === isDark(matrix, x + 1, y + 1)
+        ) {
+          penalty += N2;
+        }
+      }
+    }
+    return penalty;
+  }
+  // Is is four white, check on horizontal and vertical.
+  function isFourWhite(matrix, offset, from, to, isHorizontal) {
+    from = Math.max(from, 0);
+    to = Math.min(to, isHorizontal ? matrix.width : matrix.height);
+    for (let i = from; i < to; i++) {
+      const value = isHorizontal ? isDark(matrix, i, offset) : isDark(matrix, offset, i);
+      if (value) {
+        return false;
+      }
+    }
+    return true;
+  }
+  // Apply mask penalty rule 3 and return the penalty. Find consecutive runs of 1:1:3:1:1:4
+  // starting with black, or 4:1:1:3:1:1 starting with white, and give penalty to them. If we
+  // find patterns like 000010111010000, we give penalty once.
+  function applyMaskPenaltyRule3(matrix) {
+    let numPenalties = 0;
+    const { width, height } = matrix;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (
+          // Find consecutive runs of 1:1:3:1:1:4 or 4:1:1:3:1:1, patterns like 000010111010000
+          x + 6 < width &&
+          isDark(matrix, x, y) &&
+          !isDark(matrix, x + 1, y) &&
+          isDark(matrix, x + 2, y) &&
+          isDark(matrix, x + 3, y) &&
+          isDark(matrix, x + 4, y) &&
+          !isDark(matrix, x + 5, y) &&
+          isDark(matrix, x + 6, y) &&
+          (isFourWhite(matrix, y, x - 4, x, true) || isFourWhite(matrix, y, x + 7, x + 11, true))
+        ) {
+          numPenalties++;
+        }
+        if (
+          // Find consecutive runs of 1:1:3:1:1:4 or 4:1:1:3:1:1, patterns like 000010111010000
+          y + 6 < height &&
+          isDark(matrix, x, y) &&
+          !isDark(matrix, x, y + 1) &&
+          isDark(matrix, x, y + 2) &&
+          isDark(matrix, x, y + 3) &&
+          isDark(matrix, x, y + 4) &&
+          !isDark(matrix, x, y + 5) &&
+          isDark(matrix, x, y + 6) &&
+          (isFourWhite(matrix, x, y - 4, y, false) || isFourWhite(matrix, x, y + 7, y + 11, false))
+        ) {
+          numPenalties++;
+        }
+      }
+    }
+    return numPenalties * N3;
+  }
+  // Apply mask penalty rule 4 and return the penalty. Calculate the ratio of dark cells and give
+  // penalty if the ratio is far from 50%. It gives 10 penalty for 5% distance.
+  function applyMaskPenaltyRule4(matrix) {
+    let numDarkCells = 0;
+    const { width, height } = matrix;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (isDark(matrix, x, y)) {
+          numDarkCells++;
+        }
+      }
+    }
+    const numTotalCells = width * height;
+    const fivePercentVariances = (Math.abs(numDarkCells * 2 - numTotalCells) * 10) / numTotalCells;
+    return fivePercentVariances * N4;
+  }
+  // The mask penalty calculation is complicated.  See Table 21 of JISX0510:2004 (p.45) for details.
+  // Basically it applies four rules and summate all penalties.
+  function calculateMaskPenalty(matrix) {
+    return (
+      applyMaskPenaltyRule1(matrix) +
+      applyMaskPenaltyRule2(matrix) +
+      applyMaskPenaltyRule3(matrix) +
+      applyMaskPenaltyRule4(matrix)
+    );
+  }
+  // Return the mask bit for "getMaskPattern" at "x" and "y". See 8.8 of JISX0510:2004 for mask
+  // pattern conditions.
+  function getDataMaskBit(mask, x, y) {
+    let temp;
+    let intermediate;
+    switch (mask) {
+      case 0:
+        intermediate = (y + x) & 0x1;
+        break;
+      case 1:
+        intermediate = y & 0x1;
+        break;
+      case 2:
+        intermediate = x % 3;
+        break;
+      case 3:
+        intermediate = (y + x) % 3;
+        break;
+      case 4:
+        intermediate = (y / 2 + x / 3) & 0x1;
+        break;
+      case 5:
+        temp = y * x;
+        intermediate = (temp & 0x1) + (temp % 3);
+        break;
+      case 6:
+        temp = y * x;
+        intermediate = ((temp & 0x1) + (temp % 3)) & 0x1;
+        break;
+      case 7:
+        intermediate = (((y * x) % 3) + ((y + x) & 0x1)) & 0x1;
+        break;
+      default:
+        throw new Error(`illegal mask: ${mask}`);
+    }
+    return intermediate !== 0 ? 0 : 1;
+  }
+  function chooseMask(matrix, bits, version, ecLevel) {
+    let bestMask = -1;
+    // Lower penalty is better.
+    let minPenalty = Number.MAX_VALUE;
+    // We try all mask patterns to choose the best one.
+    for (let mask = 0; mask < 8; mask++) {
+      buildMatrix(matrix, bits, version, ecLevel, mask);
+      const penalty = calculateMaskPenalty(matrix);
+      if (penalty < minPenalty) {
+        bestMask = mask;
+        minPenalty = penalty;
+      }
+    }
+    return bestMask;
+  }
+
+  /**
+   * @module Charset
+   */
+  const NAME_TO_CHARSET = new Map();
+  const VALUES_TO_CHARSET = new Map();
+  class Charset {
+    #label;
+    #values;
+    static CP437 = new Charset('cp437', 0, 2);
+    static ISO_8859_1 = new Charset('iso-8859-1', 1, 3);
+    static ISO_8859_2 = new Charset('iso-8859-2', 4);
+    static ISO_8859_3 = new Charset('iso-8859-3', 5);
+    static ISO_8859_4 = new Charset('iso-8859-4', 6);
+    static ISO_8859_5 = new Charset('iso-8859-5', 7);
+    static ISO_8859_6 = new Charset('iso-8859-6', 8);
+    static ISO_8859_7 = new Charset('iso-8859-7', 9);
+    static ISO_8859_8 = new Charset('iso-8859-8', 10);
+    static ISO_8859_9 = new Charset('iso-8859-9', 11);
+    static ISO_8859_10 = new Charset('iso-8859-10', 12);
+    static ISO_8859_11 = new Charset('iso-8859-11', 13);
+    static ISO_8859_13 = new Charset('iso-8859-13', 15);
+    static ISO_8859_14 = new Charset('iso-8859-14', 16);
+    static ISO_8859_15 = new Charset('iso-8859-15', 17);
+    static ISO_8859_16 = new Charset('iso-8859-16', 18);
+    static SJIS = new Charset('sjis', 20);
+    static CP1250 = new Charset('cp1250', 21);
+    static CP1251 = new Charset('cp1251', 22);
+    static CP1252 = new Charset('cp1252', 23);
+    static CP1256 = new Charset('cp1256', 24);
+    static UTF_16BE = new Charset('utf-16be', 25);
+    static UTF_8 = new Charset('utf-8', 26);
+    static ASCII = new Charset('ascii', 27, 170);
+    static Big5 = new Charset('big5', 28);
+    static GB18030 = new Charset('gb18030', 29);
+    static EUC_KR = new Charset('euc-kr', 30);
+    constructor(label, ...values) {
+      NAME_TO_CHARSET.set(label, this);
+      for (const value of values) {
+        VALUES_TO_CHARSET.set(value, this);
+      }
+      this.#label = label;
+      this.#values = values;
+    }
+    get label() {
+      return this.#label;
+    }
+    get values() {
+      return this.#values;
+    }
+  }
+
+  /**
+   * @module Byte
+   */
+  const encoder = new TextEncoder();
+  class Byte {
+    #content;
+    #charset;
+    constructor(content, charset = Charset.UTF_8) {
+      this.#content = content;
+      this.#charset = charset;
+    }
+    get mode() {
+      return Mode.BYTE;
+    }
+    get content() {
+      return this.#content;
+    }
+    get charset() {
+      return this.#charset;
+    }
+    encode(encode = content => encoder.encode(content)) {
+      const bytes = encode(this.#content, this.#charset);
+      const bits = new BitArray();
+      const { length } = bytes;
+      let i = 0;
+      while (i < length) {
+        bits.append(bytes[i++], 8);
+      }
+      return bits;
+    }
+  }
+
+  /**
+   * @module Kanji
+   */
+  // prettier-ignore
+  // https://github.com/soldair/node-qrcode/blob/master/helper/to-sjis.js
+  const SJIS_UTF8 = [
         [0x8140, '　、。，．・：；？！゛゜´｀¨＾￣＿ヽヾゝゞ〃仝々〆〇ー―‐／＼～∥｜…‥‘’“”（）〔〕［］｛｝〈〉《》「」『』【】＋－±×'],
         [0x8180, '÷＝≠＜＞'],
         [0x818f, '￥＄￠￡％＃＆＊＠§☆★'],
@@ -1935,260 +2211,258 @@
         [0xea40, '鵝鵞鵤鵑鵐鵙鵲鶉鶇鶫鵯鵺鶚鶤鶩鶲鷄鷁鶻鶸鶺鷆鷏鷂鷙鷓鷸鷦鷭鷯鷽鸚鸛鸞鹵鹹鹽麁麈麋麌麒麕麑麝麥麩麸麪麭靡黌黎黏黐黔黜點黝黠黥黨黯'],
         [0xea80, '黴黶黷黹黻黼黽鼇鼈皷鼕鼡鼬鼾齊齒齔齣齟齠齡齦齧齬齪齷齲齶龕龜龠堯槇遙瑤凜熙']
     ];
-    const ENCODE_MAPPING = {};
-    for (const [code, kanji] of SJIS_UTF8) {
-        let i = 0;
-        for (const char of kanji) {
-            ENCODE_MAPPING[char.charCodeAt(0)] = code + i++;
-        }
+  const ENCODE_MAPPING = {};
+  for (const [code, kanji] of SJIS_UTF8) {
+    let i = 0;
+    for (const character of kanji) {
+      ENCODE_MAPPING[character.charCodeAt(0)] = code + i++;
     }
-    function encode(text) {
-        const { length } = text;
-        const bytes = [];
-        for (let i = 0; i < length; i++) {
-            const code = text.charCodeAt(i);
-            const byte = ENCODE_MAPPING[code];
-            if (byte != null) {
-                // 2 bytes
-                bytes.push(byte >> 8, byte & 0xff);
-            }
-            else {
-                throw new Error(`illegal char: ${text.charAt(i)}`);
-            }
-        }
-        return bytes;
+  }
+  function encode(content) {
+    const bytes = [];
+    const { length } = content;
+    for (let i = 0; i < length; i++) {
+      const code = content.charCodeAt(i);
+      const byte = ENCODE_MAPPING[code];
+      if (byte != null) {
+        // 2 bytes
+        bytes.push(byte >> 8, byte & 0xff);
+      } else {
+        throw new Error(`illegal character: ${content.charAt(i)}`);
+      }
     }
-    class Kanji {
-        #content;
-        constructor(content) {
-            this.#content = content;
-        }
-        get mode() {
-            return Mode.KANJI;
-        }
-        get content() {
-            return this.#content;
-        }
-        encode() {
-            const bytes = encode(this.#content);
-            // The bytes.length must be even
-            const length = bytes.length - 1;
-            const bits = new BitArray();
-            let i = 0;
-            while (i < length) {
-                let subtracted = -1;
-                const byte1 = bytes[i] & 0xff;
-                const byte2 = bytes[i + 1] & 0xff;
-                const code = (byte1 << 8) | byte2;
-                if (code >= 0x8140 && code <= 0x9ffc) {
-                    subtracted = code - 0x8140;
-                }
-                else if (code >= 0xe040 && code <= 0xebbf) {
-                    subtracted = code - 0xc140;
-                }
-                if (subtracted === -1) {
-                    throw new Error('illegal byte sequence');
-                }
-                const encoded = (subtracted >> 8) * 0xc0 + (subtracted & 0xff);
-                bits.append(encoded, 13);
-                i += 2;
-            }
-            return bits;
-        }
+    return bytes;
+  }
+  class Kanji {
+    #content;
+    constructor(content) {
+      this.#content = content;
     }
+    get mode() {
+      return Mode.KANJI;
+    }
+    get content() {
+      return this.#content;
+    }
+    encode() {
+      const bytes = encode(this.#content);
+      // The bytes.length must be even
+      const length = bytes.length - 1;
+      const bits = new BitArray();
+      let i = 0;
+      while (i < length) {
+        let subtracted = -1;
+        const byte1 = bytes[i] & 0xff;
+        const byte2 = bytes[i + 1] & 0xff;
+        const code = (byte1 << 8) | byte2;
+        if (code >= 0x8140 && code <= 0x9ffc) {
+          subtracted = code - 0x8140;
+        } else if (code >= 0xe040 && code <= 0xebbf) {
+          subtracted = code - 0xc140;
+        }
+        if (subtracted === -1) {
+          throw new Error('illegal byte sequence');
+        }
+        const encoded = (subtracted >> 8) * 0xc0 + (subtracted & 0xff);
+        bits.append(encoded, 13);
+        i += 2;
+      }
+      return bits;
+    }
+  }
 
-    /**
-     * @module Numeric
-     */
-    function getDigit(character) {
-        return character.charCodeAt(0) - 48;
+  /**
+   * @module Numeric
+   */
+  function getDigit(character) {
+    const code = character.charCodeAt(0);
+    // 0 - 9
+    if (48 <= code && code <= 57) {
+      return code - 48;
     }
-    class Numeric {
-        #content;
-        constructor(content) {
-            this.#content = content;
-        }
-        get mode() {
-            return Mode.NUMERIC;
-        }
-        get content() {
-            return this.#content;
-        }
-        encode() {
-            const content = this.#content;
-            const bits = new BitArray();
-            const { length } = content;
-            let i = 0;
-            while (i < length) {
-                const num1 = getDigit(content.charAt(i));
-                if (i + 2 < length) {
-                    // Encode three numeric letters in ten bits.
-                    const num2 = getDigit(content.charAt(i + 1));
-                    const num3 = getDigit(content.charAt(i + 2));
-                    bits.append(num1 * 100 + num2 * 10 + num3, 10);
-                    i += 3;
-                }
-                else if (i + 1 < length) {
-                    // Encode two numeric letters in seven bits.
-                    const num2 = getDigit(content.charAt(i + 1));
-                    bits.append(num1 * 10 + num2, 7);
-                    i += 2;
-                }
-                else {
-                    // Encode one numeric letter in four bits.
-                    bits.append(num1, 4);
-                    i++;
-                }
-            }
-            return bits;
-        }
+    throw new Error(`illegal character: ${character}`);
+  }
+  class Numeric {
+    #content;
+    constructor(content) {
+      this.#content = content;
     }
+    get mode() {
+      return Mode.NUMERIC;
+    }
+    get content() {
+      return this.#content;
+    }
+    encode() {
+      const content = this.#content;
+      const bits = new BitArray();
+      const { length } = content;
+      let i = 0;
+      while (i < length) {
+        const num1 = getDigit(content.charAt(i));
+        if (i + 2 < length) {
+          // Encode three numeric letters in ten bits.
+          const num2 = getDigit(content.charAt(i + 1));
+          const num3 = getDigit(content.charAt(i + 2));
+          bits.append(num1 * 100 + num2 * 10 + num3, 10);
+          i += 3;
+        } else if (i + 1 < length) {
+          // Encode two numeric letters in seven bits.
+          const num2 = getDigit(content.charAt(i + 1));
+          bits.append(num1 * 10 + num2, 7);
+          i += 2;
+        } else {
+          // Encode one numeric letter in four bits.
+          bits.append(num1, 4);
+          i++;
+        }
+      }
+      return bits;
+    }
+  }
 
-    /**
-     * @module Alphanumeric
-     */
-    const ALPHANUMERIC_TABLE = [
-        // 0x00-0x0f
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        // 0x10-0x1f
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-        // 0x20-0x2f
-        36, -1, -1, -1, 37, 38, -1, -1, -1, -1, 39, 40, -1, 41, 42, 43,
-        // 0x30-0x3f
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 44, -1, -1, -1, -1, -1,
-        // 0x40-0x4f
-        -1, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-        // 0x50-0x5f
-        25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, -1, -1, -1, -1, -1
-    ];
-    function getAlphanumericCode(code) {
-        if (code < ALPHANUMERIC_TABLE.length) {
-            return ALPHANUMERIC_TABLE[code];
-        }
-        return -1;
+  /**
+   * @module Alphanumeric
+   */
+  const ALPHANUMERIC_TABLE = [
+    // 0x00-0x0f
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    // 0x10-0x1f
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    // 0x20-0x2f
+    36, -1, -1, -1, 37, 38, -1, -1, -1, -1, 39, 40, -1, 41, 42, 43,
+    // 0x30-0x3f
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 44, -1, -1, -1, -1, -1,
+    // 0x40-0x4f
+    -1, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+    // 0x50-0x5f
+    25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, -1, -1, -1, -1, -1
+  ];
+  function getAlphanumericCode(code) {
+    if (code < ALPHANUMERIC_TABLE.length) {
+      return ALPHANUMERIC_TABLE[code];
     }
-    class Alphanumeric {
-        #content;
-        constructor(content) {
-            this.#content = content;
-        }
-        get mode() {
-            return Mode.ALPHANUMERIC;
-        }
-        get content() {
-            return this.#content;
-        }
-        encode() {
-            const content = this.#content;
-            const bits = new BitArray();
-            const { length } = content;
-            let i = 0;
-            while (i < length) {
-                const code1 = getAlphanumericCode(content.charCodeAt(i));
-                if (code1 === -1) {
-                    throw new Error(`illegal char: ${content.charAt(i)}`);
-                }
-                if (i + 1 < length) {
-                    const code2 = getAlphanumericCode(content.charCodeAt(i + 1));
-                    if (code2 === -1) {
-                        throw new Error(`illegal char: ${content.charAt(i)}`);
-                    }
-                    // Encode two alphanumeric letters in 11 bits.
-                    bits.append(code1 * 45 + code2, 11);
-                    i += 2;
-                }
-                else {
-                    // Encode one alphanumeric letter in six bits.
-                    bits.append(code1, 6);
-                    i++;
-                }
-            }
-            return bits;
-        }
+    return -1;
+  }
+  class Alphanumeric {
+    #content;
+    constructor(content) {
+      this.#content = content;
     }
-
-    /**
-     * @module Encoder
-     */
-    class Encoder {
-        #level;
-        #version;
-        #encode;
-        #hints;
-        constructor({ encode, version, hints = [], level = 'L' } = {}) {
-            this.#hints = hints;
-            this.#encode = encode;
-            this.#version = version;
-            this.#level = ECLevel[level];
-        }
-        encode(...segments) {
-            const hints = this.#hints;
-            const ecLevel = this.#level;
-            const encode = this.#encode;
-            const versionNumber = this.#version;
-            const segmentBlocks = [];
-            const hasGS1FormatHint = hints.indexOf('GS1_FORMAT') >= 0;
-            const hasEncodingHint = hints.indexOf('CHARACTER_SET') >= 0;
-            for (const segment of segments) {
-                const { mode, content } = segment;
-                const isByte = isByteMode(segment);
-                // This will store the header information, like mode and
-                // length, as well as "header" segments like an ECI segment.
-                const headerBits = new BitArray();
-                const dataBits = isByte ? segment.encode(encode) : segment.encode();
-                // Append ECI segment if applicable
-                if (hasEncodingHint && isByte) {
-                    appendECI(headerBits, mode, segment.charset);
-                }
-                // Append the FNC1 mode header for GS1 formatted data if applicable
-                if (hasGS1FormatHint) {
-                    // GS1 formatted codes are prefixed with a FNC1 in first position mode header
-                    appendModeInfo(headerBits, Mode.FNC1_FIRST_POSITION);
-                }
-                // (With ECI in place,) Write the mode marker
-                appendModeInfo(headerBits, mode);
-                segmentBlocks.push({
-                    mode,
-                    dataBits,
-                    headerBits,
-                    length: isByte ? dataBits.byteLength : content.length
-                });
-            }
-            let version;
-            if (versionNumber != null) {
-                version = VERSIONS[versionNumber - 1];
-                const bitsNeeded = calculateBitsNeeded(segmentBlocks, version);
-                if (!willFit(bitsNeeded, version, ecLevel)) {
-                    throw new Error('data too big for requested version');
-                }
-            }
-            else {
-                version = recommendVersion(segmentBlocks, ecLevel);
-            }
-            const headerAndDataBits = new BitArray();
-            for (const { mode, length, headerBits, dataBits } of segmentBlocks) {
-                headerAndDataBits.append(headerBits);
-                appendLengthInfo(headerAndDataBits, version, mode, length);
-                headerAndDataBits.append(dataBits);
-            }
-            const { totalCodewords, dimension } = version;
-            const ecBlocks = version.getECBlocksForECLevel(ecLevel);
-            const numDataBytes = totalCodewords - ecBlocks.totalECCodewords;
-            // Terminate the bits properly.
-            terminateBits(headerAndDataBits, numDataBytes);
-            const { numBlocks } = ecBlocks;
-            const matrix = new ByteMatrix(dimension);
-            const finalBits = interleaveWithECBytes(headerAndDataBits, numBlocks, numDataBytes, totalCodewords);
-            const mask = chooseMask(matrix, finalBits, version, ecLevel);
-            buildMatrix(matrix, finalBits, version, ecLevel, mask);
-            return new QRCode(matrix);
-        }
+    get mode() {
+      return Mode.ALPHANUMERIC;
     }
+    get content() {
+      return this.#content;
+    }
+    encode() {
+      const content = this.#content;
+      const bits = new BitArray();
+      const { length } = content;
+      let i = 0;
+      while (i < length) {
+        const code1 = getAlphanumericCode(content.charCodeAt(i));
+        if (code1 === -1) {
+          throw new Error(`illegal character: ${content.charAt(i)}`);
+        }
+        if (i + 1 < length) {
+          const code2 = getAlphanumericCode(content.charCodeAt(i + 1));
+          if (code2 === -1) {
+            throw new Error(`illegal character: ${content.charAt(i)}`);
+          }
+          // Encode two alphanumeric letters in 11 bits.
+          bits.append(code1 * 45 + code2, 11);
+          i += 2;
+        } else {
+          // Encode one alphanumeric letter in six bits.
+          bits.append(code1, 6);
+          i++;
+        }
+      }
+      return bits;
+    }
+  }
 
-    exports.Alphanumeric = Alphanumeric;
-    exports.Byte = Byte;
-    exports.Encoder = Encoder;
-    exports.Kanji = Kanji;
-    exports.Numeric = Numeric;
+  /**
+   * @module Encoder
+   */
+  class Encoder {
+    #level;
+    #version;
+    #encode;
+    #hints;
+    constructor({ encode, version, hints = [], level = 'L' } = {}) {
+      this.#hints = hints;
+      this.#encode = encode;
+      this.#version = version;
+      this.#level = ECLevel[level];
+    }
+    encode(...segments) {
+      const hints = this.#hints;
+      const ecLevel = this.#level;
+      const encode = this.#encode;
+      const versionNumber = this.#version;
+      const segmentBlocks = [];
+      const hasGS1FormatHint = hints.indexOf('GS1_FORMAT') >= 0;
+      const hasEncodingHint = hints.indexOf('CHARACTER_SET') >= 0;
+      for (const segment of segments) {
+        const { mode, content } = segment;
+        const isByte = isByteMode(segment);
+        // This will store the header information, like mode and
+        // length, as well as "header" segments like an ECI segment.
+        const headerBits = new BitArray();
+        const dataBits = isByte ? segment.encode(encode) : segment.encode();
+        // Append ECI segment if applicable
+        if (hasEncodingHint && isByte) {
+          appendECI(headerBits, mode, segment.charset);
+        }
+        // Append the FNC1 mode header for GS1 formatted data if applicable
+        if (hasGS1FormatHint) {
+          // GS1 formatted codes are prefixed with a FNC1 in first position mode header
+          appendModeInfo(headerBits, Mode.FNC1_FIRST_POSITION);
+        }
+        // (With ECI in place,) Write the mode marker
+        appendModeInfo(headerBits, mode);
+        segmentBlocks.push({
+          mode,
+          dataBits,
+          headerBits,
+          length: isByte ? dataBits.byteLength : content.length
+        });
+      }
+      let version;
+      if (versionNumber != null) {
+        version = VERSIONS[versionNumber - 1];
+        const bitsNeeded = calculateBitsNeeded(segmentBlocks, version);
+        if (!willFit(bitsNeeded, version, ecLevel)) {
+          throw new Error('data too big for requested version');
+        }
+      } else {
+        version = recommendVersion(segmentBlocks, ecLevel);
+      }
+      const headerAndDataBits = new BitArray();
+      for (const { mode, length, headerBits, dataBits } of segmentBlocks) {
+        headerAndDataBits.append(headerBits);
+        appendLengthInfo(headerAndDataBits, version, mode, length);
+        headerAndDataBits.append(dataBits);
+      }
+      const { totalCodewords, dimension } = version;
+      const ecBlocks = version.getECBlocksForECLevel(ecLevel);
+      const numDataBytes = totalCodewords - ecBlocks.totalECCodewords;
+      // Terminate the bits properly.
+      terminateBits(headerAndDataBits, numDataBytes);
+      const { numBlocks } = ecBlocks;
+      const matrix = new ByteMatrix(dimension);
+      const finalBits = interleaveWithECBytes(headerAndDataBits, numBlocks, numDataBytes, totalCodewords);
+      const mask = chooseMask(matrix, finalBits, version, ecLevel);
+      buildMatrix(matrix, finalBits, version, ecLevel, mask);
+      return new QRCode(matrix);
+    }
+  }
 
-}));
+  exports.Alphanumeric = Alphanumeric;
+  exports.Byte = Byte;
+  exports.Encoder = Encoder;
+  exports.Kanji = Kanji;
+  exports.Numeric = Numeric;
+});

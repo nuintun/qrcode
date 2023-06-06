@@ -152,7 +152,7 @@
         });
 
         try {
-          const qrcode = encoder.encode(new QRCode.Byte(data));
+          const qrcode = encoder.encode(new QRCode.Numeric(data));
 
           encodeResult.html('<img src="' + qrcode.toDataURL(moduleSize, margin) + '" />');
           encodeResult.removeClass('hide');

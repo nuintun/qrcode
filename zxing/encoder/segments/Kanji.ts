@@ -100,24 +100,24 @@ const ENCODE_MAPPING: Record<number, number> = {};
 for (const [code, kanji] of SJIS_UTF8) {
   let i = 0;
 
-  for (const char of kanji) {
-    ENCODE_MAPPING[char.charCodeAt(0)] = code + i++;
+  for (const character of kanji) {
+    ENCODE_MAPPING[character.charCodeAt(0)] = code + i++;
   }
 }
 
-function encode(text: string): number[] {
-  const { length } = text;
+function encode(content: string): number[] {
   const bytes: number[] = [];
+  const { length } = content;
 
   for (let i = 0; i < length; i++) {
-    const code = text.charCodeAt(i);
+    const code = content.charCodeAt(i);
     const byte = ENCODE_MAPPING[code];
 
     if (byte != null) {
       // 2 bytes
       bytes.push(byte >> 8, byte & 0xff);
     } else {
-      throw new Error(`illegal char: ${text.charAt(i)}`);
+      throw new Error(`illegal character: ${content.charAt(i)}`);
     }
   }
 
