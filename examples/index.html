@@ -139,22 +139,20 @@
         var hints = [];
 
         if (hasGs1Hint) {
-          hints.push(QRCode.EncodeHint.GS1_FORMAT);
+          hints.push('GS1_FORMAT');
         }
 
         if (hasEciHint) {
-          hints.push(QRCode.EncodeHint.CHARACTER_SET);
+          hints.push('CHARACTER_SET');
         }
 
-        var qrcode = new QRCode.Writer({
+        var encoder = new QRCode.Encoder({
           hints: hints,
-          level: QRCode.ECLevel[ecLevel]
+          level: ecLevel
         });
 
         try {
-          var data = mode === 'Auto' ? chooseBestModeData(data) : new QRCode[mode](data);
-
-          qrcode.write(data).encode();
+          const qrcode = encoder.encode(new QRCode.Byte(data));
 
           encodeResult.html('<img src="' + qrcode.toDataURL(moduleSize, margin) + '" />');
           encodeResult.removeClass('hide');

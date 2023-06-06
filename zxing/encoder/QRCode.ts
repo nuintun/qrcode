@@ -1,12 +1,17 @@
 /**
- * @module Writer
+ * @module QRCode
  */
 
-import { Encoder } from './encoder';
-import { isDark } from './encoder/Matrix';
-import { GIFImage } from './image/GIFImage';
+import { ByteMatrix } from './ByteMatrix';
+import { GIFImage } from 'src/image/GIFImage';
 
-export class Writer extends Encoder {
+export class QRCode {
+  #matrix: ByteMatrix;
+
+  constructor(matrix: ByteMatrix) {
+    this.#matrix = matrix;
+  }
+
   /**
    * @public
    * @method toDataURL
@@ -18,8 +23,8 @@ export class Writer extends Encoder {
     moduleSize = Math.max(1, moduleSize >> 0);
     margin = Math.max(0, margin >> 0);
 
-    const matrix = this.encode();
-    const matrixSize = matrix.size;
+    const matrix = this.#matrix;
+    const matrixSize = matrix.width;
     const size = moduleSize * matrixSize + margin * 2;
     const min = margin;
     const max = size - margin;
@@ -31,7 +36,7 @@ export class Writer extends Encoder {
           const x = ((j - min) / moduleSize) >> 0;
           const y = ((i - min) / moduleSize) >> 0;
 
-          gif.set(j, i, isDark(matrix, x, y) ? 0 : 1);
+          gif.set(j, i, matrix.get(x, y) ? 0 : 1);
         } else {
           gif.set(j, i, 1);
         }

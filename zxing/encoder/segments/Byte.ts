@@ -2,52 +2,48 @@
  * @module Byte
  */
 
-import { BitArray } from '/common/BitArray';
+import { Mode } from '/common/Mode';
 import { Charset } from '/common/Charset';
-
-interface EncodeResult {
-  readonly charset: Charset;
-  readonly bytes: ArrayLike<number>;
-}
-
-interface TextEncode {
-  (content: string): EncodeResult;
-}
+import { BitArray } from '/common/BitArray';
 
 const encoder = new TextEncoder();
 
+export interface TextEncode {
+  (content: string, charset: Charset): ArrayLike<number>;
+}
+
 export class Byte {
-  #bits: BitArray;
+  #content: string;
   #charset: Charset;
 
-  constructor(
-    content: string,
-    encode: TextEncode = content => {
-      return {
-        charset: Charset.UTF_8,
-        bytes: encoder.encode(content)
-      };
-    }
-  ) {
-    let i = 0;
+  constructor(content: string, charset: Charset = Charset.UTF_8) {
+    this.#content = content;
+    this.#charset = charset;
+  }
 
-    const { bytes, charset } = encode(content);
+  public get mode(): Mode {
+    return Mode.BYTE;
+  }
+
+  public get content(): string {
+    return this.#content;
+  }
+
+  public get charset(): Charset {
+    return this.#charset;
+  }
+
+  public encode(encode: TextEncode = content => encoder.encode(content)): BitArray {
+    const bytes = encode(this.#content, this.#charset);
     const bits = new BitArray();
     const { length } = bytes;
+
+    let i = 0;
 
     while (i < length) {
       bits.append(bytes[i++], 8);
     }
 
-    this.#bits = bits;
-    this.#charset = charset;
-  }
-
-  public get bits(): BitArray {
-    return this.#bits;
-  }
-
-  public get charset(): Charset {
-    return this.#charset;
+    return bits;
   }
 }

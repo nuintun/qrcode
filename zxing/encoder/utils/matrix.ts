@@ -322,11 +322,11 @@ function embedTypeInfo(matrix: ByteMatrix, ecLevel: ECLevel, mask: number): void
   const { width, height } = matrix;
 
   for (let i = 0; i < length; i++) {
+    // Type info bits at the left top corner. See 8.9 of JISX0510:2004 (p.46).
+    const [x1, y1] = TYPE_INFO_COORDINATES[i];
     // Place bits in LSB to MSB order. LSB (least significant bit) is the last value in
     // "typeInfoBits".
     const bit = typeInfoBits.get(length - 1 - i);
-    // Type info bits at the left top corner. See 8.9 of JISX0510:2004 (p.46).
-    const [x1, y1] = TYPE_INFO_COORDINATES[i];
 
     matrix.set(x1, y1, bit);
 
@@ -373,9 +373,7 @@ function embedVersionInfo(matrix: ByteMatrix, { version }: Version): void {
     for (let i = 0; i < 6; ++i) {
       for (let j = 0; j < 3; ++j) {
         // Place bits in LSB (least significant bit) to MSB order.
-        const bit = versionInfoBits.get(bitIndex);
-
-        bitIndex--;
+        const bit = versionInfoBits.get(bitIndex--);
 
         // Left bottom corner.
         matrix.set(i, height - 11 + j, bit);

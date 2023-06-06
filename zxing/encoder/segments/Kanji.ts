@@ -2,11 +2,12 @@
  * @module Kanji
  */
 
+import { Mode } from '/common/Mode';
 import { BitArray } from '/common/BitArray';
 
 // prettier-ignore
 // https://github.com/soldair/node-qrcode/blob/master/helper/to-sjis.js
-const SJIS_UTF8_TABLE: [number, string][]= [
+const SJIS_UTF8: [number, string][]= [
   [0x8140, '　、。，．・：；？！゛゜´｀¨＾￣＿ヽヾゝゞ〃仝々〆〇ー―‐／＼～∥｜…‥‘’“”（）〔〕［］｛｝〈〉《》「」『』【】＋－±×'],
   [0x8180, '÷＝≠＜＞'],
   [0x818f, '￥＄￠￡％＃＆＊＠§☆★'],
@@ -94,30 +95,29 @@ const SJIS_UTF8_TABLE: [number, string][]= [
   [0xea80, '黴黶黷黹黻黼黽鼇鼈皷鼕鼡鼬鼾齊齒齔齣齟齠齡齦齧齬齪齷齲齶龕龜龠堯槇遙瑤凜熙']
 ];
 
-const UTF8_TO_SJIS: Record<number, number> = {};
+const ENCODE_MAPPING: Record<number, number> = {};
 
-for (const [code, kanji] of SJIS_UTF8_TABLE) {
-  const { length } = kanji;
+for (const [code, kanji] of SJIS_UTF8) {
+  let i = 0;
 
-  for (let i = 0; i < length; i++) {
-    UTF8_TO_SJIS[kanji.charAt(i).charCodeAt(0)] = code + i;
+  for (const char of kanji) {
+    ENCODE_MAPPING[char.charCodeAt(0)] = code + i++;
   }
 }
 
 function encode(text: string): number[] {
   const { length } = text;
   const bytes: number[] = [];
-  const { fromCharCode } = String;
 
   for (let i = 0; i < length; i++) {
     const code = text.charCodeAt(i);
-    const byte = UTF8_TO_SJIS[code];
+    const byte = ENCODE_MAPPING[code];
 
     if (byte != null) {
       // 2 bytes
       bytes.push(byte >> 8, byte & 0xff);
     } else {
-      throw new Error(`illegal char: ${fromCharCode(code)}`);
+      throw new Error(`illegal char: ${text.charAt(i)}`);
     }
   }
 
@@ -125,15 +125,27 @@ function encode(text: string): number[] {
 }
 
 export class Kanji {
-  #bits: BitArray;
+  #content: string;
 
   constructor(content: string) {
-    let i = 0;
+    this.#content = content;
+  }
 
-    const bits = new BitArray();
-    const bytes = encode(content);
+  public get mode(): Mode {
+    return Mode.KANJI;
+  }
+
+  public get content(): string {
+    return this.#content;
+  }
+
+  public encode(): BitArray {
+    const bytes = encode(this.#content);
     // The bytes.length must be even
     const length = bytes.length - 1;
+    const bits = new BitArray();
+
+    let i = 0;
 
     while (i < length) {
       let subtracted = -1;
@@ -148,7 +160,7 @@ export class Kanji {
         subtracted = code - 0xc140;
       }
 
-      if (subtracted == -1) {
+      if (subtracted === -1) {
         throw new Error('illegal byte sequence');
       }
 
@@ -159,10 +171,6 @@ export class Kanji {
       i += 2;
     }
 
-    this.#bits = bits;
-  }
-
-  public get bits(): BitArray {
-    return this.#bits;
+    return bits;
   }
 }

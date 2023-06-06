@@ -2,6 +2,7 @@
  * @module Numeric
  */
 
+import { Mode } from '/common/Mode';
 import { BitArray } from '/common/BitArray';
 
 function getDigit(character: string): number {
@@ -9,13 +10,26 @@ function getDigit(character: string): number {
 }
 
 export class Numeric {
-  #bits: BitArray;
+  #content: string;
 
   constructor(content: string) {
-    let i = 0;
+    this.#content = content;
+  }
 
-    const { length } = content;
+  public get mode(): Mode {
+    return Mode.NUMERIC;
+  }
+
+  public get content(): string {
+    return this.#content;
+  }
+
+  public encode(): BitArray {
+    const content = this.#content;
     const bits = new BitArray();
+    const { length } = content;
+
+    let i = 0;
 
     while (i < length) {
       const num1 = getDigit(content.charAt(i));
@@ -43,10 +57,6 @@ export class Numeric {
       }
     }
 
-    this.#bits = bits;
-  }
-
-  public get bits(): BitArray {
-    return this.#bits;
+    return bits;
   }
 }

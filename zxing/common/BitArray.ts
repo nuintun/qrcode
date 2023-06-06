@@ -99,6 +99,22 @@ export class BitArray {
     }
   }
 
+  public toBytes(bitOffset: number, array: Int8Array, offset: number, byteLength: number): void {
+    for (let i = 0; i < byteLength; i++) {
+      let byte = 0;
+
+      for (let j = 0; j < 8; j++) {
+        if (this.get(bitOffset)) {
+          byte |= 1 << (7 - j);
+        }
+
+        bitOffset++;
+      }
+
+      array[offset + i] = byte;
+    }
+  }
+
   public clear(): void {
     this.#bits.fill(0);
   }

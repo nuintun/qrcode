@@ -2,6 +2,10 @@
  * @module mask
  */
 
+import { buildMatrix } from './matrix';
+import { ECLevel } from '/common/ECLevel';
+import { Version } from '/common/Version';
+import { BitArray } from '/common/BitArray';
 import { ByteMatrix } from '/encoder/ByteMatrix';
 
 // Penalty weights from section 6.8.2.1
@@ -170,7 +174,7 @@ function applyMaskPenaltyRule4(matrix: ByteMatrix): number {
 
 // The mask penalty calculation is complicated.  See Table 21 of JISX0510:2004 (p.45) for details.
 // Basically it applies four rules and summate all penalties.
-export function calculateMaskPenalty(matrix: ByteMatrix): number {
+function calculateMaskPenalty(matrix: ByteMatrix): number {
   return (
     applyMaskPenaltyRule1(matrix) +
     applyMaskPenaltyRule2(matrix) +
@@ -217,4 +221,24 @@ export function getDataMaskBit(mask: number, x: number, y: number): number {
   }
 
   return intermediate !== 0 ? 0 : 1;
+}
+
+export function chooseMask(matrix: ByteMatrix, bits: BitArray, version: Version, ecLevel: ECLevel): number {
+  let bestMask = -1;
+  // Lower penalty is better.
+  let minPenalty = Number.MAX_VALUE;
+
+  // We try all mask patterns to choose the best one.
+  for (let mask = 0; mask < 8; mask++) {
+    buildMatrix(matrix, bits, version, ecLevel, mask);
+
+    const penalty = calculateMaskPenalty(matrix);
+
+    if (penalty < minPenalty) {
+      bestMask = mask;
+      minPenalty = penalty;
+    }
+  }
+
+  return bestMask;
 }

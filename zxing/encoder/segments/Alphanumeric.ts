@@ -2,6 +2,7 @@
  * @module Alphanumeric
  */
 
+import { Mode } from '/common/Mode';
 import { BitArray } from '/common/BitArray';
 
 const ALPHANUMERIC_TABLE = [
@@ -28,26 +29,39 @@ function getAlphanumericCode(code: number): number {
 }
 
 export class Alphanumeric {
-  #bits: BitArray;
+  #content: string;
 
   constructor(content: string) {
-    let i = 0;
+    this.#content = content;
+  }
 
-    const { length } = content;
+  public get mode(): Mode {
+    return Mode.ALPHANUMERIC;
+  }
+
+  public get content(): string {
+    return this.#content;
+  }
+
+  public encode(): BitArray {
+    const content = this.#content;
     const bits = new BitArray();
+    const { length } = content;
+
+    let i = 0;
 
     while (i < length) {
       const code1 = getAlphanumericCode(content.charCodeAt(i));
 
       if (code1 === -1) {
-        throw new Error();
+        throw new Error(`illegal char: ${content.charAt(i)}`);
       }
 
       if (i + 1 < length) {
         const code2 = getAlphanumericCode(content.charCodeAt(i + 1));
 
         if (code2 === -1) {
-          throw new Error('');
+          throw new Error(`illegal char: ${content.charAt(i)}`);
         }
 
         // Encode two alphanumeric letters in 11 bits.
@@ -62,10 +76,6 @@ export class Alphanumeric {
       }
     }
 
-    this.#bits = bits;
-  }
-
-  public get bits(): BitArray {
-    return this.#bits;
+    return bits;
   }
 }
