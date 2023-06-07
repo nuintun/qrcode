@@ -2,8 +2,17 @@
  * @module Charset
  */
 
-const NAME_TO_CHARSET = new Map<string, Charset>();
 const VALUES_TO_CHARSET = new Map<number, Charset>();
+
+export function getCharsetByValue(value: number): Charset {
+  const charset = VALUES_TO_CHARSET.get(value);
+
+  if (charset) {
+    return charset;
+  }
+
+  throw Error('illegal charset value');
+}
 
 export class Charset {
   #label: string;
@@ -38,8 +47,6 @@ export class Charset {
   public static readonly EUC_KR = new Charset('euc-kr', 30);
 
   private constructor(label: string, ...values: number[]) {
-    NAME_TO_CHARSET.set(label, this);
-
     for (const value of values) {
       VALUES_TO_CHARSET.set(value, this);
     }
@@ -55,24 +62,4 @@ export class Charset {
   public get values(): number[] {
     return this.#values;
   }
-}
-
-export function getCharSetByValue(value: number): Charset {
-  const charset = VALUES_TO_CHARSET.get(value);
-
-  if (charset) {
-    return charset;
-  }
-
-  throw Error('illegal charset value');
-}
-
-export function getCharSetByName(name: string): Charset {
-  const charset = NAME_TO_CHARSET.get(name);
-
-  if (charset) {
-    return charset;
-  }
-
-  throw Error('illegal charset name');
 }

@@ -242,7 +242,7 @@
       this.#version = version;
       this.#ecBlocks = ecBlocks;
       this.#dimension = 17 + 4 * version;
-      this.#alignmentPatterns = new Int32Array(alignmentPatterns);
+      this.#alignmentPatterns = alignmentPatterns;
       // Version determines the Total codewords
       // All ecc level total codewords are equals
       this.#totalCodewords = ecBlock.totalECCodewords + ecBlock.totalDataCodewords;
@@ -259,8 +259,8 @@
     get alignmentPatterns() {
       return this.#alignmentPatterns;
     }
-    getECBlocksForECLevel(ecLevel) {
-      return this.#ecBlocks[ecLevel.level];
+    getECBlocksForECLevel({ level }) {
+      return this.#ecBlocks[level];
     }
   }
   const VERSIONS = [
@@ -2056,7 +2056,6 @@
   /**
    * @module Charset
    */
-  const NAME_TO_CHARSET = new Map();
   const VALUES_TO_CHARSET = new Map();
   class Charset {
     #label;
@@ -2089,7 +2088,6 @@
     static GB18030 = new Charset('gb18030', 29);
     static EUC_KR = new Charset('euc-kr', 30);
     constructor(label, ...values) {
-      NAME_TO_CHARSET.set(label, this);
       for (const value of values) {
         VALUES_TO_CHARSET.set(value, this);
       }
