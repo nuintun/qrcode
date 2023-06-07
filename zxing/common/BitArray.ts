@@ -4,8 +4,6 @@
 
 import { toUInt32 } from './utils';
 
-const LOAD_FACTOR = 0.75;
-
 function makeArray(length: number): Int32Array {
   return new Int32Array(toUInt32((length + 31) / 32));
 }
@@ -27,7 +25,7 @@ export class BitArray {
     const bits = this.#bits;
 
     if (length > bits.length * 32) {
-      const newBits = makeArray(Math.ceil(length / LOAD_FACTOR));
+      const newBits = makeArray(length);
 
       newBits.set(bits);
 
@@ -104,11 +102,9 @@ export class BitArray {
       let byte = 0;
 
       for (let j = 0; j < 8; j++) {
-        if (this.get(bitOffset)) {
+        if (this.get(bitOffset++)) {
           byte |= 1 << (7 - j);
         }
-
-        bitOffset++;
       }
 
       array[offset + i] = byte;

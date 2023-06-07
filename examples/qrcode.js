@@ -68,7 +68,6 @@
   /**
    * @module BitArray
    */
-  const LOAD_FACTOR = 0.75;
   function makeArray(length) {
     return new Int32Array(toUInt32((length + 31) / 32));
   }
@@ -85,7 +84,7 @@
     #alloc(length) {
       const bits = this.#bits;
       if (length > bits.length * 32) {
-        const newBits = makeArray(Math.ceil(length / LOAD_FACTOR));
+        const newBits = makeArray(length);
         newBits.set(bits);
         this.#bits = newBits;
       }
@@ -140,10 +139,9 @@
       for (let i = 0; i < byteLength; i++) {
         let byte = 0;
         for (let j = 0; j < 8; j++) {
-          if (this.get(bitOffset)) {
+          if (this.get(bitOffset++)) {
             byte |= 1 << (7 - j);
           }
-          bitOffset++;
         }
         array[offset + i] = byte;
       }
