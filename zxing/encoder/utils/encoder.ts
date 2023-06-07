@@ -80,15 +80,13 @@ function getNumBytesInBlock(
   }
 }
 
-function generateECBytes(dataBytes: Int8Array, numECBytesInBlock: number): Int8Array {
+function generateECBytes(dataBytes: Uint8Array, numECBytesInBlock: number): Uint8Array {
   const numDataBytes = dataBytes.length;
-  const ecBytes = new Int8Array(numECBytesInBlock);
+  const ecBytes = new Uint8Array(numECBytesInBlock);
   const toEncode = new Int32Array(numDataBytes + numECBytesInBlock);
 
-  // Must use Uint8 type
-  for (let i = 0; i < numDataBytes; i++) {
-    toEncode[i] = dataBytes[i] & 0xff;
-  }
+  // Append data bytes
+  toEncode.set(dataBytes);
 
   // Append ec code
   new ReedSolomonEncoder().encode(toEncode, numECBytesInBlock);
@@ -121,9 +119,9 @@ export function interleaveWithECBytes(
 
   for (let i = 0; i < numRSBlocks; i++) {
     const [numECBytesInBlock, numDataBytesInBlock] = getNumBytesInBlock(i, numRSBlocks, numDataBytes, numTotalBytes);
-    const dataBytes = new Int8Array(numDataBytesInBlock);
+    const dataBytes = new Uint8Array(numDataBytesInBlock);
 
-    bits.toBytes(8 * dataBytesOffset, dataBytes, 0, numDataBytesInBlock);
+    bits.toUint8Array(8 * dataBytesOffset, dataBytes, 0, numDataBytesInBlock);
 
     const ecBytes = generateECBytes(dataBytes, numECBytesInBlock);
 

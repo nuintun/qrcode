@@ -136,7 +136,7 @@
         }
       }
     }
-    toBytes(bitOffset, array, offset, byteLength) {
+    toUint8Array(bitOffset, array, offset, byteLength) {
       for (let i = 0; i < byteLength; i++) {
         let byte = 0;
         for (let j = 0; j < 8; j++) {
@@ -930,12 +930,10 @@
   }
   function generateECBytes(dataBytes, numECBytesInBlock) {
     const numDataBytes = dataBytes.length;
-    const ecBytes = new Int8Array(numECBytesInBlock);
+    const ecBytes = new Uint8Array(numECBytesInBlock);
     const toEncode = new Int32Array(numDataBytes + numECBytesInBlock);
-    // Must use Uint8 type
-    for (let i = 0; i < numDataBytes; i++) {
-      toEncode[i] = dataBytes[i] & 0xff;
-    }
+    // Append data bytes
+    toEncode.set(dataBytes);
     // Append ec code
     new Encoder$1().encode(toEncode, numECBytesInBlock);
     // Get ec bytes
@@ -956,8 +954,8 @@
     const blocks = [];
     for (let i = 0; i < numRSBlocks; i++) {
       const [numECBytesInBlock, numDataBytesInBlock] = getNumBytesInBlock(i, numRSBlocks, numDataBytes, numTotalBytes);
-      const dataBytes = new Int8Array(numDataBytesInBlock);
-      bits.toBytes(8 * dataBytesOffset, dataBytes, 0, numDataBytesInBlock);
+      const dataBytes = new Uint8Array(numDataBytesInBlock);
+      bits.toUint8Array(8 * dataBytesOffset, dataBytes, 0, numDataBytesInBlock);
       const ecBytes = generateECBytes(dataBytes, numECBytesInBlock);
       blocks.push(new BlockPair(dataBytes, ecBytes));
       maxNumDataBytes = Math.max(maxNumDataBytes, numDataBytesInBlock);

@@ -99,7 +99,7 @@ export class BitArray {
     }
   }
 
-  public toBytes(bitOffset: number, array: Int8Array, offset: number, byteLength: number): void {
+  public toUint8Array(bitOffset: number, array: Uint8Array, offset: number, byteLength: number): void {
     for (let i = 0; i < byteLength; i++) {
       let byte = 0;
 
