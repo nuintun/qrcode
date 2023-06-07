@@ -845,9 +845,9 @@
     }
     #buildGenerator(degree) {
       const generators = this.#generators;
-      if (degree >= generators.length) {
+      const { length } = generators;
+      if (degree >= length) {
         const field = this.#field;
-        const { length } = generators;
         const { generatorBase } = field;
         let lastGenerator = generators[length - 1];
         for (let i = length; i <= degree; i++) {

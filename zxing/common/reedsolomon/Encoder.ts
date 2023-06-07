@@ -16,10 +16,10 @@ export class Encoder {
 
   #buildGenerator(degree: number): GenericGFPoly {
     const generators = this.#generators;
+    const { length } = generators;
 
-    if (degree >= generators.length) {
+    if (degree >= length) {
       const field = this.#field;
-      const { length } = generators;
       const { generatorBase } = field;
 
       let lastGenerator = generators[length - 1];
