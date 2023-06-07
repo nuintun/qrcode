@@ -1470,8 +1470,7 @@
   const FORMAT_INFO_POLY = 0x537;
   // Format information mask
   const FORMAT_INFO_MASK = 0x5412;
-  // Version information poly
-  // 1 1111 0010 0101
+  // Version information poly: 1 1111 0010 0101
   const VERSION_INFO_POLY = 0x1f25;
   // Format information coordinates
   const FORMAT_INFO_COORDINATES = [
@@ -1588,26 +1587,26 @@
   }
   // Embed position detection patterns and surrounding vertical/horizontal separators.
   function embedPositionDetectionPatternsAndSeparators(matrix) {
+    // Embed three big squares at corners.
+    const pdpWidth = 7;
+    // Embed horizontal separation patterns around the squares.
+    const hspWidth = 8;
+    // Embed vertical separation patterns around the squares.
+    const vspHeight = 7;
     // Matrix width
     const { width, height } = matrix;
-    // Embed three big squares at corners.
-    const pdpWidth = POSITION_DETECTION_PATTERN[0].length;
     // Left top corner.
     embedPositionDetectionPattern(matrix, 0, 0);
     // Right top corner.
     embedPositionDetectionPattern(matrix, width - pdpWidth, 0);
     // Left bottom corner.
     embedPositionDetectionPattern(matrix, 0, width - pdpWidth);
-    // Embed horizontal separation patterns around the squares.
-    const hspWidth = 8;
     // Left top corner.
     embedHorizontalSeparationPattern(matrix, 0, hspWidth - 1);
     // Right top corner.
     embedHorizontalSeparationPattern(matrix, width - hspWidth, hspWidth - 1);
     // Left bottom corner.
     embedHorizontalSeparationPattern(matrix, 0, width - hspWidth);
-    // Embed vertical separation patterns around the squares.
-    const vspHeight = 7;
     // Left top corner.
     embedVerticalSeparationPattern(matrix, vspHeight, 0);
     // Right top corner.
