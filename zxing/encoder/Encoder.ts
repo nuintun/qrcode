@@ -102,7 +102,7 @@ export class Encoder {
     for (const { mode, length, headerBits, dataBits } of segmentBlocks) {
       headerAndDataBits.append(headerBits);
 
-      appendLengthInfo(headerAndDataBits, version, mode, length);
+      appendLengthInfo(headerAndDataBits, mode, version, length);
 
       headerAndDataBits.append(dataBits);
     }

@@ -85,10 +85,15 @@ function generateECBytes(dataBytes: Int8Array, numECBytesInBlock: number): Int8A
   const ecBytes = new Int8Array(numECBytesInBlock);
   const toEncode = new Int32Array(numDataBytes + numECBytesInBlock);
 
-  toEncode.set(dataBytes);
+  // Must use Uint8 type
+  for (let i = 0; i < numDataBytes; i++) {
+    toEncode[i] = dataBytes[i] & 0xff;
+  }
 
+  // Append ec code
   new ReedSolomonEncoder().encode(toEncode, numECBytesInBlock);
 
+  // Get ec bytes
   ecBytes.set(toEncode.subarray(numDataBytes));
 
   return ecBytes;
@@ -187,7 +192,7 @@ export function terminateBits(bits: BitArray, numDataBytes: number): void {
   const numPaddingBytes = numDataBytes - bits.byteLength;
 
   for (let i = 0; i < numPaddingBytes; i++) {
-    bits.append((i & 0x01) === 0 ? 0xec : 0x11, 8);
+    bits.append(i & 1 ? 0x11 : 0xec, 8);
   }
 
   if (bits.length !== capacity) {
@@ -208,7 +213,7 @@ export function appendECI(bits: BitArray, charset: Charset): void {
   bits.append(charset.values[0], 8);
 }
 
-export function appendLengthInfo(bits: BitArray, version: Version, mode: Mode, numLetters: number): void {
+export function appendLengthInfo(bits: BitArray, mode: Mode, version: Version, numLetters: number): void {
   const numBits = mode.getCharacterCountBits(version);
 
   if (numLetters >= 1 << numBits) {

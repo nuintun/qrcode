@@ -13,7 +13,7 @@ export class GenericGFPoly {
     const { length } = coefficients;
 
     if (length === 0) {
-      throw new Error('coefficients can not empty');
+      throw new Error('coefficients cannot empty');
     }
 
     this.#field = field;

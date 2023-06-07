@@ -594,7 +594,7 @@
     constructor(field, coefficients) {
       const { length } = coefficients;
       if (length === 0) {
-        throw new Error('coefficients can not empty');
+        throw new Error('coefficients cannot empty');
       }
       this.#field = field;
       if (length > 1 && coefficients[0] === 0) {
@@ -932,8 +932,13 @@
     const numDataBytes = dataBytes.length;
     const ecBytes = new Int8Array(numECBytesInBlock);
     const toEncode = new Int32Array(numDataBytes + numECBytesInBlock);
-    toEncode.set(dataBytes);
+    // Must use Uint8 type
+    for (let i = 0; i < numDataBytes; i++) {
+      toEncode[i] = dataBytes[i] & 0xff;
+    }
+    // Append ec code
     new Encoder$1().encode(toEncode, numECBytesInBlock);
+    // Get ec bytes
     ecBytes.set(toEncode.subarray(numDataBytes));
     return ecBytes;
   }
@@ -1005,7 +1010,7 @@
     // If we have more space, we'll fill the space with padding patterns defined in 8.4.9 (p.24).
     const numPaddingBytes = numDataBytes - bits.byteLength;
     for (let i = 0; i < numPaddingBytes; i++) {
-      bits.append((i & 0x01) === 0 ? 0xec : 0x11, 8);
+      bits.append(i & 1 ? 0x11 : 0xec, 8);
     }
     if (bits.length !== capacity) {
       throw new Error('bits size does not equal capacity');
@@ -1021,7 +1026,7 @@
     bits.append(Mode.ECI.bits, 4);
     bits.append(charset.values[0], 8);
   }
-  function appendLengthInfo(bits, version, mode, numLetters) {
+  function appendLengthInfo(bits, mode, version, numLetters) {
     const numBits = mode.getCharacterCountBits(version);
     if (numLetters >= 1 << numBits) {
       throw new Error(`${numLetters} is bigger than ${(1 << numBits) - 1}`);
@@ -2437,7 +2442,7 @@
       const headerAndDataBits = new BitArray();
       for (const { mode, length, headerBits, dataBits } of segmentBlocks) {
         headerAndDataBits.append(headerBits);
-        appendLengthInfo(headerAndDataBits, version, mode, length);
+        appendLengthInfo(headerAndDataBits, mode, version, length);
         headerAndDataBits.append(dataBits);
       }
       const { totalCodewords, dimension } = version;
