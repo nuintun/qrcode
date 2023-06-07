@@ -9,7 +9,7 @@ import { BitArray } from '/common/BitArray';
 const encoder = new TextEncoder();
 
 export interface TextEncode {
-  (content: string, charset: Charset): ArrayLike<number>;
+  (content: string, charset: Charset): Uint8Array;
 }
 
 export class Byte {
@@ -34,14 +34,11 @@ export class Byte {
   }
 
   public encode(encode: TextEncode = content => encoder.encode(content)): BitArray {
-    const bytes = encode(this.#content, this.#charset);
     const bits = new BitArray();
-    const { length } = bytes;
+    const bytes = encode(this.#content, this.#charset);
 
-    let i = 0;
-
-    while (i < length) {
-      bits.append(bytes[i++], 8);
+    for (const byte of bytes) {
+      bits.append(byte, 8);
     }
 
     return bits;

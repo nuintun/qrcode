@@ -2,17 +2,21 @@
  * @module GenericGFPoly
  */
 
-import { isNumber } from '../utils';
 import { GenericGF } from './GenericGF';
+import { isNumber } from '/common/utils';
 
 export class GenericGFPoly {
   #field: GenericGF;
   #coefficients: Int32Array;
 
   constructor(field: GenericGF, coefficients: Int32Array) {
-    this.#field = field;
-
     const { length } = coefficients;
+
+    if (length === 0) {
+      throw new Error('coefficients can not empty');
+    }
+
+    this.#field = field;
 
     if (length > 1 && coefficients[0] === 0) {
       // Leading term must be non-zero for anything except the constant polynomial "0"
@@ -75,18 +79,19 @@ export class GenericGFPoly {
       result = 0;
 
       for (const coefficient of coefficients) {
-        result = result ^ coefficient;
+        result ^= coefficient;
       }
 
       return result;
     }
 
-    result = coefficients[0];
+    [result] = coefficients;
 
     const field = this.#field;
+    const { length } = coefficients;
 
-    for (const coefficient of coefficients) {
-      result = field.multiply(a, result) ^ coefficient;
+    for (let i = 1; i < length; i++) {
+      result = field.multiply(a, result) ^ coefficients[i];
     }
 
     return result;
@@ -113,8 +118,7 @@ export class GenericGFPoly {
       [smallerCoefficients, largerCoefficients] = [largerCoefficients, smallerCoefficients];
     }
 
-    let sumDiff = new Int32Array(largerLength);
-
+    const sumDiff = new Int32Array(largerLength);
     const lengthDiff = largerLength - smallerLength;
 
     // Copy high-order terms only found in higher-degree polynomial's coefficients
@@ -168,7 +172,7 @@ export class GenericGFPoly {
       const aCoefficient = aCoefficients[i];
 
       for (let j = 0; j < bLength; j++) {
-        product[i + j] = product[i + j] ^ field.multiply(aCoefficient, bCoefficients[j]);
+        product[i + j] ^= field.multiply(aCoefficient, bCoefficients[j]);
       }
     }
 
@@ -197,7 +201,7 @@ export class GenericGFPoly {
     return new GenericGFPoly(field, product);
   }
 
-  public divide(other: GenericGFPoly): GenericGFPoly[] {
+  public divide(other: GenericGFPoly): [quotient: GenericGFPoly, remainder: GenericGFPoly] {
     this.#assertField(other);
 
     if (other.isZero()) {

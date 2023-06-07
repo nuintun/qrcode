@@ -140,14 +140,11 @@ export class Kanji {
   }
 
   public encode(): BitArray {
-    const bytes = encode(this.#content);
-    // The bytes.length must be even
-    const length = bytes.length - 1;
     const bits = new BitArray();
+    const bytes = encode(this.#content);
+    const length = bytes.length - 1;
 
-    let i = 0;
-
-    while (i < length) {
+    for (let i = 0; i < length; i += 2) {
       let subtracted = -1;
 
       const byte1 = bytes[i] & 0xff;
@@ -167,8 +164,6 @@ export class Kanji {
       const encoded = (subtracted >> 8) * 0xc0 + (subtracted & 0xff);
 
       bits.append(encoded, 13);
-
-      i += 2;
     }
 
     return bits;

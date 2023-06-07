@@ -56,16 +56,14 @@ export class Encoder {
     const hasEncodingHint = hints.indexOf('CHARACTER_SET') >= 0;
 
     for (const segment of segments) {
-      const { mode, content } = segment;
-      const isByte = isByteMode(segment);
-      // This will store the header information, like mode and
-      // length, as well as "header" segments like an ECI segment.
+      const { mode } = segment;
       const headerBits = new BitArray();
+      const isByte = isByteMode(segment);
       const dataBits = isByte ? segment.encode(encode) : segment.encode();
 
       // Append ECI segment if applicable
-      if (hasEncodingHint && isByte) {
-        appendECI(headerBits, mode, segment.charset);
+      if (isByte && hasEncodingHint) {
+        appendECI(headerBits, segment.charset);
       }
 
       // Append the FNC1 mode header for GS1 formatted data if applicable
@@ -81,7 +79,7 @@ export class Encoder {
         mode,
         dataBits,
         headerBits,
-        length: isByte ? dataBits.byteLength : content.length
+        length: isByte ? dataBits.byteLength : segment.content.length
       });
     }
 

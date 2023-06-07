@@ -593,8 +593,11 @@
     #field;
     #coefficients;
     constructor(field, coefficients) {
-      this.#field = field;
       const { length } = coefficients;
+      if (length === 0) {
+        throw new Error('coefficients can not empty');
+      }
+      this.#field = field;
       if (length > 1 && coefficients[0] === 0) {
         // Leading term must be non-zero for anything except the constant polynomial "0"
         let firstNonZero = 1;
@@ -641,14 +644,15 @@
         // Just the sum of the coefficients
         result = 0;
         for (const coefficient of coefficients) {
-          result = result ^ coefficient;
+          result ^= coefficient;
         }
         return result;
       }
-      result = coefficients[0];
+      [result] = coefficients;
       const field = this.#field;
-      for (const coefficient of coefficients) {
-        result = field.multiply(a, result) ^ coefficient;
+      const { length } = coefficients;
+      for (let i = 1; i < length; i++) {
+        result = field.multiply(a, result) ^ coefficients[i];
       }
       return result;
     }
@@ -668,7 +672,7 @@
         [smallerLength, largerLength] = [largerLength, smallerLength];
         [smallerCoefficients, largerCoefficients] = [largerCoefficients, smallerCoefficients];
       }
-      let sumDiff = new Int32Array(largerLength);
+      const sumDiff = new Int32Array(largerLength);
       const lengthDiff = largerLength - smallerLength;
       // Copy high-order terms only found in higher-degree polynomial's coefficients
       sumDiff.set(largerCoefficients.subarray(0, lengthDiff));
@@ -706,7 +710,7 @@
       for (let i = 0; i < aLength; i++) {
         const aCoefficient = aCoefficients[i];
         for (let j = 0; j < bLength; j++) {
-          product[i + j] = product[i + j] ^ field.multiply(aCoefficient, bCoefficients[j]);
+          product[i + j] ^= field.multiply(aCoefficient, bCoefficients[j]);
         }
       }
       return new GenericGFPoly(field, product);
@@ -760,8 +764,8 @@
     #logTable;
     #generatorBase;
     constructor(primitive, size, generatorBase) {
-      const expTable = new Int32Array(size);
       let x = 1;
+      const expTable = new Int32Array(size);
       for (let i = 0; i < size; i++) {
         expTable[i] = x;
         // We're assuming the generator alpha is 2
@@ -818,14 +822,14 @@
       const logTable = this.#logTable;
       return this.#expTable[(logTable[a] + logTable[b]) % (this.#size - 1)];
     }
+    exp(a) {
+      return this.#expTable[a];
+    }
     log(a) {
       if (a === 0) {
         throw new Error("can't take log(0)");
       }
       return this.#logTable[a];
-    }
-    exp(a) {
-      return this.#expTable[a];
     }
   }
   const QR_CODE_FIELD_256 = new GenericGF(0x011d, 256, 0);
@@ -834,26 +838,27 @@
    * @module Encoder
    */
   let Encoder$1 = class Encoder {
-    #cachedGenerators;
-    #field = QR_CODE_FIELD_256;
-    constructor() {
-      this.#cachedGenerators = [new GenericGFPoly(this.#field, new Int32Array([1]))];
+    #field;
+    #generators;
+    constructor(field = QR_CODE_FIELD_256) {
+      this.#field = field;
+      this.#generators = [new GenericGFPoly(field, new Int32Array([1]))];
     }
     #buildGenerator(degree) {
-      const cachedGenerators = this.#cachedGenerators;
-      const { length } = cachedGenerators;
-      if (degree >= length) {
+      const generators = this.#generators;
+      if (degree >= generators.length) {
         const field = this.#field;
-        let lastGenerator = cachedGenerators[length - 1];
+        const { length } = generators;
+        const { generatorBase } = field;
+        let lastGenerator = generators[length - 1];
         for (let i = length; i <= degree; i++) {
-          const nextGenerator = lastGenerator.multiply(
-            new GenericGFPoly(field, Int32Array.from([1, field.exp(i - 1 + field.generatorBase)]))
-          );
-          cachedGenerators.push(nextGenerator);
+          const coefficients = new Int32Array([1, field.exp(i - 1 + generatorBase)]);
+          const nextGenerator = lastGenerator.multiply(new GenericGFPoly(field, coefficients));
+          generators.push(nextGenerator);
           lastGenerator = nextGenerator;
         }
       }
-      return cachedGenerators[degree];
+      return generators[degree];
     }
     encode(received, ecBytes) {
       if (ecBytes === 0) {
@@ -866,10 +871,10 @@
       const generator = this.#buildGenerator(ecBytes);
       const infoCoefficients = new Int32Array(dataBytes);
       infoCoefficients.set(received.subarray(0, dataBytes));
-      let info = new GenericGFPoly(this.#field, infoCoefficients);
-      info = info.multiplyByMonomial(ecBytes, 1);
-      const remainder = info.divide(generator)[1];
-      const coefficients = remainder.coefficients;
+      const base = new GenericGFPoly(this.#field, infoCoefficients);
+      const info = base.multiplyByMonomial(ecBytes, 1);
+      const [, remainder] = info.divide(generator);
+      const { coefficients } = remainder;
       const numZeroCoefficients = ecBytes - coefficients.length;
       for (let i = 0; i < numZeroCoefficients; i++) {
         received[dataBytes + i] = 0;
@@ -940,46 +945,46 @@
     }
     // Step 1.  Divide data bytes into blocks and generate error correction bytes for them. We'll
     // store the divided data bytes blocks and error correction bytes blocks into "blocks".
-    let maxNumEcBytes = 0;
+    let maxNumECBytes = 0;
     let maxNumDataBytes = 0;
     let dataBytesOffset = 0;
     // Since, we know the number of reedsolmon blocks, we can initialize the vector with the number.
     const blocks = [];
-    for (let i = 0; i < numRSBlocks; ++i) {
+    for (let i = 0; i < numRSBlocks; i++) {
       const [numECBytesInBlock, numDataBytesInBlock] = getNumBytesInBlock(i, numRSBlocks, numDataBytes, numTotalBytes);
       const dataBytes = new Int8Array(numDataBytesInBlock);
       bits.toBytes(8 * dataBytesOffset, dataBytes, 0, numDataBytesInBlock);
       const ecBytes = generateECBytes(dataBytes, numECBytesInBlock);
       blocks.push(new BlockPair(dataBytes, ecBytes));
       maxNumDataBytes = Math.max(maxNumDataBytes, numDataBytesInBlock);
-      maxNumEcBytes = Math.max(maxNumEcBytes, ecBytes.length);
+      maxNumECBytes = Math.max(maxNumECBytes, ecBytes.length);
       dataBytesOffset += numDataBytesInBlock;
     }
     if (numDataBytes !== dataBytesOffset) {
       throw new Error('data bytes does not match offset');
     }
-    const array = new BitArray();
+    const result = new BitArray();
     // First, place data blocks.
     for (let i = 0; i < maxNumDataBytes; i++) {
       for (const { dataBytes } of blocks) {
         if (i < dataBytes.length) {
-          array.append(dataBytes[i], 8);
+          result.append(dataBytes[i], 8);
         }
       }
     }
     // Then, place error correction blocks.
-    for (let i = 0; i < maxNumEcBytes; i++) {
+    for (let i = 0; i < maxNumECBytes; i++) {
       for (const { ecBytes } of blocks) {
         if (i < ecBytes.length) {
-          array.append(ecBytes[i], 8);
+          result.append(ecBytes[i], 8);
         }
       }
     }
-    if (numTotalBytes !== array.byteLength) {
+    if (numTotalBytes !== result.byteLength) {
       // Should be same.
-      throw new Error(`interleaving error: ${numTotalBytes} and ${array.byteLength} differ`);
+      throw new Error(`interleaving error: ${numTotalBytes} and ${result.byteLength} differ`);
     }
-    return array;
+    return result;
   }
   function terminateBits(bits, numDataBytes) {
     const capacity = numDataBytes * 8;
@@ -1013,8 +1018,8 @@
   function appendModeInfo(bits, mode) {
     bits.append(mode.bits, 4);
   }
-  function appendECI(bits, mode, charset) {
-    appendModeInfo(bits, mode);
+  function appendECI(bits, charset) {
+    bits.append(Mode.ECI.bits, 4);
     bits.append(charset.values[0], 8);
   }
   function appendLengthInfo(bits, version, mode, numLetters) {
@@ -1394,7 +1399,7 @@
           if (min <= j && j < max && min <= i && i < max) {
             const x = ((j - min) / moduleSize) >> 0;
             const y = ((i - min) / moduleSize) >> 0;
-            gif.set(j, i, matrix.get(x, y) ? 0 : 1);
+            gif.set(j, i, matrix.get(x, y) === 1 ? 0 : 1);
           } else {
             gif.set(j, i, 1);
           }
@@ -1462,11 +1467,15 @@
   /**
    * @module matrix
    */
-  const TYPE_INFO_POLY = 0x537;
+  // Format information poly
+  const FORMAT_INFO_POLY = 0x537;
+  // Format information mask
+  const FORMAT_INFO_MASK = 0x5412;
+  // Version information poly
   // 1 1111 0010 0101
   const VERSION_INFO_POLY = 0x1f25;
-  const TYPE_INFO_MASK_PATTERN = 0x5412;
-  const TYPE_INFO_COORDINATES = [
+  // Format information coordinates
+  const FORMAT_INFO_COORDINATES = [
     [8, 0],
     [8, 1],
     [8, 2],
@@ -1483,6 +1492,7 @@
     [1, 8],
     [0, 8]
   ];
+  // Position detection pattern
   const POSITION_DETECTION_PATTERN = [
     [1, 1, 1, 1, 1, 1, 1],
     [1, 0, 0, 0, 0, 0, 1],
@@ -1492,6 +1502,7 @@
     [1, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1]
   ];
+  // Position adjustment pattern
   const POSITION_ADJUSTMENT_PATTERN = [
     [1, 1, 1, 1, 1],
     [1, 0, 0, 0, 1],
@@ -1710,47 +1721,41 @@
     // Now the "value" is the remainder (i.e. the BCH code)
     return value;
   }
-  // Make bit vector of type information. On success, store the result in "bits".
+  // Make bit vector of format information. On success, store the result in "bits".
   // Encode error correction level and mask pattern. See 8.9 of
   // JISX0510:2004 (p.45) for details.
-  function makeTypeInfoBits(bits, ecLevel, mask) {
-    const typeInfo = (ecLevel.bits << 3) | mask;
-    bits.append(typeInfo, 5);
-    const bchCode = calculateBCHCode(typeInfo, TYPE_INFO_POLY);
+  function makeFormatInfoBits(bits, ecLevel, mask) {
+    const formatInfo = (ecLevel.bits << 3) | mask;
+    bits.append(formatInfo, 5);
+    const bchCode = calculateBCHCode(formatInfo, FORMAT_INFO_POLY);
     bits.append(bchCode, 10);
     const maskBits = new BitArray();
-    maskBits.append(TYPE_INFO_MASK_PATTERN, 15);
+    maskBits.append(FORMAT_INFO_MASK, 15);
     bits.xor(maskBits);
     if (bits.length !== 15) {
       // Just in case.
       throw new Error(`should not happen but we got: ${bits.length}`);
     }
   }
-  // Embed type information. On success, modify the matrix.
-  function embedTypeInfo(matrix, ecLevel, mask) {
-    const typeInfoBits = new BitArray();
-    makeTypeInfoBits(typeInfoBits, ecLevel, mask);
-    const { length } = typeInfoBits;
+  // Embed format information. On success, modify the matrix.
+  function embedFormatInfo(matrix, ecLevel, mask) {
+    const formatInfoBits = new BitArray();
+    makeFormatInfoBits(formatInfoBits, ecLevel, mask);
     const { width, height } = matrix;
+    const { length } = formatInfoBits;
     for (let i = 0; i < length; i++) {
       // Type info bits at the left top corner. See 8.9 of JISX0510:2004 (p.46).
-      const [x1, y1] = TYPE_INFO_COORDINATES[i];
-      // Place bits in LSB to MSB order. LSB (least significant bit) is the last value in
-      // "typeInfoBits".
-      const bit = typeInfoBits.get(length - 1 - i);
-      matrix.set(x1, y1, bit);
-      let x2;
-      let y2;
+      const [x, y] = FORMAT_INFO_COORDINATES[i];
+      // Place bits in LSB to MSB order. LSB (least significant bit) is the last value in formatInfoBits.
+      const bit = formatInfoBits.get(length - 1 - i);
+      matrix.set(x, y, bit);
       if (i < 8) {
         // Right top corner.
-        x2 = width - i - 1;
-        y2 = 8;
+        matrix.set(width - i - 1, 8, bit);
       } else {
         // Left bottom corner.
-        x2 = 8;
-        y2 = height - 7 + (i - 8);
+        matrix.set(8, height - 7 + (i - 8), bit);
       }
-      matrix.set(x2, y2, bit);
     }
   }
   // Make bit vector of version information. On success, store the result in "bits".
@@ -1773,8 +1778,8 @@
       // It will decrease from 17 to 0.
       let bitIndex = 6 * 3 - 1;
       const { height } = matrix;
-      for (let i = 0; i < 6; ++i) {
-        for (let j = 0; j < 3; ++j) {
+      for (let i = 0; i < 6; i++) {
+        for (let j = 0; j < 3; j++) {
           // Place bits in LSB (least significant bit) to MSB order.
           const bit = versionInfoBits.get(bitIndex--);
           // Left bottom corner.
@@ -1842,7 +1847,7 @@
     // Embed basic patterns
     embedBasicPatterns(matrix, version);
     // Type information appear with any version.
-    embedTypeInfo(matrix, ecLevel, mask);
+    embedFormatInfo(matrix, ecLevel, mask);
     // Version info appear if version >= 7.
     embedVersionInfo(matrix, version);
     // Data should be embedded at end.
@@ -2120,12 +2125,10 @@
       return this.#charset;
     }
     encode(encode = content => encoder.encode(content)) {
-      const bytes = encode(this.#content, this.#charset);
       const bits = new BitArray();
-      const { length } = bytes;
-      let i = 0;
-      while (i < length) {
-        bits.append(bytes[i++], 8);
+      const bytes = encode(this.#content, this.#charset);
+      for (const byte of bytes) {
+        bits.append(byte, 8);
       }
       return bits;
     }
@@ -2257,12 +2260,10 @@
       return this.#content;
     }
     encode() {
-      const bytes = encode(this.#content);
-      // The bytes.length must be even
-      const length = bytes.length - 1;
       const bits = new BitArray();
-      let i = 0;
-      while (i < length) {
+      const bytes = encode(this.#content);
+      const length = bytes.length - 1;
+      for (let i = 0; i < length; i += 2) {
         let subtracted = -1;
         const byte1 = bytes[i] & 0xff;
         const byte2 = bytes[i + 1] & 0xff;
@@ -2277,7 +2278,6 @@
         }
         const encoded = (subtracted >> 8) * 0xc0 + (subtracted & 0xff);
         bits.append(encoded, 13);
-        i += 2;
       }
       return bits;
     }
@@ -2286,7 +2286,7 @@
   /**
    * @module Numeric
    */
-  function getDigit(code) {
+  function getNumericCode(code) {
     // 0 - 9
     if (48 <= code && code <= 57) {
       return code - 48;
@@ -2305,26 +2305,25 @@
       return this.#content;
     }
     encode() {
-      const content = this.#content;
       const bits = new BitArray();
+      const content = this.#content;
       const { length } = content;
-      let i = 0;
-      while (i < length) {
-        const num1 = getDigit(content.charCodeAt(i));
+      for (let i = 0; i < length; ) {
+        const code1 = getNumericCode(content.charCodeAt(i));
         if (i + 2 < length) {
           // Encode three numeric letters in ten bits.
-          const num2 = getDigit(content.charCodeAt(i + 1));
-          const num3 = getDigit(content.charCodeAt(i + 2));
-          bits.append(num1 * 100 + num2 * 10 + num3, 10);
+          const code2 = getNumericCode(content.charCodeAt(i + 1));
+          const code3 = getNumericCode(content.charCodeAt(i + 2));
+          bits.append(code1 * 100 + code2 * 10 + code3, 10);
           i += 3;
         } else if (i + 1 < length) {
           // Encode two numeric letters in seven bits.
-          const num2 = getDigit(content.charCodeAt(i + 1));
-          bits.append(num1 * 10 + num2, 7);
+          const code2 = getNumericCode(content.charCodeAt(i + 1));
+          bits.append(code1 * 10 + code2, 7);
           i += 2;
         } else {
           // Encode one numeric letter in four bits.
-          bits.append(num1, 4);
+          bits.append(code1, 4);
           i++;
         }
       }
@@ -2364,11 +2363,10 @@
       return this.#content;
     }
     encode() {
-      const content = this.#content;
       const bits = new BitArray();
+      const content = this.#content;
       const { length } = content;
-      let i = 0;
-      while (i < length) {
+      for (let i = 0; i < length; ) {
         const code1 = getAlphanumericCode(content.charCodeAt(i));
         if (i + 1 < length) {
           const code2 = getAlphanumericCode(content.charCodeAt(i + 1));
@@ -2408,15 +2406,13 @@
       const hasGS1FormatHint = hints.indexOf('GS1_FORMAT') >= 0;
       const hasEncodingHint = hints.indexOf('CHARACTER_SET') >= 0;
       for (const segment of segments) {
-        const { mode, content } = segment;
-        const isByte = isByteMode(segment);
-        // This will store the header information, like mode and
-        // length, as well as "header" segments like an ECI segment.
+        const { mode } = segment;
         const headerBits = new BitArray();
+        const isByte = isByteMode(segment);
         const dataBits = isByte ? segment.encode(encode) : segment.encode();
         // Append ECI segment if applicable
-        if (hasEncodingHint && isByte) {
-          appendECI(headerBits, mode, segment.charset);
+        if (isByte && hasEncodingHint) {
+          appendECI(headerBits, segment.charset);
         }
         // Append the FNC1 mode header for GS1 formatted data if applicable
         if (hasGS1FormatHint) {
@@ -2429,7 +2425,7 @@
           mode,
           dataBits,
           headerBits,
-          length: isByte ? dataBits.byteLength : content.length
+          length: isByte ? dataBits.byteLength : segment.content.length
         });
       }
       let version;

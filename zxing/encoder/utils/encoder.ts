@@ -107,14 +107,14 @@ export function interleaveWithECBytes(
 
   // Step 1.  Divide data bytes into blocks and generate error correction bytes for them. We'll
   // store the divided data bytes blocks and error correction bytes blocks into "blocks".
-  let maxNumEcBytes = 0;
+  let maxNumECBytes = 0;
   let maxNumDataBytes = 0;
   let dataBytesOffset = 0;
 
   // Since, we know the number of reedsolmon blocks, we can initialize the vector with the number.
   const blocks: BlockPair[] = [];
 
-  for (let i = 0; i < numRSBlocks; ++i) {
+  for (let i = 0; i < numRSBlocks; i++) {
     const [numECBytesInBlock, numDataBytesInBlock] = getNumBytesInBlock(i, numRSBlocks, numDataBytes, numTotalBytes);
     const dataBytes = new Int8Array(numDataBytesInBlock);
 
@@ -125,7 +125,7 @@ export function interleaveWithECBytes(
     blocks.push(new BlockPair(dataBytes, ecBytes));
 
     maxNumDataBytes = Math.max(maxNumDataBytes, numDataBytesInBlock);
-    maxNumEcBytes = Math.max(maxNumEcBytes, ecBytes.length);
+    maxNumECBytes = Math.max(maxNumECBytes, ecBytes.length);
     dataBytesOffset += numDataBytesInBlock;
   }
 
@@ -133,32 +133,32 @@ export function interleaveWithECBytes(
     throw new Error('data bytes does not match offset');
   }
 
-  const array = new BitArray();
+  const result = new BitArray();
 
   // First, place data blocks.
   for (let i = 0; i < maxNumDataBytes; i++) {
     for (const { dataBytes } of blocks) {
       if (i < dataBytes.length) {
-        array.append(dataBytes[i], 8);
+        result.append(dataBytes[i], 8);
       }
     }
   }
 
   // Then, place error correction blocks.
-  for (let i = 0; i < maxNumEcBytes; i++) {
+  for (let i = 0; i < maxNumECBytes; i++) {
     for (const { ecBytes } of blocks) {
       if (i < ecBytes.length) {
-        array.append(ecBytes[i], 8);
+        result.append(ecBytes[i], 8);
       }
     }
   }
 
-  if (numTotalBytes !== array.byteLength) {
+  if (numTotalBytes !== result.byteLength) {
     // Should be same.
-    throw new Error(`interleaving error: ${numTotalBytes} and ${array.byteLength} differ`);
+    throw new Error(`interleaving error: ${numTotalBytes} and ${result.byteLength} differ`);
   }
 
-  return array;
+  return result;
 }
 
 export function terminateBits(bits: BitArray, numDataBytes: number): void {
@@ -203,9 +203,8 @@ export function appendModeInfo(bits: BitArray, mode: Mode): void {
   bits.append(mode.bits, 4);
 }
 
-export function appendECI(bits: BitArray, mode: Mode, charset: Charset): void {
-  appendModeInfo(bits, mode);
-
+export function appendECI(bits: BitArray, charset: Charset): void {
+  bits.append(Mode.ECI.bits, 4);
   bits.append(charset.values[0], 8);
 }
 

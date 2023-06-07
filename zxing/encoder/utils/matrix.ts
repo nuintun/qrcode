@@ -8,14 +8,18 @@ import { Version } from '/common/Version';
 import { BitArray } from '/common/BitArray';
 import { ByteMatrix } from '/encoder/ByteMatrix';
 
-const TYPE_INFO_POLY = 0x537;
+// Format information poly
+const FORMAT_INFO_POLY = 0x537;
 
+// Format information mask
+const FORMAT_INFO_MASK = 0x5412;
+
+// Version information poly
 // 1 1111 0010 0101
 const VERSION_INFO_POLY = 0x1f25;
 
-const TYPE_INFO_MASK_PATTERN = 0x5412;
-
-const TYPE_INFO_COORDINATES = [
+// Format information coordinates
+const FORMAT_INFO_COORDINATES = [
   [8, 0],
   [8, 1],
   [8, 2],
@@ -33,6 +37,7 @@ const TYPE_INFO_COORDINATES = [
   [0, 8]
 ];
 
+// Position detection pattern
 const POSITION_DETECTION_PATTERN = [
   [1, 1, 1, 1, 1, 1, 1],
   [1, 0, 0, 0, 0, 0, 1],
@@ -43,6 +48,7 @@ const POSITION_DETECTION_PATTERN = [
   [1, 1, 1, 1, 1, 1, 1]
 ];
 
+// Position adjustment pattern
 const POSITION_ADJUSTMENT_PATTERN = [
   [1, 1, 1, 1, 1],
   [1, 0, 0, 0, 1],
@@ -293,21 +299,21 @@ function calculateBCHCode(value: number, poly: number): number {
   return value;
 }
 
-// Make bit vector of type information. On success, store the result in "bits".
+// Make bit vector of format information. On success, store the result in "bits".
 // Encode error correction level and mask pattern. See 8.9 of
 // JISX0510:2004 (p.45) for details.
-function makeTypeInfoBits(bits: BitArray, ecLevel: ECLevel, mask: number): void {
-  const typeInfo = (ecLevel.bits << 3) | mask;
+function makeFormatInfoBits(bits: BitArray, ecLevel: ECLevel, mask: number): void {
+  const formatInfo = (ecLevel.bits << 3) | mask;
 
-  bits.append(typeInfo, 5);
+  bits.append(formatInfo, 5);
 
-  const bchCode = calculateBCHCode(typeInfo, TYPE_INFO_POLY);
+  const bchCode = calculateBCHCode(formatInfo, FORMAT_INFO_POLY);
 
   bits.append(bchCode, 10);
 
   const maskBits = new BitArray();
 
-  maskBits.append(TYPE_INFO_MASK_PATTERN, 15);
+  maskBits.append(FORMAT_INFO_MASK, 15);
 
   bits.xor(maskBits);
 
@@ -317,38 +323,30 @@ function makeTypeInfoBits(bits: BitArray, ecLevel: ECLevel, mask: number): void 
   }
 }
 
-// Embed type information. On success, modify the matrix.
-function embedTypeInfo(matrix: ByteMatrix, ecLevel: ECLevel, mask: number): void {
-  const typeInfoBits = new BitArray();
+// Embed format information. On success, modify the matrix.
+function embedFormatInfo(matrix: ByteMatrix, ecLevel: ECLevel, mask: number): void {
+  const formatInfoBits = new BitArray();
 
-  makeTypeInfoBits(typeInfoBits, ecLevel, mask);
+  makeFormatInfoBits(formatInfoBits, ecLevel, mask);
 
-  const { length } = typeInfoBits;
   const { width, height } = matrix;
+  const { length } = formatInfoBits;
 
   for (let i = 0; i < length; i++) {
     // Type info bits at the left top corner. See 8.9 of JISX0510:2004 (p.46).
-    const [x1, y1] = TYPE_INFO_COORDINATES[i];
-    // Place bits in LSB to MSB order. LSB (least significant bit) is the last value in
-    // "typeInfoBits".
-    const bit = typeInfoBits.get(length - 1 - i);
+    const [x, y] = FORMAT_INFO_COORDINATES[i];
+    // Place bits in LSB to MSB order. LSB (least significant bit) is the last value in formatInfoBits.
+    const bit = formatInfoBits.get(length - 1 - i);
 
-    matrix.set(x1, y1, bit);
-
-    let x2;
-    let y2;
+    matrix.set(x, y, bit);
 
     if (i < 8) {
       // Right top corner.
-      x2 = width - i - 1;
-      y2 = 8;
+      matrix.set(width - i - 1, 8, bit);
     } else {
       // Left bottom corner.
-      x2 = 8;
-      y2 = height - 7 + (i - 8);
+      matrix.set(8, height - 7 + (i - 8), bit);
     }
-
-    matrix.set(x2, y2, bit);
   }
 }
 
@@ -380,8 +378,8 @@ function embedVersionInfo(matrix: ByteMatrix, { version }: Version): void {
 
     const { height } = matrix;
 
-    for (let i = 0; i < 6; ++i) {
-      for (let j = 0; j < 3; ++j) {
+    for (let i = 0; i < 6; i++) {
+      for (let j = 0; j < 3; j++) {
         // Place bits in LSB (least significant bit) to MSB order.
         const bit = versionInfoBits.get(bitIndex--);
 
@@ -463,7 +461,7 @@ export function buildMatrix(matrix: ByteMatrix, dataBits: BitArray, version: Ver
   // Embed basic patterns
   embedBasicPatterns(matrix, version);
   // Type information appear with any version.
-  embedTypeInfo(matrix, ecLevel, mask);
+  embedFormatInfo(matrix, ecLevel, mask);
   // Version info appear if version >= 7.
   embedVersionInfo(matrix, version);
   // Data should be embedded at end.

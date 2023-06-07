@@ -13,9 +13,9 @@ export class GenericGF {
   #generatorBase: number;
 
   constructor(primitive: number, size: number, generatorBase: number) {
-    const expTable = new Int32Array(size);
-
     let x = 1;
+
+    const expTable = new Int32Array(size);
 
     for (let i = 0; i < size; i++) {
       expTable[i] = x;
@@ -92,16 +92,16 @@ export class GenericGF {
     return this.#expTable[(logTable[a] + logTable[b]) % (this.#size - 1)];
   }
 
+  public exp(a: number): number {
+    return this.#expTable[a];
+  }
+
   public log(a: number): number {
     if (a === 0) {
       throw new Error("can't take log(0)");
     }
 
     return this.#logTable[a];
-  }
-
-  public exp(a: number): number {
-    return this.#expTable[a];
   }
 }
 

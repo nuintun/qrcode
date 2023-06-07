@@ -5,7 +5,7 @@
 import { Mode } from '/common/Mode';
 import { BitArray } from '/common/BitArray';
 
-function getDigit(code: number): number {
+function getNumericCode(code: number): number {
   // 0 - 9
   if (48 <= code && code <= 57) {
     return code - 48;
@@ -30,33 +30,31 @@ export class Numeric {
   }
 
   public encode(): BitArray {
-    const content = this.#content;
     const bits = new BitArray();
+    const content = this.#content;
     const { length } = content;
 
-    let i = 0;
-
-    while (i < length) {
-      const num1 = getDigit(content.charCodeAt(i));
+    for (let i = 0; i < length; ) {
+      const code1 = getNumericCode(content.charCodeAt(i));
 
       if (i + 2 < length) {
         // Encode three numeric letters in ten bits.
-        const num2 = getDigit(content.charCodeAt(i + 1));
-        const num3 = getDigit(content.charCodeAt(i + 2));
+        const code2 = getNumericCode(content.charCodeAt(i + 1));
+        const code3 = getNumericCode(content.charCodeAt(i + 2));
 
-        bits.append(num1 * 100 + num2 * 10 + num3, 10);
+        bits.append(code1 * 100 + code2 * 10 + code3, 10);
 
         i += 3;
       } else if (i + 1 < length) {
         // Encode two numeric letters in seven bits.
-        const num2 = getDigit(content.charCodeAt(i + 1));
+        const code2 = getNumericCode(content.charCodeAt(i + 1));
 
-        bits.append(num1 * 10 + num2, 7);
+        bits.append(code1 * 10 + code2, 7);
 
         i += 2;
       } else {
         // Encode one numeric letter in four bits.
-        bits.append(num1, 4);
+        bits.append(code1, 4);
 
         i++;
       }

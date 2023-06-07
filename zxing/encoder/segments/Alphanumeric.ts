@@ -42,13 +42,11 @@ export class Alphanumeric {
   }
 
   public encode(): BitArray {
-    const content = this.#content;
     const bits = new BitArray();
+    const content = this.#content;
     const { length } = content;
 
-    let i = 0;
-
-    while (i < length) {
+    for (let i = 0; i < length; ) {
       const code1 = getAlphanumericCode(content.charCodeAt(i));
 
       if (i + 1 < length) {

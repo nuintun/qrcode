@@ -36,7 +36,7 @@ export class QRCode {
           const x = ((j - min) / moduleSize) >> 0;
           const y = ((i - min) / moduleSize) >> 0;
 
-          gif.set(j, i, matrix.get(x, y) ? 0 : 1);
+          gif.set(j, i, matrix.get(x, y) === 1 ? 0 : 1);
         } else {
           gif.set(j, i, 1);
         }

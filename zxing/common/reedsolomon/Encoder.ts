@@ -6,34 +6,35 @@ import { GenericGFPoly } from './GenericGFPoly';
 import { GenericGF, QR_CODE_FIELD_256 } from './GenericGF';
 
 export class Encoder {
-  #cachedGenerators: GenericGFPoly[];
-  #field: GenericGF = QR_CODE_FIELD_256;
+  #field: GenericGF;
+  #generators: GenericGFPoly[];
 
-  constructor() {
-    this.#cachedGenerators = [new GenericGFPoly(this.#field, new Int32Array([1]))];
+  constructor(field: GenericGF = QR_CODE_FIELD_256) {
+    this.#field = field;
+    this.#generators = [new GenericGFPoly(field, new Int32Array([1]))];
   }
 
   #buildGenerator(degree: number): GenericGFPoly {
-    const cachedGenerators = this.#cachedGenerators;
-    const { length } = cachedGenerators;
+    const generators = this.#generators;
 
-    if (degree >= length) {
+    if (degree >= generators.length) {
       const field = this.#field;
+      const { length } = generators;
+      const { generatorBase } = field;
 
-      let lastGenerator = cachedGenerators[length - 1];
+      let lastGenerator = generators[length - 1];
 
       for (let i = length; i <= degree; i++) {
-        const nextGenerator = lastGenerator.multiply(
-          new GenericGFPoly(field, Int32Array.from([1, field.exp(i - 1 + field.generatorBase)]))
-        );
+        const coefficients = new Int32Array([1, field.exp(i - 1 + generatorBase)]);
+        const nextGenerator = lastGenerator.multiply(new GenericGFPoly(field, coefficients));
 
-        cachedGenerators.push(nextGenerator);
+        generators.push(nextGenerator);
 
         lastGenerator = nextGenerator;
       }
     }
 
-    return cachedGenerators[degree];
+    return generators[degree];
   }
 
   public encode(received: Int32Array, ecBytes: number): void {
@@ -48,16 +49,14 @@ export class Encoder {
     }
 
     const generator = this.#buildGenerator(ecBytes);
-    const infoCoefficients: Int32Array = new Int32Array(dataBytes);
+    const infoCoefficients = new Int32Array(dataBytes);
 
     infoCoefficients.set(received.subarray(0, dataBytes));
 
-    let info = new GenericGFPoly(this.#field, infoCoefficients);
-
-    info = info.multiplyByMonomial(ecBytes, 1);
-
-    const remainder = info.divide(generator)[1];
-    const coefficients = remainder.coefficients;
+    const base = new GenericGFPoly(this.#field, infoCoefficients);
+    const info = base.multiplyByMonomial(ecBytes, 1);
+    const [, remainder] = info.divide(generator);
+    const { coefficients } = remainder;
     const numZeroCoefficients = ecBytes - coefficients.length;
 
     for (let i = 0; i < numZeroCoefficients; i++) {

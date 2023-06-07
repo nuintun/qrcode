@@ -2,13 +2,85 @@
  * @module Decoder
  */
 
-import { QR_CODE_FIELD_256 } from './GenericGF';
 import { GenericGFPoly } from './GenericGFPoly';
+import { GenericGF, QR_CODE_FIELD_256 } from './GenericGF';
 
 export class Decoder {
-  #field = QR_CODE_FIELD_256;
+  #field: GenericGF;
 
-  #runEuclideanAlgorithm(a: GenericGFPoly, b: GenericGFPoly, ecBytes: number): GenericGFPoly[] {
+  constructor(field: GenericGF = QR_CODE_FIELD_256) {
+    this.#field = field;
+  }
+
+  #findErrorLocations(errorLocator: GenericGFPoly): Int32Array {
+    // This is a direct application of Chien's search
+    const numErrors = errorLocator.getDegree();
+
+    if (numErrors === 1) {
+      // Shortcut
+      return new Int32Array([errorLocator.getCoefficient(1)]);
+    }
+
+    let e = 0;
+
+    const field = this.#field;
+    const { size } = field;
+    const result = new Int32Array(numErrors);
+
+    for (let i = 1; i < size && e < numErrors; i++) {
+      if (errorLocator.evaluateAt(i) === 0) {
+        result[e++] = field.inverse(i);
+      }
+    }
+
+    if (e !== numErrors) {
+      throw new Error('error locator degree does not match number of roots');
+    }
+
+    return result;
+  }
+
+  #findErrorMagnitudes(errorEvaluator: GenericGFPoly, errorLocations: Int32Array): Int32Array {
+    // This is directly applying Forney's Formula
+    const field = this.#field;
+    const { generatorBase } = field;
+    const { length } = errorLocations;
+    const result = new Int32Array(length);
+
+    for (let i = 0; i < length; i++) {
+      let denominator = 1;
+
+      const xiInverse = field.inverse(errorLocations[i]);
+
+      for (let j = 0; j < length; j++) {
+        if (i !== j) {
+          // denominator = field.multiply(
+          //   denominator,
+          //   GenericGF.addOrSubtract(
+          //     1,
+          //     field.multiply(errorLocations[j], xiInverse)
+          //   )
+          // )
+          // Above should work but fails on some Apple and Linux JDKs due to a Hotspot bug.
+          // Below is a funny-looking workaround from Steven Parkes
+          const term = field.multiply(errorLocations[j], xiInverse);
+          const termPlus1 = (term & 0x1) === 0 ? term | 1 : term & ~1;
+
+          denominator = field.multiply(denominator, termPlus1);
+        }
+      }
+
+      result[i] = field.multiply(errorEvaluator.evaluateAt(xiInverse), field.inverse(denominator));
+
+      if (generatorBase !== 0) {
+        result[i] = field.multiply(result[i], xiInverse);
+      }
+    }
+
+    return result;
+  }
+
+  #runEuclideanAlgorithm(a: GenericGFPoly, b: GenericGFPoly, ecBytes: number): [sigma: GenericGFPoly, omega: GenericGFPoly] {
     // Assume a's degree is >= b's
     if (a.getDegree() < b.getDegree()) {
       [a, b] = [b, a];
@@ -70,83 +142,16 @@ export class Decoder {
     return [sigma, omega];
   }
 
-  #findErrorLocations(errorLocator: GenericGFPoly): Int32Array {
-    // This is a direct application of Chien's search
-    const numErrors = errorLocator.getDegree();
-
-    if (numErrors === 1) {
-      // Shortcut
-      return new Int32Array([errorLocator.getCoefficient(1)]);
-    }
-
-    let e = 0;
-
-    const field = this.#field;
-    const { size } = field;
-    const result = new Int32Array(numErrors);
-
-    for (let i = 1; i < size && e < numErrors; i++) {
-      if (errorLocator.evaluateAt(i) === 0) {
-        result[e] = field.inverse(i);
-        e++;
-      }
-    }
-
-    if (e !== numErrors) {
-      throw new Error('error locator degree does not match number of roots');
-    }
-
-    return result;
-  }
-
-  #findErrorMagnitudes(errorEvaluator: GenericGFPoly, errorLocations: Int32Array): Int32Array {
-    // This is directly applying Forney's Formula
-    const field = this.#field;
-    const s = errorLocations.length;
-    const result = new Int32Array(s);
-
-    for (let i = 0; i < s; i++) {
-      let denominator = 1;
-
-      const xiInverse = field.inverse(errorLocations[i]);
-
-      for (let j = 0; j < s; j++) {
-        if (i !== j) {
-          // denominator = field.multiply(
-          //   denominator,
-          //   GenericGF.addOrSubtract(
-          //     1,
-          //     field.multiply(errorLocations[j], xiInverse)
-          //   )
-          // )
-          // Above should work but fails on some Apple and Linux JDKs due to a Hotspot bug.
-          // Below is a funny-looking workaround from Steven Parkes
-          const term = field.multiply(errorLocations[j], xiInverse);
-          const termPlus1 = (term & 0x1) === 0 ? term | 1 : term & ~1;
-
-          denominator = field.multiply(denominator, termPlus1);
-        }
-      }
-
-      result[i] = field.multiply(errorEvaluator.evaluateAt(xiInverse), field.inverse(denominator));
-
-      if (field.generatorBase !== 0) {
-        result[i] = field.multiply(result[i], xiInverse);
-      }
-    }
-
-    return result;
-  }
-
   public decode(received: Int32Array, ecBytes: number): void {
     const field = this.#field;
+    const { generatorBase } = field;
     const poly = new GenericGFPoly(field, received);
     const syndromeCoefficients = new Int32Array(ecBytes);
 
     let noError: boolean = true;
 
     for (let i = 0; i < ecBytes; i++) {
-      const evalResult = poly.evaluateAt(field.exp(i + field.generatorBase));
+      const evalResult = poly.evaluateAt(field.exp(i + generatorBase));
 
       syndromeCoefficients[ecBytes - 1 - i] = evalResult;
 
@@ -155,25 +160,23 @@ export class Decoder {
       }
     }
 
-    if (noError) {
-      return;
-    }
+    if (!noError) {
+      const syndrome = new GenericGFPoly(field, syndromeCoefficients);
+      const [sigma, omega] = this.#runEuclideanAlgorithm(field.buildMonomial(ecBytes, 1), syndrome, ecBytes);
+      const errorLocations = this.#findErrorLocations(sigma);
+      const errorMagnitudes = this.#findErrorMagnitudes(omega, errorLocations);
+      const eLength = errorLocations.length;
+      const rLength = received.length;
 
-    const syndrome = new GenericGFPoly(field, syndromeCoefficients);
-    const [sigma, omega] = this.#runEuclideanAlgorithm(field.buildMonomial(ecBytes, 1), syndrome, ecBytes);
-    const errorLocations = this.#findErrorLocations(sigma);
-    const errorMagnitudes = this.#findErrorMagnitudes(omega, errorLocations);
-    const eLength = errorLocations.length;
-    const rLength = received.length;
+      for (let i = 0; i < eLength; i++) {
+        const position = rLength - 1 - field.log(errorLocations[i]);
 
-    for (let i = 0; i < eLength; i++) {
-      const position = rLength - 1 - field.log(errorLocations[i]);
+        if (position < 0) {
+          throw new Error('bad error location');
+        }
 
-      if (position < 0) {
-        throw new Error('bad error location');
+        received[position] = received[position] ^ errorMagnitudes[i];
       }
-
-      received[position] = received[position] ^ errorMagnitudes[i];
     }
   }
 }
