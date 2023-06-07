@@ -208,7 +208,18 @@ export function appendModeInfo(bits: BitArray, mode: Mode): void {
 
 export function appendECI(bits: BitArray, charset: Charset): void {
   bits.append(Mode.ECI.bits, 4);
-  bits.append(charset.values[0], 8);
+
+  const [encoding] = charset.values;
+
+  if (encoding < 1 << 7) {
+    bits.append(encoding, 8);
+  } else if (encoding < 1 << 14) {
+    bits.append(2, 2);
+    bits.append(encoding, 14);
+  } else {
+    bits.append(6, 3);
+    bits.append(encoding, 21);
+  }
 }
 
 export function appendLengthInfo(bits: BitArray, mode: Mode, version: Version, numLetters: number): void {
