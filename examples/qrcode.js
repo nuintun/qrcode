@@ -68,6 +68,7 @@
   /**
    * @module BitArray
    */
+  const LOAD_FACTOR = 0.75;
   function makeArray(length) {
     return new Int32Array(toUInt32((length + 31) / 32));
   }
@@ -84,7 +85,7 @@
     #alloc(length) {
       const bits = this.#bits;
       if (length > bits.length * 32) {
-        const newBits = makeArray(length);
+        const newBits = makeArray(Math.ceil(length / LOAD_FACTOR));
         newBits.set(bits);
         this.#bits = newBits;
       }
