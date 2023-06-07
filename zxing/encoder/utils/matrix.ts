@@ -181,23 +181,23 @@ function embedTimingPatterns(matrix: ByteMatrix): void {
 
   // -8 is for skipping position detection patterns (7: size)
   // separation patterns (1: size). Thus, 8 = 7 + 1.
-  for (let i = 8; i < height; i++) {
-    const bit = (i + 1) % 2;
+  for (let x = 8; x < width; x++) {
+    const bit = (x + 1) & 1;
 
-    // Vertical line.
-    if (isEmpty(matrix, 6, i)) {
-      matrix.set(6, i, bit);
+    // Horizontal line.
+    if (isEmpty(matrix, x, 6)) {
+      matrix.set(x, 6, bit);
     }
   }
 
   // -8 is for skipping position detection patterns (7: size)
   // separation patterns (1: size). Thus, 8 = 7 + 1.
-  for (let j = 8; j < width; j++) {
-    const bit = (j + 1) % 2;
+  for (let y = 8; y < height; y++) {
+    const bit = (y + 1) & 1;
 
-    // Horizontal line.
-    if (isEmpty(matrix, j, 6)) {
-      matrix.set(j, 6, bit);
+    // Vertical line.
+    if (isEmpty(matrix, 6, y)) {
+      matrix.set(6, y, bit);
     }
   }
 }
@@ -392,55 +392,43 @@ function embedVersionInfo(matrix: ByteMatrix, { version }: Version): void {
 // Embed "dataBits" using "getMaskPattern". On success, modify the matrix.
 // See 8.7 of JISX0510:2004 (p.38) for how to embed data bits.
 function embedDataBits(matrix: ByteMatrix, dataBits: BitArray, mask: number): void {
+  let bitIndex = 0;
+
   const { length } = dataBits;
   const { width, height } = matrix;
 
-  let bitIndex = 0;
-  let direction = -1;
   // Start from the right bottom cell.
-  let x = width - 1;
-  let y = height - 1;
-
-  while (x > 0) {
+  for (let x = width - 1; x >= 1; x -= 2) {
     // Skip the vertical timing pattern.
     if (x === 6) {
-      x -= 1;
+      x = 5;
     }
 
-    while (y >= 0 && y < height) {
+    for (let y = 0; y < height; y++) {
       for (let i = 0; i < 2; i++) {
         const offsetX = x - i;
+        const upward = ((x + 1) & 2) === 0;
+        const offsetY = upward ? height - 1 - y : y;
 
         // Skip the cell if it's not empty.
-        if (isEmpty(matrix, offsetX, y)) {
-          let bit: number;
+        if (isEmpty(matrix, offsetX, offsetY)) {
+          // Padding bit. If there is no bit left, we'll fill the left cells with 0,
+          // as described in 8.4.9 of JISX0510:2004 (p. 24).
+          let bit = 0;
 
           if (bitIndex < length) {
             bit = dataBits.get(bitIndex++);
-          } else {
-            // Padding bit. If there is no bit left, we'll fill the left cells with 0, as described
-            // in 8.4.9 of JISX0510:2004 (p. 24).
-            bit = 0;
           }
 
           // Is apply mask.
-          if (isApplyMask(mask, offsetX, y)) {
+          if (isApplyMask(mask, offsetX, offsetY)) {
             bit ^= 1;
           }
 
-          matrix.set(offsetX, y, bit);
+          matrix.set(offsetX, offsetY, bit);
         }
       }
-
-      y += direction;
     }
-
-    // Reverse the direction.
-    direction = -direction;
-    // Update y.
-    y += direction;
-    // Move to the left.
-    x -= 2;
   }
 
   // All bits should be consumed.
