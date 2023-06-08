@@ -313,11 +313,6 @@ function makeFormatInfoBits(bits: BitArray, ecLevel: ECLevel, mask: number): voi
   maskBits.append(FORMAT_INFO_MASK, 15);
 
   bits.xor(maskBits);
-
-  if (bits.length !== 15) {
-    // Just in case.
-    throw new Error(`should not happen but we got: ${bits.length}`);
-  }
 }
 
 // Embed format information. On success, modify the matrix.
@@ -355,11 +350,6 @@ function makeVersionInfoBits(bits: BitArray, version: number): void {
   const bchCode = calculateBCHCode(version, VERSION_INFO_POLY);
 
   bits.append(bchCode, 12);
-
-  if (bits.length !== 18) {
-    // Just in case.
-    throw new Error(`should not happen but we got: ${bits.length}`);
-  }
 }
 
 // Embed version information if need be. On success, modify the matrix.

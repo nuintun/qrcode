@@ -8,6 +8,7 @@ import {
   appendModeInfo,
   appendTerminateBits,
   calculateBitsNeeded,
+  chooseMask,
   EncodeHint,
   interleaveWithECBytes,
   isByteMode,
@@ -20,7 +21,6 @@ import { QRCode } from './QRCode';
 import { Mode } from '/common/Mode';
 import { ByteMatrix } from './ByteMatrix';
 import { ECLevel } from '/common/ECLevel';
-import { chooseMask } from './utils/mask';
 import { BitArray } from '/common/BitArray';
 import { TextEncode } from './segments/Byte';
 import { buildMatrix } from './utils/matrix';
@@ -30,26 +30,26 @@ export interface Options {
   version?: number;
   encode?: TextEncode;
   hints?: EncodeHint[];
-  ecLevel?: 'L' | 'M' | 'Q' | 'H';
+  level?: 'L' | 'M' | 'Q' | 'H';
 }
 
 export class Encoder {
-  #ecLevel: ECLevel;
+  #level: ECLevel;
   #version?: number;
   #encode?: TextEncode;
   #hints: EncodeHint[];
 
-  constructor({ encode, version, hints = [], ecLevel = 'L' }: Options = {}) {
+  constructor({ encode, version, hints = [], level = 'L' }: Options = {}) {
     this.#hints = hints;
     this.#encode = encode;
     this.#version = version;
-    this.#ecLevel = ECLevel[ecLevel];
+    this.#level = ECLevel[level];
   }
 
   public encode(...segments: Segment[]): QRCode {
     const hints = this.#hints;
+    const ecLevel = this.#level;
     const encode = this.#encode;
-    const ecLevel = this.#ecLevel;
     const versionNumber = this.#version;
     const segmentBlocks: SegmentBlock[] = [];
     const hasGS1FormatHint = hints.indexOf('GS1_FORMAT') >= 0;

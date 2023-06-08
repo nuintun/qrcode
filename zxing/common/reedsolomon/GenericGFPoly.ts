@@ -40,12 +40,6 @@ export class GenericGFPoly {
     }
   }
 
-  #assertField(other: GenericGFPoly): void {
-    if (this.#field !== other.#field) {
-      throw new Error('polys do not have same field');
-    }
-  }
-
   public get coefficients(): Int32Array {
     return this.#coefficients;
   }
@@ -98,8 +92,6 @@ export class GenericGFPoly {
   }
 
   public addOrSubtract(other: GenericGFPoly): GenericGFPoly {
-    this.#assertField(other);
-
     if (this.isZero()) {
       return other;
     }
@@ -156,8 +148,6 @@ export class GenericGFPoly {
       return new GenericGFPoly(field, product);
     }
 
-    this.#assertField(other);
-
     if (this.isZero() || other.isZero()) {
       return field.zero;
     }
@@ -202,8 +192,6 @@ export class GenericGFPoly {
   }
 
   public divide(other: GenericGFPoly): [quotient: GenericGFPoly, remainder: GenericGFPoly] {
-    this.#assertField(other);
-
     if (other.isZero()) {
       throw new Error('divide by 0');
     }

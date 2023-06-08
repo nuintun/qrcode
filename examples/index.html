@@ -18,7 +18,7 @@
           <div><textarea id="encode-text">https://github.com/nuintun/qrcode</textarea></div>
           <p>
             <label>纠错等级：</label>
-            <select id="encode-eclevel">
+            <select id="encode-level">
               <option value="L">Level L (7%)</option>
               <option value="M" selected>Level M (15%)</option>
               <option value="Q">Level Q (25%)</option>
@@ -115,16 +115,16 @@
       const hintGs1 = $('#hint-gs1');
       const encodeMode = $('#encode-mode');
       const encodeText = $('#encode-text');
+      const encodeLevel = $('#encode-level');
       const encodeMSize = $('#encode-msize');
       const encodeMargin = $('#encode-margin');
       const encodeResult = $('#encode-result');
-      const encodeECLevel = $('#encode-eclevel');
 
       // 生成二维码
       $('#encode-btn').on('click', function () {
         const data = encodeText.val();
         const mode = encodeMode.val();
-        const ecLevel = encodeECLevel.val();
+        const level = encodeLevel.val();
         const margin = Number(encodeMargin.val());
         const hasGs1Hint = hintGs1.prop('checked');
         const hasEciHint = hintEci.prop('checked');
@@ -147,8 +147,8 @@
         }
 
         const encoder = new QRCode.Encoder({
-          hints: hints,
-          ecLevel: ecLevel
+          level: level,
+          hints: hints
         });
 
         try {
@@ -165,8 +165,9 @@
         }
       });
 
-      const hasImage = false;
-      const imageData = null;
+      let hasImage = false;
+      let imageData = null;
+
       const decodeText = $('#decode-text');
       const canvas = $('#decode-canvas')[0];
       const context = canvas.getContext('2d');

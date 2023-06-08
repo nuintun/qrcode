@@ -66,6 +66,190 @@
   }
 
   /**
+   * @module mask
+   */
+  // Penalty weights from section 6.8.2.1
+  const N1 = 3;
+  const N2 = 3;
+  const N3 = 40;
+  const N4 = 10;
+  // Is dark point.
+  function isDark(matrix, x, y) {
+    return matrix.get(x, y) === 1;
+  }
+  // Helper function for applyMaskPenaltyRule1. We need this for doing this calculation in both
+  // vertical and horizontal orders respectively.
+  function applyMaskPenaltyRule1Internal(matrix, isHorizontal) {
+    let penalty = 0;
+    let { width, height } = matrix;
+    width = isHorizontal ? width : height;
+    height = isHorizontal ? height : width;
+    for (let y = 0; y < height; y++) {
+      let prevBit = -1;
+      let numSameBitCells = 0;
+      for (let x = 0; x < width; x++) {
+        const bit = isHorizontal ? matrix.get(x, y) : matrix.get(y, x);
+        if (bit === prevBit) {
+          numSameBitCells++;
+        } else {
+          if (numSameBitCells >= 5) {
+            penalty += N1 + (numSameBitCells - 5);
+          }
+          // set prev bit
+          prevBit = bit;
+          // include the cell itself
+          numSameBitCells = 1;
+        }
+      }
+      if (numSameBitCells >= 5) {
+        penalty += N1 + (numSameBitCells - 5);
+      }
+    }
+    return penalty;
+  }
+  // Apply mask penalty rule 1 and return the penalty. Find repetitive cells with the same color and
+  // give penalty to them. Example: 00000 or 11111.
+  function applyMaskPenaltyRule1(matrix) {
+    return applyMaskPenaltyRule1Internal(matrix, true) + applyMaskPenaltyRule1Internal(matrix, false);
+  }
+  // Apply mask penalty rule 2 and return the penalty. Find 2x2 blocks with the same color and give
+  // penalty to them. This is actually equivalent to the spec's rule, which is to find MxN blocks and give a
+  // penalty proportional to (M-1)x(N-1), because this is the number of 2x2 blocks inside such a block.
+  function applyMaskPenaltyRule2(matrix) {
+    let penalty = 0;
+    const width = matrix.width - 1;
+    const height = matrix.height - 1;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const bit = matrix.get(x, y);
+        if (
+          // Find 2x2 blocks with the same color
+          bit === matrix.get(x + 1, y) &&
+          bit === matrix.get(x, y + 1) &&
+          bit === matrix.get(x + 1, y + 1)
+        ) {
+          penalty += N2;
+        }
+      }
+    }
+    return penalty;
+  }
+  // Is is four white, check on horizontal and vertical.
+  function isFourWhite(matrix, offset, from, to, isHorizontal) {
+    if (from < 0 || to > (isHorizontal ? matrix.width : matrix.height)) {
+      return false;
+    }
+    for (let i = from; i < to; i++) {
+      if (isHorizontal ? isDark(matrix, i, offset) : isDark(matrix, offset, i)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  // Apply mask penalty rule 3 and return the penalty. Find consecutive runs of 1:1:3:1:1:4
+  // starting with black, or 4:1:1:3:1:1 starting with white, and give penalty to them. If we
+  // find patterns like 000010111010000, we give penalty once.
+  function applyMaskPenaltyRule3(matrix) {
+    let numPenalties = 0;
+    const { width, height } = matrix;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (
+          // Find consecutive runs of 1:1:3:1:1:4 or 4:1:1:3:1:1, patterns like 000010111010000
+          x + 6 < width &&
+          isDark(matrix, x, y) &&
+          !isDark(matrix, x + 1, y) &&
+          isDark(matrix, x + 2, y) &&
+          isDark(matrix, x + 3, y) &&
+          isDark(matrix, x + 4, y) &&
+          !isDark(matrix, x + 5, y) &&
+          isDark(matrix, x + 6, y) &&
+          (isFourWhite(matrix, y, x - 4, x, true) || isFourWhite(matrix, y, x + 7, x + 11, true))
+        ) {
+          numPenalties++;
+        }
+        if (
+          // Find consecutive runs of 1:1:3:1:1:4 or 4:1:1:3:1:1, patterns like 000010111010000
+          y + 6 < height &&
+          isDark(matrix, x, y) &&
+          !isDark(matrix, x, y + 1) &&
+          isDark(matrix, x, y + 2) &&
+          isDark(matrix, x, y + 3) &&
+          isDark(matrix, x, y + 4) &&
+          !isDark(matrix, x, y + 5) &&
+          isDark(matrix, x, y + 6) &&
+          (isFourWhite(matrix, x, y - 4, y, false) || isFourWhite(matrix, x, y + 7, y + 11, false))
+        ) {
+          numPenalties++;
+        }
+      }
+    }
+    return numPenalties * N3;
+  }
+  // Apply mask penalty rule 4 and return the penalty. Calculate the ratio of dark cells and give
+  // penalty if the ratio is far from 50%. It gives 10 penalty for 5% distance.
+  function applyMaskPenaltyRule4(matrix) {
+    let numDarkCells = 0;
+    const { width, height } = matrix;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (isDark(matrix, x, y)) {
+          numDarkCells++;
+        }
+      }
+    }
+    const numTotalCells = width * height;
+    const fivePercentVariances = toUInt32((Math.abs(numDarkCells * 2 - numTotalCells) * 10) / numTotalCells);
+    return fivePercentVariances * N4;
+  }
+  // The mask penalty calculation is complicated.  See Table 21 of JISX0510:2004 (p.45) for details.
+  // Basically it applies four rules and summate all penalties.
+  function calculateMaskPenalty(matrix) {
+    return (
+      applyMaskPenaltyRule1(matrix) +
+      applyMaskPenaltyRule2(matrix) +
+      applyMaskPenaltyRule3(matrix) +
+      applyMaskPenaltyRule4(matrix)
+    );
+  }
+  // Return is apply mask at "x" and "y". See 8.8 of JISX0510:2004 for mask pattern conditions.
+  function isApplyMask(mask, x, y) {
+    let temp;
+    let intermediate;
+    switch (mask) {
+      case 0:
+        intermediate = (y + x) & 0x1;
+        break;
+      case 1:
+        intermediate = y & 0x1;
+        break;
+      case 2:
+        intermediate = x % 3;
+        break;
+      case 3:
+        intermediate = (y + x) % 3;
+        break;
+      case 4:
+        intermediate = (toUInt32(y / 2) + toUInt32(x / 3)) & 0x1;
+        break;
+      case 5:
+        temp = y * x;
+        intermediate = (temp & 0x1) + (temp % 3);
+        break;
+      case 6:
+        temp = y * x;
+        intermediate = ((temp & 0x1) + (temp % 3)) & 0x1;
+        break;
+      case 7:
+        intermediate = (((y * x) % 3) + ((y + x) & 0x1)) & 0x1;
+        break;
+      default:
+        throw new Error(`illegal mask: ${mask}`);
+    }
+    return intermediate === 0;
+  }
+
+  /**
    * @module BitArray
    */
   const LOAD_FACTOR = 0.75;
@@ -150,6 +334,377 @@
     clear() {
       this.#bits.fill(0);
     }
+  }
+
+  /**
+   * @module matrix
+   */
+  // Format information poly
+  const FORMAT_INFO_POLY = 0x537;
+  // Format information mask
+  const FORMAT_INFO_MASK = 0x5412;
+  // Version information poly: 1 1111 0010 0101
+  const VERSION_INFO_POLY = 0x1f25;
+  // Format information coordinates
+  const FORMAT_INFO_COORDINATES = [
+    [8, 0],
+    [8, 1],
+    [8, 2],
+    [8, 3],
+    [8, 4],
+    [8, 5],
+    [8, 7],
+    [8, 8],
+    [7, 8],
+    [5, 8],
+    [4, 8],
+    [3, 8],
+    [2, 8],
+    [1, 8],
+    [0, 8]
+  ];
+  // Position detection pattern
+  const POSITION_DETECTION_PATTERN = [
+    [1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1]
+  ];
+  // Position adjustment pattern
+  const POSITION_ADJUSTMENT_PATTERN = [
+    [1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 1, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1]
+  ];
+  // From Appendix E. Table 1, JIS0510X:2004 (p 71).
+  const POSITION_ADJUSTMENT_PATTERN_COORDINATE_TABLE = [
+    [],
+    [6, 18],
+    [6, 22],
+    [6, 26],
+    [6, 30],
+    [6, 34],
+    [6, 22, 38],
+    [6, 24, 42],
+    [6, 26, 46],
+    [6, 28, 50],
+    [6, 30, 54],
+    [6, 32, 58],
+    [6, 34, 62],
+    [6, 26, 46, 66],
+    [6, 26, 48, 70],
+    [6, 26, 50, 74],
+    [6, 30, 54, 78],
+    [6, 30, 56, 82],
+    [6, 30, 58, 86],
+    [6, 34, 62, 90],
+    [6, 28, 50, 72, 94],
+    [6, 26, 50, 74, 98],
+    [6, 30, 54, 78, 102],
+    [6, 28, 54, 80, 106],
+    [6, 32, 58, 84, 110],
+    [6, 30, 58, 86, 114],
+    [6, 34, 62, 90, 118],
+    [6, 26, 50, 74, 98, 122],
+    [6, 30, 54, 78, 102, 126],
+    [6, 26, 52, 78, 104, 130],
+    [6, 30, 56, 82, 108, 134],
+    [6, 34, 60, 86, 112, 138],
+    [6, 30, 58, 86, 114, 142],
+    [6, 34, 62, 90, 118, 146],
+    [6, 30, 54, 78, 102, 126, 150],
+    [6, 24, 50, 76, 102, 128, 154],
+    [6, 28, 54, 80, 106, 132, 158],
+    [6, 32, 58, 84, 110, 136, 162],
+    [6, 26, 54, 82, 110, 138, 166],
+    [6, 30, 58, 86, 114, 142, 170] // Version 40
+  ];
+  // Is empty point.
+  function isEmpty(matrix, x, y) {
+    return matrix.get(x, y) === -1;
+  }
+  function embedPositionDetectionPattern(matrix, x, y) {
+    for (let i = 0; i < 7; i++) {
+      const pattern = POSITION_DETECTION_PATTERN[i];
+      for (let j = 0; j < 7; j++) {
+        matrix.set(x + j, y + i, pattern[j]);
+      }
+    }
+  }
+  function embedHorizontalSeparationPattern(matrix, x, y) {
+    for (let j = 0; j < 8; j++) {
+      matrix.set(x + j, y, 0);
+    }
+  }
+  function embedVerticalSeparationPattern(matrix, x, y) {
+    for (let i = 0; i < 7; i++) {
+      matrix.set(x, y + i, 0);
+    }
+  }
+  function embedPositionAdjustmentPattern(matrix, x, y) {
+    for (let i = 0; i < 5; i++) {
+      const pattern = POSITION_ADJUSTMENT_PATTERN[i];
+      for (let j = 0; j < 5; j++) {
+        matrix.set(x + j, y + i, pattern[j]);
+      }
+    }
+  }
+  // Embed the lonely dark dot at left bottom corner. JISX0510:2004 (p.46)
+  function embedDarkDotAtLeftBottomCorner(matrix) {
+    matrix.set(8, matrix.height - 8, 1);
+  }
+  // Embed position detection patterns and surrounding vertical/horizontal separators.
+  function embedPositionDetectionPatternsAndSeparators(matrix) {
+    // Embed three big squares at corners.
+    const pdpWidth = 7;
+    // Embed horizontal separation patterns around the squares.
+    const hspWidth = 8;
+    // Embed vertical separation patterns around the squares.
+    const vspHeight = 7;
+    // Matrix width
+    const { width, height } = matrix;
+    // Left top corner.
+    embedPositionDetectionPattern(matrix, 0, 0);
+    // Right top corner.
+    embedPositionDetectionPattern(matrix, width - pdpWidth, 0);
+    // Left bottom corner.
+    embedPositionDetectionPattern(matrix, 0, width - pdpWidth);
+    // Left top corner.
+    embedHorizontalSeparationPattern(matrix, 0, hspWidth - 1);
+    // Right top corner.
+    embedHorizontalSeparationPattern(matrix, width - hspWidth, hspWidth - 1);
+    // Left bottom corner.
+    embedHorizontalSeparationPattern(matrix, 0, width - hspWidth);
+    // Left top corner.
+    embedVerticalSeparationPattern(matrix, vspHeight, 0);
+    // Right top corner.
+    embedVerticalSeparationPattern(matrix, height - vspHeight - 1, 0);
+    // Left bottom corner.
+    embedVerticalSeparationPattern(matrix, vspHeight, height - vspHeight);
+  }
+  function embedTimingPatterns(matrix) {
+    const width = matrix.width - 8;
+    const height = matrix.height - 8;
+    // -8 is for skipping position detection patterns (7: size)
+    // separation patterns (1: size). Thus, 8 = 7 + 1.
+    for (let x = 8; x < width; x++) {
+      const bit = (x + 1) & 1;
+      // Horizontal line.
+      if (isEmpty(matrix, x, 6)) {
+        matrix.set(x, 6, bit);
+      }
+    }
+    // -8 is for skipping position detection patterns (7: size)
+    // separation patterns (1: size). Thus, 8 = 7 + 1.
+    for (let y = 8; y < height; y++) {
+      const bit = (y + 1) & 1;
+      // Vertical line.
+      if (isEmpty(matrix, 6, y)) {
+        matrix.set(6, y, bit);
+      }
+    }
+  }
+  // Embed position adjustment patterns if need be.
+  function embedPositionAdjustmentPatterns(matrix, { version }) {
+    if (version >= 2) {
+      const coordinates = POSITION_ADJUSTMENT_PATTERN_COORDINATE_TABLE[version - 1];
+      const { length } = coordinates;
+      for (let i = 0; i < length; i++) {
+        const y = coordinates[i];
+        for (let j = 0; j < length; j++) {
+          const x = coordinates[j];
+          if (isEmpty(matrix, x, y)) {
+            // If the cell is unset, we embed the position adjustment pattern here.
+            // -2 is necessary since the x/y coordinates point to the center of the pattern, not the
+            // left top corner.
+            embedPositionAdjustmentPattern(matrix, x - 2, y - 2);
+          }
+        }
+      }
+    }
+  }
+  // Embed basic patterns. On success, modify the matrix.
+  // The basic patterns are:
+  // - Position detection patterns
+  // - Timing patterns
+  // - Dark dot at the left bottom corner
+  // - Position adjustment patterns, if need be
+  function embedBasicPatterns(matrix, version) {
+    // Let's get started with embedding big squares at corners.
+    embedPositionDetectionPatternsAndSeparators(matrix);
+    // Then, embed the dark dot at the left bottom corner.
+    embedDarkDotAtLeftBottomCorner(matrix);
+    // Position adjustment patterns appear if version >= 2.
+    embedPositionAdjustmentPatterns(matrix, version);
+    // Timing patterns should be embedded after position adj. patterns.
+    embedTimingPatterns(matrix);
+  }
+  // Return the position of the most significant bit set (to one) in the "value". The most
+  // significant bit is position 32. If there is no bit set, return 0. Examples:
+  // - findMSBSet(0) => 0
+  // - findMSBSet(1) => 1
+  // - findMSBSet(255) => 8
+  function findMSBSet(value) {
+    return 32 - Math.clz32(value);
+  }
+  // Calculate BCH (Bose-Chaudhuri-Hocquenghem) code for "value" using polynomial "poly". The BCH
+  // code is used for encoding type information and version information.
+  // Example: Calculation of version information of 7.
+  // f(x) is created from 7.
+  //   - 7 = 000111 in 6 bits
+  //   - f(x) = x^2 + x^1 + x^0
+  // g(x) is given by the standard (p. 67)
+  //   - g(x) = x^12 + x^11 + x^10 + x^9 + x^8 + x^5 + x^2 + 1
+  // Multiply f(x) by x^(18 - 6)
+  //   - f'(x) = f(x) * x^(18 - 6)
+  //   - f'(x) = x^14 + x^13 + x^12
+  // Calculate the remainder of f'(x) / g(x)
+  //         x^2
+  //         __________________________________________________
+  //   g(x) )x^14 + x^13 + x^12
+  //         x^14 + x^13 + x^12 + x^11 + x^10 + x^7 + x^4 + x^2
+  //         --------------------------------------------------
+  //                              x^11 + x^10 + x^7 + x^4 + x^2
+  //
+  // The remainder is x^11 + x^10 + x^7 + x^4 + x^2
+  // Encode it in binary: 110010010100
+  // The return value is 0xc94 (1100 1001 0100)
+  //
+  // Since all coefficients in the polynomials are 1 or 0, we can do the calculation by bit
+  // operations. We don't care if coefficients are positive or negative.
+  function calculateBCHCode(value, poly) {
+    if (poly === 0) {
+      throw new Error('0 polynomial');
+    }
+    // If poly is "1 1111 0010 0101" (version info poly), msbSetInPoly is 13. We'll subtract 1
+    // from 13 to make it 12.
+    const msbSetInPoly = findMSBSet(poly);
+    value <<= msbSetInPoly - 1;
+    // Do the division business using exclusive-or operations.
+    while (findMSBSet(value) >= msbSetInPoly) {
+      value ^= poly << (findMSBSet(value) - msbSetInPoly);
+    }
+    // Now the "value" is the remainder (i.e. the BCH code)
+    return value;
+  }
+  // Make bit vector of format information. On success, store the result in "bits".
+  // Encode error correction level and mask pattern. See 8.9 of
+  // JISX0510:2004 (p.45) for details.
+  function makeFormatInfoBits(bits, ecLevel, mask) {
+    const formatInfo = (ecLevel.bits << 3) | mask;
+    bits.append(formatInfo, 5);
+    const bchCode = calculateBCHCode(formatInfo, FORMAT_INFO_POLY);
+    bits.append(bchCode, 10);
+    const maskBits = new BitArray();
+    maskBits.append(FORMAT_INFO_MASK, 15);
+    bits.xor(maskBits);
+  }
+  // Embed format information. On success, modify the matrix.
+  function embedFormatInfo(matrix, ecLevel, mask) {
+    const formatInfoBits = new BitArray();
+    makeFormatInfoBits(formatInfoBits, ecLevel, mask);
+    const { width, height } = matrix;
+    const { length } = formatInfoBits;
+    for (let i = 0; i < length; i++) {
+      // Type info bits at the left top corner. See 8.9 of JISX0510:2004 (p.46).
+      const [x, y] = FORMAT_INFO_COORDINATES[i];
+      // Place bits in LSB to MSB order. LSB (least significant bit) is the last value in formatInfoBits.
+      const bit = formatInfoBits.get(length - 1 - i);
+      matrix.set(x, y, bit);
+      if (i < 8) {
+        // Right top corner.
+        matrix.set(width - i - 1, 8, bit);
+      } else {
+        // Left bottom corner.
+        matrix.set(8, height - 7 + (i - 8), bit);
+      }
+    }
+  }
+  // Make bit vector of version information. On success, store the result in "bits".
+  // See 8.10 of JISX0510:2004 (p.45) for details.
+  function makeVersionInfoBits(bits, version) {
+    bits.append(version, 6);
+    const bchCode = calculateBCHCode(version, VERSION_INFO_POLY);
+    bits.append(bchCode, 12);
+  }
+  // Embed version information if need be. On success, modify the matrix.
+  // See 8.10 of JISX0510:2004 (p.47) for how to embed version information.
+  function embedVersionInfo(matrix, { version }) {
+    if (version >= 7) {
+      const versionInfoBits = new BitArray();
+      makeVersionInfoBits(versionInfoBits, version);
+      // It will decrease from 17 to 0.
+      let bitIndex = 6 * 3 - 1;
+      const { height } = matrix;
+      for (let i = 0; i < 6; i++) {
+        for (let j = 0; j < 3; j++) {
+          // Place bits in LSB (least significant bit) to MSB order.
+          const bit = versionInfoBits.get(bitIndex--);
+          // Left bottom corner.
+          matrix.set(i, height - 11 + j, bit);
+          // Right bottom corner.
+          matrix.set(height - 11 + j, i, bit);
+        }
+      }
+    }
+  }
+  // Embed "dataBits" using "getMaskPattern". On success, modify the matrix.
+  // See 8.7 of JISX0510:2004 (p.38) for how to embed data bits.
+  function embedDataBits(matrix, dataBits, mask) {
+    let bitIndex = 0;
+    const { length } = dataBits;
+    const { width, height } = matrix;
+    // Start from the right bottom cell.
+    for (let x = width - 1; x >= 1; x -= 2) {
+      // Skip the vertical timing pattern.
+      if (x === 6) {
+        x = 5;
+      }
+      for (let y = 0; y < height; y++) {
+        for (let i = 0; i < 2; i++) {
+          const offsetX = x - i;
+          const upward = ((x + 1) & 2) === 0;
+          const offsetY = upward ? height - 1 - y : y;
+          // Skip the cell if it's not empty.
+          if (isEmpty(matrix, offsetX, offsetY)) {
+            // Padding bit. If there is no bit left, we'll fill the left cells with 0,
+            // as described in 8.4.9 of JISX0510:2004 (p. 24).
+            let bit = 0;
+            if (bitIndex < length) {
+              bit = dataBits.get(bitIndex++);
+            }
+            // Is apply mask.
+            if (isApplyMask(mask, offsetX, offsetY)) {
+              bit ^= 1;
+            }
+            matrix.set(offsetX, offsetY, bit);
+          }
+        }
+      }
+    }
+    // All bits should be consumed.
+    if (bitIndex !== length) {
+      throw new Error(`not all bits consumed: ${bitIndex}/${length}`);
+    }
+  }
+  // Build 2D matrix of QR Code from "dataBits" with "ecLevel", "version" and "getMaskPattern". On
+  // success, store the result in "matrix".
+  function buildMatrix(matrix, dataBits, version, ecLevel, mask) {
+    // Clear matrix
+    matrix.clear(-1);
+    // Embed basic patterns
+    embedBasicPatterns(matrix, version);
+    // Type information appear with any version.
+    embedFormatInfo(matrix, ecLevel, mask);
+    // Version info appear if version >= 7.
+    embedVersionInfo(matrix, version);
+    // Data should be embedded at end.
+    embedDataBits(matrix, dataBits, mask);
   }
 
   /**
@@ -614,11 +1169,6 @@
         this.#coefficients = coefficients;
       }
     }
-    #assertField(other) {
-      if (this.#field !== other.#field) {
-        throw new Error('polys do not have same field');
-      }
-    }
     get coefficients() {
       return this.#coefficients;
     }
@@ -656,7 +1206,6 @@
       return result;
     }
     addOrSubtract(other) {
-      this.#assertField(other);
       if (this.isZero()) {
         return other;
       }
@@ -697,7 +1246,6 @@
         }
         return new GenericGFPoly(field, product);
       }
-      this.#assertField(other);
       if (this.isZero() || other.isZero()) {
         return field.zero;
       }
@@ -731,7 +1279,6 @@
       return new GenericGFPoly(field, product);
     }
     divide(other) {
-      this.#assertField(other);
       if (other.isZero()) {
         throw new Error('divide by 0');
       }
@@ -860,13 +1407,7 @@
       return generators[degree];
     }
     encode(received, ecBytes) {
-      if (ecBytes === 0) {
-        throw new Error('no error correction bytes');
-      }
       const dataBytes = received.length - ecBytes;
-      if (dataBytes <= 0) {
-        throw new Error('no data bytes provided');
-      }
       const generator = this.#buildGenerator(ecBytes);
       const infoCoefficients = new Int32Array(dataBytes);
       infoCoefficients.set(received.subarray(0, dataBytes));
@@ -886,9 +1427,6 @@
    * @module encoder
    */
   function getNumBytesInBlock(blockID, numRSBlocks, numDataBytes, numTotalBytes) {
-    if (blockID >= numRSBlocks) {
-      throw new Error('block id too large');
-    }
     // numRSBlocksInGroup2 = 196 % 5 = 1
     const numRSBlocksInGroup2 = numTotalBytes % numRSBlocks;
     // numRSBlocksInGroup1 = 5 - 1 = 4
@@ -905,23 +1443,7 @@
     const numECBytesInGroup1 = numTotalBytesInGroup1 - numDataBytesInGroup1;
     // numECBytesInGroup2 = 40 - 14 = 26
     const numECBytesInGroup2 = numTotalBytesInGroup2 - numDataBytesInGroup2;
-    // Sanity checks.
-    // 26 = 26
-    if (numECBytesInGroup1 !== numECBytesInGroup2) {
-      throw new Error('ec bytes mismatch');
-    }
-    // 5 = 4 + 1.
-    if (numRSBlocks !== numRSBlocksInGroup1 + numRSBlocksInGroup2) {
-      throw new Error('rs blocks mismatch');
-    }
-    // 196 = (13 + 26) * 4 + (14 + 26) * 1
-    if (
-      numTotalBytes !==
-      (numDataBytesInGroup1 + numECBytesInGroup1) * numRSBlocksInGroup1 +
-        (numDataBytesInGroup2 + numECBytesInGroup2) * numRSBlocksInGroup2
-    ) {
-      throw new Error('total bytes mismatch');
-    }
+    // Sanity checks: /zxing/qrcode/encoder/Encoder.java -> getNumDataBytesAndNumECBytesForBlockID
     if (blockID < numRSBlocksInGroup1) {
       return [numECBytesInGroup1, numDataBytesInGroup1];
     } else {
@@ -941,10 +1463,6 @@
     return ecBytes;
   }
   function interleaveWithECBytes(bits, numRSBlocks, numDataBytes, numTotalBytes) {
-    // "bits" must have "getNumDataBytes" bytes of data.
-    if (bits.byteLength !== numDataBytes) {
-      throw new Error('number of bits and data bytes does not match');
-    }
     // Step 1.  Divide data bytes into blocks and generate error correction bytes for them. We'll
     // store the divided data bytes blocks and error correction bytes blocks into "blocks".
     let maxNumECBytes = 0;
@@ -961,9 +1479,6 @@
       maxNumDataBytes = Math.max(maxNumDataBytes, numDataBytesInBlock);
       maxNumECBytes = Math.max(maxNumECBytes, ecBytes.length);
       dataBytesOffset += numDataBytesInBlock;
-    }
-    if (numDataBytes !== dataBytesOffset) {
-      throw new Error('data bytes does not match offset');
     }
     const result = new BitArray();
     // First, place data blocks.
@@ -982,17 +1497,10 @@
         }
       }
     }
-    if (numTotalBytes !== result.byteLength) {
-      // Should be same.
-      throw new Error(`interleaving error: ${numTotalBytes} and ${result.byteLength} differ`);
-    }
     return result;
   }
   function appendTerminateBits(bits, numDataBytes) {
     const capacity = numDataBytes * 8;
-    if (bits.length > capacity) {
-      throw new Error(`data bits cannot fit in the QRCode ${bits.length} > ${capacity}`);
-    }
     // Append Mode.TERMINATE if there is enough space (value is 0000)
     for (let i = 0; i < 4 && bits.length < capacity; i++) {
       bits.append(0);
@@ -1009,9 +1517,6 @@
     const numPaddingBytes = numDataBytes - bits.byteLength;
     for (let i = 0; i < numPaddingBytes; i++) {
       bits.append(i & 1 ? 0x11 : 0xec, 8);
-    }
-    if (bits.length !== capacity) {
-      throw new Error('bits size does not equal capacity');
     }
   }
   function isByteMode(segment) {
@@ -1034,11 +1539,7 @@
     }
   }
   function appendLengthInfo(bits, mode, version, numLetters) {
-    const numBits = mode.getCharacterCountBits(version);
-    if (numLetters >= 1 << numBits) {
-      throw new Error(`${numLetters} is bigger than ${(1 << numBits) - 1}`);
-    }
-    bits.append(numLetters, numBits);
+    bits.append(numLetters, mode.getCharacterCountBits(version));
   }
   function willFit(numInputBits, version, ecLevel) {
     // In the following comments, we use numbers of Version 7-H.
@@ -1058,7 +1559,7 @@
         return version;
       }
     }
-    throw new Error('data too big');
+    throw new Error('data too big for all versions');
   }
   function calculateBitsNeeded(segmentBlocks, version) {
     let bitsNeeded = 0;
@@ -1076,6 +1577,21 @@
     // Use that guess to calculate the right version. I am still not sure this works in 100% of cases.
     const bitsNeeded = calculateBitsNeeded(segmentBlocks, provisionalVersion);
     return chooseVersion(bitsNeeded, ecLevel);
+  }
+  function chooseMask(matrix, bits, version, ecLevel) {
+    let bestMask = -1;
+    // Lower penalty is better.
+    let minPenalty = Number.MAX_VALUE;
+    // We try all mask patterns to choose the best one.
+    for (let mask = 0; mask < 8; mask++) {
+      buildMatrix(matrix, bits, version, ecLevel, mask);
+      const penalty = calculateMaskPenalty(matrix);
+      if (penalty < minPenalty) {
+        bestMask = mask;
+        minPenalty = penalty;
+      }
+    }
+    return bestMask;
   }
 
   /**
@@ -1386,20 +1902,20 @@
    */
   class QRCode {
     #mask;
-    #ecLevel;
+    #level;
     #version;
     #matrix;
-    constructor(matrix, version, ecLevel, mask) {
+    constructor(matrix, version, level, mask) {
       this.#mask = mask;
+      this.#level = level;
       this.#matrix = matrix;
-      this.#ecLevel = ecLevel;
       this.#version = version;
     }
     get mask() {
       return this.#mask;
     }
-    get ecLevel() {
-      return this.#ecLevel.name;
+    get level() {
+      return this.#level.name;
     }
     get version() {
       return this.#version.version;
@@ -1496,584 +2012,6 @@
     get level() {
       return this.#level;
     }
-  }
-
-  /**
-   * @module matrix
-   */
-  // Format information poly
-  const FORMAT_INFO_POLY = 0x537;
-  // Format information mask
-  const FORMAT_INFO_MASK = 0x5412;
-  // Version information poly: 1 1111 0010 0101
-  const VERSION_INFO_POLY = 0x1f25;
-  // Format information coordinates
-  const FORMAT_INFO_COORDINATES = [
-    [8, 0],
-    [8, 1],
-    [8, 2],
-    [8, 3],
-    [8, 4],
-    [8, 5],
-    [8, 7],
-    [8, 8],
-    [7, 8],
-    [5, 8],
-    [4, 8],
-    [3, 8],
-    [2, 8],
-    [1, 8],
-    [0, 8]
-  ];
-  // Position detection pattern
-  const POSITION_DETECTION_PATTERN = [
-    [1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 1, 1, 1, 0, 1],
-    [1, 0, 1, 1, 1, 0, 1],
-    [1, 0, 1, 1, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1]
-  ];
-  // Position adjustment pattern
-  const POSITION_ADJUSTMENT_PATTERN = [
-    [1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 1],
-    [1, 0, 1, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1]
-  ];
-  // From Appendix E. Table 1, JIS0510X:2004 (p 71).
-  const POSITION_ADJUSTMENT_PATTERN_COORDINATE_TABLE = [
-    [],
-    [6, 18],
-    [6, 22],
-    [6, 26],
-    [6, 30],
-    [6, 34],
-    [6, 22, 38],
-    [6, 24, 42],
-    [6, 26, 46],
-    [6, 28, 50],
-    [6, 30, 54],
-    [6, 32, 58],
-    [6, 34, 62],
-    [6, 26, 46, 66],
-    [6, 26, 48, 70],
-    [6, 26, 50, 74],
-    [6, 30, 54, 78],
-    [6, 30, 56, 82],
-    [6, 30, 58, 86],
-    [6, 34, 62, 90],
-    [6, 28, 50, 72, 94],
-    [6, 26, 50, 74, 98],
-    [6, 30, 54, 78, 102],
-    [6, 28, 54, 80, 106],
-    [6, 32, 58, 84, 110],
-    [6, 30, 58, 86, 114],
-    [6, 34, 62, 90, 118],
-    [6, 26, 50, 74, 98, 122],
-    [6, 30, 54, 78, 102, 126],
-    [6, 26, 52, 78, 104, 130],
-    [6, 30, 56, 82, 108, 134],
-    [6, 34, 60, 86, 112, 138],
-    [6, 30, 58, 86, 114, 142],
-    [6, 34, 62, 90, 118, 146],
-    [6, 30, 54, 78, 102, 126, 150],
-    [6, 24, 50, 76, 102, 128, 154],
-    [6, 28, 54, 80, 106, 132, 158],
-    [6, 32, 58, 84, 110, 136, 162],
-    [6, 26, 54, 82, 110, 138, 166],
-    [6, 30, 58, 86, 114, 142, 170] // Version 40
-  ];
-  // Is empty point.
-  function isEmpty(matrix, x, y) {
-    return matrix.get(x, y) === -1;
-  }
-  function embedPositionDetectionPattern(matrix, x, y) {
-    for (let i = 0; i < 7; i++) {
-      const pattern = POSITION_DETECTION_PATTERN[i];
-      for (let j = 0; j < 7; j++) {
-        matrix.set(x + j, y + i, pattern[j]);
-      }
-    }
-  }
-  function embedHorizontalSeparationPattern(matrix, x, y) {
-    for (let j = 0; j < 8; j++) {
-      matrix.set(x + j, y, 0);
-    }
-  }
-  function embedVerticalSeparationPattern(matrix, x, y) {
-    for (let i = 0; i < 7; i++) {
-      matrix.set(x, y + i, 0);
-    }
-  }
-  function embedPositionAdjustmentPattern(matrix, x, y) {
-    for (let i = 0; i < 5; i++) {
-      const pattern = POSITION_ADJUSTMENT_PATTERN[i];
-      for (let j = 0; j < 5; j++) {
-        matrix.set(x + j, y + i, pattern[j]);
-      }
-    }
-  }
-  // Embed the lonely dark dot at left bottom corner. JISX0510:2004 (p.46)
-  function embedDarkDotAtLeftBottomCorner(matrix) {
-    matrix.set(8, matrix.height - 8, 1);
-  }
-  // Embed position detection patterns and surrounding vertical/horizontal separators.
-  function embedPositionDetectionPatternsAndSeparators(matrix) {
-    // Embed three big squares at corners.
-    const pdpWidth = 7;
-    // Embed horizontal separation patterns around the squares.
-    const hspWidth = 8;
-    // Embed vertical separation patterns around the squares.
-    const vspHeight = 7;
-    // Matrix width
-    const { width, height } = matrix;
-    // Left top corner.
-    embedPositionDetectionPattern(matrix, 0, 0);
-    // Right top corner.
-    embedPositionDetectionPattern(matrix, width - pdpWidth, 0);
-    // Left bottom corner.
-    embedPositionDetectionPattern(matrix, 0, width - pdpWidth);
-    // Left top corner.
-    embedHorizontalSeparationPattern(matrix, 0, hspWidth - 1);
-    // Right top corner.
-    embedHorizontalSeparationPattern(matrix, width - hspWidth, hspWidth - 1);
-    // Left bottom corner.
-    embedHorizontalSeparationPattern(matrix, 0, width - hspWidth);
-    // Left top corner.
-    embedVerticalSeparationPattern(matrix, vspHeight, 0);
-    // Right top corner.
-    embedVerticalSeparationPattern(matrix, height - vspHeight - 1, 0);
-    // Left bottom corner.
-    embedVerticalSeparationPattern(matrix, vspHeight, height - vspHeight);
-  }
-  function embedTimingPatterns(matrix) {
-    const width = matrix.width - 8;
-    const height = matrix.height - 8;
-    // -8 is for skipping position detection patterns (7: size)
-    // separation patterns (1: size). Thus, 8 = 7 + 1.
-    for (let x = 8; x < width; x++) {
-      const bit = (x + 1) & 1;
-      // Horizontal line.
-      if (isEmpty(matrix, x, 6)) {
-        matrix.set(x, 6, bit);
-      }
-    }
-    // -8 is for skipping position detection patterns (7: size)
-    // separation patterns (1: size). Thus, 8 = 7 + 1.
-    for (let y = 8; y < height; y++) {
-      const bit = (y + 1) & 1;
-      // Vertical line.
-      if (isEmpty(matrix, 6, y)) {
-        matrix.set(6, y, bit);
-      }
-    }
-  }
-  // Embed position adjustment patterns if need be.
-  function embedPositionAdjustmentPatterns(matrix, { version }) {
-    if (version >= 2) {
-      const coordinates = POSITION_ADJUSTMENT_PATTERN_COORDINATE_TABLE[version - 1];
-      const { length } = coordinates;
-      for (let i = 0; i < length; i++) {
-        const y = coordinates[i];
-        for (let j = 0; j < length; j++) {
-          const x = coordinates[j];
-          if (isEmpty(matrix, x, y)) {
-            // If the cell is unset, we embed the position adjustment pattern here.
-            // -2 is necessary since the x/y coordinates point to the center of the pattern, not the
-            // left top corner.
-            embedPositionAdjustmentPattern(matrix, x - 2, y - 2);
-          }
-        }
-      }
-    }
-  }
-  // Embed basic patterns. On success, modify the matrix.
-  // The basic patterns are:
-  // - Position detection patterns
-  // - Timing patterns
-  // - Dark dot at the left bottom corner
-  // - Position adjustment patterns, if need be
-  function embedBasicPatterns(matrix, version) {
-    // Let's get started with embedding big squares at corners.
-    embedPositionDetectionPatternsAndSeparators(matrix);
-    // Then, embed the dark dot at the left bottom corner.
-    embedDarkDotAtLeftBottomCorner(matrix);
-    // Position adjustment patterns appear if version >= 2.
-    embedPositionAdjustmentPatterns(matrix, version);
-    // Timing patterns should be embedded after position adj. patterns.
-    embedTimingPatterns(matrix);
-  }
-  // Return the position of the most significant bit set (to one) in the "value". The most
-  // significant bit is position 32. If there is no bit set, return 0. Examples:
-  // - findMSBSet(0) => 0
-  // - findMSBSet(1) => 1
-  // - findMSBSet(255) => 8
-  function findMSBSet(value) {
-    return 32 - Math.clz32(value);
-  }
-  // Calculate BCH (Bose-Chaudhuri-Hocquenghem) code for "value" using polynomial "poly". The BCH
-  // code is used for encoding type information and version information.
-  // Example: Calculation of version information of 7.
-  // f(x) is created from 7.
-  //   - 7 = 000111 in 6 bits
-  //   - f(x) = x^2 + x^1 + x^0
-  // g(x) is given by the standard (p. 67)
-  //   - g(x) = x^12 + x^11 + x^10 + x^9 + x^8 + x^5 + x^2 + 1
-  // Multiply f(x) by x^(18 - 6)
-  //   - f'(x) = f(x) * x^(18 - 6)
-  //   - f'(x) = x^14 + x^13 + x^12
-  // Calculate the remainder of f'(x) / g(x)
-  //         x^2
-  //         __________________________________________________
-  //   g(x) )x^14 + x^13 + x^12
-  //         x^14 + x^13 + x^12 + x^11 + x^10 + x^7 + x^4 + x^2
-  //         --------------------------------------------------
-  //                              x^11 + x^10 + x^7 + x^4 + x^2
-  //
-  // The remainder is x^11 + x^10 + x^7 + x^4 + x^2
-  // Encode it in binary: 110010010100
-  // The return value is 0xc94 (1100 1001 0100)
-  //
-  // Since all coefficients in the polynomials are 1 or 0, we can do the calculation by bit
-  // operations. We don't care if coefficients are positive or negative.
-  function calculateBCHCode(value, poly) {
-    if (poly === 0) {
-      throw new Error('0 polynomial');
-    }
-    // If poly is "1 1111 0010 0101" (version info poly), msbSetInPoly is 13. We'll subtract 1
-    // from 13 to make it 12.
-    const msbSetInPoly = findMSBSet(poly);
-    value <<= msbSetInPoly - 1;
-    // Do the division business using exclusive-or operations.
-    while (findMSBSet(value) >= msbSetInPoly) {
-      value ^= poly << (findMSBSet(value) - msbSetInPoly);
-    }
-    // Now the "value" is the remainder (i.e. the BCH code)
-    return value;
-  }
-  // Make bit vector of format information. On success, store the result in "bits".
-  // Encode error correction level and mask pattern. See 8.9 of
-  // JISX0510:2004 (p.45) for details.
-  function makeFormatInfoBits(bits, ecLevel, mask) {
-    const formatInfo = (ecLevel.bits << 3) | mask;
-    bits.append(formatInfo, 5);
-    const bchCode = calculateBCHCode(formatInfo, FORMAT_INFO_POLY);
-    bits.append(bchCode, 10);
-    const maskBits = new BitArray();
-    maskBits.append(FORMAT_INFO_MASK, 15);
-    bits.xor(maskBits);
-    if (bits.length !== 15) {
-      // Just in case.
-      throw new Error(`should not happen but we got: ${bits.length}`);
-    }
-  }
-  // Embed format information. On success, modify the matrix.
-  function embedFormatInfo(matrix, ecLevel, mask) {
-    const formatInfoBits = new BitArray();
-    makeFormatInfoBits(formatInfoBits, ecLevel, mask);
-    const { width, height } = matrix;
-    const { length } = formatInfoBits;
-    for (let i = 0; i < length; i++) {
-      // Type info bits at the left top corner. See 8.9 of JISX0510:2004 (p.46).
-      const [x, y] = FORMAT_INFO_COORDINATES[i];
-      // Place bits in LSB to MSB order. LSB (least significant bit) is the last value in formatInfoBits.
-      const bit = formatInfoBits.get(length - 1 - i);
-      matrix.set(x, y, bit);
-      if (i < 8) {
-        // Right top corner.
-        matrix.set(width - i - 1, 8, bit);
-      } else {
-        // Left bottom corner.
-        matrix.set(8, height - 7 + (i - 8), bit);
-      }
-    }
-  }
-  // Make bit vector of version information. On success, store the result in "bits".
-  // See 8.10 of JISX0510:2004 (p.45) for details.
-  function makeVersionInfoBits(bits, version) {
-    bits.append(version, 6);
-    const bchCode = calculateBCHCode(version, VERSION_INFO_POLY);
-    bits.append(bchCode, 12);
-    if (bits.length !== 18) {
-      // Just in case.
-      throw new Error(`should not happen but we got: ${bits.length}`);
-    }
-  }
-  // Embed version information if need be. On success, modify the matrix.
-  // See 8.10 of JISX0510:2004 (p.47) for how to embed version information.
-  function embedVersionInfo(matrix, { version }) {
-    if (version >= 7) {
-      const versionInfoBits = new BitArray();
-      makeVersionInfoBits(versionInfoBits, version);
-      // It will decrease from 17 to 0.
-      let bitIndex = 6 * 3 - 1;
-      const { height } = matrix;
-      for (let i = 0; i < 6; i++) {
-        for (let j = 0; j < 3; j++) {
-          // Place bits in LSB (least significant bit) to MSB order.
-          const bit = versionInfoBits.get(bitIndex--);
-          // Left bottom corner.
-          matrix.set(i, height - 11 + j, bit);
-          // Right bottom corner.
-          matrix.set(height - 11 + j, i, bit);
-        }
-      }
-    }
-  }
-  // Embed "dataBits" using "getMaskPattern". On success, modify the matrix.
-  // See 8.7 of JISX0510:2004 (p.38) for how to embed data bits.
-  function embedDataBits(matrix, dataBits, mask) {
-    let bitIndex = 0;
-    const { length } = dataBits;
-    const { width, height } = matrix;
-    // Start from the right bottom cell.
-    for (let x = width - 1; x >= 1; x -= 2) {
-      // Skip the vertical timing pattern.
-      if (x === 6) {
-        x = 5;
-      }
-      for (let y = 0; y < height; y++) {
-        for (let i = 0; i < 2; i++) {
-          const offsetX = x - i;
-          const upward = ((x + 1) & 2) === 0;
-          const offsetY = upward ? height - 1 - y : y;
-          // Skip the cell if it's not empty.
-          if (isEmpty(matrix, offsetX, offsetY)) {
-            // Padding bit. If there is no bit left, we'll fill the left cells with 0,
-            // as described in 8.4.9 of JISX0510:2004 (p. 24).
-            let bit = 0;
-            if (bitIndex < length) {
-              bit = dataBits.get(bitIndex++);
-            }
-            // Is apply mask.
-            if (isApplyMask(mask, offsetX, offsetY)) {
-              bit ^= 1;
-            }
-            matrix.set(offsetX, offsetY, bit);
-          }
-        }
-      }
-    }
-    // All bits should be consumed.
-    if (bitIndex !== length) {
-      throw new Error(`not all bits consumed: ${bitIndex}/${length}`);
-    }
-  }
-  // Build 2D matrix of QR Code from "dataBits" with "ecLevel", "version" and "getMaskPattern". On
-  // success, store the result in "matrix".
-  function buildMatrix(matrix, dataBits, version, ecLevel, mask) {
-    // Clear matrix
-    matrix.clear(-1);
-    // Embed basic patterns
-    embedBasicPatterns(matrix, version);
-    // Type information appear with any version.
-    embedFormatInfo(matrix, ecLevel, mask);
-    // Version info appear if version >= 7.
-    embedVersionInfo(matrix, version);
-    // Data should be embedded at end.
-    embedDataBits(matrix, dataBits, mask);
-  }
-
-  /**
-   * @module mask
-   */
-  // Penalty weights from section 6.8.2.1
-  const N1 = 3;
-  const N2 = 3;
-  const N3 = 40;
-  const N4 = 10;
-  // Is dark point.
-  function isDark(matrix, x, y) {
-    return matrix.get(x, y) === 1;
-  }
-  // Helper function for applyMaskPenaltyRule1. We need this for doing this calculation in both
-  // vertical and horizontal orders respectively.
-  function applyMaskPenaltyRule1Internal(matrix, isHorizontal) {
-    let penalty = 0;
-    let { width, height } = matrix;
-    width = isHorizontal ? width : height;
-    height = isHorizontal ? height : width;
-    for (let y = 0; y < height; y++) {
-      let prevBit = -1;
-      let numSameBitCells = 0;
-      for (let x = 0; x < width; x++) {
-        const bit = isHorizontal ? matrix.get(x, y) : matrix.get(y, x);
-        if (bit === prevBit) {
-          numSameBitCells++;
-        } else {
-          if (numSameBitCells >= 5) {
-            penalty += N1 + (numSameBitCells - 5);
-          }
-          // set prev bit
-          prevBit = bit;
-          // include the cell itself
-          numSameBitCells = 1;
-        }
-      }
-      if (numSameBitCells >= 5) {
-        penalty += N1 + (numSameBitCells - 5);
-      }
-    }
-    return penalty;
-  }
-  // Apply mask penalty rule 1 and return the penalty. Find repetitive cells with the same color and
-  // give penalty to them. Example: 00000 or 11111.
-  function applyMaskPenaltyRule1(matrix) {
-    return applyMaskPenaltyRule1Internal(matrix, true) + applyMaskPenaltyRule1Internal(matrix, false);
-  }
-  // Apply mask penalty rule 2 and return the penalty. Find 2x2 blocks with the same color and give
-  // penalty to them. This is actually equivalent to the spec's rule, which is to find MxN blocks and give a
-  // penalty proportional to (M-1)x(N-1), because this is the number of 2x2 blocks inside such a block.
-  function applyMaskPenaltyRule2(matrix) {
-    let penalty = 0;
-    const width = matrix.width - 1;
-    const height = matrix.height - 1;
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const bit = matrix.get(x, y);
-        if (
-          // Find 2x2 blocks with the same color
-          bit === matrix.get(x + 1, y) &&
-          bit === matrix.get(x, y + 1) &&
-          bit === matrix.get(x + 1, y + 1)
-        ) {
-          penalty += N2;
-        }
-      }
-    }
-    return penalty;
-  }
-  // Is is four white, check on horizontal and vertical.
-  function isFourWhite(matrix, offset, from, to, isHorizontal) {
-    if (from < 0 || to > (isHorizontal ? matrix.width : matrix.height)) {
-      return false;
-    }
-    for (let i = from; i < to; i++) {
-      if (isHorizontal ? isDark(matrix, i, offset) : isDark(matrix, offset, i)) {
-        return false;
-      }
-    }
-    return true;
-  }
-  // Apply mask penalty rule 3 and return the penalty. Find consecutive runs of 1:1:3:1:1:4
-  // starting with black, or 4:1:1:3:1:1 starting with white, and give penalty to them. If we
-  // find patterns like 000010111010000, we give penalty once.
-  function applyMaskPenaltyRule3(matrix) {
-    let numPenalties = 0;
-    const { width, height } = matrix;
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        if (
-          // Find consecutive runs of 1:1:3:1:1:4 or 4:1:1:3:1:1, patterns like 000010111010000
-          x + 6 < width &&
-          isDark(matrix, x, y) &&
-          !isDark(matrix, x + 1, y) &&
-          isDark(matrix, x + 2, y) &&
-          isDark(matrix, x + 3, y) &&
-          isDark(matrix, x + 4, y) &&
-          !isDark(matrix, x + 5, y) &&
-          isDark(matrix, x + 6, y) &&
-          (isFourWhite(matrix, y, x - 4, x, true) || isFourWhite(matrix, y, x + 7, x + 11, true))
-        ) {
-          numPenalties++;
-        }
-        if (
-          // Find consecutive runs of 1:1:3:1:1:4 or 4:1:1:3:1:1, patterns like 000010111010000
-          y + 6 < height &&
-          isDark(matrix, x, y) &&
-          !isDark(matrix, x, y + 1) &&
-          isDark(matrix, x, y + 2) &&
-          isDark(matrix, x, y + 3) &&
-          isDark(matrix, x, y + 4) &&
-          !isDark(matrix, x, y + 5) &&
-          isDark(matrix, x, y + 6) &&
-          (isFourWhite(matrix, x, y - 4, y, false) || isFourWhite(matrix, x, y + 7, y + 11, false))
-        ) {
-          numPenalties++;
-        }
-      }
-    }
-    return numPenalties * N3;
-  }
-  // Apply mask penalty rule 4 and return the penalty. Calculate the ratio of dark cells and give
-  // penalty if the ratio is far from 50%. It gives 10 penalty for 5% distance.
-  function applyMaskPenaltyRule4(matrix) {
-    let numDarkCells = 0;
-    const { width, height } = matrix;
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        if (isDark(matrix, x, y)) {
-          numDarkCells++;
-        }
-      }
-    }
-    const numTotalCells = width * height;
-    const fivePercentVariances = toUInt32((Math.abs(numDarkCells * 2 - numTotalCells) * 10) / numTotalCells);
-    return fivePercentVariances * N4;
-  }
-  // The mask penalty calculation is complicated.  See Table 21 of JISX0510:2004 (p.45) for details.
-  // Basically it applies four rules and summate all penalties.
-  function calculateMaskPenalty(matrix) {
-    return (
-      applyMaskPenaltyRule1(matrix) +
-      applyMaskPenaltyRule2(matrix) +
-      applyMaskPenaltyRule3(matrix) +
-      applyMaskPenaltyRule4(matrix)
-    );
-  }
-  // Return is apply mask at "x" and "y". See 8.8 of JISX0510:2004 for mask pattern conditions.
-  function isApplyMask(mask, x, y) {
-    let temp;
-    let intermediate;
-    switch (mask) {
-      case 0:
-        intermediate = (y + x) & 0x1;
-        break;
-      case 1:
-        intermediate = y & 0x1;
-        break;
-      case 2:
-        intermediate = x % 3;
-        break;
-      case 3:
-        intermediate = (y + x) % 3;
-        break;
-      case 4:
-        intermediate = (toUInt32(y / 2) + toUInt32(x / 3)) & 0x1;
-        break;
-      case 5:
-        temp = y * x;
-        intermediate = (temp & 0x1) + (temp % 3);
-        break;
-      case 6:
-        temp = y * x;
-        intermediate = ((temp & 0x1) + (temp % 3)) & 0x1;
-        break;
-      case 7:
-        intermediate = (((y * x) % 3) + ((y + x) & 0x1)) & 0x1;
-        break;
-      default:
-        throw new Error(`illegal mask: ${mask}`);
-    }
-    return intermediate === 0;
-  }
-  function chooseMask(matrix, bits, version, ecLevel) {
-    let bestMask = -1;
-    // Lower penalty is better.
-    let minPenalty = Number.MAX_VALUE;
-    // We try all mask patterns to choose the best one.
-    for (let mask = 0; mask < 8; mask++) {
-      buildMatrix(matrix, bits, version, ecLevel, mask);
-      const penalty = calculateMaskPenalty(matrix);
-      if (penalty < minPenalty) {
-        bestMask = mask;
-        minPenalty = penalty;
-      }
-    }
-    return bestMask;
   }
 
   /**
@@ -2408,20 +2346,20 @@
    * @module Encoder
    */
   class Encoder {
-    #ecLevel;
+    #level;
     #version;
     #encode;
     #hints;
-    constructor({ encode, version, hints = [], ecLevel = 'L' } = {}) {
+    constructor({ encode, version, hints = [], level = 'L' } = {}) {
       this.#hints = hints;
       this.#encode = encode;
       this.#version = version;
-      this.#ecLevel = ECLevel[ecLevel];
+      this.#level = ECLevel[level];
     }
     encode(...segments) {
       const hints = this.#hints;
+      const ecLevel = this.#level;
       const encode = this.#encode;
-      const ecLevel = this.#ecLevel;
       const versionNumber = this.#version;
       const segmentBlocks = [];
       const hasGS1FormatHint = hints.indexOf('GS1_FORMAT') >= 0;

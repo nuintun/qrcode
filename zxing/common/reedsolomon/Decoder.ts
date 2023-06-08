@@ -125,14 +125,14 @@ export class Decoder {
       t = q.multiply(tLast).addOrSubtract(tLastLast);
 
       if (r.getDegree() >= rLast.getDegree()) {
-        throw new Error('division algorithm failed to reduce polynomial?');
+        throw new Error('division algorithm failed to reduce polynomial');
       }
     }
 
     const sigmaTildeAtZero = t.getCoefficient(0);
 
     if (sigmaTildeAtZero === 0) {
-      throw new Error('sigmaTilde(0) was zero');
+      throw new Error('sigma tilde(0) was zero');
     }
 
     const inverse = field.inverse(sigmaTildeAtZero);

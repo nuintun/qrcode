@@ -3,13 +3,16 @@
  */
 
 import { Mode } from '/common/Mode';
+import { buildMatrix } from './matrix';
 import { toUInt32 } from '/common/utils';
 import { Charset } from '/common/Charset';
 import { ECLevel } from '/common/ECLevel';
 import { BitArray } from '/common/BitArray';
 import { Byte } from '/encoder/segments/Byte';
+import { calculateMaskPenalty } from './mask';
 import { BlockPair } from '/encoder/BlockPair';
 import { Kanji } from '/encoder/segments/Kanji';
+import { ByteMatrix } from '/encoder/ByteMatrix';
 import { Numeric } from '/encoder/segments/Numeric';
 import { Version, VERSIONS } from '/common/Version';
 import { Alphanumeric } from '/encoder/segments/Alphanumeric';
@@ -32,10 +35,6 @@ function getNumBytesInBlock(
   numDataBytes: number,
   numTotalBytes: number
 ): [numECBytesInBlock: number, numDataBytesInBlock: number] {
-  if (blockID >= numRSBlocks) {
-    throw new Error('block id too large');
-  }
-
   // numRSBlocksInGroup2 = 196 % 5 = 1
   const numRSBlocksInGroup2 = numTotalBytes % numRSBlocks;
   // numRSBlocksInGroup1 = 5 - 1 = 4
@@ -53,25 +52,7 @@ function getNumBytesInBlock(
   // numECBytesInGroup2 = 40 - 14 = 26
   const numECBytesInGroup2 = numTotalBytesInGroup2 - numDataBytesInGroup2;
 
-  // Sanity checks.
-  // 26 = 26
-  if (numECBytesInGroup1 !== numECBytesInGroup2) {
-    throw new Error('ec bytes mismatch');
-  }
-
-  // 5 = 4 + 1.
-  if (numRSBlocks !== numRSBlocksInGroup1 + numRSBlocksInGroup2) {
-    throw new Error('rs blocks mismatch');
-  }
-
-  // 196 = (13 + 26) * 4 + (14 + 26) * 1
-  if (
-    numTotalBytes !==
-    (numDataBytesInGroup1 + numECBytesInGroup1) * numRSBlocksInGroup1 +
-      (numDataBytesInGroup2 + numECBytesInGroup2) * numRSBlocksInGroup2
-  ) {
-    throw new Error('total bytes mismatch');
-  }
+  // Sanity checks: /zxing/qrcode/encoder/Encoder.java -> getNumDataBytesAndNumECBytesForBlockID
 
   if (blockID < numRSBlocksInGroup1) {
     return [numECBytesInGroup1, numDataBytesInGroup1];
@@ -103,11 +84,6 @@ export function interleaveWithECBytes(
   numDataBytes: number,
   numTotalBytes: number
 ): BitArray {
-  // "bits" must have "getNumDataBytes" bytes of data.
-  if (bits.byteLength !== numDataBytes) {
-    throw new Error('number of bits and data bytes does not match');
-  }
-
   // Step 1.  Divide data bytes into blocks and generate error correction bytes for them. We'll
   // store the divided data bytes blocks and error correction bytes blocks into "blocks".
   let maxNumECBytes = 0;
@@ -132,10 +108,6 @@ export function interleaveWithECBytes(
     dataBytesOffset += numDataBytesInBlock;
   }
 
-  if (numDataBytes !== dataBytesOffset) {
-    throw new Error('data bytes does not match offset');
-  }
-
   const result = new BitArray();
 
   // First, place data blocks.
@@ -156,20 +128,11 @@ export function interleaveWithECBytes(
     }
   }
 
-  if (numTotalBytes !== result.byteLength) {
-    // Should be same.
-    throw new Error(`interleaving error: ${numTotalBytes} and ${result.byteLength} differ`);
-  }
-
   return result;
 }
 
 export function appendTerminateBits(bits: BitArray, numDataBytes: number): void {
   const capacity = numDataBytes * 8;
-
-  if (bits.length > capacity) {
-    throw new Error(`data bits cannot fit in the QRCode ${bits.length} > ${capacity}`);
-  }
 
   // Append Mode.TERMINATE if there is enough space (value is 0000)
   for (let i = 0; i < 4 && bits.length < capacity; i++) {
@@ -191,10 +154,6 @@ export function appendTerminateBits(bits: BitArray, numDataBytes: number): void 
 
   for (let i = 0; i < numPaddingBytes; i++) {
     bits.append(i & 1 ? 0x11 : 0xec, 8);
-  }
-
-  if (bits.length !== capacity) {
-    throw new Error('bits size does not equal capacity');
   }
 }
 
@@ -223,13 +182,7 @@ export function appendECI(bits: BitArray, charset: Charset): void {
 }
 
 export function appendLengthInfo(bits: BitArray, mode: Mode, version: Version, numLetters: number): void {
-  const numBits = mode.getCharacterCountBits(version);
-
-  if (numLetters >= 1 << numBits) {
-    throw new Error(`${numLetters} is bigger than ${(1 << numBits) - 1}`);
-  }
-
-  bits.append(numLetters, numBits);
+  bits.append(numLetters, mode.getCharacterCountBits(version));
 }
 
 export function willFit(numInputBits: number, version: Version, ecLevel: ECLevel): boolean {
@@ -253,7 +206,7 @@ function chooseVersion(numInputBits: number, ecLevel: ECLevel): Version {
     }
   }
 
-  throw new Error('data too big');
+  throw new Error('data too big for all versions');
 }
 
 export function calculateBitsNeeded(segmentBlocks: SegmentBlock[], version: Version): number {
@@ -276,4 +229,24 @@ export function recommendVersion(segmentBlocks: SegmentBlock[], ecLevel: ECLevel
   const bitsNeeded = calculateBitsNeeded(segmentBlocks, provisionalVersion);
 
   return chooseVersion(bitsNeeded, ecLevel);
+}
+
+export function chooseMask(matrix: ByteMatrix, bits: BitArray, version: Version, ecLevel: ECLevel): number {
+  let bestMask = -1;
+  // Lower penalty is better.
+  let minPenalty = Number.MAX_VALUE;
+
+  // We try all mask patterns to choose the best one.
+  for (let mask = 0; mask < 8; mask++) {
+    buildMatrix(matrix, bits, version, ecLevel, mask);
+
+    const penalty = calculateMaskPenalty(matrix);
+
+    if (penalty < minPenalty) {
+      bestMask = mask;
+      minPenalty = penalty;
+    }
+  }
+
+  return bestMask;
 }

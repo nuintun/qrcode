@@ -10,14 +10,14 @@ import { GIFImage } from 'src/image/GIFImage';
 
 export class QRCode {
   #mask: number;
-  #ecLevel: ECLevel;
+  #level: ECLevel;
   #version: Version;
   #matrix: ByteMatrix;
 
-  constructor(matrix: ByteMatrix, version: Version, ecLevel: ECLevel, mask: number) {
+  constructor(matrix: ByteMatrix, version: Version, level: ECLevel, mask: number) {
     this.#mask = mask;
+    this.#level = level;
     this.#matrix = matrix;
-    this.#ecLevel = ecLevel;
     this.#version = version;
   }
 
@@ -25,8 +25,8 @@ export class QRCode {
     return this.#mask;
   }
 
-  public get ecLevel(): string {
-    return this.#ecLevel.name;
+  public get level(): string {
+    return this.#level.name;
   }
 
   public get version(): number {
