@@ -2,15 +2,39 @@
  * @module QRCode
  */
 
-import { ByteMatrix } from './ByteMatrix';
-import { GIFImage } from 'src/image/GIFImage';
 import { toUInt32 } from '/common/utils';
+import { ByteMatrix } from './ByteMatrix';
+import { ECLevel } from '/common/ECLevel';
+import { Version } from '/common/Version';
+import { GIFImage } from 'src/image/GIFImage';
 
 export class QRCode {
+  #mask: number;
+  #ecLevel: ECLevel;
+  #version: Version;
   #matrix: ByteMatrix;
 
-  constructor(matrix: ByteMatrix) {
+  constructor(matrix: ByteMatrix, version: Version, ecLevel: ECLevel, mask: number) {
+    this.#mask = mask;
     this.#matrix = matrix;
+    this.#ecLevel = ecLevel;
+    this.#version = version;
+  }
+
+  public get mask(): number {
+    return this.#mask;
+  }
+
+  public get ecLevel(): string {
+    return this.#ecLevel.name;
+  }
+
+  public get version(): number {
+    return this.#version.version;
+  }
+
+  public get matrix(): ByteMatrix {
+    return this.#matrix;
   }
 
   /**

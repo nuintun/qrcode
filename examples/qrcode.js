@@ -988,7 +988,7 @@
     }
     return result;
   }
-  function terminateBits(bits, numDataBytes) {
+  function appendTerminateBits(bits, numDataBytes) {
     const capacity = numDataBytes * 8;
     if (bits.length > capacity) {
       throw new Error(`data bits cannot fit in the QRCode ${bits.length} > ${capacity}`);
@@ -1385,9 +1385,27 @@
    * @module QRCode
    */
   class QRCode {
+    #mask;
+    #ecLevel;
+    #version;
     #matrix;
-    constructor(matrix) {
+    constructor(matrix, version, ecLevel, mask) {
+      this.#mask = mask;
       this.#matrix = matrix;
+      this.#ecLevel = ecLevel;
+      this.#version = version;
+    }
+    get mask() {
+      return this.#mask;
+    }
+    get ecLevel() {
+      return this.#ecLevel.name;
+    }
+    get version() {
+      return this.#version.version;
+    }
+    get matrix() {
+      return this.#matrix;
     }
     /**
      * @public
@@ -1453,22 +1471,27 @@
    * @module ECLevel
    */
   class ECLevel {
+    #name;
     #bits;
     #level;
     // L = ~7% correction
-    static L = new ECLevel(0, 0x01);
+    static L = new ECLevel('L', 0, 0x01);
     // L = ~15% correction
-    static M = new ECLevel(1, 0x00);
+    static M = new ECLevel('M', 1, 0x00);
     // L = ~25% correction
-    static Q = new ECLevel(2, 0x03);
+    static Q = new ECLevel('Q', 2, 0x03);
     // L = ~30% correction
-    static H = new ECLevel(3, 0x02);
-    constructor(level, bits) {
+    static H = new ECLevel('H', 3, 0x02);
+    constructor(name, level, bits) {
       this.#bits = bits;
+      this.#name = name;
       this.#level = level;
     }
     get bits() {
       return this.#bits;
+    }
+    get name() {
+      return this.#name;
     }
     get level() {
       return this.#level;
@@ -2385,20 +2408,20 @@
    * @module Encoder
    */
   class Encoder {
-    #level;
+    #ecLevel;
     #version;
     #encode;
     #hints;
-    constructor({ encode, version, hints = [], level = 'L' } = {}) {
+    constructor({ encode, version, hints = [], ecLevel = 'L' } = {}) {
       this.#hints = hints;
       this.#encode = encode;
       this.#version = version;
-      this.#level = ECLevel[level];
+      this.#ecLevel = ECLevel[ecLevel];
     }
     encode(...segments) {
       const hints = this.#hints;
-      const ecLevel = this.#level;
       const encode = this.#encode;
+      const ecLevel = this.#ecLevel;
       const versionNumber = this.#version;
       const segmentBlocks = [];
       const hasGS1FormatHint = hints.indexOf('GS1_FORMAT') >= 0;
@@ -2445,14 +2468,14 @@
       const { totalCodewords, dimension } = version;
       const ecBlocks = version.getECBlocksForECLevel(ecLevel);
       const numDataBytes = totalCodewords - ecBlocks.totalECCodewords;
-      // Terminate the bits properly.
-      terminateBits(headerAndDataBits, numDataBytes);
+      // Append terminate the bits properly.
+      appendTerminateBits(headerAndDataBits, numDataBytes);
       const { numBlocks } = ecBlocks;
       const matrix = new ByteMatrix(dimension);
       const finalBits = interleaveWithECBytes(headerAndDataBits, numBlocks, numDataBytes, totalCodewords);
       const mask = chooseMask(matrix, finalBits, version, ecLevel);
       buildMatrix(matrix, finalBits, version, ecLevel, mask);
-      return new QRCode(matrix);
+      return new QRCode(matrix, version, ecLevel, mask);
     }
   }
 

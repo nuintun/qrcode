@@ -60,7 +60,7 @@
         </li>
       </ul>
     </div>
-    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.slim.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.slim.min.js"></script>
     <script type="text/javascript">
       if (self.Uint8ClampedArray) {
         if (!Uint8ClampedArray.from) {
@@ -81,11 +81,11 @@
     <script type="text/javascript" src="./qrcode.js"></script>
     <script type="text/javascript">
       // Tab 切换
-      var nav = $('.tabs li');
-      var content = $('.content li');
+      const nav = $('.tabs li');
+      const content = $('.content li');
 
       nav.on('click', function () {
-        var target = $(this);
+        const target = $(this);
 
         nav.removeClass('selected');
 
@@ -94,8 +94,8 @@
         content.removeClass('selected').eq(target.index()).addClass('selected');
       });
 
-      var TEST_NUMERIC = /^\d+$/;
-      var TEST_ALPHANUMERIC = /^[0-9A-Z$%*+-./: ]+$/;
+      const TEST_NUMERIC = /^\d+$/;
+      const TEST_ALPHANUMERIC = /^[0-9A-Z$%*+-./: ]+$/;
 
       function chooseBestModeData(data) {
         if (TEST_NUMERIC.test(data)) {
@@ -111,24 +111,24 @@
         }
       }
 
-      var hintEci = $('#hint-eci');
-      var hintGs1 = $('#hint-gs1');
-      var encodeMode = $('#encode-mode');
-      var encodeText = $('#encode-text');
-      var encodeMSize = $('#encode-msize');
-      var encodeMargin = $('#encode-margin');
-      var encodeResult = $('#encode-result');
-      var encodeECLevel = $('#encode-eclevel');
+      const hintEci = $('#hint-eci');
+      const hintGs1 = $('#hint-gs1');
+      const encodeMode = $('#encode-mode');
+      const encodeText = $('#encode-text');
+      const encodeMSize = $('#encode-msize');
+      const encodeMargin = $('#encode-margin');
+      const encodeResult = $('#encode-result');
+      const encodeECLevel = $('#encode-eclevel');
 
       // 生成二维码
       $('#encode-btn').on('click', function () {
-        var data = encodeText.val();
-        var mode = encodeMode.val();
-        var ecLevel = encodeECLevel.val();
-        var margin = Number(encodeMargin.val());
-        var hasGs1Hint = hintGs1.prop('checked');
-        var hasEciHint = hintEci.prop('checked');
-        var moduleSize = Number(encodeMSize.val());
+        const data = encodeText.val();
+        const mode = encodeMode.val();
+        const ecLevel = encodeECLevel.val();
+        const margin = Number(encodeMargin.val());
+        const hasGs1Hint = hintGs1.prop('checked');
+        const hasEciHint = hintEci.prop('checked');
+        const moduleSize = Number(encodeMSize.val());
 
         if (!data) {
           encodeResult.addClass('hide');
@@ -136,7 +136,7 @@
           return alert('请输入二维码内容');
         }
 
-        var hints = [];
+        const hints = [];
 
         if (hasGs1Hint) {
           hints.push('GS1_FORMAT');
@@ -146,9 +146,9 @@
           hints.push('CHARACTER_SET');
         }
 
-        var encoder = new QRCode.Encoder({
+        const encoder = new QRCode.Encoder({
           hints: hints,
-          level: ecLevel
+          ecLevel: ecLevel
         });
 
         try {

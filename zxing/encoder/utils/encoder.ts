@@ -164,7 +164,7 @@ export function interleaveWithECBytes(
   return result;
 }
 
-export function terminateBits(bits: BitArray, numDataBytes: number): void {
+export function appendTerminateBits(bits: BitArray, numDataBytes: number): void {
   const capacity = numDataBytes * 8;
 
   if (bits.length > capacity) {
