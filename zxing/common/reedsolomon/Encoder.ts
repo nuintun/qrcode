@@ -20,12 +20,12 @@ export class Encoder {
 
     if (degree >= length) {
       const field = this.#field;
-      const { generatorBase } = field;
+      const { generator } = field;
 
       let lastGenerator = generators[length - 1];
 
       for (let i = length; i <= degree; i++) {
-        const coefficients = new Int32Array([1, field.exp(i - 1 + generatorBase)]);
+        const coefficients = new Int32Array([1, field.exp(i - 1 + generator)]);
         const nextGenerator = lastGenerator.multiply(new GenericGFPoly(field, coefficients));
 
         generators.push(nextGenerator);

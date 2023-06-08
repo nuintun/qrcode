@@ -6,13 +6,13 @@ import { GenericGFPoly } from './GenericGFPoly';
 
 export class GenericGF {
   #size: number;
+  #generator: number;
   #one: GenericGFPoly;
   #zero: GenericGFPoly;
   #expTable: Int32Array;
   #logTable: Int32Array;
-  #generatorBase: number;
 
-  constructor(primitive: number, size: number, generatorBase: number) {
+  constructor(primitive: number, size: number, generator: number) {
     let x = 1;
 
     const expTable = new Int32Array(size);
@@ -37,7 +37,7 @@ export class GenericGF {
     this.#size = size;
     this.#expTable = expTable;
     this.#logTable = logTable;
-    this.#generatorBase = generatorBase;
+    this.#generator = generator;
     this.#one = new GenericGFPoly(this, new Int32Array([1]));
     this.#zero = new GenericGFPoly(this, new Int32Array([0]));
   }
@@ -54,8 +54,8 @@ export class GenericGF {
     return this.#zero;
   }
 
-  public get generatorBase(): number {
-    return this.#generatorBase;
+  public get generator(): number {
+    return this.#generator;
   }
 
   public buildMonomial(degree: number, coefficient: number): GenericGFPoly {

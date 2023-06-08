@@ -1292,12 +1292,12 @@
    */
   class GenericGF {
     #size;
+    #generator;
     #one;
     #zero;
     #expTable;
     #logTable;
-    #generatorBase;
-    constructor(primitive, size, generatorBase) {
+    constructor(primitive, size, generator) {
       let x = 1;
       const expTable = new Int32Array(size);
       for (let i = 0; i < size; i++) {
@@ -1316,7 +1316,7 @@
       this.#size = size;
       this.#expTable = expTable;
       this.#logTable = logTable;
-      this.#generatorBase = generatorBase;
+      this.#generator = generator;
       this.#one = new GenericGFPoly(this, new Int32Array([1]));
       this.#zero = new GenericGFPoly(this, new Int32Array([0]));
     }
@@ -1329,8 +1329,8 @@
     get zero() {
       return this.#zero;
     }
-    get generatorBase() {
-      return this.#generatorBase;
+    get generator() {
+      return this.#generator;
     }
     buildMonomial(degree, coefficient) {
       if (degree < 0) {
@@ -1383,10 +1383,10 @@
       const { length } = generators;
       if (degree >= length) {
         const field = this.#field;
-        const { generatorBase } = field;
+        const { generator } = field;
         let lastGenerator = generators[length - 1];
         for (let i = length; i <= degree; i++) {
-          const coefficients = new Int32Array([1, field.exp(i - 1 + generatorBase)]);
+          const coefficients = new Int32Array([1, field.exp(i - 1 + generator)]);
           const nextGenerator = lastGenerator.multiply(new GenericGFPoly(field, coefficients));
           generators.push(nextGenerator);
           lastGenerator = nextGenerator;

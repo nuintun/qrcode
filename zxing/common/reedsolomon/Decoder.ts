@@ -43,7 +43,7 @@ export class Decoder {
   #findErrorMagnitudes(errorEvaluator: GenericGFPoly, errorLocations: Int32Array): Int32Array {
     // This is directly applying Forney's Formula
     const field = this.#field;
-    const { generatorBase } = field;
+    const { generator } = field;
     const { length } = errorLocations;
     const result = new Int32Array(length);
 
@@ -72,7 +72,7 @@ export class Decoder {
 
       result[i] = field.multiply(errorEvaluator.evaluateAt(xiInverse), field.inverse(denominator));
 
-      if (generatorBase !== 0) {
+      if (generator !== 0) {
         result[i] = field.multiply(result[i], xiInverse);
       }
     }
@@ -144,14 +144,14 @@ export class Decoder {
 
   public decode(received: Int32Array, ecBytes: number): void {
     const field = this.#field;
-    const { generatorBase } = field;
+    const { generator } = field;
     const poly = new GenericGFPoly(field, received);
     const syndromeCoefficients = new Int32Array(ecBytes);
 
     let noError: boolean = true;
 
     for (let i = 0; i < ecBytes; i++) {
-      const evalResult = poly.evaluateAt(field.exp(i + generatorBase));
+      const evalResult = poly.evaluateAt(field.exp(i + generator));
 
       syndromeCoefficients[ecBytes - 1 - i] = evalResult;
 
