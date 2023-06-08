@@ -54,18 +54,6 @@
   }
 
   /**
-   * @module utils
-   */
-  const { toString } = Object.prototype;
-  function toUInt32(uint32) {
-    // 防止溢出 0-0xffffffff
-    return uint32 >>> 0;
-  }
-  function isNumber(value) {
-    return toString.call(value) === '[object Number]';
-  }
-
-  /**
    * @module mask
    */
   // Penalty weights from section 6.8.2.1
@@ -199,7 +187,7 @@
       }
     }
     const numTotalCells = width * height;
-    const fivePercentVariances = toUInt32((Math.abs(numDarkCells * 2 - numTotalCells) * 10) / numTotalCells);
+    const fivePercentVariances = Math.floor((Math.abs(numDarkCells * 2 - numTotalCells) * 10) / numTotalCells);
     return fivePercentVariances * N4;
   }
   // The mask penalty calculation is complicated.  See Table 21 of JISX0510:2004 (p.45) for details.
@@ -230,7 +218,7 @@
         intermediate = (y + x) % 3;
         break;
       case 4:
-        intermediate = (toUInt32(y / 2) + toUInt32(x / 3)) & 0x1;
+        intermediate = (Math.floor(y / 2) + Math.floor(x / 3)) & 0x1;
         break;
       case 5:
         temp = y * x;
@@ -254,7 +242,7 @@
    */
   const LOAD_FACTOR = 0.75;
   function makeArray(length) {
-    return new Int32Array(toUInt32((length + 31) / 32));
+    return new Int32Array(Math.floor((length + 31) / 32));
   }
   class BitArray {
     #length;
@@ -264,7 +252,7 @@
       this.#bits = makeArray(length);
     }
     #offset(index) {
-      return toUInt32(index / 32);
+      return Math.floor(index / 32);
     }
     #alloc(length) {
       const bits = this.#bits;
@@ -279,7 +267,7 @@
       return this.#length;
     }
     get byteLength() {
-      return toUInt32((this.#length + 7) / 8);
+      return Math.ceil(this.#length / 8);
     }
     set(index) {
       const offset = this.#offset(index);
@@ -1141,6 +1129,14 @@
   ];
 
   /**
+   * @module utils
+   */
+  const { toString } = Object.prototype;
+  function isNumber(value) {
+    return toString.call(value) === '[object Number]';
+  }
+
+  /**
    * @module GenericGFPoly
    */
   class GenericGFPoly {
@@ -1432,11 +1428,11 @@
     // numRSBlocksInGroup1 = 5 - 1 = 4
     const numRSBlocksInGroup1 = numRSBlocks - numRSBlocksInGroup2;
     // numTotalBytesInGroup1 = 196 / 5 = 39
-    const numTotalBytesInGroup1 = toUInt32(numTotalBytes / numRSBlocks);
+    const numTotalBytesInGroup1 = Math.floor(numTotalBytes / numRSBlocks);
     // numTotalBytesInGroup2 = 39 + 1 = 40
     const numTotalBytesInGroup2 = numTotalBytesInGroup1 + 1;
     // numDataBytesInGroup1 = 66 / 5 = 13
-    const numDataBytesInGroup1 = toUInt32(numDataBytes / numRSBlocks);
+    const numDataBytesInGroup1 = Math.floor(numDataBytes / numRSBlocks);
     // numDataBytesInGroup2 = 13 + 1 = 14
     const numDataBytesInGroup2 = numDataBytesInGroup1 + 1;
     // numECBytesInGroup1 = 39 - 13 = 26
@@ -1942,8 +1938,8 @@
       for (let i = 0; i < size; i++) {
         for (let j = 0; j < size; j++) {
           if (min <= j && j < max && min <= i && i < max) {
-            const x = toUInt32((j - min) / moduleSize);
-            const y = toUInt32((i - min) / moduleSize);
+            const x = Math.floor((j - min) / moduleSize);
+            const y = Math.floor((i - min) / moduleSize);
             gif.set(j, i, matrix.get(x, y) === 1 ? 0 : 1);
           } else {
             gif.set(j, i, 1);

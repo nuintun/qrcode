@@ -2,7 +2,6 @@
  * @module mask
  */
 
-import { toUInt32 } from '/common/utils';
 import { ByteMatrix } from '/encoder/ByteMatrix';
 
 // Penalty weights from section 6.8.2.1
@@ -163,7 +162,7 @@ function applyMaskPenaltyRule4(matrix: ByteMatrix): number {
   }
 
   const numTotalCells = width * height;
-  const fivePercentVariances = toUInt32((Math.abs(numDarkCells * 2 - numTotalCells) * 10) / numTotalCells);
+  const fivePercentVariances = Math.floor((Math.abs(numDarkCells * 2 - numTotalCells) * 10) / numTotalCells);
 
   return fivePercentVariances * N4;
 }
@@ -198,7 +197,7 @@ export function isApplyMask(mask: number, x: number, y: number): boolean {
       intermediate = (y + x) % 3;
       break;
     case 4:
-      intermediate = (toUInt32(y / 2) + toUInt32(x / 3)) & 0x1;
+      intermediate = (Math.floor(y / 2) + Math.floor(x / 3)) & 0x1;
       break;
     case 5:
       temp = y * x;

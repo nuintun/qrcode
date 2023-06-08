@@ -2,7 +2,6 @@
  * @module QRCode
  */
 
-import { toUInt32 } from '/common/utils';
 import { ByteMatrix } from './ByteMatrix';
 import { ECLevel } from '/common/ECLevel';
 import { Version } from '/common/Version';
@@ -58,8 +57,8 @@ export class QRCode {
     for (let i = 0; i < size; i++) {
       for (let j = 0; j < size; j++) {
         if (min <= j && j < max && min <= i && i < max) {
-          const x = toUInt32((j - min) / moduleSize);
-          const y = toUInt32((i - min) / moduleSize);
+          const x = Math.floor((j - min) / moduleSize);
+          const y = Math.floor((i - min) / moduleSize);
 
           gif.set(j, i, matrix.get(x, y) === 1 ? 0 : 1);
         } else {

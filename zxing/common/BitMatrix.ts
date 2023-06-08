@@ -2,8 +2,6 @@
  * @module BitMatrix
  */
 
-import { toUInt32 } from './utils';
-
 export class BitMatrix {
   #width: number;
   #height: number;
@@ -16,7 +14,7 @@ export class BitMatrix {
   constructor(
     width: number,
     height: number = width,
-    rowSize: number = toUInt32((width + 31) / 32),
+    rowSize: number = Math.floor((width + 31) / 32),
     bits: Int32Array = new Int32Array(rowSize * height)
   ) {
     this.#bits = bits;
@@ -26,7 +24,7 @@ export class BitMatrix {
   }
 
   #offset(x: number, y: number): number {
-    return toUInt32(y * this.#rowSize + x / 32);
+    return Math.floor(y * this.#rowSize + x / 32);
   }
 
   public get width(): number {
@@ -69,7 +67,7 @@ export class BitMatrix {
       const offset = y * rowSize;
 
       for (let x = left; x < right; x++) {
-        bits[toUInt32(offset + x / 32)] |= 1 << (x & 0x1f);
+        bits[Math.floor(offset + x / 32)] |= 1 << (x & 0x1f);
       }
     }
   }

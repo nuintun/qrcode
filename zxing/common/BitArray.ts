@@ -2,12 +2,10 @@
  * @module BitArray
  */
 
-import { toUInt32 } from './utils';
-
 const LOAD_FACTOR = 0.75;
 
 function makeArray(length: number): Int32Array {
-  return new Int32Array(toUInt32((length + 31) / 32));
+  return new Int32Array(Math.floor((length + 31) / 32));
 }
 
 export class BitArray {
@@ -20,7 +18,7 @@ export class BitArray {
   }
 
   #offset(index: number): number {
-    return toUInt32(index / 32);
+    return Math.floor(index / 32);
   }
 
   #alloc(length: number): void {
@@ -42,7 +40,7 @@ export class BitArray {
   }
 
   public get byteLength(): number {
-    return toUInt32((this.#length + 7) / 8);
+    return Math.ceil(this.#length / 8);
   }
 
   public set(index: number): void {

@@ -4,7 +4,6 @@
 
 import { Mode } from '/common/Mode';
 import { buildMatrix } from './matrix';
-import { toUInt32 } from '/common/utils';
 import { Charset } from '/common/Charset';
 import { ECLevel } from '/common/ECLevel';
 import { BitArray } from '/common/BitArray';
@@ -40,11 +39,11 @@ function getNumBytesInBlock(
   // numRSBlocksInGroup1 = 5 - 1 = 4
   const numRSBlocksInGroup1 = numRSBlocks - numRSBlocksInGroup2;
   // numTotalBytesInGroup1 = 196 / 5 = 39
-  const numTotalBytesInGroup1 = toUInt32(numTotalBytes / numRSBlocks);
+  const numTotalBytesInGroup1 = Math.floor(numTotalBytes / numRSBlocks);
   // numTotalBytesInGroup2 = 39 + 1 = 40
   const numTotalBytesInGroup2 = numTotalBytesInGroup1 + 1;
   // numDataBytesInGroup1 = 66 / 5 = 13
-  const numDataBytesInGroup1 = toUInt32(numDataBytes / numRSBlocks);
+  const numDataBytesInGroup1 = Math.floor(numDataBytes / numRSBlocks);
   // numDataBytesInGroup2 = 13 + 1 = 14
   const numDataBytesInGroup2 = numDataBytesInGroup1 + 1;
   // numECBytesInGroup1 = 39 - 13 = 26
