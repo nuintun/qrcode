@@ -56,10 +56,7 @@ export class Decoder {
         if (i !== j) {
           // denominator = field.multiply(
           //   denominator,
-          //   GenericGF.addOrSubtract(
-          //     1,
-          //     field.multiply(errorLocations[j], xiInverse)
-          //   )
+          //   1 ^ field.multiply(errorLocations[j], xiInverse)
           // )
           // Above should work but fails on some Apple and Linux JDKs due to a Hotspot bug.
           // Below is a funny-looking workaround from Steven Parkes
