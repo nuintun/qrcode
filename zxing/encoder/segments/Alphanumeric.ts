@@ -4,6 +4,7 @@
 
 import { Mode } from '/common/Mode';
 import { BitArray } from '/common/BitArray';
+import { assertContent } from '/encoder/utils/segment';
 
 const ALPHANUMERIC_TABLE = [
   // 0x20-0x2f
@@ -30,6 +31,8 @@ export class Alphanumeric {
   #content: string;
 
   constructor(content: string) {
+    assertContent(content);
+
     this.#content = content;
   }
 

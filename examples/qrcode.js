@@ -2051,6 +2051,15 @@
   }
 
   /**
+   * @module segment
+   */
+  function assertContent(content) {
+    if (!content) {
+      throw new Error('segment content should be at least 1 character');
+    }
+  }
+
+  /**
    * @module Byte
    */
   const encoder = new TextEncoder();
@@ -2058,6 +2067,7 @@
     #content;
     #charset;
     constructor(content, charset = Charset.UTF_8) {
+      assertContent(content);
       this.#content = content;
       this.#charset = charset;
     }
@@ -2197,6 +2207,7 @@
   class Kanji {
     #content;
     constructor(content) {
+      assertContent(content);
       this.#content = content;
     }
     get mode() {
@@ -2242,6 +2253,7 @@
   class Numeric {
     #content;
     constructor(content) {
+      assertContent(content);
       this.#content = content;
     }
     get mode() {
@@ -2300,6 +2312,7 @@
   class Alphanumeric {
     #content;
     constructor(content) {
+      assertContent(content);
       this.#content = content;
     }
     get mode() {

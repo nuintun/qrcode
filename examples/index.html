@@ -105,6 +105,7 @@
 
       // 生成二维码
       $('#encode-btn').on('click', function () {
+        const hints = [];
         const data = encodeText.val();
         const mode = encodeMode.val();
         const level = encodeLevel.val();
@@ -112,14 +113,6 @@
         const hasGs1Hint = hintGs1.prop('checked');
         const hasEciHint = hintEci.prop('checked');
         const moduleSize = Number(encodeMSize.val());
-
-        if (!data) {
-          encodeResult.addClass('hide');
-
-          return alert('请输入二维码内容');
-        }
-
-        const hints = [];
 
         if (hasGs1Hint) {
           hints.push('GS1_FORMAT');

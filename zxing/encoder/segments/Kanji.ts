@@ -4,6 +4,7 @@
 
 import { Mode } from '/common/Mode';
 import { BitArray } from '/common/BitArray';
+import { assertContent } from '/encoder/utils/segment';
 
 // prettier-ignore
 // https://github.com/soldair/node-qrcode/blob/master/helper/to-sjis.js
@@ -128,6 +129,8 @@ export class Kanji {
   #content: string;
 
   constructor(content: string) {
+    assertContent(content);
+
     this.#content = content;
   }
 

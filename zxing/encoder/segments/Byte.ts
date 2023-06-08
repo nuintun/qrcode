@@ -5,6 +5,7 @@
 import { Mode } from '/common/Mode';
 import { Charset } from '/common/Charset';
 import { BitArray } from '/common/BitArray';
+import { assertContent } from '/encoder/utils/segment';
 
 const encoder = new TextEncoder();
 
@@ -17,6 +18,8 @@ export class Byte {
   #charset: Charset;
 
   constructor(content: string, charset: Charset = Charset.UTF_8) {
+    assertContent(content);
+
     this.#content = content;
     this.#charset = charset;
   }
