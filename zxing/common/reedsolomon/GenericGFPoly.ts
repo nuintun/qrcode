@@ -3,7 +3,6 @@
  */
 
 import { GenericGF } from './GenericGF';
-import { isNumber } from '/common/utils';
 
 export class GenericGFPoly {
   #field: GenericGF;
@@ -128,42 +127,42 @@ export class GenericGFPoly {
   public multiply(other: number | GenericGFPoly): GenericGFPoly {
     const field = this.#field;
 
-    if (isNumber(other)) {
-      if (other === 0) {
+    if (other instanceof GenericGFPoly) {
+      if (this.isZero() || other.isZero()) {
         return field.zero;
       }
 
-      if (other === 1) {
-        return this;
-      }
+      const aCoefficients = this.#coefficients;
+      const aLength = aCoefficients.length;
+      const bCoefficients = other.#coefficients;
+      const bLength = bCoefficients.length;
+      const product = new Int32Array(aLength + bLength - 1);
 
-      const coefficients = this.#coefficients;
-      const { length } = coefficients;
-      const product = new Int32Array(length);
+      for (let i = 0; i < aLength; i++) {
+        const aCoefficient = aCoefficients[i];
 
-      for (let i = 0; i < length; i++) {
-        product[i] = field.multiply(coefficients[i], other);
+        for (let j = 0; j < bLength; j++) {
+          product[i + j] ^= field.multiply(aCoefficient, bCoefficients[j]);
+        }
       }
 
       return new GenericGFPoly(field, product);
     }
 
-    if (this.isZero() || other.isZero()) {
+    if (other === 0) {
       return field.zero;
     }
 
-    const aCoefficients = this.#coefficients;
-    const aLength = aCoefficients.length;
-    const bCoefficients = other.#coefficients;
-    const bLength = bCoefficients.length;
-    const product = new Int32Array(aLength + bLength - 1);
+    if (other === 1) {
+      return this;
+    }
 
-    for (let i = 0; i < aLength; i++) {
-      const aCoefficient = aCoefficients[i];
+    const coefficients = this.#coefficients;
+    const { length } = coefficients;
+    const product = new Int32Array(length);
 
-      for (let j = 0; j < bLength; j++) {
-        product[i + j] ^= field.multiply(aCoefficient, bCoefficients[j]);
-      }
+    for (let i = 0; i < length; i++) {
+      product[i] = field.multiply(coefficients[i], other);
     }
 
     return new GenericGFPoly(field, product);

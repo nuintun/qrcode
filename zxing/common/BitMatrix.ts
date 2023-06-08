@@ -24,7 +24,7 @@ export class BitMatrix {
   }
 
   #offset(x: number, y: number): number {
-    return Math.floor(y * this.#rowSize + x / 32);
+    return y * this.#rowSize + Math.floor(x / 32);
   }
 
   public get width(): number {
@@ -67,7 +67,7 @@ export class BitMatrix {
       const offset = y * rowSize;
 
       for (let x = left; x < right; x++) {
-        bits[Math.floor(offset + x / 32)] |= 1 << (x & 0x1f);
+        bits[offset + Math.floor(x / 32)] |= 1 << (x & 0x1f);
       }
     }
   }

@@ -188,7 +188,7 @@ export function willFit(numInputBits: number, version: Version, ecLevel: ECLevel
   const numECBytes = ecBlocks.totalECCodewords;
   // numDataBytes = 196 - 130 = 66
   const numDataBytes = numBytes - numECBytes;
-  const totalInputBytes = (numInputBits + 7) / 8;
+  const totalInputBytes = Math.ceil(numInputBits / 8);
 
   return numDataBytes >= totalInputBytes;
 }

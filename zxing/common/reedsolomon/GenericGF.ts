@@ -30,7 +30,7 @@ export class GenericGF {
 
     const logTable = new Int32Array(size);
 
-    for (let i = 0; i < size - 1; i++) {
+    for (let i = 0, length = size - 1; i < length; i++) {
       logTable[expTable[i]] = i;
     }
 

@@ -1129,14 +1129,6 @@
   ];
 
   /**
-   * @module utils
-   */
-  const { toString } = Object.prototype;
-  function isNumber(value) {
-    return toString.call(value) === '[object Number]';
-  }
-
-  /**
    * @module GenericGFPoly
    */
   class GenericGFPoly {
@@ -1227,34 +1219,34 @@
     }
     multiply(other) {
       const field = this.#field;
-      if (isNumber(other)) {
-        if (other === 0) {
+      if (other instanceof GenericGFPoly) {
+        if (this.isZero() || other.isZero()) {
           return field.zero;
         }
-        if (other === 1) {
-          return this;
-        }
-        const coefficients = this.#coefficients;
-        const { length } = coefficients;
-        const product = new Int32Array(length);
-        for (let i = 0; i < length; i++) {
-          product[i] = field.multiply(coefficients[i], other);
+        const aCoefficients = this.#coefficients;
+        const aLength = aCoefficients.length;
+        const bCoefficients = other.#coefficients;
+        const bLength = bCoefficients.length;
+        const product = new Int32Array(aLength + bLength - 1);
+        for (let i = 0; i < aLength; i++) {
+          const aCoefficient = aCoefficients[i];
+          for (let j = 0; j < bLength; j++) {
+            product[i + j] ^= field.multiply(aCoefficient, bCoefficients[j]);
+          }
         }
         return new GenericGFPoly(field, product);
       }
-      if (this.isZero() || other.isZero()) {
+      if (other === 0) {
         return field.zero;
       }
-      const aCoefficients = this.#coefficients;
-      const aLength = aCoefficients.length;
-      const bCoefficients = other.#coefficients;
-      const bLength = bCoefficients.length;
-      const product = new Int32Array(aLength + bLength - 1);
-      for (let i = 0; i < aLength; i++) {
-        const aCoefficient = aCoefficients[i];
-        for (let j = 0; j < bLength; j++) {
-          product[i + j] ^= field.multiply(aCoefficient, bCoefficients[j]);
-        }
+      if (other === 1) {
+        return this;
+      }
+      const coefficients = this.#coefficients;
+      const { length } = coefficients;
+      const product = new Int32Array(length);
+      for (let i = 0; i < length; i++) {
+        product[i] = field.multiply(coefficients[i], other);
       }
       return new GenericGFPoly(field, product);
     }
@@ -1318,7 +1310,7 @@
         }
       }
       const logTable = new Int32Array(size);
-      for (let i = 0; i < size - 1; i++) {
+      for (let i = 0, length = size - 1; i < length; i++) {
         logTable[expTable[i]] = i;
       }
       this.#size = size;
@@ -1545,7 +1537,7 @@
     const numECBytes = ecBlocks.totalECCodewords;
     // numDataBytes = 196 - 130 = 66
     const numDataBytes = numBytes - numECBytes;
-    const totalInputBytes = (numInputBits + 7) / 8;
+    const totalInputBytes = Math.ceil(numInputBits / 8);
     return numDataBytes >= totalInputBytes;
   }
   function chooseVersion(numInputBits, ecLevel) {
