@@ -94,23 +94,6 @@
         content.removeClass('selected').eq(target.index()).addClass('selected');
       });
 
-      const TEST_NUMERIC = /^\d+$/;
-      const TEST_ALPHANUMERIC = /^[0-9A-Z$%*+-./: ]+$/;
-
-      function chooseBestModeData(data) {
-        if (TEST_NUMERIC.test(data)) {
-          return new QRCode.QRNumeric(data);
-        } else if (TEST_ALPHANUMERIC.test(data)) {
-          return new QRCode.Alphanumeric(data);
-        }
-
-        try {
-          return new QRCode.Kanji(data);
-        } catch (error) {
-          return new QRCode.Byte(data);
-        }
-      }
-
       const hintEci = $('#hint-eci');
       const hintGs1 = $('#hint-gs1');
       const encodeMode = $('#encode-mode');
@@ -152,7 +135,8 @@
         });
 
         try {
-          const qrcode = encoder.encode(new QRCode.Byte(data));
+          const segment = mode === 'Auto' ? 'Byte' : mode;
+          const qrcode = encoder.encode(new QRCode[segment](data));
 
           encodeResult.html('<img src="' + qrcode.toDataURL(moduleSize, margin) + '" />');
           encodeResult.removeClass('hide');
