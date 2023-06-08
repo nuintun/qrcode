@@ -1408,8 +1408,8 @@
       for (let i = 0; i < size; i++) {
         for (let j = 0; j < size; j++) {
           if (min <= j && j < max && min <= i && i < max) {
-            const x = ((j - min) / moduleSize) >> 0;
-            const y = ((i - min) / moduleSize) >> 0;
+            const x = toUInt32((j - min) / moduleSize);
+            const y = toUInt32((i - min) / moduleSize);
             gif.set(j, i, matrix.get(x, y) === 1 ? 0 : 1);
           } else {
             gif.set(j, i, 1);
@@ -1874,10 +1874,10 @@
     width = isHorizontal ? width : height;
     height = isHorizontal ? height : width;
     for (let y = 0; y < height; y++) {
-      let prevBit = false;
+      let prevBit = -1;
       let numSameBitCells = 0;
       for (let x = 0; x < width; x++) {
-        const bit = isHorizontal ? isDark(matrix, x, y) : isDark(matrix, y, x);
+        const bit = isHorizontal ? matrix.get(x, y) : matrix.get(y, x);
         if (bit === prevBit) {
           numSameBitCells++;
         } else {
@@ -1910,12 +1910,12 @@
     const height = matrix.height - 1;
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
-        const value = isDark(matrix, x, y);
+        const bit = matrix.get(x, y);
         if (
           // Find 2x2 blocks with the same color
-          value === isDark(matrix, x + 1, y) &&
-          value === isDark(matrix, x, y + 1) &&
-          value === isDark(matrix, x + 1, y + 1)
+          bit === matrix.get(x + 1, y) &&
+          bit === matrix.get(x, y + 1) &&
+          bit === matrix.get(x + 1, y + 1)
         ) {
           penalty += N2;
         }
@@ -1925,11 +1925,11 @@
   }
   // Is is four white, check on horizontal and vertical.
   function isFourWhite(matrix, offset, from, to, isHorizontal) {
-    from = Math.max(from, 0);
-    to = Math.min(to, isHorizontal ? matrix.width : matrix.height);
+    if (from < 0 || to > (isHorizontal ? matrix.width : matrix.height)) {
+      return false;
+    }
     for (let i = from; i < to; i++) {
-      const value = isHorizontal ? isDark(matrix, i, offset) : isDark(matrix, offset, i);
-      if (value) {
+      if (isHorizontal ? isDark(matrix, i, offset) : isDark(matrix, offset, i)) {
         return false;
       }
     }
@@ -1988,7 +1988,7 @@
       }
     }
     const numTotalCells = width * height;
-    const fivePercentVariances = (Math.abs(numDarkCells * 2 - numTotalCells) * 10) / numTotalCells;
+    const fivePercentVariances = toUInt32((Math.abs(numDarkCells * 2 - numTotalCells) * 10) / numTotalCells);
     return fivePercentVariances * N4;
   }
   // The mask penalty calculation is complicated.  See Table 21 of JISX0510:2004 (p.45) for details.
@@ -2019,7 +2019,7 @@
         intermediate = (y + x) % 3;
         break;
       case 4:
-        intermediate = (y / 2 + x / 3) & 0x1;
+        intermediate = (toUInt32(y / 2) + toUInt32(x / 3)) & 0x1;
         break;
       case 5:
         temp = y * x;

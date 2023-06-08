@@ -42,7 +42,7 @@ export function getMaskBit(maskPattern: number, x: number, y: number): boolean {
       intermediate = (y + x) % 3;
       break;
     case MaskPattern.PATTERN100:
-      intermediate = (y / 2 + x / 3) & 0x1;
+      intermediate = (Math.floor(y / 2) + Math.floor(x / 3)) & 0x1;
       break;
     case MaskPattern.PATTERN101:
       temp = y * x;

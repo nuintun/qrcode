@@ -4,6 +4,7 @@
 
 import { ByteMatrix } from './ByteMatrix';
 import { GIFImage } from 'src/image/GIFImage';
+import { toUInt32 } from '/common/utils';
 
 export class QRCode {
   #matrix: ByteMatrix;
@@ -33,8 +34,8 @@ export class QRCode {
     for (let i = 0; i < size; i++) {
       for (let j = 0; j < size; j++) {
         if (min <= j && j < max && min <= i && i < max) {
-          const x = ((j - min) / moduleSize) >> 0;
-          const y = ((i - min) / moduleSize) >> 0;
+          const x = toUInt32((j - min) / moduleSize);
+          const y = toUInt32((i - min) / moduleSize);
 
           gif.set(j, i, matrix.get(x, y) === 1 ? 0 : 1);
         } else {
