@@ -1412,10 +1412,9 @@
       const [, remainder] = info.divide(generator);
       const { coefficients } = remainder;
       const numZeroCoefficients = ecBytes - coefficients.length;
-      for (let i = 0; i < numZeroCoefficients; i++) {
-        received[dataBytes + i] = 0;
-      }
-      received.set(coefficients, dataBytes + numZeroCoefficients);
+      const zeroCoefficientsOffset = dataBytes + numZeroCoefficients;
+      received.fill(0, dataBytes, zeroCoefficientsOffset);
+      received.set(coefficients, zeroCoefficientsOffset);
     }
   };
 
@@ -1458,7 +1457,7 @@
     ecBytes.set(toEncode.subarray(numDataBytes));
     return ecBytes;
   }
-  function interleaveWithECBytes(bits, numRSBlocks, numDataBytes, numTotalBytes) {
+  function injectECBytes(bits, numRSBlocks, numDataBytes, numTotalBytes) {
     // Step 1.  Divide data bytes into blocks and generate error correction bytes for them. We'll
     // store the divided data bytes blocks and error correction bytes blocks into "blocks".
     let maxNumECBytes = 0;
@@ -2406,7 +2405,7 @@
       appendTerminateBits(headerAndDataBits, numDataBytes);
       const { numBlocks } = ecBlocks;
       const matrix = new ByteMatrix(dimension);
-      const finalBits = interleaveWithECBytes(headerAndDataBits, numBlocks, numDataBytes, totalCodewords);
+      const finalBits = injectECBytes(headerAndDataBits, numBlocks, numDataBytes, totalCodewords);
       const mask = chooseMask(matrix, finalBits, version, ecLevel);
       buildMatrix(matrix, finalBits, version, ecLevel, mask);
       return new QRCode(matrix, version, ecLevel, mask);

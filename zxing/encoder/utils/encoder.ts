@@ -77,12 +77,7 @@ function generateECBytes(dataBytes: Uint8Array, numECBytesInBlock: number): Uint
   return ecBytes;
 }
 
-export function interleaveWithECBytes(
-  bits: BitArray,
-  numRSBlocks: number,
-  numDataBytes: number,
-  numTotalBytes: number
-): BitArray {
+export function injectECBytes(bits: BitArray, numRSBlocks: number, numDataBytes: number, numTotalBytes: number): BitArray {
   // Step 1.  Divide data bytes into blocks and generate error correction bytes for them. We'll
   // store the divided data bytes blocks and error correction bytes blocks into "blocks".
   let maxNumECBytes = 0;

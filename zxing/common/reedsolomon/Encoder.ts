@@ -49,11 +49,9 @@ export class Encoder {
     const [, remainder] = info.divide(generator);
     const { coefficients } = remainder;
     const numZeroCoefficients = ecBytes - coefficients.length;
+    const zeroCoefficientsOffset = dataBytes + numZeroCoefficients;
 
-    for (let i = 0; i < numZeroCoefficients; i++) {
-      received[dataBytes + i] = 0;
-    }
-
-    received.set(coefficients, dataBytes + numZeroCoefficients);
+    received.fill(0, dataBytes, zeroCoefficientsOffset);
+    received.set(coefficients, zeroCoefficientsOffset);
   }
 }

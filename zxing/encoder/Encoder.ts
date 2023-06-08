@@ -10,7 +10,7 @@ import {
   calculateBitsNeeded,
   chooseMask,
   EncodeHint,
-  interleaveWithECBytes,
+  injectECBytes,
   isByteMode,
   recommendVersion,
   Segment,
@@ -116,7 +116,7 @@ export class Encoder {
 
     const { numBlocks } = ecBlocks;
     const matrix = new ByteMatrix(dimension);
-    const finalBits = interleaveWithECBytes(headerAndDataBits, numBlocks, numDataBytes, totalCodewords);
+    const finalBits = injectECBytes(headerAndDataBits, numBlocks, numDataBytes, totalCodewords);
     const mask = chooseMask(matrix, finalBits, version, ecLevel);
 
     buildMatrix(matrix, finalBits, version, ecLevel, mask);
