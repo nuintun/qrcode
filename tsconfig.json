@@ -2,7 +2,7 @@
   "compilerOptions": {
     "lib": [
       "DOM",
-      "ES2015"
+      "ESNext"
     ],
     "baseUrl": ".",
     "pretty": true,
