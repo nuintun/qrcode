@@ -46,7 +46,7 @@ export class Charset {
   public static readonly GB18030 = new Charset('gb18030', 29);
   public static readonly EUC_KR = new Charset('euc-kr', 30);
 
-  private constructor(label: string, ...values: number[]) {
+  constructor(label: string, ...values: number[]) {
     for (const value of values) {
       VALUES_TO_CHARSET.set(value, this);
     }
