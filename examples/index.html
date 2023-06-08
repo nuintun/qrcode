@@ -70,7 +70,7 @@
         }
 
         if (!Uint8ClampedArray.prototype.forEach) {
-          var APForEach = Array.prototype.forEach;
+          const APForEach = Array.prototype.forEach;
 
           Uint8ClampedArray.prototype.forEach = function (callback, context) {
             return APForEach.call(this, callback, context);
@@ -165,12 +165,12 @@
         }
       });
 
-      var hasImage = false;
-      var imageData = null;
-      var decodeText = $('#decode-text');
-      var canvas = $('#decode-canvas')[0];
-      var context = canvas.getContext('2d');
-      var decodeResult = decodeText.find('textarea');
+      const hasImage = false;
+      const imageData = null;
+      const decodeText = $('#decode-text');
+      const canvas = $('#decode-canvas')[0];
+      const context = canvas.getContext('2d');
+      const decodeResult = decodeText.find('textarea');
 
       function resetDecoder() {
         hasImage = false;
@@ -181,15 +181,15 @@
       }
 
       function drawImage(src) {
-        var img = new Image();
+        const img = new Image();
 
         img.crossOrigin = 'anonymous';
 
         img.onload = function () {
-          var width = img.width;
-          var height = img.height;
-          var actualWidth = Math.min(960, width);
-          var actualHeight = height * (actualWidth / width);
+          const width = img.width;
+          const height = img.height;
+          const actualWidth = Math.min(960, width);
+          const actualHeight = height * (actualWidth / width);
 
           hasImage = true;
           canvas.width = actualWidth;
@@ -205,12 +205,12 @@
 
       // 二维码加载
       $('#decode-file').on('change', function (e) {
-        var file = e.target.files[0];
+        const file = e.target.files[0];
 
         if (file) {
           resetDecoder();
 
-          var reader = new FileReader();
+          const reader = new FileReader();
 
           reader.onload = function (e) {
             drawImage(e.target.result);
@@ -227,11 +227,11 @@
       }
 
       function getModuleSize(location, version) {
-        var topLeft = location.topLeft;
-        var topRight = location.topRight;
-        var a = Math.abs(topRight.x - topLeft.x);
-        var b = Math.abs(topRight.y - topLeft.y);
-        var c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+        const topLeft = location.topLeft;
+        const topRight = location.topRight;
+        const a = Math.abs(topRight.x - topLeft.x);
+        const b = Math.abs(topRight.y - topLeft.y);
+        const c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
 
         return c / (version * 4 + 17);
       }
@@ -256,7 +256,7 @@
         context.lineTo(location.topLeft.x, location.topLeft.y);
         context.stroke();
 
-        var moduleSize = getModuleSize(location, version);
+        const moduleSize = getModuleSize(location, version);
 
         markFinderPattern(location.topLeftFinder.x, location.topLeftFinder.y, moduleSize);
         markFinderPattern(location.topRightFinder.x, location.topRightFinder.y, moduleSize);
@@ -268,8 +268,8 @@
           return alert('请选择二维码图片');
         }
 
-        var imageData = getImageData();
-        var result = new QRCode.Decoder()
+        const imageData = getImageData();
+        const result = new QRCode.Decoder()
           .setOptions({ canOverwriteImage: false })
           .decode(imageData.data, imageData.width, imageData.height);
 
