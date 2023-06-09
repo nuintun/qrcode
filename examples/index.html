@@ -132,9 +132,16 @@
 
         try {
           const segment = mode === 'Auto' ? 'Byte' : mode;
-          const qrcode = encoder.encode(new QRCode[segment](data));
 
-          encodeResult.html('<img src="' + qrcode.toDataURL(moduleSize, margin) + '" />');
+          console.time('encode');
+          const qrcode = encoder.encode(new QRCode[segment](data));
+          console.timeEnd('encode');
+
+          console.time('toDataURL');
+          const url = qrcode.toDataURL(moduleSize, margin);
+          console.timeEnd('toDataURL');
+
+          encodeResult.html('<img src="' + url + '" />');
           encodeResult.removeClass('hide');
 
           console.dir(qrcode);

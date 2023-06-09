@@ -152,14 +152,22 @@ export class GIFImage {
 
   public toDataURL(): string {
     const bytes = this.#encode();
-    const base64 = new Base64Stream();
+    const stream = new Base64Stream();
 
     for (const byte of bytes) {
-      base64.write(byte);
+      stream.write(byte);
     }
 
-    base64.close();
+    stream.close();
 
-    return `data:image/gif;base64,${fromCharCode(...base64.bytes)}`;
+    const base64 = stream.bytes;
+
+    let url = 'data:image/gif;base64,';
+
+    for (const byte of base64) {
+      url += fromCharCode(byte);
+    }
+
+    return url;
   }
 }
