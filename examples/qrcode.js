@@ -1622,31 +1622,31 @@
    * @module BitStream
    */
   class BitStream {
-    #bits = 0;
+    #buffer = 0;
     #available = 0;
-    #buffer = new ByteArray();
+    #stream = new ByteArray();
     get bytes() {
-      return this.#buffer.bytes;
+      return this.#stream.bytes;
     }
     write(value, length) {
-      let bits = this.#bits;
+      let buffer = this.#buffer;
       let available = this.#available;
-      const buffer = this.#buffer;
+      const stream = this.#stream;
       while (available + length >= 8) {
-        buffer.writeByte((bits | (value << available)) & 0xff);
+        stream.writeByte((buffer | (value << available)) & 0xff);
         length -= 8 - available;
         value >>>= 8 - available;
-        bits = 0;
+        buffer = 0;
         available = 0;
       }
       this.#available = available + length;
-      this.#bits = bits | (value << available);
+      this.#buffer = buffer | (value << available);
     }
     close() {
       if (this.#available > 0) {
-        this.#buffer.writeByte(this.#bits);
+        this.#stream.writeByte(this.#buffer);
       }
-      this.#bits = 0;
+      this.#buffer = 0;
       this.#available = 0;
     }
   }
@@ -1677,6 +1677,71 @@
     }
     clear(value) {
       this.#bytes.fill(value);
+    }
+  }
+
+  /**
+   * @module Base64Stream
+   */
+  function encode$2(byte) {
+    byte &= 0x3f;
+    if (byte >= 0) {
+      if (byte < 26) {
+        // A
+        return 0x41 + byte;
+      } else if (byte < 52) {
+        // a
+        return 0x61 + (byte - 26);
+      } else if (byte < 62) {
+        // 0
+        return 0x30 + (byte - 52);
+      } else if (byte === 62) {
+        // +
+        return 0x2b;
+      } else if (byte === 63) {
+        // /
+        return 0x2f;
+      }
+    }
+    throw new Error(`illegal char: ${String.fromCharCode(byte)}`);
+  }
+  class Base64Stream {
+    #buffer = 0;
+    #length = 0;
+    #available = 0;
+    #stream = new ByteArray();
+    get bytes() {
+      return this.#stream.bytes;
+    }
+    write(byte) {
+      let available = this.#available + 8;
+      const stream = this.#stream;
+      const buffer = (this.#buffer << 8) | (byte & 0xff);
+      while (available >= 6) {
+        stream.writeByte(encode$2(buffer >>> (available - 6)));
+        available -= 6;
+      }
+      this.#length++;
+      this.#buffer = buffer;
+      this.#available = available;
+    }
+    close() {
+      const stream = this.#stream;
+      const available = this.#available;
+      if (available > 0) {
+        stream.writeByte(encode$2(this.#buffer << (6 - available)));
+        this.#buffer = 0;
+        this.#available = 0;
+      }
+      const length = this.#length;
+      if (length % 3 != 0) {
+        // Padding
+        const pad = 3 - (length % 3);
+        for (let i = 0; i < pad; i++) {
+          // =
+          stream.writeByte(0x3d);
+        }
+      }
     }
   }
 
@@ -1789,7 +1854,13 @@
       this.#pixels.set(x, y, color);
     }
     toDataURL() {
-      return `data:image/gif;base64,${btoa(fromCharCode.apply(null, this.#encode()))}`;
+      const bytes = this.#encode();
+      const base64 = new Base64Stream();
+      for (const byte of bytes) {
+        base64.write(byte);
+      }
+      base64.close();
+      return `data:image/gif;base64,${fromCharCode(...base64.bytes)}`;
     }
   }
 

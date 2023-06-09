@@ -5,40 +5,40 @@
 import { ByteArray } from './ByteArray';
 
 export class BitStream {
-  #bits: number = 0;
+  #buffer: number = 0;
   #available: number = 0;
-  #buffer: ByteArray = new ByteArray();
+  #stream: ByteArray = new ByteArray();
 
   public get bytes(): number[] {
-    return this.#buffer.bytes;
+    return this.#stream.bytes;
   }
 
   public write(value: number, length: number): void {
-    let bits = this.#bits;
+    let buffer = this.#buffer;
     let available = this.#available;
 
-    const buffer = this.#buffer;
+    const stream = this.#stream;
 
     while (available + length >= 8) {
-      buffer.writeByte((bits | (value << available)) & 0xff);
+      stream.writeByte((buffer | (value << available)) & 0xff);
 
       length -= 8 - available;
       value >>>= 8 - available;
 
-      bits = 0;
+      buffer = 0;
       available = 0;
     }
 
     this.#available = available + length;
-    this.#bits = bits | (value << available);
+    this.#buffer = buffer | (value << available);
   }
 
   public close(): void {
     if (this.#available > 0) {
-      this.#buffer.writeByte(this.#bits);
+      this.#stream.writeByte(this.#buffer);
     }
 
-    this.#bits = 0;
+    this.#buffer = 0;
     this.#available = 0;
   }
 }

@@ -32,44 +32,42 @@ function encode(byte: number): number {
 export class Base64Stream {
   #buffer = 0;
   #length = 0;
-  #bufLength = 0;
+  #available = 0;
   #stream: ByteArray = new ByteArray();
 
   public get bytes(): number[] {
     return this.#stream.bytes;
   }
 
-  public writeByte(byte: number): void {
-    let bufLength = this.#bufLength + 8;
+  public write(byte: number): void {
+    let available = this.#available + 8;
 
+    const stream = this.#stream;
     const buffer = (this.#buffer << 8) | (byte & 0xff);
 
-    while (bufLength >= 6) {
-      this.writeByte(encode(buffer >>> (bufLength - 6)));
+    while (available >= 6) {
+      stream.writeByte(encode(buffer >>> (available - 6)));
 
-      bufLength -= 6;
+      available -= 6;
     }
 
     this.#length++;
     this.#buffer = buffer;
-    this.#bufLength = bufLength;
-  }
-
-  public writeBytes(bytes: number[], offset?: number, length?: number): void {
-    this.#stream.writeBytes(bytes, offset, length);
+    this.#available = available;
   }
 
   public close(): void {
     const stream = this.#stream;
-    const length = this.#length;
-    const bufLength = this.#bufLength;
+    const available = this.#available;
 
-    if (bufLength > 0) {
-      this.writeByte(encode(this.#buffer << (6 - bufLength)));
+    if (available > 0) {
+      stream.writeByte(encode(this.#buffer << (6 - available)));
 
       this.#buffer = 0;
-      this.#bufLength = 0;
+      this.#available = 0;
     }
+
+    const length = this.#length;
 
     if (length % 3 != 0) {
       // Padding

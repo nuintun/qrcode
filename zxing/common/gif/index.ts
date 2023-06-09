@@ -6,6 +6,7 @@ import { LZWTable } from './LZWTable';
 import { BitStream } from './BitStream';
 import { ByteArray } from './ByteArray';
 import { ByteMatrix } from '/common/ByteMatrix';
+import { Base64Stream } from './Base64Stream';
 
 const { fromCharCode } = String;
 
@@ -152,6 +153,15 @@ export class GIFImage {
   }
 
   public toDataURL(): string {
-    return `data:image/gif;base64,${btoa(fromCharCode.apply(null, this.#encode()))}`;
+    const bytes = this.#encode();
+    const base64 = new Base64Stream();
+
+    for (const byte of bytes) {
+      base64.write(byte);
+    }
+
+    base64.close();
+
+    return `data:image/gif;base64,${fromCharCode(...base64.bytes)}`;
   }
 }
