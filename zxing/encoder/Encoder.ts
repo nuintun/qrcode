@@ -22,24 +22,29 @@ import { Mode } from '/common/Mode';
 import { ByteMatrix } from './ByteMatrix';
 import { ECLevel } from '/common/ECLevel';
 import { BitArray } from '/common/BitArray';
-import { TextEncode } from './segments/Byte';
 import { buildMatrix } from './utils/matrix';
 import { Version, VERSIONS } from '/common/Version';
+import { encode as contentEncode, TextEncode } from '/common/encoding';
+import { assertHints, assertLevel, assertVersion } from './utils/asserts';
 
 export interface Options {
-  version?: number;
   encode?: TextEncode;
   hints?: EncodeHint[];
+  version?: number | 'auto';
   level?: 'L' | 'M' | 'Q' | 'H';
 }
 
 export class Encoder {
   #level: ECLevel;
-  #version?: number;
-  #encode?: TextEncode;
   #hints: EncodeHint[];
+  #encode: TextEncode;
+  #version: number | 'auto';
 
-  constructor({ encode, version, hints = [], level = 'L' }: Options = {}) {
+  constructor({ level = 'L', hints = [], version = 'auto', encode = contentEncode }: Options = {}) {
+    assertHints(hints);
+    assertLevel(level);
+    assertVersion(version);
+
     this.#hints = hints;
     this.#encode = encode;
     this.#version = version;
@@ -85,7 +90,9 @@ export class Encoder {
 
     let version: Version;
 
-    if (versionNumber != null) {
+    if (versionNumber === 'auto') {
+      version = recommendVersion(segmentBlocks, ecLevel);
+    } else {
       version = VERSIONS[versionNumber - 1];
 
       const bitsNeeded = calculateBitsNeeded(segmentBlocks, version);
@@ -93,8 +100,6 @@ export class Encoder {
       if (!willFit(bitsNeeded, version, ecLevel)) {
         throw new Error('data too big for requested version');
       }
-    } else {
-      version = recommendVersion(segmentBlocks, ecLevel);
     }
 
     const headerAndDataBits = new BitArray();
@@ -125,6 +130,7 @@ export class Encoder {
   }
 }
 
+export { Charset } from '/common/Charset';
 export { Byte } from '/encoder/segments/Byte';
 export { Kanji } from '/encoder/segments/Kanji';
 export { Numeric } from '/encoder/segments/Numeric';

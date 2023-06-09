@@ -327,7 +327,7 @@
   /**
    * @module matrix
    */
-  // Format information poly
+  // Format information poly: 101 0011 0111
   const FORMAT_INFO_POLY = 0x537;
   // Format information mask
   const FORMAT_INFO_MASK = 0x5412;
@@ -1559,7 +1559,7 @@
     // Hard part: need to know version to know how many bits length takes. But need to know how many
     // bits it takes to know version. First we take a guess at version by assuming version will be
     // the minimum, 1:
-    const provisionalBitsNeeded = calculateBitsNeeded(segmentBlocks, VERSIONS[1]);
+    const provisionalBitsNeeded = calculateBitsNeeded(segmentBlocks, VERSIONS[0]);
     const provisionalVersion = chooseVersion(provisionalBitsNeeded, ecLevel);
     // Use that guess to calculate the right version. I am still not sure this works in 100% of cases.
     const bitsNeeded = calculateBitsNeeded(segmentBlocks, provisionalVersion);
@@ -1623,7 +1623,7 @@
    * @author nuintun
    * @author Kazuhiko Arase
    */
-  function encode$1(ch) {
+  function encode$2(ch) {
     if (ch >= 0) {
       if (ch < 26) {
         // A
@@ -1682,7 +1682,7 @@
       }
     }
     writeEncoded(byte) {
-      this.stream.writeByte(encode$1(byte & 0x3f));
+      this.stream.writeByte(encode$2(byte & 0x3f));
     }
   }
 
@@ -2051,23 +2051,61 @@
   }
 
   /**
-   * @module segment
+   * @module encoding
+   */
+  const encoder = new TextEncoder();
+  function encode$1(content, charset) {
+    if (charset !== Charset.UTF_8) {
+      throw Error('built-in encode only support utf-8 charset');
+    }
+    return encoder.encode(content);
+  }
+
+  /**
+   * @module asserts
    */
   function assertContent(content) {
     if (!content) {
       throw new Error('segment content should be at least 1 character');
     }
   }
+  function assertCharset(charset) {
+    if (!(charset instanceof Charset)) {
+      throw new Error('illegal charset');
+    }
+  }
+  function assertHints(hints) {
+    if (!Array.isArray(hints)) {
+      throw new Error('hints must be an array');
+    }
+    for (const hint of hints) {
+      if (['GS1_FORMAT', 'CHARACTER_SET'].indexOf(hint) < 0) {
+        throw new Error('illegal item of hints');
+      }
+    }
+  }
+  function assertLevel(level) {
+    if (['L', 'M', 'Q', 'H'].indexOf(level) < 0) {
+      throw new Error('illegal error correction level');
+    }
+  }
+  function assertVersion(version) {
+    if (version !== 'auto') {
+      if (version < 1 || version > 40 || !Number.isInteger(version)) {
+        throw new Error('version must be an integer in [1 - 40] or "auto"');
+      }
+    }
+  }
 
   /**
    * @module Byte
    */
-  const encoder = new TextEncoder();
   class Byte {
     #content;
     #charset;
     constructor(content, charset = Charset.UTF_8) {
       assertContent(content);
+      assertCharset(charset);
       this.#content = content;
       this.#charset = charset;
     }
@@ -2080,7 +2118,7 @@
     get charset() {
       return this.#charset;
     }
-    encode(encode = content => encoder.encode(content)) {
+    encode(encode) {
       const bits = new BitArray();
       const bytes = encode(this.#content, this.#charset);
       for (const byte of bytes) {
@@ -2347,10 +2385,13 @@
    */
   class Encoder {
     #level;
-    #version;
-    #encode;
     #hints;
-    constructor({ encode, version, hints = [], level = 'L' } = {}) {
+    #encode;
+    #version;
+    constructor({ level = 'L', hints = [], version = 'auto', encode = encode$1 } = {}) {
+      assertHints(hints);
+      assertLevel(level);
+      assertVersion(version);
       this.#hints = hints;
       this.#encode = encode;
       this.#version = version;
@@ -2388,14 +2429,14 @@
         });
       }
       let version;
-      if (versionNumber != null) {
+      if (versionNumber === 'auto') {
+        version = recommendVersion(segmentBlocks, ecLevel);
+      } else {
         version = VERSIONS[versionNumber - 1];
         const bitsNeeded = calculateBitsNeeded(segmentBlocks, version);
         if (!willFit(bitsNeeded, version, ecLevel)) {
           throw new Error('data too big for requested version');
         }
-      } else {
-        version = recommendVersion(segmentBlocks, ecLevel);
       }
       const headerAndDataBits = new BitArray();
       for (const { mode, length, headerBits, dataBits } of segmentBlocks) {
@@ -2419,6 +2460,7 @@
 
   exports.Alphanumeric = Alphanumeric;
   exports.Byte = Byte;
+  exports.Charset = Charset;
   exports.Encoder = Encoder;
   exports.Kanji = Kanji;
   exports.Numeric = Numeric;

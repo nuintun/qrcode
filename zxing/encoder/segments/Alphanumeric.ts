@@ -4,7 +4,7 @@
 
 import { Mode } from '/common/Mode';
 import { BitArray } from '/common/BitArray';
-import { assertContent } from '/encoder/utils/segment';
+import { assertContent } from '/encoder/utils/asserts';
 
 const ALPHANUMERIC_TABLE = [
   // 0x20-0x2f

@@ -5,13 +5,8 @@
 import { Mode } from '/common/Mode';
 import { Charset } from '/common/Charset';
 import { BitArray } from '/common/BitArray';
-import { assertContent } from '/encoder/utils/segment';
-
-const encoder = new TextEncoder();
-
-export interface TextEncode {
-  (content: string, charset: Charset): Uint8Array;
-}
+import { TextEncode } from '/common/encoding';
+import { assertCharset, assertContent } from '/encoder/utils/asserts';
 
 export class Byte {
   #content: string;
@@ -19,6 +14,7 @@ export class Byte {
 
   constructor(content: string, charset: Charset = Charset.UTF_8) {
     assertContent(content);
+    assertCharset(charset);
 
     this.#content = content;
     this.#charset = charset;
@@ -36,7 +32,7 @@ export class Byte {
     return this.#charset;
   }
 
-  public encode(encode: TextEncode = content => encoder.encode(content)): BitArray {
+  public encode(encode: TextEncode): BitArray {
     const bits = new BitArray();
     const bytes = encode(this.#content, this.#charset);
 

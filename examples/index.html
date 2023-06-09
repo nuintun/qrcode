@@ -127,6 +127,9 @@
           hints: hints
         });
 
+        console.dir(encoder);
+        console.dir(QRCode.Charset);
+
         try {
           const segment = mode === 'Auto' ? 'Byte' : mode;
           const qrcode = encoder.encode(new QRCode[segment](data));
@@ -134,11 +137,11 @@
           encodeResult.html('<img src="' + qrcode.toDataURL(moduleSize, margin) + '" />');
           encodeResult.removeClass('hide');
 
-          console && console.log(qrcode);
+          console.dir(qrcode);
         } catch (error) {
           encodeResult.addClass('hide');
 
-          console.error(error.message);
+          console.error(error);
         }
       });
 

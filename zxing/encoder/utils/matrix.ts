@@ -8,7 +8,7 @@ import { Version } from '/common/Version';
 import { BitArray } from '/common/BitArray';
 import { ByteMatrix } from '/encoder/ByteMatrix';
 
-// Format information poly
+// Format information poly: 101 0011 0111
 const FORMAT_INFO_POLY = 0x537;
 
 // Format information mask

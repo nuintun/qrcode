@@ -217,7 +217,7 @@ export function recommendVersion(segmentBlocks: SegmentBlock[], ecLevel: ECLevel
   // Hard part: need to know version to know how many bits length takes. But need to know how many
   // bits it takes to know version. First we take a guess at version by assuming version will be
   // the minimum, 1:
-  const provisionalBitsNeeded = calculateBitsNeeded(segmentBlocks, VERSIONS[1]);
+  const provisionalBitsNeeded = calculateBitsNeeded(segmentBlocks, VERSIONS[0]);
   const provisionalVersion = chooseVersion(provisionalBitsNeeded, ecLevel);
   // Use that guess to calculate the right version. I am still not sure this works in 100% of cases.
   const bitsNeeded = calculateBitsNeeded(segmentBlocks, provisionalVersion);

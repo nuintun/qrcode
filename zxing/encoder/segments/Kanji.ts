@@ -4,7 +4,7 @@
 
 import { Mode } from '/common/Mode';
 import { BitArray } from '/common/BitArray';
-import { assertContent } from '/encoder/utils/segment';
+import { assertContent } from '/encoder/utils/asserts';
 
 // prettier-ignore
 // https://github.com/soldair/node-qrcode/blob/master/helper/to-sjis.js
