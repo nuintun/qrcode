@@ -6,8 +6,8 @@ import { ByteArray } from './ByteArray';
 
 export class BitStream {
   #bit: number;
-  #available: number;
   #buffer: ByteArray;
+  #available: number;
 
   constructor() {
     this.#bit = 0;

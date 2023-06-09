@@ -1633,8 +1633,8 @@
    */
   class BitStream {
     #bit;
-    #available;
     #buffer;
+    #available;
     constructor() {
       this.#bit = 0;
       this.#available = 0;
