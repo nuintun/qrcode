@@ -6,9 +6,7 @@ import { LZWTable } from './LZWTable';
 import { BitStream } from './BitStream';
 import { ByteArray } from './ByteArray';
 import { ByteMatrix } from '/common/ByteMatrix';
-import { Base64Stream } from './Base64Stream';
-
-const { fromCharCode } = String;
+import { Base64Stream, fromCharCode } from './Base64Stream';
 
 export class GIFImage {
   #pixels: ByteMatrix;

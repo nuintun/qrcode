@@ -4,6 +4,8 @@
 
 import { ByteArray } from './ByteArray';
 
+export const { fromCharCode } = String;
+
 function encode(byte: number): number {
   byte &= 0x3f;
 
@@ -26,7 +28,7 @@ function encode(byte: number): number {
     }
   }
 
-  throw new Error(`illegal char: ${String.fromCharCode(byte)}`);
+  throw new Error(`illegal char: ${fromCharCode(byte)}`);
 }
 
 export class Base64Stream {

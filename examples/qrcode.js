@@ -1683,6 +1683,7 @@
   /**
    * @module Base64Stream
    */
+  const { fromCharCode } = String;
   function encode$2(byte) {
     byte &= 0x3f;
     if (byte >= 0) {
@@ -1703,7 +1704,7 @@
         return 0x2f;
       }
     }
-    throw new Error(`illegal char: ${String.fromCharCode(byte)}`);
+    throw new Error(`illegal char: ${fromCharCode(byte)}`);
   }
   class Base64Stream {
     #buffer = 0;
@@ -1748,7 +1749,6 @@
   /**
    * @module index
    */
-  const { fromCharCode } = String;
   class GIFImage {
     #pixels;
     constructor(width, height) {
