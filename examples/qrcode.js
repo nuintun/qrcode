@@ -566,9 +566,6 @@
   // Since all coefficients in the polynomials are 1 or 0, we can do the calculation by bit
   // operations. We don't care if coefficients are positive or negative.
   function calculateBCHCode(value, poly) {
-    if (poly === 0) {
-      throw new Error('0 polynomial');
-    }
     // If poly is "1 1111 0010 0101" (version info poly), msbSetInPoly is 13. We'll subtract 1
     // from 13 to make it 12.
     const msbSetInPoly = findMSBSet(poly);
@@ -674,10 +671,6 @@
           }
         }
       }
-    }
-    // All bits should be consumed.
-    if (bitIndex !== length) {
-      throw new Error(`not all bits consumed: ${bitIndex}/${length}`);
     }
   }
   // Build 2D matrix of QR Code from "dataBits" with "ecLevel", "version" and "getMaskPattern". On
@@ -1607,10 +1600,7 @@
    * @module ByteArray
    */
   class ByteArray {
-    #bytes;
-    constructor() {
-      this.#bytes = [];
-    }
+    #bytes = [];
     get bytes() {
       return this.#bytes;
     }
@@ -1632,36 +1622,31 @@
    * @module BitStream
    */
   class BitStream {
-    #bit;
-    #buffer;
-    #available;
-    constructor() {
-      this.#bit = 0;
-      this.#available = 0;
-      this.#buffer = new ByteArray();
-    }
+    #bits = 0;
+    #available = 0;
+    #buffer = new ByteArray();
     get bytes() {
       return this.#buffer.bytes;
     }
     write(value, length) {
-      let bit = this.#bit;
+      let bits = this.#bits;
       let available = this.#available;
       const buffer = this.#buffer;
       while (available + length >= 8) {
-        buffer.writeByte((bit | (value << available)) & 0xff);
+        buffer.writeByte((bits | (value << available)) & 0xff);
         length -= 8 - available;
         value >>>= 8 - available;
-        bit = 0;
+        bits = 0;
         available = 0;
       }
       this.#available = available + length;
-      this.#bit = bit | (value << available);
+      this.#bits = bits | (value << available);
     }
     flush() {
       if (this.#available > 0) {
-        this.#buffer.writeByte(this.#bit);
+        this.#buffer.writeByte(this.#bits);
       }
-      this.#bit = 0;
+      this.#bits = 0;
       this.#available = 0;
     }
   }
@@ -1692,6 +1677,71 @@
     }
     clear(value) {
       this.#bytes.fill(value);
+    }
+  }
+
+  /**
+   * @module Base64Stream
+   */
+  function encode$2(ch) {
+    if (ch >= 0) {
+      if (ch < 26) {
+        // A
+        return 0x41 + ch;
+      } else if (ch < 52) {
+        // a
+        return 0x61 + (ch - 26);
+      } else if (ch < 62) {
+        // 0
+        return 0x30 + (ch - 52);
+      } else if (ch === 62) {
+        // +
+        return 0x2b;
+      } else if (ch === 63) {
+        // /
+        return 0x2f;
+      }
+    }
+    throw new Error(`illegal char: ${String.fromCharCode(ch)}`);
+  }
+  class Base64Stream {
+    #buffer = 0;
+    #length = 0;
+    #bufLength = 0;
+    #stream = new ByteArray();
+    #writeEncoded(byte) {
+      this.#stream.writeByte(encode$2(byte & 0x3f));
+    }
+    get bytes() {
+      return this.#stream.bytes;
+    }
+    writeByte(byte) {
+      this.#buffer = (this.#buffer << 8) | (byte & 0xff);
+      this.#bufLength += 8;
+      this.#length++;
+      while (this.#bufLength >= 6) {
+        this.#writeEncoded(this.#buffer >>> (this.#bufLength - 6));
+        this.#bufLength -= 6;
+      }
+    }
+    writeBytes(bytes, offset, length) {
+      this.#stream.writeBytes(bytes, offset, length);
+    }
+    flush() {
+      if (this.#bufLength > 0) {
+        this.#writeEncoded(this.#buffer << (6 - this.#bufLength));
+        this.#buffer = 0;
+        this.#bufLength = 0;
+      }
+      const stream = this.#stream;
+      if (this.#length % 3 != 0) {
+        // Padding
+        const pad = 3 - (this.#length % 3);
+        for (let i = 0; i < pad; i++) {
+          // =
+          stream.writeByte(0x3d);
+        }
+      }
     }
   }
 
@@ -1803,7 +1853,9 @@
       this.#pixels.set(x, y, color);
     }
     toDataURL() {
-      const bytes = this.#encode();
+      const base64 = new Base64Stream();
+      base64.writeBytes(this.#encode());
+      const { bytes } = base64;
       return `data:image/gif;base64,${btoa(fromCharCode.apply(null, bytes))}`;
     }
   }

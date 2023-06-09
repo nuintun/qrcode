@@ -3,11 +3,7 @@
  */
 
 export class ByteArray {
-  #bytes: number[];
-
-  constructor() {
-    this.#bytes = [];
-  }
+  #bytes: number[] = [];
 
   public get bytes(): number[] {
     return this.#bytes;

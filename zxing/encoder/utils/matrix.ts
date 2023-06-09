@@ -277,10 +277,6 @@ function findMSBSet(value: number): number {
 // Since all coefficients in the polynomials are 1 or 0, we can do the calculation by bit
 // operations. We don't care if coefficients are positive or negative.
 function calculateBCHCode(value: number, poly: number): number {
-  if (poly === 0) {
-    throw new Error('0 polynomial');
-  }
-
   // If poly is "1 1111 0010 0101" (version info poly), msbSetInPoly is 13. We'll subtract 1
   // from 13 to make it 12.
   const msbSetInPoly = findMSBSet(poly);
@@ -419,11 +415,6 @@ function embedDataBits(matrix: ByteMatrix, dataBits: BitArray, mask: number): vo
         }
       }
     }
-  }
-
-  // All bits should be consumed.
-  if (bitIndex !== length) {
-    throw new Error(`not all bits consumed: ${bitIndex}/${length}`);
   }
 }
 
