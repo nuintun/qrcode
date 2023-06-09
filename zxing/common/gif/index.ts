@@ -78,69 +78,62 @@ export class GIFImage {
     const buffer = new ByteArray();
     const { width, height } = this.#pixels;
 
-    // GIF Signature
+    // GIF signature
     buffer.writeByte(0x47); // G
     buffer.writeByte(0x49); // I
     buffer.writeByte(0x46); // F
     buffer.writeByte(0x38); // 8
-    buffer.writeByte(0x37); // 7
+    buffer.writeByte(0x39); // 9
     buffer.writeByte(0x61); // a
 
-    // Screen Descriptor
+    // Logical screen descriptor
     buffer.writeInt16(width);
     buffer.writeInt16(height);
-
-    // 2bit
     buffer.writeByte(0x80);
     buffer.writeByte(0);
     buffer.writeByte(0);
 
-    // Global color map: black
+    // Global color palette: black
     buffer.writeByte(0x00);
     buffer.writeByte(0x00);
     buffer.writeByte(0x00);
 
-    // Global color map: white
+    // Global color palette: white
     buffer.writeByte(0xff);
     buffer.writeByte(0xff);
     buffer.writeByte(0xff);
 
-    // Image Descriptor: ,
+    // Image descriptor
     buffer.writeByte(0x2c);
-
     buffer.writeInt16(0);
     buffer.writeInt16(0);
     buffer.writeInt16(width);
     buffer.writeInt16(height);
-
     buffer.writeByte(0);
 
-    // Local color raster map
+    // Pixel data
     const size = 2;
     const raster = this.#getLZWRaster(size);
-    const rasterLength = raster.length;
+    const { length } = raster;
 
     buffer.writeByte(size);
 
     let offset = 0;
 
-    while (rasterLength - offset > 255) {
+    while (length - offset > 255) {
       buffer.writeByte(255);
-
       buffer.writeBytes(raster, offset, 255);
 
       offset += 255;
     }
 
-    const length = rasterLength - offset;
+    const remain = length - offset;
 
-    buffer.writeByte(length);
-
-    buffer.writeBytes(raster, offset, length);
-
+    buffer.writeByte(remain);
+    buffer.writeBytes(raster, offset, remain);
     buffer.writeByte(0x00);
 
-    // GIF Terminator: ;
+    // GIF terminator
     buffer.writeByte(0x3b);
 
     return buffer.bytes;
