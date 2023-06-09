@@ -19,10 +19,10 @@ import {
 } from './utils/encoder';
 import { QRCode } from './QRCode';
 import { Mode } from '/common/Mode';
-import { ByteMatrix } from './ByteMatrix';
 import { ECLevel } from '/common/ECLevel';
 import { BitArray } from '/common/BitArray';
 import { buildMatrix } from './utils/matrix';
+import { ByteMatrix } from '/common/ByteMatrix';
 import { Version, VERSIONS } from '/common/Version';
 import { encode as contentEncode, TextEncode } from '/common/encoding';
 import { assertHints, assertLevel, assertVersion } from './utils/asserts';

@@ -6,7 +6,7 @@ import { isApplyMask } from './mask';
 import { ECLevel } from '/common/ECLevel';
 import { Version } from '/common/Version';
 import { BitArray } from '/common/BitArray';
-import { ByteMatrix } from '/encoder/ByteMatrix';
+import { ByteMatrix } from '/common/ByteMatrix';
 
 // Format information poly: 101 0011 0111
 const FORMAT_INFO_POLY = 0x537;

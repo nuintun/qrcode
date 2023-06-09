@@ -143,7 +143,7 @@ export class GIFImage {
         } else {
           bitOutput.write(table.indexOf(words), bitLength);
 
-          if (table.getSize() < 0xfff) {
+          if (table.getSize() < 0x0fff) {
             if (table.getSize() === 1 << bitLength) {
               bitLength++;
             }

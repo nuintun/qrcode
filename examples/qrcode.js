@@ -1582,305 +1582,229 @@
   }
 
   /**
-   * @module OutputStream
-   * @author nuintun
-   * @author Kazuhiko Arase
+   * @module LZWTable
    */
-  class OutputStream {
-    writeBytes(bytes, offset = 0, length = bytes.length) {
-      for (let i = 0; i < length; i++) {
-        this.writeByte(bytes[i + offset]);
-      }
-    }
-    flush() {
-      // The flush method
-    }
-    close() {
-      this.flush();
-    }
-  }
-
-  /**
-   * @module ByteArrayOutputStream
-   * @author nuintun
-   * @author Kazuhiko Arase
-   */
-  class ByteArrayOutputStream extends OutputStream {
-    bytes = [];
-    writeByte(byte) {
-      this.bytes.push(byte);
-    }
-    writeInt16(byte) {
-      this.bytes.push(byte, byte >>> 8);
-    }
-    toByteArray() {
-      return this.bytes;
-    }
-  }
-
-  /**
-   * @module Base64EncodeOutputStream
-   * @author nuintun
-   * @author Kazuhiko Arase
-   */
-  function encode$2(ch) {
-    if (ch >= 0) {
-      if (ch < 26) {
-        // A
-        return 0x41 + ch;
-      } else if (ch < 52) {
-        // a
-        return 0x61 + (ch - 26);
-      } else if (ch < 62) {
-        // 0
-        return 0x30 + (ch - 52);
-      } else if (ch === 62) {
-        // +
-        return 0x2b;
-      } else if (ch === 63) {
-        // /
-        return 0x2f;
-      }
-    }
-    throw new Error(`illegal char: ${String.fromCharCode(ch)}`);
-  }
-  class Base64EncodeOutputStream extends OutputStream {
-    buffer = 0;
-    length = 0;
-    bufLength = 0;
-    stream;
-    constructor(stream) {
-      super();
-      this.stream = stream;
-    }
-    writeByte(byte) {
-      this.buffer = (this.buffer << 8) | (byte & 0xff);
-      this.bufLength += 8;
-      this.length++;
-      while (this.bufLength >= 6) {
-        this.writeEncoded(this.buffer >>> (this.bufLength - 6));
-        this.bufLength -= 6;
-      }
-    }
-    /**
-     * @override
-     */
-    flush() {
-      if (this.bufLength > 0) {
-        this.writeEncoded(this.buffer << (6 - this.bufLength));
-        this.buffer = 0;
-        this.bufLength = 0;
-      }
-      const { stream } = this;
-      if (this.length % 3 != 0) {
-        // Padding
-        const pad = 3 - (this.length % 3);
-        for (let i = 0; i < pad; i++) {
-          // =
-          stream.writeByte(0x3d);
-        }
-      }
-    }
-    writeEncoded(byte) {
-      this.stream.writeByte(encode$2(byte & 0x3f));
-    }
-  }
-
-  /**
-   * @module GIF Image (B/W)
-   * @author nuintun
-   * @author Kazuhiko Arase
-   */
-  function encodeToBase64(data) {
-    const output = new ByteArrayOutputStream();
-    const stream = new Base64EncodeOutputStream(output);
-    stream.writeBytes(data);
-    stream.close();
-    output.close();
-    return output.toByteArray();
-  }
   class LZWTable {
-    size = 0;
-    map = {};
+    #size = 0;
+    #table = {};
+    get size() {
+      return this.#size;
+    }
     add(key) {
-      if (!this.contains(key)) {
-        this.map[key] = this.size++;
+      if (!this.has(key)) {
+        this.#table[key] = this.#size++;
       }
     }
-    getSize() {
-      return this.size;
+    has(key) {
+      return this.#table[key] >= 0;
     }
     indexOf(key) {
-      return this.map[key];
-    }
-    contains(key) {
-      return this.map[key] >= 0;
+      return this.#table[key];
     }
   }
-  class BitOutputStream {
-    output;
-    bitLength = 0;
-    bitBuffer = 0;
-    constructor(output) {
-      this.output = output;
+
+  /**
+   * @module ByteArray
+   */
+  class ByteArray {
+    #bytes;
+    constructor() {
+      this.#bytes = [];
     }
-    write(data, length) {
-      if (data >>> length !== 0) {
-        throw new Error('length overflow');
+    get bytes() {
+      return this.#bytes;
+    }
+    writeByte(value) {
+      this.#bytes.push(value);
+    }
+    writeInt16(value) {
+      this.#bytes.push(value, 8, value >>> 8);
+    }
+    writeBytes(bytes, offset = 0, length = bytes.length) {
+      const buffer = this.#bytes;
+      for (let i = 0; i < length; i++) {
+        buffer.push(bytes[offset + i]);
       }
-      const { output } = this;
-      while (this.bitLength + length >= 8) {
-        output.writeByte(0xff & ((data << this.bitLength) | this.bitBuffer));
-        length -= 8 - this.bitLength;
-        data >>>= 8 - this.bitLength;
-        this.bitBuffer = 0;
-        this.bitLength = 0;
+    }
+  }
+
+  /**
+   * @module BitStream
+   */
+  class BitStream {
+    #bit;
+    #available;
+    #buffer;
+    constructor() {
+      this.#bit = 0;
+      this.#available = 0;
+      this.#buffer = new ByteArray();
+    }
+    get bytes() {
+      return this.#buffer.bytes;
+    }
+    write(value, length) {
+      let bit = this.#bit;
+      let available = this.#available;
+      const buffer = this.#buffer;
+      while (available + length >= 8) {
+        buffer.writeByte((bit | (value << available)) & 0xff);
+        length -= 8 - available;
+        value >>>= 8 - available;
+        bit = 0;
+        available = 0;
       }
-      this.bitBuffer = (data << this.bitLength) | this.bitBuffer;
-      this.bitLength = this.bitLength + length;
+      this.#available = available + length;
+      this.#bit = bit | (value << available);
     }
     flush() {
-      const { output } = this;
-      if (this.bitLength > 0) {
-        output.writeByte(this.bitBuffer);
+      if (this.#available > 0) {
+        this.#buffer.writeByte(this.#bit);
       }
-      output.flush();
-    }
-    close() {
-      this.flush();
-      this.output.close();
+      this.#bit = 0;
+      this.#available = 0;
     }
   }
-  class GIFImage {
-    width;
-    height;
-    pixels;
-    constructor(width, height) {
-      this.pixels = [];
-      this.width = width;
-      this.height = height;
-      const size = width * height;
-      for (let i = 0; i < size; i++) {
-        this.pixels[i] = 0;
-      }
+
+  /**
+   * @module ByteMatrix
+   */
+  class ByteMatrix {
+    #width;
+    #height;
+    #bytes;
+    constructor(width, height = width) {
+      this.#width = width;
+      this.#height = height;
+      this.#bytes = new Int8Array(width * height);
     }
-    getLZWRaster(lzwMinCodeSize) {
-      // Setup LZWTable
+    get width() {
+      return this.#width;
+    }
+    get height() {
+      return this.#height;
+    }
+    set(x, y, value) {
+      this.#bytes[y * this.#width + x] = value;
+    }
+    get(x, y) {
+      return this.#bytes[y * this.#width + x];
+    }
+    clear(value) {
+      this.#bytes.fill(value);
+    }
+  }
+
+  /**
+   * @module index
+   */
+  const { fromCharCode } = String;
+  class GIFImage {
+    #pixels;
+    constructor(width, height) {
+      this.#pixels = new ByteMatrix(width, height);
+    }
+    #getLZWRaster(size) {
+      const clearCode = 1 << size;
       const table = new LZWTable();
-      const { fromCharCode } = String;
-      const clearCode = 1 << lzwMinCodeSize;
-      const endCode = (1 << lzwMinCodeSize) + 1;
+      const endCode = clearCode + 1;
       for (let i = 0; i < clearCode; i++) {
         table.add(fromCharCode(i));
       }
       table.add(fromCharCode(clearCode));
       table.add(fromCharCode(endCode));
-      let bitLength = lzwMinCodeSize + 1;
-      const byteOutput = new ByteArrayOutputStream();
-      const bitOutput = new BitOutputStream(byteOutput);
-      try {
-        const { pixels } = this;
-        const { length } = pixels;
-        const { fromCharCode } = String;
-        // Clear code
-        bitOutput.write(clearCode, bitLength);
-        let dataIndex = 0;
-        let words = fromCharCode(pixels[dataIndex++]);
-        while (dataIndex < length) {
-          const char = fromCharCode(pixels[dataIndex++]);
-          if (table.contains(words + char)) {
-            words += char;
-          } else {
-            bitOutput.write(table.indexOf(words), bitLength);
-            if (table.getSize() < 0xfff) {
-              if (table.getSize() === 1 << bitLength) {
-                bitLength++;
+      let bitLength = size + 1;
+      const pixels = this.#pixels;
+      const stream = new BitStream();
+      const { width, height } = this.#pixels;
+      // Clear code
+      stream.write(clearCode, bitLength);
+      let word = fromCharCode(pixels.get(0, 0) & 0xff);
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          // Skip 0 0 pixel
+          if (x > 0 || y > 0) {
+            const char = fromCharCode(pixels.get(x, y) & 0xff);
+            if (table.has(word + char)) {
+              word += char;
+            } else {
+              stream.write(table.indexOf(word), bitLength);
+              // 4096 dict
+              if (table.size < 0x0fff) {
+                if (table.size === 1 << bitLength) {
+                  bitLength++;
+                }
+                table.add(width + char);
               }
-              table.add(words + char);
+              word = char;
             }
-            words = char;
           }
         }
-        bitOutput.write(table.indexOf(words), bitLength);
-        // End code
-        bitOutput.write(endCode, bitLength);
-      } finally {
-        bitOutput.close();
       }
-      return byteOutput.toByteArray();
+      stream.write(table.indexOf(word), bitLength);
+      // End code
+      stream.write(endCode, bitLength);
+      // Flush
+      stream.flush();
+      return stream.bytes;
     }
-    /**
-     * @function set
-     * @description set pixel of point
-     * @param x x point
-     * @param y y point
-     * @param color pixel color 0: Black 1: White
-     */
-    set(x, y, color) {
-      this.pixels[y * this.width + x] = color;
-    }
-    write(output) {
-      const { width, height } = this;
+    #encode() {
+      const buffer = new ByteArray();
+      const { width, height } = this.#pixels;
       // GIF Signature
-      output.writeByte(0x47); // G
-      output.writeByte(0x49); // I
-      output.writeByte(0x46); // F
-      output.writeByte(0x38); // 8
-      output.writeByte(0x37); // 7
-      output.writeByte(0x61); // a
+      buffer.writeByte(0x47); // G
+      buffer.writeByte(0x49); // I
+      buffer.writeByte(0x46); // F
+      buffer.writeByte(0x38); // 8
+      buffer.writeByte(0x37); // 7
+      buffer.writeByte(0x61); // a
       // Screen Descriptor
-      output.writeInt16(width);
-      output.writeInt16(height);
-      output.writeByte(0x80); // 2bit
-      output.writeByte(0);
-      output.writeByte(0);
-      // Global Color Map
-      // Black
-      output.writeByte(0x00);
-      output.writeByte(0x00);
-      output.writeByte(0x00);
-      // White
-      output.writeByte(0xff);
-      output.writeByte(0xff);
-      output.writeByte(0xff);
-      // Image Descriptor
-      output.writeByte(0x2c); // ,
-      output.writeInt16(0);
-      output.writeInt16(0);
-      output.writeInt16(width);
-      output.writeInt16(height);
-      output.writeByte(0);
-      // Local Color Map
-      // Raster Data
-      const lzwMinCodeSize = 2;
-      const raster = this.getLZWRaster(lzwMinCodeSize);
-      const raLength = raster.length;
-      output.writeByte(lzwMinCodeSize);
+      buffer.writeInt16(width);
+      buffer.writeInt16(height);
+      // 2bit
+      buffer.writeByte(0x80);
+      buffer.writeByte(0);
+      buffer.writeByte(0);
+      // Global color map: black
+      buffer.writeByte(0x00);
+      buffer.writeByte(0x00);
+      buffer.writeByte(0x00);
+      // Global color map: white
+      buffer.writeByte(0xff);
+      buffer.writeByte(0xff);
+      buffer.writeByte(0xff);
+      // Image Descriptor: ,
+      buffer.writeByte(0x2c);
+      buffer.writeInt16(0);
+      buffer.writeInt16(0);
+      buffer.writeInt16(width);
+      buffer.writeInt16(height);
+      buffer.writeByte(0);
+      // Local color raster map
+      const size = 2;
+      const raster = this.#getLZWRaster(size);
+      const rasterLength = raster.length;
+      buffer.writeByte(size);
       let offset = 0;
-      while (raLength - offset > 255) {
-        output.writeByte(255);
-        output.writeBytes(raster, offset, 255);
+      while (rasterLength - offset > 255) {
+        buffer.writeByte(255);
+        buffer.writeBytes(raster, offset, 255);
         offset += 255;
       }
-      const length = raLength - offset;
-      output.writeByte(length);
-      output.writeBytes(raster, offset, length);
-      output.writeByte(0x00);
-      // GIF Terminator
-      output.writeByte(0x3b); // ;
+      const length = rasterLength - offset;
+      buffer.writeByte(length);
+      buffer.writeBytes(raster, offset, length);
+      buffer.writeByte(0x00);
+      // GIF Terminator: ;
+      buffer.writeByte(0x3b);
+      return buffer.bytes;
+    }
+    set(x, y, color) {
+      this.#pixels.set(x, y, color);
     }
     toDataURL() {
-      const output = new ByteArrayOutputStream();
-      this.write(output);
-      const bytes = encodeToBase64(output.toByteArray());
-      output.close();
-      const { length } = bytes;
-      const { fromCharCode } = String;
-      let url = 'data:image/gif;base64,';
-      for (let i = 0; i < length; i++) {
-        url += fromCharCode(bytes[i]);
-      }
-      return url;
+      const bytes = this.#encode();
+      return `data:image/gif;base64,${btoa(fromCharCode.apply(null, bytes))}`;
     }
   }
 
@@ -1938,35 +1862,6 @@
         }
       }
       return gif.toDataURL();
-    }
-  }
-
-  /**
-   * @module ByteMatrix
-   */
-  class ByteMatrix {
-    #width;
-    #height;
-    #bytes;
-    constructor(width, height = width) {
-      this.#width = width;
-      this.#height = height;
-      this.#bytes = new Int8Array(width * height);
-    }
-    get width() {
-      return this.#width;
-    }
-    get height() {
-      return this.#height;
-    }
-    set(x, y, value) {
-      this.#bytes[y * this.#width + x] = value;
-    }
-    get(x, y) {
-      return this.#bytes[y * this.#width + x];
-    }
-    clear(value) {
-      this.#bytes.fill(value);
     }
   }
 
