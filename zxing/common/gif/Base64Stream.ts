@@ -4,27 +4,29 @@
 
 import { ByteArray } from './ByteArray';
 
-function encode(ch: number): number {
-  if (ch >= 0) {
-    if (ch < 26) {
+function encode(byte: number): number {
+  byte &= 0x3f;
+
+  if (byte >= 0) {
+    if (byte < 26) {
       // A
-      return 0x41 + ch;
-    } else if (ch < 52) {
+      return 0x41 + byte;
+    } else if (byte < 52) {
       // a
-      return 0x61 + (ch - 26);
-    } else if (ch < 62) {
+      return 0x61 + (byte - 26);
+    } else if (byte < 62) {
       // 0
-      return 0x30 + (ch - 52);
-    } else if (ch === 62) {
+      return 0x30 + (byte - 52);
+    } else if (byte === 62) {
       // +
       return 0x2b;
-    } else if (ch === 63) {
+    } else if (byte === 63) {
       // /
       return 0x2f;
     }
   }
 
-  throw new Error(`illegal char: ${String.fromCharCode(ch)}`);
+  throw new Error(`illegal char: ${String.fromCharCode(byte)}`);
 }
 
 export class Base64Stream {
@@ -33,43 +35,45 @@ export class Base64Stream {
   #bufLength = 0;
   #stream: ByteArray = new ByteArray();
 
-  #writeEncoded(byte: number): void {
-    this.#stream.writeByte(encode(byte & 0x3f));
-  }
-
   public get bytes(): number[] {
     return this.#stream.bytes;
   }
 
   public writeByte(byte: number): void {
-    this.#buffer = (this.#buffer << 8) | (byte & 0xff);
-    this.#bufLength += 8;
-    this.#length++;
+    let bufLength = this.#bufLength + 8;
 
-    while (this.#bufLength >= 6) {
-      this.#writeEncoded(this.#buffer >>> (this.#bufLength - 6));
+    const buffer = (this.#buffer << 8) | (byte & 0xff);
 
-      this.#bufLength -= 6;
+    while (bufLength >= 6) {
+      this.writeByte(encode(buffer >>> (bufLength - 6)));
+
+      bufLength -= 6;
     }
+
+    this.#length++;
+    this.#buffer = buffer;
+    this.#bufLength = bufLength;
   }
 
   public writeBytes(bytes: number[], offset?: number, length?: number): void {
     this.#stream.writeBytes(bytes, offset, length);
   }
 
-  public flush(): void {
-    if (this.#bufLength > 0) {
-      this.#writeEncoded(this.#buffer << (6 - this.#bufLength));
+  public close(): void {
+    const stream = this.#stream;
+    const length = this.#length;
+    const bufLength = this.#bufLength;
+
+    if (bufLength > 0) {
+      this.writeByte(encode(this.#buffer << (6 - bufLength)));
 
       this.#buffer = 0;
       this.#bufLength = 0;
     }
 
-    const stream = this.#stream;
-
-    if (this.#length % 3 != 0) {
+    if (length % 3 != 0) {
       // Padding
-      const pad = 3 - (this.#length % 3);
+      const pad = 3 - (length % 3);
 
       for (let i = 0; i < pad; i++) {
         // =

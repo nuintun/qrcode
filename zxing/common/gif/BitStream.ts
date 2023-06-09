@@ -33,7 +33,7 @@ export class BitStream {
     this.#bits = bits | (value << available);
   }
 
-  public flush(): void {
+  public close(): void {
     if (this.#available > 0) {
       this.#buffer.writeByte(this.#bits);
     }

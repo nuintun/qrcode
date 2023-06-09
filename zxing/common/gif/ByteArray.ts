@@ -14,7 +14,7 @@ export class ByteArray {
   }
 
   public writeInt16(value: number): void {
-    this.#bytes.push(value, 8, value >>> 8);
+    this.#bytes.push(value, value >>> 8);
   }
 
   public writeBytes(bytes: number[], offset: number = 0, length: number = bytes.length): void {

@@ -1608,7 +1608,7 @@
       this.#bytes.push(value);
     }
     writeInt16(value) {
-      this.#bytes.push(value, 8, value >>> 8);
+      this.#bytes.push(value, value >>> 8);
     }
     writeBytes(bytes, offset = 0, length = bytes.length) {
       const buffer = this.#bytes;
@@ -1642,7 +1642,7 @@
       this.#available = available + length;
       this.#bits = bits | (value << available);
     }
-    flush() {
+    close() {
       if (this.#available > 0) {
         this.#buffer.writeByte(this.#bits);
       }
@@ -1681,71 +1681,6 @@
   }
 
   /**
-   * @module Base64Stream
-   */
-  function encode$2(ch) {
-    if (ch >= 0) {
-      if (ch < 26) {
-        // A
-        return 0x41 + ch;
-      } else if (ch < 52) {
-        // a
-        return 0x61 + (ch - 26);
-      } else if (ch < 62) {
-        // 0
-        return 0x30 + (ch - 52);
-      } else if (ch === 62) {
-        // +
-        return 0x2b;
-      } else if (ch === 63) {
-        // /
-        return 0x2f;
-      }
-    }
-    throw new Error(`illegal char: ${String.fromCharCode(ch)}`);
-  }
-  class Base64Stream {
-    #buffer = 0;
-    #length = 0;
-    #bufLength = 0;
-    #stream = new ByteArray();
-    #writeEncoded(byte) {
-      this.#stream.writeByte(encode$2(byte & 0x3f));
-    }
-    get bytes() {
-      return this.#stream.bytes;
-    }
-    writeByte(byte) {
-      this.#buffer = (this.#buffer << 8) | (byte & 0xff);
-      this.#bufLength += 8;
-      this.#length++;
-      while (this.#bufLength >= 6) {
-        this.#writeEncoded(this.#buffer >>> (this.#bufLength - 6));
-        this.#bufLength -= 6;
-      }
-    }
-    writeBytes(bytes, offset, length) {
-      this.#stream.writeBytes(bytes, offset, length);
-    }
-    flush() {
-      if (this.#bufLength > 0) {
-        this.#writeEncoded(this.#buffer << (6 - this.#bufLength));
-        this.#buffer = 0;
-        this.#bufLength = 0;
-      }
-      const stream = this.#stream;
-      if (this.#length % 3 != 0) {
-        // Padding
-        const pad = 3 - (this.#length % 3);
-        for (let i = 0; i < pad; i++) {
-          // =
-          stream.writeByte(0x3d);
-        }
-      }
-    }
-  }
-
-  /**
    * @module index
    */
   const { fromCharCode } = String;
@@ -1755,47 +1690,48 @@
       this.#pixels = new ByteMatrix(width, height);
     }
     #getLZWRaster(size) {
+      const dict = new LZWTable();
       const clearCode = 1 << size;
-      const table = new LZWTable();
       const endCode = clearCode + 1;
       for (let i = 0; i < clearCode; i++) {
-        table.add(fromCharCode(i));
+        dict.add(fromCharCode(i));
       }
-      table.add(fromCharCode(clearCode));
-      table.add(fromCharCode(endCode));
+      dict.add(fromCharCode(clearCode));
+      dict.add(fromCharCode(endCode));
       let bitLength = size + 1;
       const pixels = this.#pixels;
       const stream = new BitStream();
-      const { width, height } = this.#pixels;
+      const { width, height } = pixels;
       // Clear code
       stream.write(clearCode, bitLength);
-      let word = fromCharCode(pixels.get(0, 0) & 0xff);
+      let words = fromCharCode(pixels.get(0, 0));
       for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
           // Skip 0 0 pixel
           if (x > 0 || y > 0) {
-            const char = fromCharCode(pixels.get(x, y) & 0xff);
-            if (table.has(word + char)) {
-              word += char;
+            const character = fromCharCode(pixels.get(x, y));
+            const newWords = words + character;
+            if (dict.has(newWords)) {
+              words = newWords;
             } else {
-              stream.write(table.indexOf(word), bitLength);
+              stream.write(dict.indexOf(words), bitLength);
               // 4096 dict
-              if (table.size < 0x0fff) {
-                if (table.size === 1 << bitLength) {
+              if (dict.size < 0x0fff) {
+                if (dict.size === 1 << bitLength) {
                   bitLength++;
                 }
-                table.add(width + char);
+                dict.add(newWords);
               }
-              word = char;
+              words = character;
             }
           }
         }
       }
-      stream.write(table.indexOf(word), bitLength);
+      stream.write(dict.indexOf(words), bitLength);
       // End code
       stream.write(endCode, bitLength);
-      // Flush
-      stream.flush();
+      // Close
+      stream.close();
       return stream.bytes;
     }
     #encode() {
@@ -1853,10 +1789,7 @@
       this.#pixels.set(x, y, color);
     }
     toDataURL() {
-      const base64 = new Base64Stream();
-      base64.writeBytes(this.#encode());
-      const { bytes } = base64;
-      return `data:image/gif;base64,${btoa(fromCharCode.apply(null, bytes))}`;
+      return `data:image/gif;base64,${btoa(fromCharCode.apply(null, this.#encode()))}`;
     }
   }
 

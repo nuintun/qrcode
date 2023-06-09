@@ -4,9 +4,8 @@
 
 import { LZWTable } from './LZWTable';
 import { BitStream } from './BitStream';
-import { ByteMatrix } from '/common/ByteMatrix';
 import { ByteArray } from './ByteArray';
-import { Base64Stream } from './Base64Stream';
+import { ByteMatrix } from '/common/ByteMatrix';
 
 const { fromCharCode } = String;
 
@@ -18,59 +17,60 @@ export class GIFImage {
   }
 
   #getLZWRaster(size: number): number[] {
+    const dict = new LZWTable();
     const clearCode = 1 << size;
-    const table = new LZWTable();
     const endCode = clearCode + 1;
 
     for (let i = 0; i < clearCode; i++) {
-      table.add(fromCharCode(i));
+      dict.add(fromCharCode(i));
     }
 
-    table.add(fromCharCode(clearCode));
-    table.add(fromCharCode(endCode));
+    dict.add(fromCharCode(clearCode));
+    dict.add(fromCharCode(endCode));
 
     let bitLength = size + 1;
 
     const pixels = this.#pixels;
     const stream = new BitStream();
-    const { width, height } = this.#pixels;
+    const { width, height } = pixels;
 
     // Clear code
     stream.write(clearCode, bitLength);
 
-    let word = fromCharCode(pixels.get(0, 0) & 0xff);
+    let words = fromCharCode(pixels.get(0, 0));
 
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         // Skip 0 0 pixel
         if (x > 0 || y > 0) {
-          const char = fromCharCode(pixels.get(x, y) & 0xff);
+          const character = fromCharCode(pixels.get(x, y));
+          const newWords = words + character;
 
-          if (table.has(word + char)) {
-            word += char;
+          if (dict.has(newWords)) {
+            words = newWords;
           } else {
-            stream.write(table.indexOf(word), bitLength);
+            stream.write(dict.indexOf(words), bitLength);
 
             // 4096 dict
-            if (table.size < 0x0fff) {
-              if (table.size === 1 << bitLength) {
+            if (dict.size < 0x0fff) {
+              if (dict.size === 1 << bitLength) {
                 bitLength++;
               }
 
-              table.add(width + char);
+              dict.add(newWords);
             }
 
-            word = char;
+            words = character;
           }
         }
       }
     }
 
-    stream.write(table.indexOf(word), bitLength);
+    stream.write(dict.indexOf(words), bitLength);
     // End code
     stream.write(endCode, bitLength);
-    // Flush
-    stream.flush();
+    // Close
+    stream.close();
 
     return stream.bytes;
   }
@@ -152,12 +152,6 @@ export class GIFImage {
   }
 
   public toDataURL(): string {
-    const base64 = new Base64Stream();
-
-    base64.writeBytes(this.#encode());
-
-    const { bytes } = base64;
-
-    return `data:image/gif;base64,${btoa(fromCharCode.apply(null, bytes))}`;
+    return `data:image/gif;base64,${btoa(fromCharCode.apply(null, this.#encode()))}`;
   }
 }
