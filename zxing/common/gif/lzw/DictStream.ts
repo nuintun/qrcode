@@ -49,16 +49,16 @@ export class DictStream {
     const { length } = bytes;
 
     for (let i = 0; i < length; ) {
-      const offset = length - i;
+      const remain = length - i;
 
-      if (offset >= 255) {
+      if (remain >= 255) {
         stream.writeByte(255);
         stream.writeBytes(bytes, i, 255);
 
         i += 255;
       } else {
-        stream.writeByte(offset);
-        stream.writeBytes(bytes, i, length);
+        stream.writeByte(remain);
+        stream.writeBytes(bytes, i, remain);
 
         i = length;
       }
