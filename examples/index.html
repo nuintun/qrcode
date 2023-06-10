@@ -17,6 +17,12 @@
           <p>二维码内容：</p>
           <div><textarea id="encode-text">https://github.com/nuintun/qrcode</textarea></div>
           <p>
+            <label>前景颜色：</label>
+            <input id="gif-foreground" type="color" value="#ff0000" />
+            <label class="indent">背景颜色：</label>
+            <input id="gif-background" type="color" value="#ffffff" />
+          </p>
+          <p>
             <label>纠错等级：</label>
             <select id="encode-level">
               <option value="L">Level L (7%)</option>
@@ -102,6 +108,14 @@
       const encodeMSize = $('#encode-msize');
       const encodeMargin = $('#encode-margin');
       const encodeResult = $('#encode-result');
+      const gifForeground = $('#gif-foreground');
+      const gifBackground = $('#gif-background');
+
+      function hex2rgb(hex) {
+        hex = parseInt(hex.replace('#', '0x'));
+
+        return [(hex >> 16) & 0xff, (hex >> 8) & 0xff, hex & 0xff];
+      }
 
       // 生成二维码
       $('#encode-btn').on('click', function () {
@@ -109,10 +123,12 @@
         const data = encodeText.val();
         const mode = encodeMode.val();
         const level = encodeLevel.val();
-        const margin = Number(encodeMargin.val());
-        const hasGs1Hint = hintGs1.prop('checked');
         const hasEciHint = hintEci.prop('checked');
-        const moduleSize = Number(encodeMSize.val());
+        const hasGs1Hint = hintGs1.prop('checked');
+        const margin = parseInt(encodeMargin.val());
+        const moduleSize = parseInt(encodeMSize.val());
+        const foreground = hex2rgb(gifForeground.val());
+        const background = hex2rgb(gifBackground.val());
 
         if (hasGs1Hint) {
           hints.push('GS1_FORMAT');
@@ -138,7 +154,7 @@
           console.timeEnd('encode');
 
           console.time('toDataURL');
-          const url = qrcode.toDataURL(moduleSize, { margin, foreground: [0xff, 0x00, 0x00] });
+          const url = qrcode.toDataURL(moduleSize, { margin, foreground, background });
           console.timeEnd('toDataURL');
 
           encodeResult.html('<img src="' + url + '" />');
