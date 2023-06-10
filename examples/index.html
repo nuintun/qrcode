@@ -138,7 +138,7 @@
           console.timeEnd('encode');
 
           console.time('toDataURL');
-          const url = qrcode.toDataURL(moduleSize, margin);
+          const url = qrcode.toDataURL(moduleSize, { margin, foreground: [0xff, 0x00, 0x00] });
           console.timeEnd('toDataURL');
 
           encodeResult.html('<img src="' + url + '" />');

@@ -6,20 +6,44 @@ import { compress } from './lzw';
 import { ByteStream } from './ByteStream';
 import { Base64Stream, fromCharCode } from './Base64Stream';
 
+export type RGB = [
+  // Red
+  R: number,
+  // Green
+  G: number,
+  // Blue
+  B: number
+];
+
+export interface Colors {
+  foreground?: RGB;
+  background?: RGB;
+}
+
 export class GIFImage {
   #width: number;
   #height: number;
+  #foreground: RGB;
+  #background: RGB;
   #pixels: number[] = [];
 
-  constructor(width: number, height: number) {
+  constructor(
+    width: number,
+    height: number,
+    { foreground = [0x00, 0x00, 0x00], background = [0xff, 0xff, 0xff] }: Colors = {}
+  ) {
     this.#width = width;
     this.#height = height;
+    this.#foreground = foreground;
+    this.#background = background;
   }
 
   #encode(): number[] {
     const stream = new ByteStream();
     const width = this.#width;
     const height = this.#height;
+    const foreground = this.#foreground;
+    const background = this.#background;
 
     // GIF signature
     stream.writeByte(0x47); // G
@@ -36,15 +60,15 @@ export class GIFImage {
     stream.writeByte(0);
     stream.writeByte(0);
 
-    // Global color palette: white
-    stream.writeByte(0xff);
-    stream.writeByte(0xff);
-    stream.writeByte(0xff);
+    // Global background color palette
+    stream.writeByte(background[0] & 0xff);
+    stream.writeByte(background[1] & 0xff);
+    stream.writeByte(background[2] & 0xff);
 
-    // Global color palette: black
-    stream.writeByte(0x00);
-    stream.writeByte(0x00);
-    stream.writeByte(0x00);
+    // Global background color palette
+    stream.writeByte(foreground[0] & 0xff);
+    stream.writeByte(foreground[1] & 0xff);
+    stream.writeByte(foreground[2] & 0xff);
 
     // Image descriptor
     stream.writeByte(0x2c);

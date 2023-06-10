@@ -1858,15 +1858,21 @@
   class GIFImage {
     #width;
     #height;
+    #foreground;
+    #background;
     #pixels = [];
-    constructor(width, height) {
+    constructor(width, height, { foreground = [0x00, 0x00, 0x00], background = [0xff, 0xff, 0xff] } = {}) {
       this.#width = width;
       this.#height = height;
+      this.#foreground = foreground;
+      this.#background = background;
     }
     #encode() {
       const stream = new ByteStream();
       const width = this.#width;
       const height = this.#height;
+      const foreground = this.#foreground;
+      const background = this.#background;
       // GIF signature
       stream.writeByte(0x47); // G
       stream.writeByte(0x49); // I
@@ -1880,14 +1886,14 @@
       stream.writeByte(0x80);
       stream.writeByte(0);
       stream.writeByte(0);
-      // Global color palette: white
-      stream.writeByte(0xff);
-      stream.writeByte(0xff);
-      stream.writeByte(0xff);
-      // Global color palette: black
-      stream.writeByte(0x00);
-      stream.writeByte(0x00);
-      stream.writeByte(0x00);
+      // Global background color palette
+      stream.writeByte(background[0] & 0xff);
+      stream.writeByte(background[1] & 0xff);
+      stream.writeByte(background[2] & 0xff);
+      // Global background color palette
+      stream.writeByte(foreground[0] & 0xff);
+      stream.writeByte(foreground[1] & 0xff);
+      stream.writeByte(foreground[2] & 0xff);
       // Image descriptor
       stream.writeByte(0x2c);
       stream.writeInt16(0);
@@ -1933,32 +1939,46 @@
       this.#matrix = matrix;
       this.#version = version;
     }
+    /**
+     * @property mask
+     * @description Get the mask of qrcode
+     */
     get mask() {
       return this.#mask;
     }
+    /**
+     * @property level
+     * @description Get the error correction level of qrcode
+     */
     get level() {
       return this.#level.name;
     }
+    /**
+     * @property version
+     * @description Get the version of qrcode
+     */
     get version() {
       return this.#version.version;
     }
+    /**
+     * @property matrix
+     * @description Get the matrix of qrcode
+     */
     get matrix() {
       return this.#matrix;
     }
     /**
-     * @public
      * @method toDataURL
-     * @param {number} moduleSize
-     * @param {number} margin
-     * @returns {string}
+     * @param moduleSize The size of one qrcode module
+     * @param options Set rest options of gif, like margin, foreground and background
      */
-    toDataURL(moduleSize = 2, margin = moduleSize * 4) {
+    toDataURL(moduleSize = 2, { margin = moduleSize * 4, ...colors } = {}) {
       moduleSize = Math.max(1, moduleSize >> 0);
       margin = Math.max(0, margin >> 0);
       const matrix = this.#matrix;
       const matrixSize = matrix.width;
       const size = moduleSize * matrixSize + margin * 2;
-      const gif = new GIFImage(size, size);
+      const gif = new GIFImage(size, size, colors);
       const max = size - margin;
       for (let i = 0; i < size; i++) {
         for (let j = 0; j < size; j++) {
@@ -2019,18 +2039,38 @@
       this.#height = height;
       this.#bytes = new Int8Array(width * height);
     }
+    /**
+     * @property width
+     * @description Get the width of matrix
+     */
     get width() {
       return this.#width;
     }
+    /**
+     * @property height
+     * @description Get the height of matrix
+     */
     get height() {
       return this.#height;
     }
+    /**
+     * @method set
+     * @description Set the matrix value of position
+     */
     set(x, y, value) {
       this.#bytes[y * this.#width + x] = value;
     }
+    /**
+     * @method get
+     * @description Get the matrix value of position
+     */
     get(x, y) {
       return this.#bytes[y * this.#width + x];
     }
+    /**
+     * @method clear
+     * @description Clear the matrix with value
+     */
     clear(value) {
       this.#bytes.fill(value);
     }
