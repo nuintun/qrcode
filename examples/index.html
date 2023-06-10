@@ -117,6 +117,31 @@
         return [(hex >> 16) & 0xff, (hex >> 8) & 0xff, hex & 0xff];
       }
 
+      const NUMERIC_RE = /^\d+$/;
+      const ALPHANUMERIC_RE = /^[0-9A-Z$%*+-./: ]+$/;
+
+      function chooseBestMode(mode, data) {
+        if (mode === 'Auto') {
+          if (NUMERIC_RE.test(data)) {
+            return new QRCode.Numeric(data);
+          } else if (ALPHANUMERIC_RE.test(data)) {
+            return new QRCode.Alphanumeric(data);
+          }
+
+          const kanji = new QRCode.Kanji(data);
+
+          try {
+            kanji.encode();
+
+            return kanji;
+          } catch {
+            return new QRCode.Byte(data);
+          }
+        }
+
+        return new QRCode[mode](data);
+      }
+
       // 生成二维码
       $('#encode-btn').on('click', function () {
         const hints = [];
@@ -147,10 +172,10 @@
         console.dir(QRCode.Charset);
 
         try {
-          const segment = mode === 'Auto' ? 'Byte' : mode;
+          const segment = chooseBestMode(mode, data);
 
           console.time('encode');
-          const qrcode = encoder.encode(new QRCode[segment](data));
+          const qrcode = encoder.encode(segment);
           console.timeEnd('encode');
 
           console.time('toDataURL');
