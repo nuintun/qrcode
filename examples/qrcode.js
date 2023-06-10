@@ -1786,7 +1786,7 @@
       this.#bytes.push(value & 0xff);
     }
     writeInt16(value) {
-      this.#bytes.push(value & 0xff, (value >>> 8) & 0xff);
+      this.#bytes.push(value & 0xff, (value >> 8) & 0xff);
     }
     writeBytes(bytes, offset = 0, length = bytes.length) {
       const buffer = this.#bytes;

@@ -14,7 +14,7 @@ export class ByteStream {
   }
 
   public writeInt16(value: number): void {
-    this.#bytes.push(value & 0xff, (value >>> 8) & 0xff);
+    this.#bytes.push(value & 0xff, (value >> 8) & 0xff);
   }
 
   public writeBytes(bytes: number[], offset: number = 0, length: number = bytes.length): void {
