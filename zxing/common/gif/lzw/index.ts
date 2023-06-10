@@ -18,16 +18,16 @@ export function compress(pixels: number[], depth: number, stream: ByteArray): vo
     const { length } = pixels;
 
     for (let i = 1; i < length; i++) {
-      const pixel = pixels[i];
-      const newCode = dict.codeAfterAppend(code, pixel);
+      const pixelIndex = pixels[i];
+      const nextCode = dict.get(code, pixelIndex);
 
-      if (newCode != null) {
-        code = newCode;
+      if (nextCode != null) {
+        code = nextCode;
       } else {
         buffer.write(code);
-        dict.add(code, pixel);
+        dict.add(code, pixelIndex);
 
-        code = pixel;
+        code = pixelIndex;
       }
     }
 

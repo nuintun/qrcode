@@ -1631,7 +1631,7 @@
         this.#unused = unused;
       }
     }
-    codeAfterAppend(code, index) {
+    get(code, index) {
       return this.#codes[(code << 8) | index];
     }
   }
@@ -1696,14 +1696,14 @@
       let code = pixels[0];
       const { length } = pixels;
       for (let i = 1; i < length; i++) {
-        const pixel = pixels[i];
-        const newCode = dict.codeAfterAppend(code, pixel);
-        if (newCode != null) {
-          code = newCode;
+        const pixelIndex = pixels[i];
+        const nextCode = dict.get(code, pixelIndex);
+        if (nextCode != null) {
+          code = nextCode;
         } else {
           buffer.write(code);
-          dict.add(code, pixel);
-          code = pixel;
+          dict.add(code, pixelIndex);
+          code = pixelIndex;
         }
       }
       buffer.write(code);

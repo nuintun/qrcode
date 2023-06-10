@@ -69,7 +69,7 @@ export class Dict {
     }
   }
 
-  public codeAfterAppend(code: number, index: number): number {
+  public get(code: number, index: number): number {
     return this.#codes[(code << 8) | index];
   }
 }
