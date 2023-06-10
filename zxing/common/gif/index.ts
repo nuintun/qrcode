@@ -45,30 +45,18 @@ export class GIFImage {
     const foreground = this.#foreground;
     const background = this.#background;
 
-    // GIF signature
-    stream.writeByte(0x47); // G
-    stream.writeByte(0x49); // I
-    stream.writeByte(0x46); // F
-    stream.writeByte(0x38); // 8
-    stream.writeByte(0x39); // 9
-    stream.writeByte(0x61); // a
+    // GIF signature: GIF89a
+    stream.writeBytes([0x47, 0x49, 0x46, 0x38, 0x39, 0x61]);
 
     // Logical screen descriptor
     stream.writeInt16(width);
     stream.writeInt16(height);
-    stream.writeByte(0x80);
-    stream.writeByte(0);
-    stream.writeByte(0);
+    stream.writeBytes([0x80, 0, 0]);
 
     // Global background color palette
-    stream.writeByte(background[0] & 0xff);
-    stream.writeByte(background[1] & 0xff);
-    stream.writeByte(background[2] & 0xff);
-
+    stream.writeBytes([background[0], background[1], background[2]]);
     // Global background color palette
-    stream.writeByte(foreground[0] & 0xff);
-    stream.writeByte(foreground[1] & 0xff);
-    stream.writeByte(foreground[2] & 0xff);
+    stream.writeBytes([foreground[0], foreground[1], foreground[2]]);
 
     // Image descriptor
     stream.writeByte(0x2c);

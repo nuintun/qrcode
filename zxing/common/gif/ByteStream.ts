@@ -10,18 +10,18 @@ export class ByteStream {
   }
 
   public writeByte(value: number): void {
-    this.#bytes.push(value);
+    this.#bytes.push(value & 0xff);
   }
 
   public writeInt16(value: number): void {
-    this.#bytes.push(value, value >>> 8);
+    this.#bytes.push(value & 0xff, (value >>> 8) & 0xff);
   }
 
   public writeBytes(bytes: number[], offset: number = 0, length: number = bytes.length): void {
     const buffer = this.#bytes;
 
     for (let i = 0; i < length; i++) {
-      buffer.push(bytes[offset + i]);
+      buffer.push(bytes[offset + i] & 0xff);
     }
   }
 }

@@ -52,7 +52,7 @@ export class DictStream {
       const remain = length - i;
 
       if (remain >= 255) {
-        stream.writeByte(255);
+        stream.writeByte(0xff);
         stream.writeBytes(bytes, i, 255);
 
         i += 255;

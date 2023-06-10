@@ -1729,7 +1729,7 @@
       for (let i = 0; i < length; ) {
         const remain = length - i;
         if (remain >= 255) {
-          stream.writeByte(255);
+          stream.writeByte(0xff);
           stream.writeBytes(bytes, i, 255);
           i += 255;
         } else {
@@ -1783,15 +1783,15 @@
       return this.#bytes;
     }
     writeByte(value) {
-      this.#bytes.push(value);
+      this.#bytes.push(value & 0xff);
     }
     writeInt16(value) {
-      this.#bytes.push(value, value >>> 8);
+      this.#bytes.push(value & 0xff, (value >>> 8) & 0xff);
     }
     writeBytes(bytes, offset = 0, length = bytes.length) {
       const buffer = this.#bytes;
       for (let i = 0; i < length; i++) {
-        buffer.push(bytes[offset + i]);
+        buffer.push(bytes[offset + i] & 0xff);
       }
     }
   }
@@ -1883,27 +1883,16 @@
       const height = this.#height;
       const foreground = this.#foreground;
       const background = this.#background;
-      // GIF signature
-      stream.writeByte(0x47); // G
-      stream.writeByte(0x49); // I
-      stream.writeByte(0x46); // F
-      stream.writeByte(0x38); // 8
-      stream.writeByte(0x39); // 9
-      stream.writeByte(0x61); // a
+      // GIF signature: GIF89a
+      stream.writeBytes([0x47, 0x49, 0x46, 0x38, 0x39, 0x61]);
       // Logical screen descriptor
       stream.writeInt16(width);
       stream.writeInt16(height);
-      stream.writeByte(0x80);
-      stream.writeByte(0);
-      stream.writeByte(0);
+      stream.writeBytes([0x80, 0, 0]);
       // Global background color palette
-      stream.writeByte(background[0] & 0xff);
-      stream.writeByte(background[1] & 0xff);
-      stream.writeByte(background[2] & 0xff);
+      stream.writeBytes([background[0], background[1], background[2]]);
       // Global background color palette
-      stream.writeByte(foreground[0] & 0xff);
-      stream.writeByte(foreground[1] & 0xff);
-      stream.writeByte(foreground[2] & 0xff);
+      stream.writeBytes([foreground[0], foreground[1], foreground[2]]);
       // Image descriptor
       stream.writeByte(0x2c);
       stream.writeInt16(0);
