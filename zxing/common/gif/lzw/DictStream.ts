@@ -54,6 +54,7 @@ export class DictStream {
       if (offset >= 255) {
         stream.writeByte(255);
         stream.writeBytes(bytes, i, 255);
+
         i += 255;
       } else {
         stream.writeByte(offset);
