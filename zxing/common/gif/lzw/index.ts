@@ -26,7 +26,12 @@ export function compress(pixels: number[], depth: number, stream: ByteStream): v
         code = nextCode;
       } else {
         buffer.write(code);
-        dict.add(code, pixelIndex);
+
+        // Reset dict when full
+        if (!dict.add(code, pixelIndex)) {
+          buffer.write(dict.bof);
+          dict.reset();
+        }
 
         code = pixelIndex;
       }

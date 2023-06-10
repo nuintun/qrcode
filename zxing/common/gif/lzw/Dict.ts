@@ -16,23 +16,21 @@ const MAX_CODE = (1 << 12) - 1;
 export class Dict {
   #bof: number;
   #eof: number;
-  #bits: number;
-  #size: number;
+  #bits!: number;
   #depth: number;
-  #unused: number;
-  #codes: number[] = [];
+  #size!: number;
+  #unused!: number;
+  #codes!: number[];
 
   constructor(depth: number) {
-    const bits = depth + 1;
     const bof = 1 << depth;
     const eof = bof + 1;
 
     this.#bof = bof;
     this.#eof = eof;
-    this.#bits = bits;
     this.#depth = depth;
-    this.#size = 1 << bits;
-    this.#unused = eof + 1;
+
+    this.reset();
   }
 
   public get bof(): number {
@@ -51,7 +49,16 @@ export class Dict {
     return this.#depth;
   }
 
-  public add(code: number, index: number): void {
+  public reset() {
+    const bits = this.#depth + 1;
+
+    this.#codes = [];
+    this.#bits = bits;
+    this.#size = 1 << bits;
+    this.#unused = this.#eof + 1;
+  }
+
+  public add(code: number, index: number): boolean {
     let unused = this.#unused;
 
     if (unused < MAX_CODE) {
@@ -67,7 +74,11 @@ export class Dict {
       this.#bits = bits;
       this.#size = size;
       this.#unused = unused;
+
+      return true;
     }
+
+    return false;
   }
 
   public get(code: number, index: number): number {

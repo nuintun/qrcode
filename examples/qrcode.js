@@ -1640,20 +1640,17 @@
     #bof;
     #eof;
     #bits;
-    #size;
     #depth;
+    #size;
     #unused;
-    #codes = [];
+    #codes;
     constructor(depth) {
-      const bits = depth + 1;
       const bof = 1 << depth;
       const eof = bof + 1;
       this.#bof = bof;
       this.#eof = eof;
-      this.#bits = bits;
       this.#depth = depth;
-      this.#size = 1 << bits;
-      this.#unused = eof + 1;
+      this.reset();
     }
     get bof() {
       return this.#bof;
@@ -1667,6 +1664,13 @@
     get depth() {
       return this.#depth;
     }
+    reset() {
+      const bits = this.#depth + 1;
+      this.#codes = [];
+      this.#bits = bits;
+      this.#size = 1 << bits;
+      this.#unused = this.#eof + 1;
+    }
     add(code, index) {
       let unused = this.#unused;
       if (unused < MAX_CODE) {
@@ -1679,7 +1683,9 @@
         this.#bits = bits;
         this.#size = size;
         this.#unused = unused;
+        return true;
       }
+      return false;
     }
     get(code, index) {
       return this.#codes[(code << 8) | index];
@@ -1754,7 +1760,11 @@
           code = nextCode;
         } else {
           buffer.write(code);
-          dict.add(code, pixelIndex);
+          // Reset dict when full
+          if (!dict.add(code, pixelIndex)) {
+            buffer.write(dict.bof);
+            dict.reset();
+          }
           code = pixelIndex;
         }
       }
