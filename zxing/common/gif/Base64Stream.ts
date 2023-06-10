@@ -2,7 +2,7 @@
  * @module Base64Stream
  */
 
-import { ByteArray } from './ByteArray';
+import { ByteStream } from './ByteStream';
 
 export const { fromCharCode } = String;
 
@@ -35,7 +35,7 @@ export class Base64Stream {
   #bits = 0;
   #buffer = 0;
   #length = 0;
-  #stream: ByteArray = new ByteArray();
+  #stream: ByteStream = new ByteStream();
 
   public get bytes(): number[] {
     return this.#stream.bytes;

@@ -129,9 +129,3 @@ export class Encoder {
     return new QRCode(matrix, version, ecLevel, mask);
   }
 }
-
-export { Charset } from '/common/Charset';
-export { Byte } from '/encoder/segments/Byte';
-export { Kanji } from '/encoder/segments/Kanji';
-export { Numeric } from '/encoder/segments/Numeric';
-export { Alphanumeric } from '/encoder/segments/Alphanumeric';

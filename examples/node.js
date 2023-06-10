@@ -1,10 +1,8 @@
-const { Encoder, QRByte, QRKanji } = require('../cjs');
+import { Encoder, Byte, Kanji } from '@nuintun/qrcode';
 
-const qrcode = new Encoder();
-
-qrcode.write('你好世界\n');
-qrcode.write(new QRByte('hello world\n'));
-qrcode.write(new QRKanji('こんにちは世界'));
-qrcode.make();
+const encoder = new Encoder({
+  hints: ['CHARACTER_SET']
+});
+const qrcode = encoder.encode(new Byte('你好世界\n'), new Byte('hello world\n'), new Kanji('こんにちは世界'));
 
 console.log(qrcode.toDataURL());

@@ -1,8 +1,8 @@
 /**
- * @module ByteArray
+ * @module ByteStream
  */
 
-export class ByteArray {
+export class ByteStream {
   #bytes: number[] = [];
 
   public get bytes(): number[] {

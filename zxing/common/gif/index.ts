@@ -3,7 +3,7 @@
  */
 
 import { compress } from './lzw';
-import { ByteArray } from './ByteArray';
+import { ByteStream } from './ByteStream';
 import { Base64Stream, fromCharCode } from './Base64Stream';
 
 export class GIFImage {
@@ -17,49 +17,49 @@ export class GIFImage {
   }
 
   #encode(): number[] {
-    const buffer = new ByteArray();
+    const stream = new ByteStream();
     const width = this.#width;
     const height = this.#height;
 
     // GIF signature
-    buffer.writeByte(0x47); // G
-    buffer.writeByte(0x49); // I
-    buffer.writeByte(0x46); // F
-    buffer.writeByte(0x38); // 8
-    buffer.writeByte(0x39); // 9
-    buffer.writeByte(0x61); // a
+    stream.writeByte(0x47); // G
+    stream.writeByte(0x49); // I
+    stream.writeByte(0x46); // F
+    stream.writeByte(0x38); // 8
+    stream.writeByte(0x39); // 9
+    stream.writeByte(0x61); // a
 
     // Logical screen descriptor
-    buffer.writeInt16(width);
-    buffer.writeInt16(height);
-    buffer.writeByte(0x80);
-    buffer.writeByte(0);
-    buffer.writeByte(0);
+    stream.writeInt16(width);
+    stream.writeInt16(height);
+    stream.writeByte(0x80);
+    stream.writeByte(0);
+    stream.writeByte(0);
 
     // Global color palette: white
-    buffer.writeByte(0xff);
-    buffer.writeByte(0xff);
-    buffer.writeByte(0xff);
+    stream.writeByte(0xff);
+    stream.writeByte(0xff);
+    stream.writeByte(0xff);
 
     // Global color palette: black
-    buffer.writeByte(0x00);
-    buffer.writeByte(0x00);
-    buffer.writeByte(0x00);
+    stream.writeByte(0x00);
+    stream.writeByte(0x00);
+    stream.writeByte(0x00);
 
     // Image descriptor
-    buffer.writeByte(0x2c);
-    buffer.writeInt16(0);
-    buffer.writeInt16(0);
-    buffer.writeInt16(width);
-    buffer.writeInt16(height);
-    buffer.writeByte(0);
+    stream.writeByte(0x2c);
+    stream.writeInt16(0);
+    stream.writeInt16(0);
+    stream.writeInt16(width);
+    stream.writeInt16(height);
+    stream.writeByte(0);
 
-    compress(this.#pixels, 2, buffer);
+    compress(this.#pixels, 2, stream);
 
     // GIF terminator
-    buffer.writeByte(0x3b);
+    stream.writeByte(0x3b);
 
-    return buffer.bytes;
+    return stream.bytes;
   }
 
   public set(x: number, y: number, color: number): void {

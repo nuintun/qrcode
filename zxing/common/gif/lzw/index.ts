@@ -1,12 +1,13 @@
 /**
  * @module index
+ * @see https://github.com/google/dart-gif-encoder
  */
 
 import { Dict } from './Dict';
 import { DictStream } from './DictStream';
-import { ByteArray } from '/common/gif/ByteArray';
+import { ByteStream } from '/common/gif/ByteStream';
 
-export function compress(pixels: number[], depth: number, stream: ByteArray): void {
+export function compress(pixels: number[], depth: number, stream: ByteStream): void {
   const dict = new Dict(depth);
   const buffer = new DictStream(dict);
 

@@ -1,9 +1,10 @@
 /**
  * @module BookStream
+ * @see https://github.com/google/dart-gif-encoder
  */
 
 import { Dict } from './Dict';
-import { ByteArray } from '/common/gif/ByteArray';
+import { ByteStream } from '/common/gif/ByteStream';
 
 export class DictStream {
   #bits = 0;
@@ -34,7 +35,7 @@ export class DictStream {
     this.#buffer = buffer;
   }
 
-  pipe(stream: ByteArray): void {
+  pipe(stream: ByteStream): void {
     const bytes = this.#bytes;
 
     // Add the remaining bits. (Unused bits are set to zero.)

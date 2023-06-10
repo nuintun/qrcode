@@ -26,7 +26,7 @@ const banner = `/**
  */
 export default function rollup(esnext) {
   return {
-    input: 'src/index.ts',
+    input: 'zxing/index.ts',
     output: {
       banner,
       interop: 'auto',

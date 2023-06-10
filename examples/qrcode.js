@@ -18,6 +18,55 @@
   'use strict';
 
   /**
+   * @module Charset
+   */
+  const VALUES_TO_CHARSET = new Map();
+  class Charset {
+    #label;
+    #values;
+    static CP437 = new Charset('cp437', 0, 2);
+    static ISO_8859_1 = new Charset('iso-8859-1', 1, 3);
+    static ISO_8859_2 = new Charset('iso-8859-2', 4);
+    static ISO_8859_3 = new Charset('iso-8859-3', 5);
+    static ISO_8859_4 = new Charset('iso-8859-4', 6);
+    static ISO_8859_5 = new Charset('iso-8859-5', 7);
+    static ISO_8859_6 = new Charset('iso-8859-6', 8);
+    static ISO_8859_7 = new Charset('iso-8859-7', 9);
+    static ISO_8859_8 = new Charset('iso-8859-8', 10);
+    static ISO_8859_9 = new Charset('iso-8859-9', 11);
+    static ISO_8859_10 = new Charset('iso-8859-10', 12);
+    static ISO_8859_11 = new Charset('iso-8859-11', 13);
+    static ISO_8859_13 = new Charset('iso-8859-13', 15);
+    static ISO_8859_14 = new Charset('iso-8859-14', 16);
+    static ISO_8859_15 = new Charset('iso-8859-15', 17);
+    static ISO_8859_16 = new Charset('iso-8859-16', 18);
+    static SJIS = new Charset('sjis', 20);
+    static CP1250 = new Charset('cp1250', 21);
+    static CP1251 = new Charset('cp1251', 22);
+    static CP1252 = new Charset('cp1252', 23);
+    static CP1256 = new Charset('cp1256', 24);
+    static UTF_16BE = new Charset('utf-16be', 25);
+    static UTF_8 = new Charset('utf-8', 26);
+    static ASCII = new Charset('ascii', 27, 170);
+    static Big5 = new Charset('big5', 28);
+    static GB18030 = new Charset('gb18030', 29);
+    static EUC_KR = new Charset('euc-kr', 30);
+    constructor(label, ...values) {
+      for (const value of values) {
+        VALUES_TO_CHARSET.set(value, this);
+      }
+      this.#label = label;
+      this.#values = values;
+    }
+    get label() {
+      return this.#label;
+    }
+    get values() {
+      return this.#values;
+    }
+  }
+
+  /**
    * @module Mode
    */
   class Mode {
@@ -1576,6 +1625,7 @@
 
   /**
    * @module Dict
+   * @see https://github.com/google/dart-gif-encoder
    */
   // The highest code that can be defined in the CodeBook.
   const MAX_CODE = (1 << 12) - 1;
@@ -1638,6 +1688,7 @@
 
   /**
    * @module BookStream
+   * @see https://github.com/google/dart-gif-encoder
    */
   class DictStream {
     #bits = 0;
@@ -1687,6 +1738,7 @@
 
   /**
    * @module index
+   * @see https://github.com/google/dart-gif-encoder
    */
   function compress(pixels, depth, stream) {
     const dict = new Dict(depth);
@@ -1713,9 +1765,9 @@
   }
 
   /**
-   * @module ByteArray
+   * @module ByteStream
    */
-  class ByteArray {
+  class ByteStream {
     #bytes = [];
     get bytes() {
       return this.#bytes;
@@ -1764,7 +1816,7 @@
     #bits = 0;
     #buffer = 0;
     #length = 0;
-    #stream = new ByteArray();
+    #stream = new ByteStream();
     get bytes() {
       return this.#stream.bytes;
     }
@@ -1812,41 +1864,41 @@
       this.#height = height;
     }
     #encode() {
-      const buffer = new ByteArray();
+      const stream = new ByteStream();
       const width = this.#width;
       const height = this.#height;
       // GIF signature
-      buffer.writeByte(0x47); // G
-      buffer.writeByte(0x49); // I
-      buffer.writeByte(0x46); // F
-      buffer.writeByte(0x38); // 8
-      buffer.writeByte(0x39); // 9
-      buffer.writeByte(0x61); // a
+      stream.writeByte(0x47); // G
+      stream.writeByte(0x49); // I
+      stream.writeByte(0x46); // F
+      stream.writeByte(0x38); // 8
+      stream.writeByte(0x39); // 9
+      stream.writeByte(0x61); // a
       // Logical screen descriptor
-      buffer.writeInt16(width);
-      buffer.writeInt16(height);
-      buffer.writeByte(0x80);
-      buffer.writeByte(0);
-      buffer.writeByte(0);
+      stream.writeInt16(width);
+      stream.writeInt16(height);
+      stream.writeByte(0x80);
+      stream.writeByte(0);
+      stream.writeByte(0);
       // Global color palette: white
-      buffer.writeByte(0xff);
-      buffer.writeByte(0xff);
-      buffer.writeByte(0xff);
+      stream.writeByte(0xff);
+      stream.writeByte(0xff);
+      stream.writeByte(0xff);
       // Global color palette: black
-      buffer.writeByte(0x00);
-      buffer.writeByte(0x00);
-      buffer.writeByte(0x00);
+      stream.writeByte(0x00);
+      stream.writeByte(0x00);
+      stream.writeByte(0x00);
       // Image descriptor
-      buffer.writeByte(0x2c);
-      buffer.writeInt16(0);
-      buffer.writeInt16(0);
-      buffer.writeInt16(width);
-      buffer.writeInt16(height);
-      buffer.writeByte(0);
-      compress(this.#pixels, 2, buffer);
+      stream.writeByte(0x2c);
+      stream.writeInt16(0);
+      stream.writeInt16(0);
+      stream.writeInt16(width);
+      stream.writeInt16(height);
+      stream.writeByte(0);
+      compress(this.#pixels, 2, stream);
       // GIF terminator
-      buffer.writeByte(0x3b);
-      return buffer.bytes;
+      stream.writeByte(0x3b);
+      return stream.bytes;
     }
     set(x, y, color) {
       this.#pixels[y * this.#width + x] = color;
@@ -1985,55 +2037,6 @@
   }
 
   /**
-   * @module Charset
-   */
-  const VALUES_TO_CHARSET = new Map();
-  class Charset {
-    #label;
-    #values;
-    static CP437 = new Charset('cp437', 0, 2);
-    static ISO_8859_1 = new Charset('iso-8859-1', 1, 3);
-    static ISO_8859_2 = new Charset('iso-8859-2', 4);
-    static ISO_8859_3 = new Charset('iso-8859-3', 5);
-    static ISO_8859_4 = new Charset('iso-8859-4', 6);
-    static ISO_8859_5 = new Charset('iso-8859-5', 7);
-    static ISO_8859_6 = new Charset('iso-8859-6', 8);
-    static ISO_8859_7 = new Charset('iso-8859-7', 9);
-    static ISO_8859_8 = new Charset('iso-8859-8', 10);
-    static ISO_8859_9 = new Charset('iso-8859-9', 11);
-    static ISO_8859_10 = new Charset('iso-8859-10', 12);
-    static ISO_8859_11 = new Charset('iso-8859-11', 13);
-    static ISO_8859_13 = new Charset('iso-8859-13', 15);
-    static ISO_8859_14 = new Charset('iso-8859-14', 16);
-    static ISO_8859_15 = new Charset('iso-8859-15', 17);
-    static ISO_8859_16 = new Charset('iso-8859-16', 18);
-    static SJIS = new Charset('sjis', 20);
-    static CP1250 = new Charset('cp1250', 21);
-    static CP1251 = new Charset('cp1251', 22);
-    static CP1252 = new Charset('cp1252', 23);
-    static CP1256 = new Charset('cp1256', 24);
-    static UTF_16BE = new Charset('utf-16be', 25);
-    static UTF_8 = new Charset('utf-8', 26);
-    static ASCII = new Charset('ascii', 27, 170);
-    static Big5 = new Charset('big5', 28);
-    static GB18030 = new Charset('gb18030', 29);
-    static EUC_KR = new Charset('euc-kr', 30);
-    constructor(label, ...values) {
-      for (const value of values) {
-        VALUES_TO_CHARSET.set(value, this);
-      }
-      this.#label = label;
-      this.#values = values;
-    }
-    get label() {
-      return this.#label;
-    }
-    get values() {
-      return this.#values;
-    }
-  }
-
-  /**
    * @module encoding
    */
   const encoder = new TextEncoder();
@@ -2077,6 +2080,84 @@
       if (version < 1 || version > 40 || !Number.isInteger(version)) {
         throw new Error('version must be an integer in [1 - 40] or "auto"');
       }
+    }
+  }
+
+  /**
+   * @module Encoder
+   */
+  class Encoder {
+    #level;
+    #hints;
+    #encode;
+    #version;
+    constructor({ level = 'L', hints = [], version = 'auto', encode = encode$1 } = {}) {
+      assertHints(hints);
+      assertLevel(level);
+      assertVersion(version);
+      this.#hints = hints;
+      this.#encode = encode;
+      this.#version = version;
+      this.#level = ECLevel[level];
+    }
+    encode(...segments) {
+      const hints = this.#hints;
+      const ecLevel = this.#level;
+      const encode = this.#encode;
+      const versionNumber = this.#version;
+      const segmentBlocks = [];
+      const hasGS1FormatHint = hints.indexOf('GS1_FORMAT') >= 0;
+      const hasEncodingHint = hints.indexOf('CHARACTER_SET') >= 0;
+      for (const segment of segments) {
+        const { mode } = segment;
+        const headerBits = new BitArray();
+        const isByte = isByteMode(segment);
+        const dataBits = isByte ? segment.encode(encode) : segment.encode();
+        // Append ECI segment if applicable
+        if (isByte && hasEncodingHint) {
+          appendECI(headerBits, segment.charset);
+        }
+        // Append the FNC1 mode header for GS1 formatted data if applicable
+        if (hasGS1FormatHint) {
+          // GS1 formatted codes are prefixed with a FNC1 in first position mode header
+          appendModeInfo(headerBits, Mode.FNC1_FIRST_POSITION);
+        }
+        // (With ECI in place,) Write the mode marker
+        appendModeInfo(headerBits, mode);
+        segmentBlocks.push({
+          mode,
+          dataBits,
+          headerBits,
+          length: isByte ? dataBits.byteLength : segment.content.length
+        });
+      }
+      let version;
+      if (versionNumber === 'auto') {
+        version = recommendVersion(segmentBlocks, ecLevel);
+      } else {
+        version = VERSIONS[versionNumber - 1];
+        const bitsNeeded = calculateBitsNeeded(segmentBlocks, version);
+        if (!willFit(bitsNeeded, version, ecLevel)) {
+          throw new Error('data too big for requested version');
+        }
+      }
+      const headerAndDataBits = new BitArray();
+      for (const { mode, length, headerBits, dataBits } of segmentBlocks) {
+        headerAndDataBits.append(headerBits);
+        appendLengthInfo(headerAndDataBits, mode, version, length);
+        headerAndDataBits.append(dataBits);
+      }
+      const { totalCodewords, dimension } = version;
+      const ecBlocks = version.getECBlocksForECLevel(ecLevel);
+      const numDataBytes = totalCodewords - ecBlocks.totalECCodewords;
+      // Append terminate the bits properly.
+      appendTerminateBits(headerAndDataBits, numDataBytes);
+      const { numBlocks } = ecBlocks;
+      const matrix = new ByteMatrix(dimension);
+      const finalBits = injectECBytes(headerAndDataBits, numBlocks, numDataBytes, totalCodewords);
+      const mask = chooseMask(matrix, finalBits, version, ecLevel);
+      buildMatrix(matrix, finalBits, version, ecLevel, mask);
+      return new QRCode(matrix, version, ecLevel, mask);
     }
   }
 
@@ -2360,84 +2441,6 @@
         }
       }
       return bits;
-    }
-  }
-
-  /**
-   * @module Encoder
-   */
-  class Encoder {
-    #level;
-    #hints;
-    #encode;
-    #version;
-    constructor({ level = 'L', hints = [], version = 'auto', encode = encode$1 } = {}) {
-      assertHints(hints);
-      assertLevel(level);
-      assertVersion(version);
-      this.#hints = hints;
-      this.#encode = encode;
-      this.#version = version;
-      this.#level = ECLevel[level];
-    }
-    encode(...segments) {
-      const hints = this.#hints;
-      const ecLevel = this.#level;
-      const encode = this.#encode;
-      const versionNumber = this.#version;
-      const segmentBlocks = [];
-      const hasGS1FormatHint = hints.indexOf('GS1_FORMAT') >= 0;
-      const hasEncodingHint = hints.indexOf('CHARACTER_SET') >= 0;
-      for (const segment of segments) {
-        const { mode } = segment;
-        const headerBits = new BitArray();
-        const isByte = isByteMode(segment);
-        const dataBits = isByte ? segment.encode(encode) : segment.encode();
-        // Append ECI segment if applicable
-        if (isByte && hasEncodingHint) {
-          appendECI(headerBits, segment.charset);
-        }
-        // Append the FNC1 mode header for GS1 formatted data if applicable
-        if (hasGS1FormatHint) {
-          // GS1 formatted codes are prefixed with a FNC1 in first position mode header
-          appendModeInfo(headerBits, Mode.FNC1_FIRST_POSITION);
-        }
-        // (With ECI in place,) Write the mode marker
-        appendModeInfo(headerBits, mode);
-        segmentBlocks.push({
-          mode,
-          dataBits,
-          headerBits,
-          length: isByte ? dataBits.byteLength : segment.content.length
-        });
-      }
-      let version;
-      if (versionNumber === 'auto') {
-        version = recommendVersion(segmentBlocks, ecLevel);
-      } else {
-        version = VERSIONS[versionNumber - 1];
-        const bitsNeeded = calculateBitsNeeded(segmentBlocks, version);
-        if (!willFit(bitsNeeded, version, ecLevel)) {
-          throw new Error('data too big for requested version');
-        }
-      }
-      const headerAndDataBits = new BitArray();
-      for (const { mode, length, headerBits, dataBits } of segmentBlocks) {
-        headerAndDataBits.append(headerBits);
-        appendLengthInfo(headerAndDataBits, mode, version, length);
-        headerAndDataBits.append(dataBits);
-      }
-      const { totalCodewords, dimension } = version;
-      const ecBlocks = version.getECBlocksForECLevel(ecLevel);
-      const numDataBytes = totalCodewords - ecBlocks.totalECCodewords;
-      // Append terminate the bits properly.
-      appendTerminateBits(headerAndDataBits, numDataBytes);
-      const { numBlocks } = ecBlocks;
-      const matrix = new ByteMatrix(dimension);
-      const finalBits = injectECBytes(headerAndDataBits, numBlocks, numDataBytes, totalCodewords);
-      const mask = chooseMask(matrix, finalBits, version, ecLevel);
-      buildMatrix(matrix, finalBits, version, ecLevel, mask);
-      return new QRCode(matrix, version, ecLevel, mask);
     }
   }
 

@@ -1,5 +1,6 @@
 /**
  * @module Dict
+ * @see https://github.com/google/dart-gif-encoder
  */
 
 // The highest code that can be defined in the CodeBook.
