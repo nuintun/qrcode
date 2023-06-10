@@ -32,9 +32,9 @@ function encode(byte: number): number {
 }
 
 export class Base64Stream {
+  #bits = 0;
   #buffer = 0;
   #length = 0;
-  #available = 0;
   #stream: ByteArray = new ByteArray();
 
   public get bytes(): number[] {
@@ -42,31 +42,31 @@ export class Base64Stream {
   }
 
   public write(byte: number): void {
-    let available = this.#available + 8;
+    let bits = this.#bits + 8;
 
     const stream = this.#stream;
     const buffer = (this.#buffer << 8) | (byte & 0xff);
 
-    while (available >= 6) {
-      stream.writeByte(encode(buffer >>> (available - 6)));
+    while (bits >= 6) {
+      stream.writeByte(encode(buffer >>> (bits - 6)));
 
-      available -= 6;
+      bits -= 6;
     }
 
     this.#length++;
+    this.#bits = bits;
     this.#buffer = buffer;
-    this.#available = available;
   }
 
   public close(): void {
+    const bits = this.#bits;
     const stream = this.#stream;
-    const available = this.#available;
 
-    if (available > 0) {
-      stream.writeByte(encode(this.#buffer << (6 - available)));
+    if (bits > 0) {
+      stream.writeByte(encode(this.#buffer << (6 - bits)));
 
+      this.#bits = 0;
       this.#buffer = 0;
-      this.#available = 0;
     }
 
     const length = this.#length;

@@ -50,19 +50,19 @@ export class QRCode {
     const matrix = this.#matrix;
     const matrixSize = matrix.width;
     const size = moduleSize * matrixSize + margin * 2;
-    const min = margin;
-    const max = size - margin;
     const gif = new GIFImage(size, size);
+    const max = size - margin;
 
     for (let i = 0; i < size; i++) {
       for (let j = 0; j < size; j++) {
-        if (min <= j && j < max && min <= i && i < max) {
-          const x = Math.floor((j - min) / moduleSize);
-          const y = Math.floor((i - min) / moduleSize);
+        if (margin <= j && j < max && margin <= i && i < max) {
+          const x = Math.floor((j - margin) / moduleSize);
+          const y = Math.floor((i - margin) / moduleSize);
 
-          gif.set(j, i, matrix.get(x, y) === 1 ? 0 : 1);
+          gif.set(j, i, matrix.get(x, y));
         } else {
-          gif.set(j, i, 1);
+          // Margin pixels
+          gif.set(j, i, 0);
         }
       }
     }

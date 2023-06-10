@@ -1575,25 +1575,141 @@
   }
 
   /**
-   * @module LZWTable
+   * @module Dict
    */
-  class LZWTable {
-    #size = 0;
-    #table = {};
-    get size() {
-      return this.#size;
+  // The highest code that can be defined in the CodeBook.
+  const MAX_CODE = (1 << 12) - 1;
+  /**
+   * A dict contains codes defined during LZW compression. It's a mapping from a string
+   * of pixels to the code that represents it. The codes are stored in a trie which is
+   * represented as a map. Codes may be up to 12 bits. The size of the codebook is always
+   * the minimum power of 2 needed to represent all the codes and automatically increases
+   * as new codes are defined.
+   */
+  class Dict {
+    #bof;
+    #eof;
+    #bits;
+    #size;
+    #depth;
+    #unused;
+    #codes = [];
+    constructor(depth) {
+      const bits = depth + 1;
+      const bof = 1 << depth;
+      const eof = bof + 1;
+      this.#bof = bof;
+      this.#eof = eof;
+      this.#bits = bits;
+      this.#depth = depth;
+      this.#size = 1 << bits;
+      this.#unused = eof + 1;
     }
-    add(key) {
-      if (!this.has(key)) {
-        this.#table[key] = this.#size++;
+    get bof() {
+      return this.#bof;
+    }
+    get eof() {
+      return this.#eof;
+    }
+    get bits() {
+      return this.#bits;
+    }
+    get depth() {
+      return this.#depth;
+    }
+    add(code, index) {
+      let unused = this.#unused;
+      if (unused < MAX_CODE) {
+        this.#codes[(code << 8) | index] = unused++;
+        let bits = this.#bits;
+        let size = this.#size;
+        if (unused > size) {
+          size = 1 << ++bits;
+        }
+        this.#bits = bits;
+        this.#size = size;
+        this.#unused = unused;
       }
     }
-    has(key) {
-      return this.#table[key] >= 0;
+    codeAfterAppend(code, index) {
+      return this.#codes[(code << 8) | index];
     }
-    indexOf(key) {
-      return this.#table[key];
+  }
+
+  /**
+   * @module BookStream
+   */
+  class DictStream {
+    #bits = 0;
+    #dict;
+    #buffer = 0;
+    #bytes = [];
+    constructor(dict) {
+      this.#dict = dict;
     }
+    write(code) {
+      let bits = this.#bits;
+      let buffer = this.#buffer | (code << bits);
+      bits += this.#dict.bits;
+      const bytes = this.#bytes;
+      while (bits >= 8) {
+        bytes.push(buffer & 0xff);
+        buffer >>= 8;
+        bits -= 8;
+      }
+      this.#bits = bits;
+      this.#buffer = buffer;
+    }
+    pipe(stream) {
+      const bytes = this.#bytes;
+      // Add the remaining bits. (Unused bits are set to zero.)
+      if (this.#bits > 0) {
+        bytes.push(this.#buffer);
+      }
+      stream.writeByte(this.#dict.depth);
+      // Divide it up into blocks with a size in front of each block.
+      const { length } = bytes;
+      for (let i = 0; i < length; ) {
+        const offset = length - i;
+        if (offset >= 255) {
+          stream.writeByte(255);
+          stream.writeBytes(bytes, i, 255);
+          i += 255;
+        } else {
+          stream.writeByte(offset);
+          stream.writeBytes(bytes, i, length);
+          i = length;
+        }
+      }
+      stream.writeByte(0);
+    }
+  }
+
+  /**
+   * @module index
+   */
+  function compress(pixels, depth, stream) {
+    const dict = new Dict(depth);
+    const buffer = new DictStream(dict);
+    buffer.write(dict.bof);
+    if (pixels.length > 0) {
+      let code = pixels[0];
+      const { length } = pixels;
+      for (let i = 1; i < length; i++) {
+        const pixel = pixels[i];
+        const newCode = dict.codeAfterAppend(code, pixel);
+        if (newCode != null) {
+          code = newCode;
+        } else {
+          buffer.write(code);
+          dict.add(code, pixel);
+          code = pixel;
+        }
+      }
+      buffer.write(code);
+    }
+    buffer.write(dict.eof);
+    buffer.pipe(stream);
   }
 
   /**
@@ -1615,68 +1731,6 @@
       for (let i = 0; i < length; i++) {
         buffer.push(bytes[offset + i]);
       }
-    }
-  }
-
-  /**
-   * @module BitStream
-   */
-  class BitStream {
-    #buffer = 0;
-    #available = 0;
-    #stream = new ByteArray();
-    get bytes() {
-      return this.#stream.bytes;
-    }
-    write(value, length) {
-      let buffer = this.#buffer;
-      let available = this.#available;
-      const stream = this.#stream;
-      while (available + length >= 8) {
-        stream.writeByte((buffer | (value << available)) & 0xff);
-        length -= 8 - available;
-        value >>>= 8 - available;
-        buffer = 0;
-        available = 0;
-      }
-      this.#available = available + length;
-      this.#buffer = buffer | (value << available);
-    }
-    close() {
-      if (this.#available > 0) {
-        this.#stream.writeByte(this.#buffer);
-      }
-      this.#buffer = 0;
-      this.#available = 0;
-    }
-  }
-
-  /**
-   * @module ByteMatrix
-   */
-  class ByteMatrix {
-    #width;
-    #height;
-    #bytes;
-    constructor(width, height = width) {
-      this.#width = width;
-      this.#height = height;
-      this.#bytes = new Int8Array(width * height);
-    }
-    get width() {
-      return this.#width;
-    }
-    get height() {
-      return this.#height;
-    }
-    set(x, y, value) {
-      this.#bytes[y * this.#width + x] = value;
-    }
-    get(x, y) {
-      return this.#bytes[y * this.#width + x];
-    }
-    clear(value) {
-      this.#bytes.fill(value);
     }
   }
 
@@ -1707,32 +1761,32 @@
     throw new Error(`illegal char: ${fromCharCode(byte)}`);
   }
   class Base64Stream {
+    #bits = 0;
     #buffer = 0;
     #length = 0;
-    #available = 0;
     #stream = new ByteArray();
     get bytes() {
       return this.#stream.bytes;
     }
     write(byte) {
-      let available = this.#available + 8;
+      let bits = this.#bits + 8;
       const stream = this.#stream;
       const buffer = (this.#buffer << 8) | (byte & 0xff);
-      while (available >= 6) {
-        stream.writeByte(encode$2(buffer >>> (available - 6)));
-        available -= 6;
+      while (bits >= 6) {
+        stream.writeByte(encode$2(buffer >>> (bits - 6)));
+        bits -= 6;
       }
       this.#length++;
+      this.#bits = bits;
       this.#buffer = buffer;
-      this.#available = available;
     }
     close() {
+      const bits = this.#bits;
       const stream = this.#stream;
-      const available = this.#available;
-      if (available > 0) {
-        stream.writeByte(encode$2(this.#buffer << (6 - available)));
+      if (bits > 0) {
+        stream.writeByte(encode$2(this.#buffer << (6 - bits)));
+        this.#bits = 0;
         this.#buffer = 0;
-        this.#available = 0;
       }
       const length = this.#length;
       if (length % 3 != 0) {
@@ -1750,58 +1804,17 @@
    * @module index
    */
   class GIFImage {
-    #pixels;
+    #width;
+    #height;
+    #pixels = [];
     constructor(width, height) {
-      this.#pixels = new ByteMatrix(width, height);
-    }
-    #getLZWRaster(size) {
-      const dict = new LZWTable();
-      const clearCode = 1 << size;
-      const endCode = clearCode + 1;
-      for (let i = 0; i < clearCode; i++) {
-        dict.add(fromCharCode(i));
-      }
-      dict.add(fromCharCode(clearCode));
-      dict.add(fromCharCode(endCode));
-      let bitLength = size + 1;
-      const pixels = this.#pixels;
-      const stream = new BitStream();
-      const { width, height } = pixels;
-      // Clear code
-      stream.write(clearCode, bitLength);
-      let words = fromCharCode(pixels.get(0, 0));
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-          // Skip 0 0 pixel
-          if (x > 0 || y > 0) {
-            const character = fromCharCode(pixels.get(x, y));
-            const newWords = words + character;
-            if (dict.has(newWords)) {
-              words = newWords;
-            } else {
-              stream.write(dict.indexOf(words), bitLength);
-              // 4096 dict
-              if (dict.size < 0x0fff) {
-                if (dict.size === 1 << bitLength) {
-                  bitLength++;
-                }
-                dict.add(newWords);
-              }
-              words = character;
-            }
-          }
-        }
-      }
-      stream.write(dict.indexOf(words), bitLength);
-      // End code
-      stream.write(endCode, bitLength);
-      // Close
-      stream.close();
-      return stream.bytes;
+      this.#width = width;
+      this.#height = height;
     }
     #encode() {
       const buffer = new ByteArray();
-      const { width, height } = this.#pixels;
+      const width = this.#width;
+      const height = this.#height;
       // GIF signature
       buffer.writeByte(0x47); // G
       buffer.writeByte(0x49); // I
@@ -1815,14 +1828,14 @@
       buffer.writeByte(0x80);
       buffer.writeByte(0);
       buffer.writeByte(0);
-      // Global color palette: black
-      buffer.writeByte(0x00);
-      buffer.writeByte(0x00);
-      buffer.writeByte(0x00);
       // Global color palette: white
       buffer.writeByte(0xff);
       buffer.writeByte(0xff);
       buffer.writeByte(0xff);
+      // Global color palette: black
+      buffer.writeByte(0x00);
+      buffer.writeByte(0x00);
+      buffer.writeByte(0x00);
       // Image descriptor
       buffer.writeByte(0x2c);
       buffer.writeInt16(0);
@@ -1830,27 +1843,13 @@
       buffer.writeInt16(width);
       buffer.writeInt16(height);
       buffer.writeByte(0);
-      // Pixel data
-      const size = 2;
-      const raster = this.#getLZWRaster(size);
-      const { length } = raster;
-      buffer.writeByte(size);
-      let offset = 0;
-      while (length - offset > 255) {
-        buffer.writeByte(255);
-        buffer.writeBytes(raster, offset, 255);
-        offset += 255;
-      }
-      const remain = length - offset;
-      buffer.writeByte(remain);
-      buffer.writeBytes(raster, offset, remain);
-      buffer.writeByte(0x00);
+      compress(this.#pixels, 2, buffer);
       // GIF terminator
       buffer.writeByte(0x3b);
       return buffer.bytes;
     }
     set(x, y, color) {
-      this.#pixels.set(x, y, color);
+      this.#pixels[y * this.#width + x] = color;
     }
     toDataURL() {
       const bytes = this.#encode();
@@ -1907,17 +1906,17 @@
       const matrix = this.#matrix;
       const matrixSize = matrix.width;
       const size = moduleSize * matrixSize + margin * 2;
-      const min = margin;
-      const max = size - margin;
       const gif = new GIFImage(size, size);
+      const max = size - margin;
       for (let i = 0; i < size; i++) {
         for (let j = 0; j < size; j++) {
-          if (min <= j && j < max && min <= i && i < max) {
-            const x = Math.floor((j - min) / moduleSize);
-            const y = Math.floor((i - min) / moduleSize);
-            gif.set(j, i, matrix.get(x, y) === 1 ? 0 : 1);
+          if (margin <= j && j < max && margin <= i && i < max) {
+            const x = Math.floor((j - margin) / moduleSize);
+            const y = Math.floor((i - margin) / moduleSize);
+            gif.set(j, i, matrix.get(x, y));
           } else {
-            gif.set(j, i, 1);
+            // Margin pixels
+            gif.set(j, i, 0);
           }
         }
       }
@@ -1953,6 +1952,35 @@
     }
     get level() {
       return this.#level;
+    }
+  }
+
+  /**
+   * @module ByteMatrix
+   */
+  class ByteMatrix {
+    #width;
+    #height;
+    #bytes;
+    constructor(width, height = width) {
+      this.#width = width;
+      this.#height = height;
+      this.#bytes = new Int8Array(width * height);
+    }
+    get width() {
+      return this.#width;
+    }
+    get height() {
+      return this.#height;
+    }
+    set(x, y, value) {
+      this.#bytes[y * this.#width + x] = value;
+    }
+    get(x, y) {
+      return this.#bytes[y * this.#width + x];
+    }
+    clear(value) {
+      this.#bytes.fill(value);
     }
   }
 
