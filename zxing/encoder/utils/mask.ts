@@ -180,7 +180,7 @@ export function calculateMaskPenalty(matrix: ByteMatrix): number {
 
 // Return is apply mask at "x" and "y". See 8.8 of JISX0510:2004 for mask pattern conditions.
 export function isApplyMask(mask: number, x: number, y: number): boolean {
-  let temp: number;
+  let temporary: number;
   let intermediate: number;
 
   switch (mask) {
@@ -200,12 +200,12 @@ export function isApplyMask(mask: number, x: number, y: number): boolean {
       intermediate = (Math.floor(y / 2) + Math.floor(x / 3)) & 0x1;
       break;
     case 5:
-      temp = y * x;
-      intermediate = (temp & 0x1) + (temp % 3);
+      temporary = y * x;
+      intermediate = (temporary & 0x1) + (temporary % 3);
       break;
     case 6:
-      temp = y * x;
-      intermediate = ((temp & 0x1) + (temp % 3)) & 0x1;
+      temporary = y * x;
+      intermediate = ((temporary & 0x1) + (temporary % 3)) & 0x1;
       break;
     case 7:
       intermediate = (((y * x) % 3) + ((y + x) & 0x1)) & 0x1;
