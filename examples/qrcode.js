@@ -1668,15 +1668,15 @@
       const bits = this.#depth + 1;
       this.#bits = bits;
       this.#size = 1 << bits;
+      this.#codes = new Map();
       this.#unused = this.#eof + 1;
-      this.#codes = Object.create(null);
     }
     add(code, index) {
       let unused = this.#unused;
       if (unused > MAX_CODE) {
         return false;
       }
-      this.#codes[(code << 8) | index] = unused++;
+      this.#codes.set((code << 8) | index, unused++);
       let bits = this.#bits;
       let size = this.#size;
       if (unused > size) {
@@ -1688,7 +1688,7 @@
       return true;
     }
     get(code, index) {
-      return this.#codes[(code << 8) | index];
+      return this.#codes.get((code << 8) | index);
     }
   }
 

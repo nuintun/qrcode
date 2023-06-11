@@ -20,7 +20,7 @@ export class Dict {
   #depth: number;
   #size!: number;
   #unused!: number;
-  #codes!: Record<number, number>;
+  #codes!: Map<number, number>;
 
   constructor(depth: number) {
     const bof = 1 << depth;
@@ -54,8 +54,8 @@ export class Dict {
 
     this.#bits = bits;
     this.#size = 1 << bits;
+    this.#codes = new Map();
     this.#unused = this.#eof + 1;
-    this.#codes = Object.create(null);
   }
 
   public add(code: number, index: number): boolean {
@@ -65,7 +65,7 @@ export class Dict {
       return false;
     }
 
-    this.#codes[(code << 8) | index] = unused++;
+    this.#codes.set((code << 8) | index, unused++);
 
     let bits = this.#bits;
     let size = this.#size;
@@ -82,6 +82,6 @@ export class Dict {
   }
 
   public get(code: number, index: number): number | undefined {
-    return this.#codes[(code << 8) | index];
+    return this.#codes.get((code << 8) | index);
   }
 }
