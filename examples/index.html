@@ -67,23 +67,6 @@
       </ul>
     </div>
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.slim.min.js"></script>
-    <script type="text/javascript">
-      if (self.Uint8ClampedArray) {
-        if (!Uint8ClampedArray.from) {
-          Uint8ClampedArray.from = function (array) {
-            return new Uint8ClampedArray(array);
-          };
-        }
-
-        if (!Uint8ClampedArray.prototype.forEach) {
-          const APForEach = Array.prototype.forEach;
-
-          Uint8ClampedArray.prototype.forEach = function (callback, context) {
-            return APForEach.call(this, callback, context);
-          };
-        }
-      }
-    </script>
     <script type="text/javascript" src="./qrcode.js"></script>
     <script type="text/javascript">
       // Tab 切换
@@ -155,6 +138,8 @@
         const foreground = hex2rgb(gifForeground.val());
         const background = hex2rgb(gifBackground.val());
 
+        encodeResult.removeClass('hide');
+
         if (hasGs1Hint) {
           hints.push('GS1_FORMAT');
         }
@@ -182,14 +167,13 @@
           const url = qrcode.toDataURL(moduleSize, { margin, foreground, background });
           console.timeEnd('toDataURL');
 
-          encodeResult.html('<img src="' + url + '" />');
-          encodeResult.removeClass('hide');
+          encodeResult.html(`<img src="${url}" />`);
 
           console.dir(qrcode);
         } catch (error) {
-          encodeResult.addClass('hide');
+          encodeResult.html(`<span class="error">${error.message}</span>`);
 
-          console.error(error);
+          console.dir(error);
         }
       });
 

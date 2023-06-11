@@ -91,6 +91,12 @@ textarea {
   max-width: 944px;
 }
 
+.error {
+  margin: 0;
+  padding: 0;
+  color: #f00;
+}
+
 label,
 select,
 input {
