@@ -1666,26 +1666,26 @@
     }
     reset() {
       const bits = this.#depth + 1;
-      this.#codes = [];
       this.#bits = bits;
       this.#size = 1 << bits;
       this.#unused = this.#eof + 1;
+      this.#codes = Object.create(null);
     }
     add(code, index) {
       let unused = this.#unused;
-      if (unused < MAX_CODE) {
-        this.#codes[(code << 8) | index] = unused++;
-        let bits = this.#bits;
-        let size = this.#size;
-        if (unused > size) {
-          size = 1 << ++bits;
-        }
-        this.#bits = bits;
-        this.#size = size;
-        this.#unused = unused;
-        return true;
+      if (unused > MAX_CODE) {
+        return false;
       }
-      return false;
+      this.#codes[(code << 8) | index] = unused++;
+      let bits = this.#bits;
+      let size = this.#size;
+      if (unused > size) {
+        size = 1 << ++bits;
+      }
+      this.#bits = bits;
+      this.#size = size;
+      this.#unused = unused;
+      return true;
     }
     get(code, index) {
       return this.#codes[(code << 8) | index];
@@ -1996,6 +1996,37 @@
   }
 
   /**
+   * @module ECLevel
+   */
+  class ECLevel {
+    #name;
+    #bits;
+    #level;
+    // L = ~7% correction
+    static L = new ECLevel('L', 0, 0x01);
+    // L = ~15% correction
+    static M = new ECLevel('M', 1, 0x00);
+    // L = ~25% correction
+    static Q = new ECLevel('Q', 2, 0x03);
+    // L = ~30% correction
+    static H = new ECLevel('H', 3, 0x02);
+    constructor(name, level, bits) {
+      this.#bits = bits;
+      this.#name = name;
+      this.#level = level;
+    }
+    get bits() {
+      return this.#bits;
+    }
+    get name() {
+      return this.#name;
+    }
+    get level() {
+      return this.#level;
+    }
+  }
+
+  /**
    * @module ByteMatrix
    */
   class ByteMatrix {
@@ -2041,37 +2072,6 @@
      */
     clear(value) {
       this.#bytes.fill(value);
-    }
-  }
-
-  /**
-   * @module ECLevel
-   */
-  class ECLevel {
-    #name;
-    #bits;
-    #level;
-    // L = ~7% correction
-    static L = new ECLevel('L', 0, 0x01);
-    // L = ~15% correction
-    static M = new ECLevel('M', 1, 0x00);
-    // L = ~25% correction
-    static Q = new ECLevel('Q', 2, 0x03);
-    // L = ~30% correction
-    static H = new ECLevel('H', 3, 0x02);
-    constructor(name, level, bits) {
-      this.#bits = bits;
-      this.#name = name;
-      this.#level = level;
-    }
-    get bits() {
-      return this.#bits;
-    }
-    get name() {
-      return this.#name;
-    }
-    get level() {
-      return this.#level;
     }
   }
 

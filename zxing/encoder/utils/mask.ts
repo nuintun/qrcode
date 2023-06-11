@@ -2,7 +2,7 @@
  * @module mask
  */
 
-import { ByteMatrix } from '/encoder/ByteMatrix';
+import { ByteMatrix } from '/common/ByteMatrix';
 
 // Penalty weights from section 6.8.2.1
 const N1 = 3;

@@ -20,7 +20,7 @@ export class Dict {
   #depth: number;
   #size!: number;
   #unused!: number;
-  #codes!: number[];
+  #codes!: Record<number, number>;
 
   constructor(depth: number) {
     const bof = 1 << depth;
@@ -52,36 +52,36 @@ export class Dict {
   public reset() {
     const bits = this.#depth + 1;
 
-    this.#codes = [];
     this.#bits = bits;
     this.#size = 1 << bits;
     this.#unused = this.#eof + 1;
+    this.#codes = Object.create(null);
   }
 
   public add(code: number, index: number): boolean {
     let unused = this.#unused;
 
-    if (unused < MAX_CODE) {
-      this.#codes[(code << 8) | index] = unused++;
-
-      let bits = this.#bits;
-      let size = this.#size;
-
-      if (unused > size) {
-        size = 1 << ++bits;
-      }
-
-      this.#bits = bits;
-      this.#size = size;
-      this.#unused = unused;
-
-      return true;
+    if (unused > MAX_CODE) {
+      return false;
     }
 
-    return false;
+    this.#codes[(code << 8) | index] = unused++;
+
+    let bits = this.#bits;
+    let size = this.#size;
+
+    if (unused > size) {
+      size = 1 << ++bits;
+    }
+
+    this.#bits = bits;
+    this.#size = size;
+    this.#unused = unused;
+
+    return true;
   }
 
-  public get(code: number, index: number): number {
+  public get(code: number, index: number): number | undefined {
     return this.#codes[(code << 8) | index];
   }
 }
