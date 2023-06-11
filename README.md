@@ -24,16 +24,21 @@
 #### Encoder
 
 ```js
-import { Byte, ECLevel, EncodeHint, Encoder, Kanji } from '@nuintun/qrcode';
+import { Byte, Encoder, Kanji } from '@nuintun/qrcode';
 
-const qrcode = new Encoder({
-  level: ECLevel.H,
-  hints: [EncodeHint.GS1_FORMAT, EncodeHint.CHARACTER_SET]
+const encoder = new Encoder({
+  level: 'H',
+  hints: ['GS1_FORMAT', 'CHARACTER_SET']
 });
 
-qrcode.write('你好世界\n');
-qrcode.write(new Byte('hello world\n'));
-qrcode.write(new Kanji('こんにちは世界'));
+const qrcode = encoder.encode(
+  // Byte
+  new Byte('你好世界\n'),
+  // Byte
+  new Byte('hello world\n'),
+  // Kanji
+  new Kanji('こんにちは世界')
+);
 
 console.log(qrcode.toDataURL());
 ```
@@ -41,88 +46,21 @@ console.log(qrcode.toDataURL());
 ###### Constructor
 
 - new Encoder(options?: Options): Encoder
-
-  - version?: number;
-  - encodingHint?: boolean;
-  - errorCorrectionLevel?: ErrorCorrectionLevel;
+  - version?: number | 'auto';
+  - level?: 'L' | 'M' | 'Q' | 'H';
+  - hints?: ('GS1_FORMAT' | 'CHARACTER_SET')[];
+  - encode ?: (content: string, charset: Charset) => Uint8Array;
 
 ###### Methods
 
-- getMatrix(): boolean[][]
-
-  - Get qrcode modules matrix.
-
-- getMatrixSize(): number
-
-  - Get qrcode modules matrix size.
-
-- setVersion(version: number): Encoder
-
-  - Set qrcode version, if set `0` the version will be set automatically.
-
-- getVersion(): number
-
-  - Get qrcode version.
-
-- setErrorCorrectionLevel(errorCorrectionLevel: ErrorCorrectionLevel): Encoder
-
-  - Set qrcode error correction level.
-
-- getErrorCorrectionLevel(): ErrorCorrectionLevel
-
-  - Get qrcode error correction level.
-
-- setEncodingHint(encodingHint: boolean): Encoder
-
-  - Set qrcode encoding hint, it will add ECI in qrcode.
-
-- getEncodingHint(): boolean
-
-  - Get qrcode encoding hint.
-
-- write(data: string \| QRByte \| QRKanji \| QRNumeric \| QRAlphanumeric): Encoder
-
-  - Add qrcode data, if string will use `QRByte` by default.
-
-- isDark(row: number, col: number): boolean
-
-  - Get byte with row and col.
-
-- make(): Encoder
-
-  - Make qrcode matrix.
-
-- toDataURL(moduleSize?: number, margin?: number): string
-
-  - Output qrcode base64 gif image.
-
-- clear(): void
-  - Clear written data.
-
-###### Custom ECI
-
-```js
-import { Encoder, QRByte } from '@nuintun/qrcode';
-
-const qrcode = new Encoder();
-
-qrcode.setEncodingHint(true);
-
-// Custom your own encode function return bytes and encoding
-// The encoding value must a valid ECI value
-// Custom ECI only support QRByte mode
-// https://github.com/zxing/zxing/blob/master/core/src/main/java/com/google/zxing/common/CharacterSetECI.java
-qrcode.write(
-  new QRByte('hello world', data => ({
-    encoding: 26,
-    bytes: [104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100]
-  }))
-);
-
-qrcode.make();
-
-console.log(qrcode.toDataURL());
-```
+- encode(...segment: (Byte | Kanji | Numeric | Alphanumeric)[]): QRCode
+  - Encode segments to qrcode.
+    - QRCode
+      - mask
+      - level
+      - matrix
+      - version
+      - toDataURL
 
 #### Decoder
 
