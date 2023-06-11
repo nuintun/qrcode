@@ -16,7 +16,7 @@ export class DictStream {
     this.#dict = dict;
   }
 
-  write(code: number): void {
+  public write(code: number): void {
     let bits = this.#bits;
     let buffer = this.#buffer | (code << bits);
 
@@ -35,7 +35,7 @@ export class DictStream {
     this.#buffer = buffer;
   }
 
-  pipe(stream: ByteStream): void {
+  public pipe(stream: ByteStream): void {
     const bytes = this.#bytes;
 
     // Add the remaining bits. (Unused bits are set to zero.)
