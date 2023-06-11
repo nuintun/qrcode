@@ -42,7 +42,7 @@ export class Charset {
   public static readonly UTF_16BE = new Charset('utf-16be', 25);
   public static readonly UTF_8 = new Charset('utf-8', 26);
   public static readonly ASCII = new Charset('ascii', 27, 170);
-  public static readonly Big5 = new Charset('big5', 28);
+  public static readonly BIG5 = new Charset('big5', 28);
   public static readonly GB18030 = new Charset('gb18030', 29);
   public static readonly EUC_KR = new Charset('euc-kr', 30);
 
