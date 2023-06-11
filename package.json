@@ -36,6 +36,7 @@
   "homepage": "https://github.com/nuintun/qrcode#readme",
   "scripts": {
     "lint": "tsc --noEmit",
+    "test": "node tests/index.js",
     "clean": "node tools/clean.js",
     "format": "prettier --write .",
     "prepublishOnly": "npm run build",
