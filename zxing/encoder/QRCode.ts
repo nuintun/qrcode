@@ -2,10 +2,10 @@
  * @module QRCode
  */
 
+import { ByteMatrix } from './ByteMatrix';
 import { ECLevel } from '/common/ECLevel';
 import { Version } from '/common/Version';
 import { Colors, GIFImage } from '/common/gif';
-import { ByteMatrix } from '/common/ByteMatrix';
 
 export class QRCode {
   #mask: number;
