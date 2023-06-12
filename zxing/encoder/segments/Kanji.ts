@@ -11,7 +11,7 @@ import { assertContent } from '/encoder/utils/asserts';
 // @see https://github.com/soldair/node-qrcode/pull/319
 // @see http://ash.jp/code/unitbl21.htm
 // @see https://seiai.ed.jp/sys/text/java/shiftjis_table.html
-const SJIS_UTF8: [number, string][] = [
+const SJIS_TABLE: [offset: number, sjis: string][] = [
   [0x8140, '　、。，．・：；？！゛゜´｀¨＾￣＿ヽヾゝゞ〃仝々〆〇ー―‐／＼～∥｜…‥‘’“”（）〔〕［］｛｝〈〉《》「」『』【】＋－±×'],
   [0x8180, '÷＝≠＜＞≦≧∞∴♂♀°′″℃￥＄￠￡％＃＆＊＠§☆★○●◎◇◆□■△▲▽▼※〒→←↑↓〓'],
   [0x81b8, '∈∋⊆⊇⊂⊃∪∩'],
@@ -33,7 +33,7 @@ const SJIS_UTF8: [number, string][] = [
   [0x849f, '─│┌┐┘└├┬┤┴┼━┃┏┓┛┗┣┳┫┻╋┠┯┨┷┿┝┰┥┸╂'],
   [0x8740, '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ'],
   [0x875f, '㍉㌔㌢㍍㌘㌧㌃㌶㍑㍗㌍㌦㌣㌫㍊㌻㎜㎝㎞㎎㎏㏄㎡'],
-  [0x877E, '㍻'],
+  [0x877e, '㍻'],
   [0x8780, '〝〟№㏍℡㊤㊥㊦㊧㊨㈱㈲㈹㍾㍽㍼'],
   [0x8793, '∮∑'],
   [0x8798, '∟⊿'],
@@ -110,12 +110,18 @@ const SJIS_UTF8: [number, string][] = [
 
 const SJIS_ENCODE_DICT: Map<string, number> = new Map();
 
-for (const [code, kanji] of SJIS_UTF8) {
+for (const [code, sjis] of SJIS_TABLE) {
   let offset = 0;
 
-  for (const character of kanji) {
+  for (const character of sjis) {
     SJIS_ENCODE_DICT.set(character, code + offset++);
   }
+}
+
+function getSjisCode(character: string): number {
+  const code = SJIS_ENCODE_DICT.get(character);
+
+  return code != null ? code : -1;
 }
 
 export class Kanji {
@@ -140,7 +146,7 @@ export class Kanji {
     const content = this.#content;
 
     for (const character of content) {
-      let value = SJIS_ENCODE_DICT.get(character) || 0;
+      let value = getSjisCode(character);
 
       // For characters with Shift JIS values from 0x8140 to 0x9FFC:
       if (value >= 0x8140 && value <= 0x9ffc) {
@@ -156,7 +162,7 @@ export class Kanji {
 
       // Multiply most significant byte of result by 0xC0
       // and add least significant byte to product
-      value = ((value >>> 8) & 0xff) * 0xc0 + (value & 0xff);
+      value = (value >> 8) * 0xc0 + (value & 0xff);
 
       // Convert result to a 13-bit binary string
       bits.append(value, 13);
