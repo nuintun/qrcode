@@ -13,13 +13,12 @@ import { assertContent } from '/encoder/utils/asserts';
 // @see https://seiai.ed.jp/sys/text/java/shiftjis_table.html
 const SJIS_UTF8: [number, string][] = [
   [0x8140, '　、。，．・：；？！゛゜´｀¨＾￣＿ヽヾゝゞ〃仝々〆〇ー―‐／＼～∥｜…‥‘’“”（）〔〕［］｛｝〈〉《》「」『』【】＋－±×'],
-  [0x8180, '÷＝≠＜＞≦≧∞∴♂♀°′″℃'],
-  [0x818f, '￥＄￠￡％＃＆＊＠§☆★○●◎◇◆□■△▲▽▼'],
-  [0x81a6, '※〒→←↑↓〓'],
+  [0x8180, '÷＝≠＜＞≦≧∞∴♂♀°′″℃￥＄￠￡％＃＆＊＠§☆★○●◎◇◆□■△▲▽▼※〒→←↑↓〓'],
   [0x81b8, '∈∋⊆⊇⊂⊃∪∩'],
   [0x81c8, '∧∨￢⇒⇔∀∃'],
   [0x81da, '∠⊥⌒∂∇≡≒≪≫√∽∝∵∫∬'],
   [0x81f0, 'Å‰♯♭♪†‡¶'],
+  [0x81fc, '◯'],
   [0x824f, '０１２３４５６７８９'],
   [0x8260, 'ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ'],
   [0x8281, 'ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ'],
@@ -31,9 +30,14 @@ const SJIS_UTF8: [number, string][] = [
   [0x8440, 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'],
   [0x8470, 'абвгдеёжзийклмн'],
   [0x8480, 'опрстуфхцчшщъыьэюя'],
-  [0x8780, '〝〟'],
-  [0x889f, '亜唖娃阿哀愛挨姶逢葵茜穐悪握渥旭葦芦鯵梓圧斡扱宛姐虻飴絢綾鮎或粟袷安庵按暗案闇鞍杏以伊位依偉囲夷委威尉惟意慰易椅為畏異移維緯胃萎衣'],
-  [0x88e0, '謂違遺医井亥域育郁磯一壱溢逸稲茨芋鰯允印咽員因姻引飲淫胤蔭'],
+  [0x849f, '─│┌┐┘└├┬┤┴┼━┃┏┓┛┗┣┳┫┻╋┠┯┨┷┿┝┰┥┸╂'],
+  [0x8740, '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ'],
+  [0x875f, '㍉㌔㌢㍍㌘㌧㌃㌶㍑㍗㌍㌦㌣㌫㍊㌻㎜㎝㎞㎎㎏㏄㎡'],
+  [0x877E, '㍻'],
+  [0x8780, '〝〟№㏍℡㊤㊥㊦㊧㊨㈱㈲㈹㍾㍽㍼'],
+  [0x8793, '∮∑'],
+  [0x8798, '∟⊿'],
+  [0x889f, '亜唖娃阿哀愛挨姶逢葵茜穐悪握渥旭葦芦鯵梓圧斡扱宛姐虻飴絢綾鮎或粟袷安庵按暗案闇鞍杏以伊位依偉囲夷委威尉惟意慰易椅為畏異移維緯胃萎衣謂違遺医井亥域育郁磯一壱溢逸稲茨芋鰯允印咽員因姻引飲淫胤蔭'],
   [0x8940, '院陰隠韻吋右宇烏羽迂雨卯鵜窺丑碓臼渦嘘唄欝蔚鰻姥厩浦瓜閏噂云運雲荏餌叡営嬰影映曳栄永泳洩瑛盈穎頴英衛詠鋭液疫益駅悦謁越閲榎厭円'],
   [0x8980, '園堰奄宴延怨掩援沿演炎焔煙燕猿縁艶苑薗遠鉛鴛塩於汚甥凹央奥往応押旺横欧殴王翁襖鴬鴎黄岡沖荻億屋憶臆桶牡乙俺卸恩温穏音下化仮何伽価佳加可嘉夏嫁家寡科暇果架歌河火珂禍禾稼箇花苛茄荷華菓蝦課嘩貨迦過霞蚊俄峨我牙画臥芽蛾賀雅餓駕介会解回塊壊廻快怪悔恢懐戒拐改'],
   [0x8a40, '魁晦械海灰界皆絵芥蟹開階貝凱劾外咳害崖慨概涯碍蓋街該鎧骸浬馨蛙垣柿蛎鈎劃嚇各廓拡撹格核殻獲確穫覚角赫較郭閣隔革学岳楽額顎掛笠樫'],
@@ -104,33 +108,14 @@ const SJIS_UTF8: [number, string][] = [
   [0xea80, '黴黶黷黹黻黼黽鼇鼈皷鼕鼡鼬鼾齊齒齔齣齟齠齡齦齧齬齪齷齲齶龕龜龠堯槇遙瑤凜熙']
 ];
 
-const ENCODE_MAPPING: Record<number, number> = {};
+const SJIS_ENCODE_DICT: Map<string, number> = new Map();
 
 for (const [code, kanji] of SJIS_UTF8) {
-  let i = 0;
+  let offset = 0;
 
   for (const character of kanji) {
-    ENCODE_MAPPING[character.charCodeAt(0)] = code + i++;
+    SJIS_ENCODE_DICT.set(character, code + offset++);
   }
-}
-
-function encode(content: string): number[] {
-  const bytes: number[] = [];
-  const { length } = content;
-
-  for (let i = 0; i < length; i++) {
-    const code = content.charCodeAt(i);
-    const byte = ENCODE_MAPPING[code];
-
-    if (byte != null) {
-      // 2 bytes
-      bytes.push(byte >> 8, byte & 0xff);
-    } else {
-      throw new Error(`illegal character: ${content.charAt(i)}`);
-    }
-  }
-
-  return bytes;
 }
 
 export class Kanji {
@@ -152,29 +137,29 @@ export class Kanji {
 
   public encode(): BitArray {
     const bits = new BitArray();
-    const bytes = encode(this.#content);
-    const length = bytes.length - 1;
+    const content = this.#content;
 
-    for (let i = 0; i < length; i += 2) {
-      let subtracted = -1;
+    for (const character of content) {
+      let value = SJIS_ENCODE_DICT.get(character) || 0;
 
-      const byte1 = bytes[i] & 0xff;
-      const byte2 = bytes[i + 1] & 0xff;
-      const code = (byte1 << 8) | byte2;
-
-      if (code >= 0x8140 && code <= 0x9ffc) {
-        subtracted = code - 0x8140;
-      } else if (code >= 0xe040 && code <= 0xebbf) {
-        subtracted = code - 0xc140;
+      // For characters with Shift JIS values from 0x8140 to 0x9FFC:
+      if (value >= 0x8140 && value <= 0x9ffc) {
+        // Subtract 0x8140 from Shift JIS value
+        value -= 0x8140;
+        // For characters with Shift JIS values from 0xE040 to 0xEBBF
+      } else if (value >= 0xe040 && value <= 0xebbf) {
+        // Subtract 0xC140 from Shift JIS value
+        value -= 0xc140;
+      } else {
+        throw new Error(`illegal character: ${character}`);
       }
 
-      if (subtracted === -1) {
-        throw new Error('illegal byte sequence');
-      }
+      // Multiply most significant byte of result by 0xC0
+      // and add least significant byte to product
+      value = ((value >>> 8) & 0xff) * 0xc0 + (value & 0xff);
 
-      const encoded = (subtracted >> 8) * 0xc0 + (subtracted & 0xff);
-
-      bits.append(encoded, 13);
+      // Convert result to a 13-bit binary string
+      bits.append(value, 13);
     }
 
     return bits;
