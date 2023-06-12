@@ -26,6 +26,7 @@ import { ByteMatrix } from '/common/ByteMatrix';
 import { Version, VERSIONS } from '/common/Version';
 import { encode as contentEncode, TextEncode } from '/common/encoding';
 import { assertHints, assertLevel, assertVersion } from './utils/asserts';
+import { Charset } from '/common/Charset';
 
 export interface Options {
   encode?: TextEncode;
@@ -62,6 +63,8 @@ export class Encoder {
 
     // Only append FNC1 in first segment once
     let isGS1FormatHintAppended = false;
+    // Current byte mode charset
+    let currentByteCharset: Charset | undefined;
 
     // Init segments
     for (const segment of segments) {
@@ -72,7 +75,12 @@ export class Encoder {
 
       // Append ECI segment if applicable
       if (isByte && hasEncodingHint) {
-        appendECI(headerBits, segment.charset);
+        const { charset } = segment;
+
+        // Append charset if it changed
+        if (charset !== currentByteCharset) {
+          appendECI(headerBits, segment.charset);
+        }
       }
 
       // Append the FNC1 mode header for GS1 formatted data if applicable

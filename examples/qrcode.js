@@ -2149,6 +2149,8 @@
       const hasEncodingHint = hints.indexOf('CHARACTER_SET') >= 0;
       // Only append FNC1 in first segment once
       let isGS1FormatHintAppended = false;
+      // Current byte mode charset
+      let currentByteCharset;
       // Init segments
       for (const segment of segments) {
         const { mode } = segment;
@@ -2157,7 +2159,11 @@
         const dataBits = isByte ? segment.encode(encode) : segment.encode();
         // Append ECI segment if applicable
         if (isByte && hasEncodingHint) {
-          appendECI(headerBits, segment.charset);
+          const { charset } = segment;
+          // Append charset if it changed
+          if (charset !== currentByteCharset) {
+            appendECI(headerBits, segment.charset);
+          }
         }
         // Append the FNC1 mode header for GS1 formatted data if applicable
         if (hasGS1FormatHint && !isGS1FormatHintAppended) {
