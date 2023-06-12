@@ -11,7 +11,8 @@ import { assertContent } from '/encoder/utils/asserts';
 // @see https://github.com/soldair/node-qrcode/pull/319
 // @see http://ash.jp/code/unitbl21.htm
 // @see https://seiai.ed.jp/sys/text/java/shiftjis_table.html
-const SJIS_TABLE: [offset: number, sjis: string][] = [
+// @see https://gist.github.com/nuintun/d59281f304bc85855ac67b8211a3e150
+const KANJI_TABLE: [offset: number, kanji: string][] = [
   [0x8140, '　、。，．・：；？！゛゜´｀¨＾￣＿ヽヾゝゞ〃仝々〆〇ー―‐／＼～∥｜…‥‘’“”（）〔〕［］｛｝〈〉《》「」『』【】＋－±×'],
   [0x8180, '÷＝≠＜＞≦≧∞∴♂♀°′″℃￥＄￠￡％＃＆＊＠§☆★○●◎◇◆□■△▲▽▼※〒→←↑↓〓'],
   [0x81b8, '∈∋⊆⊇⊂⊃∪∩'],
@@ -108,18 +109,18 @@ const SJIS_TABLE: [offset: number, sjis: string][] = [
   [0xea80, '黴黶黷黹黻黼黽鼇鼈皷鼕鼡鼬鼾齊齒齔齣齟齠齡齦齧齬齪齷齲齶龕龜龠堯槇遙瑤凜熙']
 ];
 
-const SJIS_ENCODE_DICT: Map<string, number> = new Map();
+const KANJI_ENCODE_DICT: Map<string, number> = new Map();
 
-for (const [code, sjis] of SJIS_TABLE) {
+for (const [code, sjis] of KANJI_TABLE) {
   let offset = 0;
 
   for (const character of sjis) {
-    SJIS_ENCODE_DICT.set(character, code + offset++);
+    KANJI_ENCODE_DICT.set(character, code + offset++);
   }
 }
 
-function getSjisCode(character: string): number {
-  const code = SJIS_ENCODE_DICT.get(character);
+function getKanjiCode(character: string): number {
+  const code = KANJI_ENCODE_DICT.get(character);
 
   return code != null ? code : -1;
 }
@@ -146,7 +147,7 @@ export class Kanji {
     const content = this.#content;
 
     for (const character of content) {
-      let value = getSjisCode(character);
+      let value = getKanjiCode(character);
 
       // For characters with Shift JIS values from 0x8140 to 0x9FFC:
       if (value >= 0x8140 && value <= 0x9ffc) {
