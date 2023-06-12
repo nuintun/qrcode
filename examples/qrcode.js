@@ -2147,6 +2147,9 @@
       const segmentBlocks = [];
       const hasGS1FormatHint = hints.indexOf('GS1_FORMAT') >= 0;
       const hasEncodingHint = hints.indexOf('CHARACTER_SET') >= 0;
+      // Only append FNC1 in first segment once
+      let isGS1FormatHintAppended = false;
+      // Init segments
       for (const segment of segments) {
         const { mode } = segment;
         const headerBits = new BitArray();
@@ -2157,7 +2160,9 @@
           appendECI(headerBits, segment.charset);
         }
         // Append the FNC1 mode header for GS1 formatted data if applicable
-        if (hasGS1FormatHint) {
+        if (hasGS1FormatHint && !isGS1FormatHintAppended) {
+          // Lock gs1 format append
+          isGS1FormatHintAppended = true;
           // GS1 formatted codes are prefixed with a FNC1 in first position mode header
           appendModeInfo(headerBits, Mode.FNC1_FIRST_POSITION);
         }
