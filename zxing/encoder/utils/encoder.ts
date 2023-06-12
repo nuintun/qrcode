@@ -4,7 +4,6 @@
 
 import { Mode } from '/common/Mode';
 import { buildMatrix } from './matrix';
-import { Charset } from '/common/Charset';
 import { ECLevel } from '/common/ECLevel';
 import { BitArray } from '/common/BitArray';
 import { Byte } from '/encoder/segments/Byte';
@@ -159,19 +158,17 @@ export function appendModeInfo(bits: BitArray, mode: Mode): void {
   bits.append(mode.bits, 4);
 }
 
-export function appendECI(bits: BitArray, charset: Charset): void {
+export function appendECI(bits: BitArray, value: number): void {
   bits.append(Mode.ECI.bits, 4);
 
-  const [encoding] = charset.values;
-
-  if (encoding < 1 << 7) {
-    bits.append(encoding, 8);
-  } else if (encoding < 1 << 14) {
+  if (value < 1 << 7) {
+    bits.append(value, 8);
+  } else if (value < 1 << 14) {
     bits.append(2, 2);
-    bits.append(encoding, 14);
+    bits.append(value, 14);
   } else {
     bits.append(6, 3);
-    bits.append(encoding, 21);
+    bits.append(value, 21);
   }
 }
 

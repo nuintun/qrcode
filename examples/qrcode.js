@@ -1554,17 +1554,16 @@
   function appendModeInfo(bits, mode) {
     bits.append(mode.bits, 4);
   }
-  function appendECI(bits, charset) {
+  function appendECI(bits, value) {
     bits.append(Mode.ECI.bits, 4);
-    const [encoding] = charset.values;
-    if (encoding < 1 << 7) {
-      bits.append(encoding, 8);
-    } else if (encoding < 1 << 14) {
+    if (value < 1 << 7) {
+      bits.append(value, 8);
+    } else if (value < 1 << 14) {
       bits.append(2, 2);
-      bits.append(encoding, 14);
+      bits.append(value, 14);
     } else {
       bits.append(6, 3);
-      bits.append(encoding, 21);
+      bits.append(value, 21);
     }
   }
   function appendLengthInfo(bits, mode, version, numLetters) {
@@ -2149,8 +2148,8 @@
       const hasEncodingHint = hints.indexOf('CHARACTER_SET') >= 0;
       // Only append FNC1 in first segment once
       let isGS1FormatHintAppended = false;
-      // Current byte mode charset
-      let currentByteCharset;
+      // Current eci value
+      let currentECIValue;
       // Init segments
       for (const segment of segments) {
         const { mode } = segment;
@@ -2160,9 +2159,13 @@
         // Append ECI segment if applicable
         if (isByte && hasEncodingHint) {
           const { charset } = segment;
-          // Append charset if it changed
-          if (charset !== currentByteCharset) {
-            appendECI(headerBits, segment.charset);
+          const [value] = charset.values;
+          // Append eci if it changed
+          if (value !== currentECIValue) {
+            // Update eci value
+            currentECIValue = value;
+            // Append eci
+            appendECI(headerBits, currentECIValue);
           }
         }
         // Append the FNC1 mode header for GS1 formatted data if applicable
