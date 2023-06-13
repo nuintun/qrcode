@@ -1530,7 +1530,7 @@
   }
   function appendTerminateBits(bits, numDataBytes) {
     const capacity = numDataBytes * 8;
-    // Append Mode.TERMINATE if there is enough space (value is 0000)
+    // Append Mode.TERMINATE if there is enough space (value is 0000).
     for (let i = 0; i < 4 && bits.length < capacity; i++) {
       bits.append(0);
     }
