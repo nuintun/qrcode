@@ -19,13 +19,14 @@ import {
 } from './utils/encoder';
 import { QRCode } from './QRCode';
 import { Mode } from '/common/Mode';
+import { Charset } from '/common/Charset';
 import { ECLevel } from '/common/ECLevel';
 import { BitArray } from '/common/BitArray';
 import { buildMatrix } from './utils/matrix';
 import { ByteMatrix } from '/common/ByteMatrix';
 import { Version, VERSIONS } from '/common/Version';
-import { encode as contentEncode, TextEncode } from '/common/encoding';
 import { assertLevel, assertVersion } from './utils/asserts';
+import { encode as contentEncode, TextEncode } from '/common/encoding';
 
 export interface Options {
   hints?: Hints;
@@ -66,45 +67,63 @@ export class Encoder {
     const versionNumber = this.#version;
     const segmentBlocks: SegmentBlock[] = [];
 
-    // Only append FNC1 in first segment once
+    // Only append FNC1 in first position once.
     let isGS1HintAppended = false;
-    // Current eci value
-    let currentECIValue: number | undefined;
+    // Only append FFNC1 in second position once.
+    let isAIMHintAppended = false;
+    // Current ECI value.
+    let [currentECIValue] = Charset.ISO_8859_1.values;
 
-    // Init segments
+    // Init segments.
     for (const segment of segments) {
       const { mode } = segment;
       const headerBits = new BitArray();
       const isByte = isByteMode(segment);
       const dataBits = isByte ? segment.encode(encode) : segment.encode();
 
-      // Append ECI segment if applicable
-      if (isByte && hints.eci !== false) {
+      // Append ECI segment if applicable.
+      if (isByte) {
         const { charset } = segment;
         const [value] = charset.values;
 
-        // Append eci if it changed
+        // Append ECI if it changed.
         if (value !== currentECIValue) {
-          // Update eci value
+          // Update ECI value.
           currentECIValue = value;
 
-          // Append eci
+          // Append ECI value.
           appendECI(headerBits, currentECIValue);
         }
       }
 
-      // Append the FNC1 mode header for GS1 formatted data if applicable
+      // Append the FNC1 mode header for GS1 formatted data if applicable.
       if (hints.gs1 && !isGS1HintAppended) {
-        // Lock gs1 format append
+        // Lock GS1 format append.
         isGS1HintAppended = true;
 
-        // GS1 formatted codes are prefixed with a FNC1 in first position mode header
+        // GS1 formatted codes are prefixed with a FNC1 in first position mode header.
         appendModeInfo(headerBits, Mode.FNC1_FIRST_POSITION);
       }
 
-      // (With ECI in place,) Write the mode marker
+      // FNC1 in second position application indicator.
+      const { aim = -1 } = hints;
+
+      // Append the FNC1 mode header for AIM formatted data if applicable.
+      if (aim >= 0 && aim <= 0xffffffff && !isAIMHintAppended) {
+        // Lock AIM format append
+        isAIMHintAppended = true;
+
+        // AIM formatted codes are prefixed with a FNC1 in first position mode header.
+        appendModeInfo(headerBits, Mode.FNC1_SECOND_POSITION);
+
+        // Append AIM application indicator.
+        headerBits.append(aim, 8);
+      }
+
+      // (With ECI in place,) Write the mode marker.
       appendModeInfo(headerBits, mode);
 
+      // Push segment block.
       segmentBlocks.push({
         mode,
         dataBits,

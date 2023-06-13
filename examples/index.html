@@ -32,8 +32,8 @@
             </select>
             <label class="indent">支持 GS1：</label>
             <input id="hint-gs1" type="checkbox" />
-            <label class="indent">支持 ECI：</label>
-            <input checked id="hint-eci" type="checkbox" />
+            <label class="indent">支持 AIM：</label>
+            <input id="hint-aim" type="number" min="0" max="4294967295" />
           </p>
           <p>
             <label>编码方式：</label>
@@ -83,8 +83,8 @@
         content.removeClass('selected').eq(target.index()).addClass('selected');
       });
 
-      const hintECI = $('#hint-eci');
       const hintGS1 = $('#hint-gs1');
+      const hintAIM = $('#hint-aim');
       const encodeMode = $('#encode-mode');
       const encodeText = $('#encode-text');
       const encodeLevel = $('#encode-level');
@@ -130,17 +130,16 @@
         const data = encodeText.val();
         const mode = encodeMode.val();
         const level = encodeLevel.val();
-        const hasECIHint = hintECI.prop('checked');
-        const hasGS1Hint = hintGS1.prop('checked');
+        const gs1 = hintGS1.prop('checked');
+        const aim = hintAIM.val() || undefined;
         const margin = parseInt(encodeMargin.val());
         const moduleSize = parseInt(encodeMSize.val());
-        const foreground = hex2rgb(gifForeground.val());
         const background = hex2rgb(gifBackground.val());
-        const hints = { eci: hasECIHint, gs1: hasGS1Hint };
+        const foreground = hex2rgb(gifForeground.val());
 
         encodeResult.removeClass('hide');
 
-        const encoder = new QRCode.Encoder({ level, hints });
+        const encoder = new QRCode.Encoder({ level, hints: { gs1, aim } });
 
         console.dir(encoder);
         console.dir(QRCode.Charset);

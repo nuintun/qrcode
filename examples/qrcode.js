@@ -2075,17 +2075,6 @@
   }
 
   /**
-   * @module encoding
-   */
-  const encoder = new TextEncoder();
-  function encode(content, charset) {
-    if (charset !== Charset.UTF_8) {
-      throw Error('built-in encode only support utf-8 charset');
-    }
-    return encoder.encode(content);
-  }
-
-  /**
    * @module asserts
    */
   function assertContent(content) {
@@ -2108,6 +2097,31 @@
       if (version < 1 || version > 40 || !Number.isInteger(version)) {
         throw new Error('version must be an integer in [1 - 40] or "auto"');
       }
+    }
+  }
+
+  /**
+   * @module encoding
+   */
+  function getCharCodes(content, maxCode) {
+    const bytes = [];
+    for (const character of content) {
+      const code = character.charCodeAt(0);
+      // If gt max code, pust ?
+      bytes.push(code > maxCode ? 63 : code);
+    }
+    return new Uint8Array(bytes);
+  }
+  function encode(content, charset) {
+    switch (charset) {
+      case Charset.ASCII:
+        return getCharCodes(content, 0x7f);
+      case Charset.ISO_8859_1:
+        return getCharCodes(content, 0xff);
+      case Charset.UTF_8:
+        return new TextEncoder().encode(content);
+      default:
+        throw Error('built-in encode only support ascii, utf-8 and iso-8859-1 charset');
     }
   }
 
@@ -2142,37 +2156,51 @@
       const encode = this.#encode;
       const versionNumber = this.#version;
       const segmentBlocks = [];
-      // Only append FNC1 in first segment once
+      // Only append FNC1 in first position once.
       let isGS1HintAppended = false;
-      // Current eci value
-      let currentECIValue;
-      // Init segments
+      // Only append FFNC1 in second position once.
+      let isAIMHintAppended = false;
+      // Current ECI value.
+      let [currentECIValue] = Charset.ISO_8859_1.values;
+      // Init segments.
       for (const segment of segments) {
         const { mode } = segment;
         const headerBits = new BitArray();
         const isByte = isByteMode(segment);
         const dataBits = isByte ? segment.encode(encode) : segment.encode();
-        // Append ECI segment if applicable
-        if (isByte && hints.eci !== false) {
+        // Append ECI segment if applicable.
+        if (isByte) {
           const { charset } = segment;
           const [value] = charset.values;
-          // Append eci if it changed
+          // Append ECI if it changed.
           if (value !== currentECIValue) {
-            // Update eci value
+            // Update ECI value.
             currentECIValue = value;
-            // Append eci
+            // Append ECI value.
             appendECI(headerBits, currentECIValue);
           }
         }
-        // Append the FNC1 mode header for GS1 formatted data if applicable
+        // Append the FNC1 mode header for GS1 formatted data if applicable.
         if (hints.gs1 && !isGS1HintAppended) {
-          // Lock gs1 format append
+          // Lock GS1 format append.
           isGS1HintAppended = true;
-          // GS1 formatted codes are prefixed with a FNC1 in first position mode header
+          // GS1 formatted codes are prefixed with a FNC1 in first position mode header.
           appendModeInfo(headerBits, Mode.FNC1_FIRST_POSITION);
         }
-        // (With ECI in place,) Write the mode marker
+        // FNC1 in second position application indicator.
+        const { aim = -1 } = hints;
+        // Append the FNC1 mode header for AIM formatted data if applicable.
+        if (aim >= 0 && aim <= 0xffffffff && !isAIMHintAppended) {
+          // Lock AIM format append
+          isAIMHintAppended = true;
+          // AIM formatted codes are prefixed with a FNC1 in first position mode header.
+          appendModeInfo(headerBits, Mode.FNC1_SECOND_POSITION);
+          // Append AIM application indicator.
+          headerBits.append(aim, 8);
+        }
+        // (With ECI in place,) Write the mode marker.
         appendModeInfo(headerBits, mode);
+        // Push segment block.
         segmentBlocks.push({
           mode,
           dataBits,
@@ -2216,7 +2244,7 @@
   class Byte {
     #content;
     #charset;
-    constructor(content, charset = Charset.UTF_8) {
+    constructor(content, charset = Charset.ISO_8859_1) {
       assertContent(content);
       assertCharset(charset);
       this.#content = content;

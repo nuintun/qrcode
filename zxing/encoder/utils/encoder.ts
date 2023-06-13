@@ -17,7 +17,7 @@ import { Alphanumeric } from '/encoder/segments/Alphanumeric';
 import { Encoder as ReedSolomonEncoder } from '/common/reedsolomon/Encoder';
 
 export interface Hints {
-  eci?: boolean;
+  aim?: number;
   gs1?: boolean;
 }
 

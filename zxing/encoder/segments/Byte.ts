@@ -12,7 +12,7 @@ export class Byte {
   #content: string;
   #charset: Charset;
 
-  constructor(content: string, charset: Charset = Charset.UTF_8) {
+  constructor(content: string, charset: Charset = Charset.ISO_8859_1) {
     assertContent(content);
     assertCharset(charset);
 
