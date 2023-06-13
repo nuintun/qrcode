@@ -28,7 +28,10 @@ import { Byte, Encoder, Kanji } from '@nuintun/qrcode';
 
 const encoder = new Encoder({
   level: 'H',
-  hints: ['GS1_FORMAT', 'CHARACTER_SET']
+  hints: {
+    eci: true,
+    gs1: false
+  }
 });
 
 const qrcode = encoder.encode(
@@ -48,7 +51,7 @@ console.log(qrcode.toDataURL());
 - new Encoder(options?: Options): Encoder
   - version?: number | 'auto';
   - level?: 'L' | 'M' | 'Q' | 'H';
-  - hints?: ('GS1_FORMAT' | 'CHARACTER_SET')[];
+  - hints?: { eci?: boolean, gs1?: boolean };
   - encode ?: (content: string, charset: Charset) => Uint8Array;
 
 ###### Methods

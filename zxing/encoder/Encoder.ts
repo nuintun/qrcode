@@ -9,7 +9,7 @@ import {
   appendTerminateBits,
   calculateBitsNeeded,
   chooseMask,
-  EncodeHint,
+  Hints,
   injectECBytes,
   isByteMode,
   recommendVersion,
@@ -25,23 +25,31 @@ import { buildMatrix } from './utils/matrix';
 import { ByteMatrix } from '/common/ByteMatrix';
 import { Version, VERSIONS } from '/common/Version';
 import { encode as contentEncode, TextEncode } from '/common/encoding';
-import { assertHints, assertLevel, assertVersion } from './utils/asserts';
+import { assertLevel, assertVersion } from './utils/asserts';
 
 export interface Options {
+  hints?: Hints;
   encode?: TextEncode;
-  hints?: EncodeHint[];
   version?: number | 'auto';
   level?: 'L' | 'M' | 'Q' | 'H';
 }
 
 export class Encoder {
+  #hints: Hints;
   #level: ECLevel;
-  #hints: EncodeHint[];
   #encode: TextEncode;
   #version: number | 'auto';
 
-  constructor({ level = 'L', hints = [], version = 'auto', encode = contentEncode }: Options = {}) {
-    assertHints(hints);
+  constructor({
+    // Encode hints
+    hints = {},
+    // Error correction level
+    level = 'L',
+    // Version number or auto
+    version = 'auto',
+    // Content encode function
+    encode = contentEncode
+  }: Options = {}) {
     assertLevel(level);
     assertVersion(version);
 
@@ -57,11 +65,9 @@ export class Encoder {
     const encode = this.#encode;
     const versionNumber = this.#version;
     const segmentBlocks: SegmentBlock[] = [];
-    const hasGS1FormatHint = hints.indexOf('GS1_FORMAT') >= 0;
-    const hasEncodingHint = hints.indexOf('CHARACTER_SET') >= 0;
 
     // Only append FNC1 in first segment once
-    let isGS1FormatHintAppended = false;
+    let isGS1HintAppended = false;
     // Current eci value
     let currentECIValue: number | undefined;
 
@@ -73,7 +79,7 @@ export class Encoder {
       const dataBits = isByte ? segment.encode(encode) : segment.encode();
 
       // Append ECI segment if applicable
-      if (isByte && hasEncodingHint) {
+      if (isByte && hints.eci !== false) {
         const { charset } = segment;
         const [value] = charset.values;
 
@@ -88,9 +94,9 @@ export class Encoder {
       }
 
       // Append the FNC1 mode header for GS1 formatted data if applicable
-      if (hasGS1FormatHint && !isGS1FormatHintAppended) {
+      if (hints.gs1 && !isGS1HintAppended) {
         // Lock gs1 format append
-        isGS1FormatHintAppended = true;
+        isGS1HintAppended = true;
 
         // GS1 formatted codes are prefixed with a FNC1 in first position mode header
         appendModeInfo(headerBits, Mode.FNC1_FIRST_POSITION);

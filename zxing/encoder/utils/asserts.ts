@@ -2,7 +2,6 @@
  * @module asserts
  */
 
-import { EncodeHint } from './encoder';
 import { Charset } from '/common/Charset';
 
 export function assertContent(content: string): asserts content {
@@ -14,18 +13,6 @@ export function assertContent(content: string): asserts content {
 export function assertCharset(charset: Charset): asserts charset {
   if (!(charset instanceof Charset)) {
     throw new Error('illegal charset');
-  }
-}
-
-export function assertHints(hints: EncodeHint[]): asserts hints {
-  if (!Array.isArray(hints)) {
-    throw new Error('hints must be an array');
-  }
-
-  for (const hint of hints) {
-    if (['GS1_FORMAT', 'CHARACTER_SET'].indexOf(hint) < 0) {
-      throw new Error('illegal item of hints');
-    }
   }
 }
 

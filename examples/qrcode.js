@@ -2098,16 +2098,6 @@
       throw new Error('illegal charset');
     }
   }
-  function assertHints(hints) {
-    if (!Array.isArray(hints)) {
-      throw new Error('hints must be an array');
-    }
-    for (const hint of hints) {
-      if (['GS1_FORMAT', 'CHARACTER_SET'].indexOf(hint) < 0) {
-        throw new Error('illegal item of hints');
-      }
-    }
-  }
   function assertLevel(level) {
     if (['L', 'M', 'Q', 'H'].indexOf(level) < 0) {
       throw new Error('illegal error correction level');
@@ -2125,12 +2115,20 @@
    * @module Encoder
    */
   class Encoder {
-    #level;
     #hints;
+    #level;
     #encode;
     #version;
-    constructor({ level = 'L', hints = [], version = 'auto', encode: encode$1 = encode } = {}) {
-      assertHints(hints);
+    constructor({
+      // Encode hints
+      hints = {},
+      // Error correction level
+      level = 'L',
+      // Version number or auto
+      version = 'auto',
+      // Content encode function
+      encode: encode$1 = encode
+    } = {}) {
       assertLevel(level);
       assertVersion(version);
       this.#hints = hints;
@@ -2144,10 +2142,8 @@
       const encode = this.#encode;
       const versionNumber = this.#version;
       const segmentBlocks = [];
-      const hasGS1FormatHint = hints.indexOf('GS1_FORMAT') >= 0;
-      const hasEncodingHint = hints.indexOf('CHARACTER_SET') >= 0;
       // Only append FNC1 in first segment once
-      let isGS1FormatHintAppended = false;
+      let isGS1HintAppended = false;
       // Current eci value
       let currentECIValue;
       // Init segments
@@ -2157,7 +2153,7 @@
         const isByte = isByteMode(segment);
         const dataBits = isByte ? segment.encode(encode) : segment.encode();
         // Append ECI segment if applicable
-        if (isByte && hasEncodingHint) {
+        if (isByte && hints.eci !== false) {
           const { charset } = segment;
           const [value] = charset.values;
           // Append eci if it changed
@@ -2169,9 +2165,9 @@
           }
         }
         // Append the FNC1 mode header for GS1 formatted data if applicable
-        if (hasGS1FormatHint && !isGS1FormatHintAppended) {
+        if (hints.gs1 && !isGS1HintAppended) {
           // Lock gs1 format append
-          isGS1FormatHintAppended = true;
+          isGS1HintAppended = true;
           // GS1 formatted codes are prefixed with a FNC1 in first position mode header
           appendModeInfo(headerBits, Mode.FNC1_FIRST_POSITION);
         }

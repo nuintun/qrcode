@@ -83,8 +83,8 @@
         content.removeClass('selected').eq(target.index()).addClass('selected');
       });
 
-      const hintEci = $('#hint-eci');
-      const hintGs1 = $('#hint-gs1');
+      const hintECI = $('#hint-eci');
+      const hintGS1 = $('#hint-gs1');
       const encodeMode = $('#encode-mode');
       const encodeText = $('#encode-text');
       const encodeLevel = $('#encode-level');
@@ -127,31 +127,20 @@
 
       // 生成二维码
       $('#encode-btn').on('click', function () {
-        const hints = [];
         const data = encodeText.val();
         const mode = encodeMode.val();
         const level = encodeLevel.val();
-        const hasEciHint = hintEci.prop('checked');
-        const hasGs1Hint = hintGs1.prop('checked');
+        const hasECIHint = hintECI.prop('checked');
+        const hasGS1Hint = hintGS1.prop('checked');
         const margin = parseInt(encodeMargin.val());
         const moduleSize = parseInt(encodeMSize.val());
         const foreground = hex2rgb(gifForeground.val());
         const background = hex2rgb(gifBackground.val());
+        const hints = { eci: hasECIHint, gs1: hasGS1Hint };
 
         encodeResult.removeClass('hide');
 
-        if (hasGs1Hint) {
-          hints.push('GS1_FORMAT');
-        }
-
-        if (hasEciHint) {
-          hints.push('CHARACTER_SET');
-        }
-
-        const encoder = new QRCode.Encoder({
-          level: level,
-          hints: hints
-        });
+        const encoder = new QRCode.Encoder({ level, hints });
 
         console.dir(encoder);
         console.dir(QRCode.Charset);
