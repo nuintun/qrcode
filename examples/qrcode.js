@@ -2309,24 +2309,23 @@
     encode() {
       const bits = new BitArray();
       const content = this.#content;
-      // GB/T 18284-2000
+      // GB/T 18284-2000.
       for (const character of content) {
         let value = getHanziCode(character);
-        // For characters with GB2312 values from 0xa1a1 to 0xaafe:
+        // For characters with GB2312 values from 0xa1a1 to 0xaafe.
         if (value >= 0xa1a1 && value <= 0xaafe) {
-          // Subtract 0x8140 from Shift JIS value
+          // Subtract 0xa1a1 from GB2312 value.
           value -= 0xa1a1;
-          // For characters with GB2312 values from 0xb0a1 to 0xfafe
+          // For characters with GB2312 values from 0xb0a1 to 0xfafe.
         } else if (value >= 0xb0a1 && value <= 0xfafe) {
-          // Subtract 0xC140 from GB2312 value
+          // Subtract 0xa6a1 from GB2312 value.
           value -= 0xa6a1;
         } else {
-          throw new Error(`illegal character: ${character}`);
+          throw new Error(`illegal hanzi character: ${character}`);
         }
-        // Multiply most significant byte of result by 0x60
-        // and add least significant byte to product
+        // Multiply most significant byte of result by 0x60 and add least significant byte to product.
         value = (value >> 8) * 0x60 + (value & 0xff);
-        // Convert result to a 13-bit binary string
+        // Convert result to a 13-bit binary string.
         bits.append(value, 13);
       }
       return bits;
@@ -2466,21 +2465,20 @@
       const content = this.#content;
       for (const character of content) {
         let value = getKanjiCode(character);
-        // For characters with Shift JIS values from 0x8140 to 0x9ffc:
+        // For characters with Shift JIS values from 0x8140 to 0x9ffc.
         if (value >= 0x8140 && value <= 0x9ffc) {
-          // Subtract 0x8140 from Shift JIS value
+          // Subtract 0x8140 from Shift JIS value.
           value -= 0x8140;
-          // For characters with Shift JIS values from 0xe040 to 0xebbf
+          // For characters with Shift JIS values from 0xe040 to 0xebbf.
         } else if (value >= 0xe040 && value <= 0xebbf) {
-          // Subtract 0xc140 from Shift JIS value
+          // Subtract 0xc140 from Shift JIS value.
           value -= 0xc140;
         } else {
-          throw new Error(`illegal character: ${character}`);
+          throw new Error(`illegal kanji character: ${character}`);
         }
-        // Multiply most significant byte of result by 0xc0
-        // and add least significant byte to product
+        // Multiply most significant byte of result by 0xc0 and add least significant byte to product.
         value = (value >> 8) * 0xc0 + (value & 0xff);
-        // Convert result to a 13-bit binary string
+        // Convert result to a 13-bit binary string.
         bits.append(value, 13);
       }
       return bits;
@@ -2495,7 +2493,7 @@
     if (48 <= code && code <= 57) {
       return code - 48;
     }
-    throw new Error(`illegal character: ${String.fromCharCode(code)}`);
+    throw new Error(`illegal numeric character: ${String.fromCharCode(code)}`);
   }
   class Numeric {
     #content;
@@ -2554,7 +2552,7 @@
     if (index < ALPHANUMERIC_TABLE.length) {
       return ALPHANUMERIC_TABLE[index];
     }
-    throw new Error(`illegal character: ${String.fromCharCode(code)}`);
+    throw new Error(`illegal alphanumeric character: ${String.fromCharCode(code)}`);
   }
   class Alphanumeric {
     #content;

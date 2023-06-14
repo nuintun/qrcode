@@ -12,7 +12,7 @@ function getNumericCode(code: number): number {
     return code - 48;
   }
 
-  throw new Error(`illegal character: ${String.fromCharCode(code)}`);
+  throw new Error(`illegal numeric character: ${String.fromCharCode(code)}`);
 }
 
 export class Numeric {

@@ -24,7 +24,7 @@ function getAlphanumericCode(code: number): number {
     return ALPHANUMERIC_TABLE[index];
   }
 
-  throw new Error(`illegal character: ${String.fromCharCode(code)}`);
+  throw new Error(`illegal alphanumeric character: ${String.fromCharCode(code)}`);
 }
 
 export class Alphanumeric {
