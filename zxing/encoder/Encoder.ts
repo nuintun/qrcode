@@ -25,8 +25,8 @@ import { BitArray } from '/common/BitArray';
 import { buildMatrix } from './utils/matrix';
 import { ByteMatrix } from '/common/ByteMatrix';
 import { Version, VERSIONS } from '/common/Version';
-import { assertLevel, assertVersion } from './utils/asserts';
 import { encode as contentEncode, TextEncode } from '/common/encoding';
+import { assertHints, assertLevel, assertVersion } from './utils/asserts';
 
 export interface Options {
   hints?: Hints;
@@ -51,6 +51,7 @@ export class Encoder {
     // Content encode function
     encode = contentEncode
   }: Options = {}) {
+    assertHints(hints);
     assertLevel(level);
     assertVersion(version);
 
@@ -96,31 +97,40 @@ export class Encoder {
         }
       }
 
-      // Append the FNC1 mode header for GS1 formatted data if applicable.
-      if (hints.gs1 && !isGS1HintAppended) {
-        // Lock GS1 format append.
-        isGS1HintAppended = true;
+      // FNC1 hint.
+      const { fnc1 } = hints;
 
-        // GS1 formatted codes are prefixed with a FNC1 in first position mode header.
-        appendModeInfo(headerBits, Mode.FNC1_FIRST_POSITION);
+      // Process FNC1.
+      if (fnc1 != null) {
+        const [fnc1Mode, indicator] = fnc1;
+
+        // Append FNC1 if applicable.
+        switch (fnc1Mode) {
+          case 'GS1':
+            if (!isGS1HintAppended) {
+              // Lock GS1 format append.
+              isGS1HintAppended = true;
+
+              // GS1 formatted codes are prefixed with a FNC1 in first position mode header.
+              appendModeInfo(headerBits, Mode.FNC1_FIRST_POSITION);
+            }
+            break;
+          case 'AIM':
+            if (!isAIMHintAppended) {
+              // Lock AIM format append.
+              isAIMHintAppended = true;
+
+              // AIM formatted codes are prefixed with a FNC1 in first position mode header.
+              appendModeInfo(headerBits, Mode.FNC1_SECOND_POSITION);
+
+              // Append AIM application indicator.
+              headerBits.append(indicator, 8);
+            }
+            break;
+        }
       }
 
-      // FNC1 in second position application indicator.
-      const { aim = -1 } = hints;
-
-      // Append the FNC1 mode header for AIM formatted data if applicable.
-      if (aim >= 0 && aim <= 0xffffffff && !isAIMHintAppended) {
-        // Lock AIM format append
-        isAIMHintAppended = true;
-
-        // AIM formatted codes are prefixed with a FNC1 in first position mode header.
-        appendModeInfo(headerBits, Mode.FNC1_SECOND_POSITION);
-
-        // Append AIM application indicator.
-        headerBits.append(aim, 8);
-      }
-
-      // (With ECI in place,) Write the mode marker.
+      // With ECI in place, Write the mode marker.
       appendModeInfo(headerBits, mode);
 
       // Push segment block.

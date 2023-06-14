@@ -16,16 +16,15 @@ import { Version, VERSIONS } from '/common/Version';
 import { Alphanumeric } from '/encoder/segments/Alphanumeric';
 import { Encoder as ReedSolomonEncoder } from '/common/reedsolomon/Encoder';
 
-export interface Hints {
-  aim?: number;
-  gs1?: boolean;
-}
-
 export interface SegmentBlock {
   mode: Mode;
   length: number;
   dataBits: BitArray;
   headerBits: BitArray;
+}
+
+export interface Hints {
+  fnc1?: [mode: 'GS1'] | [mode: 'AIM', indicator: number];
 }
 
 export type Segment = Alphanumeric | Byte | Kanji | Numeric;

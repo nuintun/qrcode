@@ -17,10 +17,14 @@
           <p>二维码内容：</p>
           <div><textarea id="encode-text">https://github.com/nuintun/qrcode</textarea></div>
           <p>
-            <label>前景颜色：</label>
-            <input id="gif-foreground" type="color" value="#000000" />
-            <label class="indent">背景颜色：</label>
-            <input id="gif-background" type="color" value="#ffffff" />
+            <label>支持 FNC1：</label>
+            <select id="hints-fnc1">
+              <option value="NONE" selected>否</option>
+              <option value="AIM">AIM</option>
+              <option value="GS1">GS1</option>
+            </select>
+            <label class="indent">AIM 标识：</label>
+            <input disabled id="aim-indicator" type="number" min="0" max="255" value="0" />
           </p>
           <p>
             <label>纠错等级：</label>
@@ -30,13 +34,7 @@
               <option value="Q">Level Q (25%)</option>
               <option value="H">Level H (30%)</option>
             </select>
-            <label class="indent">支持 GS1：</label>
-            <input id="hint-gs1" type="checkbox" />
-            <label class="indent">支持 AIM：</label>
-            <input id="hint-aim" type="number" min="0" max="4294967295" />
-          </p>
-          <p>
-            <label>编码方式：</label>
+            <label class="indent">编码方式：</label>
             <select id="encode-mode">
               <option value="Auto" selected>Auto</option>
               <option value="Byte">Byte</option>
@@ -44,6 +42,12 @@
               <option value="Numeric">Numeric</option>
               <option value="Kanji">Kanji</option>
             </select>
+          </p>
+          <p>
+            <label>前景颜色：</label>
+            <input id="gif-foreground" type="color" value="#000000" />
+            <label class="indent">背景颜色：</label>
+            <input id="gif-background" type="color" value="#ffffff" />
             <label class="indent">色块大小：</label>
             <input id="encode-msize" type="number" min="1" max="10" value="4" />
             <label class="indent">留白大小：</label>
@@ -83,16 +87,29 @@
         content.removeClass('selected').eq(target.index()).addClass('selected');
       });
 
-      const hintGS1 = $('#hint-gs1');
-      const hintAIM = $('#hint-aim');
+      const hintsFNC1 = $('#hints-fnc1');
       const encodeMode = $('#encode-mode');
       const encodeText = $('#encode-text');
       const encodeLevel = $('#encode-level');
       const encodeMSize = $('#encode-msize');
+      const aimIndicator = $('#aim-indicator');
       const encodeMargin = $('#encode-margin');
       const encodeResult = $('#encode-result');
-      const gifForeground = $('#gif-foreground');
       const gifBackground = $('#gif-background');
+      const gifForeground = $('#gif-foreground');
+
+      hintsFNC1.on('change', function (e) {
+        aimIndicator.prop('disabled', hintsFNC1.val() !== 'AIM');
+      });
+
+      function getFNC1Hint() {
+        switch (hintsFNC1.val()) {
+          case 'GS1':
+            return ['GS1'];
+          case 'AIM':
+            return ['AIM', +aimIndicator.val()];
+        }
+      }
 
       function hex2rgb(hex) {
         hex = parseInt(hex.replace('#', '0x'));
@@ -130,25 +147,27 @@
         const data = encodeText.val();
         const mode = encodeMode.val();
         const level = encodeLevel.val();
-        const gs1 = hintGS1.prop('checked');
-        const aim = hintAIM.val() || undefined;
         const margin = parseInt(encodeMargin.val());
         const moduleSize = parseInt(encodeMSize.val());
         const background = hex2rgb(gifBackground.val());
         const foreground = hex2rgb(gifForeground.val());
 
-        encodeResult.removeClass('hide');
-
-        const encoder = new QRCode.Encoder({ level, hints: { gs1, aim } });
+        const encoder = new QRCode.Encoder({
+          level,
+          version: 'auto',
+          hints: { fnc1: getFNC1Hint() }
+        });
 
         console.dir(encoder);
         console.dir(QRCode.Charset);
+
+        encodeResult.removeClass('hide');
 
         try {
           const segment = chooseBestMode(mode, data);
 
           console.time('encode');
-          const qrcode = encoder.encode(segment);
+          const qrcode = encoder.encode(chooseBestMode(mode, data));
           console.timeEnd('encode');
 
           console.time('toDataURL');
