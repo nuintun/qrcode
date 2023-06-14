@@ -4,6 +4,7 @@
 
 import {
   appendECI,
+  appendFNC1Info,
   appendLengthInfo,
   appendModeInfo,
   appendTerminateBits,
@@ -18,7 +19,6 @@ import {
   willFit
 } from './utils/encoder';
 import { QRCode } from './QRCode';
-import { Mode } from '/common/Mode';
 import { Charset } from '/common/Charset';
 import { ECLevel } from '/common/ECLevel';
 import { BitArray } from '/common/BitArray';
@@ -62,16 +62,14 @@ export class Encoder {
   }
 
   public encode(...segments: Segment[]): QRCode {
-    const hints = this.#hints;
     const ecLevel = this.#level;
     const encode = this.#encode;
+    const { fnc1 } = this.#hints;
     const versionNumber = this.#version;
     const segmentBlocks: SegmentBlock[] = [];
 
-    // Only append FNC1 in first position once.
-    let isGS1HintAppended = false;
-    // Only append FFNC1 in second position once.
-    let isAIMHintAppended = false;
+    // Only append FNC1 once.
+    let isFNC1Appended = false;
     // Current ECI value.
     let [currentECIValue] = Charset.ISO_8859_1.values;
 
@@ -83,51 +81,13 @@ export class Encoder {
       const dataBits = isByte ? segment.encode(encode) : segment.encode();
 
       // Append ECI segment if applicable.
-      if (isByte) {
-        const { charset } = segment;
-        const [value] = charset.values;
+      currentECIValue = appendECI(headerBits, segment, currentECIValue);
 
-        // Append ECI if it changed.
-        if (value !== currentECIValue) {
-          // Update ECI value.
-          currentECIValue = value;
+      // Append FNC1 if applicable.
+      if (fnc1 != null && !isFNC1Appended) {
+        isFNC1Appended = true;
 
-          // Append ECI value.
-          appendECI(headerBits, currentECIValue);
-        }
-      }
-
-      // FNC1 hint.
-      const { fnc1 } = hints;
-
-      // Process FNC1.
-      if (fnc1 != null) {
-        const [fnc1Mode, indicator] = fnc1;
-
-        // Append FNC1 if applicable.
-        switch (fnc1Mode) {
-          case 'GS1':
-            if (!isGS1HintAppended) {
-              // Lock GS1 format append.
-              isGS1HintAppended = true;
-
-              // GS1 formatted codes are prefixed with a FNC1 in first position mode header.
-              appendModeInfo(headerBits, Mode.FNC1_FIRST_POSITION);
-            }
-            break;
-          case 'AIM':
-            if (!isAIMHintAppended) {
-              // Lock AIM format append.
-              isAIMHintAppended = true;
-
-              // AIM formatted codes are prefixed with a FNC1 in first position mode header.
-              appendModeInfo(headerBits, Mode.FNC1_SECOND_POSITION);
-
-              // Append AIM application indicator.
-              headerBits.append(indicator, 8);
-            }
-            break;
-        }
+        appendFNC1Info(headerBits, fnc1);
       }
 
       // With ECI in place, Write the mode marker.

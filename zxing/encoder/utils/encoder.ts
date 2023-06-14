@@ -16,6 +16,10 @@ import { Version, VERSIONS } from '/common/Version';
 import { Alphanumeric } from '/encoder/segments/Alphanumeric';
 import { Encoder as ReedSolomonEncoder } from '/common/reedsolomon/Encoder';
 
+export interface Hints {
+  fnc1?: FNC1;
+}
+
 export interface SegmentBlock {
   mode: Mode;
   length: number;
@@ -23,11 +27,9 @@ export interface SegmentBlock {
   headerBits: BitArray;
 }
 
-export interface Hints {
-  fnc1?: [mode: 'GS1'] | [mode: 'AIM', indicator: number];
-}
-
 export type Segment = Alphanumeric | Byte | Kanji | Numeric;
+
+export type FNC1 = [mode: 'GS1'] | [mode: 'AIM', indicator: number];
 
 function getNumBytesInBlock(
   blockID: number,
@@ -160,17 +162,48 @@ export function appendModeInfo(bits: BitArray, mode: Mode): void {
   bits.append(mode.bits, 4);
 }
 
-export function appendECI(bits: BitArray, value: number): void {
-  bits.append(Mode.ECI.bits, 4);
+export function appendECI(bits: BitArray, segment: Segment, currentECIValue: number): number {
+  if (isByteMode(segment)) {
+    const [value] = segment.charset.values;
 
-  if (value < 1 << 7) {
-    bits.append(value, 8);
-  } else if (value < 1 << 14) {
-    bits.append(2, 2);
-    bits.append(value, 14);
-  } else {
-    bits.append(6, 3);
-    bits.append(value, 21);
+    if (value !== currentECIValue) {
+      bits.append(Mode.ECI.bits, 4);
+
+      if (value < 1 << 7) {
+        bits.append(value, 8);
+      } else if (value < 1 << 14) {
+        bits.append(2, 2);
+        bits.append(value, 14);
+      } else {
+        bits.append(6, 3);
+        bits.append(value, 21);
+      }
+
+      return value;
+    }
+  }
+
+  return currentECIValue;
+}
+
+export function appendFNC1Info(bits: BitArray, fnc1: FNC1): void {
+  const [mode, indicator] = fnc1;
+
+  // Append FNC1 if applicable.
+  switch (mode) {
+    case 'GS1':
+      // GS1 formatted codes are prefixed with a FNC1 in first position mode header.
+      appendModeInfo(bits, Mode.FNC1_FIRST_POSITION);
+
+      break;
+    case 'AIM':
+      // AIM formatted codes are prefixed with a FNC1 in first position mode header.
+      appendModeInfo(bits, Mode.FNC1_SECOND_POSITION);
+
+      // Append AIM application indicator.
+      bits.append(indicator, 8);
+
+      break;
   }
 }
 
