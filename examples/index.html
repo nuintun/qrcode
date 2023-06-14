@@ -37,10 +37,11 @@
             <label class="indent">编码方式：</label>
             <select id="encode-mode">
               <option value="Auto" selected>Auto</option>
-              <option value="Byte">Byte</option>
               <option value="Alphanumeric">Alphanumeric</option>
-              <option value="Numeric">Numeric</option>
+              <option value="Byte">Byte</option>
+              <option value="Hanzi">Hanzi</option>
               <option value="Kanji">Kanji</option>
+              <option value="Numeric">Numeric</option>
             </select>
           </p>
           <p>
@@ -135,8 +136,20 @@
 
             return kanji;
           } catch {
-            return new QRCode.Byte(data);
+            // 跳过错误
           }
+
+          const hanzi = new QRCode.Hanzi(data);
+
+          try {
+            hanzi.encode();
+
+            return kanji;
+          } catch {
+            // 跳过错误
+          }
+
+          return new QRCode.Byte(data);
         }
 
         return new QRCode[mode](data);

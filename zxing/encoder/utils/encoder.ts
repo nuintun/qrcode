@@ -10,6 +10,7 @@ import { Byte } from '/encoder/segments/Byte';
 import { calculateMaskPenalty } from './mask';
 import { BlockPair } from '/encoder/BlockPair';
 import { ByteMatrix } from '/common/ByteMatrix';
+import { Hanzi } from '/encoder/segments/Hanzi';
 import { Kanji } from '/encoder/segments/Kanji';
 import { Numeric } from '/encoder/segments/Numeric';
 import { Version, VERSIONS } from '/common/Version';
@@ -22,12 +23,12 @@ export interface Hints {
 
 export interface SegmentBlock {
   mode: Mode;
+  head: BitArray;
+  data: BitArray;
   length: number;
-  dataBits: BitArray;
-  headerBits: BitArray;
 }
 
-export type Segment = Alphanumeric | Byte | Kanji | Numeric;
+export type Segment = Alphanumeric | Byte | Hanzi | Kanji | Numeric;
 
 export type FNC1 = [mode: 'GS1'] | [mode: 'AIM', indicator: number];
 
@@ -158,6 +159,10 @@ export function isByteMode(segment: Segment): segment is Byte {
   return segment.mode === Mode.BYTE;
 }
 
+export function isHanziMode(segment: Segment): segment is Hanzi {
+  return segment.mode === Mode.HANZI;
+}
+
 export function appendModeInfo(bits: BitArray, mode: Mode): void {
   bits.append(mode.bits, 4);
 }
@@ -238,8 +243,8 @@ function chooseVersion(numInputBits: number, ecLevel: ECLevel): Version {
 export function calculateBitsNeeded(segmentBlocks: SegmentBlock[], version: Version): number {
   let bitsNeeded = 0;
 
-  for (const { mode, headerBits, dataBits } of segmentBlocks) {
-    bitsNeeded += headerBits.length + mode.getCharacterCountBits(version) + dataBits.length;
+  for (const { mode, head, data } of segmentBlocks) {
+    bitsNeeded += head.length + mode.getCharacterCountBits(version) + data.length;
   }
 
   return bitsNeeded;

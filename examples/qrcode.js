@@ -1551,6 +1551,9 @@
   function isByteMode(segment) {
     return segment.mode === Mode.BYTE;
   }
+  function isHanziMode(segment) {
+    return segment.mode === Mode.HANZI;
+  }
   function appendModeInfo(bits, mode) {
     bits.append(mode.bits, 4);
   }
@@ -1614,8 +1617,8 @@
   }
   function calculateBitsNeeded(segmentBlocks, version) {
     let bitsNeeded = 0;
-    for (const { mode, headerBits, dataBits } of segmentBlocks) {
-      bitsNeeded += headerBits.length + mode.getCharacterCountBits(version) + dataBits.length;
+    for (const { mode, head, data } of segmentBlocks) {
+      bitsNeeded += head.length + mode.getCharacterCountBits(version) + data.length;
     }
     return bitsNeeded;
   }
@@ -2203,25 +2206,25 @@
       // Init segments.
       for (const segment of segments) {
         const { mode } = segment;
-        const headerBits = new BitArray();
+        const head = new BitArray();
         const isByte = isByteMode(segment);
-        const dataBits = isByte ? segment.encode(encode) : segment.encode();
+        const data = isByte ? segment.encode(encode) : segment.encode();
+        const length = isByte ? data.byteLength : segment.content.length;
         // Append ECI segment if applicable.
-        currentECIValue = appendECI(headerBits, segment, currentECIValue);
+        currentECIValue = appendECI(head, segment, currentECIValue);
         // Append FNC1 if applicable.
         if (fnc1 != null && !isFNC1Appended) {
           isFNC1Appended = true;
-          appendFNC1Info(headerBits, fnc1);
+          appendFNC1Info(head, fnc1);
         }
         // With ECI in place, Write the mode marker.
-        appendModeInfo(headerBits, mode);
+        appendModeInfo(head, mode);
+        // If is Hanzi mode append GB2312 subset.
+        if (isHanziMode(segment)) {
+          head.append(1, 4);
+        }
         // Push segment block.
-        segmentBlocks.push({
-          mode,
-          dataBits,
-          headerBits,
-          length: isByte ? dataBits.byteLength : segment.content.length
-        });
+        segmentBlocks.push({ mode, head, data, length });
       }
       let version;
       if (versionNumber === 'auto') {
@@ -2233,20 +2236,20 @@
           throw new Error('data too big for requested version');
         }
       }
-      const headerAndDataBits = new BitArray();
-      for (const { mode, length, headerBits, dataBits } of segmentBlocks) {
-        headerAndDataBits.append(headerBits);
-        appendLengthInfo(headerAndDataBits, mode, version, length);
-        headerAndDataBits.append(dataBits);
+      const headAndDataBits = new BitArray();
+      for (const { mode, head, data, length } of segmentBlocks) {
+        headAndDataBits.append(head);
+        appendLengthInfo(headAndDataBits, mode, version, length);
+        headAndDataBits.append(data);
       }
       const { totalCodewords, dimension } = version;
       const ecBlocks = version.getECBlocksForECLevel(ecLevel);
       const numDataBytes = totalCodewords - ecBlocks.totalECCodewords;
       // Append terminate the bits properly.
-      appendTerminateBits(headerAndDataBits, numDataBytes);
+      appendTerminateBits(headAndDataBits, numDataBytes);
       const { numBlocks } = ecBlocks;
       const matrix = new ByteMatrix(dimension);
-      const finalBits = injectECBytes(headerAndDataBits, numBlocks, numDataBytes, totalCodewords);
+      const finalBits = injectECBytes(headAndDataBits, numBlocks, numDataBytes, totalCodewords);
       const mask = chooseMask(matrix, finalBits, version, ecLevel);
       buildMatrix(matrix, finalBits, version, ecLevel, mask);
       return new QRCode(matrix, version, ecLevel, mask);
@@ -2417,18 +2420,18 @@
       const content = this.#content;
       for (const character of content) {
         let value = getKanjiCode(character);
-        // For characters with Shift JIS values from 0x8140 to 0x9FFC:
+        // For characters with Shift JIS values from 0x8140 to 0x9ffc:
         if (value >= 0x8140 && value <= 0x9ffc) {
           // Subtract 0x8140 from Shift JIS value
           value -= 0x8140;
-          // For characters with Shift JIS values from 0xE040 to 0xEBBF
+          // For characters with Shift JIS values from 0xe040 to 0xebbf
         } else if (value >= 0xe040 && value <= 0xebbf) {
-          // Subtract 0xC140 from Shift JIS value
+          // Subtract 0xc140 from Shift JIS value
           value -= 0xc140;
         } else {
           throw new Error(`illegal character: ${character}`);
         }
-        // Multiply most significant byte of result by 0xC0
+        // Multiply most significant byte of result by 0xc0
         // and add least significant byte to product
         value = (value >> 8) * 0xc0 + (value & 0xff);
         // Convert result to a 13-bit binary string

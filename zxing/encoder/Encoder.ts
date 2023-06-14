@@ -13,6 +13,7 @@ import {
   Hints,
   injectECBytes,
   isByteMode,
+  isHanziMode,
   recommendVersion,
   Segment,
   SegmentBlock,
@@ -76,30 +77,31 @@ export class Encoder {
     // Init segments.
     for (const segment of segments) {
       const { mode } = segment;
-      const headerBits = new BitArray();
+      const head = new BitArray();
       const isByte = isByteMode(segment);
-      const dataBits = isByte ? segment.encode(encode) : segment.encode();
+      const data = isByte ? segment.encode(encode) : segment.encode();
+      const length = isByte ? data.byteLength : segment.content.length;
 
       // Append ECI segment if applicable.
-      currentECIValue = appendECI(headerBits, segment, currentECIValue);
+      currentECIValue = appendECI(head, segment, currentECIValue);
 
       // Append FNC1 if applicable.
       if (fnc1 != null && !isFNC1Appended) {
         isFNC1Appended = true;
 
-        appendFNC1Info(headerBits, fnc1);
+        appendFNC1Info(head, fnc1);
       }
 
       // With ECI in place, Write the mode marker.
-      appendModeInfo(headerBits, mode);
+      appendModeInfo(head, mode);
+
+      // If is Hanzi mode append GB2312 subset.
+      if (isHanziMode(segment)) {
+        head.append(1, 4);
+      }
 
       // Push segment block.
-      segmentBlocks.push({
-        mode,
-        dataBits,
-        headerBits,
-        length: isByte ? dataBits.byteLength : segment.content.length
-      });
+      segmentBlocks.push({ mode, head, data, length });
     }
 
     let version: Version;
@@ -116,14 +118,14 @@ export class Encoder {
       }
     }
 
-    const headerAndDataBits = new BitArray();
+    const headAndDataBits = new BitArray();
 
-    for (const { mode, length, headerBits, dataBits } of segmentBlocks) {
-      headerAndDataBits.append(headerBits);
+    for (const { mode, head, data, length } of segmentBlocks) {
+      headAndDataBits.append(head);
 
-      appendLengthInfo(headerAndDataBits, mode, version, length);
+      appendLengthInfo(headAndDataBits, mode, version, length);
 
-      headerAndDataBits.append(dataBits);
+      headAndDataBits.append(data);
     }
 
     const { totalCodewords, dimension } = version;
@@ -131,11 +133,11 @@ export class Encoder {
     const numDataBytes = totalCodewords - ecBlocks.totalECCodewords;
 
     // Append terminate the bits properly.
-    appendTerminateBits(headerAndDataBits, numDataBytes);
+    appendTerminateBits(headAndDataBits, numDataBytes);
 
     const { numBlocks } = ecBlocks;
     const matrix = new ByteMatrix(dimension);
-    const finalBits = injectECBytes(headerAndDataBits, numBlocks, numDataBytes, totalCodewords);
+    const finalBits = injectECBytes(headAndDataBits, numBlocks, numDataBytes, totalCodewords);
     const mask = chooseMask(matrix, finalBits, version, ecLevel);
 
     buildMatrix(matrix, finalBits, version, ecLevel, mask);

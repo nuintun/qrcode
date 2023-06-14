@@ -149,19 +149,19 @@ export class Kanji {
     for (const character of content) {
       let value = getKanjiCode(character);
 
-      // For characters with Shift JIS values from 0x8140 to 0x9FFC:
+      // For characters with Shift JIS values from 0x8140 to 0x9ffc:
       if (value >= 0x8140 && value <= 0x9ffc) {
         // Subtract 0x8140 from Shift JIS value
         value -= 0x8140;
-        // For characters with Shift JIS values from 0xE040 to 0xEBBF
+        // For characters with Shift JIS values from 0xe040 to 0xebbf
       } else if (value >= 0xe040 && value <= 0xebbf) {
-        // Subtract 0xC140 from Shift JIS value
+        // Subtract 0xc140 from Shift JIS value
         value -= 0xc140;
       } else {
         throw new Error(`illegal character: ${character}`);
       }
 
-      // Multiply most significant byte of result by 0xC0
+      // Multiply most significant byte of result by 0xc0
       // and add least significant byte to product
       value = (value >> 8) * 0xc0 + (value & 0xff);
 
