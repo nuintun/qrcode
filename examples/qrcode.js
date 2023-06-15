@@ -2371,7 +2371,7 @@
           // Subtract 0xa6a1 from GB2312 value.
           code -= 0xa6a1;
         } else {
-          throw new Error(`illegal kanji character: ${character}`);
+          throw new Error(`illegal hanzi character: ${character}`);
         }
         // Multiply most significant byte of result by 0x60 and add least significant byte to product.
         code = (code >> 8) * 0x60 + (code & 0xff);
