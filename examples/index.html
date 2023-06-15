@@ -129,6 +129,16 @@
             return new QRCode.Alphanumeric(data);
           }
 
+          const hanzi = new QRCode.Hanzi(data);
+
+          try {
+            hanzi.encode();
+
+            return hanzi;
+          } catch {
+            // 跳过错误
+          }
+
           const kanji = new QRCode.Kanji(data);
 
           try {
@@ -139,20 +149,11 @@
             // 跳过错误
           }
 
-          const hanzi = new QRCode.Hanzi(data);
-
-          try {
-            hanzi.encode();
-
-            return kanji;
-          } catch {
-            // 跳过错误
-          }
-
-          return new QRCode.Byte(data);
+          // 回退字节模式
+          mode = 'Byte';
         }
 
-        return new QRCode[mode](data);
+        return new QRCode[mode](data, QRCode.Charset.UTF_8);
       }
 
       // 生成二维码

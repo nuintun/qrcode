@@ -12,6 +12,8 @@ export interface TextDecode {
   (bytes: Uint8Array, charset: Charset): string;
 }
 
+export type EncodingRange = [start: number, end: number];
+
 function getCharCodes(content: string, maxCode: number): Uint8Array {
   const bytes: number[] = [];
 
@@ -40,4 +42,46 @@ export function encode(content: string, charset: Charset): Uint8Array {
 
 export function decode(bytes: Uint8Array, charset: Charset): string {
   return new TextDecoder(charset.label).decode(bytes);
+}
+
+export function getEncodingMapping(label: string, ...ranges: EncodingRange[]): Map<string, number> {
+  const bytes: number[] = [];
+  const codes: number[] = [];
+  const mapping: Map<string, number> = new Map();
+  const decoder = new TextDecoder(label, { fatal: true });
+
+  for (const [start, end] of ranges) {
+    for (let code = start; code <= end; code++) {
+      codes.push(code);
+      bytes.push(code >> 8, code & 0xff);
+    }
+  }
+
+  const { length } = codes;
+  const characters = decoder.decode(new Uint8Array(bytes));
+
+  for (let i = 0; i < length; i++) {
+    const character = characters.charAt(i);
+
+    if (!mapping.has(character)) {
+      mapping.set(character, codes[i]);
+    }
+  }
+
+  return mapping;
+}
+
+export function getSerialRanges(start: number, end: number, offsets: number[], step: number = 256): EncodingRange[] {
+  const count = offsets.length - 1;
+  const ranges: EncodingRange[] = [];
+
+  for (let i = start; i < end; ) {
+    for (let j = 0; j < count; j += 2) {
+      ranges.push([i + offsets[j], i + offsets[j + 1]]);
+    }
+
+    i += step;
+  }
+
+  return ranges;
 }

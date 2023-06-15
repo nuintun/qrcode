@@ -5,10 +5,20 @@
 import { Mode } from '/common/Mode';
 import { BitArray } from '/common/BitArray';
 import { assertContent } from '/encoder/utils/asserts';
+import { getEncodingMapping, getSerialRanges } from '/common/encoding';
+
+const GB2312 = getEncodingMapping(
+  'gb2312',
+  [0xa1a1, 0xa1fe],
+  ...getSerialRanges(0xa240, 0xaafe, [0, 62, 64, 190]),
+  [0xb0a1, 0xb0fe],
+  ...getSerialRanges(0xb140, 0xfafe, [0, 62, 64, 190])
+);
 
 function getHanziCode(character: string): number {
-  // TODO: Use GB2312 encode
-  return character.charCodeAt(0);
+  const code = GB2312.get(character);
+
+  return code != null ? code : -1;
 }
 
 export class Hanzi {
