@@ -2325,9 +2325,20 @@
   const GB2312 = getEncodingMapping(
     'gb2312',
     [0xa1a1, 0xa1fe],
-    ...getSerialRanges(0xa240, 0xaafe, [0, 62, 64, 190]),
-    [0xb0a1, 0xb0fe],
-    ...getSerialRanges(0xb140, 0xfafe, [0, 62, 64, 190])
+    [0xa2b1, 0xa2e2],
+    [0xa2e5, 0xa2ee],
+    [0xa2f1, 0xa2fc],
+    [0xa3a1, 0xa3fe],
+    [0xa4a1, 0xa4f3],
+    [0xa5a1, 0xa5f6],
+    [0xa6a1, 0xa6b8],
+    [0xa6c1, 0xa6d8],
+    [0xa7a1, 0xa7c1],
+    [0xa7d1, 0xa7f1],
+    [0xa8a1, 0xa8ba],
+    [0xa8c5, 0xa8e9],
+    [0xa9a4, 0xa9ef],
+    ...getSerialRanges(0xb0a1, 0xf7fe, [0, 93])
   );
   function getHanziCode(character) {
     const code = GB2312.get(character);
@@ -2350,22 +2361,22 @@
       const content = this.#content;
       // GB/T 18284-2000.
       for (const character of content) {
-        let value = getHanziCode(character);
+        let code = getHanziCode(character);
         // For characters with GB2312 values from 0xa1a1 to 0xaafe.
-        if (value >= 0xa1a1 && value <= 0xaafe) {
+        if (code >= 0xa1a1 && code <= 0xaafe) {
           // Subtract 0xa1a1 from GB2312 value.
-          value -= 0xa1a1;
+          code -= 0xa1a1;
           // For characters with GB2312 values from 0xb0a1 to 0xfafe.
-        } else if (value >= 0xb0a1 && value <= 0xfafe) {
+        } else if (code >= 0xb0a1 && code <= 0xfafe) {
           // Subtract 0xa6a1 from GB2312 value.
-          value -= 0xa6a1;
+          code -= 0xa6a1;
         } else {
-          throw new Error(`illegal hanzi character: ${character}`);
+          throw new Error(`illegal kanji character: ${character}`);
         }
         // Multiply most significant byte of result by 0x60 and add least significant byte to product.
-        value = (value >> 8) * 0x60 + (value & 0xff);
+        code = (code >> 8) * 0x60 + (code & 0xff);
         // Convert result to a 13-bit binary string.
-        bits.append(value, 13);
+        bits.append(code, 13);
       }
       return bits;
     }
@@ -2430,22 +2441,22 @@
       const bits = new BitArray();
       const content = this.#content;
       for (const character of content) {
-        let value = getKanjiCode(character);
+        let code = getKanjiCode(character);
         // For characters with Shift JIS values from 0x8140 to 0x9ffc.
-        if (value >= 0x8140 && value <= 0x9ffc) {
+        if (code >= 0x8140 && code <= 0x9ffc) {
           // Subtract 0x8140 from Shift JIS value.
-          value -= 0x8140;
+          code -= 0x8140;
           // For characters with Shift JIS values from 0xe040 to 0xebbf.
-        } else if (value >= 0xe040 && value <= 0xebbf) {
+        } else if (code >= 0xe040 && code <= 0xebbf) {
           // Subtract 0xc140 from Shift JIS value.
-          value -= 0xc140;
+          code -= 0xc140;
         } else {
           throw new Error(`illegal kanji character: ${character}`);
         }
         // Multiply most significant byte of result by 0xc0 and add least significant byte to product.
-        value = (value >> 8) * 0xc0 + (value & 0xff);
+        code = (code >> 8) * 0xc0 + (code & 0xff);
         // Convert result to a 13-bit binary string.
-        bits.append(value, 13);
+        bits.append(code, 13);
       }
       return bits;
     }
