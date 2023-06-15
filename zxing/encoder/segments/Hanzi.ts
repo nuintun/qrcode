@@ -23,7 +23,9 @@ const GB2312 = getEncodingMapping(
   [0xa8a1, 0xa8ba],
   [0xa8c5, 0xa8e9],
   [0xa9a4, 0xa9ef],
-  ...getSerialRanges(0xb0a1, 0xf7fe, [0, 93])
+  ...getSerialRanges(0xb0a1, 0xd6fe, [0, 93]),
+  [0xd7a1, 0xd7f9],
+  ...getSerialRanges(0xd8a1, 0xf7fe, [0, 93])
 );
 
 function getHanziCode(character: string): number {
