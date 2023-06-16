@@ -135,8 +135,6 @@
       const ALPHANUMERIC_RE = /^[0-9A-Z$%*+-./: ]+$/;
 
       function chooseBestMode(mode, data) {
-        let charset = encodeCharset.val();
-
         if (mode === 'Auto') {
           if (NUMERIC_RE.test(data)) {
             return new QRCode.Numeric(data);
@@ -166,10 +164,9 @@
 
           // 回退字节模式
           mode = 'Byte';
-          charset = 'UTF_8';
         }
 
-        return new QRCode[mode](data, QRCode.Charset[charset]);
+        return new QRCode[mode](data, QRCode.Charset[encodeCharset.val()]);
       }
 
       // 生成二维码
