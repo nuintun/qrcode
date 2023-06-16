@@ -2108,7 +2108,7 @@
     const bytes = [];
     for (const character of content) {
       const code = character.charCodeAt(0);
-      // If gt max code, pust ?
+      // If gt max code, push ?
       bytes.push(code > maxCode ? 63 : code);
     }
     return new Uint8Array(bytes);
