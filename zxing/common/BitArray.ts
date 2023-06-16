@@ -5,7 +5,7 @@
 const LOAD_FACTOR = 0.75;
 
 function makeArray(length: number): Int32Array {
-  return new Int32Array(Math.floor((length + 31) / 32));
+  return new Int32Array(Math.ceil(length / 32));
 }
 
 export class BitArray {
