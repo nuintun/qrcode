@@ -109,11 +109,11 @@ export class GenericGFPoly {
       [largerCoefficients, smallerCoefficients] = [smallerCoefficients, largerCoefficients];
     }
 
-    // Diff index offset.
+    // Diff index offset
     const offset = largerLength - smallerLength;
     const coefficients = new Int32Array(largerLength);
 
-    // Copy high-order terms only found in higher-degree polynomial's coefficients.
+    // Copy high-order terms only found in higher-degree polynomial's coefficients
     coefficients.set(largerCoefficients.subarray(0, offset));
 
     for (let i = offset; i < largerLength; i++) {
