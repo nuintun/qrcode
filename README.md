@@ -23,7 +23,7 @@
 
 #### Encoder
 
-```js
+```ts
 import { Byte, Encoder, Hanzi, Kanji } from '@nuintun/qrcode';
 
 const encoder = new Encoder({
@@ -43,28 +43,100 @@ const qrcode = encoder.encode(
 console.log(qrcode.toDataURL());
 ```
 
-###### Constructor
+#### Interface
 
-- new Encoder(options?: Options): Encoder
-  - version?: number | 'auto';
-  - level?: 'L' | 'M' | 'Q' | 'H';
-  - hints?: { fnc1?: ['GS1'] | ['AIM', number] };
-  - encode ?: (content: string, charset: Charset) => Uint8Array;
+```ts
+declare type Level = 'L' | 'M' | 'Q' | 'H';
 
-###### Methods
+declare type RGB = [R: number, G: number, B: number];
 
-- encode(...segments: (Alphanumeric | Byte | Hanzi | Kanji | Numeric)[]): QRCode
-  - Encode segments to qrcode.
-    - QRCode
-      - mask
-      - level
-      - matrix
-      - version
-      - toDataURL
+declare interface DataURLOptions {
+  margin?: number;
+  foreground?: RGB;
+  background?: RGB;
+}
+
+declare interface Options {
+  level?: Level;
+  version?: number | 'auto';
+  hints?: { fnc1?: ['GS1'] | ['AIM', number] };
+  encode?: (content: string, charset: Charset) => Uint8Array;
+}
+
+declare class Charset {
+  public static readonly CP437: Charset;
+  public static readonly ISO_8859_1: Charset;
+  public static readonly ISO_8859_2: Charset;
+  public static readonly ISO_8859_3: Charset;
+  public static readonly ISO_8859_4: Charset;
+  public static readonly ISO_8859_5: Charset;
+  public static readonly ISO_8859_6: Charset;
+  public static readonly ISO_8859_7: Charset;
+  public static readonly ISO_8859_8: Charset;
+  public static readonly ISO_8859_9: Charset;
+  public static readonly ISO_8859_10: Charset;
+  public static readonly ISO_8859_11: Charset;
+  public static readonly ISO_8859_13: Charset;
+  public static readonly ISO_8859_14: Charset;
+  public static readonly ISO_8859_15: Charset;
+  public static readonly ISO_8859_16: Charset;
+  public static readonly SJIS: Charset;
+  public static readonly CP1250: Charset;
+  public static readonly CP1251: Charset;
+  public static readonly CP1252: Charset;
+  public static readonly CP1256: Charset;
+  public static readonly UTF_16BE: Charset;
+  public static readonly UTF_8: Charset;
+  public static readonly ASCII: Charset;
+  public static readonly BIG5: Charset;
+  public static readonly GB18030: Charset;
+  public static readonly EUC_KR: Charset;
+  public constructor(label: string, ...values: number[]);
+}
+
+declare class Matrix {
+  public width: number;
+  public height: number;
+  public get(x: number, y: number): number;
+}
+
+declare class QRCode {
+  public level: Level;
+  public mask: number;
+  public matrix: Matrix;
+  public version: number;
+  public toDataURL(moduleSize: number, options?: DataURLOptions): string;
+}
+
+declare class Alphanumeric {
+  public constructor(content: string);
+}
+
+declare class Byte {
+  public constructor(content: string, charset?: Charset);
+}
+
+declare class Hanzi {
+  public constructor(content: string);
+}
+
+declare class Kanji {
+  public constructor(content: string);
+}
+
+declare class Numeric {
+  public constructor(content: string);
+}
+
+declare class Encoder {
+  public constructor(options?: Options);
+  public encode(...segments: (Alphanumeric | Byte | Hanzi | Kanji | Numeric)[]): QRCode;
+}
+```
 
 #### Decoder
 
-```js
+```ts
 import { Decoder } from '@nuintun/qrcode';
 
 const qrcode = new Decoder();
