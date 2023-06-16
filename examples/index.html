@@ -44,7 +44,7 @@
               <option value="Numeric">Numeric</option>
             </select>
             <label class="indent">字符集：</label>
-            <select disabled id="encode-charset">
+            <select id="encode-charset">
               <option value="ASCII">ASCII</option>
               <option value="UTF_8" selected>UTF-8</option>
               <option value="ISO_8859_1">ISO-8859-1</option>
@@ -111,7 +111,9 @@
       });
 
       encodeMode.on('change', function () {
-        encodeCharset.prop('disabled', encodeMode.val() !== 'Byte');
+        const mode = encodeMode.val();
+
+        encodeCharset.prop('disabled', mode !== 'Auto' && mode !== 'Byte');
       });
 
       function getFNC1Hint() {
@@ -133,6 +135,8 @@
       const ALPHANUMERIC_RE = /^[0-9A-Z$%*+-./: ]+$/;
 
       function chooseBestMode(mode, data) {
+        let charset = encodeCharset.val();
+
         if (mode === 'Auto') {
           if (NUMERIC_RE.test(data)) {
             return new QRCode.Numeric(data);
@@ -162,9 +166,10 @@
 
           // 回退字节模式
           mode = 'Byte';
+          charset = 'UTF_8';
         }
 
-        return new QRCode[mode](data, QRCode.Charset[encodeCharset.val()]);
+        return new QRCode[mode](data, QRCode.Charset[charset]);
       }
 
       // 生成二维码
