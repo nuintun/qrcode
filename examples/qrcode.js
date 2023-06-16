@@ -2125,22 +2125,15 @@
     }
   }
   function getEncodingMapping(label, ...ranges) {
-    const bytes = [];
-    const codes = [];
+    const decoder = new TextDecoder(label);
+    const decode = decoder.decode.bind(decoder);
     const mapping = new Map();
-    const decoder = new TextDecoder(label, { fatal: true });
     for (const [start, end] of ranges) {
       for (let code = start; code <= end; code++) {
-        codes.push(code);
-        bytes.push(code >> 8, code & 0xff);
-      }
-    }
-    const { length } = codes;
-    const characters = decoder.decode(new Uint8Array(bytes));
-    for (let i = 0; i < length; i++) {
-      const character = characters.charAt(i);
-      if (!mapping.has(character)) {
-        mapping.set(character, codes[i]);
+        const character = decode(new Uint8Array([code >> 8, code & 0xff]));
+        if (!mapping.has(character)) {
+          mapping.set(character, code);
+        }
       }
     }
     return mapping;
