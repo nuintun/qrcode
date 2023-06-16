@@ -24,21 +24,18 @@
 #### Encoder
 
 ```js
-import { Byte, Encoder, Kanji } from '@nuintun/qrcode';
+import { Byte, Encoder, Hanzi, Kanji } from '@nuintun/qrcode';
 
 const encoder = new Encoder({
   level: 'H',
-  hints: {
-    eci: true,
-    gs1: false
-  }
+  version: 'auto'
 });
 
 const qrcode = encoder.encode(
   // Byte
-  new Byte('你好世界\n'),
+  new Hanzi('你好世界'),
   // Byte
-  new Byte('hello world\n'),
+  new Byte('\nhello world\n'),
   // Kanji
   new Kanji('こんにちは世界')
 );
@@ -51,12 +48,12 @@ console.log(qrcode.toDataURL());
 - new Encoder(options?: Options): Encoder
   - version?: number | 'auto';
   - level?: 'L' | 'M' | 'Q' | 'H';
-  - hints?: { eci?: boolean, gs1?: boolean };
+  - hints?: { fnc1?: ['GS1'] | ['AIM', number] };
   - encode ?: (content: string, charset: Charset) => Uint8Array;
 
 ###### Methods
 
-- encode(...segment: (Byte | Kanji | Numeric | Alphanumeric)[]): QRCode
+- encode(...segments: (Alphanumeric | Byte | Hanzi | Kanji | Numeric)[]): QRCode
   - Encode segments to qrcode.
     - QRCode
       - mask
