@@ -43,6 +43,12 @@
               <option value="Kanji">Kanji</option>
               <option value="Numeric">Numeric</option>
             </select>
+            <label class="indent">字符集：</label>
+            <select disabled id="encode-charset">
+              <option value="ASCII">ASCII</option>
+              <option value="UTF_8" selected>UTF-8</option>
+              <option value="ISO_8859_1">ISO-8859-1</option>
+            </select>
           </p>
           <p>
             <label>前景颜色：</label>
@@ -96,11 +102,16 @@
       const aimIndicator = $('#aim-indicator');
       const encodeMargin = $('#encode-margin');
       const encodeResult = $('#encode-result');
+      const encodeCharset = $('#encode-charset');
       const gifBackground = $('#gif-background');
       const gifForeground = $('#gif-foreground');
 
-      hintsFNC1.on('change', function (e) {
+      hintsFNC1.on('change', function () {
         aimIndicator.prop('disabled', hintsFNC1.val() !== 'AIM');
+      });
+
+      encodeMode.on('change', function () {
+        encodeCharset.prop('disabled', encodeMode.val() !== 'Byte');
       });
 
       function getFNC1Hint() {
@@ -153,7 +164,7 @@
           mode = 'Byte';
         }
 
-        return new QRCode[mode](data, QRCode.Charset.UTF_8);
+        return new QRCode[mode](data, QRCode.Charset[encodeCharset.val()]);
       }
 
       // 生成二维码
