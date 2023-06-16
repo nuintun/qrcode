@@ -104,22 +104,23 @@ export class GenericGFPoly {
     let smallerCoefficients = this.#coefficients;
     let smallerLength = smallerCoefficients.length;
 
-    if (smallerLength > largerLength) {
-      [smallerLength, largerLength] = [largerLength, smallerLength];
-      [smallerCoefficients, largerCoefficients] = [largerCoefficients, smallerCoefficients];
+    if (largerLength < smallerLength) {
+      [largerLength, smallerLength] = [smallerLength, largerLength];
+      [largerCoefficients, smallerCoefficients] = [smallerCoefficients, largerCoefficients];
     }
 
-    const sumDiff = new Int32Array(largerLength);
-    const lengthDiff = largerLength - smallerLength;
+    // Diff index offset.
+    const offset = largerLength - smallerLength;
+    const coefficients = new Int32Array(largerLength);
 
-    // Copy high-order terms only found in higher-degree polynomial's coefficients
-    sumDiff.set(largerCoefficients.subarray(0, lengthDiff));
+    // Copy high-order terms only found in higher-degree polynomial's coefficients.
+    coefficients.set(largerCoefficients.subarray(0, offset));
 
-    for (let i = lengthDiff; i < largerLength; i++) {
-      sumDiff[i] = smallerCoefficients[i - lengthDiff] ^ largerCoefficients[i];
+    for (let i = offset; i < largerLength; i++) {
+      coefficients[i] = smallerCoefficients[i - offset] ^ largerCoefficients[i];
     }
 
-    return new GenericGFPoly(this.#field, sumDiff);
+    return new GenericGFPoly(this.#field, coefficients);
   }
 
   public multiply(scalar: number): GenericGFPoly;
