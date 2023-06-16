@@ -45,17 +45,26 @@ export function decode(bytes: Uint8Array, charset: Charset): string {
 }
 
 export function getEncodingMapping(label: string, ...ranges: EncodingRange[]): Map<string, number> {
-  const decoder = new TextDecoder(label);
-  const decode = decoder.decode.bind(decoder);
+  const bytes: number[] = [];
+  const codes: number[] = [];
   const mapping: Map<string, number> = new Map();
+  const decoder = new TextDecoder(label, { fatal: true });
 
   for (const [start, end] of ranges) {
     for (let code = start; code <= end; code++) {
-      const character = decode(new Uint8Array([code >> 8, code & 0xff]));
+      bytes.push(code >> 8, code & 0xff);
+      codes.push(code);
+    }
+  }
 
-      if (!mapping.has(character)) {
-        mapping.set(character, code);
-      }
+  const { length } = codes;
+  const characters = decoder.decode(new Uint8Array(bytes));
+
+  for (let i = 0; i < length; i++) {
+    const character = characters.charAt(i);
+
+    if (!mapping.has(character)) {
+      mapping.set(character, codes[i]);
     }
   }
 
