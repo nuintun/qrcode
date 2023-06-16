@@ -50,18 +50,7 @@ declare type Level = 'L' | 'M' | 'Q' | 'H';
 
 declare type RGB = [R: number, G: number, B: number];
 
-declare interface DataURLOptions {
-  margin?: number;
-  foreground?: RGB;
-  background?: RGB;
-}
-
-declare interface Options {
-  level?: Level;
-  version?: number | 'auto';
-  hints?: { fnc1?: ['GS1'] | ['AIM', number] };
-  encode?: (content: string, charset: Charset) => Uint8Array;
-}
+declare type FNC1 = [mode: 'GS1'] | [mode: 'AIM', indicator: number];
 
 declare class Charset {
   public static readonly CP437: Charset;
@@ -100,6 +89,12 @@ declare class Matrix {
   public get(x: number, y: number): number;
 }
 
+declare interface DataURLOptions {
+  margin?: number;
+  foreground?: RGB;
+  background?: RGB;
+}
+
 declare class QRCode {
   public level: Level;
   public mask: number;
@@ -126,6 +121,13 @@ declare class Kanji {
 
 declare class Numeric {
   public constructor(content: string);
+}
+
+declare interface Options {
+  level?: Level;
+  hints?: { fnc1?: FNC1 };
+  version?: number | 'auto';
+  encode?: (content: string, charset: Charset) => Uint8Array;
 }
 
 declare class Encoder {
