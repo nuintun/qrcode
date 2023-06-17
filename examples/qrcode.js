@@ -1171,9 +1171,9 @@
   ];
 
   /**
-   * @module GenericGFPoly
+   * @module Polynomial
    */
-  class GenericGFPoly {
+  class Polynomial {
     #field;
     #coefficients;
     constructor(field, coefficients) {
@@ -1202,11 +1202,11 @@
     get coefficients() {
       return this.#coefficients;
     }
-    getDegree() {
-      return this.#coefficients.length - 1;
-    }
     isZero() {
       return this.#coefficients[0] === 0;
+    }
+    getDegree() {
+      return this.#coefficients.length - 1;
     }
     getCoefficient(degree) {
       const coefficients = this.#coefficients;
@@ -1235,6 +1235,54 @@
       }
       return result;
     }
+    multiply(other) {
+      const field = this.#field;
+      const coefficients = this.#coefficients;
+      if (other instanceof Polynomial) {
+        if (this.isZero() || other.isZero()) {
+          return field.zero;
+        }
+        const { length } = coefficients;
+        const otherCoefficients = other.#coefficients;
+        const otherLength = otherCoefficients.length;
+        const product = new Int32Array(length + otherLength - 1);
+        for (let i = 0; i < length; i++) {
+          const coefficient = coefficients[i];
+          for (let j = 0; j < otherLength; j++) {
+            product[i + j] ^= field.multiply(coefficient, otherCoefficients[j]);
+          }
+        }
+        return new Polynomial(field, product);
+      }
+      if (other === 0) {
+        return field.zero;
+      }
+      if (other === 1) {
+        return this;
+      }
+      const { length } = coefficients;
+      const product = new Int32Array(length);
+      for (let i = 0; i < length; i++) {
+        product[i] = field.multiply(coefficients[i], other);
+      }
+      return new Polynomial(field, product);
+    }
+    multiplyByMonomial(degree, coefficient) {
+      if (degree < 0) {
+        throw new Error('illegal monomial degree less than 0');
+      }
+      const field = this.#field;
+      if (coefficient === 0) {
+        return field.zero;
+      }
+      const coefficients = this.#coefficients;
+      const { length } = coefficients;
+      const product = new Int32Array(length + degree);
+      for (let i = 0; i < length; i++) {
+        product[i] = field.multiply(coefficients[i], coefficient);
+      }
+      return new Polynomial(field, product);
+    }
     addOrSubtract(other) {
       if (this.isZero()) {
         return other;
@@ -1258,56 +1306,7 @@
       for (let i = offset; i < largerLength; i++) {
         coefficients[i] = smallerCoefficients[i - offset] ^ largerCoefficients[i];
       }
-      return new GenericGFPoly(this.#field, coefficients);
-    }
-    multiply(other) {
-      const field = this.#field;
-      if (other instanceof GenericGFPoly) {
-        if (this.isZero() || other.isZero()) {
-          return field.zero;
-        }
-        const coefficients = this.#coefficients;
-        const otherCoefficients = other.#coefficients;
-        const { length } = coefficients;
-        const otherLength = otherCoefficients.length;
-        const product = new Int32Array(length + otherLength - 1);
-        for (let i = 0; i < length; i++) {
-          const coefficient = coefficients[i];
-          for (let j = 0; j < otherLength; j++) {
-            product[i + j] ^= field.multiply(coefficient, otherCoefficients[j]);
-          }
-        }
-        return new GenericGFPoly(field, product);
-      }
-      if (other === 0) {
-        return field.zero;
-      }
-      if (other === 1) {
-        return this;
-      }
-      const coefficients = this.#coefficients;
-      const { length } = coefficients;
-      const product = new Int32Array(length);
-      for (let i = 0; i < length; i++) {
-        product[i] = field.multiply(coefficients[i], other);
-      }
-      return new GenericGFPoly(field, product);
-    }
-    multiplyByMonomial(degree, coefficient) {
-      if (degree < 0) {
-        throw new Error('illegal monomial degree less than 0');
-      }
-      const field = this.#field;
-      if (coefficient === 0) {
-        return field.zero;
-      }
-      const coefficients = this.#coefficients;
-      const { length } = coefficients;
-      const product = new Int32Array(length + degree);
-      for (let i = 0; i < length; i++) {
-        product[i] = field.multiply(coefficients[i], coefficient);
-      }
-      return new GenericGFPoly(field, product);
+      return new Polynomial(this.#field, coefficients);
     }
     divide(other) {
       if (other.isZero()) {
@@ -1323,7 +1322,7 @@
         const degreeDiff = remainderDegree - other.getDegree();
         const scale = field.multiply(remainder.getCoefficient(remainderDegree), inverseDenominatorLeadingTerm);
         const term = other.multiplyByMonomial(degreeDiff, scale);
-        const iterationQuotient = field.buildMonomial(degreeDiff, scale);
+        const iterationQuotient = field.buildPolynomial(degreeDiff, scale);
         quotient = quotient.addOrSubtract(iterationQuotient);
         remainder = remainder.addOrSubtract(term);
       }
@@ -1332,13 +1331,13 @@
   }
 
   /**
-   * @module GenericGF
+   * @module GaloisField
    */
-  class GenericGF {
+  class GaloisField {
     #size;
-    #generator;
     #one;
     #zero;
+    #generator;
     #expTable;
     #logTable;
     constructor(primitive, size, generator) {
@@ -1361,8 +1360,8 @@
       this.#expTable = expTable;
       this.#logTable = logTable;
       this.#generator = generator;
-      this.#one = new GenericGFPoly(this, new Int32Array([1]));
-      this.#zero = new GenericGFPoly(this, new Int32Array([0]));
+      this.#one = new Polynomial(this, new Int32Array([1]));
+      this.#zero = new Polynomial(this, new Int32Array([0]));
     }
     get size() {
       return this.#size;
@@ -1376,16 +1375,14 @@
     get generator() {
       return this.#generator;
     }
-    buildMonomial(degree, coefficient) {
-      if (degree < 0) {
-        throw new Error('illegal monomial degree less than 0');
+    exp(a) {
+      return this.#expTable[a];
+    }
+    log(a) {
+      if (a === 0) {
+        throw new Error("can't take log(0)");
       }
-      if (coefficient === 0) {
-        return this.#zero;
-      }
-      const coefficients = new Int32Array(degree + 1);
-      coefficients[0] = coefficient;
-      return new GenericGFPoly(this, coefficients);
+      return this.#logTable[a];
     }
     inverse(a) {
       if (a === 0) {
@@ -1400,17 +1397,19 @@
       const logTable = this.#logTable;
       return this.#expTable[(logTable[a] + logTable[b]) % (this.#size - 1)];
     }
-    exp(a) {
-      return this.#expTable[a];
-    }
-    log(a) {
-      if (a === 0) {
-        throw new Error("can't take log(0)");
+    buildPolynomial(degree, coefficient) {
+      if (degree < 0) {
+        throw new Error('illegal monomial degree less than 0');
       }
-      return this.#logTable[a];
+      if (coefficient === 0) {
+        return this.#zero;
+      }
+      const coefficients = new Int32Array(degree + 1);
+      coefficients[0] = coefficient;
+      return new Polynomial(this, coefficients);
     }
   }
-  const QR_CODE_FIELD_256 = new GenericGF(0x011d, 256, 0);
+  const QR_CODE_FIELD_256 = new GaloisField(0x011d, 256, 0);
 
   /**
    * @module Encoder
@@ -1420,7 +1419,7 @@
     #generators;
     constructor(field = QR_CODE_FIELD_256) {
       this.#field = field;
-      this.#generators = [new GenericGFPoly(field, new Int32Array([1]))];
+      this.#generators = [new Polynomial(field, new Int32Array([1]))];
     }
     #buildGenerator(degree) {
       const generators = this.#generators;
@@ -1431,7 +1430,7 @@
         let lastGenerator = generators[length - 1];
         for (let i = length; i <= degree; i++) {
           const coefficients = new Int32Array([1, field.exp(i - 1 + generator)]);
-          const nextGenerator = lastGenerator.multiply(new GenericGFPoly(field, coefficients));
+          const nextGenerator = lastGenerator.multiply(new Polynomial(field, coefficients));
           generators.push(nextGenerator);
           lastGenerator = nextGenerator;
         }
@@ -1443,7 +1442,7 @@
       const generator = this.#buildGenerator(ecBytes);
       const infoCoefficients = new Int32Array(dataBytes);
       infoCoefficients.set(received.subarray(0, dataBytes));
-      const base = new GenericGFPoly(this.#field, infoCoefficients);
+      const base = new Polynomial(this.#field, infoCoefficients);
       const info = base.multiplyByMonomial(ecBytes, 1);
       const [, remainder] = info.divide(generator);
       const { coefficients } = remainder;

@@ -2,17 +2,17 @@
  * @module Decoder
  */
 
-import { GenericGFPoly } from './GenericGFPoly';
-import { GenericGF, QR_CODE_FIELD_256 } from './GenericGF';
+import { Polynomial } from './Polynomial';
+import { GaloisField, QR_CODE_FIELD_256 } from './GaloisField';
 
 export class Decoder {
-  #field: GenericGF;
+  #field: GaloisField;
 
-  constructor(field: GenericGF = QR_CODE_FIELD_256) {
+  constructor(field: GaloisField = QR_CODE_FIELD_256) {
     this.#field = field;
   }
 
-  #findErrorLocations(errorLocator: GenericGFPoly): Int32Array {
+  #findErrorLocations(errorLocator: Polynomial): Int32Array {
     // This is a direct application of Chien's search
     const numErrors = errorLocator.getDegree();
 
@@ -40,7 +40,7 @@ export class Decoder {
     return result;
   }
 
-  #findErrorMagnitudes(errorEvaluator: GenericGFPoly, errorLocations: Int32Array): Int32Array {
+  #findErrorMagnitudes(errorEvaluator: Polynomial, errorLocations: Int32Array): Int32Array {
     // This is directly applying Forney's Formula
     const field = this.#field;
     const { generator } = field;
@@ -77,7 +77,7 @@ export class Decoder {
     return result;
   }
 
-  #runEuclideanAlgorithm(a: GenericGFPoly, b: GenericGFPoly, ecBytes: number): [sigma: GenericGFPoly, omega: GenericGFPoly] {
+  #runEuclideanAlgorithm(a: Polynomial, b: Polynomial, ecBytes: number): [sigma: Polynomial, omega: Polynomial] {
     // Assume a's degree is >= b's
     if (a.getDegree() < b.getDegree()) {
       [a, b] = [b, a];
@@ -116,7 +116,7 @@ export class Decoder {
         const degreeDiff = remainder.getDegree() - remainderLastDegree;
         const scale = field.multiply(remainder.getCoefficient(remainder.getDegree()), dltInverse);
 
-        quotient = quotient.addOrSubtract(field.buildMonomial(degreeDiff, scale));
+        quotient = quotient.addOrSubtract(field.buildPolynomial(degreeDiff, scale));
         remainder = remainder.addOrSubtract(remainderLast.multiplyByMonomial(degreeDiff, scale));
       }
 
@@ -143,7 +143,7 @@ export class Decoder {
   public decode(received: Int32Array, ecBytes: number): void {
     const field = this.#field;
     const { generator } = field;
-    const poly = new GenericGFPoly(field, received);
+    const poly = new Polynomial(field, received);
     const syndromeCoefficients = new Int32Array(ecBytes);
 
     let noError: boolean = true;
@@ -159,8 +159,8 @@ export class Decoder {
     }
 
     if (!noError) {
-      const syndrome = new GenericGFPoly(field, syndromeCoefficients);
-      const [sigma, omega] = this.#runEuclideanAlgorithm(field.buildMonomial(ecBytes, 1), syndrome, ecBytes);
+      const syndrome = new Polynomial(field, syndromeCoefficients);
+      const [sigma, omega] = this.#runEuclideanAlgorithm(field.buildPolynomial(ecBytes, 1), syndrome, ecBytes);
       const errorLocations = this.#findErrorLocations(sigma);
       const errorMagnitudes = this.#findErrorMagnitudes(omega, errorLocations);
       const errorLength = errorLocations.length;

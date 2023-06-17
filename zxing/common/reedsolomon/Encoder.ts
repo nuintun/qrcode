@@ -2,19 +2,19 @@
  * @module Encoder
  */
 
-import { GenericGFPoly } from './GenericGFPoly';
-import { GenericGF, QR_CODE_FIELD_256 } from './GenericGF';
+import { Polynomial } from './Polynomial';
+import { GaloisField, QR_CODE_FIELD_256 } from './GaloisField';
 
 export class Encoder {
-  #field: GenericGF;
-  #generators: GenericGFPoly[];
+  #field: GaloisField;
+  #generators: Polynomial[];
 
-  constructor(field: GenericGF = QR_CODE_FIELD_256) {
+  constructor(field: GaloisField = QR_CODE_FIELD_256) {
     this.#field = field;
-    this.#generators = [new GenericGFPoly(field, new Int32Array([1]))];
+    this.#generators = [new Polynomial(field, new Int32Array([1]))];
   }
 
-  #buildGenerator(degree: number): GenericGFPoly {
+  #buildGenerator(degree: number): Polynomial {
     const generators = this.#generators;
     const { length } = generators;
 
@@ -26,7 +26,7 @@ export class Encoder {
 
       for (let i = length; i <= degree; i++) {
         const coefficients = new Int32Array([1, field.exp(i - 1 + generator)]);
-        const nextGenerator = lastGenerator.multiply(new GenericGFPoly(field, coefficients));
+        const nextGenerator = lastGenerator.multiply(new Polynomial(field, coefficients));
 
         generators.push(nextGenerator);
 
@@ -44,7 +44,7 @@ export class Encoder {
 
     infoCoefficients.set(received.subarray(0, dataBytes));
 
-    const base = new GenericGFPoly(this.#field, infoCoefficients);
+    const base = new Polynomial(this.#field, infoCoefficients);
     const info = base.multiplyByMonomial(ecBytes, 1);
     const [, remainder] = info.divide(generator);
     const { coefficients } = remainder;

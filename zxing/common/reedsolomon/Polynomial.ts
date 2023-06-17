@@ -1,14 +1,14 @@
 /**
- * @module GenericGFPoly
+ * @module Polynomial
  */
 
-import { GenericGF } from './GenericGF';
+import { GaloisField } from './GaloisField';
 
-export class GenericGFPoly {
-  #field: GenericGF;
+export class Polynomial {
+  #field: GaloisField;
   #coefficients: Int32Array;
 
-  constructor(field: GenericGF, coefficients: Int32Array) {
+  constructor(field: GaloisField, coefficients: Int32Array) {
     const { length } = coefficients;
 
     if (length === 0) {
@@ -43,12 +43,12 @@ export class GenericGFPoly {
     return this.#coefficients;
   }
 
-  public getDegree(): number {
-    return this.#coefficients.length - 1;
-  }
-
   public isZero(): boolean {
     return this.#coefficients[0] === 0;
+  }
+
+  public getDegree(): number {
+    return this.#coefficients.length - 1;
   }
 
   public getCoefficient(degree: number): number {
@@ -90,7 +90,74 @@ export class GenericGFPoly {
     return result;
   }
 
-  public addOrSubtract(other: GenericGFPoly): GenericGFPoly {
+  public multiply(scalar: number): Polynomial;
+  public multiply(other: Polynomial): Polynomial;
+  public multiply(other: number | Polynomial): Polynomial {
+    const field = this.#field;
+    const coefficients = this.#coefficients;
+
+    if (other instanceof Polynomial) {
+      if (this.isZero() || other.isZero()) {
+        return field.zero;
+      }
+
+      const { length } = coefficients;
+      const otherCoefficients = other.#coefficients;
+      const otherLength = otherCoefficients.length;
+      const product = new Int32Array(length + otherLength - 1);
+
+      for (let i = 0; i < length; i++) {
+        const coefficient = coefficients[i];
+
+        for (let j = 0; j < otherLength; j++) {
+          product[i + j] ^= field.multiply(coefficient, otherCoefficients[j]);
+        }
+      }
+
+      return new Polynomial(field, product);
+    }
+
+    if (other === 0) {
+      return field.zero;
+    }
+
+    if (other === 1) {
+      return this;
+    }
+
+    const { length } = coefficients;
+    const product = new Int32Array(length);
+
+    for (let i = 0; i < length; i++) {
+      product[i] = field.multiply(coefficients[i], other);
+    }
+
+    return new Polynomial(field, product);
+  }
+
+  public multiplyByMonomial(degree: number, coefficient: number): Polynomial {
+    if (degree < 0) {
+      throw new Error('illegal monomial degree less than 0');
+    }
+
+    const field = this.#field;
+
+    if (coefficient === 0) {
+      return field.zero;
+    }
+
+    const coefficients = this.#coefficients;
+    const { length } = coefficients;
+    const product = new Int32Array(length + degree);
+
+    for (let i = 0; i < length; i++) {
+      product[i] = field.multiply(coefficients[i], coefficient);
+    }
+
+    return new Polynomial(field, product);
+  }
+
+  public addOrSubtract(other: Polynomial): Polynomial {
     if (this.isZero()) {
       return other;
     }
@@ -120,78 +187,10 @@ export class GenericGFPoly {
       coefficients[i] = smallerCoefficients[i - offset] ^ largerCoefficients[i];
     }
 
-    return new GenericGFPoly(this.#field, coefficients);
+    return new Polynomial(this.#field, coefficients);
   }
 
-  public multiply(scalar: number): GenericGFPoly;
-  public multiply(other: GenericGFPoly): GenericGFPoly;
-  public multiply(other: number | GenericGFPoly): GenericGFPoly {
-    const field = this.#field;
-
-    if (other instanceof GenericGFPoly) {
-      if (this.isZero() || other.isZero()) {
-        return field.zero;
-      }
-
-      const coefficients = this.#coefficients;
-      const otherCoefficients = other.#coefficients;
-      const { length } = coefficients;
-      const otherLength = otherCoefficients.length;
-      const product = new Int32Array(length + otherLength - 1);
-
-      for (let i = 0; i < length; i++) {
-        const coefficient = coefficients[i];
-
-        for (let j = 0; j < otherLength; j++) {
-          product[i + j] ^= field.multiply(coefficient, otherCoefficients[j]);
-        }
-      }
-
-      return new GenericGFPoly(field, product);
-    }
-
-    if (other === 0) {
-      return field.zero;
-    }
-
-    if (other === 1) {
-      return this;
-    }
-
-    const coefficients = this.#coefficients;
-    const { length } = coefficients;
-    const product = new Int32Array(length);
-
-    for (let i = 0; i < length; i++) {
-      product[i] = field.multiply(coefficients[i], other);
-    }
-
-    return new GenericGFPoly(field, product);
-  }
-
-  public multiplyByMonomial(degree: number, coefficient: number): GenericGFPoly {
-    if (degree < 0) {
-      throw new Error('illegal monomial degree less than 0');
-    }
-
-    const field = this.#field;
-
-    if (coefficient === 0) {
-      return field.zero;
-    }
-
-    const coefficients = this.#coefficients;
-    const { length } = coefficients;
-    const product = new Int32Array(length + degree);
-
-    for (let i = 0; i < length; i++) {
-      product[i] = field.multiply(coefficients[i], coefficient);
-    }
-
-    return new GenericGFPoly(field, product);
-  }
-
-  public divide(other: GenericGFPoly): [quotient: GenericGFPoly, remainder: GenericGFPoly] {
+  public divide(other: Polynomial): [quotient: Polynomial, remainder: Polynomial] {
     if (other.isZero()) {
       throw new Error('divide by 0');
     }
@@ -199,7 +198,7 @@ export class GenericGFPoly {
     const field = this.#field;
 
     let quotient = field.zero;
-    let remainder: GenericGFPoly = this;
+    let remainder: Polynomial = this;
 
     const denominatorLeadingTerm = other.getCoefficient(other.getDegree());
     const inverseDenominatorLeadingTerm = field.inverse(denominatorLeadingTerm);
@@ -209,7 +208,7 @@ export class GenericGFPoly {
       const degreeDiff = remainderDegree - other.getDegree();
       const scale = field.multiply(remainder.getCoefficient(remainderDegree), inverseDenominatorLeadingTerm);
       const term = other.multiplyByMonomial(degreeDiff, scale);
-      const iterationQuotient = field.buildMonomial(degreeDiff, scale);
+      const iterationQuotient = field.buildPolynomial(degreeDiff, scale);
 
       quotient = quotient.addOrSubtract(iterationQuotient);
       remainder = remainder.addOrSubtract(term);

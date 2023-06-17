@@ -1,14 +1,14 @@
 /**
- * @module GenericGF
+ * @module GaloisField
  */
 
-import { GenericGFPoly } from './GenericGFPoly';
+import { Polynomial } from './Polynomial';
 
-export class GenericGF {
+export class GaloisField {
   #size: number;
+  #one: Polynomial;
+  #zero: Polynomial;
   #generator: number;
-  #one: GenericGFPoly;
-  #zero: GenericGFPoly;
   #expTable: Int32Array;
   #logTable: Int32Array;
 
@@ -38,19 +38,19 @@ export class GenericGF {
     this.#expTable = expTable;
     this.#logTable = logTable;
     this.#generator = generator;
-    this.#one = new GenericGFPoly(this, new Int32Array([1]));
-    this.#zero = new GenericGFPoly(this, new Int32Array([0]));
+    this.#one = new Polynomial(this, new Int32Array([1]));
+    this.#zero = new Polynomial(this, new Int32Array([0]));
   }
 
   public get size(): number {
     return this.#size;
   }
 
-  public get one(): GenericGFPoly {
+  public get one(): Polynomial {
     return this.#one;
   }
 
-  public get zero(): GenericGFPoly {
+  public get zero(): Polynomial {
     return this.#zero;
   }
 
@@ -58,20 +58,16 @@ export class GenericGF {
     return this.#generator;
   }
 
-  public buildMonomial(degree: number, coefficient: number): GenericGFPoly {
-    if (degree < 0) {
-      throw new Error('illegal monomial degree less than 0');
+  public exp(a: number): number {
+    return this.#expTable[a];
+  }
+
+  public log(a: number): number {
+    if (a === 0) {
+      throw new Error("can't take log(0)");
     }
 
-    if (coefficient === 0) {
-      return this.#zero;
-    }
-
-    const coefficients = new Int32Array(degree + 1);
-
-    coefficients[0] = coefficient;
-
-    return new GenericGFPoly(this, coefficients);
+    return this.#logTable[a];
   }
 
   public inverse(a: number): number {
@@ -92,17 +88,21 @@ export class GenericGF {
     return this.#expTable[(logTable[a] + logTable[b]) % (this.#size - 1)];
   }
 
-  public exp(a: number): number {
-    return this.#expTable[a];
-  }
-
-  public log(a: number): number {
-    if (a === 0) {
-      throw new Error("can't take log(0)");
+  public buildPolynomial(degree: number, coefficient: number): Polynomial {
+    if (degree < 0) {
+      throw new Error('illegal monomial degree less than 0');
     }
 
-    return this.#logTable[a];
+    if (coefficient === 0) {
+      return this.#zero;
+    }
+
+    const coefficients = new Int32Array(degree + 1);
+
+    coefficients[0] = coefficient;
+
+    return new Polynomial(this, coefficients);
   }
 }
 
-export const QR_CODE_FIELD_256 = new GenericGF(0x011d, 256, 0);
+export const QR_CODE_FIELD_256 = new GaloisField(0x011d, 256, 0);
