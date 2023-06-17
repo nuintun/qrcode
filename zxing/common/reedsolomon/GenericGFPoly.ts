@@ -133,17 +133,17 @@ export class GenericGFPoly {
         return field.zero;
       }
 
-      const aCoefficients = this.#coefficients;
-      const aLength = aCoefficients.length;
-      const bCoefficients = other.#coefficients;
-      const bLength = bCoefficients.length;
-      const product = new Int32Array(aLength + bLength - 1);
+      const coefficients = this.#coefficients;
+      const otherCoefficients = other.#coefficients;
+      const { length } = coefficients;
+      const otherLength = otherCoefficients.length;
+      const product = new Int32Array(length + otherLength - 1);
 
-      for (let i = 0; i < aLength; i++) {
-        const aCoefficient = aCoefficients[i];
+      for (let i = 0; i < length; i++) {
+        const coefficient = coefficients[i];
 
-        for (let j = 0; j < bLength; j++) {
-          product[i + j] ^= field.multiply(aCoefficient, bCoefficients[j]);
+        for (let j = 0; j < otherLength; j++) {
+          product[i + j] ^= field.multiply(coefficient, otherCoefficients[j]);
         }
       }
 
@@ -205,10 +205,11 @@ export class GenericGFPoly {
     const inverseDenominatorLeadingTerm = field.inverse(denominatorLeadingTerm);
 
     while (remainder.getDegree() >= other.getDegree() && !remainder.isZero()) {
-      const degreeDifference = remainder.getDegree() - other.getDegree();
-      const scale = field.multiply(remainder.getCoefficient(remainder.getDegree()), inverseDenominatorLeadingTerm);
-      const term = other.multiplyByMonomial(degreeDifference, scale);
-      const iterationQuotient = field.buildMonomial(degreeDifference, scale);
+      const remainderDegree = remainder.getDegree();
+      const degreeDiff = remainderDegree - other.getDegree();
+      const scale = field.multiply(remainder.getCoefficient(remainderDegree), inverseDenominatorLeadingTerm);
+      const term = other.multiplyByMonomial(degreeDiff, scale);
+      const iterationQuotient = field.buildMonomial(degreeDiff, scale);
 
       quotient = quotient.addOrSubtract(iterationQuotient);
       remainder = remainder.addOrSubtract(term);

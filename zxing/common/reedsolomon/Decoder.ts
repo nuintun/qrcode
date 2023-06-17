@@ -85,56 +85,57 @@ export class Decoder {
 
     const field = this.#field;
 
-    let r = b;
-    let rLast = a;
-    let t = field.one;
-    let tLast = field.zero;
+    let remainder = b;
+    let term = field.one;
+    let remainderLast = a;
+    let termLast = field.zero;
 
     // Run Euclidean algorithm until r's degree is less than ecBytes/2
-    while (r.getDegree() >= ((ecBytes / 2) | 0)) {
-      let rLastLast = rLast;
-      let tLastLast = tLast;
+    while (remainder.getDegree() >= ((ecBytes / 2) | 0)) {
+      let termLastLast = termLast;
+      let remainderLastLast = remainderLast;
 
-      rLast = r;
-      tLast = t;
+      termLast = term;
+      remainderLast = remainder;
 
-      // Divide rLastLast by rLast, with quotient in q and remainder in r
-      if (rLast.isZero()) {
+      // Divide remainderLastLast by remainderLast, with quotient in q and remainder in r
+      if (remainderLast.isZero()) {
         // Oops, Euclidean algorithm already terminated?
         throw new Error('r_{i-1} was zero');
       }
 
-      r = rLastLast;
+      remainder = remainderLastLast;
 
-      let q = field.zero;
+      let quotient = field.zero;
 
-      const denominatorLeadingTerm = rLast.getCoefficient(rLast.getDegree());
+      const remainderLastDegree = remainderLast.getDegree();
+      const denominatorLeadingTerm = remainderLast.getCoefficient(remainderLastDegree);
       const dltInverse = field.inverse(denominatorLeadingTerm);
 
-      while (r.getDegree() >= rLast.getDegree() && !r.isZero()) {
-        const degreeDiff = r.getDegree() - rLast.getDegree();
-        const scale = field.multiply(r.getCoefficient(r.getDegree()), dltInverse);
+      while (remainder.getDegree() >= remainderLastDegree && !remainder.isZero()) {
+        const degreeDiff = remainder.getDegree() - remainderLastDegree;
+        const scale = field.multiply(remainder.getCoefficient(remainder.getDegree()), dltInverse);
 
-        q = q.addOrSubtract(field.buildMonomial(degreeDiff, scale));
-        r = r.addOrSubtract(rLast.multiplyByMonomial(degreeDiff, scale));
+        quotient = quotient.addOrSubtract(field.buildMonomial(degreeDiff, scale));
+        remainder = remainder.addOrSubtract(remainderLast.multiplyByMonomial(degreeDiff, scale));
       }
 
-      t = q.multiply(tLast).addOrSubtract(tLastLast);
+      term = quotient.multiply(termLast).addOrSubtract(termLastLast);
 
-      if (r.getDegree() >= rLast.getDegree()) {
+      if (remainder.getDegree() >= remainderLastDegree) {
         throw new Error('division algorithm failed to reduce polynomial');
       }
     }
 
-    const sigmaTildeAtZero = t.getCoefficient(0);
+    const sigmaTildeAtZero = term.getCoefficient(0);
 
     if (sigmaTildeAtZero === 0) {
       throw new Error('sigma tilde(0) was zero');
     }
 
     const inverse = field.inverse(sigmaTildeAtZero);
-    const sigma = t.multiply(inverse);
-    const omega = r.multiply(inverse);
+    const sigma = term.multiply(inverse);
+    const omega = remainder.multiply(inverse);
 
     return [sigma, omega];
   }
@@ -162,11 +163,11 @@ export class Decoder {
       const [sigma, omega] = this.#runEuclideanAlgorithm(field.buildMonomial(ecBytes, 1), syndrome, ecBytes);
       const errorLocations = this.#findErrorLocations(sigma);
       const errorMagnitudes = this.#findErrorMagnitudes(omega, errorLocations);
-      const eLength = errorLocations.length;
-      const rLength = received.length;
+      const errorLength = errorLocations.length;
+      const receivedLength = received.length;
 
-      for (let i = 0; i < eLength; i++) {
-        const position = rLength - 1 - field.log(errorLocations[i]);
+      for (let i = 0; i < errorLength; i++) {
+        const position = receivedLength - 1 - field.log(errorLocations[i]);
 
         if (position < 0) {
           throw new Error('bad error location');
