@@ -1238,11 +1238,11 @@
     multiply(other) {
       const field = this.#field;
       const coefficients = this.#coefficients;
+      const { length } = coefficients;
       if (other instanceof Polynomial) {
         if (this.isZero() || other.isZero()) {
           return field.zero;
         }
-        const { length } = coefficients;
         const otherCoefficients = other.#coefficients;
         const otherLength = otherCoefficients.length;
         const product = new Int32Array(length + otherLength - 1);
@@ -1260,7 +1260,6 @@
       if (other === 1) {
         return this;
       }
-      const { length } = coefficients;
       const product = new Int32Array(length);
       for (let i = 0; i < length; i++) {
         product[i] = field.multiply(coefficients[i], other);
