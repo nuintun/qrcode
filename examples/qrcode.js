@@ -2180,7 +2180,7 @@
       }
       if (mode === 'AIM') {
         const [, indicator] = fnc1;
-        if (indicator < 0 || indicator > 0xff) {
+        if (indicator < 0 || indicator > 0xff || !Number.isInteger(indicator)) {
           throw new Error('illegal fn1 application indicator');
         }
       }
