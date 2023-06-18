@@ -47,7 +47,7 @@ export function assertLevel(level: 'L' | 'M' | 'Q' | 'H'): asserts level {
 export function assertVersion(version: number | 'auto'): asserts version {
   if (version !== 'auto') {
     if (version < 1 || version > 40 || !Number.isInteger(version)) {
-      throw new Error('version must be an integer in [1 - 40] or "auto"');
+      throw new Error('version must be "auto" or an integer in [1 - 40]');
     }
   }
 }
