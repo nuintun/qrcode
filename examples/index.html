@@ -179,18 +179,18 @@
         const background = hex2rgb(gifBackground.val());
         const foreground = hex2rgb(gifForeground.val());
 
-        const encoder = new QRCode.Encoder({
-          level,
-          version: 'auto',
-          hints: { fnc1: getFNC1Hint() }
-        });
-
-        console.dir(encoder);
-        console.dir(QRCode.Charset);
-
         encodeResult.removeClass('hide');
 
         try {
+          const encoder = new QRCode.Encoder({
+            level,
+            version: 'auto',
+            hints: { fnc1: getFNC1Hint() }
+          });
+
+          console.dir(encoder);
+          console.dir(QRCode.Charset);
+
           const segment = chooseBestMode(mode, data);
 
           console.time('encode');
