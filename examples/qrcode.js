@@ -1178,8 +1178,8 @@
     #coefficients;
     constructor(field, coefficients) {
       const { length } = coefficients;
-      if (length === 0) {
-        throw new Error('coefficients cannot empty');
+      if (length <= 0) {
+        throw new Error('polynomial coefficients cannot empty');
       }
       this.#field = field;
       if (length > 1 && coefficients[0] === 0) {
@@ -1212,7 +1212,7 @@
       const coefficients = this.#coefficients;
       return coefficients[coefficients.length - 1 - degree];
     }
-    evaluateAt(a) {
+    evaluate(a) {
       if (a === 0) {
         // Just return the x^0 coefficient
         return this.getCoefficient(0);
@@ -1267,9 +1267,6 @@
       return new Polynomial(field, product);
     }
     multiplyByMonomial(degree, coefficient) {
-      if (degree < 0) {
-        throw new Error('illegal monomial degree less than 0');
-      }
       const field = this.#field;
       if (coefficient === 0) {
         return field.zero;
@@ -1308,18 +1305,15 @@
       return new Polynomial(this.#field, coefficients);
     }
     divide(other) {
-      if (other.isZero()) {
-        throw new Error('divide by 0');
-      }
       const field = this.#field;
       let quotient = field.zero;
       let remainder = this;
       const denominatorLeadingTerm = other.getCoefficient(other.getDegree());
-      const inverseDenominatorLeadingTerm = field.inverse(denominatorLeadingTerm);
+      const invertDenominatorLeadingTerm = field.invert(denominatorLeadingTerm);
       while (remainder.getDegree() >= other.getDegree() && !remainder.isZero()) {
         const remainderDegree = remainder.getDegree();
         const degreeDiff = remainderDegree - other.getDegree();
-        const scale = field.multiply(remainder.getCoefficient(remainderDegree), inverseDenominatorLeadingTerm);
+        const scale = field.multiply(remainder.getCoefficient(remainderDegree), invertDenominatorLeadingTerm);
         const term = other.multiplyByMonomial(degreeDiff, scale);
         const iterationQuotient = field.buildPolynomial(degreeDiff, scale);
         quotient = quotient.addOrSubtract(iterationQuotient);
@@ -1378,15 +1372,9 @@
       return this.#expTable[a];
     }
     log(a) {
-      if (a === 0) {
-        throw new Error("can't take log(0)");
-      }
       return this.#logTable[a];
     }
-    inverse(a) {
-      if (a === 0) {
-        throw new Error('illegal inverse argument equals 0');
-      }
+    invert(a) {
       return this.#expTable[this.#size - this.#logTable[a] - 1];
     }
     multiply(a, b) {
@@ -1397,9 +1385,6 @@
       return this.#expTable[(logTable[a] + logTable[b]) % (this.#size - 1)];
     }
     buildPolynomial(degree, coefficient) {
-      if (degree < 0) {
-        throw new Error('illegal monomial degree less than 0');
-      }
       if (coefficient === 0) {
         return this.#zero;
       }

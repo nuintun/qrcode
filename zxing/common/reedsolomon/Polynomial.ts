@@ -11,8 +11,8 @@ export class Polynomial {
   constructor(field: GaloisField, coefficients: Int32Array) {
     const { length } = coefficients;
 
-    if (length === 0) {
-      throw new Error('coefficients cannot empty');
+    if (length <= 0) {
+      throw new Error('polynomial coefficients cannot empty');
     }
 
     this.#field = field;
@@ -57,7 +57,7 @@ export class Polynomial {
     return coefficients[coefficients.length - 1 - degree];
   }
 
-  public evaluateAt(a: number): number {
+  public evaluate(a: number): number {
     if (a === 0) {
       // Just return the x^0 coefficient
       return this.getCoefficient(0);
@@ -135,10 +135,6 @@ export class Polynomial {
   }
 
   public multiplyByMonomial(degree: number, coefficient: number): Polynomial {
-    if (degree < 0) {
-      throw new Error('illegal monomial degree less than 0');
-    }
-
     const field = this.#field;
 
     if (coefficient === 0) {
@@ -190,22 +186,18 @@ export class Polynomial {
   }
 
   public divide(other: Polynomial): [quotient: Polynomial, remainder: Polynomial] {
-    if (other.isZero()) {
-      throw new Error('divide by 0');
-    }
-
     const field = this.#field;
 
     let quotient = field.zero;
     let remainder: Polynomial = this;
 
     const denominatorLeadingTerm = other.getCoefficient(other.getDegree());
-    const inverseDenominatorLeadingTerm = field.inverse(denominatorLeadingTerm);
+    const invertDenominatorLeadingTerm = field.invert(denominatorLeadingTerm);
 
     while (remainder.getDegree() >= other.getDegree() && !remainder.isZero()) {
       const remainderDegree = remainder.getDegree();
       const degreeDiff = remainderDegree - other.getDegree();
-      const scale = field.multiply(remainder.getCoefficient(remainderDegree), inverseDenominatorLeadingTerm);
+      const scale = field.multiply(remainder.getCoefficient(remainderDegree), invertDenominatorLeadingTerm);
       const term = other.multiplyByMonomial(degreeDiff, scale);
       const iterationQuotient = field.buildPolynomial(degreeDiff, scale);
 

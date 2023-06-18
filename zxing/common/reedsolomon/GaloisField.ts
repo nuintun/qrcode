@@ -63,18 +63,10 @@ export class GaloisField {
   }
 
   public log(a: number): number {
-    if (a === 0) {
-      throw new Error("can't take log(0)");
-    }
-
     return this.#logTable[a];
   }
 
-  public inverse(a: number): number {
-    if (a === 0) {
-      throw new Error('illegal inverse argument equals 0');
-    }
-
+  public invert(a: number): number {
     return this.#expTable[this.#size - this.#logTable[a] - 1];
   }
 
@@ -89,10 +81,6 @@ export class GaloisField {
   }
 
   public buildPolynomial(degree: number, coefficient: number): Polynomial {
-    if (degree < 0) {
-      throw new Error('illegal monomial degree less than 0');
-    }
-
     if (coefficient === 0) {
       return this.#zero;
     }
