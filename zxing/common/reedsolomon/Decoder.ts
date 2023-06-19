@@ -146,7 +146,7 @@ export class Decoder {
     const poly = new Polynomial(field, received);
     const syndromeCoefficients = new Int32Array(ecBytes);
 
-    let noError: boolean = true;
+    let noError = true;
 
     for (let i = 0; i < ecBytes; i++) {
       const evaluate = poly.evaluate(field.exp(i + generator));
