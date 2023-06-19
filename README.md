@@ -27,8 +27,7 @@
 import { Byte, Encoder, Hanzi, Kanji } from '@nuintun/qrcode';
 
 const encoder = new Encoder({
-  level: 'H',
-  version: 'auto'
+  level: 'H'
 });
 
 const qrcode = encoder.encode(
