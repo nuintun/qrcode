@@ -1,7 +1,7 @@
 import { Byte, Encoder, Hanzi, Kanji } from '@nuintun/qrcode';
 
 const encoder = new Encoder({
-  level: 'M',
+  level: 'H',
   hints: ['CHARACTER_SET']
 });
 const qrcode = encoder.encode(
@@ -13,4 +13,4 @@ const qrcode = encoder.encode(
   new Kanji('こんにちは世界')
 );
 
-console.log(qrcode.toDataURL(4));
+console.log(qrcode.toDataURL());
