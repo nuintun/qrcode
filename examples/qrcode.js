@@ -306,9 +306,9 @@
     #alloc(length) {
       const bits = this.#bits;
       if (length > bits.length * 32) {
-        const newBits = makeArray(Math.ceil(length / LOAD_FACTOR));
-        newBits.set(bits);
-        this.#bits = newBits;
+        const array = makeArray(Math.ceil(length / LOAD_FACTOR));
+        array.set(bits);
+        this.#bits = array;
       }
       this.#length = length;
     }
