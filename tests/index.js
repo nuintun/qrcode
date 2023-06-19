@@ -1,9 +1,9 @@
 import { Byte, Encoder, Hanzi, Kanji } from '@nuintun/qrcode';
 
 const encoder = new Encoder({
-  level: 'H',
-  hints: ['CHARACTER_SET']
+  level: 'H'
 });
+
 const qrcode = encoder.encode(
   // Hanzi
   new Hanzi('你好世界'),
