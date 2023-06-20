@@ -34,3 +34,18 @@ export class ECLevel {
     return this.#level;
   }
 }
+
+export function fromBits(bits: number): ECLevel {
+  switch (bits) {
+    case 0x01:
+      return ECLevel.L;
+    case 0x00:
+      return ECLevel.M;
+    case 0x03:
+      return ECLevel.Q;
+    case 0x02:
+      return ECLevel.H;
+    default:
+      throw new Error('illegal error correction bits');
+  }
+}

@@ -220,7 +220,7 @@ export function willFit(numInputBits: number, version: Version, ecLevel: ECLevel
   // In the following comments, we use numbers of Version 7-H.
   // numBytes = 196
   const numBytes = version.totalCodewords;
-  const ecBlocks = version.getECBlocksForECLevel(ecLevel);
+  const ecBlocks = version.getECBlocks(ecLevel);
   // numECBytes = 130
   const numECBytes = ecBlocks.totalECCodewords;
   // numDataBytes = 196 - 130 = 66

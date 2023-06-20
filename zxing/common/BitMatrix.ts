@@ -10,17 +10,13 @@ export class BitMatrix {
 
   constructor(dimension: number);
   constructor(width: number, height: number);
-  constructor(width: number, height: number, rowSize: number, bits: Int32Array);
-  constructor(
-    width: number,
-    height: number = width,
-    rowSize: number = Math.floor((width + 31) / 32),
-    bits: Int32Array = new Int32Array(rowSize * height)
-  ) {
-    this.#bits = bits;
+  constructor(width: number, height: number = width) {
+    const rowSize = Math.ceil(width / 32);
+
     this.#width = width;
     this.#height = height;
     this.#rowSize = rowSize;
+    this.#bits = new Int32Array(rowSize * height);
   }
 
   #offset(x: number, y: number): number {

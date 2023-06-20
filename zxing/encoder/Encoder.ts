@@ -128,8 +128,8 @@ export class Encoder {
       headAndDataBits.append(data);
     }
 
+    const ecBlocks = version.getECBlocks(ecLevel);
     const { totalCodewords, dimension } = version;
-    const ecBlocks = version.getECBlocksForECLevel(ecLevel);
     const numDataBytes = totalCodewords - ecBlocks.totalECCodewords;
 
     // Append terminate the bits properly.

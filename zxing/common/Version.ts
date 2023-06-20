@@ -3,8 +3,27 @@
  */
 
 import { ECB } from './ECB';
+import { bitCount } from './utils';
 import { ECLevel } from './ECLevel';
 import { ECBlocks } from './ECBlocks';
+import { BitMatrix } from './BitMatrix';
+
+const VERSION_DECODE_TABLE = [
+  // Version 7 - 11
+  0x07c94, 0x085bc, 0x09a99, 0x0a4d3, 0x0bbf6,
+  // Version 12 - 16
+  0x0c762, 0x0d847, 0x0e60d, 0x0f928, 0x10b78,
+  // Version 17 - 21
+  0x1145d, 0x12a17, 0x13532, 0x149a6, 0x15683,
+  // Version 22 - 26
+  0x168c9, 0x177ec, 0x18ec4, 0x191e1, 0x1afab,
+  // Version 27 - 31
+  0x1b08e, 0x1cc1a, 0x1d33f, 0x1ed75, 0x1f250,
+  // Version 32 - 36
+  0x209d5, 0x216f0, 0x228ba, 0x2379f, 0x24b0b,
+  // Version 37 - 40
+  0x2542e, 0x26a64, 0x27541, 0x28c69
+];
 
 export class Version {
   #version: number;
@@ -41,27 +60,10 @@ export class Version {
     return this.#alignmentPatterns;
   }
 
-  public getECBlocksForECLevel({ level }: ECLevel): ECBlocks {
+  public getECBlocks({ level }: ECLevel): ECBlocks {
     return this.#ecBlocks[level];
   }
 }
-
-export const VERSION_DECODE_INFO = new Int32Array([
-  // Version 7 - 11
-  0x07c94, 0x085bc, 0x09a99, 0x0a4d3, 0x0bbf6,
-  // Version 12 - 16
-  0x0c762, 0x0d847, 0x0e60d, 0x0f928, 0x10b78,
-  // Version 17 - 21
-  0x1145d, 0x12a17, 0x13532, 0x149a6, 0x15683,
-  // Version 22 - 26
-  0x168c9, 0x177ec, 0x18ec4, 0x191e1, 0x1afab,
-  // Version 27 - 31
-  0x1b08e, 0x1cc1a, 0x1d33f, 0x1ed75, 0x1f250,
-  // Version 32 - 36
-  0x209d5, 0x216f0, 0x228ba, 0x2379f, 0x24b0b,
-  // Version 37 - 40
-  0x2542e, 0x26a64, 0x27541, 0x28c69
-]);
 
 export const VERSIONS = [
   new Version(
@@ -385,3 +387,87 @@ export const VERSIONS = [
     new ECBlocks(30, new ECB(20, 15), new ECB(61, 16))
   )
 ];
+
+export function decodeVersion(version1: number, version2: number): Version {
+  let bestDiff = 32;
+  let bestVersion = 0;
+
+  const { length } = VERSION_DECODE_TABLE;
+
+  for (let i = 0; i < length; i++) {
+    const maskedVersion = VERSION_DECODE_TABLE[i];
+
+    // Do the version info bits match exactly done ?
+    if (version1 === maskedVersion || version2 === maskedVersion) {
+      return VERSIONS[i + 6];
+    }
+
+    // Otherwise see if this is the closest to a real version info bit string
+    // we have seen so far
+    let bitsDiff = bitCount(version1 ^ maskedVersion);
+
+    if (bitsDiff < bestDiff) {
+      bestDiff = bitsDiff;
+      bestVersion = i + 7;
+    }
+
+    if (version1 !== version2) {
+      // Also try the other option
+      bitsDiff = bitCount(version2 ^ maskedVersion);
+
+      if (bitsDiff < bestDiff) {
+        bestDiff = bitsDiff;
+        bestVersion = i + 7;
+      }
+    }
+  }
+
+  // We can tolerate up to 3 bits of error since no two version info codewords will
+  // differ in less than 8 bits.
+  if (bestDiff <= 3 && bestVersion >= 7) {
+    return VERSIONS[bestVersion - 1];
+  }
+
+  // If we didn't find a close enough match, fail
+  throw new Error('unable to decode version');
+}
+
+// See ISO 18004:2006 Annex E
+export function buildFunctionPattern({ version, dimension, alignmentPatterns }: Version): BitMatrix {
+  const matrix = new BitMatrix(dimension);
+
+  // Top left finder pattern + separator + format
+  matrix.setRegion(0, 0, 9, 9);
+  // Top right finder pattern + separator + format
+  matrix.setRegion(dimension - 8, 0, 8, 9);
+  // Bottom left finder pattern + separator + format
+  matrix.setRegion(0, dimension - 8, 9, 8);
+
+  // Alignment patterns
+  const max = alignmentPatterns.length;
+
+  for (let x = 0; x < max; x++) {
+    const top = alignmentPatterns[x] - 2;
+
+    for (let y = 0; y < max; y++) {
+      if ((x !== 0 || (y !== 0 && y !== max - 1)) && (x !== max - 1 || y !== 0)) {
+        matrix.setRegion(alignmentPatterns[y] - 2, top, 5, 5);
+      }
+      // Else no o alignment patterns near the three finder patterns
+    }
+  }
+
+  // Vertical timing pattern
+  matrix.setRegion(6, 9, 1, dimension - 17);
+  // Horizontal timing pattern
+  matrix.setRegion(9, 6, dimension - 17, 1);
+
+  if (version > 6) {
+    // Version info, top right
+    matrix.setRegion(dimension - 11, 0, 3, 6);
+    // Version info, bottom left
+    matrix.setRegion(0, dimension - 11, 6, 3);
+  }
+
+  return matrix;
+}
