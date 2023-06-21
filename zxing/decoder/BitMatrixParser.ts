@@ -2,10 +2,91 @@
  * @module BitMatrixParser
  */
 
+import { DataBlock } from './DataBlock';
+import { ECLevel } from '/common/ECLevel';
 import { isApplyMask } from '/common/mask';
 import { BitMatrix } from '/common/BitMatrix';
 import { decodeFormatInfo, FormatInfo } from './FormatInfo';
+import { Decoder as ReedSolomonDecoder } from '/common/reedsolomon/Decoder';
 import { buildFunctionPattern, decodeVersion, Version, VERSIONS } from '/common/Version';
+
+export function getDataBlocks(codewords: Uint8Array, version: Version, ecLevel: ECLevel): DataBlock[] {
+  if (codewords.length !== version.totalCodewords) {
+    throw new Error('failed to get data blocks');
+  }
+
+  const blocks: DataBlock[] = [];
+  const { ecBlocks, ecCodewordsPerBlock } = version.getECBlocks(ecLevel);
+
+  // Now establish DataBlocks of the appropriate size and number of data codewords
+  for (const { count, dataCodewords } of ecBlocks) {
+    for (let i = 0; i < count; i++) {
+      const numBlockCodewords = ecCodewordsPerBlock + dataCodewords;
+
+      blocks.push(new DataBlock(new Uint8Array(numBlockCodewords), dataCodewords));
+    }
+  }
+
+  const { length } = blocks;
+
+  // All blocks have the same amount of data, except that the last n
+  // (where n may be 0) have 1 more byte. Figure out where these start.
+  let longerBlocksStartAt = length - 1;
+
+  const shorterBlocksTotalCodewords = blocks[0].codewords.length;
+
+  while (longerBlocksStartAt >= 0) {
+    const numCodewords = blocks[longerBlocksStartAt].codewords.length;
+
+    if (numCodewords === shorterBlocksTotalCodewords) {
+      break;
+    }
+
+    longerBlocksStartAt--;
+  }
+
+  longerBlocksStartAt++;
+
+  // The last elements of result may be 1 element longer;
+  // first fill out as many elements as all of them have
+  let codewordsOffset = 0;
+
+  const shorterBlocksNumDataCodewords = shorterBlocksTotalCodewords - ecCodewordsPerBlock;
+
+  for (let i = 0; i < shorterBlocksNumDataCodewords; i++) {
+    for (let j = 0; j < length; j++) {
+      blocks[j].codewords[i] = codewords[codewordsOffset++];
+    }
+  }
+
+  // Fill out the last data block in the longer ones
+  for (let j = longerBlocksStartAt; j < length; j++) {
+    blocks[j].codewords[shorterBlocksNumDataCodewords] = codewords[codewordsOffset++];
+  }
+
+  // Now add in error correction blocks
+  const max = blocks[0].codewords.length;
+
+  for (let i = shorterBlocksNumDataCodewords; i < max; i++) {
+    for (let j = 0; j < length; j++) {
+      const offset = j < longerBlocksStartAt ? i : i + 1;
+
+      blocks[j].codewords[offset] = codewords[codewordsOffset++];
+    }
+  }
+
+  return blocks;
+}
+
+export function correctErrors(bytes: Uint8Array, numDataBytes: number): Uint8Array {
+  // First read into an array of ints
+  const toDecode = new Int32Array(bytes);
+  const ecBytes = bytes.length - numDataBytes;
+
+  new ReedSolomonDecoder().decode(toDecode, ecBytes);
+
+  return new Uint8Array(toDecode.subarray(0, numDataBytes));
+}
 
 export class BitMatrixParser {
   #matrix: BitMatrix;

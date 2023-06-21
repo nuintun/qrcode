@@ -1460,15 +1460,13 @@
   }
   function generateECBytes(dataBytes, numECBytesInBlock) {
     const numDataBytes = dataBytes.length;
-    const ecBytes = new Uint8Array(numECBytesInBlock);
     const toEncode = new Int32Array(numDataBytes + numECBytesInBlock);
-    // Append data bytes
+    // Copy data bytes
     toEncode.set(dataBytes);
-    // Append ec code
+    // Reed solomon encode
     new Encoder$1().encode(toEncode, numECBytesInBlock);
     // Get ec bytes
-    ecBytes.set(toEncode.subarray(numDataBytes));
-    return ecBytes;
+    return new Uint8Array(toEncode.subarray(numDataBytes));
   }
   function injectECBytes(bits, numRSBlocks, numDataBytes, numTotalBytes) {
     // Step 1.  Divide data bytes into blocks and generate error correction bytes for them. We'll

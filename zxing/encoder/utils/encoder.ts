@@ -66,19 +66,16 @@ function getNumBytesInBlock(
 
 function generateECBytes(dataBytes: Uint8Array, numECBytesInBlock: number): Uint8Array {
   const numDataBytes = dataBytes.length;
-  const ecBytes = new Uint8Array(numECBytesInBlock);
   const toEncode = new Int32Array(numDataBytes + numECBytesInBlock);
 
-  // Append data bytes
+  // Copy data bytes
   toEncode.set(dataBytes);
 
-  // Append ec code
+  // Reed solomon encode
   new ReedSolomonEncoder().encode(toEncode, numECBytesInBlock);
 
   // Get ec bytes
-  ecBytes.set(toEncode.subarray(numDataBytes));
-
-  return ecBytes;
+  return new Uint8Array(toEncode.subarray(numDataBytes));
 }
 
 export function injectECBytes(bits: BitArray, numRSBlocks: number, numDataBytes: number, numTotalBytes: number): BitArray {
