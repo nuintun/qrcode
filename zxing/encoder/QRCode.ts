@@ -67,16 +67,16 @@ export class QRCode {
     const gif = new GIFImage(size, size, colors);
     const max = size - margin;
 
-    for (let i = 0; i < size; i++) {
-      for (let j = 0; j < size; j++) {
-        if (margin <= j && j < max && margin <= i && i < max) {
-          const x = Math.floor((j - margin) / moduleSize);
-          const y = Math.floor((i - margin) / moduleSize);
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        if (x >= margin && x < max && y >= margin && y < max) {
+          const offsetX = Math.floor((x - margin) / moduleSize);
+          const offsetY = Math.floor((y - margin) / moduleSize);
 
-          gif.set(j, i, matrix.get(x, y));
+          gif.set(x, y, matrix.get(offsetX, offsetY));
         } else {
           // Margin pixels
-          gif.set(j, i, 0);
+          gif.set(x, y, 0);
         }
       }
     }
