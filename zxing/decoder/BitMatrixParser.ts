@@ -2,14 +2,13 @@
  * @module BitMatrixParser
  */
 
-import { unmask } from '/common/mask';
+import { isApplyMask } from '/common/mask';
 import { BitMatrix } from '/common/BitMatrix';
 import { decodeFormatInfo, FormatInfo } from './FormatInfo';
 import { buildFunctionPattern, decodeVersion, Version, VERSIONS } from '/common/Version';
 
 export class BitMatrixParser {
   #matrix: BitMatrix;
-  #mirror: boolean = false;
 
   constructor(matrix: BitMatrix) {
     const { size } = matrix;
@@ -22,10 +21,7 @@ export class BitMatrixParser {
   }
 
   #copyBit(x: number, y: number, bits: number) {
-    const matrix = this.#matrix;
-    const bit = this.#mirror ? matrix.get(y, x) : matrix.get(x, y);
-
-    return bit ? (bits << 1) | 0x01 : bits << 1;
+    return this.#matrix.get(x, y) ? (bits << 1) | 0x01 : bits << 1;
   }
 
   public readVersion(): Version {
@@ -91,18 +87,17 @@ export class BitMatrixParser {
     return decodeFormatInfo(formatInfo1, formatInfo2);
   }
 
-  public readCodewords(version: Version, { mask }: FormatInfo): Uint8Array {
+  public readCodewords(version: Version): Uint8Array {
     let bitsRead = 0;
     let currentByte = 0;
     let readingUp = true;
     let resultOffset = 0;
 
     const matrix = this.#matrix;
-    const { size } = matrix;
     const functionPattern = buildFunctionPattern(version);
     const codewords = new Uint8Array(version.totalCodewords);
 
-    unmask(matrix, mask);
+    const { size } = matrix;
 
     // Read columns in pairs, from right to left
     for (let x = size - 1; x > 0; x -= 2) {
@@ -147,8 +142,21 @@ export class BitMatrixParser {
     return codewords;
   }
 
-  public remask({ mask }: FormatInfo): void {
-    unmask(this.#matrix, mask);
+  public unmask(mask: number): void {
+    const matrix = this.#matrix;
+    const { size } = matrix;
+
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        if (isApplyMask(mask, x, y)) {
+          matrix.flip(x, y);
+        }
+      }
+    }
+  }
+
+  public remask(mask: number): void {
+    this.unmask(mask);
   }
 
   public mirror(): void {
@@ -163,7 +171,5 @@ export class BitMatrixParser {
         }
       }
     }
-
-    this.#mirror = !this.#mirror;
   }
 }

@@ -4,6 +4,10 @@
 
 const LOAD_FACTOR = 0.75;
 
+function offset(index: number): number {
+  return Math.floor(index / 32);
+}
+
 function makeArray(length: number): Int32Array {
   return new Int32Array(Math.ceil(length / 32));
 }
@@ -15,10 +19,6 @@ export class BitArray {
   constructor(length: number = 0) {
     this.#length = length;
     this.#bits = makeArray(length);
-  }
-
-  #offset(index: number): number {
-    return Math.floor(index / 32);
   }
 
   #alloc(length: number): void {
@@ -44,15 +44,11 @@ export class BitArray {
   }
 
   public set(index: number): void {
-    const offset = this.#offset(index);
-
-    this.#bits[offset] |= 1 << (index & 0x1f);
+    this.#bits[offset(index)] |= 1 << (index & 0x1f);
   }
 
   public get(index: number): number {
-    const offset = this.#offset(index);
-
-    return (this.#bits[offset] >>> (index & 0x1f)) & 1;
+    return (this.#bits[offset(index)] >>> (index & 0x1f)) & 1;
   }
 
   public xor(mask: BitArray): void {

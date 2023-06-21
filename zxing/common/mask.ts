@@ -2,7 +2,6 @@
  * @module mask
  */
 
-import { BitMatrix } from './BitMatrix';
 import { ByteMatrix } from './ByteMatrix';
 
 // Penalty weights from section 6.8.2.1
@@ -212,16 +211,4 @@ export function isApplyMask(mask: number, x: number, y: number): boolean {
   }
 
   return intermediate === 0;
-}
-
-export function unmask(bits: BitMatrix, mask: number): void {
-  const { size } = bits;
-
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      if (isApplyMask(mask, x, y)) {
-        bits.flip(x, y);
-      }
-    }
-  }
 }

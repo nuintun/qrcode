@@ -287,6 +287,9 @@
    * @module BitArray
    */
   const LOAD_FACTOR = 0.75;
+  function offset(index) {
+    return Math.floor(index / 32);
+  }
   function makeArray(length) {
     return new Int32Array(Math.ceil(length / 32));
   }
@@ -296,9 +299,6 @@
     constructor(length = 0) {
       this.#length = length;
       this.#bits = makeArray(length);
-    }
-    #offset(index) {
-      return Math.floor(index / 32);
     }
     #alloc(length) {
       const bits = this.#bits;
@@ -316,12 +316,10 @@
       return Math.ceil(this.#length / 8);
     }
     set(index) {
-      const offset = this.#offset(index);
-      this.#bits[offset] |= 1 << (index & 0x1f);
+      this.#bits[offset(index)] |= 1 << (index & 0x1f);
     }
     get(index) {
-      const offset = this.#offset(index);
-      return (this.#bits[offset] >>> (index & 0x1f)) & 1;
+      return (this.#bits[offset(index)] >>> (index & 0x1f)) & 1;
     }
     xor(mask) {
       const bits = this.#bits;
