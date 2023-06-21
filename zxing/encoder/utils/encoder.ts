@@ -33,36 +33,6 @@ export type Segment = Alphanumeric | Byte | Hanzi | Kanji | Numeric;
 
 export type FNC1 = [mode: 'GS1'] | [mode: 'AIM', indicator: number];
 
-function getNumCodewordsInBlock(
-  blockID: number,
-  ecBlocks: ECBlocks
-): [numECCodewordsInBlock: number, numDataCodewordsInBlock: number] {
-  const { numBlocks, numTotalCodewords, numTotalDataCodewords } = ecBlocks;
-  // numBlocksInGroup2 = 196 % 5 = 1
-  const numBlocksInGroup2 = numTotalCodewords % numBlocks;
-  // numBlocksInGroup1 = 5 - 1 = 4
-  const numBlocksInGroup1 = numBlocks - numBlocksInGroup2;
-  // numTotalCodewordsInGroup1 = 196 / 5 = 39
-  const numTotalCodewordsInGroup1 = Math.floor(numTotalCodewords / numBlocks);
-  // numTotalCodewordsInGroup2 = 39 + 1 = 40
-  const numTotalCodewordsInGroup2 = numTotalCodewordsInGroup1 + 1;
-  // numDataCodewordsInGroup1 = 66 / 5 = 13
-  const numDataCodewordsInGroup1 = Math.floor(numTotalDataCodewords / numBlocks);
-  // numDataCodewordsInGroup2 = 13 + 1 = 14
-  const numDataCodewordsInGroup2 = numDataCodewordsInGroup1 + 1;
-  // numECCodewordsInGroup1 = 39 - 13 = 26
-  const numECCodewordsInGroup1 = numTotalCodewordsInGroup1 - numDataCodewordsInGroup1;
-  // numECCodewordsInGroup2 = 40 - 14 = 26
-  const numECCodewordsInGroup2 = numTotalCodewordsInGroup2 - numDataCodewordsInGroup2;
-
-  // Sanity checks: /zxing/qrcode/encoder/Encoder.java -> getNumDataBytesAndNumECBytesForBlockID
-  if (blockID < numBlocksInGroup1) {
-    return [numECCodewordsInGroup1, numDataCodewordsInGroup1];
-  } else {
-    return [numECCodewordsInGroup2, numDataCodewordsInGroup2];
-  }
-}
-
 function generateECCodewords(dataCodewords: Uint8Array, numECCodewords: number): Uint8Array {
   const numDataCodewords = dataCodewords.length;
   const codewords = new Int32Array(numDataCodewords + numECCodewords);
@@ -77,7 +47,7 @@ function generateECCodewords(dataCodewords: Uint8Array, numECCodewords: number):
   return new Uint8Array(codewords.subarray(numDataCodewords));
 }
 
-export function injectECCodewords(bits: BitArray, ecBlocks: ECBlocks): BitArray {
+export function injectECCodewords(bits: BitArray, { ecBlocks, numECCodewordsPerBlock }: ECBlocks): BitArray {
   // Step 1.  Divide data bytes into blocks and generate error correction bytes for them. We'll
   // store the divided data bytes blocks and error correction bytes blocks into "blocks".
   let maxNumECCodewords = 0;
@@ -86,22 +56,21 @@ export function injectECCodewords(bits: BitArray, ecBlocks: ECBlocks): BitArray 
 
   // Block pair.
   const blocks: BlockPair[] = [];
-  // Number of blocks.
-  const { numBlocks } = ecBlocks;
 
-  for (let i = 0; i < numBlocks; i++) {
-    const [numECCodewords, numDataCodewords] = getNumCodewordsInBlock(i, ecBlocks);
-    const dataCodewords = new Uint8Array(numDataCodewords);
+  for (const { count, numDataCodewords } of ecBlocks) {
+    for (let i = 0; i < count; i++) {
+      const dataCodewords = new Uint8Array(numDataCodewords);
 
-    bits.toUint8Array(8 * dataCodewordsOffset, dataCodewords, 0, numDataCodewords);
+      bits.toUint8Array(dataCodewordsOffset * 8, dataCodewords, 0, numDataCodewords);
 
-    const ecCodewords = generateECCodewords(dataCodewords, numECCodewords);
+      const ecCodewords = generateECCodewords(dataCodewords, numECCodewordsPerBlock);
 
-    blocks.push(new BlockPair(dataCodewords, ecCodewords));
+      blocks.push(new BlockPair(dataCodewords, ecCodewords));
 
-    maxNumDataCodewords = Math.max(maxNumDataCodewords, numDataCodewords);
-    maxNumECCodewords = Math.max(maxNumECCodewords, ecCodewords.length);
-    dataCodewordsOffset += numDataCodewords;
+      dataCodewordsOffset += numDataCodewords;
+      maxNumECCodewords = Math.max(maxNumECCodewords, ecCodewords.length);
+      maxNumDataCodewords = Math.max(maxNumDataCodewords, numDataCodewords);
+    }
   }
 
   const codewords = new BitArray();
