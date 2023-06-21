@@ -772,7 +772,6 @@
    */
   class ECBlocks {
     #ecBlocks;
-    #numBlocks;
     #numTotalCodewords;
     #numTotalECCodewords;
     #numTotalDataCodewords;
@@ -786,7 +785,6 @@
       }
       const numTotalECCodewords = numECCodewordsPerBlock * numBlocks;
       this.#ecBlocks = ecBlocks;
-      this.#numBlocks = numBlocks;
       this.#numTotalECCodewords = numTotalECCodewords;
       this.#numTotalDataCodewords = numTotalDataCodewords;
       this.#numECCodewordsPerBlock = numECCodewordsPerBlock;
@@ -794,9 +792,6 @@
     }
     get ecBlocks() {
       return this.#ecBlocks;
-    }
-    get numBlocks() {
-      return this.#numBlocks;
     }
     get numTotalCodewords() {
       return this.#numTotalCodewords;

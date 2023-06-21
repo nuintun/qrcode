@@ -6,7 +6,6 @@ import { ECB } from './ECB';
 
 export class ECBlocks {
   #ecBlocks: ECB[];
-  #numBlocks: number;
   #numTotalCodewords: number;
   #numTotalECCodewords: number;
   #numTotalDataCodewords: number;
@@ -24,7 +23,6 @@ export class ECBlocks {
     const numTotalECCodewords = numECCodewordsPerBlock * numBlocks;
 
     this.#ecBlocks = ecBlocks;
-    this.#numBlocks = numBlocks;
     this.#numTotalECCodewords = numTotalECCodewords;
     this.#numTotalDataCodewords = numTotalDataCodewords;
     this.#numECCodewordsPerBlock = numECCodewordsPerBlock;
@@ -33,10 +31,6 @@ export class ECBlocks {
 
   public get ecBlocks(): ECB[] {
     return this.#ecBlocks;
-  }
-
-  public get numBlocks(): number {
-    return this.#numBlocks;
   }
 
   public get numTotalCodewords(): number {
