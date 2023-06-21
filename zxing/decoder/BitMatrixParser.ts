@@ -79,14 +79,15 @@ export function getDataBlocks(codewords: Uint8Array, version: Version, ecLevel: 
   return blocks;
 }
 
-export function correctErrors(bytes: Uint8Array, numDataBytes: number): Uint8Array {
-  // First read into an array of ints
-  const toDecode = new Int32Array(bytes);
-  const ecBytes = bytes.length - numDataBytes;
+export function correctErrors(codewords: Uint8Array, numDataCodewords: number): Uint8Array {
+  const buffer = new Int32Array(codewords);
+  const numECCodewords = codewords.length - numDataCodewords;
 
-  new ReedSolomonDecoder().decode(toDecode, ecBytes);
+  // Reed solomon encode.
+  new ReedSolomonDecoder().decode(buffer, numECCodewords);
 
-  return new Uint8Array(toDecode.subarray(0, numDataBytes));
+  // Get data codewords.
+  return new Uint8Array(buffer.subarray(0, numDataCodewords));
 }
 
 export class BitMatrixParser {

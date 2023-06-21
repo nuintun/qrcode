@@ -1432,15 +1432,15 @@
   /**
    * @module encoder
    */
-  function generateECCodewords(dataCodewords, numECCodewords) {
-    const numDataCodewords = dataCodewords.length;
-    const codewords = new Int32Array(numDataCodewords + numECCodewords);
-    // Copy data bytes.
-    codewords.set(dataCodewords);
+  function generateECCodewords(codewords, numECCodewords) {
+    const numDataCodewords = codewords.length;
+    const buffer = new Int32Array(numDataCodewords + numECCodewords);
+    // Copy data codewords.
+    buffer.set(codewords);
     // Reed solomon encode.
-    new Encoder$1().encode(codewords, numECCodewords);
-    // Get ec bytes.
-    return new Uint8Array(codewords.subarray(numDataCodewords));
+    new Encoder$1().encode(buffer, numECCodewords);
+    // Get ec codewords.
+    return new Uint8Array(buffer.subarray(numDataCodewords));
   }
   function injectECCodewords(bits, { ecBlocks, numECCodewordsPerBlock }) {
     // Step 1.  Divide data bytes into blocks and generate error correction bytes for them. We'll

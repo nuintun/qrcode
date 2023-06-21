@@ -33,18 +33,18 @@ export type Segment = Alphanumeric | Byte | Hanzi | Kanji | Numeric;
 
 export type FNC1 = [mode: 'GS1'] | [mode: 'AIM', indicator: number];
 
-function generateECCodewords(dataCodewords: Uint8Array, numECCodewords: number): Uint8Array {
-  const numDataCodewords = dataCodewords.length;
-  const codewords = new Int32Array(numDataCodewords + numECCodewords);
+function generateECCodewords(codewords: Uint8Array, numECCodewords: number): Uint8Array {
+  const numDataCodewords = codewords.length;
+  const buffer = new Int32Array(numDataCodewords + numECCodewords);
 
-  // Copy data bytes.
-  codewords.set(dataCodewords);
+  // Copy data codewords.
+  buffer.set(codewords);
 
   // Reed solomon encode.
-  new ReedSolomonEncoder().encode(codewords, numECCodewords);
+  new ReedSolomonEncoder().encode(buffer, numECCodewords);
 
-  // Get ec bytes.
-  return new Uint8Array(codewords.subarray(numDataCodewords));
+  // Get ec codewords.
+  return new Uint8Array(buffer.subarray(numDataCodewords));
 }
 
 export function injectECCodewords(bits: BitArray, { ecBlocks, numECCodewordsPerBlock }: ECBlocks): BitArray {
