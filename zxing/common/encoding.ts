@@ -44,6 +44,22 @@ export function decode(bytes: Uint8Array, charset: Charset): string {
   return new TextDecoder(charset.label).decode(bytes);
 }
 
+export const NUMERIC_CHARACTERS = '0123456789';
+
+export const ALPHANUMERIC_CHARACTERS = `${NUMERIC_CHARACTERS}ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:`;
+
+export function getCharactersMapping(characters: string): Map<string, number> {
+  let code = 0;
+
+  const mapping = new Map<string, number>();
+
+  for (const character of characters) {
+    mapping.set(character, code++);
+  }
+
+  return mapping;
+}
+
 export function getEncodingMapping(label: string, ...ranges: EncodingRange[]): Map<string, number> {
   const bytes: number[] = [];
   const codes: number[] = [];

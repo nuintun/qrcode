@@ -7,7 +7,7 @@ import { BitArray } from '/common/BitArray';
 import { assertContent } from '/encoder/utils/asserts';
 import { getEncodingMapping, getSerialRanges } from '/common/encoding';
 
-const GB2312 = getEncodingMapping(
+const GB2312_MAPPING = getEncodingMapping(
   'gb2312',
   [0xa1a1, 0xa1fe],
   [0xa2b1, 0xa2e2],
@@ -29,7 +29,7 @@ const GB2312 = getEncodingMapping(
 );
 
 function getHanziCode(character: string): number {
-  const code = GB2312.get(character);
+  const code = GB2312_MAPPING.get(character);
 
   return code != null ? code : -1;
 }

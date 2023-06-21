@@ -5,14 +5,18 @@
 import { Mode } from '/common/Mode';
 import { BitArray } from '/common/BitArray';
 import { assertContent } from '/encoder/utils/asserts';
+import { getCharactersMapping, NUMERIC_CHARACTERS } from '/common/encoding';
 
-function getNumericCode(code: number): number {
-  // 0 - 9
-  if (48 <= code && code <= 57) {
-    return code - 48;
+const NUMERIC_MAPPING = getCharactersMapping(NUMERIC_CHARACTERS);
+
+function getNumericCode(character: string): number {
+  const code = NUMERIC_MAPPING.get(character);
+
+  if (code != null) {
+    return code;
   }
 
-  throw new Error(`illegal numeric character: ${String.fromCharCode(code)}`);
+  throw new Error(`illegal numeric character: ${character}`);
 }
 
 export class Numeric {
@@ -38,19 +42,19 @@ export class Numeric {
     const { length } = content;
 
     for (let i = 0; i < length; ) {
-      const code1 = getNumericCode(content.charCodeAt(i));
+      const code1 = getNumericCode(content.charAt(i));
 
       if (i + 2 < length) {
         // Encode three numeric letters in ten bits.
-        const code2 = getNumericCode(content.charCodeAt(i + 1));
-        const code3 = getNumericCode(content.charCodeAt(i + 2));
+        const code2 = getNumericCode(content.charAt(i + 1));
+        const code3 = getNumericCode(content.charAt(i + 2));
 
         bits.append(code1 * 100 + code2 * 10 + code3, 10);
 
         i += 3;
       } else if (i + 1 < length) {
         // Encode two numeric letters in seven bits.
-        const code2 = getNumericCode(content.charCodeAt(i + 1));
+        const code2 = getNumericCode(content.charAt(i + 1));
 
         bits.append(code1 * 10 + code2, 7);
 

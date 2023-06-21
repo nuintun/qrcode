@@ -5,30 +5,18 @@
 import { Mode } from '/common/Mode';
 import { BitArray } from '/common/BitArray';
 import { assertContent } from '/encoder/utils/asserts';
+import { ALPHANUMERIC_CHARACTERS, getCharactersMapping } from '/common/encoding';
 
-const ALPHANUMERIC_TABLE = [
-  // 0x20-0x2f
-  36, -1, -1, -1, 37, 38, -1, -1, -1, -1, 39, 40, -1, 41, 42, 43,
-  // 0x30-0x3f
-  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 44, -1, -1, -1, -1, -1,
-  // 0x40-0x4f
-  -1, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-  // 0x50-0x5a
-  25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
-];
+const ALPHANUMERIC_MAPPING = getCharactersMapping(ALPHANUMERIC_CHARACTERS);
 
-function getAlphanumericCode(code: number): number {
-  const index = code - 32;
+function getAlphanumericCode(character: string): number {
+  const code = ALPHANUMERIC_MAPPING.get(character);
 
-  if (index < ALPHANUMERIC_TABLE.length) {
-    code = ALPHANUMERIC_TABLE[index];
-
-    if (code >= 0) {
-      return ALPHANUMERIC_TABLE[index];
-    }
+  if (code != null) {
+    return code;
   }
 
-  throw new Error(`illegal alphanumeric character: ${String.fromCharCode(code)}`);
+  throw new Error(`illegal alphanumeric character: ${character}`);
 }
 
 export class Alphanumeric {
@@ -54,10 +42,10 @@ export class Alphanumeric {
     const { length } = content;
 
     for (let i = 0; i < length; ) {
-      const code1 = getAlphanumericCode(content.charCodeAt(i));
+      const code1 = getAlphanumericCode(content.charAt(i));
 
       if (i + 1 < length) {
-        const code2 = getAlphanumericCode(content.charCodeAt(i + 1));
+        const code2 = getAlphanumericCode(content.charAt(i + 1));
 
         // Encode two alphanumeric letters in 11 bits.
         bits.append(code1 * 45 + code2, 11);

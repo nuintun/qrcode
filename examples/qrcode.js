@@ -2061,6 +2061,16 @@
         throw Error('built-in encode only support ascii, utf-8 and iso-8859-1 charset');
     }
   }
+  const NUMERIC_CHARACTERS = '0123456789';
+  const ALPHANUMERIC_CHARACTERS = `${NUMERIC_CHARACTERS}ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:`;
+  function getCharactersMapping(characters) {
+    let code = 0;
+    const mapping = new Map();
+    for (const character of characters) {
+      mapping.set(character, code++);
+    }
+    return mapping;
+  }
   function getEncodingMapping(label, ...ranges) {
     const bytes = [];
     const codes = [];
@@ -2256,7 +2266,7 @@
   /**
    * @module Hanzi
    */
-  const GB2312 = getEncodingMapping(
+  const GB2312_MAPPING = getEncodingMapping(
     'gb2312',
     [0xa1a1, 0xa1fe],
     [0xa2b1, 0xa2e2],
@@ -2277,7 +2287,7 @@
     ...getSerialRanges(0xd8a1, 0xf7fe, [0, 93])
   );
   function getHanziCode(character) {
-    const code = GB2312.get(character);
+    const code = GB2312_MAPPING.get(character);
     return code != null ? code : -1;
   }
   class Hanzi {
@@ -2321,7 +2331,7 @@
   /**
    * @module Kanji
    */
-  const SHIFT_JIS = getEncodingMapping(
+  const SHIFT_JIS_MAPPING = getEncodingMapping(
     'shift-jis',
     [0x8140, 0x817e],
     [0x8180, 0x81ac],
@@ -2352,7 +2362,7 @@
     [0xea80, 0xeaa4]
   );
   function getKanjiCode(character) {
-    const code = SHIFT_JIS.get(character);
+    const code = SHIFT_JIS_MAPPING.get(character);
     return code != null ? code : -1;
   }
   class Kanji {
@@ -2395,12 +2405,13 @@
   /**
    * @module Numeric
    */
-  function getNumericCode(code) {
-    // 0 - 9
-    if (48 <= code && code <= 57) {
-      return code - 48;
+  const NUMERIC_MAPPING = getCharactersMapping(NUMERIC_CHARACTERS);
+  function getNumericCode(character) {
+    const code = NUMERIC_MAPPING.get(character);
+    if (code != null) {
+      return code;
     }
-    throw new Error(`illegal numeric character: ${String.fromCharCode(code)}`);
+    throw new Error(`illegal numeric character: ${character}`);
   }
   class Numeric {
     #content;
@@ -2419,16 +2430,16 @@
       const content = this.#content;
       const { length } = content;
       for (let i = 0; i < length; ) {
-        const code1 = getNumericCode(content.charCodeAt(i));
+        const code1 = getNumericCode(content.charAt(i));
         if (i + 2 < length) {
           // Encode three numeric letters in ten bits.
-          const code2 = getNumericCode(content.charCodeAt(i + 1));
-          const code3 = getNumericCode(content.charCodeAt(i + 2));
+          const code2 = getNumericCode(content.charAt(i + 1));
+          const code3 = getNumericCode(content.charAt(i + 2));
           bits.append(code1 * 100 + code2 * 10 + code3, 10);
           i += 3;
         } else if (i + 1 < length) {
           // Encode two numeric letters in seven bits.
-          const code2 = getNumericCode(content.charCodeAt(i + 1));
+          const code2 = getNumericCode(content.charAt(i + 1));
           bits.append(code1 * 10 + code2, 7);
           i += 2;
         } else {
@@ -2444,25 +2455,13 @@
   /**
    * @module Alphanumeric
    */
-  const ALPHANUMERIC_TABLE = [
-    // 0x20-0x2f
-    36, -1, -1, -1, 37, 38, -1, -1, -1, -1, 39, 40, -1, 41, 42, 43,
-    // 0x30-0x3f
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 44, -1, -1, -1, -1, -1,
-    // 0x40-0x4f
-    -1, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-    // 0x50-0x5a
-    25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
-  ];
-  function getAlphanumericCode(code) {
-    const index = code - 32;
-    if (index < ALPHANUMERIC_TABLE.length) {
-      code = ALPHANUMERIC_TABLE[index];
-      if (code >= 0) {
-        return ALPHANUMERIC_TABLE[index];
-      }
+  const ALPHANUMERIC_MAPPING = getCharactersMapping(ALPHANUMERIC_CHARACTERS);
+  function getAlphanumericCode(character) {
+    const code = ALPHANUMERIC_MAPPING.get(character);
+    if (code != null) {
+      return code;
     }
-    throw new Error(`illegal alphanumeric character: ${String.fromCharCode(code)}`);
+    throw new Error(`illegal alphanumeric character: ${character}`);
   }
   class Alphanumeric {
     #content;
@@ -2481,9 +2480,9 @@
       const content = this.#content;
       const { length } = content;
       for (let i = 0; i < length; ) {
-        const code1 = getAlphanumericCode(content.charCodeAt(i));
+        const code1 = getAlphanumericCode(content.charAt(i));
         if (i + 1 < length) {
-          const code2 = getAlphanumericCode(content.charCodeAt(i + 1));
+          const code2 = getAlphanumericCode(content.charAt(i + 1));
           // Encode two alphanumeric letters in 11 bits.
           bits.append(code1 * 45 + code2, 11);
           i += 2;

@@ -7,7 +7,7 @@ import { BitArray } from '/common/BitArray';
 import { assertContent } from '/encoder/utils/asserts';
 import { getEncodingMapping, getSerialRanges } from '/common/encoding';
 
-const SHIFT_JIS = getEncodingMapping(
+const SHIFT_JIS_MAPPING = getEncodingMapping(
   'shift-jis',
   [0x8140, 0x817e],
   [0x8180, 0x81ac],
@@ -39,7 +39,7 @@ const SHIFT_JIS = getEncodingMapping(
 );
 
 function getKanjiCode(character: string): number {
-  const code = SHIFT_JIS.get(character);
+  const code = SHIFT_JIS_MAPPING.get(character);
 
   return code != null ? code : -1;
 }
