@@ -3,36 +3,24 @@
  */
 
 export class BitMatrix {
-  #width: number;
-  #height: number;
+  #size: number;
   #rowSize: number;
   #bits: Int32Array;
 
-  constructor(dimension: number);
-  constructor(width: number, height: number);
-  constructor(width: number, height: number = width) {
-    const rowSize = Math.ceil(width / 32);
+  constructor(size: number) {
+    const rowSize = Math.ceil(size / 32);
 
-    this.#width = width;
-    this.#height = height;
+    this.#size = size;
     this.#rowSize = rowSize;
-    this.#bits = new Int32Array(rowSize * height);
+    this.#bits = new Int32Array(rowSize * size);
   }
 
   #offset(x: number, y: number): number {
     return y * this.#rowSize + Math.floor(x / 32);
   }
 
-  public get width(): number {
-    return this.#width;
-  }
-
-  public get height(): number {
-    return this.#height;
-  }
-
-  public get rowSize(): number {
-    return this.#rowSize;
+  public get size(): number {
+    return this.#size;
   }
 
   public set(x: number, y: number): void {

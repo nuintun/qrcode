@@ -62,7 +62,7 @@ export class QRCode {
     margin = Math.max(0, margin >> 0);
 
     const matrix = this.#matrix;
-    const matrixSize = matrix.width;
+    const matrixSize = matrix.size;
     const size = moduleSize * matrixSize + margin * 2;
     const gif = new GIFImage(size, size, colors);
     const max = size - margin;

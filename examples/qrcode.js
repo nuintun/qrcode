@@ -118,13 +118,11 @@
   // vertical and horizontal orders respectively.
   function applyMaskPenaltyRule1Internal(matrix, isHorizontal) {
     let penalty = 0;
-    let { width, height } = matrix;
-    width = isHorizontal ? width : height;
-    height = isHorizontal ? height : width;
-    for (let y = 0; y < height; y++) {
+    const { size } = matrix;
+    for (let y = 0; y < size; y++) {
       let prevBit = -1;
       let numSameBitCells = 0;
-      for (let x = 0; x < width; x++) {
+      for (let x = 0; x < size; x++) {
         const bit = isHorizontal ? matrix.get(x, y) : matrix.get(y, x);
         if (bit === prevBit) {
           numSameBitCells++;
@@ -154,10 +152,9 @@
   // penalty proportional to (M-1)x(N-1), because this is the number of 2x2 blocks inside such a block.
   function applyMaskPenaltyRule2(matrix) {
     let penalty = 0;
-    const width = matrix.width - 1;
-    const height = matrix.height - 1;
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
+    const size = matrix.size - 1;
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
         const bit = matrix.get(x, y);
         if (
           // Find 2x2 blocks with the same color
@@ -173,7 +170,7 @@
   }
   // Is is four white, check on horizontal and vertical.
   function isFourWhite(matrix, offset, from, to, isHorizontal) {
-    if (from < 0 || to > (isHorizontal ? matrix.width : matrix.height)) {
+    if (from < 0 || to > matrix.size) {
       return false;
     }
     for (let i = from; i < to; i++) {
@@ -188,12 +185,12 @@
   // find patterns like 000010111010000, we give penalty once.
   function applyMaskPenaltyRule3(matrix) {
     let numPenalties = 0;
-    const { width, height } = matrix;
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
+    const { size } = matrix;
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
         if (
           // Find consecutive runs of 1:1:3:1:1:4 or 4:1:1:3:1:1, patterns like 000010111010000
-          x + 6 < width &&
+          x + 6 < size &&
           isDark(matrix, x, y) &&
           !isDark(matrix, x + 1, y) &&
           isDark(matrix, x + 2, y) &&
@@ -207,7 +204,7 @@
         }
         if (
           // Find consecutive runs of 1:1:3:1:1:4 or 4:1:1:3:1:1, patterns like 000010111010000
-          y + 6 < height &&
+          y + 6 < size &&
           isDark(matrix, x, y) &&
           !isDark(matrix, x, y + 1) &&
           isDark(matrix, x, y + 2) &&
@@ -227,15 +224,15 @@
   // penalty if the ratio is far from 50%. It gives 10 penalty for 5% distance.
   function applyMaskPenaltyRule4(matrix) {
     let numDarkCells = 0;
-    const { width, height } = matrix;
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
+    const { size } = matrix;
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
         if (isDark(matrix, x, y)) {
           numDarkCells++;
         }
       }
     }
-    const numTotalCells = width * height;
+    const numTotalCells = size * size;
     const fivePercentVariances = Math.floor((Math.abs(numDarkCells * 2 - numTotalCells) * 10) / numTotalCells);
     return fivePercentVariances * N4;
   }
@@ -255,10 +252,10 @@
     let intermediate;
     switch (mask) {
       case 0:
-        intermediate = (y + x) & 0x1;
+        intermediate = (y + x) & 0x01;
         break;
       case 1:
-        intermediate = y & 0x1;
+        intermediate = y & 0x01;
         break;
       case 2:
         intermediate = x % 3;
@@ -267,18 +264,18 @@
         intermediate = (y + x) % 3;
         break;
       case 4:
-        intermediate = (Math.floor(y / 2) + Math.floor(x / 3)) & 0x1;
+        intermediate = (Math.floor(y / 2) + Math.floor(x / 3)) & 0x01;
         break;
       case 5:
         temporary = y * x;
-        intermediate = (temporary & 0x1) + (temporary % 3);
+        intermediate = (temporary & 0x01) + (temporary % 3);
         break;
       case 6:
         temporary = y * x;
-        intermediate = ((temporary & 0x1) + (temporary % 3)) & 0x1;
+        intermediate = ((temporary & 0x01) + (temporary % 3)) & 0x01;
         break;
       case 7:
-        intermediate = (((y * x) % 3) + ((y + x) & 0x1)) & 0x1;
+        intermediate = (((y * x) % 3) + ((y + x) & 0x01)) & 0x01;
         break;
       default:
         throw new Error(`illegal mask: ${mask}`);
@@ -493,7 +490,7 @@
   }
   // Embed the lonely dark dot at left bottom corner. JISX0510:2004 (p.46)
   function embedDarkDotAtLeftBottomCorner(matrix) {
-    matrix.set(8, matrix.height - 8, 1);
+    matrix.set(8, matrix.size - 8, 1);
   }
   // Embed position detection patterns and surrounding vertical/horizontal separators.
   function embedPositionDetectionPatternsAndSeparators(matrix) {
@@ -504,32 +501,31 @@
     // Embed vertical separation patterns around the squares.
     const vspHeight = 7;
     // Matrix width
-    const { width, height } = matrix;
+    const { size } = matrix;
     // Left top corner.
     embedPositionDetectionPattern(matrix, 0, 0);
     // Right top corner.
-    embedPositionDetectionPattern(matrix, width - pdpWidth, 0);
+    embedPositionDetectionPattern(matrix, size - pdpWidth, 0);
     // Left bottom corner.
-    embedPositionDetectionPattern(matrix, 0, width - pdpWidth);
+    embedPositionDetectionPattern(matrix, 0, size - pdpWidth);
     // Left top corner.
     embedHorizontalSeparationPattern(matrix, 0, hspWidth - 1);
     // Right top corner.
-    embedHorizontalSeparationPattern(matrix, width - hspWidth, hspWidth - 1);
+    embedHorizontalSeparationPattern(matrix, size - hspWidth, hspWidth - 1);
     // Left bottom corner.
-    embedHorizontalSeparationPattern(matrix, 0, width - hspWidth);
+    embedHorizontalSeparationPattern(matrix, 0, size - hspWidth);
     // Left top corner.
     embedVerticalSeparationPattern(matrix, vspHeight, 0);
     // Right top corner.
-    embedVerticalSeparationPattern(matrix, height - vspHeight - 1, 0);
+    embedVerticalSeparationPattern(matrix, size - vspHeight - 1, 0);
     // Left bottom corner.
-    embedVerticalSeparationPattern(matrix, vspHeight, height - vspHeight);
+    embedVerticalSeparationPattern(matrix, vspHeight, size - vspHeight);
   }
   function embedTimingPatterns(matrix) {
-    const width = matrix.width - 8;
-    const height = matrix.height - 8;
+    const size = matrix.size - 8;
     // -8 is for skipping position detection patterns (7: size)
     // separation patterns (1: size). Thus, 8 = 7 + 1.
-    for (let x = 8; x < width; x++) {
+    for (let x = 8; x < size; x++) {
       const bit = (x + 1) & 1;
       // Horizontal line.
       if (isEmpty(matrix, x, 6)) {
@@ -538,7 +534,7 @@
     }
     // -8 is for skipping position detection patterns (7: size)
     // separation patterns (1: size). Thus, 8 = 7 + 1.
-    for (let y = 8; y < height; y++) {
+    for (let y = 8; y < size; y++) {
       const bit = (y + 1) & 1;
       // Vertical line.
       if (isEmpty(matrix, 6, y)) {
@@ -642,7 +638,7 @@
   function embedFormatInfo(matrix, ecLevel, mask) {
     const formatInfoBits = new BitArray();
     makeFormatInfoBits(formatInfoBits, ecLevel, mask);
-    const { width, height } = matrix;
+    const { size } = matrix;
     const { length } = formatInfoBits;
     for (let i = 0; i < length; i++) {
       // Type info bits at the left top corner. See 8.9 of JISX0510:2004 (p.46).
@@ -652,10 +648,10 @@
       matrix.set(x, y, bit);
       if (i < 8) {
         // Right top corner.
-        matrix.set(width - i - 1, 8, bit);
+        matrix.set(size - i - 1, 8, bit);
       } else {
         // Left bottom corner.
-        matrix.set(8, height - 7 + (i - 8), bit);
+        matrix.set(8, size - 7 + (i - 8), bit);
       }
     }
   }
@@ -674,15 +670,15 @@
       makeVersionInfoBits(versionInfoBits, version);
       // It will decrease from 17 to 0.
       let bitIndex = 6 * 3 - 1;
-      const { height } = matrix;
+      const { size } = matrix;
       for (let i = 0; i < 6; i++) {
         for (let j = 0; j < 3; j++) {
           // Place bits in LSB (least significant bit) to MSB order.
           const bit = versionInfoBits.get(bitIndex--);
           // Left bottom corner.
-          matrix.set(i, height - 11 + j, bit);
+          matrix.set(i, size - 11 + j, bit);
           // Right bottom corner.
-          matrix.set(height - 11 + j, i, bit);
+          matrix.set(size - 11 + j, i, bit);
         }
       }
     }
@@ -691,19 +687,19 @@
   // See 8.7 of JISX0510:2004 (p.38) for how to embed data bits.
   function embedDataBits(matrix, dataBits, mask) {
     let bitIndex = 0;
+    const { size } = matrix;
     const { length } = dataBits;
-    const { width, height } = matrix;
     // Start from the right bottom cell.
-    for (let x = width - 1; x >= 1; x -= 2) {
+    for (let x = size - 1; x >= 1; x -= 2) {
       // Skip the vertical timing pattern.
       if (x === 6) {
         x = 5;
       }
-      for (let y = 0; y < height; y++) {
+      for (let y = 0; y < size; y++) {
         for (let i = 0; i < 2; i++) {
           const offsetX = x - i;
           const upward = ((x + 1) & 2) === 0;
-          const offsetY = upward ? height - 1 - y : y;
+          const offsetY = upward ? size - 1 - y : y;
           // Skip the cell if it's not empty.
           if (isEmpty(matrix, offsetX, offsetY)) {
             // Padding bit. If there is no bit left, we'll fill the left cells with 0,
@@ -1985,7 +1981,7 @@
       moduleSize = Math.max(1, moduleSize >> 0);
       margin = Math.max(0, margin >> 0);
       const matrix = this.#matrix;
-      const matrixSize = matrix.width;
+      const matrixSize = matrix.size;
       const size = moduleSize * matrixSize + margin * 2;
       const gif = new GIFImage(size, size, colors);
       const max = size - margin;
@@ -2040,41 +2036,32 @@
    * @module ByteMatrix
    */
   class ByteMatrix {
-    #width;
-    #height;
+    #size;
     #bytes;
-    constructor(width, height = width) {
-      this.#width = width;
-      this.#height = height;
-      this.#bytes = new Int8Array(width * height);
+    constructor(size) {
+      this.#size = size;
+      this.#bytes = new Int8Array(size * size);
     }
     /**
-     * @property width
-     * @description Get the width of matrix
+     * @property size
+     * @description Get the size of matrix
      */
-    get width() {
-      return this.#width;
-    }
-    /**
-     * @property height
-     * @description Get the height of matrix
-     */
-    get height() {
-      return this.#height;
+    get size() {
+      return this.#size;
     }
     /**
      * @method set
      * @description Set the matrix value of position
      */
     set(x, y, value) {
-      this.#bytes[y * this.#width + x] = value;
+      this.#bytes[y * this.#size + x] = value;
     }
     /**
      * @method get
      * @description Get the matrix value of position
      */
     get(x, y) {
-      return this.#bytes[y * this.#width + x];
+      return this.#bytes[y * this.#size + x];
     }
     /**
      * @method clear

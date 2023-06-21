@@ -83,8 +83,7 @@ declare class Charset {
 }
 
 declare class Matrix {
-  public width: number;
-  public height: number;
+  public size: number;
   public get(x: number, y: number): number;
 }
 

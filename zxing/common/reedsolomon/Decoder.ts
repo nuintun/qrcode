@@ -61,7 +61,7 @@ export class Decoder {
           // Above should work but fails on some Apple and Linux JDKs due to a Hotspot bug.
           // Below is a funny-looking workaround from Steven Parkes
           const term = field.multiply(errorLocations[j], invert);
-          const termPlus1 = (term & 0x1) === 0 ? term | 1 : term & ~1;
+          const termPlus1 = (term & 0x01) === 0 ? term | 1 : term & ~1;
 
           denominator = field.multiply(denominator, termPlus1);
         }

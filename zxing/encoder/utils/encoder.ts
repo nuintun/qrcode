@@ -7,13 +7,13 @@ import { buildMatrix } from './matrix';
 import { ECLevel } from '/common/ECLevel';
 import { BitArray } from '/common/BitArray';
 import { Byte } from '/encoder/segments/Byte';
-import { calculateMaskPenalty } from './mask';
 import { BlockPair } from '/encoder/BlockPair';
 import { ByteMatrix } from '/common/ByteMatrix';
 import { Hanzi } from '/encoder/segments/Hanzi';
 import { Kanji } from '/encoder/segments/Kanji';
 import { Numeric } from '/encoder/segments/Numeric';
 import { Version, VERSIONS } from '/common/Version';
+import { calculateMaskPenalty } from '/common/mask';
 import { Alphanumeric } from '/encoder/segments/Alphanumeric';
 import { Encoder as ReedSolomonEncoder } from '/common/reedsolomon/Encoder';
 

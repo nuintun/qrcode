@@ -2,7 +2,8 @@
  * @module mask
  */
 
-import { ByteMatrix } from '/common/ByteMatrix';
+import { BitMatrix } from './BitMatrix';
+import { ByteMatrix } from './ByteMatrix';
 
 // Penalty weights from section 6.8.2.1
 const N1 = 3;
@@ -19,16 +20,13 @@ function isDark(matrix: ByteMatrix, x: number, y: number): boolean {
 // vertical and horizontal orders respectively.
 function applyMaskPenaltyRule1Internal(matrix: ByteMatrix, isHorizontal: boolean): number {
   let penalty = 0;
-  let { width, height } = matrix;
+  const { size } = matrix;
 
-  width = isHorizontal ? width : height;
-  height = isHorizontal ? height : width;
-
-  for (let y = 0; y < height; y++) {
+  for (let y = 0; y < size; y++) {
     let prevBit = -1;
     let numSameBitCells = 0;
 
-    for (let x = 0; x < width; x++) {
+    for (let x = 0; x < size; x++) {
       const bit = isHorizontal ? matrix.get(x, y) : matrix.get(y, x);
 
       if (bit === prevBit) {
@@ -65,11 +63,10 @@ function applyMaskPenaltyRule1(matrix: ByteMatrix): number {
 function applyMaskPenaltyRule2(matrix: ByteMatrix): number {
   let penalty = 0;
 
-  const width = matrix.width - 1;
-  const height = matrix.height - 1;
+  const size = matrix.size - 1;
 
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
       const bit = matrix.get(x, y);
 
       if (
@@ -88,7 +85,7 @@ function applyMaskPenaltyRule2(matrix: ByteMatrix): number {
 
 // Is is four white, check on horizontal and vertical.
 function isFourWhite(matrix: ByteMatrix, offset: number, from: number, to: number, isHorizontal: boolean): boolean {
-  if (from < 0 || to > (isHorizontal ? matrix.width : matrix.height)) {
+  if (from < 0 || to > matrix.size) {
     return false;
   }
 
@@ -107,13 +104,13 @@ function isFourWhite(matrix: ByteMatrix, offset: number, from: number, to: numbe
 function applyMaskPenaltyRule3(matrix: ByteMatrix): number {
   let numPenalties = 0;
 
-  const { width, height } = matrix;
+  const { size } = matrix;
 
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
       if (
         // Find consecutive runs of 1:1:3:1:1:4 or 4:1:1:3:1:1, patterns like 000010111010000
-        x + 6 < width &&
+        x + 6 < size &&
         isDark(matrix, x, y) &&
         !isDark(matrix, x + 1, y) &&
         isDark(matrix, x + 2, y) &&
@@ -128,7 +125,7 @@ function applyMaskPenaltyRule3(matrix: ByteMatrix): number {
 
       if (
         // Find consecutive runs of 1:1:3:1:1:4 or 4:1:1:3:1:1, patterns like 000010111010000
-        y + 6 < height &&
+        y + 6 < size &&
         isDark(matrix, x, y) &&
         !isDark(matrix, x, y + 1) &&
         isDark(matrix, x, y + 2) &&
@@ -151,17 +148,17 @@ function applyMaskPenaltyRule3(matrix: ByteMatrix): number {
 function applyMaskPenaltyRule4(matrix: ByteMatrix): number {
   let numDarkCells = 0;
 
-  const { width, height } = matrix;
+  const { size } = matrix;
 
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
       if (isDark(matrix, x, y)) {
         numDarkCells++;
       }
     }
   }
 
-  const numTotalCells = width * height;
+  const numTotalCells = size * size;
   const fivePercentVariances = Math.floor((Math.abs(numDarkCells * 2 - numTotalCells) * 10) / numTotalCells);
 
   return fivePercentVariances * N4;
@@ -185,10 +182,10 @@ export function isApplyMask(mask: number, x: number, y: number): boolean {
 
   switch (mask) {
     case 0:
-      intermediate = (y + x) & 0x1;
+      intermediate = (y + x) & 0x01;
       break;
     case 1:
-      intermediate = y & 0x1;
+      intermediate = y & 0x01;
       break;
     case 2:
       intermediate = x % 3;
@@ -197,22 +194,34 @@ export function isApplyMask(mask: number, x: number, y: number): boolean {
       intermediate = (y + x) % 3;
       break;
     case 4:
-      intermediate = (Math.floor(y / 2) + Math.floor(x / 3)) & 0x1;
+      intermediate = (Math.floor(y / 2) + Math.floor(x / 3)) & 0x01;
       break;
     case 5:
       temporary = y * x;
-      intermediate = (temporary & 0x1) + (temporary % 3);
+      intermediate = (temporary & 0x01) + (temporary % 3);
       break;
     case 6:
       temporary = y * x;
-      intermediate = ((temporary & 0x1) + (temporary % 3)) & 0x1;
+      intermediate = ((temporary & 0x01) + (temporary % 3)) & 0x01;
       break;
     case 7:
-      intermediate = (((y * x) % 3) + ((y + x) & 0x1)) & 0x1;
+      intermediate = (((y * x) % 3) + ((y + x) & 0x01)) & 0x01;
       break;
     default:
       throw new Error(`illegal mask: ${mask}`);
   }
 
   return intermediate === 0;
+}
+
+export function unmask(bits: BitMatrix, mask: number): void {
+  const { size } = bits;
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      if (isApplyMask(mask, x, y)) {
+        bits.flip(x, y);
+      }
+    }
+  }
 }

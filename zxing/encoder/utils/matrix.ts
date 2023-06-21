@@ -2,9 +2,9 @@
  * @module matrix
  */
 
-import { isApplyMask } from './mask';
 import { ECLevel } from '/common/ECLevel';
 import { Version } from '/common/Version';
+import { isApplyMask } from '/common/mask';
 import { BitArray } from '/common/BitArray';
 import { ByteMatrix } from '/common/ByteMatrix';
 
@@ -139,7 +139,7 @@ function embedPositionAdjustmentPattern(matrix: ByteMatrix, x: number, y: number
 
 // Embed the lonely dark dot at left bottom corner. JISX0510:2004 (p.46)
 function embedDarkDotAtLeftBottomCorner(matrix: ByteMatrix): void {
-  matrix.set(8, matrix.height - 8, 1);
+  matrix.set(8, matrix.size - 8, 1);
 }
 
 // Embed position detection patterns and surrounding vertical/horizontal separators.
@@ -151,37 +151,36 @@ function embedPositionDetectionPatternsAndSeparators(matrix: ByteMatrix): void {
   // Embed vertical separation patterns around the squares.
   const vspHeight = 7;
   // Matrix width
-  const { width, height } = matrix;
+  const { size } = matrix;
 
   // Left top corner.
   embedPositionDetectionPattern(matrix, 0, 0);
   // Right top corner.
-  embedPositionDetectionPattern(matrix, width - pdpWidth, 0);
+  embedPositionDetectionPattern(matrix, size - pdpWidth, 0);
   // Left bottom corner.
-  embedPositionDetectionPattern(matrix, 0, width - pdpWidth);
+  embedPositionDetectionPattern(matrix, 0, size - pdpWidth);
 
   // Left top corner.
   embedHorizontalSeparationPattern(matrix, 0, hspWidth - 1);
   // Right top corner.
-  embedHorizontalSeparationPattern(matrix, width - hspWidth, hspWidth - 1);
+  embedHorizontalSeparationPattern(matrix, size - hspWidth, hspWidth - 1);
   // Left bottom corner.
-  embedHorizontalSeparationPattern(matrix, 0, width - hspWidth);
+  embedHorizontalSeparationPattern(matrix, 0, size - hspWidth);
 
   // Left top corner.
   embedVerticalSeparationPattern(matrix, vspHeight, 0);
   // Right top corner.
-  embedVerticalSeparationPattern(matrix, height - vspHeight - 1, 0);
+  embedVerticalSeparationPattern(matrix, size - vspHeight - 1, 0);
   // Left bottom corner.
-  embedVerticalSeparationPattern(matrix, vspHeight, height - vspHeight);
+  embedVerticalSeparationPattern(matrix, vspHeight, size - vspHeight);
 }
 
 function embedTimingPatterns(matrix: ByteMatrix): void {
-  const width = matrix.width - 8;
-  const height = matrix.height - 8;
+  const size = matrix.size - 8;
 
   // -8 is for skipping position detection patterns (7: size)
   // separation patterns (1: size). Thus, 8 = 7 + 1.
-  for (let x = 8; x < width; x++) {
+  for (let x = 8; x < size; x++) {
     const bit = (x + 1) & 1;
 
     // Horizontal line.
@@ -192,7 +191,7 @@ function embedTimingPatterns(matrix: ByteMatrix): void {
 
   // -8 is for skipping position detection patterns (7: size)
   // separation patterns (1: size). Thus, 8 = 7 + 1.
-  for (let y = 8; y < height; y++) {
+  for (let y = 8; y < size; y++) {
     const bit = (y + 1) & 1;
 
     // Vertical line.
@@ -317,7 +316,7 @@ function embedFormatInfo(matrix: ByteMatrix, ecLevel: ECLevel, mask: number): vo
 
   makeFormatInfoBits(formatInfoBits, ecLevel, mask);
 
-  const { width, height } = matrix;
+  const { size } = matrix;
   const { length } = formatInfoBits;
 
   for (let i = 0; i < length; i++) {
@@ -330,10 +329,10 @@ function embedFormatInfo(matrix: ByteMatrix, ecLevel: ECLevel, mask: number): vo
 
     if (i < 8) {
       // Right top corner.
-      matrix.set(width - i - 1, 8, bit);
+      matrix.set(size - i - 1, 8, bit);
     } else {
       // Left bottom corner.
-      matrix.set(8, height - 7 + (i - 8), bit);
+      matrix.set(8, size - 7 + (i - 8), bit);
     }
   }
 }
@@ -359,7 +358,7 @@ function embedVersionInfo(matrix: ByteMatrix, { version }: Version): void {
     // It will decrease from 17 to 0.
     let bitIndex = 6 * 3 - 1;
 
-    const { height } = matrix;
+    const { size } = matrix;
 
     for (let i = 0; i < 6; i++) {
       for (let j = 0; j < 3; j++) {
@@ -367,9 +366,9 @@ function embedVersionInfo(matrix: ByteMatrix, { version }: Version): void {
         const bit = versionInfoBits.get(bitIndex--);
 
         // Left bottom corner.
-        matrix.set(i, height - 11 + j, bit);
+        matrix.set(i, size - 11 + j, bit);
         // Right bottom corner.
-        matrix.set(height - 11 + j, i, bit);
+        matrix.set(size - 11 + j, i, bit);
       }
     }
   }
@@ -380,21 +379,21 @@ function embedVersionInfo(matrix: ByteMatrix, { version }: Version): void {
 function embedDataBits(matrix: ByteMatrix, dataBits: BitArray, mask: number): void {
   let bitIndex = 0;
 
+  const { size } = matrix;
   const { length } = dataBits;
-  const { width, height } = matrix;
 
   // Start from the right bottom cell.
-  for (let x = width - 1; x >= 1; x -= 2) {
+  for (let x = size - 1; x >= 1; x -= 2) {
     // Skip the vertical timing pattern.
     if (x === 6) {
       x = 5;
     }
 
-    for (let y = 0; y < height; y++) {
+    for (let y = 0; y < size; y++) {
       for (let i = 0; i < 2; i++) {
         const offsetX = x - i;
         const upward = ((x + 1) & 2) === 0;
-        const offsetY = upward ? height - 1 - y : y;
+        const offsetY = upward ? size - 1 - y : y;
 
         // Skip the cell if it's not empty.
         if (isEmpty(matrix, offsetX, offsetY)) {

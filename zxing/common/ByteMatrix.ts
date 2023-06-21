@@ -3,32 +3,20 @@
  */
 
 export class ByteMatrix {
-  #width: number;
-  #height: number;
+  #size: number;
   #bytes: Int8Array;
 
-  constructor(dimension: number);
-  constructor(width: number, height: number);
-  constructor(width: number, height: number = width) {
-    this.#width = width;
-    this.#height = height;
-    this.#bytes = new Int8Array(width * height);
+  constructor(size: number) {
+    this.#size = size;
+    this.#bytes = new Int8Array(size * size);
   }
 
   /**
-   * @property width
-   * @description Get the width of matrix
+   * @property size
+   * @description Get the size of matrix
    */
-  public get width(): number {
-    return this.#width;
-  }
-
-  /**
-   * @property height
-   * @description Get the height of matrix
-   */
-  public get height(): number {
-    return this.#height;
+  public get size(): number {
+    return this.#size;
   }
 
   /**
@@ -36,7 +24,7 @@ export class ByteMatrix {
    * @description Set the matrix value of position
    */
   public set(x: number, y: number, value: number): void {
-    this.#bytes[y * this.#width + x] = value;
+    this.#bytes[y * this.#size + x] = value;
   }
 
   /**
@@ -44,7 +32,7 @@ export class ByteMatrix {
    * @description Get the matrix value of position
    */
   public get(x: number, y: number): number {
-    return this.#bytes[y * this.#width + x];
+    return this.#bytes[y * this.#size + x];
   }
 
   /**

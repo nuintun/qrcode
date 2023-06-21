@@ -2,43 +2,36 @@
  * @module BitMatrixParser
  */
 
+import { unmask } from '/common/mask';
 import { BitMatrix } from '/common/BitMatrix';
 import { decodeFormatInfo, FormatInfo } from './FormatInfo';
-import { decodeVersion, Version, VERSIONS } from '/common/Version';
+import { buildFunctionPattern, decodeVersion, Version, VERSIONS } from '/common/Version';
 
 export class BitMatrixParser {
-  #mirror: boolean;
-  #version: Version;
   #matrix: BitMatrix;
-  #codewords: Uint8Array;
-  #formatInfo: FormatInfo;
+  #mirror: boolean = false;
 
-  constructor(matrix: BitMatrix, mirror: boolean = false) {
-    const dimension = Math.min(matrix.width, matrix.height);
+  constructor(matrix: BitMatrix) {
+    const { size } = matrix;
 
-    if (dimension < 21 || (dimension & 0x03) !== 1) {
+    if (size < 21 || (size & 0x03) !== 1) {
       throw new Error('illegal qrcode dimension');
     }
 
-    const version = this.#readVersion(dimension);
-    const formatInfo = this.#readFormatInfo(dimension);
-
     this.#matrix = matrix;
-    this.#mirror = mirror;
-    this.#version = version;
-    this.#formatInfo = formatInfo;
-    this.#codewords = this.#readCodewords(version, formatInfo);
   }
 
   #copyBit(x: number, y: number, bits: number) {
     const matrix = this.#matrix;
     const bit = this.#mirror ? matrix.get(y, x) : matrix.get(x, y);
 
-    return bit ? (bits << 1) | 0x1 : bits << 1;
+    return bit ? (bits << 1) | 0x01 : bits << 1;
   }
 
-  #readVersion(dimension: number): Version {
-    let version = Math.floor((dimension - 17) / 4);
+  public readVersion(): Version {
+    const { size } = this.#matrix;
+
+    let version = Math.floor((size - 17) / 4);
 
     if (version >= 1 && version <= 6) {
       return VERSIONS[version - 1];
@@ -48,16 +41,16 @@ export class BitMatrixParser {
     let version1 = 0;
     let version2 = 0;
 
-    const min = dimension - 11;
+    const min = size - 11;
 
     for (let y = 5; y >= 0; y--) {
-      for (let x = dimension - 9; x >= min; x--) {
+      for (let x = size - 9; x >= min; x--) {
         version1 = this.#copyBit(x, y, version1);
       }
     }
 
     for (let x = 5; x >= 0; x--) {
-      for (let y = dimension - 9; y >= min; y--) {
+      for (let y = size - 9; y >= min; y--) {
         version2 = this.#copyBit(x, y, version2);
       }
     }
@@ -65,11 +58,12 @@ export class BitMatrixParser {
     return decodeVersion(version1, version2);
   }
 
-  #readFormatInfo(dimension: number): FormatInfo {
+  public readFormatInfo(): FormatInfo {
     let formatInfo1 = 0;
     let formatInfo2 = 0;
 
-    const max = dimension - 7;
+    const { size } = this.#matrix;
+    const max = size - 7;
 
     // Read top-left format info bits
     for (let x = 0; x <= 8; x++) {
@@ -86,32 +80,90 @@ export class BitMatrixParser {
       }
     }
 
-    for (let y = dimension - 1; y >= max; y--) {
+    for (let y = size - 1; y >= max; y--) {
       formatInfo2 = this.#copyBit(8, y, formatInfo2);
     }
 
-    for (let x = dimension - 8; x < dimension; x++) {
+    for (let x = size - 8; x < size; x++) {
       formatInfo2 = this.#copyBit(x, 8, formatInfo2);
     }
 
     return decodeFormatInfo(formatInfo1, formatInfo2);
   }
 
-  #readCodewords(version: Version, _formatInfo: FormatInfo): Uint8Array {
+  public readCodewords(version: Version, { mask }: FormatInfo): Uint8Array {
+    let bitsRead = 0;
+    let currentByte = 0;
+    let readingUp = true;
+    let resultOffset = 0;
+
+    const matrix = this.#matrix;
+    const { size } = matrix;
+    const functionPattern = buildFunctionPattern(version);
     const codewords = new Uint8Array(version.totalCodewords);
+
+    unmask(matrix, mask);
+
+    // Read columns in pairs, from right to left
+    for (let x = size - 1; x > 0; x -= 2) {
+      if (x === 6) {
+        // Skip whole column with vertical alignment pattern
+        // saves time and makes the other code proceed more cleanly
+        x--;
+      }
+
+      // Read alternatingly from bottom to top then top to bottom
+      for (let count = 0; count < size; count++) {
+        const y = readingUp ? size - 1 - count : count;
+
+        for (let col = 0; col < 2; col++) {
+          const offsetX = x - col;
+
+          // Ignore bits covered by the function pattern
+          if (!functionPattern.get(offsetX, y)) {
+            // Read a bit
+            bitsRead++;
+            currentByte <<= 1;
+
+            if (matrix.get(offsetX, y)) {
+              currentByte |= 1;
+            }
+
+            // If we've made a whole byte, save it off
+            if (bitsRead === 8) {
+              codewords[resultOffset++] = currentByte;
+
+              bitsRead = 0;
+              currentByte = 0;
+            }
+          }
+        }
+      }
+
+      // Switch directions
+      readingUp = !readingUp;
+    }
 
     return codewords;
   }
 
-  public get version(): Version {
-    return this.#version;
+  public remask({ mask }: FormatInfo): void {
+    unmask(this.#matrix, mask);
   }
 
-  public get codewords(): Uint8Array {
-    return this.#codewords;
-  }
+  public mirror(): void {
+    const matrix = this.#matrix;
+    const { size } = matrix;
 
-  public get formatInfo(): FormatInfo {
-    return this.#formatInfo;
+    for (let x = 0; x < size; x++) {
+      for (let y = x + 1; y < size; y++) {
+        if (matrix.get(x, y) !== matrix.get(y, x)) {
+          matrix.flip(x, y);
+          matrix.flip(y, x);
+        }
+      }
+    }
+
+    this.#mirror = !this.#mirror;
   }
 }
