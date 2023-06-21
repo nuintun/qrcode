@@ -11,19 +11,20 @@ import { Decoder as ReedSolomonDecoder } from '/common/reedsolomon/Decoder';
 import { buildFunctionPattern, decodeVersion, Version, VERSIONS } from '/common/Version';
 
 export function getDataBlocks(codewords: Uint8Array, version: Version, ecLevel: ECLevel): DataBlock[] {
-  if (codewords.length !== version.totalCodewords) {
+  const { ecBlocks, numTotalCodewords, numECCodewordsPerBlock } = version.getECBlocks(ecLevel);
+
+  if (codewords.length !== numTotalCodewords) {
     throw new Error('failed to get data blocks');
   }
 
   const blocks: DataBlock[] = [];
-  const { ecBlocks, ecCodewordsPerBlock } = version.getECBlocks(ecLevel);
 
   // Now establish DataBlocks of the appropriate size and number of data codewords
-  for (const { count, dataCodewords } of ecBlocks) {
+  for (const { count, numDataCodewords } of ecBlocks) {
     for (let i = 0; i < count; i++) {
-      const numBlockCodewords = ecCodewordsPerBlock + dataCodewords;
+      const numBlockCodewords = numECCodewordsPerBlock + numDataCodewords;
 
-      blocks.push(new DataBlock(new Uint8Array(numBlockCodewords), dataCodewords));
+      blocks.push(new DataBlock(new Uint8Array(numBlockCodewords), numDataCodewords));
     }
   }
 
@@ -51,7 +52,7 @@ export function getDataBlocks(codewords: Uint8Array, version: Version, ecLevel: 
   // first fill out as many elements as all of them have
   let codewordsOffset = 0;
 
-  const shorterBlocksNumDataCodewords = shorterBlocksTotalCodewords - ecCodewordsPerBlock;
+  const shorterBlocksNumDataCodewords = shorterBlocksTotalCodewords - numECCodewordsPerBlock;
 
   for (let i = 0; i < shorterBlocksNumDataCodewords; i++) {
     for (let j = 0; j < length; j++) {
@@ -168,15 +169,16 @@ export class BitMatrixParser {
     return decodeFormatInfo(formatInfo1, formatInfo2);
   }
 
-  public readCodewords(version: Version): Uint8Array {
+  public readCodewords(version: Version, ecLevel: ECLevel): Uint8Array {
     let bitsRead = 0;
     let currentByte = 0;
     let readingUp = true;
     let resultOffset = 0;
 
     const matrix = this.#matrix;
+    const ecBlocks = version.getECBlocks(ecLevel);
     const functionPattern = buildFunctionPattern(version);
-    const codewords = new Uint8Array(version.totalCodewords);
+    const codewords = new Uint8Array(ecBlocks.numTotalCodewords);
 
     const { size } = matrix;
 

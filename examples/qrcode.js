@@ -735,17 +735,17 @@
    * @module BlockPair
    */
   class BlockPair {
-    #ecBytes;
-    #dataBytes;
-    constructor(dataBytes, ecBytes) {
-      this.#ecBytes = ecBytes;
-      this.#dataBytes = dataBytes;
+    #ecCodewords;
+    #dataCodewords;
+    constructor(dataCodewords, ecCodewords) {
+      this.#ecCodewords = ecCodewords;
+      this.#dataCodewords = dataCodewords;
     }
-    get ecBytes() {
-      return this.#ecBytes;
+    get ecCodewords() {
+      return this.#ecCodewords;
     }
-    get dataBytes() {
-      return this.#dataBytes;
+    get dataCodewords() {
+      return this.#dataCodewords;
     }
   }
 
@@ -754,16 +754,16 @@
    */
   class ECB {
     #count;
-    #dataCodewords;
-    constructor(count, dataCodewords) {
+    #numDataCodewords;
+    constructor(count, numDataCodewords) {
       this.#count = count;
-      this.#dataCodewords = dataCodewords;
+      this.#numDataCodewords = numDataCodewords;
     }
     get count() {
       return this.#count;
     }
-    get dataCodewords() {
-      return this.#dataCodewords;
+    get numDataCodewords() {
+      return this.#numDataCodewords;
     }
   }
 
@@ -773,21 +773,24 @@
   class ECBlocks {
     #ecBlocks;
     #numBlocks;
-    #totalECCodewords;
-    #totalDataCodewords;
-    #ecCodewordsPerBlock;
-    constructor(ecCodewordsPerBlock, ...ecBlocks) {
+    #numTotalCodewords;
+    #numTotalECCodewords;
+    #numTotalDataCodewords;
+    #numECCodewordsPerBlock;
+    constructor(numECCodewordsPerBlock, ...ecBlocks) {
       let numBlocks = 0;
-      let totalDataCodewords = 0;
-      for (const { count, dataCodewords } of ecBlocks) {
+      let numTotalDataCodewords = 0;
+      for (const { count, numDataCodewords } of ecBlocks) {
         numBlocks += count;
-        totalDataCodewords += count * dataCodewords;
+        numTotalDataCodewords += numDataCodewords * count;
       }
+      const numTotalECCodewords = numECCodewordsPerBlock * numBlocks;
       this.#ecBlocks = ecBlocks;
       this.#numBlocks = numBlocks;
-      this.#totalDataCodewords = totalDataCodewords;
-      this.#ecCodewordsPerBlock = ecCodewordsPerBlock;
-      this.#totalECCodewords = ecCodewordsPerBlock * numBlocks;
+      this.#numTotalECCodewords = numTotalECCodewords;
+      this.#numTotalDataCodewords = numTotalDataCodewords;
+      this.#numECCodewordsPerBlock = numECCodewordsPerBlock;
+      this.#numTotalCodewords = numTotalDataCodewords + numTotalECCodewords;
     }
     get ecBlocks() {
       return this.#ecBlocks;
@@ -795,14 +798,17 @@
     get numBlocks() {
       return this.#numBlocks;
     }
-    get totalECCodewords() {
-      return this.#totalECCodewords;
+    get numTotalCodewords() {
+      return this.#numTotalCodewords;
     }
-    get totalDataCodewords() {
-      return this.#totalDataCodewords;
+    get numTotalECCodewords() {
+      return this.#numTotalECCodewords;
     }
-    get ecCodewordsPerBlock() {
-      return this.#ecCodewordsPerBlock;
+    get numTotalDataCodewords() {
+      return this.#numTotalDataCodewords;
+    }
+    get numECCodewordsPerBlock() {
+      return this.#numECCodewordsPerBlock;
     }
   }
 
@@ -813,26 +819,18 @@
     #version;
     #dimension;
     #ecBlocks;
-    #totalCodewords;
     #alignmentPatterns;
     constructor(version, alignmentPatterns, ...ecBlocks) {
-      const [ecBlock] = ecBlocks;
       this.#version = version;
       this.#ecBlocks = ecBlocks;
       this.#dimension = 17 + 4 * version;
       this.#alignmentPatterns = alignmentPatterns;
-      // Version determines the Total codewords
-      // All ecc level total codewords are equals
-      this.#totalCodewords = ecBlock.totalECCodewords + ecBlock.totalDataCodewords;
     }
     get version() {
       return this.#version;
     }
     get dimension() {
       return this.#dimension;
-    }
-    get totalCodewords() {
-      return this.#totalCodewords;
     }
     get alignmentPatterns() {
       return this.#alignmentPatterns;
@@ -1434,79 +1432,82 @@
   /**
    * @module encoder
    */
-  function getNumBytesInBlock(blockID, numRSBlocks, numDataBytes, numTotalBytes) {
-    // numRSBlocksInGroup2 = 196 % 5 = 1
-    const numRSBlocksInGroup2 = numTotalBytes % numRSBlocks;
-    // numRSBlocksInGroup1 = 5 - 1 = 4
-    const numRSBlocksInGroup1 = numRSBlocks - numRSBlocksInGroup2;
-    // numTotalBytesInGroup1 = 196 / 5 = 39
-    const numTotalBytesInGroup1 = Math.floor(numTotalBytes / numRSBlocks);
-    // numTotalBytesInGroup2 = 39 + 1 = 40
-    const numTotalBytesInGroup2 = numTotalBytesInGroup1 + 1;
-    // numDataBytesInGroup1 = 66 / 5 = 13
-    const numDataBytesInGroup1 = Math.floor(numDataBytes / numRSBlocks);
-    // numDataBytesInGroup2 = 13 + 1 = 14
-    const numDataBytesInGroup2 = numDataBytesInGroup1 + 1;
-    // numECBytesInGroup1 = 39 - 13 = 26
-    const numECBytesInGroup1 = numTotalBytesInGroup1 - numDataBytesInGroup1;
-    // numECBytesInGroup2 = 40 - 14 = 26
-    const numECBytesInGroup2 = numTotalBytesInGroup2 - numDataBytesInGroup2;
+  function getNumCodewordsInBlock(blockID, ecBlocks) {
+    const { numBlocks, numTotalCodewords, numTotalDataCodewords } = ecBlocks;
+    // numBlocksInGroup2 = 196 % 5 = 1
+    const numBlocksInGroup2 = numTotalCodewords % numBlocks;
+    // numBlocksInGroup1 = 5 - 1 = 4
+    const numBlocksInGroup1 = numBlocks - numBlocksInGroup2;
+    // numTotalCodewordsInGroup1 = 196 / 5 = 39
+    const numTotalCodewordsInGroup1 = Math.floor(numTotalCodewords / numBlocks);
+    // numTotalCodewordsInGroup2 = 39 + 1 = 40
+    const numTotalCodewordsInGroup2 = numTotalCodewordsInGroup1 + 1;
+    // numDataCodewordsInGroup1 = 66 / 5 = 13
+    const numDataCodewordsInGroup1 = Math.floor(numTotalDataCodewords / numBlocks);
+    // numDataCodewordsInGroup2 = 13 + 1 = 14
+    const numDataCodewordsInGroup2 = numDataCodewordsInGroup1 + 1;
+    // numECCodewordsInGroup1 = 39 - 13 = 26
+    const numECCodewordsInGroup1 = numTotalCodewordsInGroup1 - numDataCodewordsInGroup1;
+    // numECCodewordsInGroup2 = 40 - 14 = 26
+    const numECCodewordsInGroup2 = numTotalCodewordsInGroup2 - numDataCodewordsInGroup2;
     // Sanity checks: /zxing/qrcode/encoder/Encoder.java -> getNumDataBytesAndNumECBytesForBlockID
-    if (blockID < numRSBlocksInGroup1) {
-      return [numECBytesInGroup1, numDataBytesInGroup1];
+    if (blockID < numBlocksInGroup1) {
+      return [numECCodewordsInGroup1, numDataCodewordsInGroup1];
     } else {
-      return [numECBytesInGroup2, numDataBytesInGroup2];
+      return [numECCodewordsInGroup2, numDataCodewordsInGroup2];
     }
   }
-  function generateECBytes(dataBytes, numECBytesInBlock) {
-    const numDataBytes = dataBytes.length;
-    const toEncode = new Int32Array(numDataBytes + numECBytesInBlock);
-    // Copy data bytes
-    toEncode.set(dataBytes);
-    // Reed solomon encode
-    new Encoder$1().encode(toEncode, numECBytesInBlock);
-    // Get ec bytes
-    return new Uint8Array(toEncode.subarray(numDataBytes));
+  function generateECCodewords(dataCodewords, numECCodewords) {
+    const numDataCodewords = dataCodewords.length;
+    const codewords = new Int32Array(numDataCodewords + numECCodewords);
+    // Copy data bytes.
+    codewords.set(dataCodewords);
+    // Reed solomon encode.
+    new Encoder$1().encode(codewords, numECCodewords);
+    // Get ec bytes.
+    return new Uint8Array(codewords.subarray(numDataCodewords));
   }
-  function injectECBytes(bits, numRSBlocks, numDataBytes, numTotalBytes) {
+  function injectECCodewords(bits, ecBlocks) {
     // Step 1.  Divide data bytes into blocks and generate error correction bytes for them. We'll
     // store the divided data bytes blocks and error correction bytes blocks into "blocks".
-    let maxNumECBytes = 0;
-    let maxNumDataBytes = 0;
-    let dataBytesOffset = 0;
-    // Since, we know the number of reedsolmon blocks, we can initialize the vector with the number.
+    let maxNumECCodewords = 0;
+    let maxNumDataCodewords = 0;
+    let dataCodewordsOffset = 0;
+    // Block pair.
     const blocks = [];
-    for (let i = 0; i < numRSBlocks; i++) {
-      const [numECBytesInBlock, numDataBytesInBlock] = getNumBytesInBlock(i, numRSBlocks, numDataBytes, numTotalBytes);
-      const dataBytes = new Uint8Array(numDataBytesInBlock);
-      bits.toUint8Array(8 * dataBytesOffset, dataBytes, 0, numDataBytesInBlock);
-      const ecBytes = generateECBytes(dataBytes, numECBytesInBlock);
-      blocks.push(new BlockPair(dataBytes, ecBytes));
-      maxNumDataBytes = Math.max(maxNumDataBytes, numDataBytesInBlock);
-      maxNumECBytes = Math.max(maxNumECBytes, ecBytes.length);
-      dataBytesOffset += numDataBytesInBlock;
+    // Number of blocks.
+    const { numBlocks } = ecBlocks;
+    for (let i = 0; i < numBlocks; i++) {
+      const [numECCodewords, numDataCodewords] = getNumCodewordsInBlock(i, ecBlocks);
+      const dataCodewords = new Uint8Array(numDataCodewords);
+      bits.toUint8Array(8 * dataCodewordsOffset, dataCodewords, 0, numDataCodewords);
+      const ecCodewords = generateECCodewords(dataCodewords, numECCodewords);
+      blocks.push(new BlockPair(dataCodewords, ecCodewords));
+      maxNumDataCodewords = Math.max(maxNumDataCodewords, numDataCodewords);
+      maxNumECCodewords = Math.max(maxNumECCodewords, ecCodewords.length);
+      dataCodewordsOffset += numDataCodewords;
     }
-    const result = new BitArray();
+    const codewords = new BitArray();
     // First, place data blocks.
-    for (let i = 0; i < maxNumDataBytes; i++) {
-      for (const { dataBytes } of blocks) {
-        if (i < dataBytes.length) {
-          result.append(dataBytes[i], 8);
+    for (let i = 0; i < maxNumDataCodewords; i++) {
+      for (const { dataCodewords } of blocks) {
+        if (i < dataCodewords.length) {
+          codewords.append(dataCodewords[i], 8);
         }
       }
     }
     // Then, place error correction blocks.
-    for (let i = 0; i < maxNumECBytes; i++) {
-      for (const { ecBytes } of blocks) {
-        if (i < ecBytes.length) {
-          result.append(ecBytes[i], 8);
+    for (let i = 0; i < maxNumECCodewords; i++) {
+      for (const { ecCodewords } of blocks) {
+        if (i < ecCodewords.length) {
+          codewords.append(ecCodewords[i], 8);
         }
       }
     }
-    return result;
+    return codewords;
   }
-  function appendTerminateBits(bits, numDataBytes) {
-    const capacity = numDataBytes * 8;
+  function appendTerminateBits(bits, numDataCodewords) {
+    const capacity = numDataCodewords * 8;
     // Append Mode.TERMINATE if there is enough space (value is 0000).
     for (let i = 0; i < 4 && bits.length < capacity; i++) {
       bits.append(0);
@@ -1520,8 +1521,8 @@
       }
     }
     // If we have more space, we'll fill the space with padding patterns defined in 8.4.9 (p.24).
-    const numPaddingBytes = numDataBytes - bits.byteLength;
-    for (let i = 0; i < numPaddingBytes; i++) {
+    const numPaddingCodewords = numDataCodewords - bits.byteLength;
+    for (let i = 0; i < numPaddingCodewords; i++) {
       bits.append(i & 1 ? 0x11 : 0xec, 8);
     }
   }
@@ -1574,15 +1575,9 @@
   }
   function willFit(numInputBits, version, ecLevel) {
     // In the following comments, we use numbers of Version 7-H.
-    // numBytes = 196
-    const numBytes = version.totalCodewords;
     const ecBlocks = version.getECBlocks(ecLevel);
-    // numECBytes = 130
-    const numECBytes = ecBlocks.totalECCodewords;
-    // numDataBytes = 196 - 130 = 66
-    const numDataBytes = numBytes - numECBytes;
-    const totalInputBytes = Math.ceil(numInputBits / 8);
-    return numDataBytes >= totalInputBytes;
+    const numInputCodewords = Math.ceil(numInputBits / 8);
+    return ecBlocks.numTotalDataCodewords >= numInputCodewords;
   }
   function chooseVersion(numInputBits, ecLevel) {
     for (const version of VERSIONS) {
@@ -2243,13 +2238,10 @@
         headAndDataBits.append(data);
       }
       const ecBlocks = version.getECBlocks(ecLevel);
-      const { totalCodewords, dimension } = version;
-      const numDataBytes = totalCodewords - ecBlocks.totalECCodewords;
       // Append terminate the bits properly.
-      appendTerminateBits(headAndDataBits, numDataBytes);
-      const { numBlocks } = ecBlocks;
-      const matrix = new ByteMatrix(dimension);
-      const finalBits = injectECBytes(headAndDataBits, numBlocks, numDataBytes, totalCodewords);
+      appendTerminateBits(headAndDataBits, ecBlocks.numTotalDataCodewords);
+      const matrix = new ByteMatrix(version.dimension);
+      const finalBits = injectECCodewords(headAndDataBits, ecBlocks);
       const mask = chooseMask(matrix, finalBits, version, ecLevel);
       buildMatrix(matrix, finalBits, version, ecLevel, mask);
       return new QRCode(matrix, version, ecLevel, mask);

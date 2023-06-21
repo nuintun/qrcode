@@ -11,7 +11,7 @@ import {
   calculateBitsNeeded,
   chooseMask,
   Hints,
-  injectECBytes,
+  injectECCodewords,
   isByteMode,
   isHanziMode,
   recommendVersion,
@@ -129,15 +129,12 @@ export class Encoder {
     }
 
     const ecBlocks = version.getECBlocks(ecLevel);
-    const { totalCodewords, dimension } = version;
-    const numDataBytes = totalCodewords - ecBlocks.totalECCodewords;
 
     // Append terminate the bits properly.
-    appendTerminateBits(headAndDataBits, numDataBytes);
+    appendTerminateBits(headAndDataBits, ecBlocks.numTotalDataCodewords);
 
-    const { numBlocks } = ecBlocks;
-    const matrix = new ByteMatrix(dimension);
-    const finalBits = injectECBytes(headAndDataBits, numBlocks, numDataBytes, totalCodewords);
+    const matrix = new ByteMatrix(version.dimension);
+    const finalBits = injectECCodewords(headAndDataBits, ecBlocks);
     const mask = chooseMask(matrix, finalBits, version, ecLevel);
 
     buildMatrix(matrix, finalBits, version, ecLevel, mask);

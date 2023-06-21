@@ -4,18 +4,18 @@
 
 export class ECB {
   #count: number;
-  #dataCodewords: number;
+  #numDataCodewords: number;
 
-  constructor(count: number, dataCodewords: number) {
+  constructor(count: number, numDataCodewords: number) {
     this.#count = count;
-    this.#dataCodewords = dataCodewords;
+    this.#numDataCodewords = numDataCodewords;
   }
 
   public get count(): number {
     return this.#count;
   }
 
-  public get dataCodewords(): number {
-    return this.#dataCodewords;
+  public get numDataCodewords(): number {
+    return this.#numDataCodewords;
   }
 }

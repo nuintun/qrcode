@@ -29,19 +29,13 @@ export class Version {
   #version: number;
   #dimension: number;
   #ecBlocks: ECBlocks[];
-  #totalCodewords: number;
   #alignmentPatterns: number[];
 
   constructor(version: number, alignmentPatterns: number[], ...ecBlocks: ECBlocks[]) {
-    const [ecBlock] = ecBlocks;
-
     this.#version = version;
     this.#ecBlocks = ecBlocks;
     this.#dimension = 17 + 4 * version;
     this.#alignmentPatterns = alignmentPatterns;
-    // Version determines the Total codewords
-    // All ecc level total codewords are equals
-    this.#totalCodewords = ecBlock.totalECCodewords + ecBlock.totalDataCodewords;
   }
 
   public get version(): number {
@@ -50,10 +44,6 @@ export class Version {
 
   public get dimension(): number {
     return this.#dimension;
-  }
-
-  public get totalCodewords(): number {
-    return this.#totalCodewords;
   }
 
   public get alignmentPatterns(): number[] {

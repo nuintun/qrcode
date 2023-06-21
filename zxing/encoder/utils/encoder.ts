@@ -6,6 +6,7 @@ import { Mode } from '/common/Mode';
 import { buildMatrix } from './matrix';
 import { ECLevel } from '/common/ECLevel';
 import { BitArray } from '/common/BitArray';
+import { ECBlocks } from '/common/ECBlocks';
 import { Byte } from '/encoder/segments/Byte';
 import { BlockPair } from '/encoder/BlockPair';
 import { ByteMatrix } from '/common/ByteMatrix';
@@ -32,102 +33,102 @@ export type Segment = Alphanumeric | Byte | Hanzi | Kanji | Numeric;
 
 export type FNC1 = [mode: 'GS1'] | [mode: 'AIM', indicator: number];
 
-function getNumBytesInBlock(
+function getNumCodewordsInBlock(
   blockID: number,
-  numRSBlocks: number,
-  numDataBytes: number,
-  numTotalBytes: number
-): [numECBytesInBlock: number, numDataBytesInBlock: number] {
-  // numRSBlocksInGroup2 = 196 % 5 = 1
-  const numRSBlocksInGroup2 = numTotalBytes % numRSBlocks;
-  // numRSBlocksInGroup1 = 5 - 1 = 4
-  const numRSBlocksInGroup1 = numRSBlocks - numRSBlocksInGroup2;
-  // numTotalBytesInGroup1 = 196 / 5 = 39
-  const numTotalBytesInGroup1 = Math.floor(numTotalBytes / numRSBlocks);
-  // numTotalBytesInGroup2 = 39 + 1 = 40
-  const numTotalBytesInGroup2 = numTotalBytesInGroup1 + 1;
-  // numDataBytesInGroup1 = 66 / 5 = 13
-  const numDataBytesInGroup1 = Math.floor(numDataBytes / numRSBlocks);
-  // numDataBytesInGroup2 = 13 + 1 = 14
-  const numDataBytesInGroup2 = numDataBytesInGroup1 + 1;
-  // numECBytesInGroup1 = 39 - 13 = 26
-  const numECBytesInGroup1 = numTotalBytesInGroup1 - numDataBytesInGroup1;
-  // numECBytesInGroup2 = 40 - 14 = 26
-  const numECBytesInGroup2 = numTotalBytesInGroup2 - numDataBytesInGroup2;
+  ecBlocks: ECBlocks
+): [numECCodewordsInBlock: number, numDataCodewordsInBlock: number] {
+  const { numBlocks, numTotalCodewords, numTotalDataCodewords } = ecBlocks;
+  // numBlocksInGroup2 = 196 % 5 = 1
+  const numBlocksInGroup2 = numTotalCodewords % numBlocks;
+  // numBlocksInGroup1 = 5 - 1 = 4
+  const numBlocksInGroup1 = numBlocks - numBlocksInGroup2;
+  // numTotalCodewordsInGroup1 = 196 / 5 = 39
+  const numTotalCodewordsInGroup1 = Math.floor(numTotalCodewords / numBlocks);
+  // numTotalCodewordsInGroup2 = 39 + 1 = 40
+  const numTotalCodewordsInGroup2 = numTotalCodewordsInGroup1 + 1;
+  // numDataCodewordsInGroup1 = 66 / 5 = 13
+  const numDataCodewordsInGroup1 = Math.floor(numTotalDataCodewords / numBlocks);
+  // numDataCodewordsInGroup2 = 13 + 1 = 14
+  const numDataCodewordsInGroup2 = numDataCodewordsInGroup1 + 1;
+  // numECCodewordsInGroup1 = 39 - 13 = 26
+  const numECCodewordsInGroup1 = numTotalCodewordsInGroup1 - numDataCodewordsInGroup1;
+  // numECCodewordsInGroup2 = 40 - 14 = 26
+  const numECCodewordsInGroup2 = numTotalCodewordsInGroup2 - numDataCodewordsInGroup2;
 
   // Sanity checks: /zxing/qrcode/encoder/Encoder.java -> getNumDataBytesAndNumECBytesForBlockID
-
-  if (blockID < numRSBlocksInGroup1) {
-    return [numECBytesInGroup1, numDataBytesInGroup1];
+  if (blockID < numBlocksInGroup1) {
+    return [numECCodewordsInGroup1, numDataCodewordsInGroup1];
   } else {
-    return [numECBytesInGroup2, numDataBytesInGroup2];
+    return [numECCodewordsInGroup2, numDataCodewordsInGroup2];
   }
 }
 
-function generateECBytes(dataBytes: Uint8Array, numECBytesInBlock: number): Uint8Array {
-  const numDataBytes = dataBytes.length;
-  const toEncode = new Int32Array(numDataBytes + numECBytesInBlock);
+function generateECCodewords(dataCodewords: Uint8Array, numECCodewords: number): Uint8Array {
+  const numDataCodewords = dataCodewords.length;
+  const codewords = new Int32Array(numDataCodewords + numECCodewords);
 
-  // Copy data bytes
-  toEncode.set(dataBytes);
+  // Copy data bytes.
+  codewords.set(dataCodewords);
 
-  // Reed solomon encode
-  new ReedSolomonEncoder().encode(toEncode, numECBytesInBlock);
+  // Reed solomon encode.
+  new ReedSolomonEncoder().encode(codewords, numECCodewords);
 
-  // Get ec bytes
-  return new Uint8Array(toEncode.subarray(numDataBytes));
+  // Get ec bytes.
+  return new Uint8Array(codewords.subarray(numDataCodewords));
 }
 
-export function injectECBytes(bits: BitArray, numRSBlocks: number, numDataBytes: number, numTotalBytes: number): BitArray {
+export function injectECCodewords(bits: BitArray, ecBlocks: ECBlocks): BitArray {
   // Step 1.  Divide data bytes into blocks and generate error correction bytes for them. We'll
   // store the divided data bytes blocks and error correction bytes blocks into "blocks".
-  let maxNumECBytes = 0;
-  let maxNumDataBytes = 0;
-  let dataBytesOffset = 0;
+  let maxNumECCodewords = 0;
+  let maxNumDataCodewords = 0;
+  let dataCodewordsOffset = 0;
 
-  // Since, we know the number of reedsolmon blocks, we can initialize the vector with the number.
+  // Block pair.
   const blocks: BlockPair[] = [];
+  // Number of blocks.
+  const { numBlocks } = ecBlocks;
 
-  for (let i = 0; i < numRSBlocks; i++) {
-    const [numECBytesInBlock, numDataBytesInBlock] = getNumBytesInBlock(i, numRSBlocks, numDataBytes, numTotalBytes);
-    const dataBytes = new Uint8Array(numDataBytesInBlock);
+  for (let i = 0; i < numBlocks; i++) {
+    const [numECCodewords, numDataCodewords] = getNumCodewordsInBlock(i, ecBlocks);
+    const dataCodewords = new Uint8Array(numDataCodewords);
 
-    bits.toUint8Array(8 * dataBytesOffset, dataBytes, 0, numDataBytesInBlock);
+    bits.toUint8Array(8 * dataCodewordsOffset, dataCodewords, 0, numDataCodewords);
 
-    const ecBytes = generateECBytes(dataBytes, numECBytesInBlock);
+    const ecCodewords = generateECCodewords(dataCodewords, numECCodewords);
 
-    blocks.push(new BlockPair(dataBytes, ecBytes));
+    blocks.push(new BlockPair(dataCodewords, ecCodewords));
 
-    maxNumDataBytes = Math.max(maxNumDataBytes, numDataBytesInBlock);
-    maxNumECBytes = Math.max(maxNumECBytes, ecBytes.length);
-    dataBytesOffset += numDataBytesInBlock;
+    maxNumDataCodewords = Math.max(maxNumDataCodewords, numDataCodewords);
+    maxNumECCodewords = Math.max(maxNumECCodewords, ecCodewords.length);
+    dataCodewordsOffset += numDataCodewords;
   }
 
-  const result = new BitArray();
+  const codewords = new BitArray();
 
   // First, place data blocks.
-  for (let i = 0; i < maxNumDataBytes; i++) {
-    for (const { dataBytes } of blocks) {
-      if (i < dataBytes.length) {
-        result.append(dataBytes[i], 8);
+  for (let i = 0; i < maxNumDataCodewords; i++) {
+    for (const { dataCodewords } of blocks) {
+      if (i < dataCodewords.length) {
+        codewords.append(dataCodewords[i], 8);
       }
     }
   }
 
   // Then, place error correction blocks.
-  for (let i = 0; i < maxNumECBytes; i++) {
-    for (const { ecBytes } of blocks) {
-      if (i < ecBytes.length) {
-        result.append(ecBytes[i], 8);
+  for (let i = 0; i < maxNumECCodewords; i++) {
+    for (const { ecCodewords } of blocks) {
+      if (i < ecCodewords.length) {
+        codewords.append(ecCodewords[i], 8);
       }
     }
   }
 
-  return result;
+  return codewords;
 }
 
-export function appendTerminateBits(bits: BitArray, numDataBytes: number): void {
-  const capacity = numDataBytes * 8;
+export function appendTerminateBits(bits: BitArray, numDataCodewords: number): void {
+  const capacity = numDataCodewords * 8;
 
   // Append Mode.TERMINATE if there is enough space (value is 0000).
   for (let i = 0; i < 4 && bits.length < capacity; i++) {
@@ -145,9 +146,9 @@ export function appendTerminateBits(bits: BitArray, numDataBytes: number): void 
   }
 
   // If we have more space, we'll fill the space with padding patterns defined in 8.4.9 (p.24).
-  const numPaddingBytes = numDataBytes - bits.byteLength;
+  const numPaddingCodewords = numDataCodewords - bits.byteLength;
 
-  for (let i = 0; i < numPaddingBytes; i++) {
+  for (let i = 0; i < numPaddingCodewords; i++) {
     bits.append(i & 1 ? 0x11 : 0xec, 8);
   }
 }
@@ -215,16 +216,10 @@ export function appendLengthInfo(bits: BitArray, mode: Mode, version: Version, n
 
 export function willFit(numInputBits: number, version: Version, ecLevel: ECLevel): boolean {
   // In the following comments, we use numbers of Version 7-H.
-  // numBytes = 196
-  const numBytes = version.totalCodewords;
   const ecBlocks = version.getECBlocks(ecLevel);
-  // numECBytes = 130
-  const numECBytes = ecBlocks.totalECCodewords;
-  // numDataBytes = 196 - 130 = 66
-  const numDataBytes = numBytes - numECBytes;
-  const totalInputBytes = Math.ceil(numInputBits / 8);
+  const numInputCodewords = Math.ceil(numInputBits / 8);
 
-  return numDataBytes >= totalInputBytes;
+  return ecBlocks.numTotalDataCodewords >= numInputCodewords;
 }
 
 function chooseVersion(numInputBits: number, ecLevel: ECLevel): Version {

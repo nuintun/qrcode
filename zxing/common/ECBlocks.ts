@@ -7,24 +7,28 @@ import { ECB } from './ECB';
 export class ECBlocks {
   #ecBlocks: ECB[];
   #numBlocks: number;
-  #totalECCodewords: number;
-  #totalDataCodewords: number;
-  #ecCodewordsPerBlock: number;
+  #numTotalCodewords: number;
+  #numTotalECCodewords: number;
+  #numTotalDataCodewords: number;
+  #numECCodewordsPerBlock: number;
 
-  constructor(ecCodewordsPerBlock: number, ...ecBlocks: ECB[]) {
+  constructor(numECCodewordsPerBlock: number, ...ecBlocks: ECB[]) {
     let numBlocks = 0;
-    let totalDataCodewords = 0;
+    let numTotalDataCodewords = 0;
 
-    for (const { count, dataCodewords } of ecBlocks) {
+    for (const { count, numDataCodewords } of ecBlocks) {
       numBlocks += count;
-      totalDataCodewords += count * dataCodewords;
+      numTotalDataCodewords += numDataCodewords * count;
     }
+
+    const numTotalECCodewords = numECCodewordsPerBlock * numBlocks;
 
     this.#ecBlocks = ecBlocks;
     this.#numBlocks = numBlocks;
-    this.#totalDataCodewords = totalDataCodewords;
-    this.#ecCodewordsPerBlock = ecCodewordsPerBlock;
-    this.#totalECCodewords = ecCodewordsPerBlock * numBlocks;
+    this.#numTotalECCodewords = numTotalECCodewords;
+    this.#numTotalDataCodewords = numTotalDataCodewords;
+    this.#numECCodewordsPerBlock = numECCodewordsPerBlock;
+    this.#numTotalCodewords = numTotalDataCodewords + numTotalECCodewords;
   }
 
   public get ecBlocks(): ECB[] {
@@ -35,15 +39,19 @@ export class ECBlocks {
     return this.#numBlocks;
   }
 
-  public get totalECCodewords(): number {
-    return this.#totalECCodewords;
+  public get numTotalCodewords(): number {
+    return this.#numTotalCodewords;
   }
 
-  public get totalDataCodewords(): number {
-    return this.#totalDataCodewords;
+  public get numTotalECCodewords(): number {
+    return this.#numTotalECCodewords;
   }
 
-  public get ecCodewordsPerBlock(): number {
-    return this.#ecCodewordsPerBlock;
+  public get numTotalDataCodewords(): number {
+    return this.#numTotalDataCodewords;
+  }
+
+  public get numECCodewordsPerBlock(): number {
+    return this.#numECCodewordsPerBlock;
   }
 }

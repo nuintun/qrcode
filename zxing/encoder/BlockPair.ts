@@ -3,19 +3,19 @@
  */
 
 export class BlockPair {
-  #ecBytes: Uint8Array;
-  #dataBytes: Uint8Array;
+  #ecCodewords: Uint8Array;
+  #dataCodewords: Uint8Array;
 
-  constructor(dataBytes: Uint8Array, ecBytes: Uint8Array) {
-    this.#ecBytes = ecBytes;
-    this.#dataBytes = dataBytes;
+  constructor(dataCodewords: Uint8Array, ecCodewords: Uint8Array) {
+    this.#ecCodewords = ecCodewords;
+    this.#dataCodewords = dataCodewords;
   }
 
-  public get ecBytes(): Uint8Array {
-    return this.#ecBytes;
+  public get ecCodewords(): Uint8Array {
+    return this.#ecCodewords;
   }
 
-  public get dataBytes(): Uint8Array {
-    return this.#dataBytes;
+  public get dataCodewords(): Uint8Array {
+    return this.#dataCodewords;
   }
 }
