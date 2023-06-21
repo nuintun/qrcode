@@ -1413,16 +1413,16 @@
       }
       return generators[degree];
     }
-    encode(received, ecBytes) {
-      const dataBytes = received.length - ecBytes;
-      const generator = this.#buildGenerator(ecBytes);
+    encode(received, ecLength) {
+      const dataBytes = received.length - ecLength;
+      const generator = this.#buildGenerator(ecLength);
       const infoCoefficients = new Int32Array(dataBytes);
       infoCoefficients.set(received.subarray(0, dataBytes));
       const base = new Polynomial(this.#field, infoCoefficients);
-      const info = base.multiplyByMonomial(ecBytes, 1);
+      const info = base.multiplyByMonomial(ecLength, 1);
       const [, remainder] = info.divide(generator);
       const { coefficients } = remainder;
-      const numZeroCoefficients = ecBytes - coefficients.length;
+      const numZeroCoefficients = ecLength - coefficients.length;
       const zeroCoefficientsOffset = dataBytes + numZeroCoefficients;
       received.fill(0, dataBytes, zeroCoefficientsOffset);
       received.set(coefficients, zeroCoefficientsOffset);

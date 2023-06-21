@@ -140,18 +140,18 @@ export class Decoder {
     return [sigma, omega];
   }
 
-  public decode(received: Int32Array, ecBytes: number): void {
+  public decode(received: Int32Array, ecLength: number): void {
     const field = this.#field;
     const { generator } = field;
     const poly = new Polynomial(field, received);
-    const syndromeCoefficients = new Int32Array(ecBytes);
+    const syndromeCoefficients = new Int32Array(ecLength);
 
     let noError = true;
 
-    for (let i = 0; i < ecBytes; i++) {
+    for (let i = 0; i < ecLength; i++) {
       const evaluate = poly.evaluate(field.exp(i + generator));
 
-      syndromeCoefficients[ecBytes - 1 - i] = evaluate;
+      syndromeCoefficients[ecLength - 1 - i] = evaluate;
 
       if (evaluate !== 0) {
         noError = false;
@@ -160,7 +160,7 @@ export class Decoder {
 
     if (!noError) {
       const syndrome = new Polynomial(field, syndromeCoefficients);
-      const [sigma, omega] = this.#runEuclideanAlgorithm(field.buildPolynomial(ecBytes, 1), syndrome, ecBytes);
+      const [sigma, omega] = this.#runEuclideanAlgorithm(field.buildPolynomial(ecLength, 1), syndrome, ecLength);
       const errorLocations = this.#findErrorLocations(sigma);
       const errorMagnitudes = this.#findErrorMagnitudes(omega, errorLocations);
       const errorLength = errorLocations.length;
