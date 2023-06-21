@@ -2457,7 +2457,10 @@
   function getAlphanumericCode(code) {
     const index = code - 32;
     if (index < ALPHANUMERIC_TABLE.length) {
-      return ALPHANUMERIC_TABLE[index];
+      code = ALPHANUMERIC_TABLE[index];
+      if (code >= 0) {
+        return ALPHANUMERIC_TABLE[index];
+      }
     }
     throw new Error(`illegal alphanumeric character: ${String.fromCharCode(code)}`);
   }
