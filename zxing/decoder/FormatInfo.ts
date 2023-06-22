@@ -87,8 +87,7 @@ export function decodeFormatInfo(formatInfo1: number, formatInfo2: number): Form
     }
   }
 
-  // Hamming distance of the 32 masked codes is 7, by construction, so <= 3 bits
-  // differing means we found a match
+  // Hamming distance of the 32 masked codes is 7, by construction, so <= 3 bits differing means we found a match
   if (bestDiff <= 3) {
     return new FormatInfo(bestFormatInfo);
   }

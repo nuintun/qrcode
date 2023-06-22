@@ -392,8 +392,7 @@ export function decodeVersion(version1: number, version2: number): Version {
       return VERSIONS[i + 6];
     }
 
-    // Otherwise see if this is the closest to a real version info bit string
-    // we have seen so far
+    // Otherwise see if this is the closest to a real version info bit string we have seen so far
     let bitsDiff = bitCount(version1 ^ maskedVersion);
 
     if (bitsDiff < bestDiff) {
@@ -412,8 +411,7 @@ export function decodeVersion(version1: number, version2: number): Version {
     }
   }
 
-  // We can tolerate up to 3 bits of error since no two version info codewords will
-  // differ in less than 8 bits.
+  // We can tolerate up to 3 bits of error since no two version info codewords will differ in less than 8 bits
   if (bestDiff <= 3 && bestVersion >= 7) {
     return VERSIONS[bestVersion - 1];
   }
