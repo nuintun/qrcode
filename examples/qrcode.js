@@ -1001,11 +1001,11 @@
     #size;
     #rowSize;
     #bits;
-    constructor(size) {
+    constructor(size, bits) {
       const rowSize = Math.ceil(size / 32);
       this.#size = size;
       this.#rowSize = rowSize;
-      this.#bits = new Int32Array(rowSize * size);
+      this.#bits = bits || new Int32Array(rowSize * size);
     }
     #offset(x, y) {
       return y * this.#rowSize + Math.floor(x / 32);
@@ -1024,6 +1024,9 @@
     flip(x, y) {
       const offset = this.#offset(x, y);
       this.#bits[offset] ^= 1 << (x & 0x1f);
+    }
+    clone() {
+      return new BitMatrix(this.#size, new Int32Array(this.#bits));
     }
     setRegion(left, top, width, height) {
       const bits = this.#bits;
@@ -1479,10 +1482,10 @@
     #matrix;
     constructor(matrix) {
       const { size } = matrix;
-      if (size < 21 || (size & 0x03) !== 1) {
+      if (size < 21 || size > 177 || (size - 17) & 0x03) {
         throw new Error('illegal qrcode dimension');
       }
-      this.#matrix = matrix;
+      this.#matrix = matrix.clone();
     }
     #copyBit(x, y, bits) {
       return this.#matrix.get(x, y) ? (bits << 1) | 0x01 : bits << 1;
@@ -2081,7 +2084,7 @@
       } catch {
         mirror = true;
         if (formatInfo != null) {
-          parser.unmask(formatInfo.mask);
+          parser.remask(formatInfo.mask);
         }
         parser.mirror();
         version = parser.readVersion();

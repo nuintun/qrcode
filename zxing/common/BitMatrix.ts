@@ -7,12 +7,12 @@ export class BitMatrix {
   #rowSize: number;
   #bits: Int32Array;
 
-  constructor(size: number) {
+  constructor(size: number, bits?: Int32Array) {
     const rowSize = Math.ceil(size / 32);
 
     this.#size = size;
     this.#rowSize = rowSize;
-    this.#bits = new Int32Array(rowSize * size);
+    this.#bits = bits || new Int32Array(rowSize * size);
   }
 
   #offset(x: number, y: number): number {
@@ -39,6 +39,10 @@ export class BitMatrix {
     const offset = this.#offset(x, y);
 
     this.#bits[offset] ^= 1 << (x & 0x1f);
+  }
+
+  public clone(): BitMatrix {
+    return new BitMatrix(this.#size, new Int32Array(this.#bits));
   }
 
   public setRegion(left: number, top: number, width: number, height: number): void {

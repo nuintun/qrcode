@@ -14,11 +14,11 @@ export class BitMatrixParser {
   constructor(matrix: BitMatrix) {
     const { size } = matrix;
 
-    if (size < 21 || (size & 0x03) !== 1) {
+    if (size < 21 || size > 177 || (size - 17) & 0x03) {
       throw new Error('illegal qrcode dimension');
     }
 
-    this.#matrix = matrix;
+    this.#matrix = matrix.clone();
   }
 
   #copyBit(x: number, y: number, bits: number) {

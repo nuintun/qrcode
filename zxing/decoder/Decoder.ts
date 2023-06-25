@@ -59,7 +59,7 @@ export class Decoder {
       mirror = true;
 
       if (formatInfo != null) {
-        parser.unmask(formatInfo.mask);
+        parser.remask(formatInfo.mask);
       }
 
       parser.mirror();
