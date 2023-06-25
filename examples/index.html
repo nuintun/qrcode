@@ -197,13 +197,13 @@
           const qrcode = encoder.encode(chooseBestMode(mode, data));
           console.timeEnd('encode');
 
+          console.dir(qrcode);
+
           console.time('toDataURL');
           const url = qrcode.toDataURL(moduleSize, { margin, foreground, background });
           console.timeEnd('toDataURL');
 
           encodeResult.html(`<img src="${url}" />`);
-
-          console.dir(qrcode);
 
           const decoder = new QRCode.Decoder();
 

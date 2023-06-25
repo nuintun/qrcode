@@ -11,12 +11,14 @@ import { DecodeResult, Structured } from './utils/source';
 export class QRCode {
   #mask: number;
   #level: ECLevel;
+  #mirror: boolean;
   #version: Version;
   #metadata: DecodeResult;
 
-  constructor(metadata: DecodeResult, version: Version, { mask, level }: FormatInfo) {
+  constructor(metadata: DecodeResult, version: Version, { mask, level }: FormatInfo, mirror: boolean) {
     this.#mask = mask;
     this.#level = level;
+    this.#mirror = mirror;
     this.#version = version;
     this.#metadata = metadata;
   }
@@ -43,6 +45,14 @@ export class QRCode {
    */
   public get version(): number {
     return this.#version.version;
+  }
+
+  /**
+   * @property mirror
+   * @description Get the mirror of qrcode
+   */
+  public get mirror(): boolean {
+    return this.#mirror;
   }
 
   /**

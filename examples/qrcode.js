@@ -79,11 +79,13 @@
   let QRCode$1 = class QRCode {
     #mask;
     #level;
+    #mirror;
     #version;
     #metadata;
-    constructor(metadata, version, { mask, level }) {
+    constructor(metadata, version, { mask, level }, mirror) {
       this.#mask = mask;
       this.#level = level;
+      this.#mirror = mirror;
       this.#version = version;
       this.#metadata = metadata;
     }
@@ -107,6 +109,13 @@
      */
     get version() {
       return this.#version.version;
+    }
+    /**
+     * @property mirror
+     * @description Get the mirror of qrcode
+     */
+    get mirror() {
+      return this.#mirror;
     }
     /**
      * @property content
@@ -2059,6 +2068,7 @@
       return buffer;
     }
     decode(matrix) {
+      let mirror = false;
       let version;
       let codewords;
       let formatInfo;
@@ -2068,6 +2078,7 @@
         formatInfo = parser.readFormatInfo();
         codewords = this.#parse(parser, version, formatInfo);
       } catch {
+        mirror = true;
         if (formatInfo != null) {
           parser.unmask(formatInfo.mask);
         }
@@ -2076,7 +2087,7 @@
         formatInfo = parser.readFormatInfo();
         codewords = this.#parse(parser, version, formatInfo);
       }
-      return new QRCode$1(decode(codewords, version, formatInfo, this.#decode), version, formatInfo);
+      return new QRCode$1(decode(codewords, version, formatInfo, this.#decode), version, formatInfo, mirror);
     }
   }
 

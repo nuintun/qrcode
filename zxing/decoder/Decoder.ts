@@ -44,6 +44,7 @@ export class Decoder {
   }
 
   decode(matrix: BitMatrix): QRCode {
+    let mirror = false;
     let version: Version;
     let codewords: Uint8Array;
     let formatInfo: FormatInfo | undefined;
@@ -55,6 +56,8 @@ export class Decoder {
       formatInfo = parser.readFormatInfo();
       codewords = this.#parse(parser, version, formatInfo);
     } catch {
+      mirror = true;
+
       if (formatInfo != null) {
         parser.unmask(formatInfo.mask);
       }
@@ -66,6 +69,6 @@ export class Decoder {
       codewords = this.#parse(parser, version, formatInfo);
     }
 
-    return new QRCode(decode(codewords, version, formatInfo, this.#decode), version, formatInfo);
+    return new QRCode(decode(codewords, version, formatInfo, this.#decode), version, formatInfo, mirror);
   }
 }
