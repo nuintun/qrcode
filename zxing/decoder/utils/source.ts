@@ -48,13 +48,15 @@ function parseECIValue(source: BitSource): number {
   throw new Error('');
 }
 
-function processFNC1Separator(content: string): string {
+const GS = String.fromCharCode(0x1d);
+
+function processGSCharacter(content: string): string {
   return content.replace(/%+/g, match => {
     const isOdd = match.length & 0x01;
 
     match = match.replace(/%%/g, '%');
 
-    return isOdd ? match.replace(/%$/, '0x1d') : match;
+    return isOdd ? match.replace(/%$/, GS) : match;
   });
 }
 
@@ -83,7 +85,7 @@ function decodeAlphanumericSegment(source: BitSource, count: number, fnc1: boole
     content += ALPHANUMERIC_CHARACTERS.charAt(source.read(6));
   }
 
-  return fnc1 ? processFNC1Separator(content) : content;
+  return fnc1 ? processGSCharacter(content) : content;
 }
 
 function decodeByteSegment(source: BitSource, count: number, decode: TextDecode, fnc1: boolean, eciValue?: number): string {
@@ -101,7 +103,7 @@ function decodeByteSegment(source: BitSource, count: number, decode: TextDecode,
 
   const content = decode(bytes, charset);
 
-  return fnc1 ? processFNC1Separator(content) : content;
+  return fnc1 ? processGSCharacter(content) : content;
 }
 
 function decodeHanziSegment(source: BitSource, count: number): string {

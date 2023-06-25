@@ -351,11 +351,12 @@
     }
     throw new Error('');
   }
-  function processFNC1Separator(content) {
+  const GS = String.fromCharCode(0x1d);
+  function processGSCharacter(content) {
     return content.replace(/%+/g, match => {
       const isOdd = match.length & 0x01;
       match = match.replace(/%%/g, '%');
-      return isOdd ? match.replace(/%$/, '0x1d') : match;
+      return isOdd ? match.replace(/%$/, GS) : match;
     });
   }
   function decodeAlphanumericSegment(source, count, fnc1) {
@@ -376,7 +377,7 @@
       }
       content += ALPHANUMERIC_CHARACTERS.charAt(source.read(6));
     }
-    return fnc1 ? processFNC1Separator(content) : content;
+    return fnc1 ? processGSCharacter(content) : content;
   }
   function decodeByteSegment(source, count, decode, fnc1, eciValue) {
     // Don't crash trying to read more bits than we have available.
@@ -389,7 +390,7 @@
       bytes[i] = source.read(8);
     }
     const content = decode(bytes, charset);
-    return fnc1 ? processFNC1Separator(content) : content;
+    return fnc1 ? processGSCharacter(content) : content;
   }
   function decodeHanziSegment(source, count) {
     if (source.available() < 13 * count) {
