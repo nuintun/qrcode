@@ -74,6 +74,498 @@
   }
 
   /**
+   * @module QRCode
+   */
+  let QRCode$1 = class QRCode {
+    #mask;
+    #level;
+    #version;
+    #metadata;
+    constructor(metadata, version, { mask, level }) {
+      this.#mask = mask;
+      this.#level = level;
+      this.#version = version;
+      this.#metadata = metadata;
+    }
+    /**
+     * @property mask
+     * @description Get the mask of qrcode
+     */
+    get mask() {
+      return this.#mask;
+    }
+    /**
+     * @property level
+     * @description Get the error correction level of qrcode
+     */
+    get level() {
+      return this.#level.name;
+    }
+    /**
+     * @property version
+     * @description Get the version of qrcode
+     */
+    get version() {
+      return this.#version.version;
+    }
+    /**
+     * @property content
+     * @description Get the content of qrcode
+     */
+    get content() {
+      return this.#metadata.content;
+    }
+    /**
+     * @property symbology
+     * @description Get the symbology of qrcode
+     */
+    get symbology() {
+      return this.#metadata.symbology;
+    }
+    /**
+     * @property fnc1
+     * @description Get the fnc1 of qrcode
+     */
+    get fnc1() {
+      return this.#metadata.fnc1;
+    }
+    /**
+     * @property codewords
+     * @description Get the codewords of qrcode
+     */
+    get codewords() {
+      return this.#metadata.codewords;
+    }
+    /**
+     * @property structured
+     * @description Get the structured of qrcode
+     */
+    get structured() {
+      return this.#metadata.structured;
+    }
+  };
+
+  /**
+   * @module BitSource
+   */
+  class BitSource {
+    #bytes;
+    #bitOffset;
+    #byteOffset;
+    constructor(bytes) {
+      this.#bytes = bytes;
+      this.#bitOffset = 0;
+      this.#byteOffset = 0;
+    }
+    get bitOffset() {
+      return this.#bitOffset;
+    }
+    get byteOffset() {
+      return this.#byteOffset;
+    }
+    read(length) {
+      let result = 0;
+      let bitOffset = this.#bitOffset;
+      let byteOffset = this.#byteOffset;
+      const bytes = this.#bytes;
+      // First, read remainder from current byte
+      if (bitOffset > 0) {
+        const bitsLeft = 8 - bitOffset;
+        const toRead = Math.min(length, bitsLeft);
+        const bitsToNotRead = bitsLeft - toRead;
+        const mask = (0xff >> (8 - toRead)) << bitsToNotRead;
+        result = (bytes[byteOffset] & mask) >> bitsToNotRead;
+        length -= toRead;
+        bitOffset += toRead;
+        if (bitOffset == 8) {
+          bitOffset = 0;
+          byteOffset++;
+        }
+      }
+      // Next read whole bytes
+      if (length > 0) {
+        while (length >= 8) {
+          result = (result << 8) | (bytes[byteOffset] & 0xff);
+          byteOffset++;
+          length -= 8;
+        }
+        // Finally read a partial byte
+        if (length > 0) {
+          const bitsToNotRead = 8 - length;
+          const mask = (0xff >> bitsToNotRead) << bitsToNotRead;
+          result = (result << length) | ((bytes[byteOffset] & mask) >> bitsToNotRead);
+          bitOffset += length;
+        }
+      }
+      this.#bitOffset = bitOffset;
+      this.#byteOffset = byteOffset;
+      return result;
+    }
+    available() {
+      return 8 * (this.#bytes.length - this.#byteOffset) - this.#bitOffset;
+    }
+  }
+
+  /**
+   * @module Mode
+   */
+  const VALUES_TO_MODE = new Map();
+  function fromModeBits(bits) {
+    const mode = VALUES_TO_MODE.get(bits);
+    if (mode != null) {
+      return mode;
+    }
+    throw new Error('illegal mode bits');
+  }
+  class Mode {
+    #bits;
+    #characterCountBitsSet;
+    static TERMINATOR = new Mode([0, 0, 0], 0x00);
+    static NUMERIC = new Mode([10, 12, 14], 0x01);
+    static ALPHANUMERIC = new Mode([9, 11, 13], 0x02);
+    static STRUCTURED_APPEND = new Mode([0, 0, 0], 0x03);
+    static BYTE = new Mode([8, 16, 16], 0x04);
+    static ECI = new Mode([0, 0, 0], 0x07);
+    static KANJI = new Mode([8, 10, 12], 0x08);
+    static FNC1_FIRST_POSITION = new Mode([0, 0, 0], 0x05);
+    static FNC1_SECOND_POSITION = new Mode([0, 0, 0], 0x09);
+    static HANZI = new Mode([8, 10, 12], 0x0d);
+    constructor(characterCountBitsSet, bits) {
+      this.#bits = bits;
+      this.#characterCountBitsSet = new Int32Array(characterCountBitsSet);
+      VALUES_TO_MODE.set(bits, this);
+    }
+    get bits() {
+      return this.#bits;
+    }
+    getCharacterCountBits({ version }) {
+      let offset;
+      if (version <= 9) {
+        offset = 0;
+      } else if (version <= 26) {
+        offset = 1;
+      } else {
+        offset = 2;
+      }
+      return this.#characterCountBitsSet[offset];
+    }
+  }
+
+  /**
+   * @module encoding
+   */
+  function getCharCodes(content, maxCode) {
+    const bytes = [];
+    for (const character of content) {
+      const code = character.charCodeAt(0);
+      // If gt max code, push ?
+      bytes.push(code > maxCode ? 63 : code);
+    }
+    return new Uint8Array(bytes);
+  }
+  function encode$1(content, charset) {
+    switch (charset) {
+      case Charset.ASCII:
+        return getCharCodes(content, 0x7f);
+      case Charset.ISO_8859_1:
+        return getCharCodes(content, 0xff);
+      case Charset.UTF_8:
+        return new TextEncoder().encode(content);
+      default:
+        throw Error('built-in encode only support ascii, utf-8 and iso-8859-1 charset');
+    }
+  }
+  function decode$1(bytes, charset) {
+    return new TextDecoder(charset.label).decode(bytes);
+  }
+  const NUMERIC_CHARACTERS = '0123456789';
+  const ALPHANUMERIC_CHARACTERS = `${NUMERIC_CHARACTERS}ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:`;
+  function getCharactersMapping(characters) {
+    let code = 0;
+    const mapping = new Map();
+    for (const character of characters) {
+      mapping.set(character, code++);
+    }
+    return mapping;
+  }
+  function getEncodingMapping(label, ...ranges) {
+    const bytes = [];
+    const codes = [];
+    const mapping = new Map();
+    const decoder = new TextDecoder(label, { fatal: true });
+    for (const [start, end] of ranges) {
+      for (let code = start; code <= end; code++) {
+        bytes.push(code >> 8, code & 0xff);
+        codes.push(code);
+      }
+    }
+    const { length } = codes;
+    const characters = decoder.decode(new Uint8Array(bytes));
+    for (let i = 0; i < length; i++) {
+      const character = characters.charAt(i);
+      if (!mapping.has(character)) {
+        mapping.set(character, codes[i]);
+      }
+    }
+    return mapping;
+  }
+  function getSerialRanges(start, end, offsets, step = 256) {
+    const count = offsets.length - 1;
+    const ranges = [];
+    for (let i = start; i < end; ) {
+      for (let j = 0; j < count; j += 2) {
+        ranges.push([i + offsets[j], i + offsets[j + 1]]);
+      }
+      i += step;
+    }
+    return ranges;
+  }
+
+  /**
+   * @module source
+   */
+  function parseECIValue(source) {
+    const firstByte = source.read(8);
+    if ((firstByte & 0x80) == 0) {
+      // just one byte
+      return firstByte & 0x7f;
+    }
+    if ((firstByte & 0xc0) == 0x80) {
+      // two bytes
+      const secondByte = source.read(8);
+      return ((firstByte & 0x3f) << 8) | secondByte;
+    }
+    if ((firstByte & 0xe0) == 0xc0) {
+      // three bytes
+      const secondThirdBytes = source.read(16);
+      return ((firstByte & 0x1f) << 16) | secondThirdBytes;
+    }
+    throw new Error('');
+  }
+  function processFNC1Separator(content) {
+    return content.replace(/%+/g, match => {
+      const isOdd = match.length & 0x01;
+      match = match.replace(/%%/g, '%');
+      return isOdd ? match.replace(/%$/, '0x1d') : match;
+    });
+  }
+  function decodeAlphanumericSegment(source, count, fnc1) {
+    let content = '';
+    while (count > 1) {
+      if (source.available() < 11) {
+        throw new Error('');
+      }
+      const nextTwoCharsBits = source.read(11);
+      content += ALPHANUMERIC_CHARACTERS.charAt(nextTwoCharsBits / 45);
+      content += ALPHANUMERIC_CHARACTERS.charAt(nextTwoCharsBits % 45);
+      count -= 2;
+    }
+    if (count == 1) {
+      // special case: one character left
+      if (source.available() < 6) {
+        throw new Error('');
+      }
+      content += ALPHANUMERIC_CHARACTERS.charAt(source.read(6));
+    }
+    return fnc1 ? processFNC1Separator(content) : content;
+  }
+  function decodeByteSegment(source, count, decode, fnc1, eciValue) {
+    // Don't crash trying to read more bits than we have available.
+    if (source.available() < 8 * count) {
+      throw new Error('');
+    }
+    const bytes = new Uint8Array(count);
+    const charset = eciValue != null ? fromCharsetValue(eciValue) : Charset.ISO_8859_1;
+    for (let i = 0; i < count; i++) {
+      bytes[i] = source.read(8);
+    }
+    const content = decode(bytes, charset);
+    return fnc1 ? processFNC1Separator(content) : content;
+  }
+  function decodeHanziSegment(source, count) {
+    if (source.available() < 13 * count) {
+      throw new Error('');
+    }
+    let offset = 0;
+    const bytes = new Uint8Array(2 * count);
+    while (count > 0) {
+      const twoBytes = source.read(13);
+      let assembledTwoBytes = ((twoBytes / 0x060) << 8) | twoBytes % 0x060;
+      if (assembledTwoBytes < 0x00a00) {
+        // In the 0xA1A1 to 0xAAFE range
+        assembledTwoBytes += 0x0a1a1;
+      } else {
+        // In the 0xB0A1 to 0xFAFE range
+        assembledTwoBytes += 0x0a6a1;
+      }
+      bytes[offset] = (assembledTwoBytes >> 8) & 0xff;
+      bytes[offset + 1] = assembledTwoBytes & 0xff;
+      count--;
+      offset += 2;
+    }
+    return new TextDecoder('gb2312').decode(bytes);
+  }
+  function decodeKanjiSegment(source, count) {
+    if (source.available() < 13 * count) {
+      throw new Error('');
+    }
+    let offset = 0;
+    const bytes = new Uint8Array(2 * count);
+    while (count > 0) {
+      const twoBytes = source.read(13);
+      let assembledTwoBytes = ((twoBytes / 0x0c0) << 8) | twoBytes % 0x0c0;
+      if (assembledTwoBytes < 0x01f00) {
+        // In the 0x8140 to 0x9FFC range
+        assembledTwoBytes += 0x08140;
+      } else {
+        // In the 0xE040 to 0xEBBF range
+        assembledTwoBytes += 0x0c140;
+      }
+      bytes[offset] = (assembledTwoBytes >> 8) & 0xff;
+      bytes[offset + 1] = assembledTwoBytes & 0xff;
+      count--;
+      offset += 2;
+    }
+    return new TextDecoder('shift-jis').decode(bytes);
+  }
+  function decodeNumericSegment(source, count) {
+    let content = '';
+    // Read three digits at a time
+    while (count >= 3) {
+      // Each 10 bits encodes three digits
+      if (source.available() < 10) {
+        throw new Error('');
+      }
+      const threeDigitsBits = source.read(10);
+      if (threeDigitsBits >= 1000) {
+        throw new Error('');
+      }
+      content += NUMERIC_CHARACTERS.charAt(threeDigitsBits / 100);
+      content += NUMERIC_CHARACTERS.charAt((threeDigitsBits / 10) % 10);
+      content += NUMERIC_CHARACTERS.charAt(threeDigitsBits % 10);
+      count -= 3;
+    }
+    if (count === 2) {
+      // Two digits left over to read, encoded in 7 bits
+      if (source.available() < 7) {
+        throw new Error('illegal numeric');
+      }
+      const twoDigitsBits = source.read(7);
+      if (twoDigitsBits >= 100) {
+        throw new Error('illegal numeric codeword');
+      }
+      content += NUMERIC_CHARACTERS.charAt(twoDigitsBits / 10);
+      content += NUMERIC_CHARACTERS.charAt(twoDigitsBits % 10);
+    } else if (count === 1) {
+      // One digit left over to read
+      if (source.available() < 4) {
+        throw new Error('illegal numeric');
+      }
+      const digitBits = source.read(4);
+      if (digitBits >= 10) {
+        throw new Error('illegal numeric codeword');
+      }
+      content += NUMERIC_CHARACTERS.charAt(digitBits);
+    }
+    return content;
+  }
+  function decode(codewords, version, {}, decode) {
+    let content = '';
+    let indicator = -1;
+    let modifier;
+    let hasFNC1First = false;
+    let hasFNC1Second = false;
+    let mode;
+    let fnc1 = false;
+    let currentECIValue;
+    let structured = false;
+    const source = new BitSource(codewords);
+    do {
+      // While still another segment to read...
+      if (source.available() < 4) {
+        // OK, assume we're done. Really, a TERMINATOR mode should have been recorded here
+        mode = Mode.TERMINATOR;
+      } else {
+        mode = fromModeBits(source.read(4));
+      }
+      switch (mode) {
+        case Mode.TERMINATOR:
+          break;
+        case Mode.FNC1_FIRST_POSITION:
+          hasFNC1First = true;
+          break;
+        case Mode.FNC1_SECOND_POSITION:
+          hasFNC1Second = true;
+          indicator = source.read(8);
+          break;
+        case Mode.STRUCTURED_APPEND:
+          if (source.available() < 16) {
+            throw new Error('illegal structured append');
+          }
+          structured = {
+            index: source.read(4),
+            count: source.read(4) + 1,
+            parity: source.read(8)
+          };
+          break;
+        case Mode.ECI:
+          currentECIValue = parseECIValue(source);
+          break;
+        default:
+          if (mode === Mode.HANZI) {
+            const subset = source.read(4);
+            if (subset !== 1) {
+              throw new Error('illegal hanzi subset');
+            }
+          }
+          const count = source.read(mode.getCharacterCountBits(version));
+          switch (mode) {
+            case Mode.ALPHANUMERIC:
+              content += decodeAlphanumericSegment(source, count, hasFNC1First || hasFNC1Second);
+              break;
+            case Mode.BYTE:
+              content += decodeByteSegment(source, count, decode, hasFNC1First || hasFNC1Second, currentECIValue);
+              break;
+            case Mode.HANZI:
+              content += decodeHanziSegment(source, count);
+              break;
+            case Mode.KANJI:
+              content += decodeKanjiSegment(source, count);
+              break;
+            case Mode.NUMERIC:
+              content += decodeNumericSegment(source, count);
+              break;
+            default:
+              throw new Error('');
+          }
+      }
+    } while (mode !== Mode.TERMINATOR);
+    if (hasFNC1First) {
+      fnc1 = ['GS1'];
+    } else if (hasFNC1Second) {
+      fnc1 = ['AIM', indicator];
+    }
+    if (currentECIValue != null) {
+      if (hasFNC1First) {
+        modifier = 4;
+      } else if (hasFNC1Second) {
+        modifier = 6;
+      } else {
+        modifier = 2;
+      }
+    } else {
+      if (hasFNC1First) {
+        modifier = 3;
+      } else if (hasFNC1Second) {
+        modifier = 5;
+      } else {
+        modifier = 1;
+      }
+    }
+    return { content, codewords, structured, symbology: `]Q${modifier}`, fnc1 };
+  }
+
+  /**
    * @module mask
    */
   // Penalty weights from section 6.8.2.1
@@ -1106,426 +1598,6 @@
   }
 
   /**
-   * @module BitSource
-   */
-  class BitSource {
-    #bytes;
-    #bitOffset;
-    #byteOffset;
-    constructor(bytes) {
-      this.#bytes = bytes;
-      this.#bitOffset = 0;
-      this.#byteOffset = 0;
-    }
-    get bitOffset() {
-      return this.#bitOffset;
-    }
-    get byteOffset() {
-      return this.#byteOffset;
-    }
-    read(length) {
-      let result = 0;
-      let bitOffset = this.#bitOffset;
-      let byteOffset = this.#byteOffset;
-      const bytes = this.#bytes;
-      // First, read remainder from current byte
-      if (bitOffset > 0) {
-        const bitsLeft = 8 - bitOffset;
-        const toRead = Math.min(length, bitsLeft);
-        const bitsToNotRead = bitsLeft - toRead;
-        const mask = (0xff >> (8 - toRead)) << bitsToNotRead;
-        result = (bytes[byteOffset] & mask) >> bitsToNotRead;
-        length -= toRead;
-        bitOffset += toRead;
-        if (bitOffset == 8) {
-          bitOffset = 0;
-          byteOffset++;
-        }
-      }
-      // Next read whole bytes
-      if (length > 0) {
-        while (length >= 8) {
-          result = (result << 8) | (bytes[byteOffset] & 0xff);
-          byteOffset++;
-          length -= 8;
-        }
-        // Finally read a partial byte
-        if (length > 0) {
-          const bitsToNotRead = 8 - length;
-          const mask = (0xff >> bitsToNotRead) << bitsToNotRead;
-          result = (result << length) | ((bytes[byteOffset] & mask) >> bitsToNotRead);
-          bitOffset += length;
-        }
-      }
-      this.#bitOffset = bitOffset;
-      this.#byteOffset = byteOffset;
-      return result;
-    }
-    available() {
-      return 8 * (this.#bytes.length - this.#byteOffset) - this.#bitOffset;
-    }
-  }
-
-  /**
-   * @module Mode
-   */
-  const VALUES_TO_MODE = new Map();
-  function fromModeBits(bits) {
-    const mode = VALUES_TO_MODE.get(bits);
-    if (mode != null) {
-      return mode;
-    }
-    throw new Error('illegal mode bits');
-  }
-  class Mode {
-    #bits;
-    #characterCountBitsSet;
-    static TERMINATOR = new Mode([0, 0, 0], 0x00);
-    static NUMERIC = new Mode([10, 12, 14], 0x01);
-    static ALPHANUMERIC = new Mode([9, 11, 13], 0x02);
-    static STRUCTURED_APPEND = new Mode([0, 0, 0], 0x03);
-    static BYTE = new Mode([8, 16, 16], 0x04);
-    static ECI = new Mode([0, 0, 0], 0x07);
-    static KANJI = new Mode([8, 10, 12], 0x08);
-    static FNC1_FIRST_POSITION = new Mode([0, 0, 0], 0x05);
-    static FNC1_SECOND_POSITION = new Mode([0, 0, 0], 0x09);
-    static HANZI = new Mode([8, 10, 12], 0x0d);
-    constructor(characterCountBitsSet, bits) {
-      this.#bits = bits;
-      this.#characterCountBitsSet = new Int32Array(characterCountBitsSet);
-      VALUES_TO_MODE.set(bits, this);
-    }
-    get bits() {
-      return this.#bits;
-    }
-    getCharacterCountBits({ version }) {
-      let offset;
-      if (version <= 9) {
-        offset = 0;
-      } else if (version <= 26) {
-        offset = 1;
-      } else {
-        offset = 2;
-      }
-      return this.#characterCountBitsSet[offset];
-    }
-  }
-
-  /**
-   * @module encoding
-   */
-  function getCharCodes(content, maxCode) {
-    const bytes = [];
-    for (const character of content) {
-      const code = character.charCodeAt(0);
-      // If gt max code, push ?
-      bytes.push(code > maxCode ? 63 : code);
-    }
-    return new Uint8Array(bytes);
-  }
-  function encode$1(content, charset) {
-    switch (charset) {
-      case Charset.ASCII:
-        return getCharCodes(content, 0x7f);
-      case Charset.ISO_8859_1:
-        return getCharCodes(content, 0xff);
-      case Charset.UTF_8:
-        return new TextEncoder().encode(content);
-      default:
-        throw Error('built-in encode only support ascii, utf-8 and iso-8859-1 charset');
-    }
-  }
-  function decode$1(bytes, charset) {
-    return new TextDecoder(charset.label).decode(bytes);
-  }
-  const NUMERIC_CHARACTERS = '0123456789';
-  const ALPHANUMERIC_CHARACTERS = `${NUMERIC_CHARACTERS}ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:`;
-  function getCharactersMapping(characters) {
-    let code = 0;
-    const mapping = new Map();
-    for (const character of characters) {
-      mapping.set(character, code++);
-    }
-    return mapping;
-  }
-  function getEncodingMapping(label, ...ranges) {
-    const bytes = [];
-    const codes = [];
-    const mapping = new Map();
-    const decoder = new TextDecoder(label, { fatal: true });
-    for (const [start, end] of ranges) {
-      for (let code = start; code <= end; code++) {
-        bytes.push(code >> 8, code & 0xff);
-        codes.push(code);
-      }
-    }
-    const { length } = codes;
-    const characters = decoder.decode(new Uint8Array(bytes));
-    for (let i = 0; i < length; i++) {
-      const character = characters.charAt(i);
-      if (!mapping.has(character)) {
-        mapping.set(character, codes[i]);
-      }
-    }
-    return mapping;
-  }
-  function getSerialRanges(start, end, offsets, step = 256) {
-    const count = offsets.length - 1;
-    const ranges = [];
-    for (let i = start; i < end; ) {
-      for (let j = 0; j < count; j += 2) {
-        ranges.push([i + offsets[j], i + offsets[j + 1]]);
-      }
-      i += step;
-    }
-    return ranges;
-  }
-
-  /**
-   * @module source
-   */
-  function parseECIValue(source) {
-    const firstByte = source.read(8);
-    if ((firstByte & 0x80) == 0) {
-      // just one byte
-      return firstByte & 0x7f;
-    }
-    if ((firstByte & 0xc0) == 0x80) {
-      // two bytes
-      const secondByte = source.read(8);
-      return ((firstByte & 0x3f) << 8) | secondByte;
-    }
-    if ((firstByte & 0xe0) == 0xc0) {
-      // three bytes
-      const secondThirdBytes = source.read(16);
-      return ((firstByte & 0x1f) << 16) | secondThirdBytes;
-    }
-    throw new Error('');
-  }
-  function processFNC1Separator(content) {
-    return content.replace(/%+/g, match => {
-      const isOdd = match.length & 0x01;
-      match = match.replace(/%%/g, '%');
-      return isOdd ? match.replace(/%$/, '0x1d') : match;
-    });
-  }
-  function decodeAlphanumericSegment(source, count, fnc1) {
-    let content = '';
-    while (count > 1) {
-      if (source.available() < 11) {
-        throw new Error('');
-      }
-      const nextTwoCharsBits = source.read(11);
-      content += ALPHANUMERIC_CHARACTERS.charAt(nextTwoCharsBits / 45);
-      content += ALPHANUMERIC_CHARACTERS.charAt(nextTwoCharsBits % 45);
-      count -= 2;
-    }
-    if (count == 1) {
-      // special case: one character left
-      if (source.available() < 6) {
-        throw new Error('');
-      }
-      content += ALPHANUMERIC_CHARACTERS.charAt(source.read(6));
-    }
-    return fnc1 ? processFNC1Separator(content) : content;
-  }
-  function decodeByteSegment(source, count, decode, fnc1, eciValue) {
-    // Don't crash trying to read more bits than we have available.
-    if (source.available() < 8 * count) {
-      throw new Error('');
-    }
-    const bytes = new Uint8Array(count);
-    const charset = eciValue != null ? fromCharsetValue(eciValue) : Charset.ISO_8859_1;
-    for (let i = 0; i < count; i++) {
-      bytes[i] = source.read(8);
-    }
-    const content = decode(bytes, charset);
-    return fnc1 ? processFNC1Separator(content) : content;
-  }
-  function decodeHanziSegment(source, count) {
-    if (source.available() < 13 * count) {
-      throw new Error('');
-    }
-    let offset = 0;
-    const bytes = new Uint8Array(2 * count);
-    while (count > 0) {
-      const twoBytes = source.read(13);
-      let assembledTwoBytes = ((twoBytes / 0x060) << 8) | twoBytes % 0x060;
-      if (assembledTwoBytes < 0x00a00) {
-        // In the 0xA1A1 to 0xAAFE range
-        assembledTwoBytes += 0x0a1a1;
-      } else {
-        // In the 0xB0A1 to 0xFAFE range
-        assembledTwoBytes += 0x0a6a1;
-      }
-      bytes[offset] = (assembledTwoBytes >> 8) & 0xff;
-      bytes[offset + 1] = assembledTwoBytes & 0xff;
-      count--;
-      offset += 2;
-    }
-    return new TextDecoder('gb2312').decode(bytes);
-  }
-  function decodeKanjiSegment(source, count) {
-    if (source.available() < 13 * count) {
-      throw new Error('');
-    }
-    let offset = 0;
-    const bytes = new Uint8Array(2 * count);
-    while (count > 0) {
-      const twoBytes = source.read(13);
-      let assembledTwoBytes = ((twoBytes / 0x0c0) << 8) | twoBytes % 0x0c0;
-      if (assembledTwoBytes < 0x01f00) {
-        // In the 0x8140 to 0x9FFC range
-        assembledTwoBytes += 0x08140;
-      } else {
-        // In the 0xE040 to 0xEBBF range
-        assembledTwoBytes += 0x0c140;
-      }
-      bytes[offset] = (assembledTwoBytes >> 8) & 0xff;
-      bytes[offset + 1] = assembledTwoBytes & 0xff;
-      count--;
-      offset += 2;
-    }
-    return new TextDecoder('shift-jis').decode(bytes);
-  }
-  function decodeNumericSegment(source, count) {
-    let content = '';
-    // Read three digits at a time
-    while (count >= 3) {
-      // Each 10 bits encodes three digits
-      if (source.available() < 10) {
-        throw new Error('');
-      }
-      const threeDigitsBits = source.read(10);
-      if (threeDigitsBits >= 1000) {
-        throw new Error('');
-      }
-      content += NUMERIC_CHARACTERS.charAt(threeDigitsBits / 100);
-      content += NUMERIC_CHARACTERS.charAt((threeDigitsBits / 10) % 10);
-      content += NUMERIC_CHARACTERS.charAt(threeDigitsBits % 10);
-      count -= 3;
-    }
-    if (count === 2) {
-      // Two digits left over to read, encoded in 7 bits
-      if (source.available() < 7) {
-        throw new Error('illegal numeric');
-      }
-      const twoDigitsBits = source.read(7);
-      if (twoDigitsBits >= 100) {
-        throw new Error('illegal numeric codeword');
-      }
-      content += NUMERIC_CHARACTERS.charAt(twoDigitsBits / 10);
-      content += NUMERIC_CHARACTERS.charAt(twoDigitsBits % 10);
-    } else if (count === 1) {
-      // One digit left over to read
-      if (source.available() < 4) {
-        throw new Error('illegal numeric');
-      }
-      const digitBits = source.read(4);
-      if (digitBits >= 10) {
-        throw new Error('illegal numeric codeword');
-      }
-      content += NUMERIC_CHARACTERS.charAt(digitBits);
-    }
-    return content;
-  }
-  function decode(codewords, version, {}, decode) {
-    let content = '';
-    let indicator = -1;
-    let modifier;
-    let hasFNC1First = false;
-    let hasFNC1Second = false;
-    let mode;
-    let fnc1 = false;
-    let currentECIValue;
-    let structured = false;
-    const source = new BitSource(codewords);
-    do {
-      // While still another segment to read...
-      if (source.available() < 4) {
-        // OK, assume we're done. Really, a TERMINATOR mode should have been recorded here
-        mode = Mode.TERMINATOR;
-      } else {
-        mode = fromModeBits(source.read(4));
-      }
-      switch (mode) {
-        case Mode.TERMINATOR:
-          break;
-        case Mode.FNC1_FIRST_POSITION:
-          hasFNC1First = true;
-          break;
-        case Mode.FNC1_SECOND_POSITION:
-          hasFNC1Second = true;
-          indicator = source.read(8);
-          break;
-        case Mode.STRUCTURED_APPEND:
-          if (source.available() < 16) {
-            throw new Error('illegal structured append');
-          }
-          structured = {
-            index: source.read(4),
-            count: source.read(4) + 1,
-            parity: source.read(8)
-          };
-          break;
-        case Mode.ECI:
-          currentECIValue = parseECIValue(source);
-          break;
-        default:
-          if (mode === Mode.HANZI) {
-            const subset = source.read(4);
-            if (subset !== 1) {
-              throw new Error('illegal hanzi subset');
-            }
-          }
-          const count = source.read(mode.getCharacterCountBits(version));
-          switch (mode) {
-            case Mode.ALPHANUMERIC:
-              content += decodeAlphanumericSegment(source, count, hasFNC1First || hasFNC1Second);
-              break;
-            case Mode.BYTE:
-              content += decodeByteSegment(source, count, decode, hasFNC1First || hasFNC1Second, currentECIValue);
-              break;
-            case Mode.HANZI:
-              content += decodeHanziSegment(source, count);
-              break;
-            case Mode.KANJI:
-              content += decodeKanjiSegment(source, count);
-              break;
-            case Mode.NUMERIC:
-              content += decodeNumericSegment(source, count);
-              break;
-            default:
-              throw new Error('');
-          }
-      }
-    } while (mode !== Mode.TERMINATOR);
-    if (hasFNC1First) {
-      fnc1 = ['GS1'];
-    } else if (hasFNC1Second) {
-      fnc1 = ['AIM', indicator];
-    }
-    if (currentECIValue != null) {
-      if (hasFNC1First) {
-        modifier = 4;
-      } else if (hasFNC1Second) {
-        modifier = 6;
-      } else {
-        modifier = 2;
-      }
-    } else {
-      if (hasFNC1First) {
-        modifier = 3;
-      } else if (hasFNC1Second) {
-        modifier = 5;
-      } else {
-        modifier = 1;
-      }
-    }
-    return { content, codewords, structured, symbology: `]Q${modifier}`, fnc1 };
-  }
-
-  /**
    * @module DataBlock
    */
   class DataBlock {
@@ -2004,7 +2076,7 @@
         formatInfo = parser.readFormatInfo();
         codewords = this.#parse(parser, version, formatInfo);
       }
-      return decode(codewords, version, formatInfo, this.#decode);
+      return new QRCode$1(decode(codewords, version, formatInfo, this.#decode), version, formatInfo);
     }
   }
 

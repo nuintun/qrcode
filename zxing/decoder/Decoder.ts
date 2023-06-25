@@ -2,11 +2,12 @@
  * @module Decoder
  */
 
+import { QRCode } from './QRCode';
+import { decode } from './utils/source';
 import { FormatInfo } from './FormatInfo';
 import { Version } from '/common/Version';
 import { BitMatrix } from '/common/BitMatrix';
 import { BitMatrixParser } from './BitMatrixParser';
-import { decode, DecodeResult } from './utils/source';
 import { correctErrors, getDataBlocks } from './utils/decoder';
 import { decode as textDecode, TextDecode } from '/common/encoding';
 
@@ -42,7 +43,7 @@ export class Decoder {
     return buffer;
   }
 
-  decode(matrix: BitMatrix): DecodeResult {
+  decode(matrix: BitMatrix): QRCode {
     let version: Version;
     let codewords: Uint8Array;
     let formatInfo: FormatInfo | undefined;
@@ -65,6 +66,6 @@ export class Decoder {
       codewords = this.#parse(parser, version, formatInfo);
     }
 
-    return decode(codewords, version, formatInfo, this.#decode);
+    return new QRCode(decode(codewords, version, formatInfo, this.#decode), version, formatInfo);
   }
 }
