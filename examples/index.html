@@ -204,6 +204,29 @@
           encodeResult.html(`<img src="${url}" />`);
 
           console.dir(qrcode);
+
+          const decoder = new QRCode.Decoder();
+
+          const matrix = qrcode.matrix;
+          const size = matrix.size;
+          const bitMatrix = new QRCode.BitMatrix(size);
+          const bitMatrixMirror = new QRCode.BitMatrix(size);
+
+          for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+              if (matrix.get(x, y) === 1) {
+                bitMatrix.set(x, y);
+                bitMatrixMirror.set(y, x);
+              }
+            }
+          }
+
+          console.time('decode');
+          console.dir(decoder.decode(bitMatrix));
+          console.timeEnd('decode');
+          console.time('decode mirror');
+          console.dir(decoder.decode(bitMatrixMirror));
+          console.timeEnd('decode mirror');
         } catch (error) {
           encodeResult.html(`<span class="error">${error.message}</span>`);
 

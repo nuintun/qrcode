@@ -4,6 +4,7 @@
 
 import { Mode } from '/common/Mode';
 import { buildMatrix } from './matrix';
+import { FNC1 } from '/common/interface';
 import { ECLevel } from '/common/ECLevel';
 import { BitArray } from '/common/BitArray';
 import { ECBlocks } from '/common/ECBlocks';
@@ -30,8 +31,6 @@ export interface SegmentBlock {
 }
 
 export type Segment = Alphanumeric | Byte | Hanzi | Kanji | Numeric;
-
-export type FNC1 = [mode: 'GS1'] | [mode: 'AIM', indicator: number];
 
 function generateECCodewords(codewords: Uint8Array, numECCodewords: number): Uint8Array {
   const numDataCodewords = codewords.length;

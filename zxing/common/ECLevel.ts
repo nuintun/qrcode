@@ -2,6 +2,18 @@
  * @module ECLevel
  */
 
+const VALUES_TO_ECLEVEL = new Map<number, ECLevel>();
+
+export function fromECLevelBits(bits: number): ECLevel {
+  const ecLevel = VALUES_TO_ECLEVEL.get(bits);
+
+  if (ecLevel != null) {
+    return ecLevel;
+  }
+
+  throw new Error('illegal error correction bits');
+}
+
 export class ECLevel {
   #name: string;
   #bits: number;
@@ -20,6 +32,8 @@ export class ECLevel {
     this.#bits = bits;
     this.#name = name;
     this.#level = level;
+
+    VALUES_TO_ECLEVEL.set(bits, this);
   }
 
   public get bits(): number {
@@ -32,20 +46,5 @@ export class ECLevel {
 
   public get level(): number {
     return this.#level;
-  }
-}
-
-export function fromBits(bits: number): ECLevel {
-  switch (bits) {
-    case 0x01:
-      return ECLevel.L;
-    case 0x00:
-      return ECLevel.M;
-    case 0x03:
-      return ECLevel.Q;
-    case 0x02:
-      return ECLevel.H;
-    default:
-      throw new Error('illegal error correction bits');
   }
 }

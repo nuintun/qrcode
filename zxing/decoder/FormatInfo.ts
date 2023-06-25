@@ -3,7 +3,7 @@
  */
 
 import { bitCount } from '/common/utils';
-import { ECLevel, fromBits } from '/common/ECLevel';
+import { ECLevel, fromECLevelBits } from '/common/ECLevel';
 
 const FORMAT_INFO_DECODE_TABLE = [
   [0x5412, 0x00],
@@ -46,7 +46,7 @@ export class FormatInfo {
 
   constructor(formatInfo: number) {
     this.#mask = formatInfo & 0x07;
-    this.#level = fromBits((formatInfo >> 3) & 0x03);
+    this.#level = fromECLevelBits((formatInfo >> 3) & 0x03);
   }
 
   public get mask(): number {

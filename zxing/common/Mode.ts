@@ -4,6 +4,18 @@
 
 import { Version } from './Version';
 
+const VALUES_TO_MODE = new Map<number, Mode>();
+
+export function fromModeBits(bits: number): Mode {
+  const mode = VALUES_TO_MODE.get(bits);
+
+  if (mode != null) {
+    return mode;
+  }
+
+  throw new Error('illegal mode bits');
+}
+
 export class Mode {
   #bits: number;
   #characterCountBitsSet: Int32Array;
@@ -22,6 +34,8 @@ export class Mode {
   constructor(characterCountBitsSet: number[], bits: number) {
     this.#bits = bits;
     this.#characterCountBitsSet = new Int32Array(characterCountBitsSet);
+
+    VALUES_TO_MODE.set(bits, this);
   }
 
   public get bits(): number {

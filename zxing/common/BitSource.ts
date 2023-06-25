@@ -3,11 +3,11 @@
  */
 
 export class BitSource {
-  #bytes: Int8Array;
+  #bytes: Uint8Array;
   #bitOffset: number;
   #byteOffset: number;
 
-  constructor(bytes: Int8Array) {
+  constructor(bytes: Uint8Array) {
     this.#bytes = bytes;
     this.#bitOffset = 0;
     this.#byteOffset = 0;

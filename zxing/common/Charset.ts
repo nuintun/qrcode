@@ -4,7 +4,7 @@
 
 const VALUES_TO_CHARSET = new Map<number, Charset>();
 
-export function getCharsetByValue(value: number): Charset {
+export function fromCharsetValue(value: number): Charset {
   const charset = VALUES_TO_CHARSET.get(value);
 
   if (charset) {
@@ -47,12 +47,12 @@ export class Charset {
   public static readonly EUC_KR = new Charset('euc-kr', 30);
 
   constructor(label: string, ...values: number[]) {
+    this.#label = label;
+    this.#values = values;
+
     for (const value of values) {
       VALUES_TO_CHARSET.set(value, this);
     }
-
-    this.#label = label;
-    this.#values = values;
   }
 
   public get label(): string {
