@@ -3,24 +3,30 @@
  */
 
 export class BitMatrix {
-  #size: number;
+  #width: number;
+  #height: number;
   #rowSize: number;
   #bits: Int32Array;
 
-  constructor(size: number, bits?: Int32Array) {
-    const rowSize = Math.ceil(size / 32);
+  constructor(width: number, height: number, bits?: Int32Array) {
+    const rowSize = Math.ceil(width / 32);
 
-    this.#size = size;
+    this.#width = width;
+    this.#height = height;
     this.#rowSize = rowSize;
-    this.#bits = bits || new Int32Array(rowSize * size);
+    this.#bits = bits || new Int32Array(rowSize * height);
   }
 
   #offset(x: number, y: number): number {
     return y * this.#rowSize + Math.floor(x / 32);
   }
 
-  public get size(): number {
-    return this.#size;
+  public get width(): number {
+    return this.#width;
+  }
+
+  public get height(): number {
+    return this.#height;
   }
 
   public set(x: number, y: number): void {
@@ -42,7 +48,7 @@ export class BitMatrix {
   }
 
   public clone(): BitMatrix {
-    return new BitMatrix(this.#size, new Int32Array(this.#bits));
+    return new BitMatrix(this.#width, this.#height, new Int32Array(this.#bits));
   }
 
   public setRegion(left: number, top: number, width: number, height: number): void {

@@ -422,7 +422,7 @@ export function decodeVersion(version1: number, version2: number): Version {
 
 // See ISO 18004:2006 Annex E
 export function buildFunctionPattern({ version, dimension, alignmentPatterns }: Version): BitMatrix {
-  const matrix = new BitMatrix(dimension);
+  const matrix = new BitMatrix(dimension, dimension);
 
   // Top left finder pattern + separator + format
   matrix.setRegion(0, 0, 9, 9);

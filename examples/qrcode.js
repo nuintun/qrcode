@@ -998,20 +998,25 @@
    * @module BitMatrix
    */
   class BitMatrix {
-    #size;
+    #width;
+    #height;
     #rowSize;
     #bits;
-    constructor(size, bits) {
-      const rowSize = Math.ceil(size / 32);
-      this.#size = size;
+    constructor(width, height, bits) {
+      const rowSize = Math.ceil(width / 32);
+      this.#width = width;
+      this.#height = height;
       this.#rowSize = rowSize;
-      this.#bits = bits || new Int32Array(rowSize * size);
+      this.#bits = bits || new Int32Array(rowSize * height);
     }
     #offset(x, y) {
       return y * this.#rowSize + Math.floor(x / 32);
     }
-    get size() {
-      return this.#size;
+    get width() {
+      return this.#width;
+    }
+    get height() {
+      return this.#height;
     }
     set(x, y) {
       const offset = this.#offset(x, y);
@@ -1026,7 +1031,7 @@
       this.#bits[offset] ^= 1 << (x & 0x1f);
     }
     clone() {
-      return new BitMatrix(this.#size, new Int32Array(this.#bits));
+      return new BitMatrix(this.#width, this.#height, new Int32Array(this.#bits));
     }
     setRegion(left, top, width, height) {
       const bits = this.#bits;
@@ -1444,7 +1449,7 @@
   }
   // See ISO 18004:2006 Annex E
   function buildFunctionPattern({ version, dimension, alignmentPatterns }) {
-    const matrix = new BitMatrix(dimension);
+    const matrix = new BitMatrix(dimension, dimension);
     // Top left finder pattern + separator + format
     matrix.setRegion(0, 0, 9, 9);
     // Top right finder pattern + separator + format
@@ -1479,19 +1484,21 @@
    * @module BitMatrixParser
    */
   class BitMatrixParser {
+    #size;
     #matrix;
     constructor(matrix) {
-      const { size } = matrix;
-      if (size < 21 || size > 177 || (size - 17) & 0x03) {
-        throw new Error('illegal qrcode dimension');
+      const { width, height } = matrix;
+      if (width !== height || width < 21 || width > 177 || (width - 17) & 0x03) {
+        throw new Error('illegal qrcode size');
       }
+      this.#size = width;
       this.#matrix = matrix.clone();
     }
     #copyBit(x, y, bits) {
       return this.#matrix.get(x, y) ? (bits << 1) | 0x01 : bits << 1;
     }
     readVersion() {
-      const { size } = this.#matrix;
+      const size = this.#size;
       let version = Math.floor((size - 17) / 4);
       if (version >= 1 && version <= 6) {
         return VERSIONS[version - 1];
@@ -1515,7 +1522,7 @@
     readFormatInfo() {
       let formatInfo1 = 0;
       let formatInfo2 = 0;
-      const { size } = this.#matrix;
+      const size = this.#size;
       const max = size - 7;
       // Read top-left format info bits
       for (let x = 0; x <= 8; x++) {
@@ -1543,11 +1550,11 @@
       let currentByte = 0;
       let readingUp = true;
       let resultOffset = 0;
+      const size = this.#size;
       const matrix = this.#matrix;
       const ecBlocks = version.getECBlocks(ecLevel);
       const functionPattern = buildFunctionPattern(version);
       const codewords = new Uint8Array(ecBlocks.numTotalCodewords);
-      const { size } = matrix;
       // Read columns in pairs, from right to left
       for (let x = size - 1; x > 0; x -= 2) {
         if (x === 6) {
@@ -1583,8 +1590,8 @@
       return codewords;
     }
     unmask(mask) {
+      const size = this.#size;
       const matrix = this.#matrix;
-      const { size } = matrix;
       for (let y = 0; y < size; y++) {
         for (let x = 0; x < size; x++) {
           if (isApplyMask(mask, x, y)) {
@@ -1597,8 +1604,8 @@
       this.unmask(mask);
     }
     mirror() {
+      const size = this.#size;
       const matrix = this.#matrix;
-      const { size } = matrix;
       for (let x = 0; x < size; x++) {
         for (let y = x + 1; y < size; y++) {
           if (matrix.get(x, y) !== matrix.get(y, x)) {

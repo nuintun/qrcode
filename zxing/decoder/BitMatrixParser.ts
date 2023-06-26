@@ -9,15 +9,17 @@ import { decodeFormatInfo, FormatInfo } from './FormatInfo';
 import { buildFunctionPattern, decodeVersion, Version, VERSIONS } from '/common/Version';
 
 export class BitMatrixParser {
+  #size: number;
   #matrix: BitMatrix;
 
   constructor(matrix: BitMatrix) {
-    const { size } = matrix;
+    const { width, height } = matrix;
 
-    if (size < 21 || size > 177 || (size - 17) & 0x03) {
-      throw new Error('illegal qrcode dimension');
+    if (width !== height || width < 21 || width > 177 || (width - 17) & 0x03) {
+      throw new Error('illegal qrcode size');
     }
 
+    this.#size = width;
     this.#matrix = matrix.clone();
   }
 
@@ -26,7 +28,7 @@ export class BitMatrixParser {
   }
 
   public readVersion(): Version {
-    const { size } = this.#matrix;
+    const size = this.#size;
 
     let version = Math.floor((size - 17) / 4);
 
@@ -59,7 +61,7 @@ export class BitMatrixParser {
     let formatInfo1 = 0;
     let formatInfo2 = 0;
 
-    const { size } = this.#matrix;
+    const size = this.#size;
     const max = size - 7;
 
     // Read top-left format info bits
@@ -94,12 +96,11 @@ export class BitMatrixParser {
     let readingUp = true;
     let resultOffset = 0;
 
+    const size = this.#size;
     const matrix = this.#matrix;
     const ecBlocks = version.getECBlocks(ecLevel);
     const functionPattern = buildFunctionPattern(version);
     const codewords = new Uint8Array(ecBlocks.numTotalCodewords);
-
-    const { size } = matrix;
 
     // Read columns in pairs, from right to left
     for (let x = size - 1; x > 0; x -= 2) {
@@ -145,8 +146,8 @@ export class BitMatrixParser {
   }
 
   public unmask(mask: number): void {
+    const size = this.#size;
     const matrix = this.#matrix;
-    const { size } = matrix;
 
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < size; x++) {
@@ -162,8 +163,8 @@ export class BitMatrixParser {
   }
 
   public mirror(): void {
+    const size = this.#size;
     const matrix = this.#matrix;
-    const { size } = matrix;
 
     for (let x = 0; x < size; x++) {
       for (let y = x + 1; y < size; y++) {

@@ -41,7 +41,7 @@ export class AlignmentPatternFinder {
 
   #crossCheckVertical(x: number, y: number, maxCount: number, originalStateCountTotal: number) {
     const matrix = this.#matrix;
-    const size = matrix.size;
+    const size = matrix.width;
 
     console.log(size, this.#x, this.#y, this.#patterns, this.#foundPatternCross);
     console.log(x, y, maxCount, originalStateCountTotal, this.#crossCheckStateCount);
