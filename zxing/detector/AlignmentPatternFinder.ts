@@ -23,7 +23,7 @@ export class AlignmentPatternFinder {
     this.#matrix = matrix;
     this.#moduleSize = moduleSize;
 
-    console.log(this.#crossCheckVertical);
+    console.log(this.#crossCheckVertical, centerFromEnd);
   }
 
   #foundPatternCross(stateCount: number[]): boolean {
