@@ -209,8 +209,8 @@
 
           const matrix = qrcode.matrix;
           const size = matrix.size;
-          const bitMatrix = new QRCode.BitMatrix(size);
-          const bitMatrixMirror = new QRCode.BitMatrix(size);
+          const bitMatrix = new QRCode.BitMatrix(size, size);
+          const bitMatrixMirror = new QRCode.BitMatrix(size, size);
 
           for (let y = 0; y < size; y++) {
             for (let x = 0; x < size; x++) {
