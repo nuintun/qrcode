@@ -20,9 +20,9 @@ export class FinderPattern extends Pattern {
   public combine(x: number, y: number, moduleSize: number): FinderPattern {
     const count = this.#count;
     const combinedCount = count + 1;
-    const combinedX = Math.floor((this.x * count + x) / combinedCount);
-    const combinedY = Math.floor((this.y * count + y) / combinedCount);
-    const combinedModuleSize = Math.floor((this.moduleSize * count + moduleSize) / combinedCount);
+    const combinedX = (this.x * count + x) / combinedCount;
+    const combinedY = (this.y * count + y) / combinedCount;
+    const combinedModuleSize = (this.moduleSize * count + moduleSize) / combinedCount;
 
     return new FinderPattern(combinedX, combinedY, combinedModuleSize, combinedCount);
   }
