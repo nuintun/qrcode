@@ -1070,21 +1070,21 @@
     0x2542e, 0x26a64, 0x27541, 0x28c69
   ];
   class Version {
+    #size;
     #version;
-    #dimension;
     #ecBlocks;
     #alignmentPatterns;
     constructor(version, alignmentPatterns, ...ecBlocks) {
       this.#version = version;
       this.#ecBlocks = ecBlocks;
-      this.#dimension = 17 + 4 * version;
+      this.#size = 17 + 4 * version;
       this.#alignmentPatterns = alignmentPatterns;
+    }
+    get size() {
+      return this.#size;
     }
     get version() {
       return this.#version;
-    }
-    get dimension() {
-      return this.#dimension;
     }
     get alignmentPatterns() {
       return this.#alignmentPatterns;
@@ -1448,14 +1448,14 @@
     throw new Error('unable to decode version');
   }
   // See ISO 18004:2006 Annex E
-  function buildFunctionPattern({ version, dimension, alignmentPatterns }) {
-    const matrix = new BitMatrix(dimension, dimension);
+  function buildFunctionPattern({ size, version, alignmentPatterns }) {
+    const matrix = new BitMatrix(size, size);
     // Top left finder pattern + separator + format
     matrix.setRegion(0, 0, 9, 9);
     // Top right finder pattern + separator + format
-    matrix.setRegion(dimension - 8, 0, 8, 9);
+    matrix.setRegion(size - 8, 0, 8, 9);
     // Bottom left finder pattern + separator + format
-    matrix.setRegion(0, dimension - 8, 9, 8);
+    matrix.setRegion(0, size - 8, 9, 8);
     // Alignment patterns
     const max = alignmentPatterns.length;
     for (let x = 0; x < max; x++) {
@@ -1468,14 +1468,14 @@
       }
     }
     // Vertical timing pattern
-    matrix.setRegion(6, 9, 1, dimension - 17);
+    matrix.setRegion(6, 9, 1, size - 17);
     // Horizontal timing pattern
-    matrix.setRegion(9, 6, dimension - 17, 1);
+    matrix.setRegion(9, 6, size - 17, 1);
     if (version > 6) {
       // Version info, top right
-      matrix.setRegion(dimension - 11, 0, 3, 6);
+      matrix.setRegion(size - 11, 0, 3, 6);
       // Version info, bottom left
-      matrix.setRegion(0, dimension - 11, 6, 3);
+      matrix.setRegion(0, size - 11, 6, 3);
     }
     return matrix;
   }
@@ -3262,7 +3262,7 @@
       const ecBlocks = version.getECBlocks(ecLevel);
       // Append terminate the bits properly.
       appendTerminateBits(headAndDataBits, ecBlocks.numTotalDataCodewords);
-      const matrix = new ByteMatrix(version.dimension);
+      const matrix = new ByteMatrix(version.size);
       const finalBits = injectECCodewords(headAndDataBits, ecBlocks);
       const mask = chooseMask(matrix, finalBits, version, ecLevel);
       buildMatrix(matrix, finalBits, version, ecLevel, mask);

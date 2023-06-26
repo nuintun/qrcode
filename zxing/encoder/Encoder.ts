@@ -133,7 +133,7 @@ export class Encoder {
     // Append terminate the bits properly.
     appendTerminateBits(headAndDataBits, ecBlocks.numTotalDataCodewords);
 
-    const matrix = new ByteMatrix(version.dimension);
+    const matrix = new ByteMatrix(version.size);
     const finalBits = injectECCodewords(headAndDataBits, ecBlocks);
     const mask = chooseMask(matrix, finalBits, version, ecLevel);
 

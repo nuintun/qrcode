@@ -26,24 +26,24 @@ const VERSION_DECODE_TABLE = [
 ];
 
 export class Version {
+  #size: number;
   #version: number;
-  #dimension: number;
   #ecBlocks: ECBlocks[];
   #alignmentPatterns: number[];
 
   constructor(version: number, alignmentPatterns: number[], ...ecBlocks: ECBlocks[]) {
     this.#version = version;
     this.#ecBlocks = ecBlocks;
-    this.#dimension = 17 + 4 * version;
+    this.#size = 17 + 4 * version;
     this.#alignmentPatterns = alignmentPatterns;
+  }
+
+  public get size(): number {
+    return this.#size;
   }
 
   public get version(): number {
     return this.#version;
-  }
-
-  public get dimension(): number {
-    return this.#dimension;
   }
 
   public get alignmentPatterns(): number[] {
@@ -421,15 +421,15 @@ export function decodeVersion(version1: number, version2: number): Version {
 }
 
 // See ISO 18004:2006 Annex E
-export function buildFunctionPattern({ version, dimension, alignmentPatterns }: Version): BitMatrix {
-  const matrix = new BitMatrix(dimension, dimension);
+export function buildFunctionPattern({ size, version, alignmentPatterns }: Version): BitMatrix {
+  const matrix = new BitMatrix(size, size);
 
   // Top left finder pattern + separator + format
   matrix.setRegion(0, 0, 9, 9);
   // Top right finder pattern + separator + format
-  matrix.setRegion(dimension - 8, 0, 8, 9);
+  matrix.setRegion(size - 8, 0, 8, 9);
   // Bottom left finder pattern + separator + format
-  matrix.setRegion(0, dimension - 8, 9, 8);
+  matrix.setRegion(0, size - 8, 9, 8);
 
   // Alignment patterns
   const max = alignmentPatterns.length;
@@ -446,15 +446,15 @@ export function buildFunctionPattern({ version, dimension, alignmentPatterns }: 
   }
 
   // Vertical timing pattern
-  matrix.setRegion(6, 9, 1, dimension - 17);
+  matrix.setRegion(6, 9, 1, size - 17);
   // Horizontal timing pattern
-  matrix.setRegion(9, 6, dimension - 17, 1);
+  matrix.setRegion(9, 6, size - 17, 1);
 
   if (version > 6) {
     // Version info, top right
-    matrix.setRegion(dimension - 11, 0, 3, 6);
+    matrix.setRegion(size - 11, 0, 3, 6);
     // Version info, bottom left
-    matrix.setRegion(0, dimension - 11, 6, 3);
+    matrix.setRegion(0, size - 11, 6, 3);
   }
 
   return matrix;
