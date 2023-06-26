@@ -37,10 +37,10 @@ export class AlignmentPatternFinder {
   }
 
   #crossCheckVertical(x: number, y: number, maxCount: number, originalStateCountTotal: number): number {
+    let offsetY = y;
+
     const matrix = this.#matrix;
     const stateCount = [0, 0, 0];
-
-    let offsetY = y;
 
     // Start counting up from center
     while (offsetY >= 0 && matrix.get(x, offsetY) && stateCount[1] <= maxCount) {
@@ -96,13 +96,12 @@ export class AlignmentPatternFinder {
 
   #handlePossibleCenter(x: number, y: number, stateCount: number[]): AlignmentPattern | null {
     const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2];
-
     const offsetX = centerFromEnd(stateCount, x);
     const offsetY = this.#crossCheckVertical(offsetX, y, 2 * stateCount[1], stateCountTotal);
 
     if (!Number.isNaN(offsetY)) {
       const patterns = this.#patterns;
-      const moduleSize = (stateCount[0] + stateCount[1] + stateCount[2]) / 3;
+      const moduleSize = stateCountTotal / 3;
 
       for (const pattern of patterns) {
         // Look for about the same center and module size:
