@@ -2,9 +2,10 @@
  * @module FinderPatternFinder
  */
 
+import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
 import { FinderPattern } from './FinderPattern';
-import { distance, FinderPatternInfo } from './FinderPatternInfo';
+import { FinderPatternInfo } from './FinderPatternInfo';
 
 const MIN_SKIP = 3;
 const MAX_MODULES = 97;

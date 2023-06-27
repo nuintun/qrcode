@@ -5,7 +5,9 @@
 export { Charset } from './common/Charset';
 export { Decoder } from './decoder/Decoder';
 export { Encoder } from './encoder/Encoder';
+export { binarize } from './common/binarize';
 export { Byte } from './encoder/segments/Byte';
+export { Detector } from './detector/Detector';
 export { Hanzi } from './encoder/segments/Hanzi';
 export { Kanji } from './encoder/segments/Kanji';
 export { Numeric } from './encoder/segments/Numeric';

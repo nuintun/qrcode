@@ -2,11 +2,8 @@
  * @module FinderPatternInfo
  */
 
+import { distance } from '/common/Point';
 import { FinderPattern } from './FinderPattern';
-
-export function distance(pattern1: FinderPattern, pattern2: FinderPattern): number {
-  return Math.sqrt(Math.pow(pattern1.x - pattern2.x, 2) + Math.pow(pattern1.y - pattern2.y, 2));
-}
 
 function crossProductZ(pattern1: FinderPattern, pattern2: FinderPattern, pattern3: FinderPattern): number {
   const { x, y } = pattern2;

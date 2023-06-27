@@ -378,6 +378,20 @@ export const VERSIONS = [
   )
 ];
 
+export function fromVersionSize(size: number): Version {
+  if ((size & 0x03) !== 1) {
+    throw new Error('');
+  }
+
+  const version = VERSIONS[Math.floor((size - 17) / 4)];
+
+  if (version) {
+    return version;
+  }
+
+  throw new Error('');
+}
+
 export function decodeVersion(version1: number, version2: number): Version {
   let bestDiff = 32;
   let bestVersion = 0;

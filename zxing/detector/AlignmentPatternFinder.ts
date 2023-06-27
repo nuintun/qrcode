@@ -12,13 +12,17 @@ function centerFromEnd(stateCount: number[], end: number): number {
 export class AlignmentPatternFinder {
   #x: number;
   #y: number;
+  #width: number;
+  #height: number;
   #matrix: BitMatrix;
   #moduleSize: number;
   #patterns: AlignmentPattern[] = [];
 
-  constructor(matrix: BitMatrix, x: number, y: number, moduleSize: number) {
+  constructor(matrix: BitMatrix, x: number, y: number, width: number, height: number, moduleSize: number) {
     this.#x = x;
     this.#y = y;
+    this.#width = width;
+    this.#height = height;
     this.#matrix = matrix;
     this.#moduleSize = moduleSize;
   }
@@ -65,7 +69,7 @@ export class AlignmentPatternFinder {
     // Now also count down from center
     offsetY = y + 1;
 
-    const { height } = matrix;
+    const height = this.#height;
 
     while (offsetY < height && matrix.get(x, offsetY) && stateCount[1] <= maxCount) {
       offsetY++;
@@ -119,8 +123,9 @@ export class AlignmentPatternFinder {
 
   public find(): AlignmentPattern {
     const startX = this.#x;
+    const width = this.#width;
+    const height = this.#height;
     const matrix = this.#matrix;
-    const { width, height } = matrix;
     const maxX = startX + width;
     const middleY = this.#y + height / 2;
 

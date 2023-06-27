@@ -2,7 +2,7 @@
  * @module Pattern
  */
 
-import { Point } from './Point';
+import { Point } from '/common/Point';
 
 export class Pattern extends Point {
   #moduleSize: number;

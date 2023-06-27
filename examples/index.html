@@ -227,6 +227,31 @@
           console.time('decode mirror');
           console.dir(decoder.decode(bitMatrixMirror));
           console.timeEnd('decode mirror');
+
+          const img = new Image();
+
+          img.crossOrigin = 'anonymous';
+
+          img.onload = function () {
+            const { width, height } = img;
+            const canvas = document.createElement('canvas');
+
+            canvas.width = width;
+            canvas.height = height;
+
+            const context = canvas.getContext('2d');
+
+            context.drawImage(img, 0, 0, width, height);
+
+            document.body.append(canvas);
+
+            const matrix = QRCode.binarize(context.getImageData(0, 0, width, height), width, height);
+            const detector = new QRCode.Detector(matrix);
+
+            console.log(detector.detect());
+          };
+
+          img.src = url;
         } catch (error) {
           encodeResult.html(`<span class="error">${error.message}</span>`);
 
