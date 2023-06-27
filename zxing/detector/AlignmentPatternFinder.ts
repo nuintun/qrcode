@@ -136,8 +136,9 @@ export class AlignmentPatternFinder {
       let currentState = 0;
 
       const stateCount = [0, 0, 0];
+      const middle = Math.floor((y + 1) / 2);
       // Search from middle outwards
-      const offsetY = middleY + Math.floor((y & 0x01) === 0 ? (y + 1) / 2 : -((y + 1) / 2));
+      const offsetY = middleY + (y & 0x01 ? -middle : middle);
 
       // Burn off leading white pixels before anything else; if we start in the middle of
       // a white run, it doesn't make sense to count its length, since we don't know if the
