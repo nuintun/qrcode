@@ -48,7 +48,7 @@ export class BitArray {
   }
 
   public get(index: number): number {
-    return (this.#bits[offset(index)] >>> (index & 0x1f)) & 1;
+    return (this.#bits[offset(index)] >>> (index & 0x1f)) & 0x01;
   }
 
   public xor(mask: BitArray): void {
@@ -84,7 +84,7 @@ export class BitArray {
       this.#alloc(index + length);
 
       for (let i = length - 1; i >= 0; i--) {
-        if ((value >>> i) & 1) {
+        if ((value >>> i) & 0x01) {
           this.set(index);
         }
 

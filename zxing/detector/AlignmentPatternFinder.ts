@@ -198,6 +198,6 @@ export class AlignmentPatternFinder {
       return patterns[0];
     }
 
-    throw new Error('no alignment pattern find');
+    throw new Error('no alignment pattern found');
   }
 }

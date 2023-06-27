@@ -182,7 +182,7 @@ function embedTimingPatterns(matrix: ByteMatrix): void {
   // -8 is for skipping position detection patterns (7: size)
   // separation patterns (1: size). Thus, 8 = 7 + 1.
   for (let x = 8; x < size; x++) {
-    const bit = (x + 1) & 1;
+    const bit = (x + 1) & 0x01;
 
     // Horizontal line.
     if (isEmpty(matrix, x, 6)) {
@@ -193,7 +193,7 @@ function embedTimingPatterns(matrix: ByteMatrix): void {
   // -8 is for skipping position detection patterns (7: size)
   // separation patterns (1: size). Thus, 8 = 7 + 1.
   for (let y = 8; y < size; y++) {
-    const bit = (y + 1) & 1;
+    const bit = (y + 1) & 0x01;
 
     // Vertical line.
     if (isEmpty(matrix, 6, y)) {

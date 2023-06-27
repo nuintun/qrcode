@@ -38,7 +38,7 @@ export class BitMatrix {
   public get(x: number, y: number): number {
     const offset = this.#offset(x, y);
 
-    return (this.#bits[offset] >>> (x & 0x1f)) & 1;
+    return (this.#bits[offset] >>> (x & 0x1f)) & 0x01;
   }
 
   public flip(x: number, y: number): void {

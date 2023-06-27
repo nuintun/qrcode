@@ -117,7 +117,7 @@ export function appendTerminateBits(bits: BitArray, numDataCodewords: number): v
   const numPaddingCodewords = numDataCodewords - bits.byteLength;
 
   for (let i = 0; i < numPaddingCodewords; i++) {
-    bits.append(i & 1 ? 0x11 : 0xec, 8);
+    bits.append(i & 0x01 ? 0x11 : 0xec, 8);
   }
 }
 

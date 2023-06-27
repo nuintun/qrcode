@@ -1024,7 +1024,7 @@
     }
     get(x, y) {
       const offset = this.#offset(x, y);
-      return (this.#bits[offset] >>> (x & 0x1f)) & 1;
+      return (this.#bits[offset] >>> (x & 0x1f)) & 0x01;
     }
     flip(x, y) {
       const offset = this.#offset(x, y);
@@ -2138,7 +2138,7 @@
       this.#bits[offset(index)] |= 1 << (index & 0x1f);
     }
     get(index) {
-      return (this.#bits[offset(index)] >>> (index & 0x1f)) & 1;
+      return (this.#bits[offset(index)] >>> (index & 0x1f)) & 0x01;
     }
     xor(mask) {
       const bits = this.#bits;
@@ -2164,7 +2164,7 @@
       } else {
         this.#alloc(index + length);
         for (let i = length - 1; i >= 0; i--) {
-          if ((value >>> i) & 1) {
+          if ((value >>> i) & 0x01) {
             this.set(index);
           }
           index++;
@@ -2343,7 +2343,7 @@
     // -8 is for skipping position detection patterns (7: size)
     // separation patterns (1: size). Thus, 8 = 7 + 1.
     for (let x = 8; x < size; x++) {
-      const bit = (x + 1) & 1;
+      const bit = (x + 1) & 0x01;
       // Horizontal line.
       if (isEmpty(matrix, x, 6)) {
         matrix.set(x, 6, bit);
@@ -2352,7 +2352,7 @@
     // -8 is for skipping position detection patterns (7: size)
     // separation patterns (1: size). Thus, 8 = 7 + 1.
     for (let y = 8; y < size; y++) {
-      const bit = (y + 1) & 1;
+      const bit = (y + 1) & 0x01;
       // Vertical line.
       if (isEmpty(matrix, 6, y)) {
         matrix.set(6, y, bit);
@@ -2633,7 +2633,7 @@
     // If we have more space, we'll fill the space with padding patterns defined in 8.4.9 (p.24).
     const numPaddingCodewords = numDataCodewords - bits.byteLength;
     for (let i = 0; i < numPaddingCodewords; i++) {
-      bits.append(i & 1 ? 0x11 : 0xec, 8);
+      bits.append(i & 0x01 ? 0x11 : 0xec, 8);
     }
   }
   function isByteMode(segment) {

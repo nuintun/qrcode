@@ -2,12 +2,12 @@
  * @module FinderPatternFinder
  */
 
-import { FinderPattern } from './FinderPattern';
 import { BitMatrix } from '/common/BitMatrix';
+import { FinderPattern } from './FinderPattern';
+import { distance, FinderPatternInfo } from './FinderPatternInfo';
 
 const MIN_SKIP = 3;
 const MAX_MODULES = 97;
-const CENTER_QUORUM = 2;
 const DIFF_MODSIZE_CUTOFF = 0.5;
 const MIN_MODULE_COUNT_PER_EDGE = 9;
 const MAX_MODULE_COUNT_PER_EDGE = 180;
@@ -51,58 +51,16 @@ function isFoundPattern(stateCount: number[], threshold: number): boolean {
   );
 }
 
-function isFoundPatternCross(stateCount: number[]): boolean {
+function foundPatternCross(stateCount: number[]): boolean {
   return isFoundPattern(stateCount, 2);
 }
 
-function isFoundPatternDiagonal(stateCount: number[]): boolean {
+function foundPatternDiagonal(stateCount: number[]): boolean {
   return isFoundPattern(stateCount, 1.333);
 }
 
 function centerFromEnd(stateCount: number[], end: number): number {
   return end - stateCount[4] - stateCount[3] - stateCount[2] / 2.0;
-}
-
-function distance(pattern1: FinderPattern, pattern2: FinderPattern): number {
-  return Math.sqrt(Math.pow(pattern1.x - pattern2.x, 2) + Math.pow(pattern1.y - pattern2.y, 2));
-}
-
-function crossProductZ(pattern1: FinderPattern, pattern2: FinderPattern, pattern3: FinderPattern): number {
-  const { x, y } = pattern2;
-
-  return (pattern3.x - x) * (pattern1.y - y) - (pattern3.y - y) * (pattern1.x - x);
-}
-
-function orderBestPatterns(patterns: FinderPattern[]): void {
-  let pattern1: FinderPattern;
-  let pattern2: FinderPattern;
-  let pattern3: FinderPattern;
-
-  // Find distances between pattern centers
-  const zeroOneDistance = distance(patterns[0], patterns[1]);
-  const oneTwoDistance = distance(patterns[1], patterns[2]);
-  const zeroTwoDistance = distance(patterns[0], patterns[2]);
-
-  // Assume one closest to other two is B; A and C will just be guesses at first
-  if (oneTwoDistance >= zeroOneDistance && oneTwoDistance >= zeroTwoDistance) {
-    [pattern2, pattern1, pattern3] = patterns;
-  } else if (zeroTwoDistance >= oneTwoDistance && zeroTwoDistance >= zeroOneDistance) {
-    [pattern1, pattern2, pattern3] = patterns;
-  } else {
-    [pattern1, pattern3, pattern2] = patterns;
-  }
-
-  // Use cross product to figure out whether A and C are correct or flipped.
-  // This asks whether BC x BA has a positive z component, which is the arrangement
-  // we want for A, B, C. If it's negative, then we've got it flipped around and
-  // should swap A and C.
-  if (crossProductZ(pattern1, pattern2, pattern3) < 0) {
-    [pattern1, pattern3] = [pattern3, pattern1];
-  }
-
-  patterns[0] = pattern1;
-  patterns[1] = pattern2;
-  patterns[2] = pattern3;
 }
 
 export class FinderPatternFinder {
@@ -187,7 +145,7 @@ export class FinderPatternFinder {
       return NaN;
     }
 
-    return isFoundPatternCross(stateCount) ? centerFromEnd(stateCount, offsetY) : NaN;
+    return foundPatternCross(stateCount) ? centerFromEnd(stateCount, offsetY) : NaN;
   }
 
   #crossCheckHorizontal(x: number, y: number, maxCount: number, originalStateCountTotal: number): number {
@@ -261,7 +219,7 @@ export class FinderPatternFinder {
       return NaN;
     }
 
-    return isFoundPatternCross(stateCount) ? centerFromEnd(stateCount, y) : NaN;
+    return foundPatternCross(stateCount) ? centerFromEnd(stateCount, y) : NaN;
   }
 
   #crossCheckDiagonal(x: number, y: number): boolean {
@@ -327,7 +285,7 @@ export class FinderPatternFinder {
       return false;
     }
 
-    return isFoundPatternDiagonal(stateCount);
+    return foundPatternDiagonal(stateCount);
   }
 
   #handlePossibleCenter(x: number, y: number, stateCount: number[]): boolean {
@@ -370,28 +328,158 @@ export class FinderPatternFinder {
     return false;
   }
 
-  #selectBestPatterns(): FinderPattern[][] {
+  #selectBestPatterns(): FinderPatternInfo[] {
     const patterns = this.#patterns.filter(pattern => pattern.count >= 2);
     const { length } = patterns;
 
     // Couldn't find enough finder patterns
     if (length < 3) {
-      throw new Error('');
+      throw new Error('no finder patterns found');
     }
 
     // Begin HE modifications to safely detect multiple codes of equal size
     if (length === 3) {
-      return [patterns];
+      return [new FinderPatternInfo(patterns)];
     }
 
-    patterns.sort((pattern1, pattern2) => {
-      const value = pattern2.moduleSize - pattern1.moduleSize;
+    const finderPatterns: FinderPatternInfo[] = [];
 
-      return value < 0.0 ? -1 : value > 0.0 ? 1 : 0;
-    });
+    patterns.sort((pattern1, pattern2) => pattern2.moduleSize - pattern1.moduleSize);
 
-    const results: FinderPattern[][] = [];
+    for (let i1 = 0; i1 < length - 2; i1++) {
+      const pattern1 = patterns[i1];
 
-    return results;
+      if (pattern1 == null) {
+        continue;
+      }
+
+      for (let i2 = i1 + 1; i2 < length - 1; i2++) {
+        const pattern2 = patterns[i2];
+
+        if (pattern2 == null) {
+          continue;
+        }
+
+        const vModSize12A = pattern1.moduleSize - pattern2.moduleSize;
+        const vModSize12 = vModSize12A / pattern2.moduleSize;
+
+        if (vModSize12A > DIFF_MODSIZE_CUTOFF && vModSize12 >= DIFF_MODSIZE_CUTOFF_PERCENT) {
+          // break, since elements are ordered by the module size deviation there cannot be
+          // any more interesting elements for the given p1.
+          break;
+        }
+
+        for (let i3 = i2 + 1; i3 < length; i3++) {
+          const pattern3 = patterns[i3];
+
+          if (pattern3 == null) {
+            continue;
+          }
+
+          const vModSize23A = pattern2.moduleSize - pattern3.moduleSize;
+          const vModSize23 = vModSize23A / pattern3.moduleSize;
+
+          if (vModSize23A > DIFF_MODSIZE_CUTOFF && vModSize23 >= DIFF_MODSIZE_CUTOFF_PERCENT) {
+            // break, since elements are ordered by the module size deviation there cannot be
+            // any more interesting elements for the given p1.
+            break;
+          }
+
+          const finder = new FinderPatternInfo([pattern1, pattern2, pattern3]);
+          const { topLeft, topRight, bottomLeft } = finder;
+          const dA = distance(topLeft, bottomLeft);
+          const dC = distance(topRight, bottomLeft);
+          const dB = distance(topLeft, topRight);
+          // Check the sizes
+          const moduleCount = (dA + dB) / (pattern1.moduleSize * 2);
+
+          if (moduleCount > MAX_MODULE_COUNT_PER_EDGE || moduleCount < MIN_MODULE_COUNT_PER_EDGE) {
+            continue;
+          }
+
+          // Calculate the difference of the edge lengths in percent
+          const vABBC = Math.abs((dA - dB) / Math.min(dA, dB));
+
+          if (vABBC >= 0.1) {
+            continue;
+          }
+
+          // Calculate the diagonal length by assuming a 90° angle at topleft
+          const dCpy = Math.sqrt(dA * dA + dB * dB);
+          // Compare to the real distance in %
+          const vPyC = Math.abs((dC - dCpy) / Math.min(dC, dCpy));
+
+          if (vPyC >= 0.1) {
+            continue;
+          }
+
+          // All tests passed!
+          finderPatterns.push(finder);
+        }
+      }
+    }
+
+    return finderPatterns;
+  }
+
+  public find(): FinderPatternInfo[] {
+    const matrix = this.#matrix;
+    const { width, height } = matrix;
+    // We are looking for black/white/black/white/black modules in
+    // 1:1:3:1:1 ratio; this tracks the number of such modules seen so far
+    // Let's assume that the maximum version QR Code we support takes up 1/4 the height of the
+    // image, and then account for the center being 3 modules in size. This gives the smallest
+    // number of pixels the center could be, so skip this often. When trying harder, look for all
+    // QR versions regardless of how dense they are.
+    const skip = Math.max(MIN_SKIP, Math.floor((3 * height) / (4 * MAX_MODULES)));
+
+    for (let y = skip - 1; y < height; y += skip) {
+      let currentState = 0;
+
+      const stateCount = [0, 0, 0, 0, 0];
+
+      for (let x = 0; x < width; x++) {
+        if (matrix.get(x, y)) {
+          // Black pixel
+          if (currentState & 0x01) {
+            // Counting white pixels
+            currentState++;
+          }
+
+          stateCount[currentState]++;
+        } else {
+          // White pixel
+          if (!(currentState & 0x01)) {
+            // Counting black pixels
+            if (currentState === 4) {
+              // A winner?
+              if (foundPatternCross(stateCount) && this.#handlePossibleCenter(x, y, stateCount)) {
+                // Yes
+                // Clear state to start looking again
+                currentState = 0;
+
+                stateCount.fill(0);
+              } else {
+                // No, shift counts back by two
+                currentState = 3;
+
+                shiftTwoCount(stateCount);
+              }
+            } else {
+              stateCount[++currentState]++;
+            }
+          } else {
+            // Counting white pixels
+            stateCount[currentState]++;
+          }
+        }
+      }
+
+      if (foundPatternCross(stateCount)) {
+        this.#handlePossibleCenter(width, y, stateCount);
+      }
+    }
+
+    return this.#selectBestPatterns();
   }
 }
