@@ -316,17 +316,19 @@
 
         if (detected.length > 0) {
           for (const { matrix, patterns } of detected) {
+            const { topLeft, topRight, bottomLeft } = patterns;
+
+            markFinderPattern(topLeft);
+            markFinderPattern(topRight);
+            markFinderPattern(bottomLeft);
+
+            console.dir(matrix);
+            console.dir(patterns);
+
             try {
               const decoded = decoder.decode(matrix);
-              const { topLeft, topRight, bottomLeft } = patterns;
               const { content } = decoded;
 
-              markFinderPattern(topLeft);
-              markFinderPattern(topRight);
-              markFinderPattern(bottomLeft);
-
-              console.dir(matrix);
-              console.dir(patterns);
               console.dir(decoded);
               console.dir(content);
 
