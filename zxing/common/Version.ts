@@ -383,9 +383,9 @@ export function fromVersionSize(size: number): Version {
     throw new Error('');
   }
 
-  const version = VERSIONS[Math.floor((size - 17) / 4)];
+  const version = VERSIONS[Math.floor((size - 17) / 4) - 1];
 
-  if (version) {
+  if (version != null) {
     return version;
   }
 

@@ -5,6 +5,10 @@
 import { BitMatrix } from '/common/BitMatrix';
 import { AlignmentPattern } from './AlignmentPattern';
 
+function getStateCountTotal(stateCount: number[]): number {
+  return stateCount[0] + stateCount[1] + stateCount[2];
+}
+
 function centerFromEnd(stateCount: number[], end: number): number {
   return end - stateCount[2] - stateCount[1] / 2;
 }
@@ -29,7 +33,7 @@ export class AlignmentPatternFinder {
 
   #foundPatternCross(stateCount: number[]): boolean {
     const moduleSize = this.#moduleSize;
-    const maxVariance = Math.floor(moduleSize / 2);
+    const maxVariance = moduleSize / 2;
 
     for (let i = 0; i < 3; i++) {
       if (Math.abs(moduleSize - stateCount[i]) >= maxVariance) {
@@ -40,7 +44,7 @@ export class AlignmentPatternFinder {
     return true;
   }
 
-  #crossCheckVertical(x: number, y: number, maxCount: number, originalStateCountTotal: number): number {
+  #crossCheckVertical(x: number, y: number, maxCount: number, stateCountTotal: number): number {
     let offsetY = y;
 
     const matrix = this.#matrix;
@@ -69,7 +73,7 @@ export class AlignmentPatternFinder {
     // Now also count down from center
     offsetY = y + 1;
 
-    const height = this.#height;
+    const { height } = matrix;
 
     while (offsetY < height && matrix.get(x, offsetY) && stateCount[1] <= maxCount) {
       offsetY++;
@@ -89,18 +93,16 @@ export class AlignmentPatternFinder {
       return NaN;
     }
 
-    const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2];
-
-    if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= 2 * originalStateCountTotal) {
+    if (5 * Math.abs(getStateCountTotal(stateCount) - stateCountTotal) >= 2 * stateCountTotal) {
       return NaN;
     }
 
     return this.#foundPatternCross(stateCount) ? centerFromEnd(stateCount, offsetY) : NaN;
   }
 
-  #handlePossibleCenter(x: number, y: number, stateCount: number[]): AlignmentPattern | null {
-    const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2];
+  #handlePossibleCenter(x: number, y: number, stateCount: number[]): AlignmentPattern | void {
     const offsetX = centerFromEnd(stateCount, x);
+    const stateCountTotal = getStateCountTotal(stateCount);
     const offsetY = this.#crossCheckVertical(offsetX, y, 2 * stateCount[1], stateCountTotal);
 
     if (!Number.isNaN(offsetY)) {
@@ -117,11 +119,9 @@ export class AlignmentPatternFinder {
       // Hadn't found this before; save it
       patterns.push(new AlignmentPattern(offsetX, offsetY, moduleSize));
     }
-
-    return null;
   }
 
-  public find(): AlignmentPattern {
+  public find(): AlignmentPattern | undefined {
     const startX = this.#x;
     const width = this.#width;
     const height = this.#height;
@@ -198,12 +198,6 @@ export class AlignmentPatternFinder {
 
     // Hmm, nothing we saw was observed and confirmed twice. If we had
     // any guess at all, return it.
-    const patterns = this.#patterns;
-
-    if (patterns.length > 0) {
-      return patterns[0];
-    }
-
-    throw new Error('no alignment pattern found');
+    return this.#patterns[0];
   }
 }

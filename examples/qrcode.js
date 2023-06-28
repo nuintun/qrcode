@@ -1419,8 +1419,8 @@
     if ((size & 0x03) !== 1) {
       throw new Error('');
     }
-    const version = VERSIONS[Math.floor((size - 17) / 4)];
-    if (version) {
+    const version = VERSIONS[Math.floor((size - 17) / 4) - 1];
+    if (version != null) {
       return version;
     }
     throw new Error('');
@@ -3532,7 +3532,7 @@
   }
 
   /**
-   * @module FinderPatternInfo
+   * @module FinderPatternGroup
    */
   function crossProductZ(pattern1, pattern2, pattern3) {
     const { x, y } = pattern2;
@@ -3564,7 +3564,7 @@
     }
     return [bottomLeft, topLeft, topRight];
   }
-  class FinderPatternInfo {
+  class FinderPatternGroup {
     #patterns;
     constructor(patterns) {
       this.#patterns = orderFinderPatterns(patterns);
@@ -3577,9 +3577,6 @@
     }
     get bottomLeft() {
       return this.#patterns[0];
-    }
-    get patterns() {
-      return this.#patterns;
     }
   }
 
@@ -3632,7 +3629,7 @@
   function centerFromEnd$1(stateCount, end) {
     return end - stateCount[4] - stateCount[3] - stateCount[2] / 2;
   }
-  function getStateCountTotal(stateCount) {
+  function getStateCountTotal$1(stateCount) {
     return stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] + stateCount[4];
   }
   class FinderPatternFinder {
@@ -3642,7 +3639,7 @@
     constructor(matrix) {
       this.#matrix = matrix;
     }
-    #crossCheckVertical(x, y, maxCount, originalStateCountTotal) {
+    #crossCheckVertical(x, y, maxCount, stateCountTotal) {
       let offsetY = y;
       const matrix = this.#matrix;
       const { height } = matrix;
@@ -3695,13 +3692,12 @@
       }
       // If we found a finder-pattern-like section, but its size is more than 40% different than
       // the original, assume it's a false positive
-      const stateCountTotal = getStateCountTotal(stateCount);
-      if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= 2 * originalStateCountTotal) {
+      if (5 * Math.abs(getStateCountTotal$1(stateCount) - stateCountTotal) >= 2 * stateCountTotal) {
         return NaN;
       }
       return foundPatternCross(stateCount) ? centerFromEnd$1(stateCount, offsetY) : NaN;
     }
-    #crossCheckHorizontal(x, y, maxCount, originalStateCountTotal) {
+    #crossCheckHorizontal(x, y, maxCount, stateCountTotal) {
       let offsetX = x;
       const matrix = this.#matrix;
       const { width } = matrix;
@@ -3751,8 +3747,7 @@
       }
       // If we found a finder-pattern-like section, but its size is significantly different than
       // the original, assume it's a false positive
-      const stateCountTotal = getStateCountTotal(stateCount);
-      if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= originalStateCountTotal) {
+      if (5 * Math.abs(getStateCountTotal$1(stateCount) - stateCountTotal) >= stateCountTotal) {
         return NaN;
       }
       return foundPatternCross(stateCount) ? centerFromEnd$1(stateCount, offsetX) : NaN;
@@ -3809,7 +3804,7 @@
     }
     #handlePossibleCenter(x, y, stateCount) {
       let offsetX = centerFromEnd$1(stateCount, x);
-      const stateCountTotal = getStateCountTotal(stateCount);
+      const stateCountTotal = getStateCountTotal$1(stateCount);
       const offsetY = this.#crossCheckVertical(Math.floor(offsetX), y, stateCount[2], stateCountTotal);
       if (!Number.isNaN(offsetY)) {
         // Re-cross check
@@ -3841,11 +3836,11 @@
       const { length } = patterns;
       // Couldn't find enough finder patterns
       if (length < 3) {
-        throw new Error('no finder patterns found');
+        return [];
       }
       // Begin HE modifications to safely detect multiple codes of equal size
       if (length === 3) {
-        return [new FinderPatternInfo(patterns)];
+        return [new FinderPatternGroup(patterns)];
       }
       const finderPatterns = [];
       patterns.sort((pattern1, pattern2) => pattern2.moduleSize - pattern1.moduleSize);
@@ -3878,7 +3873,7 @@
               // any more interesting elements for the given p1.
               break;
             }
-            const finder = new FinderPatternInfo([pattern1, pattern2, pattern3]);
+            const finder = new FinderPatternGroup([pattern1, pattern2, pattern3]);
             const { topLeft, topRight, bottomLeft } = finder;
             const dA = distance(topLeft, bottomLeft);
             const dC = distance(topRight, bottomLeft);
@@ -4064,6 +4059,9 @@
   /**
    * @module AlignmentPatternFinder
    */
+  function getStateCountTotal(stateCount) {
+    return stateCount[0] + stateCount[1] + stateCount[2];
+  }
   function centerFromEnd(stateCount, end) {
     return end - stateCount[2] - stateCount[1] / 2;
   }
@@ -4085,7 +4083,7 @@
     }
     #foundPatternCross(stateCount) {
       const moduleSize = this.#moduleSize;
-      const maxVariance = Math.floor(moduleSize / 2);
+      const maxVariance = moduleSize / 2;
       for (let i = 0; i < 3; i++) {
         if (Math.abs(moduleSize - stateCount[i]) >= maxVariance) {
           return false;
@@ -4093,7 +4091,7 @@
       }
       return true;
     }
-    #crossCheckVertical(x, y, maxCount, originalStateCountTotal) {
+    #crossCheckVertical(x, y, maxCount, stateCountTotal) {
       let offsetY = y;
       const matrix = this.#matrix;
       const stateCount = [0, 0, 0];
@@ -4115,7 +4113,7 @@
       }
       // Now also count down from center
       offsetY = y + 1;
-      const height = this.#height;
+      const { height } = matrix;
       while (offsetY < height && matrix.get(x, offsetY) && stateCount[1] <= maxCount) {
         offsetY++;
         stateCount[1]++;
@@ -4130,15 +4128,14 @@
       if (stateCount[2] > maxCount) {
         return NaN;
       }
-      const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2];
-      if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= 2 * originalStateCountTotal) {
+      if (5 * Math.abs(getStateCountTotal(stateCount) - stateCountTotal) >= 2 * stateCountTotal) {
         return NaN;
       }
       return this.#foundPatternCross(stateCount) ? centerFromEnd(stateCount, offsetY) : NaN;
     }
     #handlePossibleCenter(x, y, stateCount) {
-      const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2];
       const offsetX = centerFromEnd(stateCount, x);
+      const stateCountTotal = getStateCountTotal(stateCount);
       const offsetY = this.#crossCheckVertical(offsetX, y, 2 * stateCount[1], stateCountTotal);
       if (!Number.isNaN(offsetY)) {
         const patterns = this.#patterns;
@@ -4152,7 +4149,6 @@
         // Hadn't found this before; save it
         patterns.push(new AlignmentPattern(offsetX, offsetY, moduleSize));
       }
-      return null;
     }
     find() {
       const startX = this.#x;
@@ -4220,11 +4216,7 @@
       }
       // Hmm, nothing we saw was observed and confirmed twice. If we had
       // any guess at all, return it.
-      const patterns = this.#patterns;
-      if (patterns.length > 0) {
-        return patterns[0];
-      }
-      throw new Error('no alignment pattern found');
+      return this.#patterns[0];
     }
   }
 
@@ -4525,26 +4517,26 @@
       // Take the average
       return (this.#calculateModuleSizeOneWay(topLeft, topRight) + this.#calculateModuleSizeOneWay(topLeft, bottomLeft)) / 2;
     }
-    #findAlignmentInRegion(x, y, moduleSize, allowanceFactor) {
+    #findAlignmentInRegion(x, y, moduleSize, factor) {
       // Look for an alignment pattern (3 modules in size) around where it should be
       const matrix = this.#matrix;
-      const allowance = Math.floor(moduleSize * allowanceFactor);
+      const minAlignmentAreaSize = moduleSize * 3;
+      const allowance = Math.floor(moduleSize * factor);
       const alignmentAreaLeftX = Math.max(0, x - allowance);
       const alignmentAreaRightX = Math.min(matrix.width - 1, x + allowance);
       const alignmentAreaTopY = Math.max(0, y - allowance);
       const alignmentAreaBottomY = Math.min(matrix.height - 1, y + allowance);
-      const width = alignmentAreaRightX - alignmentAreaLeftX;
-      const height = alignmentAreaBottomY - alignmentAreaTopY;
-      const minSize = moduleSize * 3;
-      if (width < minSize || height < minSize) {
+      const alignmentAreaWidth = alignmentAreaRightX - alignmentAreaLeftX;
+      const alignmentAreaHeight = alignmentAreaBottomY - alignmentAreaTopY;
+      if (alignmentAreaWidth < minAlignmentAreaSize || alignmentAreaHeight < minAlignmentAreaSize) {
         throw new Error('an unexpected error occurs during detection');
       }
       const alignmentFinder = new AlignmentPatternFinder(
         this.#matrix,
         alignmentAreaLeftX,
         alignmentAreaTopY,
-        width,
-        height,
+        alignmentAreaWidth,
+        alignmentAreaHeight,
         moduleSize
       );
       return alignmentFinder.find();
@@ -4556,9 +4548,9 @@
       }
       const size = computeSymbolSize(moduleSize, topLeft, topRight, bottomLeft);
       const version = fromVersionSize(size);
-      const modulesBetweenFPCenters = version.size - 7;
       let alignmentPattern;
       if (version.alignmentPatterns.length > 0) {
+        const modulesBetweenFPCenters = version.size - 7;
         // Guess where a "bottom right" finder pattern would have been
         const bottomRightX = topRight.x - topLeft.x + bottomLeft.x;
         const bottomRightY = topRight.y - topLeft.y + bottomLeft.y;
@@ -4568,15 +4560,13 @@
         const estAlignmentX = Math.floor(topLeft.x + correctionToTopLeft * (bottomRightX - topLeft.x));
         const estAlignmentY = Math.floor(topLeft.y + correctionToTopLeft * (bottomRightY - topLeft.y));
         // Kind of arbitrary -- expand search radius before giving up
-        for (let allowanceFactor = 4; allowanceFactor <= 16; allowanceFactor <<= 1) {
-          try {
-            alignmentPattern = this.#findAlignmentInRegion(estAlignmentX, estAlignmentY, moduleSize, allowanceFactor);
+        // If we didn't find alignment pattern... well try anyway without it
+        for (let factor = 4; factor <= 16; factor <<= 1) {
+          alignmentPattern = this.#findAlignmentInRegion(estAlignmentX, estAlignmentY, moduleSize, factor);
+          if (alignmentPattern != null) {
             break;
-          } catch {
-            // try next round
           }
         }
-        // If we didn't find alignment pattern... well try anyway without it
       }
       const sampler = new GridSampler(this.#matrix);
       const transform = createTransform(size, topLeft, topRight, bottomLeft, alignmentPattern);
@@ -4586,16 +4576,12 @@
       const matrix = this.#matrix;
       const result = [];
       const finder = new FinderPatternFinder(matrix);
-      const finderPatternInfos = finder.find();
-      for (const finderPatternInfo of finderPatternInfos) {
-        try {
-          result.push({
-            finderPatternInfo,
-            matrix: this.#processFinderPatternInfo(finderPatternInfo)
-          });
-        } catch {
-          // Ignore
-        }
+      const finderPatternGroups = finder.find();
+      for (const patterns of finderPatternGroups) {
+        result.push({
+          patterns,
+          matrix: this.#processFinderPatternInfo(patterns)
+        });
       }
       return result;
     }

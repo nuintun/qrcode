@@ -1,5 +1,5 @@
 /**
- * @module FinderPatternInfo
+ * @module FinderPatternGroup
  */
 
 import { distance } from '/common/Point';
@@ -42,7 +42,7 @@ function orderFinderPatterns(patterns: FinderPattern[]): FinderPattern[] {
   return [bottomLeft, topLeft, topRight];
 }
 
-export class FinderPatternInfo {
+export class FinderPatternGroup {
   #patterns: FinderPattern[];
 
   constructor(patterns: FinderPattern[]) {
@@ -59,9 +59,5 @@ export class FinderPatternInfo {
 
   public get bottomLeft(): FinderPattern {
     return this.#patterns[0];
-  }
-
-  public get patterns(): FinderPattern[] {
-    return this.#patterns;
   }
 }

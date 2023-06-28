@@ -63,7 +63,7 @@
           <p>
             <button id="encode-btn">编码</button>
           </p>
-          <div id="encode-result" class="encode-result hide"></div>
+          <pre id="encode-result" class="encode-result hide"></pre>
         </li>
         <li class="decode">
           <p><label>二维码图片：</label><input type="file" accept="image/*" id="decode-file" /></p>
@@ -73,7 +73,7 @@
           <p>
             <button id="decode-btn">解码</button>
           </p>
-          <p id="decode-text" class="hide">解码值为：<br /><br /><textarea readonly></textarea></p>
+          <pre id="decode-result" class="decode-result hide"></pre>
         </li>
       </ul>
     </div>
@@ -237,17 +237,13 @@
       let hasImage = false;
       let imageData = null;
 
-      const decodeText = $('#decode-text');
       const canvas = $('#decode-canvas')[0];
-      const context = canvas.getContext('2d');
-      const decodeResult = decodeText.find('textarea');
+      const decodeResult = $('#decode-result');
+      const context = canvas.getContext('2d', { willReadFrequently: true });
 
       function resetDecoder() {
         hasImage = false;
         imageData = null;
-
-        decodeResult.val('');
-        decodeText.addClass('hide');
       }
 
       function drawImage(src) {
@@ -305,8 +301,10 @@
       }
 
       $('#decode-btn').on('click', function () {
+        decodeResult.removeClass('hide');
+
         if (!hasImage) {
-          return alert('请选择二维码图片');
+          return decodeResult.html(`<span class="error">请选择二维码图片</span>`);
         }
 
         const imageData = getImageData();
@@ -314,17 +312,25 @@
         const decoder = new QRCode.Decoder();
         const matrix = QRCode.binarize(imageData, width, height);
         const detector = new QRCode.Detector(matrix);
-        const [qrcode] = detector.detect(matrix);
+        const detected = detector.detect(matrix);
 
-        if (qrcode) {
-          const { topLeft, topRight, bottomLeft } = qrcode.finderPatternInfo;
+        if (detected.length > 0) {
+          for (const { matrix, patterns } of detected) {
+            const { content } = decoder.decode(matrix);
+            const { topLeft, topRight, bottomLeft } = patterns;
 
-          markFinderPattern(topLeft);
-          markFinderPattern(topRight);
-          markFinderPattern(bottomLeft);
+            markFinderPattern(topLeft);
+            markFinderPattern(topRight);
+            markFinderPattern(bottomLeft);
 
-          console.log(qrcode);
-          console.log(decoder.decode(qrcode.matrix));
+            console.dir(matrix);
+            console.dir(patterns);
+            console.dir(content);
+
+            decodeResult.html(content);
+          }
+        } else {
+          decodeResult.html(`<span class="error">未发现二维码</span>`);
         }
       });
 

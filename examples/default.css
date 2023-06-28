@@ -80,7 +80,8 @@ textarea {
   box-sizing: border-box;
 }
 
-.encode-result {
+.encode-result,
+.decode-result {
   padding: 8px;
   display: inline-block;
   background: #f0f0f0;

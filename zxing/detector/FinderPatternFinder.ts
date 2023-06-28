@@ -5,7 +5,7 @@
 import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
 import { FinderPattern } from './FinderPattern';
-import { FinderPatternInfo } from './FinderPatternInfo';
+import { FinderPatternGroup } from './FinderPatternGroup';
 
 const MIN_SKIP = 3;
 const MAX_MODULES = 97;
@@ -78,7 +78,7 @@ export class FinderPatternFinder {
     this.#matrix = matrix;
   }
 
-  #crossCheckVertical(x: number, y: number, maxCount: number, originalStateCountTotal: number): number {
+  #crossCheckVertical(x: number, y: number, maxCount: number, stateCountTotal: number): number {
     let offsetY = y;
 
     const matrix = this.#matrix;
@@ -146,16 +146,14 @@ export class FinderPatternFinder {
 
     // If we found a finder-pattern-like section, but its size is more than 40% different than
     // the original, assume it's a false positive
-    const stateCountTotal = getStateCountTotal(stateCount);
-
-    if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= 2 * originalStateCountTotal) {
+    if (5 * Math.abs(getStateCountTotal(stateCount) - stateCountTotal) >= 2 * stateCountTotal) {
       return NaN;
     }
 
     return foundPatternCross(stateCount) ? centerFromEnd(stateCount, offsetY) : NaN;
   }
 
-  #crossCheckHorizontal(x: number, y: number, maxCount: number, originalStateCountTotal: number): number {
+  #crossCheckHorizontal(x: number, y: number, maxCount: number, stateCountTotal: number): number {
     let offsetX = x;
 
     const matrix = this.#matrix;
@@ -220,9 +218,7 @@ export class FinderPatternFinder {
 
     // If we found a finder-pattern-like section, but its size is significantly different than
     // the original, assume it's a false positive
-    const stateCountTotal = getStateCountTotal(stateCount);
-
-    if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= originalStateCountTotal) {
+    if (5 * Math.abs(getStateCountTotal(stateCount) - stateCountTotal) >= stateCountTotal) {
       return NaN;
     }
 
@@ -334,21 +330,21 @@ export class FinderPatternFinder {
     return false;
   }
 
-  #selectBestPatterns(): FinderPatternInfo[] {
+  #selectBestPatterns(): FinderPatternGroup[] {
     const patterns = this.#patterns;
     const { length } = patterns;
 
     // Couldn't find enough finder patterns
     if (length < 3) {
-      throw new Error('no finder patterns found');
+      return [];
     }
 
     // Begin HE modifications to safely detect multiple codes of equal size
     if (length === 3) {
-      return [new FinderPatternInfo(patterns)];
+      return [new FinderPatternGroup(patterns)];
     }
 
-    const finderPatterns: FinderPatternInfo[] = [];
+    const finderPatterns: FinderPatternGroup[] = [];
 
     patterns.sort((pattern1, pattern2) => pattern2.moduleSize - pattern1.moduleSize);
 
@@ -391,7 +387,7 @@ export class FinderPatternFinder {
             break;
           }
 
-          const finder = new FinderPatternInfo([pattern1, pattern2, pattern3]);
+          const finder = new FinderPatternGroup([pattern1, pattern2, pattern3]);
           const { topLeft, topRight, bottomLeft } = finder;
           const dA = distance(topLeft, bottomLeft);
           const dC = distance(topRight, bottomLeft);
@@ -490,7 +486,7 @@ export class FinderPatternFinder {
     return totalDeviation <= 0.05 * totalModuleSize;
   }
 
-  public find(harder?: boolean): FinderPatternInfo[] {
+  public find(harder?: boolean): FinderPatternGroup[] {
     let done = false;
 
     const matrix = this.#matrix;
