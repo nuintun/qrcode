@@ -56,9 +56,9 @@
             <label class="indent">背景颜色：</label>
             <input id="gif-background" type="color" value="#ffffff" />
             <label class="indent">色块大小：</label>
-            <input id="encode-msize" type="number" min="1" max="10" value="4" />
+            <input id="encode-msize" type="number" min="1" max="10" value="1" />
             <label class="indent">留白大小：</label>
-            <input title="推荐设置为4倍色块大小" id="encode-margin" type="number" min="0" max="40" value="16" />
+            <input title="推荐设置为4倍色块大小" id="encode-margin" type="number" min="0" max="40" value="4" />
           </p>
           <p>
             <button id="encode-btn">编码</button>
@@ -251,7 +251,7 @@
             console.log(detector.detect());
           };
 
-          img.src = url;
+          img.src = './qrcode.jpg';
         } catch (error) {
           encodeResult.html(`<span class="error">${error.message}</span>`);
 

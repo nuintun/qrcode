@@ -23,30 +23,26 @@ function round(value: number): number {
 }
 
 function computeSymbolSize(
+  moduleSize: number,
   topLeft: FinderPattern,
   topRight: FinderPattern,
-  bottomLeft: FinderPattern,
-  moduleSize: number
+  bottomLeft: FinderPattern
 ): number {
-  const tltrCentersDimension = round(distance(topLeft, topRight) / moduleSize);
-  const tlblCentersDimension = round(distance(topLeft, bottomLeft) / moduleSize);
+  const tltrCentersSize = round(distance(topLeft, topRight) / moduleSize);
+  const tlblCentersSize = round(distance(topLeft, bottomLeft) / moduleSize);
+  const size = Math.floor((tltrCentersSize + tlblCentersSize) / 2 + 7);
 
-  let dimension: number = (tltrCentersDimension + tlblCentersDimension) / 2 + 7;
-
-  switch (dimension & 0x03) {
-    // mod 4
+  // mod 4
+  switch (size & 0x03) {
     case 0:
-      dimension++;
-      break;
-    // 1? do nothing
+      return size + 1;
     case 2:
-      dimension--;
-      break;
+      return size - 1;
     case 3:
-      throw new Error('can not compute valid dimension');
+      throw new Error('can not compute symbol size');
   }
 
-  return dimension;
+  return size;
 }
 
 function createTransform(
@@ -113,19 +109,19 @@ export class Detector {
       [fromX, fromY, toX, toY] = [fromY, fromX, toY, toX];
     }
 
-    const dx = Math.abs(toX - fromX);
-    const dy = Math.abs(toY - fromY);
-    const xstep = fromX < toX ? 1 : -1;
-    const ystep = fromY < toY ? 1 : -1;
+    const xStep = fromX < toX ? 1 : -1;
+    const yStep = fromY < toY ? 1 : -1;
+    const xDiff = Math.abs(toX - fromX);
+    const yDiff = Math.abs(toY - fromY);
 
     // In black pixels, looking for white, first or second time.
     let state = 0;
-    let error = -dx / 2;
+    let error = -xDiff / 2;
 
     // Loop up until x == toX, but not beyond
-    const xLimit = toX + xstep;
+    const xLimit = toX + xStep;
 
-    for (let x = fromX, y = fromY; x != xLimit; x += xstep) {
+    for (let x = fromX, y = fromY; x !== xLimit; x += xStep) {
       const realX = steep ? y : x;
       const realY = steep ? x : y;
 
@@ -133,22 +129,20 @@ export class Detector {
       // Scanning black in state 0,2 and white in state 1, so if we find the wrong
       // color, advance to next state or end if we are in state 2 already
       if ((state === 1) === (matrix.get(realX, realY) === 1)) {
-        if (state == 2) {
+        if (state++ === 2) {
           return distance(new Point(x, y), new Point(fromX, fromY));
         }
-
-        state++;
       }
 
-      error += dy;
+      error += yDiff;
 
       if (error > 0) {
         if (y === toY) {
           break;
         }
 
-        y += ystep;
-        error -= dx;
+        y += yStep;
+        error -= xDiff;
       }
     }
 
@@ -156,7 +150,7 @@ export class Detector {
     // is "white" so this last point at (toX+xStep,toY) is the right ending. This is really a
     // small approximation; (toX+xStep,toY+yStep) might be really correct. Ignore this.
     if (state === 2) {
-      return distance(new Point(toX + xstep, toY), new Point(fromX, fromY));
+      return distance(new Point(toX + xStep, toY), new Point(fromX, fromY));
     }
 
     // else we didn't find even black-white-black; no estimate is really possible
@@ -167,7 +161,7 @@ export class Detector {
     // Now count other way -- don't run off image though of course
     let scale = 1;
     let otherToX = fromX - (toX - fromX);
-    let result = this.#sizeOfBlackWhiteBlackRun(fromX, fromY, toX, toY);
+    let size = this.#sizeOfBlackWhiteBlackRun(fromX, fromY, toX, toY);
 
     const { width, height } = this.#matrix;
 
@@ -194,14 +188,24 @@ export class Detector {
     otherToX = Math.floor(fromX + (otherToX - fromX) * scale);
 
     // Middle pixel is double-counted this way; subtract 1
-    result += this.#sizeOfBlackWhiteBlackRun(fromX, fromY, otherToX, otherToY);
+    size += this.#sizeOfBlackWhiteBlackRun(fromX, fromY, otherToX, otherToY);
 
-    return result - 1;
+    return size - 1;
   }
 
   #calculateModuleSizeOneWay(pattern1: FinderPattern, pattern2: FinderPattern): number {
-    const moduleSizeEst1 = this.#sizeOfBlackWhiteBlackRunBothWays(pattern1.x, pattern1.y, pattern2.x, pattern2.y);
-    const moduleSizeEst2 = this.#sizeOfBlackWhiteBlackRunBothWays(pattern2.x, pattern2.y, pattern1.x, pattern1.y);
+    const moduleSizeEst1 = this.#sizeOfBlackWhiteBlackRunBothWays(
+      Math.floor(pattern1.x),
+      Math.floor(pattern1.y),
+      Math.floor(pattern2.x),
+      Math.floor(pattern2.y)
+    );
+    const moduleSizeEst2 = this.#sizeOfBlackWhiteBlackRunBothWays(
+      Math.floor(pattern2.x),
+      Math.floor(pattern2.y),
+      Math.floor(pattern1.x),
+      Math.floor(pattern1.y)
+    );
 
     if (Number.isNaN(moduleSizeEst1)) {
       return moduleSizeEst2 / 7;
@@ -256,7 +260,7 @@ export class Detector {
       throw new Error('can not detect a code that has module size enough');
     }
 
-    const size = computeSymbolSize(topLeft, topRight, bottomLeft, moduleSize);
+    const size = computeSymbolSize(moduleSize, topLeft, topRight, bottomLeft);
     const version = fromVersionSize(size);
     const modulesBetweenFPCenters = version.size - 7;
 
