@@ -4369,9 +4369,9 @@
     return Math.floor(value + (value < 0 ? -0.5 : 0.5));
   }
   function computeSymbolSize(moduleSize, topLeft, topRight, bottomLeft) {
-    const tltrCentersSize = round(distance(topLeft, topRight) / moduleSize);
-    const tlblCentersSize = round(distance(topLeft, bottomLeft) / moduleSize);
-    const size = Math.floor((tltrCentersSize + tlblCentersSize) / 2 + 7);
+    const width = round(distance(topLeft, topRight) / moduleSize);
+    const height = round(distance(topLeft, bottomLeft) / moduleSize);
+    const size = Math.floor((width + height) / 2 + 7);
     // mod 4
     switch (size & 0x03) {
       case 0:

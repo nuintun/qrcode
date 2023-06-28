@@ -11,7 +11,7 @@ import { AlignmentPattern } from './AlignmentPattern';
 import { FinderPatternInfo } from './FinderPatternInfo';
 import { FinderPatternFinder } from './FinderPatternFinder';
 import { AlignmentPatternFinder } from './AlignmentPatternFinder';
-import { quadrilateralToQuadrilateral } from '/common/PerspectiveTransform';
+import { PerspectiveTransform, quadrilateralToQuadrilateral } from '/common/PerspectiveTransform';
 
 export interface DetectResult {
   readonly matrix: BitMatrix;
@@ -28,9 +28,9 @@ function computeSymbolSize(
   topRight: FinderPattern,
   bottomLeft: FinderPattern
 ): number {
-  const tltrCentersSize = round(distance(topLeft, topRight) / moduleSize);
-  const tlblCentersSize = round(distance(topLeft, bottomLeft) / moduleSize);
-  const size = Math.floor((tltrCentersSize + tlblCentersSize) / 2 + 7);
+  const width = round(distance(topLeft, topRight) / moduleSize);
+  const height = round(distance(topLeft, bottomLeft) / moduleSize);
+  const size = Math.floor((width + height) / 2 + 7);
 
   // mod 4
   switch (size & 0x03) {
@@ -51,7 +51,7 @@ function createTransform(
   topRight: FinderPattern,
   bottomLeft: FinderPattern,
   alignmentPattern?: AlignmentPattern
-) {
+): PerspectiveTransform {
   let bottomRightX;
   let bottomRightY;
   let sourceBottomRightX;
@@ -253,7 +253,7 @@ export class Detector {
     return alignmentFinder.find();
   }
 
-  #processFinderPatternInfo({ topLeft, topRight, bottomLeft }: FinderPatternInfo) {
+  #processFinderPatternInfo({ topLeft, topRight, bottomLeft }: FinderPatternInfo): BitMatrix {
     const moduleSize = this.#calculateModuleSize(topLeft, topRight, bottomLeft);
 
     if (moduleSize < 1) {

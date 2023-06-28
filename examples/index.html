@@ -227,31 +227,6 @@
           console.time('decode mirror');
           console.dir(decoder.decode(bitMatrixMirror));
           console.timeEnd('decode mirror');
-
-          const img = new Image();
-
-          img.crossOrigin = 'anonymous';
-
-          img.onload = function () {
-            const { width, height } = img;
-            const canvas = document.createElement('canvas');
-
-            canvas.width = width;
-            canvas.height = height;
-
-            const context = canvas.getContext('2d');
-
-            context.drawImage(img, 0, 0, width, height);
-
-            document.body.append(canvas);
-
-            const matrix = QRCode.binarize(context.getImageData(0, 0, width, height), width, height);
-            const detector = new QRCode.Detector(matrix);
-
-            console.log(detector.detect());
-          };
-
-          img.src = './qrcode.jpg';
         } catch (error) {
           encodeResult.html(`<span class="error">${error.message}</span>`);
 
@@ -364,20 +339,20 @@
         }
 
         const imageData = getImageData();
-        const result = new QRCode.Decoder()
-          .setOptions({ canOverwriteImage: false })
-          .decode(imageData.data, imageData.width, imageData.height);
+        const matrix = QRCode.binarize(context.getImageData(0, 0, width, height), width, height);
 
-        if (result) {
-          decodeResult.val(result.data);
-          decodeText.removeClass('hide');
+        console.log(matrix);
 
-          markQRCodeArea(result.location, result.version);
+        // if (result) {
+        //   decodeResult.val(result.data);
+        //   decodeText.removeClass('hide');
 
-          console && console.log(result);
-        } else {
-          console.error('二维码解码失败');
-        }
+        //   markQRCodeArea(result.location, result.version);
+
+        //   console && console.log(result);
+        // } else {
+        //   console.error('二维码解码失败');
+        // }
       });
 
       /https?:/i.test(location.protocol) && drawImage('./qrcode.jpg');
