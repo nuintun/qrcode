@@ -75,6 +75,8 @@ export class GridSampler {
     const max = 2 * width;
     const matrix = this.#matrix;
     const points: number[] = [];
+    const matrixWidth = matrix.width;
+    const matrixHeight = matrix.height;
     const bits = new BitMatrix(width, height);
 
     for (let y = 0; y < height; y++) {
@@ -90,7 +92,17 @@ export class GridSampler {
       this.#checkAndNudgePoints(points);
 
       for (let x = 0; x < max; x += 2) {
-        if (matrix.get(toInt32(points[x]), toInt32(points[x + 1]))) {
+        const offsetX = toInt32(points[x]);
+        const offsetY = toInt32(points[x + 1]);
+
+        if (
+          // Check coordinate range
+          offsetX >= 0 &&
+          offsetY >= 0 &&
+          offsetX < matrixWidth &&
+          offsetY < matrixHeight &&
+          matrix.get(offsetX, offsetY)
+        ) {
           // Black(-ish) pixel
           bits.set(x / 2, y);
         }
