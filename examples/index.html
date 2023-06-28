@@ -292,8 +292,8 @@
         return imageData || context.getImageData(0, 0, canvas.width, canvas.height);
       }
 
-      function markFinderPattern({ x, y, moduleSize }) {
-        context.fillStyle = '#00ff00';
+      function markFinderPattern({ x, y, moduleSize }, color) {
+        context.fillStyle = color;
 
         context.beginPath();
         context.arc(x, y, moduleSize * 0.75, 0, 2 * Math.PI);
@@ -315,26 +315,28 @@
         const detected = detector.detect(matrix);
 
         if (detected.length > 0) {
+          const success = [];
+
           for (const { matrix, patterns } of detected) {
-            const { topLeft, topRight, bottomLeft } = patterns;
-
-            markFinderPattern(topLeft);
-            markFinderPattern(topRight);
-            markFinderPattern(bottomLeft);
-
-            console.dir(matrix);
-            console.dir(patterns);
-
             try {
               const decoded = decoder.decode(matrix);
               const { content } = decoded;
 
+              decodeResult.html(content);
+              success.push(patterns);
+
+              console.dir(matrix);
+              console.dir(patterns);
               console.dir(decoded);
               console.dir(content);
+            } catch {
+              // 解码失败，跳过
+            }
 
-              decodeResult.html(content);
-            } catch (error) {
-              console.error(error);
+            for (const { topLeft, topRight, bottomLeft } of success) {
+              markFinderPattern(topLeft, '#00ff00');
+              markFinderPattern(topRight, '#00ff00');
+              markFinderPattern(bottomLeft, '#00ff00');
             }
           }
         } else {

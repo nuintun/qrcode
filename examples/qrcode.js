@@ -4371,7 +4371,7 @@
   function computeSymbolSize(moduleSize, topLeft, topRight, bottomLeft) {
     const width = round(distance(topLeft, topRight) / moduleSize);
     const height = round(distance(topLeft, bottomLeft) / moduleSize);
-    const size = toInt32((width + height) / 2 + 7);
+    const size = toInt32((width + height) / 2) + 7;
     // mod 4
     switch (size & 0x03) {
       case 0:
@@ -4379,7 +4379,7 @@
       case 2:
         return size - 1;
       case 3:
-        throw new Error('can not compute symbol size');
+        return 0;
     }
     return size;
   }
@@ -4536,49 +4536,49 @@
       const alignmentAreaBottomY = Math.min(matrix.height - 1, y + allowance);
       const alignmentAreaWidth = alignmentAreaRightX - alignmentAreaLeftX;
       const alignmentAreaHeight = alignmentAreaBottomY - alignmentAreaTopY;
-      if (alignmentAreaWidth < minAlignmentAreaSize || alignmentAreaHeight < minAlignmentAreaSize) {
-        throw new Error('an unexpected error occurs during detection');
+      if (alignmentAreaWidth >= minAlignmentAreaSize && alignmentAreaHeight >= minAlignmentAreaSize) {
+        const alignmentFinder = new AlignmentPatternFinder(
+          this.#matrix,
+          alignmentAreaLeftX,
+          alignmentAreaTopY,
+          alignmentAreaWidth,
+          alignmentAreaHeight,
+          moduleSize
+        );
+        return alignmentFinder.find();
       }
-      const alignmentFinder = new AlignmentPatternFinder(
-        this.#matrix,
-        alignmentAreaLeftX,
-        alignmentAreaTopY,
-        alignmentAreaWidth,
-        alignmentAreaHeight,
-        moduleSize
-      );
-      return alignmentFinder.find();
     }
     #processFinderPatternInfo({ topLeft, topRight, bottomLeft }) {
       const moduleSize = this.#calculateModuleSize(topLeft, topRight, bottomLeft);
-      if (moduleSize < 1) {
-        throw new Error('can not detect a code that has module size enough');
-      }
-      const size = computeSymbolSize(moduleSize, topLeft, topRight, bottomLeft);
-      const version = fromVersionSize(size);
-      let alignmentPattern;
-      if (version.alignmentPatterns.length > 0) {
-        const modulesBetweenFPCenters = version.size - 7;
-        // Guess where a "bottom right" finder pattern would have been
-        const bottomRightX = topRight.x - topLeft.x + bottomLeft.x;
-        const bottomRightY = topRight.y - topLeft.y + bottomLeft.y;
-        // Estimate that alignment pattern is closer by 3 modules
-        // from "bottom right" to known top left location
-        const correctionToTopLeft = 1 - 3 / modulesBetweenFPCenters;
-        const estAlignmentX = toInt32(topLeft.x + correctionToTopLeft * (bottomRightX - topLeft.x));
-        const estAlignmentY = toInt32(topLeft.y + correctionToTopLeft * (bottomRightY - topLeft.y));
-        // Kind of arbitrary -- expand search radius before giving up
-        // If we didn't find alignment pattern... well try anyway without it
-        for (let factor = 4; factor <= 16; factor <<= 1) {
-          alignmentPattern = this.#findAlignmentInRegion(estAlignmentX, estAlignmentY, moduleSize, factor);
-          if (alignmentPattern != null) {
-            break;
+      if (moduleSize >= 1) {
+        const size = computeSymbolSize(moduleSize, topLeft, topRight, bottomLeft);
+        if (size >= 21 && size <= 177) {
+          const version = fromVersionSize(size);
+          let alignmentPattern;
+          if (version.alignmentPatterns.length > 0) {
+            const modulesBetweenFPCenters = version.size - 7;
+            // Guess where a "bottom right" finder pattern would have been
+            const bottomRightX = topRight.x - topLeft.x + bottomLeft.x;
+            const bottomRightY = topRight.y - topLeft.y + bottomLeft.y;
+            // Estimate that alignment pattern is closer by 3 modules
+            // from "bottom right" to known top left location
+            const correctionToTopLeft = 1 - 3 / modulesBetweenFPCenters;
+            const estAlignmentX = toInt32(topLeft.x + correctionToTopLeft * (bottomRightX - topLeft.x));
+            const estAlignmentY = toInt32(topLeft.y + correctionToTopLeft * (bottomRightY - topLeft.y));
+            // Kind of arbitrary -- expand search radius before giving up
+            // If we didn't find alignment pattern... well try anyway without it
+            for (let factor = 4; factor <= 16; factor <<= 1) {
+              alignmentPattern = this.#findAlignmentInRegion(estAlignmentX, estAlignmentY, moduleSize, factor);
+              if (alignmentPattern != null) {
+                break;
+              }
+            }
           }
+          const sampler = new GridSampler(this.#matrix);
+          const transform = createTransform(size, topLeft, topRight, bottomLeft, alignmentPattern);
+          return sampler.sampleGrid(size, size, transform);
         }
       }
-      const sampler = new GridSampler(this.#matrix);
-      const transform = createTransform(size, topLeft, topRight, bottomLeft, alignmentPattern);
-      return sampler.sampleGrid(size, size, transform);
     }
     detect() {
       const matrix = this.#matrix;
@@ -4586,10 +4586,10 @@
       const finder = new FinderPatternFinder(matrix);
       const finderPatternGroups = finder.find();
       for (const patterns of finderPatternGroups) {
-        result.push({
-          patterns,
-          matrix: this.#processFinderPatternInfo(patterns)
-        });
+        const matrix = this.#processFinderPatternInfo(patterns);
+        if (matrix != null) {
+          result.push({ matrix, patterns });
+        }
       }
       return result;
     }
