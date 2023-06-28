@@ -3968,10 +3968,7 @@
       // image, and then account for the center being 3 modules in size. This gives the smallest
       // number of pixels the center could be, so skip this often. When trying harder, look for all
       // QR versions regardless of how dense they are.
-      let skip = toInt32((3 * height) / (4 * MAX_MODULES));
-      if (harder || skip < MIN_SKIP) {
-        skip = MIN_SKIP;
-      }
+      let skip = harder ? MIN_SKIP : Math.max(MIN_SKIP, toInt32((3 * height) / (4 * MAX_MODULES)));
       for (let y = skip - 1; y < height && !done; y += skip) {
         let currentState = 0;
         const stateCount = [0, 0, 0, 0, 0];
