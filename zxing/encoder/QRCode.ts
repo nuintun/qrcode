@@ -2,6 +2,7 @@
  * @module QRCode
  */
 
+import { toInt32 } from '/common/utils';
 import { ECLevel } from '/common/ECLevel';
 import { Version } from '/common/Version';
 import { Colors, GIFImage } from '/common/gif';
@@ -70,8 +71,8 @@ export class QRCode {
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < size; x++) {
         if (x >= margin && x < max && y >= margin && y < max) {
-          const offsetX = Math.floor((x - margin) / moduleSize);
-          const offsetY = Math.floor((y - margin) / moduleSize);
+          const offsetX = toInt32((x - margin) / moduleSize);
+          const offsetY = toInt32((y - margin) / moduleSize);
 
           gif.set(x, y, matrix.get(offsetX, offsetY));
         } else {

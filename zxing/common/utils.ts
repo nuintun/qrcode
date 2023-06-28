@@ -2,6 +2,10 @@
  * @module utils
  */
 
+export function toInt32(value: number): number {
+  return value | 0;
+}
+
 // Get bit count of int32
 export function bitCount(value: number): number {
   // HD, Figure 5-2

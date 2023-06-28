@@ -3,10 +3,10 @@
  */
 
 import { ECB } from './ECB';
-import { bitCount } from './utils';
 import { ECLevel } from './ECLevel';
 import { ECBlocks } from './ECBlocks';
 import { BitMatrix } from './BitMatrix';
+import { bitCount, toInt32 } from './utils';
 
 const VERSION_DECODE_TABLE = [
   // Version 7 - 11
@@ -383,7 +383,7 @@ export function fromVersionSize(size: number): Version {
     throw new Error('');
   }
 
-  const version = VERSIONS[Math.floor((size - 17) / 4) - 1];
+  const version = VERSIONS[toInt32((size - 17) / 4) - 1];
 
   if (version != null) {
     return version;

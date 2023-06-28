@@ -2,6 +2,7 @@
  * @module Detector
  */
 
+import { toInt32 } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
 import { FinderPattern } from './FinderPattern';
 import { distance, Point } from '/common/Point';
@@ -19,7 +20,7 @@ export interface DetectResult {
 }
 
 function round(value: number): number {
-  return Math.floor(value + (value < 0 ? -0.5 : 0.5));
+  return toInt32(value + (value < 0 ? -0.5 : 0.5));
 }
 
 function computeSymbolSize(
@@ -30,7 +31,7 @@ function computeSymbolSize(
 ): number {
   const width = round(distance(topLeft, topRight) / moduleSize);
   const height = round(distance(topLeft, bottomLeft) / moduleSize);
-  const size = Math.floor((width + height) / 2 + 7);
+  const size = toInt32((width + height) / 2 + 7);
 
   // mod 4
   switch (size & 0x03) {
@@ -173,7 +174,7 @@ export class Detector {
       otherToX = width - 1;
     }
 
-    let otherToY = Math.floor(fromY - (toY - fromY) * scale);
+    let otherToY = toInt32(fromY - (toY - fromY) * scale);
 
     scale = 1;
 
@@ -185,7 +186,7 @@ export class Detector {
       otherToY = height - 1;
     }
 
-    otherToX = Math.floor(fromX + (otherToX - fromX) * scale);
+    otherToX = toInt32(fromX + (otherToX - fromX) * scale);
 
     // Middle pixel is double-counted this way; subtract 1
     size += this.#sizeOfBlackWhiteBlackRun(fromX, fromY, otherToX, otherToY);
@@ -195,16 +196,16 @@ export class Detector {
 
   #calculateModuleSizeOneWay(pattern1: FinderPattern, pattern2: FinderPattern): number {
     const moduleSizeEst1 = this.#sizeOfBlackWhiteBlackRunBothWays(
-      Math.floor(pattern1.x),
-      Math.floor(pattern1.y),
-      Math.floor(pattern2.x),
-      Math.floor(pattern2.y)
+      toInt32(pattern1.x),
+      toInt32(pattern1.y),
+      toInt32(pattern2.x),
+      toInt32(pattern2.y)
     );
     const moduleSizeEst2 = this.#sizeOfBlackWhiteBlackRunBothWays(
-      Math.floor(pattern2.x),
-      Math.floor(pattern2.y),
-      Math.floor(pattern1.x),
-      Math.floor(pattern1.y)
+      toInt32(pattern2.x),
+      toInt32(pattern2.y),
+      toInt32(pattern1.x),
+      toInt32(pattern1.y)
     );
 
     if (Number.isNaN(moduleSizeEst1)) {
@@ -229,7 +230,7 @@ export class Detector {
     // Look for an alignment pattern (3 modules in size) around where it should be
     const matrix = this.#matrix;
     const minAlignmentAreaSize = moduleSize * 3;
-    const allowance = Math.floor(moduleSize * factor);
+    const allowance = toInt32(moduleSize * factor);
     const alignmentAreaLeftX = Math.max(0, x - allowance);
     const alignmentAreaRightX = Math.min(matrix.width - 1, x + allowance);
     const alignmentAreaTopY = Math.max(0, y - allowance);
@@ -273,8 +274,8 @@ export class Detector {
       // Estimate that alignment pattern is closer by 3 modules
       // from "bottom right" to known top left location
       const correctionToTopLeft = 1 - 3 / modulesBetweenFPCenters;
-      const estAlignmentX = Math.floor(topLeft.x + correctionToTopLeft * (bottomRightX - topLeft.x));
-      const estAlignmentY = Math.floor(topLeft.y + correctionToTopLeft * (bottomRightY - topLeft.y));
+      const estAlignmentX = toInt32(topLeft.x + correctionToTopLeft * (bottomRightX - topLeft.x));
+      const estAlignmentY = toInt32(topLeft.y + correctionToTopLeft * (bottomRightY - topLeft.y));
 
       // Kind of arbitrary -- expand search radius before giving up
       // If we didn't find alignment pattern... well try anyway without it

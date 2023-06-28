@@ -2,6 +2,7 @@
  * @module BitMatrixParser
  */
 
+import { toInt32 } from '/common/utils';
 import { ECLevel } from '/common/ECLevel';
 import { isApplyMask } from '/common/mask';
 import { BitMatrix } from '/common/BitMatrix';
@@ -30,7 +31,7 @@ export class BitMatrixParser {
   public readVersion(): Version {
     const size = this.#size;
 
-    let version = Math.floor((size - 17) / 4);
+    let version = toInt32((size - 17) / 4);
 
     if (version >= 1 && version <= 6) {
       return VERSIONS[version - 1];

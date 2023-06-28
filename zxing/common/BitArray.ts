@@ -2,10 +2,12 @@
  * @module BitArray
  */
 
+import { toInt32 } from './utils';
+
 const LOAD_FACTOR = 0.75;
 
 function offset(index: number): number {
-  return Math.floor(index / 32);
+  return toInt32(index / 32);
 }
 
 function makeArray(length: number): Int32Array {

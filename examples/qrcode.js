@@ -576,6 +576,68 @@
   }
 
   /**
+   * @module utils
+   */
+  function toInt32(value) {
+    return value | 0;
+  }
+  // Get bit count of int32
+  function bitCount(value) {
+    // HD, Figure 5-2
+    value = value - ((value >>> 1) & 0x55555555);
+    value = (value & 0x33333333) + ((value >>> 2) & 0x33333333);
+    value = (value + (value >>> 4)) & 0x0f0f0f0f;
+    value = value + (value >>> 8);
+    value = value + (value >>> 16);
+    return value & 0x3f;
+  }
+  // Return the position of the most significant bit set (to one) in the "value". The most
+  // significant bit is position 32. If there is no bit set, return 0. Examples:
+  // - findMSBSet(0) => 0
+  // - findMSBSet(1) => 1
+  // - findMSBSet(255) => 8
+  function findMSBSet(value) {
+    return 32 - Math.clz32(value);
+  }
+  // Calculate BCH (Bose-Chaudhuri-Hocquenghem) code for "value" using polynomial "poly". The BCH
+  // code is used for encoding type information and version information.
+  // Example: Calculation of version information of 7.
+  // f(x) is created from 7.
+  //   - 7 = 000111 in 6 bits
+  //   - f(x) = x^2 + x^1 + x^0
+  // g(x) is given by the standard (p. 67)
+  //   - g(x) = x^12 + x^11 + x^10 + x^9 + x^8 + x^5 + x^2 + 1
+  // Multiply f(x) by x^(18 - 6)
+  //   - f'(x) = f(x) * x^(18 - 6)
+  //   - f'(x) = x^14 + x^13 + x^12
+  // Calculate the remainder of f'(x) / g(x)
+  //         x^2
+  //         __________________________________________________
+  //   g(x) )x^14 + x^13 + x^12
+  //         x^14 + x^13 + x^12 + x^11 + x^10 + x^7 + x^4 + x^2
+  //         --------------------------------------------------
+  //                              x^11 + x^10 + x^7 + x^4 + x^2
+  //
+  // The remainder is x^11 + x^10 + x^7 + x^4 + x^2
+  // Encode it in binary: 110010010100
+  // The return value is 0xc94 (1100 1001 0100)
+  //
+  // Since all coefficients in the polynomials are 1 or 0, we can do the calculation by bit
+  // operations. We don't care if coefficients are positive or negative.
+  function calculateBCHCode(value, poly) {
+    // If poly is "1 1111 0010 0101" (version info poly), msbSetInPoly is 13. We'll subtract 1
+    // from 13 to make it 12.
+    const msbSetInPoly = findMSBSet(poly);
+    value <<= msbSetInPoly - 1;
+    // Do the division business using exclusive-or operations.
+    while (findMSBSet(value) >= msbSetInPoly) {
+      value ^= poly << (findMSBSet(value) - msbSetInPoly);
+    }
+    // Now the "value" is the remainder (i.e. the BCH code)
+    return value;
+  }
+
+  /**
    * @module mask
    */
   // Penalty weights from section 6.8.2.1
@@ -706,7 +768,7 @@
       }
     }
     const numTotalCells = size * size;
-    const fivePercentVariances = Math.floor((Math.abs(numDarkCells * 2 - numTotalCells) * 10) / numTotalCells);
+    const fivePercentVariances = toInt32((Math.abs(numDarkCells * 2 - numTotalCells) * 10) / numTotalCells);
     return fivePercentVariances * N4;
   }
   // The mask penalty calculation is complicated.  See Table 21 of JISX0510:2004 (p.45) for details.
@@ -737,7 +799,7 @@
         intermediate = (y + x) % 3;
         break;
       case 4:
-        intermediate = (Math.floor(y / 2) + Math.floor(x / 3)) & 0x01;
+        intermediate = (toInt32(y / 2) + toInt32(x / 3)) & 0x01;
         break;
       case 5:
         temporary = y * x;
@@ -754,65 +816,6 @@
         throw new Error(`illegal mask: ${mask}`);
     }
     return intermediate === 0;
-  }
-
-  /**
-   * @module utils
-   */
-  // Get bit count of int32
-  function bitCount(value) {
-    // HD, Figure 5-2
-    value = value - ((value >>> 1) & 0x55555555);
-    value = (value & 0x33333333) + ((value >>> 2) & 0x33333333);
-    value = (value + (value >>> 4)) & 0x0f0f0f0f;
-    value = value + (value >>> 8);
-    value = value + (value >>> 16);
-    return value & 0x3f;
-  }
-  // Return the position of the most significant bit set (to one) in the "value". The most
-  // significant bit is position 32. If there is no bit set, return 0. Examples:
-  // - findMSBSet(0) => 0
-  // - findMSBSet(1) => 1
-  // - findMSBSet(255) => 8
-  function findMSBSet(value) {
-    return 32 - Math.clz32(value);
-  }
-  // Calculate BCH (Bose-Chaudhuri-Hocquenghem) code for "value" using polynomial "poly". The BCH
-  // code is used for encoding type information and version information.
-  // Example: Calculation of version information of 7.
-  // f(x) is created from 7.
-  //   - 7 = 000111 in 6 bits
-  //   - f(x) = x^2 + x^1 + x^0
-  // g(x) is given by the standard (p. 67)
-  //   - g(x) = x^12 + x^11 + x^10 + x^9 + x^8 + x^5 + x^2 + 1
-  // Multiply f(x) by x^(18 - 6)
-  //   - f'(x) = f(x) * x^(18 - 6)
-  //   - f'(x) = x^14 + x^13 + x^12
-  // Calculate the remainder of f'(x) / g(x)
-  //         x^2
-  //         __________________________________________________
-  //   g(x) )x^14 + x^13 + x^12
-  //         x^14 + x^13 + x^12 + x^11 + x^10 + x^7 + x^4 + x^2
-  //         --------------------------------------------------
-  //                              x^11 + x^10 + x^7 + x^4 + x^2
-  //
-  // The remainder is x^11 + x^10 + x^7 + x^4 + x^2
-  // Encode it in binary: 110010010100
-  // The return value is 0xc94 (1100 1001 0100)
-  //
-  // Since all coefficients in the polynomials are 1 or 0, we can do the calculation by bit
-  // operations. We don't care if coefficients are positive or negative.
-  function calculateBCHCode(value, poly) {
-    // If poly is "1 1111 0010 0101" (version info poly), msbSetInPoly is 13. We'll subtract 1
-    // from 13 to make it 12.
-    const msbSetInPoly = findMSBSet(poly);
-    value <<= msbSetInPoly - 1;
-    // Do the division business using exclusive-or operations.
-    while (findMSBSet(value) >= msbSetInPoly) {
-      value ^= poly << (findMSBSet(value) - msbSetInPoly);
-    }
-    // Now the "value" is the remainder (i.e. the BCH code)
-    return value;
   }
 
   /**
@@ -1010,7 +1013,7 @@
       this.#bits = bits || new Int32Array(rowSize * height);
     }
     #offset(x, y) {
-      return y * this.#rowSize + Math.floor(x / 32);
+      return y * this.#rowSize + toInt32(x / 32);
     }
     get width() {
       return this.#width;
@@ -1041,7 +1044,7 @@
       for (let y = top; y < bottom; y++) {
         const offset = y * rowSize;
         for (let x = left; x < right; x++) {
-          bits[offset + Math.floor(x / 32)] |= 1 << (x & 0x1f);
+          bits[offset + toInt32(x / 32)] |= 1 << (x & 0x1f);
         }
       }
     }
@@ -1419,7 +1422,7 @@
     if ((size & 0x03) !== 1) {
       throw new Error('');
     }
-    const version = VERSIONS[Math.floor((size - 17) / 4) - 1];
+    const version = VERSIONS[toInt32((size - 17) / 4) - 1];
     if (version != null) {
       return version;
     }
@@ -1509,7 +1512,7 @@
     }
     readVersion() {
       const size = this.#size;
-      let version = Math.floor((size - 17) / 4);
+      let version = toInt32((size - 17) / 4);
       if (version >= 1 && version <= 6) {
         return VERSIONS[version - 1];
       }
@@ -2117,7 +2120,7 @@
    */
   const LOAD_FACTOR = 0.75;
   function offset(index) {
-    return Math.floor(index / 32);
+    return toInt32(index / 32);
   }
   function makeArray(length) {
     return new Int32Array(Math.ceil(length / 32));
@@ -3099,8 +3102,8 @@
       for (let y = 0; y < size; y++) {
         for (let x = 0; x < size; x++) {
           if (x >= margin && x < max && y >= margin && y < max) {
-            const offsetX = Math.floor((x - margin) / moduleSize);
-            const offsetY = Math.floor((y - margin) / moduleSize);
+            const offsetX = toInt32((x - margin) / moduleSize);
+            const offsetY = toInt32((y - margin) / moduleSize);
             gif.set(x, y, matrix.get(offsetX, offsetY));
           } else {
             // Margin pixels
@@ -3293,7 +3296,7 @@
         const r = data[point];
         const g = data[point + 1];
         const b = data[point + 2];
-        luminance[x + y * width] = Math.floor((r * 33 + g * 34 + b * 33) / 100);
+        luminance[x + y * width] = toInt32((r * 33 + g * 34 + b * 33) / 100);
       }
     }
     return luminance;
@@ -3412,17 +3415,14 @@
     }
     #checkAndNudgePoints(points) {
       let nudged = true;
+      const { length } = points;
       const matrix = this.#matrix;
       const { width, height } = matrix;
-      const maxOffset = points.length - 1;
       // Check and nudge points from start until we see some that are OK:
-      for (let offset = 0; offset < maxOffset && nudged; offset += 2) {
-        const x = points[offset];
-        const y = points[offset + 1];
-        if (x < -1 || x > width || y < -1 || y > height) {
-          throw new Error('');
-        }
+      for (let offset = 0; offset < length && nudged; offset += 2) {
         nudged = false;
+        const x = toInt32(points[offset]);
+        const y = toInt32(points[offset + 1]);
         if (x === -1) {
           nudged = true;
           points[offset] = 0;
@@ -3430,7 +3430,7 @@
           nudged = true;
           points[offset] = width - 1;
         }
-        if (y == -1) {
+        if (y === -1) {
           nudged = true;
           points[offset + 1] = 0;
         } else if (y === height) {
@@ -3440,13 +3440,10 @@
       }
       nudged = true;
       // Check and nudge points from end
-      for (let offset = points.length - 2; offset >= 0 && nudged; offset -= 2) {
-        const x = points[offset];
-        const y = points[offset + 1];
-        if (x < -1 || x > width || y < -1 || y > height) {
-          throw new Error('');
-        }
+      for (let offset = length - 2; offset >= 0 && nudged; offset -= 2) {
         nudged = false;
+        const x = toInt32(points[offset]);
+        const y = toInt32(points[offset + 1]);
         if (x === -1) {
           nudged = true;
           points[offset] = 0;
@@ -3454,7 +3451,7 @@
           nudged = true;
           points[offset] = width - 1;
         }
-        if (y == -1) {
+        if (y === -1) {
           nudged = true;
           points[offset + 1] = 0;
         } else if (y === height) {
@@ -3477,7 +3474,7 @@
         transform.transformPoints(points);
         this.#checkAndNudgePoints(points);
         for (let x = 0; x < max; x += 2) {
-          if (matrix.get(Math.floor(points[x]), Math.floor(points[x + 1]))) {
+          if (matrix.get(toInt32(points[x]), toInt32(points[x + 1]))) {
             // Black(-ish) pixel
             bits.set(x / 2, y);
           }
@@ -3805,11 +3802,11 @@
     #handlePossibleCenter(x, y, stateCount) {
       let offsetX = centerFromEnd$1(stateCount, x);
       const stateCountTotal = getStateCountTotal$1(stateCount);
-      const offsetY = this.#crossCheckVertical(Math.floor(offsetX), y, stateCount[2], stateCountTotal);
+      const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, stateCount[2], stateCountTotal);
       if (!Number.isNaN(offsetY)) {
         // Re-cross check
-        offsetX = this.#crossCheckHorizontal(Math.floor(offsetX), Math.floor(offsetY), stateCount[2], stateCountTotal);
-        if (!Number.isNaN(offsetX) && this.#crossCheckDiagonal(Math.floor(offsetX), Math.floor(offsetY))) {
+        offsetX = this.#crossCheckHorizontal(toInt32(offsetX), toInt32(offsetY), stateCount[2], stateCountTotal);
+        if (!Number.isNaN(offsetX) && this.#crossCheckDiagonal(toInt32(offsetX), toInt32(offsetY))) {
           let found = false;
           const patterns = this.#patterns;
           const { length } = patterns;
@@ -3920,7 +3917,7 @@
               this.#hasSkipped = true;
               const xDiff = Math.abs(firstConfirmedCenter.x - pattern.x);
               const yDiff = Math.abs(firstConfirmedCenter.y - pattern.y);
-              return Math.floor((xDiff - yDiff) / 2);
+              return toInt32((xDiff - yDiff) / 2);
             }
           }
         }
@@ -3960,7 +3957,7 @@
       // image, and then account for the center being 3 modules in size. This gives the smallest
       // number of pixels the center could be, so skip this often. When trying harder, look for all
       // QR versions regardless of how dense they are.
-      let skip = Math.floor((3 * height) / (4 * MAX_MODULES));
+      let skip = toInt32((3 * height) / (4 * MAX_MODULES));
       if (harder || skip < MIN_SKIP) {
         skip = MIN_SKIP;
       }
@@ -4163,7 +4160,7 @@
         let offsetX = startX;
         let currentState = 0;
         const stateCount = [0, 0, 0];
-        const middle = Math.floor((y + 1) / 2);
+        const middle = toInt32((y + 1) / 2);
         // Search from middle outwards
         const offsetY = middleY + (y & 0x01 ? -middle : middle);
         // Burn off leading white pixels before anything else; if we start in the middle of
@@ -4358,12 +4355,12 @@
    * @module Detector
    */
   function round(value) {
-    return Math.floor(value + (value < 0 ? -0.5 : 0.5));
+    return toInt32(value + (value < 0 ? -0.5 : 0.5));
   }
   function computeSymbolSize(moduleSize, topLeft, topRight, bottomLeft) {
     const width = round(distance(topLeft, topRight) / moduleSize);
     const height = round(distance(topLeft, bottomLeft) / moduleSize);
-    const size = Math.floor((width + height) / 2 + 7);
+    const size = toInt32((width + height) / 2 + 7);
     // mod 4
     switch (size & 0x03) {
       case 0:
@@ -4476,7 +4473,7 @@
         scale = (width - 1 - fromX) / (otherToX - fromX);
         otherToX = width - 1;
       }
-      let otherToY = Math.floor(fromY - (toY - fromY) * scale);
+      let otherToY = toInt32(fromY - (toY - fromY) * scale);
       scale = 1;
       if (otherToY < 0) {
         scale = fromY / (fromY - otherToY);
@@ -4485,23 +4482,23 @@
         scale = (height - 1 - fromY) / (otherToY - fromY);
         otherToY = height - 1;
       }
-      otherToX = Math.floor(fromX + (otherToX - fromX) * scale);
+      otherToX = toInt32(fromX + (otherToX - fromX) * scale);
       // Middle pixel is double-counted this way; subtract 1
       size += this.#sizeOfBlackWhiteBlackRun(fromX, fromY, otherToX, otherToY);
       return size - 1;
     }
     #calculateModuleSizeOneWay(pattern1, pattern2) {
       const moduleSizeEst1 = this.#sizeOfBlackWhiteBlackRunBothWays(
-        Math.floor(pattern1.x),
-        Math.floor(pattern1.y),
-        Math.floor(pattern2.x),
-        Math.floor(pattern2.y)
+        toInt32(pattern1.x),
+        toInt32(pattern1.y),
+        toInt32(pattern2.x),
+        toInt32(pattern2.y)
       );
       const moduleSizeEst2 = this.#sizeOfBlackWhiteBlackRunBothWays(
-        Math.floor(pattern2.x),
-        Math.floor(pattern2.y),
-        Math.floor(pattern1.x),
-        Math.floor(pattern1.y)
+        toInt32(pattern2.x),
+        toInt32(pattern2.y),
+        toInt32(pattern1.x),
+        toInt32(pattern1.y)
       );
       if (Number.isNaN(moduleSizeEst1)) {
         return moduleSizeEst2 / 7;
@@ -4521,7 +4518,7 @@
       // Look for an alignment pattern (3 modules in size) around where it should be
       const matrix = this.#matrix;
       const minAlignmentAreaSize = moduleSize * 3;
-      const allowance = Math.floor(moduleSize * factor);
+      const allowance = toInt32(moduleSize * factor);
       const alignmentAreaLeftX = Math.max(0, x - allowance);
       const alignmentAreaRightX = Math.min(matrix.width - 1, x + allowance);
       const alignmentAreaTopY = Math.max(0, y - allowance);
@@ -4557,8 +4554,8 @@
         // Estimate that alignment pattern is closer by 3 modules
         // from "bottom right" to known top left location
         const correctionToTopLeft = 1 - 3 / modulesBetweenFPCenters;
-        const estAlignmentX = Math.floor(topLeft.x + correctionToTopLeft * (bottomRightX - topLeft.x));
-        const estAlignmentY = Math.floor(topLeft.y + correctionToTopLeft * (bottomRightY - topLeft.y));
+        const estAlignmentX = toInt32(topLeft.x + correctionToTopLeft * (bottomRightX - topLeft.x));
+        const estAlignmentY = toInt32(topLeft.y + correctionToTopLeft * (bottomRightY - topLeft.y));
         // Kind of arbitrary -- expand search radius before giving up
         // If we didn't find alignment pattern... well try anyway without it
         for (let factor = 4; factor <= 16; factor <<= 1) {

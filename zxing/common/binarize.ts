@@ -2,6 +2,7 @@
  * @module binarize
  */
 
+import { toInt32 } from './utils';
 import { BitMatrix } from './BitMatrix';
 
 const MIN_LUMINANCE_VALUE = 0;
@@ -17,7 +18,7 @@ function convertGreyscale({ width, height, data }: ImageData): Uint8Array {
       const g = data[point + 1];
       const b = data[point + 2];
 
-      luminance[x + y * width] = Math.floor((r * 33 + g * 34 + b * 33) / 100);
+      luminance[x + y * width] = toInt32((r * 33 + g * 34 + b * 33) / 100);
     }
   }
 

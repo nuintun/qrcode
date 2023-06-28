@@ -2,6 +2,7 @@
  * @module GridSampler
  */
 
+import { toInt32 } from './utils';
 import { BitMatrix } from './BitMatrix';
 import { PerspectiveTransform } from './PerspectiveTransform';
 
@@ -12,23 +13,19 @@ export class GridSampler {
     this.#matrix = matrix;
   }
 
-  #checkAndNudgePoints(points: number[]) {
+  #checkAndNudgePoints(points: number[]): void {
     let nudged = true;
 
+    const { length } = points;
     const matrix = this.#matrix;
     const { width, height } = matrix;
-    const maxOffset = points.length - 1;
 
     // Check and nudge points from start until we see some that are OK:
-    for (let offset = 0; offset < maxOffset && nudged; offset += 2) {
-      const x = points[offset];
-      const y = points[offset + 1];
-
-      if (x < -1 || x > width || y < -1 || y > height) {
-        throw new Error('');
-      }
-
+    for (let offset = 0; offset < length && nudged; offset += 2) {
       nudged = false;
+
+      const x = toInt32(points[offset]);
+      const y = toInt32(points[offset + 1]);
 
       if (x === -1) {
         nudged = true;
@@ -37,7 +34,8 @@ export class GridSampler {
         nudged = true;
         points[offset] = width - 1;
       }
-      if (y == -1) {
+
+      if (y === -1) {
         nudged = true;
         points[offset + 1] = 0;
       } else if (y === height) {
@@ -49,15 +47,11 @@ export class GridSampler {
     nudged = true;
 
     // Check and nudge points from end
-    for (let offset = points.length - 2; offset >= 0 && nudged; offset -= 2) {
-      const x = points[offset];
-      const y = points[offset + 1];
-
-      if (x < -1 || x > width || y < -1 || y > height) {
-        throw new Error('');
-      }
-
+    for (let offset = length - 2; offset >= 0 && nudged; offset -= 2) {
       nudged = false;
+
+      const x = toInt32(points[offset]);
+      const y = toInt32(points[offset + 1]);
 
       if (x === -1) {
         nudged = true;
@@ -66,7 +60,8 @@ export class GridSampler {
         nudged = true;
         points[offset] = width - 1;
       }
-      if (y == -1) {
+
+      if (y === -1) {
         nudged = true;
         points[offset + 1] = 0;
       } else if (y === height) {
@@ -95,7 +90,7 @@ export class GridSampler {
       this.#checkAndNudgePoints(points);
 
       for (let x = 0; x < max; x += 2) {
-        if (matrix.get(Math.floor(points[x]), Math.floor(points[x + 1]))) {
+        if (matrix.get(toInt32(points[x]), toInt32(points[x + 1]))) {
           // Black(-ish) pixel
           bits.set(x / 2, y);
         }

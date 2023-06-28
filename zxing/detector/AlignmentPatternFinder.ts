@@ -2,6 +2,7 @@
  * @module AlignmentPatternFinder
  */
 
+import { toInt32 } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
 import { AlignmentPattern } from './AlignmentPattern';
 
@@ -136,7 +137,7 @@ export class AlignmentPatternFinder {
       let currentState = 0;
 
       const stateCount = [0, 0, 0];
-      const middle = Math.floor((y + 1) / 2);
+      const middle = toInt32((y + 1) / 2);
       // Search from middle outwards
       const offsetY = middleY + (y & 0x01 ? -middle : middle);
 

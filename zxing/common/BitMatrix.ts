@@ -2,6 +2,8 @@
  * @module BitMatrix
  */
 
+import { toInt32 } from './utils';
+
 export class BitMatrix {
   #width: number;
   #height: number;
@@ -18,7 +20,7 @@ export class BitMatrix {
   }
 
   #offset(x: number, y: number): number {
-    return y * this.#rowSize + Math.floor(x / 32);
+    return y * this.#rowSize + toInt32(x / 32);
   }
 
   public get width(): number {
@@ -61,7 +63,7 @@ export class BitMatrix {
       const offset = y * rowSize;
 
       for (let x = left; x < right; x++) {
-        bits[offset + Math.floor(x / 32)] |= 1 << (x & 0x1f);
+        bits[offset + toInt32(x / 32)] |= 1 << (x & 0x1f);
       }
     }
   }

@@ -2,6 +2,7 @@
  * @module FinderPatternFinder
  */
 
+import { toInt32 } from '/common/utils';
 import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
 import { FinderPattern } from './FinderPattern';
@@ -295,13 +296,13 @@ export class FinderPatternFinder {
     let offsetX = centerFromEnd(stateCount, x);
 
     const stateCountTotal = getStateCountTotal(stateCount);
-    const offsetY = this.#crossCheckVertical(Math.floor(offsetX), y, stateCount[2], stateCountTotal);
+    const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, stateCount[2], stateCountTotal);
 
     if (!Number.isNaN(offsetY)) {
       // Re-cross check
-      offsetX = this.#crossCheckHorizontal(Math.floor(offsetX), Math.floor(offsetY), stateCount[2], stateCountTotal);
+      offsetX = this.#crossCheckHorizontal(toInt32(offsetX), toInt32(offsetY), stateCount[2], stateCountTotal);
 
-      if (!Number.isNaN(offsetX) && this.#crossCheckDiagonal(Math.floor(offsetX), Math.floor(offsetY))) {
+      if (!Number.isNaN(offsetX) && this.#crossCheckDiagonal(toInt32(offsetX), toInt32(offsetY))) {
         let found = false;
 
         const patterns = this.#patterns;
@@ -446,7 +447,7 @@ export class FinderPatternFinder {
             const xDiff = Math.abs(firstConfirmedCenter.x - pattern.x);
             const yDiff = Math.abs(firstConfirmedCenter.y - pattern.y);
 
-            return Math.floor((xDiff - yDiff) / 2);
+            return toInt32((xDiff - yDiff) / 2);
           }
         }
       }
@@ -498,7 +499,7 @@ export class FinderPatternFinder {
     // image, and then account for the center being 3 modules in size. This gives the smallest
     // number of pixels the center could be, so skip this often. When trying harder, look for all
     // QR versions regardless of how dense they are.
-    let skip = Math.floor((3 * height) / (4 * MAX_MODULES));
+    let skip = toInt32((3 * height) / (4 * MAX_MODULES));
 
     if (harder || skip < MIN_SKIP) {
       skip = MIN_SKIP;
