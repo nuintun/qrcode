@@ -312,7 +312,7 @@
         const decoder = new QRCode.Decoder();
         const matrix = QRCode.binarize(imageData, width, height);
         const detector = new QRCode.Detector(matrix);
-        const detected = detector.detect(matrix);
+        const detected = detector.detect();
 
         if (detected.length > 0) {
           const success = [];
