@@ -296,41 +296,12 @@
         return imageData || context.getImageData(0, 0, canvas.width, canvas.height);
       }
 
-      function getModuleSize(location, version) {
-        const topLeft = location.topLeft;
-        const topRight = location.topRight;
-        const a = Math.abs(topRight.x - topLeft.x);
-        const b = Math.abs(topRight.y - topLeft.y);
-        const c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
-
-        return c / (version * 4 + 17);
-      }
-
-      function markFinderPattern(x, y, moduleSize) {
+      function markFinderPattern({ x, y, moduleSize }) {
         context.fillStyle = '#00ff00';
 
         context.beginPath();
         context.arc(x, y, moduleSize * 0.75, 0, 2 * Math.PI);
         context.fill();
-      }
-
-      function markQRCodeArea(location, version) {
-        context.lineWidth = 2;
-        context.strokeStyle = '#00ff00';
-
-        context.beginPath();
-        context.moveTo(location.topLeft.x, location.topLeft.y);
-        context.lineTo(location.topRight.x, location.topRight.y);
-        context.lineTo(location.bottomRight.x, location.bottomRight.y);
-        context.lineTo(location.bottomLeft.x, location.bottomLeft.y);
-        context.lineTo(location.topLeft.x, location.topLeft.y);
-        context.stroke();
-
-        const moduleSize = getModuleSize(location, version);
-
-        markFinderPattern(location.topLeftFinder.x, location.topLeftFinder.y, moduleSize);
-        markFinderPattern(location.topRightFinder.x, location.topRightFinder.y, moduleSize);
-        markFinderPattern(location.bottomLeftFinder.x, location.bottomLeftFinder.y, moduleSize);
       }
 
       $('#decode-btn').on('click', function () {
@@ -339,20 +310,22 @@
         }
 
         const imageData = getImageData();
-        const matrix = QRCode.binarize(context.getImageData(0, 0, width, height), width, height);
+        const { width, height } = imageData;
+        const decoder = new QRCode.Decoder();
+        const matrix = QRCode.binarize(imageData, width, height);
+        const detector = new QRCode.Detector(matrix);
+        const [qrcode] = detector.detect(matrix);
 
-        console.log(matrix);
+        if (qrcode) {
+          const { topLeft, topRight, bottomLeft } = qrcode.finderPatternInfo;
 
-        // if (result) {
-        //   decodeResult.val(result.data);
-        //   decodeText.removeClass('hide');
+          markFinderPattern(topLeft);
+          markFinderPattern(topRight);
+          markFinderPattern(bottomLeft);
 
-        //   markQRCodeArea(result.location, result.version);
-
-        //   console && console.log(result);
-        // } else {
-        //   console.error('二维码解码失败');
-        // }
+          console.log(qrcode);
+          console.log(decoder.decode(qrcode.matrix));
+        }
       });
 
       /https?:/i.test(location.protocol) && drawImage('./qrcode.jpg');
