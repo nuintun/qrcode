@@ -315,20 +315,22 @@
         const detector = new QRCode.Detector(matrix);
         const detected = detector.detect();
 
-        for (const { matrix, patterns } of detected) {
-          try {
-            const decoded = decoder.decode(matrix);
-            const { content } = decoded;
+        if (detected.length > 0) {
+          for (const { matrix, patterns } of detected) {
+            try {
+              const decoded = decoder.decode(matrix);
+              const { content } = decoded;
 
-            decodeResult.html(content);
-            success.push(patterns);
+              decodeResult.html(content);
+              success.push(patterns);
 
-            console.dir(matrix);
-            console.dir(patterns);
-            console.dir(decoded);
-            console.dir(content);
-          } catch {
-            // 解码失败，跳过
+              console.dir(matrix);
+              console.dir(patterns);
+              console.dir(decoded);
+              console.dir(content);
+            } catch {
+              // 解码失败，跳过
+            }
           }
         }
 

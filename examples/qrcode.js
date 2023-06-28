@@ -3640,6 +3640,20 @@
   function getStateCountTotal$1(stateCount) {
     return stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] + stateCount[4];
   }
+  function isEqualsEdge(edge1, edge2) {
+    const percent = Math.abs(edge1 - edge2) / Math.min(edge1, edge2);
+    return percent < 0.1;
+  }
+  function isEqualsModuleSize(pattern1, pattern2) {
+    const moduleSizeDiff = pattern1.moduleSize - pattern2.moduleSize;
+    const moduleSizeDiffPercent = moduleSizeDiff / pattern2.moduleSize;
+    if (moduleSizeDiff > DIFF_MODULE_SIZE_CUTOFF && moduleSizeDiffPercent >= DIFF_MODULE_SIZE_CUTOFF_PERCENT) {
+      // break, since elements are ordered by the module size deviation there cannot be
+      // any more interesting elements for the given p1.
+      return false;
+    }
+    return true;
+  }
   class FinderPatternFinder {
     #matrix;
     #hasSkipped = false;
@@ -3850,59 +3864,43 @@
       if (length === 3) {
         return [new FinderPatternGroup(patterns)];
       }
+      // Max i1
+      const maxI1 = length - 2;
+      // Max i2
+      const maxI2 = length - 1;
       // Groups
       const finderPatternGroups = [];
       // Sort patterns
       patterns.sort((pattern1, pattern2) => pattern2.moduleSize - pattern1.moduleSize);
-      for (let i1 = 0; i1 < length - 2; i1++) {
+      for (let i1 = 0; i1 < maxI1; i1++) {
         const pattern1 = patterns[i1];
-        if (pattern1 == null) {
-          continue;
-        }
-        for (let i2 = i1 + 1; i2 < length - 1; i2++) {
+        const moduleSizeDouble = pattern1.moduleSize * 2;
+        for (let i2 = i1 + 1; i2 < maxI2; i2++) {
           const pattern2 = patterns[i2];
-          if (pattern2 == null) {
-            continue;
-          }
-          const moduleSizeDiff = pattern1.moduleSize - pattern2.moduleSize;
-          const moduleSizeDiffPercent = moduleSizeDiff / pattern2.moduleSize;
-          if (moduleSizeDiff > DIFF_MODULE_SIZE_CUTOFF && moduleSizeDiffPercent >= DIFF_MODULE_SIZE_CUTOFF_PERCENT) {
-            // break, since elements are ordered by the module size deviation there cannot be
-            // any more interesting elements for the given p1.
+          if (!isEqualsModuleSize(pattern1, pattern2)) {
             break;
           }
           for (let i3 = i2 + 1; i3 < length; i3++) {
             const pattern3 = patterns[i3];
-            if (pattern3 == null) {
-              continue;
-            }
-            const moduleSizeDiff = pattern2.moduleSize - pattern3.moduleSize;
-            const moduleSizeDiffPercent = moduleSizeDiff / pattern3.moduleSize;
-            if (moduleSizeDiff > DIFF_MODULE_SIZE_CUTOFF && moduleSizeDiffPercent >= DIFF_MODULE_SIZE_CUTOFF_PERCENT) {
-              // break, since elements are ordered by the module size deviation there cannot be
-              // any more interesting elements for the given p1.
+            if (!isEqualsModuleSize(pattern2, pattern3)) {
               break;
             }
             const finderPatternGroup = new FinderPatternGroup([pattern1, pattern2, pattern3]);
             const { topLeft, topRight, bottomLeft } = finderPatternGroup;
-            const a = distance(topLeft, topRight);
-            const b = distance(topLeft, bottomLeft);
-            const c = distance(topRight, bottomLeft);
-            // Check the sizes
-            const moduleCount = (a + b) / (pattern1.moduleSize * 2);
-            if (moduleCount > MAX_MODULE_COUNT_PER_EDGE || moduleCount < MIN_MODULE_COUNT_PER_EDGE) {
-              continue;
-            }
+            const a = distance(topLeft, bottomLeft);
+            const b = distance(topLeft, topRight);
             // Calculate the difference of the cathetus lengths in percent
-            const cathetusDiffPercent = Math.abs(a - b) / Math.min(a, b);
-            if (cathetusDiffPercent >= 0.1) {
+            if (!isEqualsEdge(a, b)) {
               continue;
             }
-            // Calculate the hypotenuse length by assuming a 90° angle at topleft
-            const hypotenuse = Math.sqrt(a * a + b * b);
+            const c = distance(topRight, bottomLeft);
             // Calculate the difference of the hypotenuse lengths in percent
-            const hypotenuseDiffPercent = Math.abs(c - hypotenuse) / Math.min(c, hypotenuse);
-            if (hypotenuseDiffPercent >= 0.1) {
+            if (!isEqualsEdge(Math.sqrt(a * a + b * b), c)) {
+              continue;
+            }
+            // Check the sizes
+            const moduleCount = (a + b) / moduleSizeDouble;
+            if (moduleCount > MAX_MODULE_COUNT_PER_EDGE || moduleCount < MIN_MODULE_COUNT_PER_EDGE) {
               continue;
             }
             // All tests passed!
