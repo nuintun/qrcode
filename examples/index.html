@@ -333,15 +333,18 @@
               // 解码失败，跳过
             }
 
-            for (const { topLeft, topRight, bottomLeft } of success) {
-              markFinderPattern(topLeft, '#00ff00');
-              markFinderPattern(topRight, '#00ff00');
-              markFinderPattern(bottomLeft, '#00ff00');
+            if (success.length > 0) {
+              for (const { topLeft, topRight, bottomLeft } of success) {
+                markFinderPattern(topLeft, '#00ff00');
+                markFinderPattern(topRight, '#00ff00');
+                markFinderPattern(bottomLeft, '#00ff00');
+              }
+              return;
             }
           }
-        } else {
-          decodeResult.html(`<span class="error">未发现二维码</span>`);
         }
+
+        decodeResult.html(`<span class="error">未发现二维码</span>`);
       });
 
       /https?:/i.test(location.protocol) && drawImage('./qrcode.jpg');
