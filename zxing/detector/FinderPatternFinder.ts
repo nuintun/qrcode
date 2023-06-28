@@ -11,10 +11,10 @@ import { FinderPatternGroup } from './FinderPatternGroup';
 const MIN_SKIP = 3;
 const MAX_MODULES = 97;
 const CENTER_QUORUM = 2;
-const DIFF_MODSIZE_CUTOFF = 0.5;
+const DIFF_MODULE_SIZE_CUTOFF = 0.5;
 const MIN_MODULE_COUNT_PER_EDGE = 9;
 const MAX_MODULE_COUNT_PER_EDGE = 180;
-const DIFF_MODSIZE_CUTOFF_PERCENT = 0.05;
+const DIFF_MODULE_SIZE_CUTOFF_PERCENT = 0.05;
 
 function shiftTwoCount(stateCount: number[]): void {
   stateCount[0] = stateCount[2];
@@ -345,8 +345,10 @@ export class FinderPatternFinder {
       return [new FinderPatternGroup(patterns)];
     }
 
-    const finderPatterns: FinderPatternGroup[] = [];
+    // Groups
+    const finderPatternGroups: FinderPatternGroup[] = [];
 
+    // Sort patterns
     patterns.sort((pattern1, pattern2) => pattern2.moduleSize - pattern1.moduleSize);
 
     for (let i1 = 0; i1 < length - 2; i1++) {
@@ -363,10 +365,10 @@ export class FinderPatternFinder {
           continue;
         }
 
-        const vModSize12A = pattern1.moduleSize - pattern2.moduleSize;
-        const vModSize12 = vModSize12A / pattern2.moduleSize;
+        const moduleSizeDiff = pattern1.moduleSize - pattern2.moduleSize;
+        const moduleSizeDiffPercent = moduleSizeDiff / pattern2.moduleSize;
 
-        if (vModSize12A > DIFF_MODSIZE_CUTOFF && vModSize12 >= DIFF_MODSIZE_CUTOFF_PERCENT) {
+        if (moduleSizeDiff > DIFF_MODULE_SIZE_CUTOFF && moduleSizeDiffPercent >= DIFF_MODULE_SIZE_CUTOFF_PERCENT) {
           // break, since elements are ordered by the module size deviation there cannot be
           // any more interesting elements for the given p1.
           break;
@@ -379,50 +381,50 @@ export class FinderPatternFinder {
             continue;
           }
 
-          const vModSize23A = pattern2.moduleSize - pattern3.moduleSize;
-          const vModSize23 = vModSize23A / pattern3.moduleSize;
+          const moduleSizeDiff = pattern2.moduleSize - pattern3.moduleSize;
+          const moduleSizeDiffPercent = moduleSizeDiff / pattern3.moduleSize;
 
-          if (vModSize23A > DIFF_MODSIZE_CUTOFF && vModSize23 >= DIFF_MODSIZE_CUTOFF_PERCENT) {
+          if (moduleSizeDiff > DIFF_MODULE_SIZE_CUTOFF && moduleSizeDiffPercent >= DIFF_MODULE_SIZE_CUTOFF_PERCENT) {
             // break, since elements are ordered by the module size deviation there cannot be
             // any more interesting elements for the given p1.
             break;
           }
 
-          const finder = new FinderPatternGroup([pattern1, pattern2, pattern3]);
-          const { topLeft, topRight, bottomLeft } = finder;
-          const dA = distance(topLeft, bottomLeft);
-          const dC = distance(topRight, bottomLeft);
-          const dB = distance(topLeft, topRight);
+          const finderPatternGroup = new FinderPatternGroup([pattern1, pattern2, pattern3]);
+          const { topLeft, topRight, bottomLeft } = finderPatternGroup;
+          const a = distance(topLeft, topRight);
+          const b = distance(topLeft, bottomLeft);
+          const c = distance(topRight, bottomLeft);
           // Check the sizes
-          const moduleCount = (dA + dB) / (pattern1.moduleSize * 2);
+          const moduleCount = (a + b) / (pattern1.moduleSize * 2);
 
           if (moduleCount > MAX_MODULE_COUNT_PER_EDGE || moduleCount < MIN_MODULE_COUNT_PER_EDGE) {
             continue;
           }
 
-          // Calculate the difference of the edge lengths in percent
-          const vABBC = Math.abs((dA - dB) / Math.min(dA, dB));
+          // Calculate the difference of the cathetus lengths in percent
+          const cathetusDiffPercent = Math.abs(a - b) / Math.min(a, b);
 
-          if (vABBC >= 0.1) {
+          if (cathetusDiffPercent >= 0.1) {
             continue;
           }
 
-          // Calculate the diagonal length by assuming a 90° angle at topleft
-          const dCpy = Math.sqrt(dA * dA + dB * dB);
-          // Compare to the real distance in %
-          const vPyC = Math.abs((dC - dCpy) / Math.min(dC, dCpy));
+          // Calculate the hypotenuse length by assuming a 90° angle at topleft
+          const hypotenuse = Math.sqrt(a * a + b * b);
+          // Calculate the difference of the hypotenuse lengths in percent
+          const hypotenuseDiffPercent = Math.abs(c - hypotenuse) / Math.min(c, hypotenuse);
 
-          if (vPyC >= 0.1) {
+          if (hypotenuseDiffPercent >= 0.1) {
             continue;
           }
 
           // All tests passed!
-          finderPatterns.push(finder);
+          finderPatternGroups.push(finderPatternGroup);
         }
       }
     }
 
-    return finderPatterns;
+    return finderPatternGroups;
   }
 
   #findRowSkip(): number {
