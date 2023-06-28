@@ -316,20 +316,24 @@
 
         if (detected.length > 0) {
           for (const { matrix, patterns } of detected) {
-            const decoded = decoder.decode(matrix);
-            const { topLeft, topRight, bottomLeft } = patterns;
-            const { content } = decoded;
+            try {
+              const decoded = decoder.decode(matrix);
+              const { topLeft, topRight, bottomLeft } = patterns;
+              const { content } = decoded;
 
-            markFinderPattern(topLeft);
-            markFinderPattern(topRight);
-            markFinderPattern(bottomLeft);
+              markFinderPattern(topLeft);
+              markFinderPattern(topRight);
+              markFinderPattern(bottomLeft);
 
-            console.dir(matrix);
-            console.dir(patterns);
-            console.dir(decoded);
-            console.dir(content);
+              console.dir(matrix);
+              console.dir(patterns);
+              console.dir(decoded);
+              console.dir(content);
 
-            decodeResult.html(content);
+              decodeResult.html(content);
+            } catch (error) {
+              console.error(error);
+            }
           }
         } else {
           decodeResult.html(`<span class="error">未发现二维码</span>`);
