@@ -307,6 +307,7 @@
           return decodeResult.html(`<span class="error">请选择二维码图片</span>`);
         }
 
+        const success = [];
         const imageData = getImageData();
         const { width, height } = imageData;
         const decoder = new QRCode.Decoder();
@@ -314,37 +315,32 @@
         const detector = new QRCode.Detector(matrix);
         const detected = detector.detect();
 
-        if (detected.length > 0) {
-          const success = [];
+        for (const { matrix, patterns } of detected) {
+          try {
+            const decoded = decoder.decode(matrix);
+            const { content } = decoded;
 
-          for (const { matrix, patterns } of detected) {
-            try {
-              const decoded = decoder.decode(matrix);
-              const { content } = decoded;
+            decodeResult.html(content);
+            success.push(patterns);
 
-              decodeResult.html(content);
-              success.push(patterns);
-
-              console.dir(matrix);
-              console.dir(patterns);
-              console.dir(decoded);
-              console.dir(content);
-            } catch {
-              // 解码失败，跳过
-            }
-
-            if (success.length > 0) {
-              for (const { topLeft, topRight, bottomLeft } of success) {
-                markFinderPattern(topLeft, '#00ff00');
-                markFinderPattern(topRight, '#00ff00');
-                markFinderPattern(bottomLeft, '#00ff00');
-              }
-              return;
-            }
+            console.dir(matrix);
+            console.dir(patterns);
+            console.dir(decoded);
+            console.dir(content);
+          } catch {
+            // 解码失败，跳过
           }
         }
 
-        decodeResult.html(`<span class="error">未发现二维码</span>`);
+        if (success.length > 0) {
+          for (const { topLeft, topRight, bottomLeft } of success) {
+            markFinderPattern(topLeft, '#00ff00');
+            markFinderPattern(topRight, '#00ff00');
+            markFinderPattern(bottomLeft, '#00ff00');
+          }
+        } else {
+          decodeResult.html(`<span class="error">未发现二维码</span>`);
+        }
       });
 
       /https?:/i.test(location.protocol) && drawImage('./qrcode.jpg');
