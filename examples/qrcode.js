@@ -3681,14 +3681,14 @@
         offsetY++;
         stateCount[2]++;
       }
-      if (offsetY === height) {
+      if (offsetY >= height) {
         return NaN;
       }
       while (offsetY < height && !matrix.get(x, offsetY) && stateCount[3] < maxCount) {
         offsetY++;
         stateCount[3]++;
       }
-      if (offsetY === height || stateCount[3] >= maxCount) {
+      if (offsetY >= height || stateCount[3] >= maxCount) {
         return NaN;
       }
       while (offsetY < height && matrix.get(x, offsetY) && stateCount[4] < maxCount) {
@@ -3736,14 +3736,14 @@
         offsetX++;
         stateCount[2]++;
       }
-      if (offsetX === width) {
+      if (offsetX >= width) {
         return NaN;
       }
       while (offsetX < width && !matrix.get(offsetX, y) && stateCount[3] < maxCount) {
         offsetX++;
         stateCount[3]++;
       }
-      if (offsetX === width || stateCount[3] >= maxCount) {
+      if (offsetX >= width || stateCount[3] >= maxCount) {
         return NaN;
       }
       while (offsetX < width && matrix.get(offsetX, y) && stateCount[4] < maxCount) {
@@ -3798,14 +3798,14 @@
         offset++;
         stateCount[3]++;
       }
-      if (stateCount[3] == 0) {
+      if (stateCount[3] === 0) {
         return false;
       }
       while (x + offset < width && y + offset < height && matrix.get(x + offset, y + offset)) {
         offset++;
         stateCount[4]++;
       }
-      if (stateCount[4] == 0) {
+      if (stateCount[4] === 0) {
         return false;
       }
       return foundPatternDiagonal(stateCount);
