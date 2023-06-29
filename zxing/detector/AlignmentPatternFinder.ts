@@ -176,7 +176,7 @@ export class AlignmentPatternFinder {
           }
         } else {
           // White pixel
-          if (currentState == 1) {
+          if (currentState === 1) {
             // Counting black pixels
             currentState++;
           }
