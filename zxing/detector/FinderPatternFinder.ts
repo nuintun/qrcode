@@ -8,10 +8,10 @@ import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
 import { FinderPatternGroup } from './FinderPatternGroup';
 
-const DIFF_MODULE_SIZE_CUTOFF = 0.5;
-const MIN_MODULE_COUNT_PER_EDGE = 9;
-const MAX_MODULE_COUNT_PER_EDGE = 180;
-const DIFF_MODULE_SIZE_CUTOFF_PERCENT = 0.05;
+const DIFF_EDGE_RATIO = 0.25;
+const DIFF_MODULE_SIZE_RATIO = 0.25;
+const MIN_MODULE_COUNT_PER_EDGE = 11;
+const MAX_MODULE_COUNT_PER_EDGE = 175;
 
 function isFoundPattern(stateCount: number[]): boolean {
   let stateCountTotal = 0;
@@ -50,18 +50,17 @@ function pushStateCount(stateCount: number[], count: number): void {
 }
 
 function isEqualsEdge(edge1: number, edge2: number): boolean {
-  const percent = Math.abs(edge1 - edge2) / Math.min(edge1, edge2);
+  const edgeAvg = (edge1 + edge2) / 2;
+  const ratio = Math.abs(edge1 - edge2) / edgeAvg;
 
-  return percent < 0.1;
+  return ratio < DIFF_EDGE_RATIO;
 }
 
 function isEqualsModuleSize(moduleSize1: number, moduleSize2: number): boolean {
-  const moduleSizeDiff = moduleSize1 - moduleSize2;
-  const moduleSizeDiffPercent = moduleSizeDiff / moduleSize2;
+  const modeSizeAvg = (moduleSize1 + moduleSize2) / 2;
+  const ratio = (moduleSize1 - moduleSize2) / modeSizeAvg;
 
-  // break, since elements are ordered by the module size deviation there cannot be
-  // any more interesting elements for the given p1.
-  return moduleSizeDiff <= DIFF_MODULE_SIZE_CUTOFF || moduleSizeDiffPercent <= DIFF_MODULE_SIZE_CUTOFF_PERCENT;
+  return ratio <= DIFF_MODULE_SIZE_RATIO;
 }
 
 function centerFromEnd(stateCount: number[], end: number): number {
@@ -283,7 +282,6 @@ export class FinderPatternFinder {
     for (let i1 = 0; i1 < maxI1; i1++) {
       const pattern1 = patterns[i1];
       const moduleSize1 = pattern1.moduleSize;
-      const moduleSizeDouble = moduleSize1 * 2;
 
       for (let i2 = i1 + 1; i2 < maxI2; i2++) {
         const pattern2 = patterns[i2];
@@ -318,9 +316,9 @@ export class FinderPatternFinder {
           }
 
           // Check the sizes
-          const moduleCount = (a + b) / moduleSizeDouble;
+          const moduleCount = (a + b) / (topLeft.moduleSize + topRight.moduleSize);
 
-          if (moduleCount > MAX_MODULE_COUNT_PER_EDGE || moduleCount < MIN_MODULE_COUNT_PER_EDGE) {
+          if (moduleCount < MIN_MODULE_COUNT_PER_EDGE || moduleCount > MAX_MODULE_COUNT_PER_EDGE) {
             continue;
           }
 
