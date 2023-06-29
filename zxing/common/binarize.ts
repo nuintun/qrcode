@@ -72,7 +72,8 @@ function calculateThreshold(luminance: Uint8Array): number {
   return threshold;
 }
 
-export function binarize(imageData: ImageData, width: number, height: number): BitMatrix {
+export function binarize(imageData: ImageData): BitMatrix {
+  const { width, height } = imageData;
   const matrix = new BitMatrix(width, height);
   const luminance = convertGreyscale(imageData);
   const threshold = calculateThreshold(luminance);

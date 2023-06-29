@@ -311,9 +311,11 @@
         const imageData = getImageData();
         const { width, height } = imageData;
         const decoder = new QRCode.Decoder();
-        const matrix = QRCode.binarize(imageData, width, height);
+        const matrix = QRCode.binarize(imageData);
         const detector = new QRCode.Detector(matrix);
         const detected = detector.detect();
+
+        console.log(detected);
 
         if (detected.length > 0) {
           for (const { matrix, patterns } of detected) {
