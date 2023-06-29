@@ -78,7 +78,7 @@ export class FinderPatternFinder {
     this.#matrix = matrix;
   }
 
-  #crossCheckHorizontal(x: number, y: number, maxCount: number, stateCountTotal: number): number {
+  #crossCheckHorizontal(x: number, y: number, maxCount: number): number {
     let offsetX = x;
 
     const matrix = this.#matrix;
@@ -142,16 +142,10 @@ export class FinderPatternFinder {
       return NaN;
     }
 
-    // If we found a finder-pattern-like section, but its size is significantly different than
-    // the original, assume it's a false positive
-    if (5 * Math.abs(getStateCountTotal(stateCount) - stateCountTotal) >= stateCountTotal) {
-      return NaN;
-    }
-
     return isFoundPattern(stateCount) ? centerFromEnd(stateCount, offsetX) : NaN;
   }
 
-  #crossCheckVertical(x: number, y: number, maxCount: number, stateCountTotal: number): number {
+  #crossCheckVertical(x: number, y: number, maxCount: number): number {
     let offsetY = y;
 
     const matrix = this.#matrix;
@@ -215,12 +209,6 @@ export class FinderPatternFinder {
     }
 
     if (stateCount[4] >= maxCount) {
-      return NaN;
-    }
-
-    // If we found a finder-pattern-like section, but its size is more than 40% different than
-    // the original, assume it's a false positive
-    if (5 * Math.abs(getStateCountTotal(stateCount) - stateCountTotal) >= 2 * stateCountTotal) {
       return NaN;
     }
 
@@ -293,21 +281,20 @@ export class FinderPatternFinder {
     return isFoundPattern(stateCount);
   }
 
-  #addPattern(patterns: Pattern[], x: number, y: number, stateCount: number[]): void {
+  #add(patterns: Pattern[], x: number, y: number, stateCount: number[]): void {
     let offsetX = centerFromEnd(stateCount, x);
 
-    const stateCountTotal = getStateCountTotal(stateCount);
-    const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, stateCount[2], stateCountTotal);
+    const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, stateCount[2]);
 
     if (!Number.isNaN(offsetY)) {
       // Re-cross check
-      offsetX = this.#crossCheckHorizontal(toInt32(offsetX), toInt32(offsetY), stateCount[2], stateCountTotal);
+      offsetX = this.#crossCheckHorizontal(toInt32(offsetX), toInt32(offsetY), stateCount[2]);
 
       if (!Number.isNaN(offsetX) && this.#isFoundDiagonalPattern(toInt32(offsetX), toInt32(offsetY))) {
         let found = false;
 
         const { length } = patterns;
-        const moduleSize = stateCountTotal / 7;
+        const moduleSize = getStateCountTotal(stateCount) / 7;
 
         for (let i = 0; i < length; i++) {
           const pattern = patterns[i];
@@ -417,7 +404,7 @@ export class FinderPatternFinder {
           pushStateCount(stateCount, count);
 
           if (isFoundPattern(stateCount)) {
-            this.#addPattern(patterns, x, y, stateCount);
+            this.#add(patterns, x, y, stateCount);
           }
 
           count = 1;
@@ -428,7 +415,7 @@ export class FinderPatternFinder {
       pushStateCount(stateCount, count);
 
       if (isFoundPattern(stateCount)) {
-        this.#addPattern(patterns, width - 1, y, stateCount);
+        this.#add(patterns, width - 1, y, stateCount);
       }
     }
 

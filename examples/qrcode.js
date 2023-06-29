@@ -3635,7 +3635,7 @@
     constructor(matrix) {
       this.#matrix = matrix;
     }
-    #crossCheckHorizontal(x, y, maxCount, stateCountTotal) {
+    #crossCheckHorizontal(x, y, maxCount) {
       let offsetX = x;
       const matrix = this.#matrix;
       const stateCount = [0, 0, 0, 0, 0];
@@ -3683,14 +3683,9 @@
       if (stateCount[4] >= maxCount) {
         return NaN;
       }
-      // If we found a finder-pattern-like section, but its size is significantly different than
-      // the original, assume it's a false positive
-      if (5 * Math.abs(getStateCountTotal$1(stateCount) - stateCountTotal) >= stateCountTotal) {
-        return NaN;
-      }
       return isFoundPattern(stateCount) ? centerFromEnd$1(stateCount, offsetX) : NaN;
     }
-    #crossCheckVertical(x, y, maxCount, stateCountTotal) {
+    #crossCheckVertical(x, y, maxCount) {
       let offsetY = y;
       const matrix = this.#matrix;
       const stateCount = [0, 0, 0, 0, 0];
@@ -3739,11 +3734,6 @@
         stateCount[4]++;
       }
       if (stateCount[4] >= maxCount) {
-        return NaN;
-      }
-      // If we found a finder-pattern-like section, but its size is more than 40% different than
-      // the original, assume it's a false positive
-      if (5 * Math.abs(getStateCountTotal$1(stateCount) - stateCountTotal) >= 2 * stateCountTotal) {
         return NaN;
       }
       return isFoundPattern(stateCount) ? centerFromEnd$1(stateCount, offsetY) : NaN;
@@ -3798,17 +3788,16 @@
       }
       return isFoundPattern(stateCount);
     }
-    #addPattern(patterns, x, y, stateCount) {
+    #add(patterns, x, y, stateCount) {
       let offsetX = centerFromEnd$1(stateCount, x);
-      const stateCountTotal = getStateCountTotal$1(stateCount);
-      const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, stateCount[2], stateCountTotal);
+      const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, stateCount[2]);
       if (!Number.isNaN(offsetY)) {
         // Re-cross check
-        offsetX = this.#crossCheckHorizontal(toInt32(offsetX), toInt32(offsetY), stateCount[2], stateCountTotal);
+        offsetX = this.#crossCheckHorizontal(toInt32(offsetX), toInt32(offsetY), stateCount[2]);
         if (!Number.isNaN(offsetX) && this.#isFoundDiagonalPattern(toInt32(offsetX), toInt32(offsetY))) {
           let found = false;
           const { length } = patterns;
-          const moduleSize = stateCountTotal / 7;
+          const moduleSize = getStateCountTotal$1(stateCount) / 7;
           for (let i = 0; i < length; i++) {
             const pattern = patterns[i];
             // Look for about the same center and module size:
@@ -3892,7 +3881,7 @@
           } else {
             pushStateCount(stateCount, count);
             if (isFoundPattern(stateCount)) {
-              this.#addPattern(patterns, x, y, stateCount);
+              this.#add(patterns, x, y, stateCount);
             }
             count = 1;
             lastBit = bit;
@@ -3900,7 +3889,7 @@
         }
         pushStateCount(stateCount, count);
         if (isFoundPattern(stateCount)) {
-          this.#addPattern(patterns, width - 1, y, stateCount);
+          this.#add(patterns, width - 1, y, stateCount);
         }
       }
       return this.#selectBestPatterns(patterns);
@@ -3983,7 +3972,7 @@
       }
       return this.#isFoundPattern(stateCount) ? centerFromEnd(stateCount, offsetY) : NaN;
     }
-    #addPattern(patterns, x, y, stateCount) {
+    #add(patterns, x, y, stateCount) {
       const offsetX = centerFromEnd(stateCount, x);
       const stateCountTotal = getStateCountTotal(stateCount);
       const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, 2 * stateCount[1], stateCountTotal);
@@ -4034,7 +4023,7 @@
                 // A winner?
                 if (this.#isFoundPattern(stateCount)) {
                   // Yes
-                  const confirmed = this.#addPattern(patterns, offsetX, offsetY, stateCount);
+                  const confirmed = this.#add(patterns, offsetX, offsetY, stateCount);
                   if (confirmed != null) {
                     return confirmed;
                   }
@@ -4058,7 +4047,7 @@
           offsetX++;
         }
         if (this.#isFoundPattern(stateCount)) {
-          const confirmed = this.#addPattern(patterns, maxX, offsetY, stateCount);
+          const confirmed = this.#add(patterns, maxX, offsetY, stateCount);
           if (confirmed != null) {
             return confirmed;
           }
