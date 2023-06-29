@@ -8,23 +8,20 @@ import { BitMatrix } from '/common/BitMatrix';
 import { FinderPattern } from './FinderPattern';
 import { FinderPatternGroup } from './FinderPatternGroup';
 
-const MIN_SKIP = 3;
-const MAX_MODULES = 97;
-const CENTER_QUORUM = 2;
 const DIFF_MODULE_SIZE_CUTOFF = 0.5;
 const MIN_MODULE_COUNT_PER_EDGE = 9;
 const MAX_MODULE_COUNT_PER_EDGE = 180;
 const DIFF_MODULE_SIZE_CUTOFF_PERCENT = 0.05;
 
-function shiftTwoCount(stateCount: number[]): void {
-  stateCount[0] = stateCount[2];
-  stateCount[1] = stateCount[3];
-  stateCount[2] = stateCount[4];
-  stateCount[3] = 1;
-  stateCount[4] = 0;
+function pushStateCount(stateCount: number[], count: number): void {
+  stateCount[0] = stateCount[1];
+  stateCount[1] = stateCount[2];
+  stateCount[2] = stateCount[3];
+  stateCount[3] = stateCount[4];
+  stateCount[4] = count;
 }
 
-function isFoundPattern(stateCount: number[], threshold: number): boolean {
+function isFoundPattern(stateCount: number[], ratio: number): boolean {
   let totalModuleSize = 0;
 
   for (let i = 0; i < 5; i++) {
@@ -42,24 +39,39 @@ function isFoundPattern(stateCount: number[], threshold: number): boolean {
   }
 
   const moduleSize = totalModuleSize / 7;
-  const maxVariance = moduleSize / threshold;
+  const moduleSizeDiff = moduleSize * ratio;
 
   // Allow less than 50% variance from 1-1-3-1-1 proportions
   return (
-    Math.abs(moduleSize - stateCount[0]) < maxVariance &&
-    Math.abs(moduleSize - stateCount[1]) < maxVariance &&
-    Math.abs(3 * moduleSize - stateCount[2]) < 3 * maxVariance &&
-    Math.abs(moduleSize - stateCount[3]) < maxVariance &&
-    Math.abs(moduleSize - stateCount[4]) < maxVariance
+    Math.abs(stateCount[0] - moduleSize) < moduleSizeDiff &&
+    Math.abs(stateCount[1] - moduleSize) < moduleSizeDiff &&
+    Math.abs(stateCount[2] - moduleSize * 3) < moduleSizeDiff * 3 &&
+    Math.abs(stateCount[3] - moduleSize) < moduleSizeDiff &&
+    Math.abs(stateCount[4] - moduleSize) < moduleSizeDiff
   );
 }
 
 function foundPatternCross(stateCount: number[]): boolean {
-  return isFoundPattern(stateCount, 2);
+  return isFoundPattern(stateCount, 0.5);
 }
 
 function foundPatternDiagonal(stateCount: number[]): boolean {
-  return isFoundPattern(stateCount, 1.333);
+  return isFoundPattern(stateCount, Math.SQRT2 * 0.5);
+}
+
+function isEqualsEdge(edge1: number, edge2: number): boolean {
+  const percent = Math.abs(edge1 - edge2) / Math.min(edge1, edge2);
+
+  return percent < 0.1;
+}
+
+function isEqualsModuleSize(moduleSize1: number, moduleSize2: number): boolean {
+  const moduleSizeDiff = moduleSize1 - moduleSize2;
+  const moduleSizeDiffPercent = moduleSizeDiff / moduleSize2;
+
+  // break, since elements are ordered by the module size deviation there cannot be
+  // any more interesting elements for the given p1.
+  return moduleSizeDiff <= DIFF_MODULE_SIZE_CUTOFF || moduleSizeDiffPercent <= DIFF_MODULE_SIZE_CUTOFF_PERCENT;
 }
 
 function centerFromEnd(stateCount: number[], end: number): number {
@@ -70,29 +82,8 @@ function getStateCountTotal(stateCount: number[]): number {
   return stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] + stateCount[4];
 }
 
-function isEqualsEdge(edge1: number, edge2: number): boolean {
-  const percent = Math.abs(edge1 - edge2) / Math.min(edge1, edge2);
-
-  return percent < 0.1;
-}
-
-function isEqualsModuleSize(pattern1: FinderPattern, pattern2: FinderPattern): boolean {
-  const moduleSizeDiff = pattern1.moduleSize - pattern2.moduleSize;
-  const moduleSizeDiffPercent = moduleSizeDiff / pattern2.moduleSize;
-
-  if (moduleSizeDiff > DIFF_MODULE_SIZE_CUTOFF && moduleSizeDiffPercent >= DIFF_MODULE_SIZE_CUTOFF_PERCENT) {
-    // break, since elements are ordered by the module size deviation there cannot be
-    // any more interesting elements for the given p1.
-    return false;
-  }
-
-  return true;
-}
-
 export class FinderPatternFinder {
   #matrix: BitMatrix;
-  #hasSkipped: boolean = false;
-  #patterns: FinderPattern[] = [];
 
   constructor(matrix: BitMatrix) {
     this.#matrix = matrix;
@@ -102,7 +93,6 @@ export class FinderPatternFinder {
     let offsetY = y;
 
     const matrix = this.#matrix;
-    const { height } = matrix;
     const stateCount = [0, 0, 0, 0, 0];
 
     // Start counting up from center
@@ -136,6 +126,8 @@ export class FinderPatternFinder {
 
     // Now also count down from center
     offsetY = y + 1;
+
+    const { height } = matrix;
 
     while (offsetY < height && matrix.get(x, offsetY)) {
       offsetY++;
@@ -177,7 +169,6 @@ export class FinderPatternFinder {
     let offsetX = x;
 
     const matrix = this.#matrix;
-    const { width } = matrix;
     const stateCount = [0, 0, 0, 0, 0];
 
     while (offsetX >= 0 && matrix.get(offsetX, y)) {
@@ -208,6 +199,8 @@ export class FinderPatternFinder {
     }
 
     offsetX = x + 1;
+
+    const { width } = matrix;
 
     while (offsetX < width && matrix.get(offsetX, y)) {
       offsetX++;
@@ -311,7 +304,7 @@ export class FinderPatternFinder {
     return foundPatternDiagonal(stateCount);
   }
 
-  #handlePossibleCenter(x: number, y: number, stateCount: number[]): boolean {
+  #handlePossiblePattern(patterns: FinderPattern[], x: number, y: number, stateCount: number[]): void {
     let offsetX = centerFromEnd(stateCount, x);
 
     const stateCountTotal = getStateCountTotal(stateCount);
@@ -324,7 +317,6 @@ export class FinderPatternFinder {
       if (!Number.isNaN(offsetX) && this.#crossCheckDiagonal(toInt32(offsetX), toInt32(offsetY))) {
         let found = false;
 
-        const patterns = this.#patterns;
         const { length } = patterns;
         const moduleSize = stateCountTotal / 7;
 
@@ -342,26 +334,16 @@ export class FinderPatternFinder {
         if (!found) {
           patterns.push(new FinderPattern(offsetX, offsetY, moduleSize));
         }
-
-        return true;
       }
     }
-
-    return false;
   }
 
-  #selectBestPatterns(): FinderPatternGroup[] {
-    const patterns = this.#patterns;
+  #selectBestPatterns(patterns: FinderPattern[]): FinderPatternGroup[] {
     const { length } = patterns;
 
     // Couldn't find enough finder patterns
     if (length < 3) {
       return [];
-    }
-
-    // Begin HE modifications to safely detect multiple codes of equal size
-    if (length === 3) {
-      return [new FinderPatternGroup(patterns)];
     }
 
     // Max i1
@@ -376,19 +358,21 @@ export class FinderPatternFinder {
 
     for (let i1 = 0; i1 < maxI1; i1++) {
       const pattern1 = patterns[i1];
-      const moduleSizeDouble = pattern1.moduleSize * 2;
+      const moduleSize1 = pattern1.moduleSize;
+      const moduleSizeDouble = moduleSize1 * 2;
 
       for (let i2 = i1 + 1; i2 < maxI2; i2++) {
         const pattern2 = patterns[i2];
+        const moduleSize2 = pattern2.moduleSize;
 
-        if (!isEqualsModuleSize(pattern1, pattern2)) {
+        if (!isEqualsModuleSize(moduleSize1, moduleSize2)) {
           break;
         }
 
         for (let i3 = i2 + 1; i3 < length; i3++) {
           const pattern3 = patterns[i3];
 
-          if (!isEqualsModuleSize(pattern2, pattern3)) {
+          if (!isEqualsModuleSize(moduleSize2, pattern3.moduleSize)) {
             break;
           }
 
@@ -425,171 +409,41 @@ export class FinderPatternFinder {
     return finderPatternGroups;
   }
 
-  #findRowSkip(): number {
-    const patterns = this.#patterns;
-    const { length } = patterns;
-
-    if (length > 1) {
-      let firstConfirmedCenter: FinderPattern | undefined;
-
-      for (const pattern of patterns) {
-        if (pattern.count >= CENTER_QUORUM) {
-          if (firstConfirmedCenter == null) {
-            firstConfirmedCenter = pattern;
-          } else {
-            // We have two confirmed centers
-            // How far down can we skip before resuming looking for the next
-            // pattern? In the worst case, only the difference between the
-            // difference in the x / y coordinates of the two centers.
-            // This is the case where you find top left last.
-            this.#hasSkipped = true;
-
-            const xDiff = Math.abs(firstConfirmedCenter.x - pattern.x);
-            const yDiff = Math.abs(firstConfirmedCenter.y - pattern.y);
-
-            return toInt32((xDiff - yDiff) / 2);
-          }
-        }
-      }
-    }
-
-    return 0;
-  }
-
-  #haveMultiplyConfirmedCenters(): boolean {
-    let confirmedCount = 0;
-    let totalModuleSize = 0;
-
-    const patterns = this.#patterns;
-    const { length } = patterns;
-
-    for (const pattern of patterns) {
-      if (pattern.count >= CENTER_QUORUM) {
-        confirmedCount++;
-        totalModuleSize += pattern.moduleSize;
-      }
-    }
-
-    if (confirmedCount < 3) {
-      return false;
-    }
-
-    let totalDeviation = 0;
-
-    const average = totalModuleSize / length;
-
-    for (const pattern of patterns) {
-      if (pattern.count >= CENTER_QUORUM) {
-        totalDeviation += Math.abs(pattern.moduleSize - average);
-      }
-    }
-
-    return totalDeviation <= 0.05 * totalModuleSize;
-  }
-
-  public find(harder?: boolean): FinderPatternGroup[] {
-    let done = false;
-
+  public find(): FinderPatternGroup[] {
     const matrix = this.#matrix;
     const { width, height } = matrix;
+    const patterns: FinderPattern[] = [];
 
-    // We are looking for black/white/black/white/black modules in
-    // 1:1:3:1:1 ratio; this tracks the number of such modules seen so far
-    // Let's assume that the maximum version QR Code we support takes up 1/4 the height of the
-    // image, and then account for the center being 3 modules in size. This gives the smallest
-    // number of pixels the center could be, so skip this often. When trying harder, look for all
-    // QR versions regardless of how dense they are.
-    let skip = harder ? MIN_SKIP : Math.max(MIN_SKIP, toInt32((3 * height) / (4 * MAX_MODULES)));
-
-    for (let y = skip - 1; y < height && !done; y += skip) {
-      let currentState = 0;
+    for (let y = 0; y < height; y++) {
+      let count = 0;
+      let lastBit = matrix.get(0, y);
 
       const stateCount = [0, 0, 0, 0, 0];
 
       for (let x = 0; x < width; x++) {
-        if (matrix.get(x, y)) {
-          // Black pixel
-          if (currentState & 0x01) {
-            // Counting white pixels
-            currentState++;
-          }
+        const bit = matrix.get(x, y);
 
-          stateCount[currentState]++;
+        if (bit === lastBit) {
+          count++;
         } else {
-          // White pixel
-          if (!(currentState & 0x01)) {
-            // Counting black pixels
-            if (currentState === 4) {
-              // A winner?
-              if (foundPatternCross(stateCount)) {
-                const confirmed = this.#handlePossibleCenter(x, y, stateCount);
+          pushStateCount(stateCount, count);
 
-                if (confirmed) {
-                  // Start examining every other line. Checking each line turned out to be too
-                  // expensive and didn't improve performance.
-                  skip = 2;
-
-                  if (this.#hasSkipped) {
-                    done = this.#haveMultiplyConfirmedCenters();
-                  } else {
-                    const rowSkip = this.#findRowSkip();
-
-                    if (rowSkip > stateCount[2]) {
-                      // Skip rows between row of lower confirmed center
-                      // and top of presumed third confirmed center
-                      // but back up a bit to get a full chance of detecting
-                      // it, entire width of center of finder pattern
-
-                      // Skip by rowSkip, but back off by stateCount[2] (size of last center
-                      // of pattern we saw) to be conservative, and also back off by iSkip which
-                      // is about to be re-added
-                      x = width - 1;
-                      y += rowSkip - stateCount[2] - skip;
-                    }
-                  }
-                }
-
-                // Yes
-                // Clear state to start looking again
-                currentState = 0;
-
-                stateCount.fill(0);
-              } else {
-                // No, shift counts back by two
-                currentState = 3;
-
-                shiftTwoCount(stateCount);
-                continue;
-              }
-
-              // Clear state to start looking again
-              currentState = 0;
-
-              shiftTwoCount(stateCount);
-            } else {
-              stateCount[++currentState]++;
-            }
-          } else {
-            // Counting white pixels
-            stateCount[currentState]++;
+          if (foundPatternCross(stateCount)) {
+            this.#handlePossiblePattern(patterns, x, y, stateCount);
           }
+
+          count = 1;
+          lastBit = bit;
         }
       }
 
+      pushStateCount(stateCount, count);
+
       if (foundPatternCross(stateCount)) {
-        const confirmed = this.#handlePossibleCenter(width, y, stateCount);
-
-        if (confirmed) {
-          skip = stateCount[0];
-
-          if (this.#hasSkipped) {
-            // Found a third one
-            done = this.#haveMultiplyConfirmedCenters();
-          }
-        }
+        this.#handlePossiblePattern(patterns, width - 1, y, stateCount);
       }
     }
 
-    return this.#selectBestPatterns();
+    return this.#selectBestPatterns(patterns);
   }
 }

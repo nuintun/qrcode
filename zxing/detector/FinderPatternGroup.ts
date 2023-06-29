@@ -18,14 +18,14 @@ function orderFinderPatterns(patterns: FinderPattern[]): FinderPattern[] {
 
   // Find distances between pattern centers
   const [pattern1, pattern2, pattern3] = patterns;
-  const oneTwoDistance = distance(pattern2, pattern3);
-  const zeroOneDistance = distance(pattern1, pattern2);
-  const zeroTwoDistance = distance(pattern1, pattern3);
+  const oneTwoDistance = distance(pattern1, pattern2);
+  const twoThreeDistance = distance(pattern2, pattern3);
+  const oneThreeDistance = distance(pattern1, pattern3);
 
   // Assume one closest to other two is B; A and C will just be guesses at first
-  if (oneTwoDistance >= zeroOneDistance && oneTwoDistance >= zeroTwoDistance) {
+  if (twoThreeDistance >= oneTwoDistance && twoThreeDistance >= oneThreeDistance) {
     [topLeft, bottomLeft, topRight] = patterns;
-  } else if (zeroTwoDistance >= oneTwoDistance && zeroTwoDistance >= zeroOneDistance) {
+  } else if (oneThreeDistance >= twoThreeDistance && oneThreeDistance >= oneTwoDistance) {
     [bottomLeft, topLeft, topRight] = patterns;
   } else {
     [bottomLeft, topRight, topLeft] = patterns;

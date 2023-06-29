@@ -2,25 +2,21 @@
  * @module Detector
  */
 
-import { toInt32 } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
+import { round, toInt32 } from '/common/utils';
 import { FinderPattern } from './FinderPattern';
 import { distance, Point } from '/common/Point';
 import { GridSampler } from '/common/GridSampler';
-import { fromVersionSize } from '/common/Version';
 import { AlignmentPattern } from './AlignmentPattern';
 import { FinderPatternGroup } from './FinderPatternGroup';
 import { FinderPatternFinder } from './FinderPatternFinder';
 import { AlignmentPatternFinder } from './AlignmentPatternFinder';
+import { fromVersionSize, MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
 import { PerspectiveTransform, quadrilateralToQuadrilateral } from '/common/PerspectiveTransform';
 
 export interface DetectResult {
   readonly matrix: BitMatrix;
   readonly patterns: FinderPatternGroup;
-}
-
-function round(value: number): number {
-  return toInt32(value + (value < 0 ? -0.5 : 0.5));
 }
 
 function computeSymbolSize(
@@ -226,11 +222,11 @@ export class Detector {
     return (this.#calculateModuleSizeOneWay(topLeft, topRight) + this.#calculateModuleSizeOneWay(topLeft, bottomLeft)) / 2;
   }
 
-  #findAlignmentInRegion(x: number, y: number, moduleSize: number, factor: number): AlignmentPattern | undefined {
+  #findAlignmentInRegion(x: number, y: number, moduleSize: number, ratio: number): AlignmentPattern | undefined {
     // Look for an alignment pattern (3 modules in size) around where it should be
     const matrix = this.#matrix;
     const minAlignmentAreaSize = moduleSize * 3;
-    const allowance = toInt32(moduleSize * factor);
+    const allowance = toInt32(moduleSize * ratio);
     const alignmentAreaLeftX = Math.max(0, x - allowance);
     const alignmentAreaRightX = Math.min(matrix.width - 1, x + allowance);
     const alignmentAreaTopY = Math.max(0, y - allowance);
@@ -258,7 +254,7 @@ export class Detector {
     if (moduleSize >= 1) {
       const size = computeSymbolSize(moduleSize, topLeft, topRight, bottomLeft);
 
-      if (size >= 21 && size <= 177) {
+      if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
         const version = fromVersionSize(size);
 
         let alignmentPattern: AlignmentPattern | undefined;
@@ -276,8 +272,8 @@ export class Detector {
 
           // Kind of arbitrary -- expand search radius before giving up
           // If we didn't find alignment pattern... well try anyway without it
-          for (let factor = 4; factor <= 16; factor <<= 1) {
-            alignmentPattern = this.#findAlignmentInRegion(estAlignmentX, estAlignmentY, moduleSize, factor);
+          for (let ratio = 4; ratio <= 16; ratio <<= 1) {
+            alignmentPattern = this.#findAlignmentInRegion(estAlignmentX, estAlignmentY, moduleSize, ratio);
 
             if (alignmentPattern != null) {
               break;

@@ -378,6 +378,10 @@ export const VERSIONS = [
   )
 ];
 
+export const MIN_VERSION_SIZE = VERSIONS[0].size;
+
+export const MAX_VERSION_SIZE = VERSIONS[39].size;
+
 export function fromVersionSize(size: number): Version {
   if ((size & 0x03) !== 1) {
     throw new Error('');

@@ -7,7 +7,7 @@ import { ECLevel } from '/common/ECLevel';
 import { isApplyMask } from '/common/mask';
 import { BitMatrix } from '/common/BitMatrix';
 import { decodeFormatInfo, FormatInfo } from './FormatInfo';
-import { buildFunctionPattern, decodeVersion, Version, VERSIONS } from '/common/Version';
+import { buildFunctionPattern, decodeVersion, MAX_VERSION_SIZE, MIN_VERSION_SIZE, Version, VERSIONS } from '/common/Version';
 
 export class BitMatrixParser {
   #size: number;
@@ -16,7 +16,7 @@ export class BitMatrixParser {
   constructor(matrix: BitMatrix) {
     const { width, height } = matrix;
 
-    if (width !== height || width < 21 || width > 177 || (width - 17) & 0x03) {
+    if (width !== height || width < MIN_VERSION_SIZE || width > MAX_VERSION_SIZE || (width - 17) & 0x03) {
       throw new Error('illegal qrcode size');
     }
 

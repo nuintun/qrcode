@@ -21,7 +21,6 @@ export class AlignmentPatternFinder {
   #height: number;
   #matrix: BitMatrix;
   #moduleSize: number;
-  #patterns: AlignmentPattern[] = [];
 
   constructor(matrix: BitMatrix, x: number, y: number, width: number, height: number, moduleSize: number) {
     this.#x = x;
@@ -101,13 +100,12 @@ export class AlignmentPatternFinder {
     return this.#foundPatternCross(stateCount) ? centerFromEnd(stateCount, offsetY) : NaN;
   }
 
-  #handlePossibleCenter(x: number, y: number, stateCount: number[]): AlignmentPattern | void {
+  #handlePossiblePattern(patterns: AlignmentPattern[], x: number, y: number, stateCount: number[]): AlignmentPattern | void {
     const offsetX = centerFromEnd(stateCount, x);
     const stateCountTotal = getStateCountTotal(stateCount);
     const offsetY = this.#crossCheckVertical(offsetX, y, 2 * stateCount[1], stateCountTotal);
 
     if (!Number.isNaN(offsetY)) {
-      const patterns = this.#patterns;
       const moduleSize = stateCountTotal / 3;
 
       for (const pattern of patterns) {
@@ -129,6 +127,7 @@ export class AlignmentPatternFinder {
     const matrix = this.#matrix;
     const maxX = startX + width;
     const middleY = this.#y + height / 2;
+    const patterns: AlignmentPattern[] = [];
 
     // We are looking for black/white/black modules in 1:1:1 ratio;
     // this tracks the number of black/white/black modules seen so far
@@ -160,7 +159,7 @@ export class AlignmentPatternFinder {
               // A winner?
               if (this.#foundPatternCross(stateCount)) {
                 // Yes
-                const confirmed = this.#handlePossibleCenter(offsetX, offsetY, stateCount);
+                const confirmed = this.#handlePossiblePattern(patterns, offsetX, offsetY, stateCount);
 
                 if (confirmed != null) {
                   return confirmed;
@@ -189,7 +188,7 @@ export class AlignmentPatternFinder {
       }
 
       if (this.#foundPatternCross(stateCount)) {
-        const confirmed = this.#handlePossibleCenter(maxX, offsetY, stateCount);
+        const confirmed = this.#handlePossiblePattern(patterns, maxX, offsetY, stateCount);
 
         if (confirmed != null) {
           return confirmed;
@@ -199,6 +198,6 @@ export class AlignmentPatternFinder {
 
     // Hmm, nothing we saw was observed and confirmed twice. If we had
     // any guess at all, return it.
-    return this.#patterns[0];
+    return patterns[0];
   }
 }

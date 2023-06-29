@@ -6,6 +6,10 @@ export function toInt32(value: number): number {
   return value | 0;
 }
 
+export function round(value: number): number {
+  return toInt32(value + (value < 0 ? -0.5 : 0.5));
+}
+
 // Get bit count of int32
 export function bitCount(value: number): number {
   // HD, Figure 5-2

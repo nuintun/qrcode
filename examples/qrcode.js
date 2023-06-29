@@ -581,6 +581,9 @@
   function toInt32(value) {
     return value | 0;
   }
+  function round(value) {
+    return toInt32(value + (value < 0 ? -0.5 : 0.5));
+  }
   // Get bit count of int32
   function bitCount(value) {
     // HD, Figure 5-2
@@ -1418,6 +1421,8 @@
       new ECBlocks(30, new ECB(20, 15), new ECB(61, 16))
     )
   ];
+  const MIN_VERSION_SIZE = VERSIONS[0].size;
+  const MAX_VERSION_SIZE = VERSIONS[39].size;
   function fromVersionSize(size) {
     if ((size & 0x03) !== 1) {
       throw new Error('');
@@ -1501,7 +1506,7 @@
     #matrix;
     constructor(matrix) {
       const { width, height } = matrix;
-      if (width !== height || width < 21 || width > 177 || (width - 17) & 0x03) {
+      if (width !== height || width < MIN_VERSION_SIZE || width > MAX_VERSION_SIZE || (width - 17) & 0x03) {
         throw new Error('illegal qrcode size');
       }
       this.#size = width;
@@ -3552,13 +3557,13 @@
     let bottomLeft;
     // Find distances between pattern centers
     const [pattern1, pattern2, pattern3] = patterns;
-    const oneTwoDistance = distance(pattern2, pattern3);
-    const zeroOneDistance = distance(pattern1, pattern2);
-    const zeroTwoDistance = distance(pattern1, pattern3);
+    const oneTwoDistance = distance(pattern1, pattern2);
+    const twoThreeDistance = distance(pattern2, pattern3);
+    const oneThreeDistance = distance(pattern1, pattern3);
     // Assume one closest to other two is B; A and C will just be guesses at first
-    if (oneTwoDistance >= zeroOneDistance && oneTwoDistance >= zeroTwoDistance) {
+    if (twoThreeDistance >= oneTwoDistance && twoThreeDistance >= oneThreeDistance) {
       [topLeft, bottomLeft, topRight] = patterns;
-    } else if (zeroTwoDistance >= oneTwoDistance && zeroTwoDistance >= zeroOneDistance) {
+    } else if (oneThreeDistance >= twoThreeDistance && oneThreeDistance >= oneTwoDistance) {
       [bottomLeft, topLeft, topRight] = patterns;
     } else {
       [bottomLeft, topRight, topLeft] = patterns;
@@ -3591,21 +3596,18 @@
   /**
    * @module FinderPatternFinder
    */
-  const MIN_SKIP = 3;
-  const MAX_MODULES = 97;
-  const CENTER_QUORUM = 2;
   const DIFF_MODULE_SIZE_CUTOFF = 0.5;
   const MIN_MODULE_COUNT_PER_EDGE = 9;
   const MAX_MODULE_COUNT_PER_EDGE = 180;
   const DIFF_MODULE_SIZE_CUTOFF_PERCENT = 0.05;
-  function shiftTwoCount(stateCount) {
-    stateCount[0] = stateCount[2];
-    stateCount[1] = stateCount[3];
-    stateCount[2] = stateCount[4];
-    stateCount[3] = 1;
-    stateCount[4] = 0;
+  function pushStateCount(stateCount, count) {
+    stateCount[0] = stateCount[1];
+    stateCount[1] = stateCount[2];
+    stateCount[2] = stateCount[3];
+    stateCount[3] = stateCount[4];
+    stateCount[4] = count;
   }
-  function isFoundPattern(stateCount, threshold) {
+  function isFoundPattern(stateCount, ratio) {
     let totalModuleSize = 0;
     for (let i = 0; i < 5; i++) {
       const count = stateCount[i];
@@ -3618,21 +3620,32 @@
       return false;
     }
     const moduleSize = totalModuleSize / 7;
-    const maxVariance = moduleSize / threshold;
+    const moduleSizeDiff = moduleSize * ratio;
     // Allow less than 50% variance from 1-1-3-1-1 proportions
     return (
-      Math.abs(moduleSize - stateCount[0]) < maxVariance &&
-      Math.abs(moduleSize - stateCount[1]) < maxVariance &&
-      Math.abs(3 * moduleSize - stateCount[2]) < 3 * maxVariance &&
-      Math.abs(moduleSize - stateCount[3]) < maxVariance &&
-      Math.abs(moduleSize - stateCount[4]) < maxVariance
+      Math.abs(stateCount[0] - moduleSize) < moduleSizeDiff &&
+      Math.abs(stateCount[1] - moduleSize) < moduleSizeDiff &&
+      Math.abs(stateCount[2] - moduleSize * 3) < moduleSizeDiff * 3 &&
+      Math.abs(stateCount[3] - moduleSize) < moduleSizeDiff &&
+      Math.abs(stateCount[4] - moduleSize) < moduleSizeDiff
     );
   }
   function foundPatternCross(stateCount) {
-    return isFoundPattern(stateCount, 2);
+    return isFoundPattern(stateCount, 0.5);
   }
   function foundPatternDiagonal(stateCount) {
-    return isFoundPattern(stateCount, 1.333);
+    return isFoundPattern(stateCount, Math.SQRT2 * 0.5);
+  }
+  function isEqualsEdge(edge1, edge2) {
+    const percent = Math.abs(edge1 - edge2) / Math.min(edge1, edge2);
+    return percent < 0.1;
+  }
+  function isEqualsModuleSize(moduleSize1, moduleSize2) {
+    const moduleSizeDiff = moduleSize1 - moduleSize2;
+    const moduleSizeDiffPercent = moduleSizeDiff / moduleSize2;
+    // break, since elements are ordered by the module size deviation there cannot be
+    // any more interesting elements for the given p1.
+    return moduleSizeDiff <= DIFF_MODULE_SIZE_CUTOFF || moduleSizeDiffPercent <= DIFF_MODULE_SIZE_CUTOFF_PERCENT;
   }
   function centerFromEnd$1(stateCount, end) {
     return end - stateCount[4] - stateCount[3] - stateCount[2] / 2;
@@ -3640,31 +3653,14 @@
   function getStateCountTotal$1(stateCount) {
     return stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] + stateCount[4];
   }
-  function isEqualsEdge(edge1, edge2) {
-    const percent = Math.abs(edge1 - edge2) / Math.min(edge1, edge2);
-    return percent < 0.1;
-  }
-  function isEqualsModuleSize(pattern1, pattern2) {
-    const moduleSizeDiff = pattern1.moduleSize - pattern2.moduleSize;
-    const moduleSizeDiffPercent = moduleSizeDiff / pattern2.moduleSize;
-    if (moduleSizeDiff > DIFF_MODULE_SIZE_CUTOFF && moduleSizeDiffPercent >= DIFF_MODULE_SIZE_CUTOFF_PERCENT) {
-      // break, since elements are ordered by the module size deviation there cannot be
-      // any more interesting elements for the given p1.
-      return false;
-    }
-    return true;
-  }
   class FinderPatternFinder {
     #matrix;
-    #hasSkipped = false;
-    #patterns = [];
     constructor(matrix) {
       this.#matrix = matrix;
     }
     #crossCheckVertical(x, y, maxCount, stateCountTotal) {
       let offsetY = y;
       const matrix = this.#matrix;
-      const { height } = matrix;
       const stateCount = [0, 0, 0, 0, 0];
       // Start counting up from center
       while (offsetY >= 0 && matrix.get(x, offsetY)) {
@@ -3691,6 +3687,7 @@
       }
       // Now also count down from center
       offsetY = y + 1;
+      const { height } = matrix;
       while (offsetY < height && matrix.get(x, offsetY)) {
         offsetY++;
         stateCount[2]++;
@@ -3722,7 +3719,6 @@
     #crossCheckHorizontal(x, y, maxCount, stateCountTotal) {
       let offsetX = x;
       const matrix = this.#matrix;
-      const { width } = matrix;
       const stateCount = [0, 0, 0, 0, 0];
       while (offsetX >= 0 && matrix.get(offsetX, y)) {
         offsetX--;
@@ -3746,6 +3742,7 @@
         return NaN;
       }
       offsetX = x + 1;
+      const { width } = matrix;
       while (offsetX < width && matrix.get(offsetX, y)) {
         offsetX++;
         stateCount[2]++;
@@ -3824,7 +3821,7 @@
       }
       return foundPatternDiagonal(stateCount);
     }
-    #handlePossibleCenter(x, y, stateCount) {
+    #handlePossiblePattern(patterns, x, y, stateCount) {
       let offsetX = centerFromEnd$1(stateCount, x);
       const stateCountTotal = getStateCountTotal$1(stateCount);
       const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, stateCount[2], stateCountTotal);
@@ -3833,7 +3830,6 @@
         offsetX = this.#crossCheckHorizontal(toInt32(offsetX), toInt32(offsetY), stateCount[2], stateCountTotal);
         if (!Number.isNaN(offsetX) && this.#crossCheckDiagonal(toInt32(offsetX), toInt32(offsetY))) {
           let found = false;
-          const patterns = this.#patterns;
           const { length } = patterns;
           const moduleSize = stateCountTotal / 7;
           for (let i = 0; i < length; i++) {
@@ -3848,21 +3844,14 @@
           if (!found) {
             patterns.push(new FinderPattern(offsetX, offsetY, moduleSize));
           }
-          return true;
         }
       }
-      return false;
     }
-    #selectBestPatterns() {
-      const patterns = this.#patterns;
+    #selectBestPatterns(patterns) {
       const { length } = patterns;
       // Couldn't find enough finder patterns
       if (length < 3) {
         return [];
-      }
-      // Begin HE modifications to safely detect multiple codes of equal size
-      if (length === 3) {
-        return [new FinderPatternGroup(patterns)];
       }
       // Max i1
       const maxI1 = length - 2;
@@ -3874,15 +3863,17 @@
       patterns.sort((pattern1, pattern2) => pattern2.moduleSize - pattern1.moduleSize);
       for (let i1 = 0; i1 < maxI1; i1++) {
         const pattern1 = patterns[i1];
-        const moduleSizeDouble = pattern1.moduleSize * 2;
+        const moduleSize1 = pattern1.moduleSize;
+        const moduleSizeDouble = moduleSize1 * 2;
         for (let i2 = i1 + 1; i2 < maxI2; i2++) {
           const pattern2 = patterns[i2];
-          if (!isEqualsModuleSize(pattern1, pattern2)) {
+          const moduleSize2 = pattern2.moduleSize;
+          if (!isEqualsModuleSize(moduleSize1, moduleSize2)) {
             break;
           }
           for (let i3 = i2 + 1; i3 < length; i3++) {
             const pattern3 = patterns[i3];
-            if (!isEqualsModuleSize(pattern2, pattern3)) {
+            if (!isEqualsModuleSize(moduleSize2, pattern3.moduleSize)) {
               break;
             }
             const finderPatternGroup = new FinderPatternGroup([pattern1, pattern2, pattern3]);
@@ -3910,139 +3901,33 @@
       }
       return finderPatternGroups;
     }
-    #findRowSkip() {
-      const patterns = this.#patterns;
-      const { length } = patterns;
-      if (length > 1) {
-        let firstConfirmedCenter;
-        for (const pattern of patterns) {
-          if (pattern.count >= CENTER_QUORUM) {
-            if (firstConfirmedCenter == null) {
-              firstConfirmedCenter = pattern;
-            } else {
-              // We have two confirmed centers
-              // How far down can we skip before resuming looking for the next
-              // pattern? In the worst case, only the difference between the
-              // difference in the x / y coordinates of the two centers.
-              // This is the case where you find top left last.
-              this.#hasSkipped = true;
-              const xDiff = Math.abs(firstConfirmedCenter.x - pattern.x);
-              const yDiff = Math.abs(firstConfirmedCenter.y - pattern.y);
-              return toInt32((xDiff - yDiff) / 2);
-            }
-          }
-        }
-      }
-      return 0;
-    }
-    #haveMultiplyConfirmedCenters() {
-      let confirmedCount = 0;
-      let totalModuleSize = 0;
-      const patterns = this.#patterns;
-      const { length } = patterns;
-      for (const pattern of patterns) {
-        if (pattern.count >= CENTER_QUORUM) {
-          confirmedCount++;
-          totalModuleSize += pattern.moduleSize;
-        }
-      }
-      if (confirmedCount < 3) {
-        return false;
-      }
-      let totalDeviation = 0;
-      const average = totalModuleSize / length;
-      for (const pattern of patterns) {
-        if (pattern.count >= CENTER_QUORUM) {
-          totalDeviation += Math.abs(pattern.moduleSize - average);
-        }
-      }
-      return totalDeviation <= 0.05 * totalModuleSize;
-    }
-    find(harder) {
-      let done = false;
+    find() {
       const matrix = this.#matrix;
       const { width, height } = matrix;
-      // We are looking for black/white/black/white/black modules in
-      // 1:1:3:1:1 ratio; this tracks the number of such modules seen so far
-      // Let's assume that the maximum version QR Code we support takes up 1/4 the height of the
-      // image, and then account for the center being 3 modules in size. This gives the smallest
-      // number of pixels the center could be, so skip this often. When trying harder, look for all
-      // QR versions regardless of how dense they are.
-      let skip = harder ? MIN_SKIP : Math.max(MIN_SKIP, toInt32((3 * height) / (4 * MAX_MODULES)));
-      for (let y = skip - 1; y < height && !done; y += skip) {
-        let currentState = 0;
+      const patterns = [];
+      for (let y = 0; y < height; y++) {
+        let count = 0;
+        let lastBit = matrix.get(0, y);
         const stateCount = [0, 0, 0, 0, 0];
         for (let x = 0; x < width; x++) {
-          if (matrix.get(x, y)) {
-            // Black pixel
-            if (currentState & 0x01) {
-              // Counting white pixels
-              currentState++;
-            }
-            stateCount[currentState]++;
+          const bit = matrix.get(x, y);
+          if (bit === lastBit) {
+            count++;
           } else {
-            // White pixel
-            if (!(currentState & 0x01)) {
-              // Counting black pixels
-              if (currentState === 4) {
-                // A winner?
-                if (foundPatternCross(stateCount)) {
-                  const confirmed = this.#handlePossibleCenter(x, y, stateCount);
-                  if (confirmed) {
-                    // Start examining every other line. Checking each line turned out to be too
-                    // expensive and didn't improve performance.
-                    skip = 2;
-                    if (this.#hasSkipped) {
-                      done = this.#haveMultiplyConfirmedCenters();
-                    } else {
-                      const rowSkip = this.#findRowSkip();
-                      if (rowSkip > stateCount[2]) {
-                        // Skip rows between row of lower confirmed center
-                        // and top of presumed third confirmed center
-                        // but back up a bit to get a full chance of detecting
-                        // it, entire width of center of finder pattern
-                        // Skip by rowSkip, but back off by stateCount[2] (size of last center
-                        // of pattern we saw) to be conservative, and also back off by iSkip which
-                        // is about to be re-added
-                        x = width - 1;
-                        y += rowSkip - stateCount[2] - skip;
-                      }
-                    }
-                  }
-                  // Yes
-                  // Clear state to start looking again
-                  currentState = 0;
-                  stateCount.fill(0);
-                } else {
-                  // No, shift counts back by two
-                  currentState = 3;
-                  shiftTwoCount(stateCount);
-                  continue;
-                }
-                // Clear state to start looking again
-                currentState = 0;
-                shiftTwoCount(stateCount);
-              } else {
-                stateCount[++currentState]++;
-              }
-            } else {
-              // Counting white pixels
-              stateCount[currentState]++;
+            pushStateCount(stateCount, count);
+            if (foundPatternCross(stateCount)) {
+              this.#handlePossiblePattern(patterns, x, y, stateCount);
             }
+            count = 1;
+            lastBit = bit;
           }
         }
+        pushStateCount(stateCount, count);
         if (foundPatternCross(stateCount)) {
-          const confirmed = this.#handlePossibleCenter(width, y, stateCount);
-          if (confirmed) {
-            skip = stateCount[0];
-            if (this.#hasSkipped) {
-              // Found a third one
-              done = this.#haveMultiplyConfirmedCenters();
-            }
-          }
+          this.#handlePossiblePattern(patterns, width - 1, y, stateCount);
         }
       }
-      return this.#selectBestPatterns();
+      return this.#selectBestPatterns(patterns);
     }
   }
 
@@ -4077,7 +3962,6 @@
     #height;
     #matrix;
     #moduleSize;
-    #patterns = [];
     constructor(matrix, x, y, width, height, moduleSize) {
       this.#x = x;
       this.#y = y;
@@ -4138,12 +4022,11 @@
       }
       return this.#foundPatternCross(stateCount) ? centerFromEnd(stateCount, offsetY) : NaN;
     }
-    #handlePossibleCenter(x, y, stateCount) {
+    #handlePossiblePattern(patterns, x, y, stateCount) {
       const offsetX = centerFromEnd(stateCount, x);
       const stateCountTotal = getStateCountTotal(stateCount);
       const offsetY = this.#crossCheckVertical(offsetX, y, 2 * stateCount[1], stateCountTotal);
       if (!Number.isNaN(offsetY)) {
-        const patterns = this.#patterns;
         const moduleSize = stateCountTotal / 3;
         for (const pattern of patterns) {
           // Look for about the same center and module size:
@@ -4162,6 +4045,7 @@
       const matrix = this.#matrix;
       const maxX = startX + width;
       const middleY = this.#y + height / 2;
+      const patterns = [];
       // We are looking for black/white/black modules in 1:1:1 ratio;
       // this tracks the number of black/white/black modules seen so far
       for (let y = 0; y < height; y++) {
@@ -4189,7 +4073,7 @@
                 // A winner?
                 if (this.#foundPatternCross(stateCount)) {
                   // Yes
-                  const confirmed = this.#handlePossibleCenter(offsetX, offsetY, stateCount);
+                  const confirmed = this.#handlePossiblePattern(patterns, offsetX, offsetY, stateCount);
                   if (confirmed != null) {
                     return confirmed;
                   }
@@ -4213,7 +4097,7 @@
           offsetX++;
         }
         if (this.#foundPatternCross(stateCount)) {
-          const confirmed = this.#handlePossibleCenter(maxX, offsetY, stateCount);
+          const confirmed = this.#handlePossiblePattern(patterns, maxX, offsetY, stateCount);
           if (confirmed != null) {
             return confirmed;
           }
@@ -4221,7 +4105,7 @@
       }
       // Hmm, nothing we saw was observed and confirmed twice. If we had
       // any guess at all, return it.
-      return this.#patterns[0];
+      return patterns[0];
     }
   }
 
@@ -4362,9 +4246,6 @@
   /**
    * @module Detector
    */
-  function round(value) {
-    return toInt32(value + (value < 0 ? -0.5 : 0.5));
-  }
   function computeSymbolSize(moduleSize, topLeft, topRight, bottomLeft) {
     const width = round(distance(topLeft, topRight) / moduleSize);
     const height = round(distance(topLeft, bottomLeft) / moduleSize);
@@ -4522,11 +4403,11 @@
       // Take the average
       return (this.#calculateModuleSizeOneWay(topLeft, topRight) + this.#calculateModuleSizeOneWay(topLeft, bottomLeft)) / 2;
     }
-    #findAlignmentInRegion(x, y, moduleSize, factor) {
+    #findAlignmentInRegion(x, y, moduleSize, ratio) {
       // Look for an alignment pattern (3 modules in size) around where it should be
       const matrix = this.#matrix;
       const minAlignmentAreaSize = moduleSize * 3;
-      const allowance = toInt32(moduleSize * factor);
+      const allowance = toInt32(moduleSize * ratio);
       const alignmentAreaLeftX = Math.max(0, x - allowance);
       const alignmentAreaRightX = Math.min(matrix.width - 1, x + allowance);
       const alignmentAreaTopY = Math.max(0, y - allowance);
@@ -4549,7 +4430,7 @@
       const moduleSize = this.#calculateModuleSize(topLeft, topRight, bottomLeft);
       if (moduleSize >= 1) {
         const size = computeSymbolSize(moduleSize, topLeft, topRight, bottomLeft);
-        if (size >= 21 && size <= 177) {
+        if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
           const version = fromVersionSize(size);
           let alignmentPattern;
           if (version.alignmentPatterns.length > 0) {
@@ -4564,8 +4445,8 @@
             const estAlignmentY = toInt32(topLeft.y + correctionToTopLeft * (bottomRightY - topLeft.y));
             // Kind of arbitrary -- expand search radius before giving up
             // If we didn't find alignment pattern... well try anyway without it
-            for (let factor = 4; factor <= 16; factor <<= 1) {
-              alignmentPattern = this.#findAlignmentInRegion(estAlignmentX, estAlignmentY, moduleSize, factor);
+            for (let ratio = 4; ratio <= 16; ratio <<= 1) {
+              alignmentPattern = this.#findAlignmentInRegion(estAlignmentX, estAlignmentY, moduleSize, ratio);
               if (alignmentPattern != null) {
                 break;
               }
