@@ -41,14 +41,6 @@ function isFoundPattern(stateCount: number[]): boolean {
   );
 }
 
-function pushStateCount(stateCount: number[], count: number): void {
-  stateCount[0] = stateCount[1];
-  stateCount[1] = stateCount[2];
-  stateCount[2] = stateCount[3];
-  stateCount[3] = stateCount[4];
-  stateCount[4] = count;
-}
-
 function isEqualsEdge(edge1: number, edge2: number): boolean {
   const edgeAvg = (edge1 + edge2) / 2;
   const ratio = Math.abs(edge1 - edge2) / edgeAvg;
@@ -65,6 +57,14 @@ function isEqualsModuleSize(moduleSize1: number, moduleSize2: number): boolean {
 
 function centerFromEnd(stateCount: number[], end: number): number {
   return end - stateCount[4] - stateCount[3] - stateCount[2] / 2;
+}
+
+function pushStateCount(stateCount: number[], count: number): void {
+  stateCount[0] = stateCount[1];
+  stateCount[1] = stateCount[2];
+  stateCount[2] = stateCount[3];
+  stateCount[3] = stateCount[4];
+  stateCount[4] = count;
 }
 
 function getStateCountTotal(stateCount: number[]): number {
@@ -227,6 +227,72 @@ export class FinderPatternFinder {
     return isFoundPattern(stateCount) ? centerFromEnd(stateCount, offsetY) : NaN;
   }
 
+  #isFoundDiagonalPattern(x: number, y: number): boolean {
+    let offset = 0;
+
+    const matrix = this.#matrix;
+    const stateCount = [0, 0, 0, 0, 0];
+
+    // Start counting up, left from center finding black center mass
+    while (x >= offset && y >= offset && matrix.get(x - offset, y - offset)) {
+      offset++;
+      stateCount[2]++;
+    }
+
+    if (stateCount[2] === 0) {
+      return false;
+    }
+
+    // Continue up, left finding white space
+    while (x >= offset && y >= offset && !matrix.get(x - offset, y - offset)) {
+      offset++;
+      stateCount[1]++;
+    }
+
+    if (stateCount[1] === 0) {
+      return false;
+    }
+
+    // Continue up, left finding black border
+    while (x >= offset && y >= offset && matrix.get(x - offset, y - offset)) {
+      offset++;
+      stateCount[0]++;
+    }
+
+    if (stateCount[0] === 0) {
+      return false;
+    }
+
+    offset = 1;
+
+    const { width, height } = matrix;
+
+    while (x + offset < width && y + offset < height && matrix.get(x + offset, y + offset)) {
+      offset++;
+      stateCount[2]++;
+    }
+
+    while (x + offset < width && y + offset < height && !matrix.get(x + offset, y + offset)) {
+      offset++;
+      stateCount[3]++;
+    }
+
+    if (stateCount[3] === 0) {
+      return false;
+    }
+
+    while (x + offset < width && y + offset < height && matrix.get(x + offset, y + offset)) {
+      offset++;
+      stateCount[4]++;
+    }
+
+    if (stateCount[4] === 0) {
+      return false;
+    }
+
+    return isFoundPattern(stateCount);
+  }
+
   #addPattern(patterns: Pattern[], x: number, y: number, stateCount: number[]): void {
     let offsetX = centerFromEnd(stateCount, x);
 
@@ -237,7 +303,7 @@ export class FinderPatternFinder {
       // Re-cross check
       offsetX = this.#crossCheckHorizontal(toInt32(offsetX), toInt32(offsetY), stateCount[2], stateCountTotal);
 
-      if (!Number.isNaN(offsetX)) {
+      if (!Number.isNaN(offsetX) && this.#isFoundDiagonalPattern(toInt32(offsetX), toInt32(offsetY))) {
         let found = false;
 
         const { length } = patterns;

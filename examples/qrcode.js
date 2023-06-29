@@ -3607,13 +3607,6 @@
       Math.abs(stateCount[4] - moduleSize) < moduleSizeDiff
     );
   }
-  function pushStateCount(stateCount, count) {
-    stateCount[0] = stateCount[1];
-    stateCount[1] = stateCount[2];
-    stateCount[2] = stateCount[3];
-    stateCount[3] = stateCount[4];
-    stateCount[4] = count;
-  }
   function isEqualsEdge(edge1, edge2) {
     const edgeAvg = (edge1 + edge2) / 2;
     const ratio = Math.abs(edge1 - edge2) / edgeAvg;
@@ -3626,6 +3619,13 @@
   }
   function centerFromEnd$1(stateCount, end) {
     return end - stateCount[4] - stateCount[3] - stateCount[2] / 2;
+  }
+  function pushStateCount(stateCount, count) {
+    stateCount[0] = stateCount[1];
+    stateCount[1] = stateCount[2];
+    stateCount[2] = stateCount[3];
+    stateCount[3] = stateCount[4];
+    stateCount[4] = count;
   }
   function getStateCountTotal$1(stateCount) {
     return stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] + stateCount[4];
@@ -3748,6 +3748,56 @@
       }
       return isFoundPattern(stateCount) ? centerFromEnd$1(stateCount, offsetY) : NaN;
     }
+    #isFoundDiagonalPattern(x, y) {
+      let offset = 0;
+      const matrix = this.#matrix;
+      const stateCount = [0, 0, 0, 0, 0];
+      // Start counting up, left from center finding black center mass
+      while (x >= offset && y >= offset && matrix.get(x - offset, y - offset)) {
+        offset++;
+        stateCount[2]++;
+      }
+      if (stateCount[2] === 0) {
+        return false;
+      }
+      // Continue up, left finding white space
+      while (x >= offset && y >= offset && !matrix.get(x - offset, y - offset)) {
+        offset++;
+        stateCount[1]++;
+      }
+      if (stateCount[1] === 0) {
+        return false;
+      }
+      // Continue up, left finding black border
+      while (x >= offset && y >= offset && matrix.get(x - offset, y - offset)) {
+        offset++;
+        stateCount[0]++;
+      }
+      if (stateCount[0] === 0) {
+        return false;
+      }
+      offset = 1;
+      const { width, height } = matrix;
+      while (x + offset < width && y + offset < height && matrix.get(x + offset, y + offset)) {
+        offset++;
+        stateCount[2]++;
+      }
+      while (x + offset < width && y + offset < height && !matrix.get(x + offset, y + offset)) {
+        offset++;
+        stateCount[3]++;
+      }
+      if (stateCount[3] === 0) {
+        return false;
+      }
+      while (x + offset < width && y + offset < height && matrix.get(x + offset, y + offset)) {
+        offset++;
+        stateCount[4]++;
+      }
+      if (stateCount[4] === 0) {
+        return false;
+      }
+      return isFoundPattern(stateCount);
+    }
     #addPattern(patterns, x, y, stateCount) {
       let offsetX = centerFromEnd$1(stateCount, x);
       const stateCountTotal = getStateCountTotal$1(stateCount);
@@ -3755,7 +3805,7 @@
       if (!Number.isNaN(offsetY)) {
         // Re-cross check
         offsetX = this.#crossCheckHorizontal(toInt32(offsetX), toInt32(offsetY), stateCount[2], stateCountTotal);
-        if (!Number.isNaN(offsetX)) {
+        if (!Number.isNaN(offsetX) && this.#isFoundDiagonalPattern(toInt32(offsetX), toInt32(offsetY))) {
           let found = false;
           const { length } = patterns;
           const moduleSize = stateCountTotal / 7;
