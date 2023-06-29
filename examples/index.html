@@ -316,24 +316,22 @@
         const detector = new QRCode.Detector(matrix);
         const detected = detector.detect();
 
-        const x = QRCode.extract(matrix);
+        // const x = QRCode.extract(matrix);
 
-        console.dir(x);
+        // console.dir(x);
 
-        for (const { matrix: image } of x) {
-          try {
-            const decoded = decoder.decode(image);
+        // for (const { matrix: image } of x) {
+        //   try {
+        //     const decoded = decoder.decode(image);
 
-            console.dir(image);
-            console.dir(decoded.content);
-          } catch (error) {
-            // console.error(error);
-          }
-        }
+        //     console.dir(image);
+        //     console.dir(decoded.content);
+        //   } catch (error) {
+        //     // console.error(error);
+        //   }
+        // }
 
-        return;
-
-        console.log(detected);
+        console.dir(detected);
 
         if (detected.length > 0) {
           for (const { matrix, patterns } of detected) {
