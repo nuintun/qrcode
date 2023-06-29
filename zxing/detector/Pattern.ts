@@ -17,6 +17,14 @@ export class Pattern extends Point {
     return this.#moduleSize;
   }
 
+  public combine(x: number, y: number, moduleSize: number): Pattern {
+    const combinedX = (this.x + x) / 2;
+    const combinedY = (this.y + y) / 2;
+    const combinedModuleSize = (this.#moduleSize + moduleSize) / 2;
+
+    return new Pattern(combinedX, combinedY, combinedModuleSize);
+  }
+
   public equals(x: number, y: number, moduleSize: number): boolean {
     if (Math.abs(x - this.x) <= moduleSize && Math.abs(y - this.y) <= moduleSize) {
       const currentModuleSize = this.#moduleSize;

@@ -2,9 +2,9 @@
  * @module AlignmentPatternFinder
  */
 
+import { Pattern } from './Pattern';
 import { toInt32 } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
-import { AlignmentPattern } from './AlignmentPattern';
 
 function getStateCountTotal(stateCount: number[]): number {
   return stateCount[0] + stateCount[1] + stateCount[2];
@@ -31,7 +31,7 @@ export class AlignmentPatternFinder {
     this.#moduleSize = moduleSize;
   }
 
-  #foundPatternCross(stateCount: number[]): boolean {
+  #isFoundPattern(stateCount: number[]): boolean {
     const moduleSize = this.#moduleSize;
     const maxVariance = moduleSize / 2;
 
@@ -97,13 +97,13 @@ export class AlignmentPatternFinder {
       return NaN;
     }
 
-    return this.#foundPatternCross(stateCount) ? centerFromEnd(stateCount, offsetY) : NaN;
+    return this.#isFoundPattern(stateCount) ? centerFromEnd(stateCount, offsetY) : NaN;
   }
 
-  #handlePossiblePattern(patterns: AlignmentPattern[], x: number, y: number, stateCount: number[]): AlignmentPattern | void {
+  #addPattern(patterns: Pattern[], x: number, y: number, stateCount: number[]): Pattern | void {
     const offsetX = centerFromEnd(stateCount, x);
     const stateCountTotal = getStateCountTotal(stateCount);
-    const offsetY = this.#crossCheckVertical(offsetX, y, 2 * stateCount[1], stateCountTotal);
+    const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, 2 * stateCount[1], stateCountTotal);
 
     if (!Number.isNaN(offsetY)) {
       const moduleSize = stateCountTotal / 3;
@@ -116,18 +116,18 @@ export class AlignmentPatternFinder {
       }
 
       // Hadn't found this before; save it
-      patterns.push(new AlignmentPattern(offsetX, offsetY, moduleSize));
+      patterns.push(new Pattern(offsetX, offsetY, moduleSize));
     }
   }
 
-  public find(): AlignmentPattern | undefined {
+  public find(): Pattern | undefined {
     const startX = this.#x;
     const width = this.#width;
     const height = this.#height;
     const matrix = this.#matrix;
     const maxX = startX + width;
+    const patterns: Pattern[] = [];
     const middleY = this.#y + height / 2;
-    const patterns: AlignmentPattern[] = [];
 
     // We are looking for black/white/black modules in 1:1:1 ratio;
     // this tracks the number of black/white/black modules seen so far
@@ -157,9 +157,9 @@ export class AlignmentPatternFinder {
             // Counting white pixels
             if (currentState === 2) {
               // A winner?
-              if (this.#foundPatternCross(stateCount)) {
+              if (this.#isFoundPattern(stateCount)) {
                 // Yes
-                const confirmed = this.#handlePossiblePattern(patterns, offsetX, offsetY, stateCount);
+                const confirmed = this.#addPattern(patterns, offsetX, offsetY, stateCount);
 
                 if (confirmed != null) {
                   return confirmed;
@@ -187,8 +187,8 @@ export class AlignmentPatternFinder {
         offsetX++;
       }
 
-      if (this.#foundPatternCross(stateCount)) {
-        const confirmed = this.#handlePossiblePattern(patterns, maxX, offsetY, stateCount);
+      if (this.#isFoundPattern(stateCount)) {
+        const confirmed = this.#addPattern(patterns, maxX, offsetY, stateCount);
 
         if (confirmed != null) {
           return confirmed;

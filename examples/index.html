@@ -307,6 +307,7 @@
           return decodeResult.html(`<span class="error">请选择二维码图片</span>`);
         }
 
+        const errors = [];
         const success = [];
         const imageData = getImageData();
         const { width, height } = imageData;
@@ -332,8 +333,15 @@
               console.dir(content);
             } catch {
               // 解码失败，跳过
+              errors.push(patterns);
             }
           }
+        }
+
+        for (const { topLeft, topRight, bottomLeft } of errors) {
+          markFinderPattern(topLeft, '#ff0000');
+          markFinderPattern(topRight, '#ff0000');
+          markFinderPattern(bottomLeft, '#ff0000');
         }
 
         if (success.length > 0) {

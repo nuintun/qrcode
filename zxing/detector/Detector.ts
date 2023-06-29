@@ -2,12 +2,11 @@
  * @module Detector
  */
 
+import { Pattern } from './Pattern';
 import { BitMatrix } from '/common/BitMatrix';
 import { round, toInt32 } from '/common/utils';
-import { FinderPattern } from './FinderPattern';
 import { distance, Point } from '/common/Point';
 import { GridSampler } from '/common/GridSampler';
-import { AlignmentPattern } from './AlignmentPattern';
 import { FinderPatternGroup } from './FinderPatternGroup';
 import { FinderPatternFinder } from './FinderPatternFinder';
 import { AlignmentPatternFinder } from './AlignmentPatternFinder';
@@ -19,35 +18,12 @@ export interface DetectResult {
   readonly patterns: FinderPatternGroup;
 }
 
-function computeSymbolSize(
-  moduleSize: number,
-  topLeft: FinderPattern,
-  topRight: FinderPattern,
-  bottomLeft: FinderPattern
-): number {
-  const width = round(distance(topLeft, topRight) / moduleSize);
-  const height = round(distance(topLeft, bottomLeft) / moduleSize);
-  const size = toInt32((width + height) / 2) + 7;
-
-  // mod 4
-  switch (size & 0x03) {
-    case 0:
-      return size + 1;
-    case 2:
-      return size - 1;
-    case 3:
-      return 0;
-  }
-
-  return size;
-}
-
 function createTransform(
   size: number,
-  topLeft: FinderPattern,
-  topRight: FinderPattern,
-  bottomLeft: FinderPattern,
-  alignmentPattern?: AlignmentPattern
+  topLeft: Pattern,
+  topRight: Pattern,
+  bottomLeft: Pattern,
+  alignmentPattern?: Pattern
 ): PerspectiveTransform {
   let bottomRightX;
   let bottomRightY;
@@ -87,6 +63,24 @@ function createTransform(
     bottomLeft.x,
     bottomLeft.y
   );
+}
+
+function computeSymbolSize(topLeft: Pattern, topRight: Pattern, bottomLeft: Pattern, moduleSize: number): number {
+  const width = round(distance(topLeft, topRight) / moduleSize);
+  const height = round(distance(topLeft, bottomLeft) / moduleSize);
+  const size = toInt32((width + height) / 2) + 7;
+
+  // mod 4
+  switch (size & 0x03) {
+    case 0:
+      return size + 1;
+    case 2:
+      return size - 1;
+    case 3:
+      return 0;
+  }
+
+  return size;
 }
 
 export class Detector {
@@ -190,7 +184,7 @@ export class Detector {
     return size - 1;
   }
 
-  #calculateModuleSizeOneWay(pattern1: FinderPattern, pattern2: FinderPattern): number {
+  #calculateModuleSizeOneWay(pattern1: Pattern, pattern2: Pattern): number {
     const moduleSizeEst1 = this.#sizeOfBlackWhiteBlackRunBothWays(
       toInt32(pattern1.x),
       toInt32(pattern1.y),
@@ -217,12 +211,12 @@ export class Detector {
     return (moduleSizeEst1 + moduleSizeEst2) / 14;
   }
 
-  #calculateModuleSize(topLeft: FinderPattern, topRight: FinderPattern, bottomLeft: FinderPattern): number {
+  #calculateModuleSize(topLeft: Pattern, topRight: Pattern, bottomLeft: Pattern): number {
     // Take the average
     return (this.#calculateModuleSizeOneWay(topLeft, topRight) + this.#calculateModuleSizeOneWay(topLeft, bottomLeft)) / 2;
   }
 
-  #findAlignmentInRegion(x: number, y: number, moduleSize: number, ratio: number): AlignmentPattern | undefined {
+  #findAlignmentInRegion(x: number, y: number, moduleSize: number, ratio: number): Pattern | undefined {
     // Look for an alignment pattern (3 modules in size) around where it should be
     const matrix = this.#matrix;
     const minAlignmentAreaSize = moduleSize * 3;
@@ -252,12 +246,12 @@ export class Detector {
     const moduleSize = this.#calculateModuleSize(topLeft, topRight, bottomLeft);
 
     if (moduleSize >= 1) {
-      const size = computeSymbolSize(moduleSize, topLeft, topRight, bottomLeft);
+      const size = computeSymbolSize(topLeft, topRight, bottomLeft, moduleSize);
 
       if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
         const version = fromVersionSize(size);
 
-        let alignmentPattern: AlignmentPattern | undefined;
+        let alignmentPattern: Pattern | undefined;
 
         if (version.alignmentPatterns.length > 0) {
           const modulesBetweenFPCenters = version.size - 7;
