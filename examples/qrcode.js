@@ -3874,23 +3874,23 @@
         let count = 0;
         let lastBit = matrix.get(0, y);
         const stateCount = [0, 0, 0, 0, 0];
+        const checkAndAdd = (x, y) => {
+          pushStateCount(stateCount, count);
+          if (isFoundPattern(stateCount)) {
+            this.#add(patterns, x, y, stateCount);
+          }
+        };
         for (let x = 0; x < width; x++) {
           const bit = matrix.get(x, y);
           if (bit === lastBit) {
             count++;
           } else {
-            pushStateCount(stateCount, count);
-            if (isFoundPattern(stateCount)) {
-              this.#add(patterns, x, y, stateCount);
-            }
+            checkAndAdd(x, y);
             count = 1;
             lastBit = bit;
           }
         }
-        pushStateCount(stateCount, count);
-        if (isFoundPattern(stateCount)) {
-          this.#add(patterns, width - 1, y, stateCount);
-        }
+        checkAndAdd(width - 1, y);
       }
       return this.#selectBestPatterns(patterns);
     }
