@@ -100,7 +100,7 @@ export class AlignmentPatternFinder {
     return this.#isFoundPattern(stateCount) ? centerFromEnd(stateCount, offsetY) : NaN;
   }
 
-  #add(patterns: Pattern[], x: number, y: number, stateCount: number[]): Pattern | void {
+  #add(patterns: Pattern[], x: number, y: number, stateCount: number[]): Pattern | undefined {
     const offsetX = centerFromEnd(stateCount, x);
     const stateCountTotal = getStateCountTotal(stateCount);
     const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, 2 * stateCount[1], stateCountTotal);

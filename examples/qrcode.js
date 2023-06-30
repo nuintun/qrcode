@@ -3597,115 +3597,74 @@
     constructor(matrix) {
       this.#matrix = matrix;
     }
-    #crossCheckHorizontal(x, y, maxCount) {
-      let offsetX = x;
+    #crossCheck(x, y, maxCount, isHorizontal) {
       const matrix = this.#matrix;
       const stateCount = [0, 0, 0, 0, 0];
-      while (offsetX >= 0 && matrix.get(offsetX, y)) {
-        offsetX--;
+      const getBit = offset => {
+        return isHorizontal ? matrix.get(offset, y) : matrix.get(x, offset);
+      };
+      let offset = isHorizontal ? x : y;
+      while (offset >= 0 && getBit(offset)) {
+        offset--;
         stateCount[2]++;
       }
-      if (offsetX < 0) {
+      if (offset < 0) {
         return NaN;
       }
-      while (offsetX >= 0 && !matrix.get(offsetX, y) && stateCount[1] <= maxCount) {
-        offsetX--;
+      while (offset >= 0 && !getBit(offset) && stateCount[1] <= maxCount) {
+        offset--;
         stateCount[1]++;
       }
-      if (offsetX < 0 || stateCount[1] > maxCount) {
+      if (offset < 0 || stateCount[1] > maxCount) {
         return NaN;
       }
-      while (offsetX >= 0 && matrix.get(offsetX, y) && stateCount[0] <= maxCount) {
-        offsetX--;
+      while (offset >= 0 && getBit(offset) && stateCount[0] <= maxCount) {
+        offset--;
         stateCount[0]++;
       }
       if (stateCount[0] > maxCount) {
         return NaN;
       }
-      offsetX = x + 1;
-      const { width } = matrix;
-      while (offsetX < width && matrix.get(offsetX, y)) {
-        offsetX++;
+      offset = (isHorizontal ? x : y) + 1;
+      const size = isHorizontal ? matrix.width : matrix.height;
+      while (offset < size && getBit(offset)) {
+        offset++;
         stateCount[2]++;
       }
-      if (offsetX >= width) {
+      if (offset >= size) {
         return NaN;
       }
-      while (offsetX < width && !matrix.get(offsetX, y) && stateCount[3] < maxCount) {
-        offsetX++;
+      while (offset < size && !getBit(offset) && stateCount[3] < maxCount) {
+        offset++;
         stateCount[3]++;
       }
-      if (offsetX >= width || stateCount[3] >= maxCount) {
+      if (offset >= size || stateCount[3] >= maxCount) {
         return NaN;
       }
-      while (offsetX < width && matrix.get(offsetX, y) && stateCount[4] < maxCount) {
-        offsetX++;
+      while (offset < size && getBit(offset) && stateCount[4] < maxCount) {
+        offset++;
         stateCount[4]++;
       }
       if (stateCount[4] >= maxCount) {
         return NaN;
       }
-      return isFoundPattern(stateCount) ? centerFromEnd$1(stateCount, offsetX) : NaN;
+      return isFoundPattern(stateCount) ? centerFromEnd$1(stateCount, offset) : NaN;
+    }
+    #crossCheckHorizontal(x, y, maxCount) {
+      return this.#crossCheck(x, y, maxCount, true);
     }
     #crossCheckVertical(x, y, maxCount) {
-      let offsetY = y;
-      const matrix = this.#matrix;
-      const stateCount = [0, 0, 0, 0, 0];
-      // Start counting up from center
-      while (offsetY >= 0 && matrix.get(x, offsetY)) {
-        offsetY--;
-        stateCount[2]++;
-      }
-      if (offsetY < 0) {
-        return NaN;
-      }
-      while (offsetY >= 0 && !matrix.get(x, offsetY) && stateCount[1] <= maxCount) {
-        offsetY--;
-        stateCount[1]++;
-      }
-      // If already too many modules in this state or ran off the edge:
-      if (offsetY < 0 || stateCount[1] > maxCount) {
-        return NaN;
-      }
-      while (offsetY >= 0 && matrix.get(x, offsetY) && stateCount[0] <= maxCount) {
-        offsetY--;
-        stateCount[0]++;
-      }
-      if (stateCount[0] > maxCount) {
-        return NaN;
-      }
-      // Now also count down from center
-      offsetY = y + 1;
-      const { height } = matrix;
-      while (offsetY < height && matrix.get(x, offsetY)) {
-        offsetY++;
-        stateCount[2]++;
-      }
-      if (offsetY >= height) {
-        return NaN;
-      }
-      while (offsetY < height && !matrix.get(x, offsetY) && stateCount[3] < maxCount) {
-        offsetY++;
-        stateCount[3]++;
-      }
-      if (offsetY >= height || stateCount[3] >= maxCount) {
-        return NaN;
-      }
-      while (offsetY < height && matrix.get(x, offsetY) && stateCount[4] < maxCount) {
-        offsetY++;
-        stateCount[4]++;
-      }
-      if (stateCount[4] >= maxCount) {
-        return NaN;
-      }
-      return isFoundPattern(stateCount) ? centerFromEnd$1(stateCount, offsetY) : NaN;
+      return this.#crossCheck(x, y, maxCount, false);
     }
     #isFoundDiagonalPattern(x, y) {
       let offset = 0;
       const matrix = this.#matrix;
       const stateCount = [0, 0, 0, 0, 0];
+      const getBit = (offset, isUpward) => {
+        return isUpward ? matrix.get(x - offset, y - offset) : matrix.get(x + offset, y + offset);
+      };
       // Start counting up, left from center finding black center mass
-      while (x >= offset && y >= offset && matrix.get(x - offset, y - offset)) {
+      while (x >= offset && y >= offset && getBit(offset, true)) {
         offset++;
         stateCount[2]++;
       }
@@ -3713,7 +3672,7 @@
         return false;
       }
       // Continue up, left finding white space
-      while (x >= offset && y >= offset && !matrix.get(x - offset, y - offset)) {
+      while (x >= offset && y >= offset && !getBit(offset, true)) {
         offset++;
         stateCount[1]++;
       }
@@ -3721,7 +3680,7 @@
         return false;
       }
       // Continue up, left finding black border
-      while (x >= offset && y >= offset && matrix.get(x - offset, y - offset)) {
+      while (x >= offset && y >= offset && getBit(offset, true)) {
         offset++;
         stateCount[0]++;
       }
@@ -3730,18 +3689,18 @@
       }
       offset = 1;
       const { width, height } = matrix;
-      while (x + offset < width && y + offset < height && matrix.get(x + offset, y + offset)) {
+      while (x + offset < width && y + offset < height && getBit(offset, false)) {
         offset++;
         stateCount[2]++;
       }
-      while (x + offset < width && y + offset < height && !matrix.get(x + offset, y + offset)) {
+      while (x + offset < width && y + offset < height && !getBit(offset, false)) {
         offset++;
         stateCount[3]++;
       }
       if (stateCount[3] === 0) {
         return false;
       }
-      while (x + offset < width && y + offset < height && matrix.get(x + offset, y + offset)) {
+      while (x + offset < width && y + offset < height && getBit(offset, false)) {
         offset++;
         stateCount[4]++;
       }

@@ -85,32 +85,35 @@ export class FinderPatternFinder {
     this.#matrix = matrix;
   }
 
-  #crossCheckHorizontal(x: number, y: number, maxCount: number): number {
-    let offsetX = x;
-
+  #crossCheck(x: number, y: number, maxCount: number, isHorizontal: boolean): number {
     const matrix = this.#matrix;
     const stateCount = [0, 0, 0, 0, 0];
+    const getBit = (offset: number): number => {
+      return isHorizontal ? matrix.get(offset, y) : matrix.get(x, offset);
+    };
 
-    while (offsetX >= 0 && matrix.get(offsetX, y)) {
-      offsetX--;
+    let offset = isHorizontal ? x : y;
+
+    while (offset >= 0 && getBit(offset)) {
+      offset--;
       stateCount[2]++;
     }
 
-    if (offsetX < 0) {
+    if (offset < 0) {
       return NaN;
     }
 
-    while (offsetX >= 0 && !matrix.get(offsetX, y) && stateCount[1] <= maxCount) {
-      offsetX--;
+    while (offset >= 0 && !getBit(offset) && stateCount[1] <= maxCount) {
+      offset--;
       stateCount[1]++;
     }
 
-    if (offsetX < 0 || stateCount[1] > maxCount) {
+    if (offset < 0 || stateCount[1] > maxCount) {
       return NaN;
     }
 
-    while (offsetX >= 0 && matrix.get(offsetX, y) && stateCount[0] <= maxCount) {
-      offsetX--;
+    while (offset >= 0 && getBit(offset) && stateCount[0] <= maxCount) {
+      offset--;
       stateCount[0]++;
     }
 
@@ -118,30 +121,30 @@ export class FinderPatternFinder {
       return NaN;
     }
 
-    offsetX = x + 1;
+    offset = (isHorizontal ? x : y) + 1;
 
-    const { width } = matrix;
+    const size = isHorizontal ? matrix.width : matrix.height;
 
-    while (offsetX < width && matrix.get(offsetX, y)) {
-      offsetX++;
+    while (offset < size && getBit(offset)) {
+      offset++;
       stateCount[2]++;
     }
 
-    if (offsetX >= width) {
+    if (offset >= size) {
       return NaN;
     }
 
-    while (offsetX < width && !matrix.get(offsetX, y) && stateCount[3] < maxCount) {
-      offsetX++;
+    while (offset < size && !getBit(offset) && stateCount[3] < maxCount) {
+      offset++;
       stateCount[3]++;
     }
 
-    if (offsetX >= width || stateCount[3] >= maxCount) {
+    if (offset >= size || stateCount[3] >= maxCount) {
       return NaN;
     }
 
-    while (offsetX < width && matrix.get(offsetX, y) && stateCount[4] < maxCount) {
-      offsetX++;
+    while (offset < size && getBit(offset) && stateCount[4] < maxCount) {
+      offset++;
       stateCount[4]++;
     }
 
@@ -149,77 +152,15 @@ export class FinderPatternFinder {
       return NaN;
     }
 
-    return isFoundPattern(stateCount) ? centerFromEnd(stateCount, offsetX) : NaN;
+    return isFoundPattern(stateCount) ? centerFromEnd(stateCount, offset) : NaN;
+  }
+
+  #crossCheckHorizontal(x: number, y: number, maxCount: number): number {
+    return this.#crossCheck(x, y, maxCount, true);
   }
 
   #crossCheckVertical(x: number, y: number, maxCount: number): number {
-    let offsetY = y;
-
-    const matrix = this.#matrix;
-    const stateCount = [0, 0, 0, 0, 0];
-
-    // Start counting up from center
-    while (offsetY >= 0 && matrix.get(x, offsetY)) {
-      offsetY--;
-      stateCount[2]++;
-    }
-
-    if (offsetY < 0) {
-      return NaN;
-    }
-
-    while (offsetY >= 0 && !matrix.get(x, offsetY) && stateCount[1] <= maxCount) {
-      offsetY--;
-      stateCount[1]++;
-    }
-
-    // If already too many modules in this state or ran off the edge:
-    if (offsetY < 0 || stateCount[1] > maxCount) {
-      return NaN;
-    }
-
-    while (offsetY >= 0 && matrix.get(x, offsetY) && stateCount[0] <= maxCount) {
-      offsetY--;
-      stateCount[0]++;
-    }
-
-    if (stateCount[0] > maxCount) {
-      return NaN;
-    }
-
-    // Now also count down from center
-    offsetY = y + 1;
-
-    const { height } = matrix;
-
-    while (offsetY < height && matrix.get(x, offsetY)) {
-      offsetY++;
-      stateCount[2]++;
-    }
-
-    if (offsetY >= height) {
-      return NaN;
-    }
-
-    while (offsetY < height && !matrix.get(x, offsetY) && stateCount[3] < maxCount) {
-      offsetY++;
-      stateCount[3]++;
-    }
-
-    if (offsetY >= height || stateCount[3] >= maxCount) {
-      return NaN;
-    }
-
-    while (offsetY < height && matrix.get(x, offsetY) && stateCount[4] < maxCount) {
-      offsetY++;
-      stateCount[4]++;
-    }
-
-    if (stateCount[4] >= maxCount) {
-      return NaN;
-    }
-
-    return isFoundPattern(stateCount) ? centerFromEnd(stateCount, offsetY) : NaN;
+    return this.#crossCheck(x, y, maxCount, false);
   }
 
   #isFoundDiagonalPattern(x: number, y: number): boolean {
@@ -227,9 +168,12 @@ export class FinderPatternFinder {
 
     const matrix = this.#matrix;
     const stateCount = [0, 0, 0, 0, 0];
+    const getBit = (offset: number, isUpward: boolean): number => {
+      return isUpward ? matrix.get(x - offset, y - offset) : matrix.get(x + offset, y + offset);
+    };
 
     // Start counting up, left from center finding black center mass
-    while (x >= offset && y >= offset && matrix.get(x - offset, y - offset)) {
+    while (x >= offset && y >= offset && getBit(offset, true)) {
       offset++;
       stateCount[2]++;
     }
@@ -239,7 +183,7 @@ export class FinderPatternFinder {
     }
 
     // Continue up, left finding white space
-    while (x >= offset && y >= offset && !matrix.get(x - offset, y - offset)) {
+    while (x >= offset && y >= offset && !getBit(offset, true)) {
       offset++;
       stateCount[1]++;
     }
@@ -249,7 +193,7 @@ export class FinderPatternFinder {
     }
 
     // Continue up, left finding black border
-    while (x >= offset && y >= offset && matrix.get(x - offset, y - offset)) {
+    while (x >= offset && y >= offset && getBit(offset, true)) {
       offset++;
       stateCount[0]++;
     }
@@ -262,12 +206,12 @@ export class FinderPatternFinder {
 
     const { width, height } = matrix;
 
-    while (x + offset < width && y + offset < height && matrix.get(x + offset, y + offset)) {
+    while (x + offset < width && y + offset < height && getBit(offset, false)) {
       offset++;
       stateCount[2]++;
     }
 
-    while (x + offset < width && y + offset < height && !matrix.get(x + offset, y + offset)) {
+    while (x + offset < width && y + offset < height && !getBit(offset, false)) {
       offset++;
       stateCount[3]++;
     }
@@ -276,7 +220,7 @@ export class FinderPatternFinder {
       return false;
     }
 
-    while (x + offset < width && y + offset < height && matrix.get(x + offset, y + offset)) {
+    while (x + offset < width && y + offset < height && getBit(offset, false)) {
       offset++;
       stateCount[4]++;
     }
