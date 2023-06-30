@@ -33,10 +33,10 @@ export class AlignmentPatternFinder {
 
   #isFoundPattern(stateCount: number[]): boolean {
     const moduleSize = this.#moduleSize;
-    const maxVariance = moduleSize / 2;
+    const moduleSizeDiff = moduleSize * 0.5;
 
     for (let i = 0; i < 3; i++) {
-      if (Math.abs(moduleSize - stateCount[i]) >= maxVariance) {
+      if (Math.abs(moduleSize - stateCount[i]) >= moduleSizeDiff) {
         return false;
       }
     }
@@ -44,25 +44,28 @@ export class AlignmentPatternFinder {
     return true;
   }
 
-  #crossCheckVertical(x: number, y: number, maxCount: number, stateCountTotal: number): number {
-    let offsetY = y;
-
+  #crossCheck(x: number, y: number, maxCount: number, isHorizontal: boolean): number {
     const matrix = this.#matrix;
     const stateCount = [0, 0, 0];
+    const getBit = (offset: number): number => {
+      return isHorizontal ? matrix.get(offset, y) : matrix.get(x, offset);
+    };
+
+    let offset = isHorizontal ? x : y;
 
     // Start counting up from center
-    while (offsetY >= 0 && matrix.get(x, offsetY) && stateCount[1] <= maxCount) {
-      offsetY--;
+    while (offset >= 0 && getBit(offset) && stateCount[1] <= maxCount) {
+      offset--;
       stateCount[1]++;
     }
 
     // If already too many modules in this state or ran off the edge
-    if (offsetY < 0 || stateCount[1] > maxCount) {
+    if (offset < 0 || stateCount[1] > maxCount) {
       return NaN;
     }
 
-    while (offsetY >= 0 && !matrix.get(x, offsetY) && stateCount[0] <= maxCount) {
-      offsetY--;
+    while (offset >= 0 && !getBit(offset) && stateCount[0] <= maxCount) {
+      offset--;
       stateCount[0]++;
     }
 
@@ -71,21 +74,21 @@ export class AlignmentPatternFinder {
     }
 
     // Now also count down from center
-    offsetY = y + 1;
+    offset = (isHorizontal ? x : y) + 1;
 
-    const { height } = matrix;
+    const size = isHorizontal ? this.#x + this.#width : this.#y + this.#height;
 
-    while (offsetY < height && matrix.get(x, offsetY) && stateCount[1] <= maxCount) {
-      offsetY++;
+    while (offset < size && getBit(offset) && stateCount[1] <= maxCount) {
+      offset++;
       stateCount[1]++;
     }
 
-    if (offsetY === height || stateCount[1] > maxCount) {
+    if (offset === size || stateCount[1] > maxCount) {
       return NaN;
     }
 
-    while (offsetY < height && !matrix.get(x, offsetY) && stateCount[2] <= maxCount) {
-      offsetY++;
+    while (offset < size && !getBit(offset) && stateCount[2] <= maxCount) {
+      offset++;
       stateCount[2]++;
     }
 
@@ -93,30 +96,39 @@ export class AlignmentPatternFinder {
       return NaN;
     }
 
-    if (5 * Math.abs(getStateCountTotal(stateCount) - stateCountTotal) >= 2 * stateCountTotal) {
-      return NaN;
-    }
-
-    return this.#isFoundPattern(stateCount) ? centerFromEnd(stateCount, offsetY) : NaN;
+    return this.#isFoundPattern(stateCount) ? centerFromEnd(stateCount, offset) : NaN;
   }
 
-  #add(patterns: Pattern[], x: number, y: number, stateCount: number[]): Pattern | undefined {
-    const offsetX = centerFromEnd(stateCount, x);
-    const stateCountTotal = getStateCountTotal(stateCount);
-    const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, 2 * stateCount[1], stateCountTotal);
+  #crossCheckHorizontal(x: number, y: number, maxCount: number): number {
+    return this.#crossCheck(x, y, maxCount, true);
+  }
+
+  #crossCheckVertical(x: number, y: number, maxCount: number): number {
+    return this.#crossCheck(x, y, maxCount, false);
+  }
+
+  #process(patterns: Pattern[], x: number, y: number, stateCount: number[]): Pattern | undefined {
+    let offsetX = centerFromEnd(stateCount, x);
+
+    const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, stateCount[1] * 2);
 
     if (!Number.isNaN(offsetY)) {
-      const moduleSize = stateCountTotal / 3;
+      // Re-cross check
+      offsetX = this.#crossCheckHorizontal(toInt32(offsetX), toInt32(offsetY), stateCount[1] * 2);
 
-      for (const pattern of patterns) {
-        // Look for about the same center and module size:
-        if (pattern.equals(offsetX, offsetY, moduleSize)) {
-          return pattern.combine(offsetX, offsetY, moduleSize);
+      if (!Number.isNaN(offsetX)) {
+        const moduleSize = getStateCountTotal(stateCount) / 3;
+
+        for (const pattern of patterns) {
+          // Look for about the same center and module size:
+          if (pattern.equals(offsetX, offsetY, moduleSize)) {
+            return pattern.combine(offsetX, offsetY, moduleSize);
+          }
         }
-      }
 
-      // Hadn't found this before; save it
-      patterns.push(new Pattern(offsetX, offsetY, moduleSize));
+        // Hadn't found this before; save it
+        patterns.push(new Pattern(offsetX, offsetY, moduleSize));
+      }
     }
   }
 
@@ -159,7 +171,7 @@ export class AlignmentPatternFinder {
               // A winner?
               if (this.#isFoundPattern(stateCount)) {
                 // Yes
-                const confirmed = this.#add(patterns, offsetX, offsetY, stateCount);
+                const confirmed = this.#process(patterns, offsetX, offsetY, stateCount);
 
                 if (confirmed != null) {
                   return confirmed;
@@ -188,7 +200,7 @@ export class AlignmentPatternFinder {
       }
 
       if (this.#isFoundPattern(stateCount)) {
-        const confirmed = this.#add(patterns, maxX, offsetY, stateCount);
+        const confirmed = this.#process(patterns, maxX, offsetY, stateCount);
 
         if (confirmed != null) {
           return confirmed;

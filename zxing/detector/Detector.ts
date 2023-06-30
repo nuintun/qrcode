@@ -186,30 +186,30 @@ export class Detector {
   }
 
   #calculateModuleSizeOneWay(pattern1: Pattern, pattern2: Pattern): number {
-    const moduleSizeEst1 = this.#sizeOfBlackWhiteBlackRunBothWays(
+    const expectModuleSize1 = this.#sizeOfBlackWhiteBlackRunBothWays(
       toInt32(pattern1.x),
       toInt32(pattern1.y),
       toInt32(pattern2.x),
       toInt32(pattern2.y)
     );
-    const moduleSizeEst2 = this.#sizeOfBlackWhiteBlackRunBothWays(
+    const expectModuleSize2 = this.#sizeOfBlackWhiteBlackRunBothWays(
       toInt32(pattern2.x),
       toInt32(pattern2.y),
       toInt32(pattern1.x),
       toInt32(pattern1.y)
     );
 
-    if (Number.isNaN(moduleSizeEst1)) {
-      return moduleSizeEst2 / 7;
+    if (Number.isNaN(expectModuleSize1)) {
+      return expectModuleSize2 / 7;
     }
 
-    if (Number.isNaN(moduleSizeEst2)) {
-      return moduleSizeEst1 / 7;
+    if (Number.isNaN(expectModuleSize2)) {
+      return expectModuleSize1 / 7;
     }
 
     // Average them, and divide by 7 since we've counted the width of 3 black modules,
     // and 1 white and 1 black module on either side. Ergo, divide sum by 14.
-    return (moduleSizeEst1 + moduleSizeEst2) / 14;
+    return (expectModuleSize1 + expectModuleSize2) / 14;
   }
 
   #calculateModuleSize(topLeft: Pattern, topRight: Pattern, bottomLeft: Pattern): number {
@@ -243,11 +243,7 @@ export class Detector {
     }
   }
 
-  #processFinderPatternInfo({
-    topLeft,
-    topRight,
-    bottomLeft
-  }: FinderPatternGroup): [matrix?: BitMatrix, alignmentPattern?: Pattern] {
+  #process({ topLeft, topRight, bottomLeft }: FinderPatternGroup): [matrix?: BitMatrix, alignmentPattern?: Pattern] {
     const moduleSize = this.#calculateModuleSize(topLeft, topRight, bottomLeft);
 
     if (moduleSize >= 1) {
@@ -259,20 +255,20 @@ export class Detector {
         let alignmentPattern: Pattern | undefined;
 
         if (version.alignmentPatterns.length > 0) {
-          const modulesBetweenFPCenters = version.size - 7;
+          const modulesBetweenFinderPatterns = version.size - 7;
           // Guess where a "bottom right" finder pattern would have been
           const bottomRightX = topRight.x - topLeft.x + bottomLeft.x;
           const bottomRightY = topRight.y - topLeft.y + bottomLeft.y;
           // Estimate that alignment pattern is closer by 3 modules
           // from "bottom right" to known top left location
-          const correctionToTopLeft = 1 - 3 / modulesBetweenFPCenters;
-          const estAlignmentX = toInt32(topLeft.x + correctionToTopLeft * (bottomRightX - topLeft.x));
-          const estAlignmentY = toInt32(topLeft.y + correctionToTopLeft * (bottomRightY - topLeft.y));
+          const correctionToTopLeft = 1 - 3 / modulesBetweenFinderPatterns;
+          const expectAlignmentX = toInt32(topLeft.x + correctionToTopLeft * (bottomRightX - topLeft.x));
+          const expectAlignmentY = toInt32(topLeft.y + correctionToTopLeft * (bottomRightY - topLeft.y));
 
           // Kind of arbitrary -- expand search radius before giving up
           // If we didn't find alignment pattern... well try anyway without it
           for (let ratio = 4; ratio <= 16; ratio <<= 1) {
-            alignmentPattern = this.#findAlignmentInRegion(estAlignmentX, estAlignmentY, moduleSize, ratio);
+            alignmentPattern = this.#findAlignmentInRegion(expectAlignmentX, expectAlignmentY, moduleSize, ratio);
 
             if (alignmentPattern != null) {
               break;
@@ -297,7 +293,7 @@ export class Detector {
     const finderPatternGroups = finder.find();
 
     for (const patterns of finderPatternGroups) {
-      const [matrix, alignmentPattern] = this.#processFinderPatternInfo(patterns);
+      const [matrix, alignmentPattern] = this.#process(patterns);
 
       if (matrix != null) {
         result.push({ matrix, patterns, alignment: alignmentPattern });

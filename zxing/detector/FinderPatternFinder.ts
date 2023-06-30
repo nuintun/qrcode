@@ -232,7 +232,7 @@ export class FinderPatternFinder {
     return isFoundPattern(stateCount);
   }
 
-  #add(patterns: Pattern[], x: number, y: number, stateCount: number[]): void {
+  #process(patterns: Pattern[], x: number, y: number, stateCount: number[]): void {
     let offsetX = centerFromEnd(stateCount, x);
 
     const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, stateCount[2]);
@@ -349,11 +349,11 @@ export class FinderPatternFinder {
 
       const stateCount = [0, 0, 0, 0, 0];
 
-      const checkAndAdd = (x: number, y: number) => {
+      const process = (x: number, y: number) => {
         pushStateCount(stateCount, count);
 
         if (isFoundPattern(stateCount)) {
-          this.#add(patterns, x, y, stateCount);
+          this.#process(patterns, x, y, stateCount);
         }
       };
 
@@ -363,14 +363,14 @@ export class FinderPatternFinder {
         if (bit === lastBit) {
           count++;
         } else {
-          checkAndAdd(x, y);
+          process(x, y);
 
           count = 1;
           lastBit = bit;
         }
       }
 
-      checkAndAdd(width - 1, y);
+      process(width - 1, y);
     }
 
     return this.#selectBestPatterns(patterns);
