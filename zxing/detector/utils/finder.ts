@@ -38,7 +38,7 @@ export function getStateCountTotal(stateCount: number[], checkZero?: boolean): n
 export function isFoundFinderPattern(stateCount: number[]): boolean {
   const stateCountTotal = getStateCountTotal(stateCount, true);
 
-  if (Number.isNaN(stateCountTotal) || stateCountTotal < 7) {
+  if (Number.isNaN(stateCountTotal)) {
     return false;
   }
 
@@ -58,7 +58,7 @@ export function isFoundFinderPattern(stateCount: number[]): boolean {
 export function isFoundAlignmentPattern(stateCount: number[]): boolean {
   const stateCountTotal = getStateCountTotal(stateCount, true);
 
-  if (Number.isNaN(stateCountTotal) || stateCountTotal < 5) {
+  if (Number.isNaN(stateCountTotal)) {
     return false;
   }
 
@@ -84,7 +84,7 @@ export function isEqualsEdge(edge1: number, edge2: number): boolean {
 
 export function isEqualsModuleSize(moduleSize1: number, moduleSize2: number): boolean {
   const modeSizeAvg = (moduleSize1 + moduleSize2) / 2;
-  const ratio = (moduleSize1 - moduleSize2) / modeSizeAvg;
+  const ratio = Math.abs(moduleSize1 - moduleSize2) / modeSizeAvg;
 
   return ratio <= DIFF_MODULE_SIZE_RATIO;
 }
@@ -96,7 +96,7 @@ export function isValidModuleCount(edge: number, moduleSize: number): boolean {
   return moduleCount >= MIN_MODULE_COUNT_PER_EDGE && moduleCount <= MAX_MODULE_COUNT_PER_EDGE;
 }
 
-export function crossPatternCheck(
+export function alignCrossPattern(
   matrix: BitMatrix,
   x: number,
   y: number,
@@ -111,12 +111,14 @@ export function crossPatternCheck(
 
   let offset = isHorizontal ? x : y;
 
+  maxCount += maxCount * DIFF_MODULE_SIZE_RATIO;
+
   while (offset >= 0 && getBit(offset)) {
     offset--;
     stateCount[2]++;
   }
 
-  if (offset < 0 || stateCount[2] > maxCount) {
+  if (stateCount[2] > maxCount) {
     return NaN;
   }
 
@@ -125,7 +127,7 @@ export function crossPatternCheck(
     stateCount[1]++;
   }
 
-  if (offset < 0 || stateCount[1] > maxCount) {
+  if (stateCount[1] > maxCount) {
     return NaN;
   }
 
@@ -134,7 +136,7 @@ export function crossPatternCheck(
     stateCount[0]++;
   }
 
-  if (offset < 0 || stateCount[0] > maxCount) {
+  if (stateCount[0] > maxCount) {
     return NaN;
   }
 
@@ -147,7 +149,7 @@ export function crossPatternCheck(
     stateCount[2]++;
   }
 
-  if (offset >= size || stateCount[2] > maxCount) {
+  if (stateCount[2] > maxCount) {
     return NaN;
   }
 
@@ -156,7 +158,7 @@ export function crossPatternCheck(
     stateCount[3]++;
   }
 
-  if (offset >= size || stateCount[3] >= maxCount) {
+  if (stateCount[3] >= maxCount) {
     return NaN;
   }
 
@@ -165,9 +167,89 @@ export function crossPatternCheck(
     stateCount[4]++;
   }
 
-  if (offset >= size || stateCount[4] >= maxCount) {
+  if (stateCount[4] >= maxCount) {
     return NaN;
   }
 
-  return checker(stateCount) ? centerFromEnd(stateCount, offset) : NaN;
+  return checker(stateCount) ? centerFromEnd(stateCount, Math.max(0, Math.min(offset, size - 1))) : NaN;
+}
+
+export function checkDiagonalPattern(
+  matrix: BitMatrix,
+  x: number,
+  y: number,
+  maxCount: number,
+  checker: (stateCount: number[]) => boolean
+): boolean {
+  const stateCount = [0, 0, 0, 0, 0];
+  const getBit = (offset: number, isUpward: boolean): number => {
+    return isUpward ? matrix.get(x - offset, y - offset) : matrix.get(x + offset, y + offset);
+  };
+
+  let offset = 0;
+
+  maxCount += maxCount * DIFF_MODULE_SIZE_RATIO;
+
+  // Start counting up, left from center finding black center mass
+  while (x >= offset && y >= offset && getBit(offset, true)) {
+    offset++;
+    stateCount[2]++;
+  }
+
+  if (stateCount[2] > maxCount) {
+    return false;
+  }
+
+  // Continue up, left finding white space
+  while (x >= offset && y >= offset && !getBit(offset, true)) {
+    offset++;
+    stateCount[1]++;
+  }
+
+  if (stateCount[1] > maxCount) {
+    return false;
+  }
+
+  // Continue up, left finding black border
+  while (x >= offset && y >= offset && getBit(offset, true)) {
+    offset++;
+    stateCount[0]++;
+  }
+
+  if (stateCount[0] > maxCount) {
+    return false;
+  }
+
+  offset = 1;
+
+  const { width, height } = matrix;
+
+  while (x + offset < width && y + offset < height && getBit(offset, false)) {
+    offset++;
+    stateCount[2]++;
+  }
+
+  if (stateCount[2] > maxCount) {
+    return false;
+  }
+
+  while (x + offset < width && y + offset < height && !getBit(offset, false)) {
+    offset++;
+    stateCount[3]++;
+  }
+
+  if (stateCount[3] > maxCount) {
+    return false;
+  }
+
+  while (x + offset < width && y + offset < height && getBit(offset, false)) {
+    offset++;
+    stateCount[4]++;
+  }
+
+  if (stateCount[4] > maxCount) {
+    return false;
+  }
+
+  return checker(stateCount);
 }

@@ -3,8 +3,9 @@
  */
 
 import {
+  alignCrossPattern,
   centerFromEnd,
-  crossPatternCheck,
+  checkDiagonalPattern,
   getStateCountTotal,
   isEqualsModuleSize,
   isFoundAlignmentPattern,
@@ -21,6 +22,7 @@ export class AlignmentPatternFinder {
   #height: number;
   #matrix: BitMatrix;
   #moduleSize: number;
+  #isFoundPatternBound = this.#isFoundPattern.bind(this);
 
   constructor(matrix: BitMatrix, x: number, y: number, width: number, height: number, moduleSize: number) {
     this.#x = x;
@@ -32,39 +34,34 @@ export class AlignmentPatternFinder {
   }
 
   #isFoundPattern(stateCount: number[]): boolean {
-    let moduleSize = this.#moduleSize;
+    const moduleSize = getStateCountTotal(stateCount) / 5;
 
-    for (const count of stateCount) {
-      if (!isEqualsModuleSize(count, moduleSize)) {
-        return false;
-      }
-    }
-
-    return isFoundAlignmentPattern(stateCount);
+    return isEqualsModuleSize(this.#moduleSize, moduleSize) && isFoundAlignmentPattern(stateCount);
   }
 
   #crossCheckHorizontal(x: number, y: number, maxCount: number): number {
-    const checker = this.#isFoundPattern.bind(this);
-
-    return crossPatternCheck(this.#matrix, x, y, maxCount, true, checker);
+    return alignCrossPattern(this.#matrix, x, y, maxCount, true, this.#isFoundPatternBound);
   }
 
   #crossCheckVertical(x: number, y: number, maxCount: number): number {
-    const checker = this.#isFoundPattern.bind(this);
+    return alignCrossPattern(this.#matrix, x, y, maxCount, false, this.#isFoundPatternBound);
+  }
 
-    return crossPatternCheck(this.#matrix, x, y, maxCount, false, checker);
+  #isFoundDiagonalPattern(x: number, y: number, maxCount: number): boolean {
+    return checkDiagonalPattern(this.#matrix, x, y, maxCount, this.#isFoundPatternBound);
   }
 
   #process(patterns: Pattern[], x: number, y: number, stateCount: number[]): Pattern | undefined {
     let offsetX = centerFromEnd(stateCount, x);
 
-    const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, stateCount[2]);
+    const maxCount = stateCount[2];
+    const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, maxCount);
 
     if (!Number.isNaN(offsetY)) {
       // Re-cross check
-      offsetX = this.#crossCheckHorizontal(toInt32(offsetX), toInt32(offsetY), stateCount[2]);
+      offsetX = this.#crossCheckHorizontal(toInt32(offsetX), toInt32(offsetY), maxCount);
 
-      if (!Number.isNaN(offsetX)) {
+      if (!Number.isNaN(offsetX) && this.#isFoundDiagonalPattern(toInt32(offsetX), toInt32(offsetY), maxCount)) {
         const moduleSize = getStateCountTotal(stateCount) / 5;
 
         for (const pattern of patterns) {
@@ -82,35 +79,31 @@ export class AlignmentPatternFinder {
 
   public find(): Pattern | undefined {
     const startX = this.#x;
-    const width = this.#width;
-    const height = this.#height;
+    const startY = this.#y;
     const matrix = this.#matrix;
-    const maxX = startX + width;
     const patterns: Pattern[] = [];
-    const middleY = toInt32(this.#y + height / 2);
+    const width = startX + this.#width;
+    const height = startY + this.#height;
 
     // We are looking for black/white/black modules in 1:1:1 ratio;
     // this tracks the number of black/white/black modules seen so far
-    for (let y = 0; y < height; y++) {
-      let count = 0;
-      let offsetX = startX;
-
-      const stateCount = [0, 0, 0, 0, 0];
-      const middle = toInt32((y + 1) / 2);
-      // Search from middle outwards
-      const offsetY = middleY + (y & 0x01 ? -middle : middle);
+    for (let y = startY; y < height; y++) {
+      let x = startX;
 
       // Burn off leading white pixels before anything else; if we start in the middle of
       // a white run, it doesn't make sense to count its length, since we don't know if the
       // white run continued to the left of the start point
-      while (offsetX < maxX && !matrix.get(offsetX, offsetY)) {
-        offsetX++;
+      while (x < width && !matrix.get(x, y)) {
+        x++;
       }
 
-      let lastBit = matrix.get(offsetX, offsetY);
+      let count = 0;
+      let lastBit = matrix.get(x, y);
 
-      while (offsetX < maxX) {
-        const bit = matrix.get(offsetX, offsetY);
+      const stateCount = [0, 0, 0, 0, 0];
+
+      while (x < width) {
+        const bit = matrix.get(x, y);
 
         if (bit === lastBit) {
           count++;
@@ -119,7 +112,7 @@ export class AlignmentPatternFinder {
 
           if (this.#isFoundPattern(stateCount)) {
             // Yes
-            const confirmed = this.#process(patterns, offsetX, offsetY, stateCount);
+            const confirmed = this.#process(patterns, x, y, stateCount);
             if (confirmed != null) {
               return confirmed;
             }
@@ -129,13 +122,13 @@ export class AlignmentPatternFinder {
           lastBit = bit;
         }
 
-        offsetX++;
+        x++;
       }
 
       pushStateCount(stateCount, count);
 
       if (this.#isFoundPattern(stateCount)) {
-        const confirmed = this.#process(patterns, maxX, offsetY, stateCount);
+        const confirmed = this.#process(patterns, width - 1, y, stateCount);
 
         if (confirmed != null) {
           return confirmed;

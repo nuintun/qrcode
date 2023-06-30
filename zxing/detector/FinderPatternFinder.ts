@@ -3,8 +3,9 @@
  */
 
 import {
+  alignCrossPattern,
   centerFromEnd,
-  crossPatternCheck,
+  checkDiagonalPattern,
   getStateCountTotal,
   isEqualsEdge,
   isEqualsModuleSize,
@@ -26,92 +27,28 @@ export class FinderPatternFinder {
   }
 
   #crossCheckHorizontal(x: number, y: number, maxCount: number): number {
-    return crossPatternCheck(this.#matrix, x, y, maxCount, true, isFoundFinderPattern);
+    return alignCrossPattern(this.#matrix, x, y, maxCount, true, isFoundFinderPattern);
   }
 
   #crossCheckVertical(x: number, y: number, maxCount: number): number {
-    return crossPatternCheck(this.#matrix, x, y, maxCount, false, isFoundFinderPattern);
+    return alignCrossPattern(this.#matrix, x, y, maxCount, false, isFoundFinderPattern);
   }
 
-  #isFoundDiagonalPattern(x: number, y: number): boolean {
-    let offset = 0;
-
-    const matrix = this.#matrix;
-    const stateCount = [0, 0, 0, 0, 0];
-    const getBit = (offset: number, isUpward: boolean): number => {
-      return isUpward ? matrix.get(x - offset, y - offset) : matrix.get(x + offset, y + offset);
-    };
-
-    // Start counting up, left from center finding black center mass
-    while (x >= offset && y >= offset && getBit(offset, true)) {
-      offset++;
-      stateCount[2]++;
-    }
-
-    if (stateCount[2] === 0) {
-      return false;
-    }
-
-    // Continue up, left finding white space
-    while (x >= offset && y >= offset && !getBit(offset, true)) {
-      offset++;
-      stateCount[1]++;
-    }
-
-    if (stateCount[1] === 0) {
-      return false;
-    }
-
-    // Continue up, left finding black border
-    while (x >= offset && y >= offset && getBit(offset, true)) {
-      offset++;
-      stateCount[0]++;
-    }
-
-    if (stateCount[0] === 0) {
-      return false;
-    }
-
-    offset = 1;
-
-    const { width, height } = matrix;
-
-    while (x + offset < width && y + offset < height && getBit(offset, false)) {
-      offset++;
-      stateCount[2]++;
-    }
-
-    while (x + offset < width && y + offset < height && !getBit(offset, false)) {
-      offset++;
-      stateCount[3]++;
-    }
-
-    if (stateCount[3] === 0) {
-      return false;
-    }
-
-    while (x + offset < width && y + offset < height && getBit(offset, false)) {
-      offset++;
-      stateCount[4]++;
-    }
-
-    if (stateCount[4] === 0) {
-      return false;
-    }
-
-    return isFoundFinderPattern(stateCount);
+  #isFoundDiagonalPattern(x: number, y: number, maxCount: number): boolean {
+    return checkDiagonalPattern(this.#matrix, x, y, maxCount, isFoundFinderPattern);
   }
 
   #process(patterns: Pattern[], x: number, y: number, stateCount: number[]): void {
     let offsetX = centerFromEnd(stateCount, x);
 
-    const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, stateCount[2]);
+    const maxCount = stateCount[2];
+    const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, maxCount);
 
     if (!Number.isNaN(offsetY)) {
       // Re-cross check
-      offsetX = this.#crossCheckHorizontal(toInt32(offsetX), toInt32(offsetY), stateCount[2]);
+      offsetX = this.#crossCheckHorizontal(toInt32(offsetX), toInt32(offsetY), maxCount);
 
-      if (!Number.isNaN(offsetX) && this.#isFoundDiagonalPattern(toInt32(offsetX), toInt32(offsetY))) {
+      if (!Number.isNaN(offsetX) && this.#isFoundDiagonalPattern(toInt32(offsetX), toInt32(offsetY), maxCount)) {
         let found = false;
 
         const { length } = patterns;
@@ -214,11 +151,19 @@ export class FinderPatternFinder {
     const { width, height } = matrix;
 
     for (let y = 0; y < height; y++) {
+      let x = 0;
+
+      // Burn off leading white pixels before anything else; if we start in the middle of
+      // a white run, it doesn't make sense to count its length, since we don't know if the
+      // white run continued to the left of the start point
+      while (x < width && !matrix.get(x, y)) {
+        x++;
+      }
+
       let count = 0;
-      let lastBit = matrix.get(0, y);
+      let lastBit = matrix.get(x, y);
 
       const stateCount = [0, 0, 0, 0, 0];
-
       const process = (x: number, y: number) => {
         pushStateCount(stateCount, count);
 
@@ -227,7 +172,7 @@ export class FinderPatternFinder {
         }
       };
 
-      for (let x = 0; x < width; x++) {
+      while (x < width) {
         const bit = matrix.get(x, y);
 
         if (bit === lastBit) {
@@ -238,6 +183,8 @@ export class FinderPatternFinder {
           count = 1;
           lastBit = bit;
         }
+
+        x++;
       }
 
       process(width - 1, y);
