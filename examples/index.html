@@ -56,9 +56,9 @@
             <label class="indent">背景颜色：</label>
             <input id="gif-background" type="color" value="#ffffff" />
             <label class="indent">色块大小：</label>
-            <input id="encode-msize" type="number" min="1" max="10" value="1" />
+            <input id="encode-msize" type="number" min="1" max="10" value="4" />
             <label class="indent">留白大小：</label>
-            <input title="推荐设置为4倍色块大小" id="encode-margin" type="number" min="0" max="40" value="4" />
+            <input title="推荐设置为4倍色块大小" id="encode-margin" type="number" min="0" max="40" value="16" />
           </p>
           <p>
             <button id="encode-btn">编码</button>
@@ -359,13 +359,13 @@
         }
 
         for (const alignment of alignments) {
-          markFinderPattern(alignment, '#0000ff');
+          markFinderPattern(alignment, '#ff00ff');
         }
 
         for (const { topLeft, topRight, bottomLeft } of errors) {
           markFinderPattern(topLeft, '#ff0000');
-          markFinderPattern(topRight, '#ff0000');
-          markFinderPattern(bottomLeft, '#ff0000');
+          markFinderPattern(topRight, '#00ff00');
+          markFinderPattern(bottomLeft, '#0000ff');
         }
 
         if (success.length > 0) {
