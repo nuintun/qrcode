@@ -26,11 +26,12 @@ export class Pattern extends Point {
   }
 
   public equals(x: number, y: number, moduleSize: number): boolean {
-    if (Math.abs(x - this.x) <= moduleSize && Math.abs(y - this.y) <= moduleSize) {
-      const currentModuleSize = this.#moduleSize;
-      const moduleSizeDiff = Math.abs(moduleSize - currentModuleSize);
+    const currentModuleSize = this.#moduleSize;
 
-      return moduleSizeDiff <= 1 || moduleSizeDiff <= currentModuleSize;
+    moduleSize = Math.max(currentModuleSize, moduleSize);
+
+    if (Math.abs(x - this.x) <= moduleSize && Math.abs(y - this.y) <= moduleSize) {
+      return moduleSize - currentModuleSize <= moduleSize;
     }
 
     return false;

@@ -3520,10 +3520,10 @@
       return new Pattern(combinedX, combinedY, combinedModuleSize);
     }
     equals(x, y, moduleSize) {
+      const currentModuleSize = this.#moduleSize;
+      moduleSize = Math.max(currentModuleSize, moduleSize);
       if (Math.abs(x - this.x) <= moduleSize && Math.abs(y - this.y) <= moduleSize) {
-        const currentModuleSize = this.#moduleSize;
-        const moduleSizeDiff = Math.abs(moduleSize - currentModuleSize);
-        return moduleSizeDiff <= 1 || moduleSizeDiff <= currentModuleSize;
+        return moduleSize - currentModuleSize <= moduleSize;
       }
       return false;
     }
@@ -3560,7 +3560,7 @@
     if (crossProductZ(bottomLeft, topLeft, topRight) < 0) {
       [bottomLeft, topRight] = [topRight, bottomLeft];
     }
-    return [bottomLeft, topLeft, topRight];
+    return [topLeft, topRight, bottomLeft];
   }
   class FinderPatternGroup {
     #patterns;
@@ -3568,13 +3568,13 @@
       this.#patterns = orderFinderPatterns(patterns);
     }
     get topLeft() {
-      return this.#patterns[1];
+      return this.#patterns[0];
     }
     get topRight() {
-      return this.#patterns[2];
+      return this.#patterns[1];
     }
     get bottomLeft() {
-      return this.#patterns[0];
+      return this.#patterns[2];
     }
   }
 
@@ -3582,7 +3582,7 @@
    * @module FinderPatternFinder
    */
   const DIFF_EDGE_RATIO = 0.25;
-  const DIFF_MODULE_SIZE_RATIO = 0.25;
+  const DIFF_MODULE_SIZE_RATIO = 0.5;
   const MIN_MODULE_COUNT_PER_EDGE = 11;
   const MAX_MODULE_COUNT_PER_EDGE = 175;
   function isFoundPattern(stateCount) {
@@ -3597,8 +3597,8 @@
       return false;
     }
     const moduleSize = stateCountTotal / 7;
-    const moduleSizeDiff = moduleSize * 0.5;
-    // Allow less than 50% variance from 1-1-3-1-1 proportions
+    const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
+    // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
     return (
       Math.abs(stateCount[0] - moduleSize) < moduleSizeDiff &&
       Math.abs(stateCount[1] - moduleSize) < moduleSizeDiff &&
@@ -3616,6 +3616,11 @@
     const modeSizeAvg = (moduleSize1 + moduleSize2) / 2;
     const ratio = (moduleSize1 - moduleSize2) / modeSizeAvg;
     return ratio <= DIFF_MODULE_SIZE_RATIO;
+  }
+  function isValidModuleCount(edge, moduleSize) {
+    // Check the sizes
+    const moduleCount = Math.ceil(edge / moduleSize);
+    return moduleCount >= MIN_MODULE_COUNT_PER_EDGE && moduleCount <= MAX_MODULE_COUNT_PER_EDGE;
   }
   function centerFromEnd$1(stateCount, end) {
     return end - stateCount[4] - stateCount[3] - stateCount[2] / 2;
@@ -3843,20 +3848,23 @@
             }
             const finderPatternGroup = new FinderPatternGroup([pattern1, pattern2, pattern3]);
             const { topLeft, topRight, bottomLeft } = finderPatternGroup;
-            const a = distance$1(topLeft, bottomLeft);
-            const b = distance$1(topLeft, topRight);
+            const edge1 = distance$1(bottomLeft, topLeft);
+            const edge2 = distance$1(topLeft, topRight);
             // Calculate the difference of the cathetus lengths in percent
-            if (!isEqualsEdge(a, b)) {
+            if (!isEqualsEdge(edge1, edge2)) {
               continue;
             }
-            const c = distance$1(topRight, bottomLeft);
+            const hypotenuse = distance$1(topRight, bottomLeft);
             // Calculate the difference of the hypotenuse lengths in percent
-            if (!isEqualsEdge(Math.sqrt(a * a + b * b), c)) {
+            if (!isEqualsEdge(Math.sqrt(edge1 * edge1 + edge2 * edge2), hypotenuse)) {
               continue;
             }
             // Check the sizes
-            const moduleCount = (a + b) / (topLeft.moduleSize + topRight.moduleSize);
-            if (moduleCount < MIN_MODULE_COUNT_PER_EDGE || moduleCount > MAX_MODULE_COUNT_PER_EDGE) {
+            const topLeftModuleSize = topLeft.moduleSize;
+            if (
+              !isValidModuleCount(edge1, (bottomLeft.moduleSize + topLeftModuleSize) / 2) ||
+              !isValidModuleCount(edge2, (topLeftModuleSize + topRight.moduleSize) / 2)
+            ) {
               continue;
             }
             // All tests passed!
@@ -4396,7 +4404,7 @@
             // Kind of arbitrary -- expand search radius before giving up
             // If we didn't find alignment pattern... well try anyway without it
             for (let ratio = 4; ratio <= 16; ratio <<= 1) {
-              alignmentPattern = this.#findAlignmentInRegion(estAlignmentX, estAlignmentY, moduleSize, ratio);
+              const alignmentPattern = this.#findAlignmentInRegion(estAlignmentX, estAlignmentY, moduleSize, ratio);
               if (alignmentPattern != null) {
                 break;
               }
@@ -4404,9 +4412,10 @@
           }
           const sampler = new GridSampler(this.#matrix);
           const transform = createTransform(size, topLeft, topRight, bottomLeft, alignmentPattern);
-          return sampler.sampleGrid(size, size, transform);
+          return [sampler.sampleGrid(size, size, transform), alignmentPattern];
         }
       }
+      return [];
     }
     detect() {
       const matrix = this.#matrix;
@@ -4414,9 +4423,9 @@
       const finder = new FinderPatternFinder(matrix);
       const finderPatternGroups = finder.find();
       for (const patterns of finderPatternGroups) {
-        const matrix = this.#processFinderPatternInfo(patterns);
+        const [matrix, alignmentPattern] = this.#processFinderPatternInfo(patterns);
         if (matrix != null) {
-          result.push({ matrix, patterns });
+          result.push({ matrix, patterns, alignment: alignmentPattern });
         }
       }
       return result;

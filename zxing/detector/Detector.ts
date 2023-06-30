@@ -15,6 +15,7 @@ import { PerspectiveTransform, quadrilateralToQuadrilateral } from '/common/Pers
 
 export interface DetectResult {
   readonly matrix: BitMatrix;
+  readonly alignment?: Pattern;
   readonly patterns: FinderPatternGroup;
 }
 
@@ -242,7 +243,11 @@ export class Detector {
     }
   }
 
-  #processFinderPatternInfo({ topLeft, topRight, bottomLeft }: FinderPatternGroup): BitMatrix | undefined {
+  #processFinderPatternInfo({
+    topLeft,
+    topRight,
+    bottomLeft
+  }: FinderPatternGroup): [matrix?: BitMatrix, alignmentPattern?: Pattern] {
     const moduleSize = this.#calculateModuleSize(topLeft, topRight, bottomLeft);
 
     if (moduleSize >= 1) {
@@ -267,7 +272,7 @@ export class Detector {
           // Kind of arbitrary -- expand search radius before giving up
           // If we didn't find alignment pattern... well try anyway without it
           for (let ratio = 4; ratio <= 16; ratio <<= 1) {
-            alignmentPattern = this.#findAlignmentInRegion(estAlignmentX, estAlignmentY, moduleSize, ratio);
+            const alignmentPattern = this.#findAlignmentInRegion(estAlignmentX, estAlignmentY, moduleSize, ratio);
 
             if (alignmentPattern != null) {
               break;
@@ -278,9 +283,11 @@ export class Detector {
         const sampler = new GridSampler(this.#matrix);
         const transform = createTransform(size, topLeft, topRight, bottomLeft, alignmentPattern);
 
-        return sampler.sampleGrid(size, size, transform);
+        return [sampler.sampleGrid(size, size, transform), alignmentPattern];
       }
     }
+
+    return [];
   }
 
   public detect(): DetectResult[] {
@@ -290,10 +297,10 @@ export class Detector {
     const finderPatternGroups = finder.find();
 
     for (const patterns of finderPatternGroups) {
-      const matrix = this.#processFinderPatternInfo(patterns);
+      const [matrix, alignmentPattern] = this.#processFinderPatternInfo(patterns);
 
       if (matrix != null) {
-        result.push({ matrix, patterns });
+        result.push({ matrix, patterns, alignment: alignmentPattern });
       }
     }
 

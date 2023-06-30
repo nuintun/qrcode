@@ -309,6 +309,7 @@
 
         const errors = [];
         const success = [];
+        const alignments = [];
         const imageData = getImageData();
         const { width, height } = imageData;
         const decoder = new QRCode.Decoder();
@@ -334,7 +335,7 @@
         console.dir(detected);
 
         if (detected.length > 0) {
-          for (const { matrix, patterns } of detected) {
+          for (const { matrix, patterns, alignment } of detected) {
             try {
               const decoded = decoder.decode(matrix);
               const { content } = decoded;
@@ -350,7 +351,15 @@
               // 解码失败，跳过
               errors.push(patterns);
             }
+
+            if (alignment != null) {
+              alignments.push(alignment);
+            }
           }
+        }
+
+        for (const alignment of alignments) {
+          markFinderPattern(alignment, '#0000ff');
         }
 
         for (const { topLeft, topRight, bottomLeft } of errors) {

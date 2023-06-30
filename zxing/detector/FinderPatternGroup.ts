@@ -11,7 +11,7 @@ function crossProductZ(pattern1: Pattern, pattern2: Pattern, pattern3: Pattern):
   return (pattern3.x - x) * (pattern1.y - y) - (pattern3.y - y) * (pattern1.x - x);
 }
 
-function orderFinderPatterns(patterns: Pattern[]): Pattern[] {
+function orderFinderPatterns(patterns: Pattern[]): [topLeft: Pattern, topRight: Pattern, bottomLeft: Pattern] {
   let topLeft: Pattern;
   let topRight: Pattern;
   let bottomLeft: Pattern;
@@ -39,7 +39,7 @@ function orderFinderPatterns(patterns: Pattern[]): Pattern[] {
     [bottomLeft, topRight] = [topRight, bottomLeft];
   }
 
-  return [bottomLeft, topLeft, topRight];
+  return [topLeft, topRight, bottomLeft];
 }
 
 export class FinderPatternGroup {
@@ -50,14 +50,14 @@ export class FinderPatternGroup {
   }
 
   public get topLeft(): Pattern {
-    return this.#patterns[1];
+    return this.#patterns[0];
   }
 
   public get topRight(): Pattern {
-    return this.#patterns[2];
+    return this.#patterns[1];
   }
 
   public get bottomLeft(): Pattern {
-    return this.#patterns[0];
+    return this.#patterns[2];
   }
 }
