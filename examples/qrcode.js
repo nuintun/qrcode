@@ -3928,7 +3928,7 @@
       const matrix = this.#matrix;
       const maxX = startX + width;
       const patterns = [];
-      const middleY = this.#y + height / 2;
+      const middleY = toInt32(this.#y + height / 2);
       // We are looking for black/white/black modules in 1:1:1 ratio;
       // this tracks the number of black/white/black modules seen so far
       for (let y = 0; y < height; y++) {
