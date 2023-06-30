@@ -3532,33 +3532,23 @@
     const moduleCount = Math.ceil(edge / moduleSize);
     return moduleCount >= MIN_MODULE_COUNT_PER_EDGE && moduleCount <= MAX_MODULE_COUNT_PER_EDGE;
   }
-  function alignCrossPattern(matrix, x, y, maxCount, isHorizontal, checker) {
+  function alignCrossPattern(matrix, x, y, moduleSize, isHorizontal, checker) {
+    let offset = isHorizontal ? x : y;
     const stateCount = [0, 0, 0, 0, 0];
     const getBit = offset => {
       return isHorizontal ? matrix.get(offset, y) : matrix.get(x, offset);
     };
-    let offset = isHorizontal ? x : y;
-    maxCount += maxCount * DIFF_MODULE_SIZE_RATIO;
     while (offset >= 0 && getBit(offset)) {
       offset--;
       stateCount[2]++;
-    }
-    if (stateCount[2] > maxCount) {
-      return NaN;
     }
     while (offset >= 0 && !getBit(offset)) {
       offset--;
       stateCount[1]++;
     }
-    if (stateCount[1] > maxCount) {
-      return NaN;
-    }
-    while (offset >= 0 && getBit(offset)) {
+    while (offset >= 0 && stateCount[0] < moduleSize && getBit(offset)) {
       offset--;
       stateCount[0]++;
-    }
-    if (stateCount[0] > maxCount) {
-      return NaN;
     }
     offset = (isHorizontal ? x : y) + 1;
     const size = isHorizontal ? matrix.width : matrix.height;
@@ -3566,55 +3556,36 @@
       offset++;
       stateCount[2]++;
     }
-    if (stateCount[2] > maxCount) {
-      return NaN;
-    }
     while (offset < size && !getBit(offset)) {
       offset++;
       stateCount[3]++;
     }
-    if (stateCount[3] >= maxCount) {
-      return NaN;
-    }
-    while (offset < size && getBit(offset)) {
+    while (offset < size && stateCount[4] < moduleSize && getBit(offset)) {
       offset++;
       stateCount[4]++;
     }
-    if (stateCount[4] >= maxCount) {
-      return NaN;
-    }
     return checker(stateCount) ? centerFromEnd(stateCount, offset) : NaN;
   }
-  function checkDiagonalPattern(matrix, x, y, maxCount, checker) {
+  function checkDiagonalPattern(matrix, x, y, moduleSize, checker) {
+    let offset = 0;
     const stateCount = [0, 0, 0, 0, 0];
     const getBit = (offset, isUpward) => {
       return isUpward ? matrix.get(x - offset, y - offset) : matrix.get(x + offset, y + offset);
     };
-    let offset = 0;
-    maxCount += maxCount * DIFF_MODULE_SIZE_RATIO;
     // Start counting up, left from center finding black center mass
     while (x >= offset && y >= offset && getBit(offset, true)) {
       offset++;
       stateCount[2]++;
-    }
-    if (stateCount[2] > maxCount) {
-      return false;
     }
     // Continue up, left finding white space
     while (x >= offset && y >= offset && !getBit(offset, true)) {
       offset++;
       stateCount[1]++;
     }
-    if (stateCount[1] > maxCount) {
-      return false;
-    }
     // Continue up, left finding black border
-    while (x >= offset && y >= offset && getBit(offset, true)) {
+    while (x >= offset && y >= offset && stateCount[0] < moduleSize && getBit(offset, true)) {
       offset++;
       stateCount[0]++;
-    }
-    if (stateCount[0] > maxCount) {
-      return false;
     }
     offset = 1;
     const { width, height } = matrix;
@@ -3622,22 +3593,13 @@
       offset++;
       stateCount[2]++;
     }
-    if (stateCount[2] > maxCount) {
-      return false;
-    }
     while (x + offset < width && y + offset < height && !getBit(offset, false)) {
       offset++;
       stateCount[3]++;
     }
-    if (stateCount[3] > maxCount) {
-      return false;
-    }
-    while (x + offset < width && y + offset < height && getBit(offset, false)) {
+    while (x + offset < width && y + offset < height && stateCount[4] < moduleSize && getBit(offset, false)) {
       offset++;
       stateCount[4]++;
-    }
-    if (stateCount[4] > maxCount) {
-      return false;
     }
     return checker(stateCount);
   }
@@ -3727,26 +3689,25 @@
     constructor(matrix) {
       this.#matrix = matrix;
     }
-    #crossAlignHorizontal(x, y, maxCount) {
-      return alignCrossPattern(this.#matrix, x, y, maxCount, true, isFoundFinderPattern);
+    #crossAlignHorizontal(x, y, moduleSize) {
+      return alignCrossPattern(this.#matrix, x, y, moduleSize, true, isFoundFinderPattern);
     }
-    #crossAlignVertical(x, y, maxCount) {
-      return alignCrossPattern(this.#matrix, x, y, maxCount, false, isFoundFinderPattern);
+    #crossAlignVertical(x, y, moduleSize) {
+      return alignCrossPattern(this.#matrix, x, y, moduleSize, false, isFoundFinderPattern);
     }
-    #isDiagonalPassed(x, y, maxCount) {
-      return checkDiagonalPattern(this.#matrix, x, y, maxCount, isFoundFinderPattern);
+    #isDiagonalPassed(x, y, moduleSize) {
+      return checkDiagonalPattern(this.#matrix, x, y, moduleSize, isFoundFinderPattern);
     }
     #process(patterns, x, y, stateCount) {
       let offsetX = centerFromEnd(stateCount, x);
-      const maxCount = stateCount[2];
-      const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, maxCount);
+      const moduleSize = getStateCountTotal(stateCount) / 7;
+      const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
       if (!Number.isNaN(offsetY)) {
         // Re-cross check
-        offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), maxCount);
-        if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), maxCount)) {
+        offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
+        if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), moduleSize)) {
           let found = false;
           const { length } = patterns;
-          const moduleSize = getStateCountTotal(stateCount) / 7;
           for (let i = 0; i < length; i++) {
             const pattern = patterns[i];
             // Look for about the same center and module size:
@@ -3879,24 +3840,23 @@
       const moduleSize = getStateCountTotal(stateCount) / 5;
       return isEqualsModuleSize(this.#moduleSize, moduleSize) && isFoundAlignmentPattern(stateCount);
     }
-    #crossAlignHorizontal(x, y, maxCount) {
-      return alignCrossPattern(this.#matrix, x, y, maxCount, true, this.#isFoundPatternBound);
+    #crossAlignHorizontal(x, y, moduleSize) {
+      return alignCrossPattern(this.#matrix, x, y, moduleSize, true, this.#isFoundPatternBound);
     }
-    #crossAlignVertical(x, y, maxCount) {
-      return alignCrossPattern(this.#matrix, x, y, maxCount, false, this.#isFoundPatternBound);
+    #crossAlignVertical(x, y, moduleSize) {
+      return alignCrossPattern(this.#matrix, x, y, moduleSize, false, this.#isFoundPatternBound);
     }
-    #isDiagonalPassed(x, y, maxCount) {
-      return checkDiagonalPattern(this.#matrix, x, y, maxCount, this.#isFoundPatternBound);
+    #isDiagonalPassed(x, y, moduleSize) {
+      return checkDiagonalPattern(this.#matrix, x, y, moduleSize, this.#isFoundPatternBound);
     }
     #process(patterns, x, y, stateCount) {
       let offsetX = centerFromEnd(stateCount, x);
-      const maxCount = stateCount[2];
-      const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, maxCount);
+      const moduleSize = getStateCountTotal(stateCount) / 5;
+      const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
       if (!Number.isNaN(offsetY)) {
         // Re-cross check
-        offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), maxCount);
-        if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), maxCount)) {
-          const moduleSize = getStateCountTotal(stateCount) / 5;
+        offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
+        if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), moduleSize)) {
           for (const pattern of patterns) {
             // Look for about the same center and module size:
             if (pattern.equals(offsetX, offsetY, moduleSize)) {

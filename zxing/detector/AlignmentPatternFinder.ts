@@ -39,31 +39,29 @@ export class AlignmentPatternFinder {
     return isEqualsModuleSize(this.#moduleSize, moduleSize) && isFoundAlignmentPattern(stateCount);
   }
 
-  #crossAlignHorizontal(x: number, y: number, maxCount: number): number {
-    return alignCrossPattern(this.#matrix, x, y, maxCount, true, this.#isFoundPatternBound);
+  #crossAlignHorizontal(x: number, y: number, moduleSize: number): number {
+    return alignCrossPattern(this.#matrix, x, y, moduleSize, true, this.#isFoundPatternBound);
   }
 
-  #crossAlignVertical(x: number, y: number, maxCount: number): number {
-    return alignCrossPattern(this.#matrix, x, y, maxCount, false, this.#isFoundPatternBound);
+  #crossAlignVertical(x: number, y: number, moduleSize: number): number {
+    return alignCrossPattern(this.#matrix, x, y, moduleSize, false, this.#isFoundPatternBound);
   }
 
-  #isDiagonalPassed(x: number, y: number, maxCount: number): boolean {
-    return checkDiagonalPattern(this.#matrix, x, y, maxCount, this.#isFoundPatternBound);
+  #isDiagonalPassed(x: number, y: number, moduleSize: number): boolean {
+    return checkDiagonalPattern(this.#matrix, x, y, moduleSize, this.#isFoundPatternBound);
   }
 
   #process(patterns: Pattern[], x: number, y: number, stateCount: number[]): Pattern | undefined {
     let offsetX = centerFromEnd(stateCount, x);
 
-    const maxCount = stateCount[2];
-    const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, maxCount);
+    const moduleSize = getStateCountTotal(stateCount) / 5;
+    const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
 
     if (!Number.isNaN(offsetY)) {
       // Re-cross check
-      offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), maxCount);
+      offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
 
-      if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), maxCount)) {
-        const moduleSize = getStateCountTotal(stateCount) / 5;
-
+      if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), moduleSize)) {
         for (const pattern of patterns) {
           // Look for about the same center and module size:
           if (pattern.equals(offsetX, offsetY, moduleSize)) {
