@@ -3542,21 +3542,21 @@
       offset--;
       stateCount[2]++;
     }
-    if (offset < 0) {
+    if (offset < 0 || stateCount[2] > maxCount) {
       return NaN;
     }
-    while (offset >= 0 && !getBit(offset) && stateCount[1] <= maxCount) {
+    while (offset >= 0 && !getBit(offset)) {
       offset--;
       stateCount[1]++;
     }
     if (offset < 0 || stateCount[1] > maxCount) {
       return NaN;
     }
-    while (offset >= 0 && getBit(offset) && stateCount[0] <= maxCount) {
+    while (offset >= 0 && getBit(offset)) {
       offset--;
       stateCount[0]++;
     }
-    if (stateCount[0] > maxCount) {
+    if (offset < 0 || stateCount[0] > maxCount) {
       return NaN;
     }
     offset = (isHorizontal ? x : y) + 1;
@@ -3565,21 +3565,21 @@
       offset++;
       stateCount[2]++;
     }
-    if (offset >= size) {
+    if (offset >= size || stateCount[2] > maxCount) {
       return NaN;
     }
-    while (offset < size && !getBit(offset) && stateCount[3] < maxCount) {
+    while (offset < size && !getBit(offset)) {
       offset++;
       stateCount[3]++;
     }
     if (offset >= size || stateCount[3] >= maxCount) {
       return NaN;
     }
-    while (offset < size && getBit(offset) && stateCount[4] < maxCount) {
+    while (offset < size && getBit(offset)) {
       offset++;
       stateCount[4]++;
     }
-    if (stateCount[4] >= maxCount) {
+    if (offset >= size || stateCount[4] >= maxCount) {
       return NaN;
     }
     return checker(stateCount) ? centerFromEnd(stateCount, offset) : NaN;
@@ -3877,10 +3877,10 @@
     }
     #process(patterns, x, y, stateCount) {
       let offsetX = centerFromEnd(stateCount, x);
-      const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, stateCount[2] * 2);
+      const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, stateCount[2]);
       if (!Number.isNaN(offsetY)) {
         // Re-cross check
-        offsetX = this.#crossCheckHorizontal(toInt32(offsetX), toInt32(offsetY), stateCount[2] * 2);
+        offsetX = this.#crossCheckHorizontal(toInt32(offsetX), toInt32(offsetY), stateCount[2]);
         if (!Number.isNaN(offsetX)) {
           const moduleSize = getStateCountTotal(stateCount) / 5;
           for (const pattern of patterns) {

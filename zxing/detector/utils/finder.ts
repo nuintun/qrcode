@@ -116,11 +116,11 @@ export function crossPatternCheck(
     stateCount[2]++;
   }
 
-  if (offset < 0) {
+  if (offset < 0 || stateCount[2] > maxCount) {
     return NaN;
   }
 
-  while (offset >= 0 && !getBit(offset) && stateCount[1] <= maxCount) {
+  while (offset >= 0 && !getBit(offset)) {
     offset--;
     stateCount[1]++;
   }
@@ -129,12 +129,12 @@ export function crossPatternCheck(
     return NaN;
   }
 
-  while (offset >= 0 && getBit(offset) && stateCount[0] <= maxCount) {
+  while (offset >= 0 && getBit(offset)) {
     offset--;
     stateCount[0]++;
   }
 
-  if (stateCount[0] > maxCount) {
+  if (offset < 0 || stateCount[0] > maxCount) {
     return NaN;
   }
 
@@ -147,11 +147,11 @@ export function crossPatternCheck(
     stateCount[2]++;
   }
 
-  if (offset >= size) {
+  if (offset >= size || stateCount[2] > maxCount) {
     return NaN;
   }
 
-  while (offset < size && !getBit(offset) && stateCount[3] < maxCount) {
+  while (offset < size && !getBit(offset)) {
     offset++;
     stateCount[3]++;
   }
@@ -160,12 +160,12 @@ export function crossPatternCheck(
     return NaN;
   }
 
-  while (offset < size && getBit(offset) && stateCount[4] < maxCount) {
+  while (offset < size && getBit(offset)) {
     offset++;
     stateCount[4]++;
   }
 
-  if (stateCount[4] >= maxCount) {
+  if (offset >= size || stateCount[4] >= maxCount) {
     return NaN;
   }
 

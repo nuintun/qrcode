@@ -58,11 +58,11 @@ export class AlignmentPatternFinder {
   #process(patterns: Pattern[], x: number, y: number, stateCount: number[]): Pattern | undefined {
     let offsetX = centerFromEnd(stateCount, x);
 
-    const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, stateCount[2] * 2);
+    const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, stateCount[2]);
 
     if (!Number.isNaN(offsetY)) {
       // Re-cross check
-      offsetX = this.#crossCheckHorizontal(toInt32(offsetX), toInt32(offsetY), stateCount[2] * 2);
+      offsetX = this.#crossCheckHorizontal(toInt32(offsetX), toInt32(offsetY), stateCount[2]);
 
       if (!Number.isNaN(offsetX)) {
         const moduleSize = getStateCountTotal(stateCount) / 5;
