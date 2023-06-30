@@ -38,7 +38,7 @@ export function getStateCountTotal(stateCount: number[], checkZero?: boolean): n
 export function isFoundFinderPattern(stateCount: number[]): boolean {
   const stateCountTotal = getStateCountTotal(stateCount, true);
 
-  if (Number.isNaN(stateCountTotal)) {
+  if (Number.isNaN(stateCountTotal) || stateCountTotal < 7) {
     return false;
   }
 
@@ -58,7 +58,7 @@ export function isFoundFinderPattern(stateCount: number[]): boolean {
 export function isFoundAlignmentPattern(stateCount: number[]): boolean {
   const stateCountTotal = getStateCountTotal(stateCount, true);
 
-  if (Number.isNaN(stateCountTotal)) {
+  if (Number.isNaN(stateCountTotal) || stateCountTotal < 5) {
     return false;
   }
 
@@ -171,7 +171,7 @@ export function alignCrossPattern(
     return NaN;
   }
 
-  return checker(stateCount) ? centerFromEnd(stateCount, Math.max(0, Math.min(offset, size - 1))) : NaN;
+  return checker(stateCount) ? centerFromEnd(stateCount, offset) : NaN;
 }
 
 export function checkDiagonalPattern(

@@ -3487,7 +3487,7 @@
   }
   function isFoundFinderPattern(stateCount) {
     const stateCountTotal = getStateCountTotal(stateCount, true);
-    if (Number.isNaN(stateCountTotal)) {
+    if (Number.isNaN(stateCountTotal) || stateCountTotal < 7) {
       return false;
     }
     const moduleSize = stateCountTotal / 7;
@@ -3503,7 +3503,7 @@
   }
   function isFoundAlignmentPattern(stateCount) {
     const stateCountTotal = getStateCountTotal(stateCount, true);
-    if (Number.isNaN(stateCountTotal)) {
+    if (Number.isNaN(stateCountTotal) || stateCountTotal < 5) {
       return false;
     }
     const moduleSize = stateCountTotal / 5;
@@ -3583,7 +3583,7 @@
     if (stateCount[4] >= maxCount) {
       return NaN;
     }
-    return checker(stateCount) ? centerFromEnd(stateCount, Math.max(0, Math.min(offset, size - 1))) : NaN;
+    return checker(stateCount) ? centerFromEnd(stateCount, offset) : NaN;
   }
   function checkDiagonalPattern(matrix, x, y, maxCount, checker) {
     const stateCount = [0, 0, 0, 0, 0];
@@ -3727,23 +3727,23 @@
     constructor(matrix) {
       this.#matrix = matrix;
     }
-    #crossCheckHorizontal(x, y, maxCount) {
+    #crossAlignHorizontal(x, y, maxCount) {
       return alignCrossPattern(this.#matrix, x, y, maxCount, true, isFoundFinderPattern);
     }
-    #crossCheckVertical(x, y, maxCount) {
+    #crossAlignVertical(x, y, maxCount) {
       return alignCrossPattern(this.#matrix, x, y, maxCount, false, isFoundFinderPattern);
     }
-    #isFoundDiagonalPattern(x, y, maxCount) {
+    #isDiagonalPassed(x, y, maxCount) {
       return checkDiagonalPattern(this.#matrix, x, y, maxCount, isFoundFinderPattern);
     }
     #process(patterns, x, y, stateCount) {
       let offsetX = centerFromEnd(stateCount, x);
       const maxCount = stateCount[2];
-      const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, maxCount);
+      const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, maxCount);
       if (!Number.isNaN(offsetY)) {
         // Re-cross check
-        offsetX = this.#crossCheckHorizontal(toInt32(offsetX), toInt32(offsetY), maxCount);
-        if (!Number.isNaN(offsetX) && this.#isFoundDiagonalPattern(toInt32(offsetX), toInt32(offsetY), maxCount)) {
+        offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), maxCount);
+        if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), maxCount)) {
           let found = false;
           const { length } = patterns;
           const moduleSize = getStateCountTotal(stateCount) / 7;
@@ -3879,23 +3879,23 @@
       const moduleSize = getStateCountTotal(stateCount) / 5;
       return isEqualsModuleSize(this.#moduleSize, moduleSize) && isFoundAlignmentPattern(stateCount);
     }
-    #crossCheckHorizontal(x, y, maxCount) {
+    #crossAlignHorizontal(x, y, maxCount) {
       return alignCrossPattern(this.#matrix, x, y, maxCount, true, this.#isFoundPatternBound);
     }
-    #crossCheckVertical(x, y, maxCount) {
+    #crossAlignVertical(x, y, maxCount) {
       return alignCrossPattern(this.#matrix, x, y, maxCount, false, this.#isFoundPatternBound);
     }
-    #isFoundDiagonalPattern(x, y, maxCount) {
+    #isDiagonalPassed(x, y, maxCount) {
       return checkDiagonalPattern(this.#matrix, x, y, maxCount, this.#isFoundPatternBound);
     }
     #process(patterns, x, y, stateCount) {
       let offsetX = centerFromEnd(stateCount, x);
       const maxCount = stateCount[2];
-      const offsetY = this.#crossCheckVertical(toInt32(offsetX), y, maxCount);
+      const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, maxCount);
       if (!Number.isNaN(offsetY)) {
         // Re-cross check
-        offsetX = this.#crossCheckHorizontal(toInt32(offsetX), toInt32(offsetY), maxCount);
-        if (!Number.isNaN(offsetX) && this.#isFoundDiagonalPattern(toInt32(offsetX), toInt32(offsetY), maxCount)) {
+        offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), maxCount);
+        if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), maxCount)) {
           const moduleSize = getStateCountTotal(stateCount) / 5;
           for (const pattern of patterns) {
             // Look for about the same center and module size:
