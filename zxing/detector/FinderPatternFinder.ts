@@ -2,81 +2,21 @@
  * @module FinderPatternFinder
  */
 
+import {
+  centerFromEnd,
+  crossPatternCheck,
+  getStateCountTotal,
+  isEqualsEdge,
+  isEqualsModuleSize,
+  isFoundFinderPattern,
+  isValidModuleCount,
+  pushStateCount
+} from './utils/finder';
 import { Pattern } from './Pattern';
 import { toInt32 } from '/common/utils';
 import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
 import { FinderPatternGroup } from './FinderPatternGroup';
-
-const DIFF_EDGE_RATIO = 0.25;
-const DIFF_MODULE_SIZE_RATIO = 0.5;
-const MIN_MODULE_COUNT_PER_EDGE = 11;
-const MAX_MODULE_COUNT_PER_EDGE = 175;
-
-function isFoundPattern(stateCount: number[]): boolean {
-  let stateCountTotal = 0;
-
-  for (const count of stateCount) {
-    if (count === 0) {
-      return false;
-    }
-
-    stateCountTotal += count;
-  }
-
-  if (stateCountTotal < 7) {
-    return false;
-  }
-
-  const moduleSize = stateCountTotal / 7;
-  const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
-
-  // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
-  return (
-    Math.abs(stateCount[0] - moduleSize) < moduleSizeDiff &&
-    Math.abs(stateCount[1] - moduleSize) < moduleSizeDiff &&
-    Math.abs(stateCount[2] - moduleSize * 3) < moduleSizeDiff * 3 &&
-    Math.abs(stateCount[3] - moduleSize) < moduleSizeDiff &&
-    Math.abs(stateCount[4] - moduleSize) < moduleSizeDiff
-  );
-}
-
-function isEqualsEdge(edge1: number, edge2: number): boolean {
-  const edgeAvg = (edge1 + edge2) / 2;
-  const ratio = Math.abs(edge1 - edge2) / edgeAvg;
-
-  return ratio < DIFF_EDGE_RATIO;
-}
-
-function isEqualsModuleSize(moduleSize1: number, moduleSize2: number): boolean {
-  const modeSizeAvg = (moduleSize1 + moduleSize2) / 2;
-  const ratio = (moduleSize1 - moduleSize2) / modeSizeAvg;
-
-  return ratio <= DIFF_MODULE_SIZE_RATIO;
-}
-
-function isValidModuleCount(edge: number, moduleSize: number): boolean {
-  // Check the sizes
-  const moduleCount = Math.ceil(edge / moduleSize);
-
-  return moduleCount >= MIN_MODULE_COUNT_PER_EDGE && moduleCount <= MAX_MODULE_COUNT_PER_EDGE;
-}
-
-function centerFromEnd(stateCount: number[], end: number): number {
-  return end - stateCount[4] - stateCount[3] - stateCount[2] / 2;
-}
-
-function pushStateCount(stateCount: number[], count: number): void {
-  stateCount[0] = stateCount[1];
-  stateCount[1] = stateCount[2];
-  stateCount[2] = stateCount[3];
-  stateCount[3] = stateCount[4];
-  stateCount[4] = count;
-}
-
-function getStateCountTotal(stateCount: number[]): number {
-  return stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] + stateCount[4];
-}
 
 export class FinderPatternFinder {
   #matrix: BitMatrix;
@@ -85,82 +25,12 @@ export class FinderPatternFinder {
     this.#matrix = matrix;
   }
 
-  #crossCheck(x: number, y: number, maxCount: number, isHorizontal: boolean): number {
-    const matrix = this.#matrix;
-    const stateCount = [0, 0, 0, 0, 0];
-    const getBit = (offset: number): number => {
-      return isHorizontal ? matrix.get(offset, y) : matrix.get(x, offset);
-    };
-
-    let offset = isHorizontal ? x : y;
-
-    while (offset >= 0 && getBit(offset)) {
-      offset--;
-      stateCount[2]++;
-    }
-
-    if (offset < 0) {
-      return NaN;
-    }
-
-    while (offset >= 0 && !getBit(offset) && stateCount[1] <= maxCount) {
-      offset--;
-      stateCount[1]++;
-    }
-
-    if (offset < 0 || stateCount[1] > maxCount) {
-      return NaN;
-    }
-
-    while (offset >= 0 && getBit(offset) && stateCount[0] <= maxCount) {
-      offset--;
-      stateCount[0]++;
-    }
-
-    if (stateCount[0] > maxCount) {
-      return NaN;
-    }
-
-    offset = (isHorizontal ? x : y) + 1;
-
-    const size = isHorizontal ? matrix.width : matrix.height;
-
-    while (offset < size && getBit(offset)) {
-      offset++;
-      stateCount[2]++;
-    }
-
-    if (offset >= size) {
-      return NaN;
-    }
-
-    while (offset < size && !getBit(offset) && stateCount[3] < maxCount) {
-      offset++;
-      stateCount[3]++;
-    }
-
-    if (offset >= size || stateCount[3] >= maxCount) {
-      return NaN;
-    }
-
-    while (offset < size && getBit(offset) && stateCount[4] < maxCount) {
-      offset++;
-      stateCount[4]++;
-    }
-
-    if (stateCount[4] >= maxCount) {
-      return NaN;
-    }
-
-    return isFoundPattern(stateCount) ? centerFromEnd(stateCount, offset) : NaN;
-  }
-
   #crossCheckHorizontal(x: number, y: number, maxCount: number): number {
-    return this.#crossCheck(x, y, maxCount, true);
+    return crossPatternCheck(this.#matrix, x, y, maxCount, true, isFoundFinderPattern);
   }
 
   #crossCheckVertical(x: number, y: number, maxCount: number): number {
-    return this.#crossCheck(x, y, maxCount, false);
+    return crossPatternCheck(this.#matrix, x, y, maxCount, false, isFoundFinderPattern);
   }
 
   #isFoundDiagonalPattern(x: number, y: number): boolean {
@@ -229,7 +99,7 @@ export class FinderPatternFinder {
       return false;
     }
 
-    return isFoundPattern(stateCount);
+    return isFoundFinderPattern(stateCount);
   }
 
   #process(patterns: Pattern[], x: number, y: number, stateCount: number[]): void {
@@ -352,7 +222,7 @@ export class FinderPatternFinder {
       const process = (x: number, y: number) => {
         pushStateCount(stateCount, count);
 
-        if (isFoundPattern(stateCount)) {
+        if (isFoundFinderPattern(stateCount)) {
           this.#process(patterns, x, y, stateCount);
         }
       };
