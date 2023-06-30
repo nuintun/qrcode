@@ -272,7 +272,7 @@ export class Detector {
           // Kind of arbitrary -- expand search radius before giving up
           // If we didn't find alignment pattern... well try anyway without it
           for (let ratio = 4; ratio <= 16; ratio <<= 1) {
-            const alignmentPattern = this.#findAlignmentInRegion(estAlignmentX, estAlignmentY, moduleSize, ratio);
+            alignmentPattern = this.#findAlignmentInRegion(estAlignmentX, estAlignmentY, moduleSize, ratio);
 
             if (alignmentPattern != null) {
               break;
