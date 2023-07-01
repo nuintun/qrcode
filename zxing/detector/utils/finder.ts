@@ -173,13 +173,18 @@ export function checkDiagonalPattern(
   x: number,
   y: number,
   moduleSize: number,
+  isBackslash: boolean,
   checker: (stateCount: number[]) => boolean
 ): boolean {
   let offset = 0;
 
   const stateCount = [0, 0, 0, 0, 0];
   const getBit = (offset: number, isUpward: boolean): number => {
-    return isUpward ? matrix.get(x - offset, y - offset) : matrix.get(x + offset, y + offset);
+    if (isBackslash) {
+      return isUpward ? matrix.get(x - offset, y - offset) : matrix.get(x + offset, y + offset);
+    } else {
+      return isUpward ? matrix.get(x + offset, y - offset) : matrix.get(x - offset, y + offset);
+    }
   };
 
   // Start counting up, left from center finding black center mass

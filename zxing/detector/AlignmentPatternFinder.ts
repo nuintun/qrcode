@@ -40,11 +40,25 @@ export class AlignmentPatternFinder {
     return alignCrossPattern(this.#matrix, x, y, moduleSize, false, isFoundAlignmentPattern);
   }
 
-  #isDiagonalPassed(x: number, y: number, moduleSize: number): boolean {
-    return checkDiagonalPattern(this.#matrix, x, y, moduleSize, isFoundAlignmentPattern);
+  #isDiagonalPassed(x: number, y: number, moduleSize: number, strict?: boolean): boolean {
+    const matrix = this.#matrix;
+    const isSlashPassed = checkDiagonalPattern(matrix, x, y, moduleSize, true, isFoundAlignmentPattern);
+
+    if (strict) {
+      return isSlashPassed && checkDiagonalPattern(matrix, x, y, moduleSize, false, isFoundAlignmentPattern);
+    }
+
+    return isSlashPassed || checkDiagonalPattern(matrix, x, y, moduleSize, false, isFoundAlignmentPattern);
   }
 
-  #process(patterns: Pattern[], x: number, y: number, stateCount: number[], moduleSize: number): Pattern | undefined {
+  #find(
+    patterns: Pattern[],
+    x: number,
+    y: number,
+    stateCount: number[],
+    moduleSize: number,
+    strict?: boolean
+  ): Pattern | undefined {
     let offsetX = centerFromEnd(stateCount, x);
 
     const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
@@ -53,7 +67,7 @@ export class AlignmentPatternFinder {
       // Re-cross check
       offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
 
-      if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), moduleSize)) {
+      if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), moduleSize, strict)) {
         for (const pattern of patterns) {
           // Look for about the same center and module size
           if (pattern.equals(offsetX, offsetY, moduleSize)) {
@@ -67,7 +81,7 @@ export class AlignmentPatternFinder {
     }
   }
 
-  public find(): Pattern | undefined {
+  public find(strict?: boolean): Pattern | undefined {
     const startX = this.#x;
     const startY = this.#y;
     const matrix = this.#matrix;
@@ -97,7 +111,7 @@ export class AlignmentPatternFinder {
 
         if (isFoundAlignmentPattern(stateCount)) {
           if (isEqualsModuleSize(moduleSize, getStateCountTotal(stateCount) / 3))
-            return this.#process(patterns, x, y, stateCount, moduleSize);
+            return this.#find(patterns, x, y, stateCount, moduleSize, strict);
         }
       };
 

@@ -314,8 +314,8 @@
         const { width, height } = imageData;
         const decoder = new QRCode.Decoder();
         const matrix = QRCode.binarizer(imageData);
-        const detector = new QRCode.Detector(matrix);
-        const detected = detector.detect();
+        const detector = new QRCode.Detector({ strict: true });
+        const detected = detector.detect(matrix);
 
         // const x = QRCode.extract(matrix);
 

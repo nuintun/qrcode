@@ -34,40 +34,15 @@ export class FinderPatternFinder {
     return alignCrossPattern(this.#matrix, x, y, moduleSize, false, isFoundFinderPattern);
   }
 
-  #isDiagonalPassed(x: number, y: number, moduleSize: number): boolean {
-    return checkDiagonalPattern(this.#matrix, x, y, moduleSize, isFoundFinderPattern);
-  }
+  #isDiagonalPassed(x: number, y: number, moduleSize: number, strict?: boolean): boolean {
+    const matrix = this.#matrix;
+    const isSlashPassed = checkDiagonalPattern(matrix, x, y, moduleSize, true, isFoundFinderPattern);
 
-  #process(patterns: Pattern[], x: number, y: number, stateCount: number[], moduleSize: number): void {
-    let offsetX = centerFromEnd(stateCount, x);
-
-    const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
-
-    if (!Number.isNaN(offsetY)) {
-      // Re-cross check
-      offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
-
-      if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), moduleSize)) {
-        let found = false;
-
-        const { length } = patterns;
-
-        for (let i = 0; i < length; i++) {
-          const pattern = patterns[i];
-
-          // Look for about the same center and module size:
-          if (pattern.equals(offsetX, offsetY, moduleSize)) {
-            found = true;
-            patterns[i] = pattern.combine(offsetX, offsetY, moduleSize);
-            break;
-          }
-        }
-
-        if (!found) {
-          patterns.push(new Pattern(offsetX, offsetY, moduleSize));
-        }
-      }
+    if (strict) {
+      return isSlashPassed && checkDiagonalPattern(matrix, x, y, moduleSize, false, isFoundFinderPattern);
     }
+
+    return isSlashPassed || checkDiagonalPattern(matrix, x, y, moduleSize, false, isFoundFinderPattern);
   }
 
   #selectBestPatterns(patterns: Pattern[]): FinderPatternGroup[] {
@@ -143,7 +118,39 @@ export class FinderPatternFinder {
     return finderPatternGroups;
   }
 
-  public find(): FinderPatternGroup[] {
+  #find(patterns: Pattern[], x: number, y: number, stateCount: number[], moduleSize: number, strict?: boolean): void {
+    let offsetX = centerFromEnd(stateCount, x);
+
+    const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
+
+    if (!Number.isNaN(offsetY)) {
+      // Re-cross check
+      offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
+
+      if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), moduleSize, strict)) {
+        let found = false;
+
+        const { length } = patterns;
+
+        for (let i = 0; i < length; i++) {
+          const pattern = patterns[i];
+
+          // Look for about the same center and module size:
+          if (pattern.equals(offsetX, offsetY, moduleSize)) {
+            found = true;
+            patterns[i] = pattern.combine(offsetX, offsetY, moduleSize);
+            break;
+          }
+        }
+
+        if (!found) {
+          patterns.push(new Pattern(offsetX, offsetY, moduleSize));
+        }
+      }
+    }
+  }
+
+  public find(strict?: boolean): FinderPatternGroup[] {
     const matrix = this.#matrix;
     const patterns: Pattern[] = [];
     const { width, height } = matrix;
@@ -166,7 +173,7 @@ export class FinderPatternFinder {
         pushStateCount(stateCount, count);
 
         if (isFoundFinderPattern(stateCount)) {
-          this.#process(patterns, x, y, stateCount, getStateCountTotal(stateCount) / 7);
+          this.#find(patterns, x, y, stateCount, getStateCountTotal(stateCount) / 7, strict);
         }
       };
 
