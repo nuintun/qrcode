@@ -5,11 +5,13 @@
 import { Point } from '/common/Point';
 
 export class Pattern extends Point {
+  #count: number;
   #moduleSize: number;
 
-  constructor(x: number, y: number, moduleSize: number) {
+  constructor(x: number, y: number, moduleSize: number, count: number = 1) {
     super(x, y);
 
+    this.#count = count;
     this.#moduleSize = moduleSize;
   }
 
@@ -18,20 +20,21 @@ export class Pattern extends Point {
   }
 
   public combine(x: number, y: number, moduleSize: number): Pattern {
-    const combinedX = (this.x + x) / 2;
-    const combinedY = (this.y + y) / 2;
-    const combinedModuleSize = (this.#moduleSize + moduleSize) / 2;
+    const count = this.#count;
+    const combinedCount = count + 1;
+    const combinedX = (count * this.x + x) / combinedCount;
+    const combinedY = (count * this.y + y) / combinedCount;
+    const combinedModuleSize = (count * this.#moduleSize + moduleSize) / combinedCount;
 
-    return new Pattern(combinedX, combinedY, combinedModuleSize);
+    return new Pattern(combinedX, combinedY, combinedModuleSize, combinedCount);
   }
 
   public equals(x: number, y: number, moduleSize: number): boolean {
-    const currentModuleSize = this.#moduleSize;
-
-    moduleSize = Math.max(currentModuleSize, moduleSize);
-
     if (Math.abs(x - this.x) <= moduleSize && Math.abs(y - this.y) <= moduleSize) {
-      return moduleSize - currentModuleSize <= moduleSize;
+      const currentModuleSize = this.#moduleSize;
+      const moduleSizeDiff = Math.abs(moduleSize - currentModuleSize);
+
+      return moduleSizeDiff < 1 || moduleSizeDiff <= currentModuleSize;
     }
 
     return false;

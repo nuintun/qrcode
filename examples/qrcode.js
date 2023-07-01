@@ -3640,25 +3640,29 @@
    * @module Pattern
    */
   class Pattern extends Point {
+    #count;
     #moduleSize;
-    constructor(x, y, moduleSize) {
+    constructor(x, y, moduleSize, count = 1) {
       super(x, y);
+      this.#count = count;
       this.#moduleSize = moduleSize;
     }
     get moduleSize() {
       return this.#moduleSize;
     }
     combine(x, y, moduleSize) {
-      const combinedX = (this.x + x) / 2;
-      const combinedY = (this.y + y) / 2;
-      const combinedModuleSize = (this.#moduleSize + moduleSize) / 2;
-      return new Pattern(combinedX, combinedY, combinedModuleSize);
+      const count = this.#count;
+      const combinedCount = count + 1;
+      const combinedX = (count * this.x + x) / combinedCount;
+      const combinedY = (count * this.y + y) / combinedCount;
+      const combinedModuleSize = (count * this.#moduleSize + moduleSize) / combinedCount;
+      return new Pattern(combinedX, combinedY, combinedModuleSize, combinedCount);
     }
     equals(x, y, moduleSize) {
-      const currentModuleSize = this.#moduleSize;
-      moduleSize = Math.max(currentModuleSize, moduleSize);
       if (Math.abs(x - this.x) <= moduleSize && Math.abs(y - this.y) <= moduleSize) {
-        return moduleSize - currentModuleSize <= moduleSize;
+        const currentModuleSize = this.#moduleSize;
+        const moduleSizeDiff = Math.abs(moduleSize - currentModuleSize);
+        return moduleSizeDiff < 1 || moduleSizeDiff <= currentModuleSize;
       }
       return false;
     }
@@ -3725,8 +3729,9 @@
       const process = (x, y, stateCount, count) => {
         shiftStateCount(stateCount, count);
         if (isFoundAlignmentPattern(stateCount)) {
-          if (isEqualsModuleSize(moduleSize, getStateCountTotal(stateCount) / 3)) {
-            return this.#find(patterns, x, y, stateCount, moduleSize, strict);
+          const newModuleSize = getStateCountTotal(stateCount) / 3;
+          if (isEqualsModuleSize(moduleSize, newModuleSize)) {
+            return this.#find(patterns, x, y, stateCount, newModuleSize, strict);
           }
         }
       };
