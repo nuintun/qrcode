@@ -11,7 +11,7 @@ import { FinderPatternFinder } from './FinderPatternFinder';
 export interface DetectResult {
   readonly matrix: BitMatrix;
   readonly alignment?: Pattern;
-  readonly patterns: FinderPatternGroup;
+  readonly finder: FinderPatternGroup;
 }
 
 export interface Options {
@@ -36,7 +36,7 @@ export class Detector {
 
       if (bitMatrix != null) {
         result.push({
-          patterns,
+          finder: patterns,
           matrix: bitMatrix,
           alignment: alignmentPattern
         });

@@ -335,21 +335,21 @@
         console.dir(detected);
 
         if (detected.length > 0) {
-          for (const { matrix, patterns, alignment } of detected) {
+          for (const { matrix, finder, alignment } of detected) {
             try {
               const decoded = decoder.decode(matrix);
               const { content } = decoded;
 
               decodeResult.html(content);
-              success.push(patterns);
+              success.push(finder);
 
               console.dir(matrix);
-              console.dir(patterns);
+              console.dir(finder);
               console.dir(decoded);
               console.dir(content);
             } catch {
               // 解码失败，跳过
-              errors.push(patterns);
+              errors.push(finder);
             }
 
             if (alignment != null) {

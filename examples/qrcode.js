@@ -4300,7 +4300,7 @@
         const [bitMatrix, alignmentPattern] = detect(matrix, patterns, strict);
         if (bitMatrix != null) {
           result.push({
-            patterns,
+            finder: patterns,
             matrix: bitMatrix,
             alignment: alignmentPattern
           });
