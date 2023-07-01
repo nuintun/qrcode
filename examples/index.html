@@ -340,18 +340,20 @@
               const decoded = decoder.decode(matrix);
               const { content } = decoded;
 
-              decodeResult.html(content);
-              success.push(finder);
+              if (content) {
+                decodeResult.html(content);
+                success.push(finder);
 
-              console.dir(matrix);
-              console.dir(finder);
+                console.dir(matrix);
+                console.dir(finder);
 
-              if (alignment) {
-                console.dir(alignment);
+                if (alignment) {
+                  console.dir(alignment);
+                }
+
+                console.dir(decoded);
+                console.dir(content);
               }
-
-              console.dir(decoded);
-              console.dir(content);
             } catch {
               // 解码失败，跳过
               errors.push(finder);
