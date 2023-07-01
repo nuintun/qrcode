@@ -4293,7 +4293,7 @@
     }
     detect(matrix) {
       const result = [];
-      const { strict } = this.#options;
+      const { strict = true } = this.#options;
       const finder = new FinderPatternFinder(matrix);
       const finderPatternGroups = finder.find(strict);
       for (const patterns of finderPatternGroups) {
