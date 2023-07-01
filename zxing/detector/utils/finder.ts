@@ -74,25 +74,22 @@ export function isFoundFinderPattern(stateCount: number[]): boolean {
   return false;
 }
 
-export function isFoundAlignmentPattern(stateCount: number[], moduleSize: number): boolean {
+export function isFoundAlignmentPattern(stateCount: number[]): boolean {
   const moduleCount = stateCount.length;
   const stateCountTotal = getStateCountTotal(stateCount, true);
 
   if (!Number.isNaN(stateCountTotal) && stateCountTotal >= moduleCount) {
-    const newModuleSize = stateCountTotal / moduleCount;
+    const moduleSize = stateCountTotal / moduleCount;
+    const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
 
-    if (isEqualsModuleSize(moduleSize, newModuleSize)) {
-      const moduleSizeDiff = newModuleSize * DIFF_MODULE_SIZE_RATIO;
-
-      // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
-      for (const size of stateCount) {
-        if (Math.abs(size - newModuleSize) > moduleSizeDiff) {
-          return false;
-        }
+    // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
+    for (const size of stateCount) {
+      if (Math.abs(size - moduleSize) > moduleSizeDiff) {
+        return false;
       }
-
-      return true;
     }
+
+    return true;
   }
 
   return false;
@@ -125,8 +122,8 @@ export function alignCrossPattern(
   y: number,
   moduleSize: number,
   isHorizontal: boolean,
-  checker: (stateCount: number[], moduleSize: number) => boolean
-): [offset: number, stateCount: number[]] {
+  checker: (stateCount: number[]) => boolean
+): number {
   let offset = isHorizontal ? x : y;
 
   const stateCount = [0, 0, 0, 0, 0];
@@ -168,7 +165,7 @@ export function alignCrossPattern(
     stateCount[4]++;
   }
 
-  return [checker(stateCount, moduleSize) ? centerFromEnd(stateCount, offset) : NaN, stateCount];
+  return checker(stateCount) ? centerFromEnd(stateCount, offset) : NaN;
 }
 
 export function checkDiagonalPattern(
@@ -176,7 +173,7 @@ export function checkDiagonalPattern(
   x: number,
   y: number,
   moduleSize: number,
-  checker: (stateCount: number[], moduleSize: number) => boolean
+  checker: (stateCount: number[]) => boolean
 ): boolean {
   let offset = 0;
 
@@ -222,5 +219,5 @@ export function checkDiagonalPattern(
     stateCount[4]++;
   }
 
-  return checker(stateCount, moduleSize);
+  return checker(stateCount);
 }

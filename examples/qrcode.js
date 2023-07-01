@@ -3512,21 +3512,19 @@
     }
     return false;
   }
-  function isFoundAlignmentPattern(stateCount, moduleSize) {
+  function isFoundAlignmentPattern(stateCount) {
     const moduleCount = stateCount.length;
     const stateCountTotal = getStateCountTotal(stateCount, true);
     if (!Number.isNaN(stateCountTotal) && stateCountTotal >= moduleCount) {
-      const newModuleSize = stateCountTotal / moduleCount;
-      if (isEqualsModuleSize(moduleSize, newModuleSize)) {
-        const moduleSizeDiff = newModuleSize * DIFF_MODULE_SIZE_RATIO;
-        // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
-        for (const size of stateCount) {
-          if (Math.abs(size - newModuleSize) > moduleSizeDiff) {
-            return false;
-          }
+      const moduleSize = stateCountTotal / moduleCount;
+      const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
+      // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
+      for (const size of stateCount) {
+        if (Math.abs(size - moduleSize) > moduleSizeDiff) {
+          return false;
         }
-        return true;
       }
+      return true;
     }
     return false;
   }
@@ -3577,7 +3575,7 @@
       offset++;
       stateCount[4]++;
     }
-    return [checker(stateCount, moduleSize) ? centerFromEnd(stateCount, offset) : NaN, stateCount];
+    return checker(stateCount) ? centerFromEnd(stateCount, offset) : NaN;
   }
   function checkDiagonalPattern(matrix, x, y, moduleSize, checker) {
     let offset = 0;
@@ -3614,7 +3612,7 @@
       offset++;
       stateCount[4]++;
     }
-    return checker(stateCount, moduleSize);
+    return checker(stateCount);
   }
 
   /**
@@ -3713,14 +3711,13 @@
     }
     #process(patterns, x, y, stateCount, moduleSize) {
       let offsetX = centerFromEnd(stateCount, x);
-      const [offsetY] = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
+      const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
       if (!Number.isNaN(offsetY)) {
         // Re-cross check
-        [offsetX, stateCount] = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
+        offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
         if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), moduleSize)) {
           let found = false;
           const { length } = patterns;
-          moduleSize = getStateCountTotal(stateCount) / 7;
           for (let i = 0; i < length; i++) {
             const pattern = patterns[i];
             // Look for about the same center and module size:
@@ -3859,12 +3856,11 @@
     }
     #process(patterns, x, y, stateCount, moduleSize) {
       let offsetX = centerFromEnd(stateCount, x);
-      const [offsetY] = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
+      const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
       if (!Number.isNaN(offsetY)) {
         // Re-cross check
-        [offsetX, stateCount] = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
+        offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
         if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), moduleSize)) {
-          moduleSize = getStateCountTotal(stateCount) / 5;
           for (const pattern of patterns) {
             // Look for about the same center and module size
             if (pattern.equals(offsetX, offsetY, moduleSize)) {
@@ -3899,8 +3895,9 @@
         const stateCount = [0, 0, 0];
         const process = (x, y) => {
           pushStateCount(stateCount, count);
-          if (isFoundAlignmentPattern(stateCount, moduleSize)) {
-            return this.#process(patterns, x, y, stateCount, moduleSize);
+          if (isFoundAlignmentPattern(stateCount)) {
+            if (isEqualsModuleSize(moduleSize, getStateCountTotal(stateCount) / 3))
+              return this.#process(patterns, x, y, stateCount, moduleSize);
           }
         };
         while (x < width) {

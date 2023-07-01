@@ -26,11 +26,11 @@ export class FinderPatternFinder {
     this.#matrix = matrix;
   }
 
-  #crossAlignHorizontal(x: number, y: number, moduleSize: number): [offset: number, stateCount: number[]] {
+  #crossAlignHorizontal(x: number, y: number, moduleSize: number): number {
     return alignCrossPattern(this.#matrix, x, y, moduleSize, true, isFoundFinderPattern);
   }
 
-  #crossAlignVertical(x: number, y: number, moduleSize: number): [offset: number, stateCount: number[]] {
+  #crossAlignVertical(x: number, y: number, moduleSize: number): number {
     return alignCrossPattern(this.#matrix, x, y, moduleSize, false, isFoundFinderPattern);
   }
 
@@ -41,18 +41,16 @@ export class FinderPatternFinder {
   #process(patterns: Pattern[], x: number, y: number, stateCount: number[], moduleSize: number): void {
     let offsetX = centerFromEnd(stateCount, x);
 
-    const [offsetY] = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
+    const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
 
     if (!Number.isNaN(offsetY)) {
       // Re-cross check
-      [offsetX, stateCount] = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
+      offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
 
       if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), moduleSize)) {
         let found = false;
 
         const { length } = patterns;
-
-        moduleSize = getStateCountTotal(stateCount) / 7;
 
         for (let i = 0; i < length; i++) {
           const pattern = patterns[i];
