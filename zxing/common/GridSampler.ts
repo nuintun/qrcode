@@ -18,10 +18,11 @@ export class GridSampler {
 
     const { length } = points;
     const matrix = this.#matrix;
+    const maxOffset = length - 1;
     const { width, height } = matrix;
 
     // Check and nudge points from start until we see some that are OK:
-    for (let offset = 0; offset < length && nudged; offset += 2) {
+    for (let offset = 0; offset < maxOffset && nudged; offset += 2) {
       nudged = false;
 
       const x = toInt32(points[offset]);
@@ -72,7 +73,7 @@ export class GridSampler {
   }
 
   public sampleGrid(width: number, height: number, transform: PerspectiveTransform): BitMatrix {
-    const max = 2 * width;
+    const maxX = 2 * width;
     const matrix = this.#matrix;
     const points: number[] = [];
     const matrixWidth = matrix.width;
@@ -82,7 +83,7 @@ export class GridSampler {
     for (let y = 0; y < height; y++) {
       const value = y + 0.5;
 
-      for (let x = 0; x < max; x += 2) {
+      for (let x = 0; x < maxX; x += 2) {
         points[x] = x / 2 + 0.5;
         points[x + 1] = value;
       }
@@ -91,7 +92,7 @@ export class GridSampler {
 
       this.#checkAndNudgePoints(points);
 
-      for (let x = 0; x < max; x += 2) {
+      for (let x = 0; x < maxX; x += 2) {
         const offsetX = toInt32(points[x]);
         const offsetY = toInt32(points[x + 1]);
 

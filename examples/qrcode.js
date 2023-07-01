@@ -3380,9 +3380,10 @@
       let nudged = true;
       const { length } = points;
       const matrix = this.#matrix;
+      const maxOffset = length - 1;
       const { width, height } = matrix;
       // Check and nudge points from start until we see some that are OK:
-      for (let offset = 0; offset < length && nudged; offset += 2) {
+      for (let offset = 0; offset < maxOffset && nudged; offset += 2) {
         nudged = false;
         const x = toInt32(points[offset]);
         const y = toInt32(points[offset + 1]);
@@ -3424,7 +3425,7 @@
       }
     }
     sampleGrid(width, height, transform) {
-      const max = 2 * width;
+      const maxX = 2 * width;
       const matrix = this.#matrix;
       const points = [];
       const matrixWidth = matrix.width;
@@ -3432,13 +3433,13 @@
       const bits = new BitMatrix(width, height);
       for (let y = 0; y < height; y++) {
         const value = y + 0.5;
-        for (let x = 0; x < max; x += 2) {
+        for (let x = 0; x < maxX; x += 2) {
           points[x] = x / 2 + 0.5;
           points[x + 1] = value;
         }
         transform.transformPoints(points);
         this.#checkAndNudgePoints(points);
-        for (let x = 0; x < max; x += 2) {
+        for (let x = 0; x < maxX; x += 2) {
           const offsetX = toInt32(points[x]);
           const offsetY = toInt32(points[x + 1]);
           if (
@@ -3808,8 +3809,8 @@
       const a31 = this.#a31;
       const a32 = this.#a32;
       const a33 = this.#a33;
-      const max = points.length;
-      for (let i = 0; i < max; i += 2) {
+      const maxI = points.length - 1;
+      for (let i = 0; i < maxI; i += 2) {
         const x = points[i];
         const y = points[i + 1];
         const denominator = a13 * x + a23 * y + a33;
@@ -3827,25 +3828,25 @@
       const a31 = this.#a31;
       const a32 = this.#a32;
       const a33 = this.#a33;
-      const o11 = other.#a11;
-      const o12 = other.#a12;
-      const o13 = other.#a13;
-      const o21 = other.#a21;
-      const o22 = other.#a22;
-      const o23 = other.#a23;
-      const o31 = other.#a31;
-      const o32 = other.#a32;
-      const o33 = other.#a33;
+      const b11 = other.#a11;
+      const b12 = other.#a12;
+      const b13 = other.#a13;
+      const b21 = other.#a21;
+      const b22 = other.#a22;
+      const b23 = other.#a23;
+      const b31 = other.#a31;
+      const b32 = other.#a32;
+      const b33 = other.#a33;
       return new PerspectiveTransform(
-        a11 * o11 + a21 * o12 + a31 * o13,
-        a11 * o21 + a21 * o22 + a31 * o23,
-        a11 * o31 + a21 * o32 + a31 * o33,
-        a12 * o11 + a22 * o12 + a32 * o13,
-        a12 * o21 + a22 * o22 + a32 * o23,
-        a12 * o31 + a22 * o32 + a32 * o33,
-        a13 * o11 + a23 * o12 + a33 * o13,
-        a13 * o21 + a23 * o22 + a33 * o23,
-        a13 * o31 + a23 * o32 + a33 * o33
+        a11 * b11 + a21 * b12 + a31 * b13,
+        a11 * b21 + a21 * b22 + a31 * b23,
+        a11 * b31 + a21 * b32 + a31 * b33,
+        a12 * b11 + a22 * b12 + a32 * b13,
+        a12 * b21 + a22 * b22 + a32 * b23,
+        a12 * b31 + a22 * b32 + a32 * b33,
+        a13 * b11 + a23 * b12 + a33 * b13,
+        a13 * b21 + a23 * b22 + a33 * b23,
+        a13 * b31 + a23 * b32 + a33 * b33
       );
     }
   }
