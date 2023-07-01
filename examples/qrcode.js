@@ -3725,8 +3725,9 @@
       const process = (x, y, stateCount, count) => {
         shiftStateCount(stateCount, count);
         if (isFoundAlignmentPattern(stateCount)) {
-          if (isEqualsModuleSize(moduleSize, getStateCountTotal(stateCount) / 3))
+          if (isEqualsModuleSize(moduleSize, getStateCountTotal(stateCount) / 3)) {
             return this.#find(patterns, x, y, stateCount, moduleSize, strict);
+          }
         }
       };
       // We are looking for black/white/black modules in 1:1:1 ratio;

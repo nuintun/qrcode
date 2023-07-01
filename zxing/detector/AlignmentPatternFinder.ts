@@ -93,8 +93,9 @@ export class AlignmentPatternFinder {
       shiftStateCount(stateCount, count);
 
       if (isFoundAlignmentPattern(stateCount)) {
-        if (isEqualsModuleSize(moduleSize, getStateCountTotal(stateCount) / 3))
+        if (isEqualsModuleSize(moduleSize, getStateCountTotal(stateCount) / 3)) {
           return this.#find(patterns, x, y, stateCount, moduleSize, strict);
+        }
       }
     };
 
