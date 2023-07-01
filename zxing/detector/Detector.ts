@@ -267,13 +267,7 @@ export class Detector {
 
           // Kind of arbitrary -- expand search radius before giving up
           // If we didn't find alignment pattern... well try anyway without it
-          for (let ratio = 4; ratio <= 16; ratio <<= 1) {
-            alignmentPattern = this.#findAlignmentInRegion(expectAlignmentX, expectAlignmentY, moduleSize, ratio);
-
-            if (alignmentPattern != null) {
-              break;
-            }
-          }
+          alignmentPattern = this.#findAlignmentInRegion(expectAlignmentX, expectAlignmentY, moduleSize, 4);
         }
 
         const sampler = new GridSampler(this.#matrix);

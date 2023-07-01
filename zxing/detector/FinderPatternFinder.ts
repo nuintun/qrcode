@@ -38,10 +38,9 @@ export class FinderPatternFinder {
     return checkDiagonalPattern(this.#matrix, x, y, moduleSize, isFoundFinderPattern);
   }
 
-  #process(patterns: Pattern[], x: number, y: number, stateCount: number[]): void {
+  #process(patterns: Pattern[], x: number, y: number, stateCount: number[], moduleSize: number): void {
     let offsetX = centerFromEnd(stateCount, x);
 
-    const moduleSize = getStateCountTotal(stateCount) / 7;
     const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
 
     if (!Number.isNaN(offsetY)) {
@@ -162,12 +161,14 @@ export class FinderPatternFinder {
       let count = 0;
       let lastBit = matrix.get(x, y);
 
-      const stateCount = [0, 0, 0, 0, 0];
+      const stateCount = [0, 0, 0];
       const process = (x: number, y: number) => {
         pushStateCount(stateCount, count);
 
+        const moduleSize = getStateCountTotal(stateCount) / 5;
+
         if (isFoundFinderPattern(stateCount)) {
-          this.#process(patterns, x, y, stateCount);
+          this.#process(patterns, x, y, stateCount, moduleSize);
         }
       };
 
@@ -186,7 +187,7 @@ export class FinderPatternFinder {
         x++;
       }
 
-      process(width - 1, y);
+      process(x, y);
     }
 
     return this.#selectBestPatterns(patterns);

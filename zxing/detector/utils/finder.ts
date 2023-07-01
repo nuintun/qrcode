@@ -2,6 +2,7 @@
  * @module finder
  */
 
+import { toInt32 } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
 
 export const DIFF_EDGE_RATIO = 0.25;
@@ -10,15 +11,27 @@ export const MIN_MODULE_COUNT_PER_EDGE = 11;
 export const MAX_MODULE_COUNT_PER_EDGE = 175;
 
 export function centerFromEnd(stateCount: number[], end: number): number {
-  return end - stateCount[4] - stateCount[3] - stateCount[2] / 2;
+  const { length } = stateCount;
+  const middleIndex = toInt32(length / 2);
+
+  let center = end - stateCount[middleIndex] / 2;
+
+  for (let i = middleIndex + 1; i < length; i++) {
+    center -= stateCount[i];
+  }
+
+  return center;
 }
 
 export function pushStateCount(stateCount: number[], count: number): void {
-  stateCount[0] = stateCount[1];
-  stateCount[1] = stateCount[2];
-  stateCount[2] = stateCount[3];
-  stateCount[3] = stateCount[4];
-  stateCount[4] = count;
+  const { length } = stateCount;
+  const lastIndex = length - 1;
+
+  for (let i = 0; i < lastIndex; i++) {
+    stateCount[i] = stateCount[i + 1];
+  }
+
+  stateCount[lastIndex] = count;
 }
 
 export function getStateCountTotal(stateCount: number[], checkZero?: boolean): number {
@@ -36,43 +49,53 @@ export function getStateCountTotal(stateCount: number[], checkZero?: boolean): n
 }
 
 export function isFoundFinderPattern(stateCount: number[]): boolean {
+  const { length } = stateCount;
+  const moduleCount = length === 3 ? 5 : 7;
   const stateCountTotal = getStateCountTotal(stateCount, true);
 
-  if (Number.isNaN(stateCountTotal) || stateCountTotal < 7) {
-    return false;
+  if (!Number.isNaN(stateCountTotal) && stateCountTotal >= moduleCount) {
+    const middleIndex = toInt32(length / 2);
+    const moduleSize = stateCountTotal / moduleCount;
+    const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
+
+    // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-3-1 or 1-1-3-1-1 proportions
+    for (let i = 0; i < length; i++) {
+      const size = stateCount[i];
+      const ratio = i !== middleIndex ? 1 : 3;
+
+      if (Math.abs(size - moduleSize * ratio) > moduleSizeDiff * ratio) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
-  const moduleSize = stateCountTotal / 7;
-  const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
-
-  // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
-  return (
-    Math.abs(stateCount[0] - moduleSize) < moduleSizeDiff &&
-    Math.abs(stateCount[1] - moduleSize) < moduleSizeDiff &&
-    Math.abs(stateCount[2] - moduleSize * 3) < moduleSizeDiff * 3 &&
-    Math.abs(stateCount[3] - moduleSize) < moduleSizeDiff &&
-    Math.abs(stateCount[4] - moduleSize) < moduleSizeDiff
-  );
+  return false;
 }
 
-export function isFoundAlignmentPattern(stateCount: number[]): boolean {
+export function isFoundAlignmentPattern(stateCount: number[], moduleSize: number): boolean {
+  const moduleCount = stateCount.length;
   const stateCountTotal = getStateCountTotal(stateCount, true);
 
-  if (Number.isNaN(stateCountTotal) || stateCountTotal < 5) {
-    return false;
+  if (!Number.isNaN(stateCountTotal) && stateCountTotal >= moduleCount) {
+    const newModuleSize = stateCountTotal / moduleCount;
+
+    if (isEqualsModuleSize(moduleSize, newModuleSize)) {
+      const moduleSizeDiff = newModuleSize * DIFF_MODULE_SIZE_RATIO;
+
+      // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
+      for (const size of stateCount) {
+        if (Math.abs(size - newModuleSize) > moduleSizeDiff) {
+          return false;
+        }
+      }
+
+      return true;
+    }
   }
 
-  const moduleSize = stateCountTotal / 5;
-  const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
-
-  // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-1-1-1 proportions
-  return (
-    Math.abs(stateCount[0] - moduleSize) < moduleSizeDiff &&
-    Math.abs(stateCount[1] - moduleSize) < moduleSizeDiff &&
-    Math.abs(stateCount[2] - moduleSize) < moduleSizeDiff &&
-    Math.abs(stateCount[3] - moduleSize) < moduleSizeDiff &&
-    Math.abs(stateCount[4] - moduleSize) < moduleSizeDiff
-  );
+  return false;
 }
 
 export function isEqualsEdge(edge1: number, edge2: number): boolean {
@@ -102,7 +125,7 @@ export function alignCrossPattern(
   y: number,
   moduleSize: number,
   isHorizontal: boolean,
-  checker: (stateCount: number[]) => boolean
+  checker: (stateCount: number[], moduleSize: number) => boolean
 ): number {
   let offset = isHorizontal ? x : y;
 
@@ -145,7 +168,7 @@ export function alignCrossPattern(
     stateCount[4]++;
   }
 
-  return checker(stateCount) ? centerFromEnd(stateCount, offset) : NaN;
+  return checker(stateCount, moduleSize) ? centerFromEnd(stateCount, offset) : NaN;
 }
 
 export function checkDiagonalPattern(
@@ -153,7 +176,7 @@ export function checkDiagonalPattern(
   x: number,
   y: number,
   moduleSize: number,
-  checker: (stateCount: number[]) => boolean
+  checker: (stateCount: number[], moduleSize: number) => boolean
 ): boolean {
   let offset = 0;
 
@@ -199,5 +222,5 @@ export function checkDiagonalPattern(
     stateCount[4]++;
   }
 
-  return checker(stateCount);
+  return checker(stateCount, moduleSize);
 }

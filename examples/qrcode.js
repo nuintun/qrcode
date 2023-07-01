@@ -3466,14 +3466,21 @@
   const MIN_MODULE_COUNT_PER_EDGE = 11;
   const MAX_MODULE_COUNT_PER_EDGE = 175;
   function centerFromEnd(stateCount, end) {
-    return end - stateCount[4] - stateCount[3] - stateCount[2] / 2;
+    const { length } = stateCount;
+    const middleIndex = toInt32(length / 2);
+    let center = end - stateCount[middleIndex] / 2;
+    for (let i = middleIndex + 1; i < length; i++) {
+      center -= stateCount[i];
+    }
+    return center;
   }
   function pushStateCount(stateCount, count) {
-    stateCount[0] = stateCount[1];
-    stateCount[1] = stateCount[2];
-    stateCount[2] = stateCount[3];
-    stateCount[3] = stateCount[4];
-    stateCount[4] = count;
+    const { length } = stateCount;
+    const lastIndex = length - 1;
+    for (let i = 0; i < lastIndex; i++) {
+      stateCount[i] = stateCount[i + 1];
+    }
+    stateCount[lastIndex] = count;
   }
   function getStateCountTotal(stateCount, checkZero) {
     let stateCountTotal = 0;
@@ -3486,36 +3493,42 @@
     return stateCountTotal;
   }
   function isFoundFinderPattern(stateCount) {
+    const { length } = stateCount;
+    const moduleCount = length === 3 ? 5 : 7;
     const stateCountTotal = getStateCountTotal(stateCount, true);
-    if (Number.isNaN(stateCountTotal) || stateCountTotal < 7) {
-      return false;
+    if (!Number.isNaN(stateCountTotal) && stateCountTotal >= moduleCount) {
+      const middleIndex = toInt32(length / 2);
+      const moduleSize = stateCountTotal / moduleCount;
+      const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
+      // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-3-1 or 1-1-3-1-1 proportions
+      for (let i = 0; i < length; i++) {
+        const size = stateCount[i];
+        const ratio = i !== middleIndex ? 1 : 3;
+        if (Math.abs(size - moduleSize * ratio) > moduleSizeDiff * ratio) {
+          return false;
+        }
+      }
+      return true;
     }
-    const moduleSize = stateCountTotal / 7;
-    const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
-    // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
-    return (
-      Math.abs(stateCount[0] - moduleSize) < moduleSizeDiff &&
-      Math.abs(stateCount[1] - moduleSize) < moduleSizeDiff &&
-      Math.abs(stateCount[2] - moduleSize * 3) < moduleSizeDiff * 3 &&
-      Math.abs(stateCount[3] - moduleSize) < moduleSizeDiff &&
-      Math.abs(stateCount[4] - moduleSize) < moduleSizeDiff
-    );
+    return false;
   }
-  function isFoundAlignmentPattern(stateCount) {
+  function isFoundAlignmentPattern(stateCount, moduleSize) {
+    const moduleCount = stateCount.length;
     const stateCountTotal = getStateCountTotal(stateCount, true);
-    if (Number.isNaN(stateCountTotal) || stateCountTotal < 5) {
-      return false;
+    if (!Number.isNaN(stateCountTotal) && stateCountTotal >= moduleCount) {
+      const newModuleSize = stateCountTotal / moduleCount;
+      if (isEqualsModuleSize(moduleSize, newModuleSize)) {
+        const moduleSizeDiff = newModuleSize * DIFF_MODULE_SIZE_RATIO;
+        // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
+        for (const size of stateCount) {
+          if (Math.abs(size - newModuleSize) > moduleSizeDiff) {
+            return false;
+          }
+        }
+        return true;
+      }
     }
-    const moduleSize = stateCountTotal / 5;
-    const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
-    // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-1-1-1 proportions
-    return (
-      Math.abs(stateCount[0] - moduleSize) < moduleSizeDiff &&
-      Math.abs(stateCount[1] - moduleSize) < moduleSizeDiff &&
-      Math.abs(stateCount[2] - moduleSize) < moduleSizeDiff &&
-      Math.abs(stateCount[3] - moduleSize) < moduleSizeDiff &&
-      Math.abs(stateCount[4] - moduleSize) < moduleSizeDiff
-    );
+    return false;
   }
   function isEqualsEdge(edge1, edge2) {
     const edgeAvg = (edge1 + edge2) / 2;
@@ -3564,7 +3577,7 @@
       offset++;
       stateCount[4]++;
     }
-    return checker(stateCount) ? centerFromEnd(stateCount, offset) : NaN;
+    return checker(stateCount, moduleSize) ? centerFromEnd(stateCount, offset) : NaN;
   }
   function checkDiagonalPattern(matrix, x, y, moduleSize, checker) {
     let offset = 0;
@@ -3601,7 +3614,7 @@
       offset++;
       stateCount[4]++;
     }
-    return checker(stateCount);
+    return checker(stateCount, moduleSize);
   }
 
   /**
@@ -3698,9 +3711,8 @@
     #isDiagonalPassed(x, y, moduleSize) {
       return checkDiagonalPattern(this.#matrix, x, y, moduleSize, isFoundFinderPattern);
     }
-    #process(patterns, x, y, stateCount) {
+    #process(patterns, x, y, stateCount, moduleSize) {
       let offsetX = centerFromEnd(stateCount, x);
-      const moduleSize = getStateCountTotal(stateCount) / 7;
       const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
       if (!Number.isNaN(offsetY)) {
         // Re-cross check
@@ -3793,11 +3805,12 @@
         }
         let count = 0;
         let lastBit = matrix.get(x, y);
-        const stateCount = [0, 0, 0, 0, 0];
+        const stateCount = [0, 0, 0];
         const process = (x, y) => {
           pushStateCount(stateCount, count);
+          const moduleSize = getStateCountTotal(stateCount) / 5;
           if (isFoundFinderPattern(stateCount)) {
-            this.#process(patterns, x, y, stateCount);
+            this.#process(patterns, x, y, stateCount, moduleSize);
           }
         };
         while (x < width) {
@@ -3811,7 +3824,7 @@
           }
           x++;
         }
-        process(width - 1, y);
+        process(x, y);
       }
       return this.#selectBestPatterns(patterns);
     }
@@ -3827,7 +3840,6 @@
     #height;
     #matrix;
     #moduleSize;
-    #isFoundPatternBound = this.#isFoundPattern.bind(this);
     constructor(matrix, x, y, width, height, moduleSize) {
       this.#x = x;
       this.#y = y;
@@ -3836,29 +3848,24 @@
       this.#matrix = matrix;
       this.#moduleSize = moduleSize;
     }
-    #isFoundPattern(stateCount) {
-      const moduleSize = getStateCountTotal(stateCount) / 5;
-      return isEqualsModuleSize(this.#moduleSize, moduleSize) && isFoundAlignmentPattern(stateCount);
-    }
     #crossAlignHorizontal(x, y, moduleSize) {
-      return alignCrossPattern(this.#matrix, x, y, moduleSize, true, this.#isFoundPatternBound);
+      return alignCrossPattern(this.#matrix, x, y, moduleSize, true, isFoundAlignmentPattern);
     }
     #crossAlignVertical(x, y, moduleSize) {
-      return alignCrossPattern(this.#matrix, x, y, moduleSize, false, this.#isFoundPatternBound);
+      return alignCrossPattern(this.#matrix, x, y, moduleSize, false, isFoundAlignmentPattern);
     }
     #isDiagonalPassed(x, y, moduleSize) {
-      return checkDiagonalPattern(this.#matrix, x, y, moduleSize, this.#isFoundPatternBound);
+      return checkDiagonalPattern(this.#matrix, x, y, moduleSize, isFoundAlignmentPattern);
     }
-    #process(patterns, x, y, stateCount) {
+    #process(patterns, x, y, stateCount, moduleSize) {
       let offsetX = centerFromEnd(stateCount, x);
-      const moduleSize = getStateCountTotal(stateCount) / 5;
       const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
       if (!Number.isNaN(offsetY)) {
         // Re-cross check
         offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
         if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), moduleSize)) {
           for (const pattern of patterns) {
-            // Look for about the same center and module size:
+            // Look for about the same center and module size
             if (pattern.equals(offsetX, offsetY, moduleSize)) {
               return pattern.combine(offsetX, offsetY, moduleSize);
             }
@@ -3874,6 +3881,7 @@
       const matrix = this.#matrix;
       const patterns = [];
       const width = startX + this.#width;
+      const moduleSize = this.#moduleSize;
       const height = startY + this.#height;
       // We are looking for black/white/black modules in 1:1:1 ratio;
       // this tracks the number of black/white/black modules seen so far
@@ -3887,31 +3895,31 @@
         }
         let count = 0;
         let lastBit = matrix.get(x, y);
-        const stateCount = [0, 0, 0, 0, 0];
+        const stateCount = [0, 0, 0];
+        const process = (x, y) => {
+          pushStateCount(stateCount, count);
+          if (isFoundAlignmentPattern(stateCount, moduleSize)) {
+            return this.#process(patterns, x, y, stateCount, moduleSize);
+          }
+        };
         while (x < width) {
           const bit = matrix.get(x, y);
           if (bit === lastBit) {
             count++;
           } else {
-            pushStateCount(stateCount, count);
-            if (this.#isFoundPattern(stateCount)) {
-              // Yes
-              const confirmed = this.#process(patterns, x, y, stateCount);
-              if (confirmed != null) {
-                return confirmed;
-              }
+            // Yes
+            const confirmed = process(x, y);
+            if (confirmed != null) {
+              return confirmed;
             }
             count = 1;
             lastBit = bit;
           }
           x++;
         }
-        pushStateCount(stateCount, count);
-        if (this.#isFoundPattern(stateCount)) {
-          const confirmed = this.#process(patterns, width - 1, y, stateCount);
-          if (confirmed != null) {
-            return confirmed;
-          }
+        const confirmed = process(x, y);
+        if (confirmed != null) {
+          return confirmed;
         }
       }
       // Hmm, nothing we saw was observed and confirmed twice. If we had
@@ -4256,12 +4264,7 @@
             const expectAlignmentY = toInt32(topLeft.y + correctionToTopLeft * (bottomRightY - topLeft.y));
             // Kind of arbitrary -- expand search radius before giving up
             // If we didn't find alignment pattern... well try anyway without it
-            for (let ratio = 4; ratio <= 16; ratio <<= 1) {
-              alignmentPattern = this.#findAlignmentInRegion(expectAlignmentX, expectAlignmentY, moduleSize, ratio);
-              if (alignmentPattern != null) {
-                break;
-              }
-            }
+            alignmentPattern = this.#findAlignmentInRegion(expectAlignmentX, expectAlignmentY, moduleSize, 4);
           }
           const sampler = new GridSampler(this.#matrix);
           const transform = createTransform(size, topLeft, topRight, bottomLeft, alignmentPattern);
