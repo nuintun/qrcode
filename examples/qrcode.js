@@ -3722,6 +3722,13 @@
       const moduleSize = this.#moduleSize;
       const maxX = startX + this.#width - 1;
       const maxY = startY + this.#height - 1;
+      const process = (x, y, stateCount, count) => {
+        shiftStateCount(stateCount, count);
+        if (isFoundAlignmentPattern(stateCount)) {
+          if (isEqualsModuleSize(moduleSize, getStateCountTotal(stateCount) / 3))
+            return this.#find(patterns, x, y, stateCount, moduleSize, strict);
+        }
+      };
       // We are looking for black/white/black modules in 1:1:1 ratio;
       // this tracks the number of black/white/black modules seen so far
       for (let y = maxY; y >= startY; y--) {
@@ -3735,20 +3742,13 @@
         let count = 0;
         let lastBit = matrix.get(x, y);
         const stateCount = [0, 0, 0];
-        const process = (x, y) => {
-          shiftStateCount(stateCount, count);
-          if (isFoundAlignmentPattern(stateCount)) {
-            if (isEqualsModuleSize(moduleSize, getStateCountTotal(stateCount) / 3))
-              return this.#find(patterns, x, y, stateCount, moduleSize, strict);
-          }
-        };
         while (x >= startX) {
           const bit = matrix.get(x, y);
           if (bit === lastBit) {
             count++;
           } else {
             // Yes
-            const confirmed = process(x, y);
+            const confirmed = process(x, y, stateCount, count);
             if (confirmed != null) {
               return confirmed;
             }
@@ -3757,7 +3757,7 @@
           }
           x--;
         }
-        const confirmed = process(x, y);
+        const confirmed = process(x, y, stateCount, count);
         if (confirmed != null) {
           return confirmed;
         }
@@ -4266,6 +4266,12 @@
       const matrix = this.#matrix;
       const patterns = [];
       const { width, height } = matrix;
+      const process = (x, y, stateCount, count) => {
+        pushStateCount(stateCount, count);
+        if (isFoundFinderPattern(stateCount)) {
+          this.#find(patterns, x, y, stateCount, getStateCountTotal(stateCount) / 7, strict);
+        }
+      };
       for (let y = 0; y < height; y++) {
         let x = 0;
         // Burn off leading white pixels before anything else; if we start in the middle of
@@ -4277,24 +4283,18 @@
         let count = 0;
         let lastBit = matrix.get(x, y);
         const stateCount = [0, 0, 0, 0, 0];
-        const process = (x, y) => {
-          pushStateCount(stateCount, count);
-          if (isFoundFinderPattern(stateCount)) {
-            this.#find(patterns, x, y, stateCount, getStateCountTotal(stateCount) / 7, strict);
-          }
-        };
         while (x < width) {
           const bit = matrix.get(x, y);
           if (bit === lastBit) {
             count++;
           } else {
-            process(x, y);
+            process(x, y, stateCount, count);
             count = 1;
             lastBit = bit;
           }
           x++;
         }
-        process(x, y);
+        process(x, y, stateCount, count);
       }
       return this.#selectBestPatterns(patterns);
     }

@@ -154,6 +154,13 @@ export class FinderPatternFinder {
     const matrix = this.#matrix;
     const patterns: Pattern[] = [];
     const { width, height } = matrix;
+    const process = (x: number, y: number, stateCount: number[], count: number) => {
+      pushStateCount(stateCount, count);
+
+      if (isFoundFinderPattern(stateCount)) {
+        this.#find(patterns, x, y, stateCount, getStateCountTotal(stateCount) / 7, strict);
+      }
+    };
 
     for (let y = 0; y < height; y++) {
       let x = 0;
@@ -169,13 +176,6 @@ export class FinderPatternFinder {
       let lastBit = matrix.get(x, y);
 
       const stateCount = [0, 0, 0, 0, 0];
-      const process = (x: number, y: number) => {
-        pushStateCount(stateCount, count);
-
-        if (isFoundFinderPattern(stateCount)) {
-          this.#find(patterns, x, y, stateCount, getStateCountTotal(stateCount) / 7, strict);
-        }
-      };
 
       while (x < width) {
         const bit = matrix.get(x, y);
@@ -183,7 +183,7 @@ export class FinderPatternFinder {
         if (bit === lastBit) {
           count++;
         } else {
-          process(x, y);
+          process(x, y, stateCount, count);
 
           count = 1;
           lastBit = bit;
@@ -192,7 +192,7 @@ export class FinderPatternFinder {
         x++;
       }
 
-      process(x, y);
+      process(x, y, stateCount, count);
     }
 
     return this.#selectBestPatterns(patterns);

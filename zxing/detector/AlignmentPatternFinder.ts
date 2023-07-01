@@ -89,6 +89,14 @@ export class AlignmentPatternFinder {
     const moduleSize = this.#moduleSize;
     const maxX = startX + this.#width - 1;
     const maxY = startY + this.#height - 1;
+    const process = (x: number, y: number, stateCount: number[], count: number) => {
+      shiftStateCount(stateCount, count);
+
+      if (isFoundAlignmentPattern(stateCount)) {
+        if (isEqualsModuleSize(moduleSize, getStateCountTotal(stateCount) / 3))
+          return this.#find(patterns, x, y, stateCount, moduleSize, strict);
+      }
+    };
 
     // We are looking for black/white/black modules in 1:1:1 ratio;
     // this tracks the number of black/white/black modules seen so far
@@ -106,14 +114,6 @@ export class AlignmentPatternFinder {
       let lastBit = matrix.get(x, y);
 
       const stateCount = [0, 0, 0];
-      const process = (x: number, y: number) => {
-        shiftStateCount(stateCount, count);
-
-        if (isFoundAlignmentPattern(stateCount)) {
-          if (isEqualsModuleSize(moduleSize, getStateCountTotal(stateCount) / 3))
-            return this.#find(patterns, x, y, stateCount, moduleSize, strict);
-        }
-      };
 
       while (x >= startX) {
         const bit = matrix.get(x, y);
@@ -122,7 +122,7 @@ export class AlignmentPatternFinder {
           count++;
         } else {
           // Yes
-          const confirmed = process(x, y);
+          const confirmed = process(x, y, stateCount, count);
 
           if (confirmed != null) {
             return confirmed;
@@ -135,7 +135,7 @@ export class AlignmentPatternFinder {
         x--;
       }
 
-      const confirmed = process(x, y);
+      const confirmed = process(x, y, stateCount, count);
 
       if (confirmed != null) {
         return confirmed;
