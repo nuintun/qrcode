@@ -3466,6 +3466,15 @@
   const DIFF_MODULE_SIZE_RATIO = 0.5;
   const MIN_MODULE_COUNT_PER_EDGE = 11;
   const MAX_MODULE_COUNT_PER_EDGE = 175;
+  function centerFromStart(stateCount, start) {
+    const { length } = stateCount;
+    const middleIndex = toInt32(length / 2);
+    let center = start + stateCount[middleIndex] / 2;
+    for (let i = 0; i < middleIndex; i++) {
+      center += stateCount[i];
+    }
+    return center;
+  }
   function centerFromEnd(stateCount, end) {
     const { length } = stateCount;
     const middleIndex = toInt32(length / 2);
@@ -3474,6 +3483,13 @@
       center -= stateCount[i];
     }
     return center;
+  }
+  function shiftStateCount(stateCount, count) {
+    const { length } = stateCount;
+    for (let i = 1; i < length; i++) {
+      stateCount[i] = stateCount[i - 1];
+    }
+    stateCount[0] = count;
   }
   function pushStateCount(stateCount, count) {
     const { length } = stateCount;
@@ -3681,7 +3697,7 @@
       return isSlashPassed || checkDiagonalPattern(matrix, x, y, moduleSize, false, isFoundAlignmentPattern);
     }
     #find(patterns, x, y, stateCount, moduleSize, strict) {
-      let offsetX = centerFromEnd(stateCount, x);
+      let offsetX = centerFromStart(stateCount, x);
       const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
       if (!Number.isNaN(offsetY)) {
         // Re-cross check
@@ -3703,30 +3719,30 @@
       const startY = this.#y;
       const matrix = this.#matrix;
       const patterns = [];
-      const width = startX + this.#width;
       const moduleSize = this.#moduleSize;
-      const height = startY + this.#height;
+      const maxX = startX + this.#width - 1;
+      const maxY = startY + this.#height - 1;
       // We are looking for black/white/black modules in 1:1:1 ratio;
       // this tracks the number of black/white/black modules seen so far
-      for (let y = startY; y < height; y++) {
-        let x = startX;
+      for (let y = maxY; y >= startY; y--) {
+        let x = maxX;
         // Burn off leading white pixels before anything else; if we start in the middle of
         // a white run, it doesn't make sense to count its length, since we don't know if the
         // white run continued to the left of the start point
-        while (x < width && !matrix.get(x, y)) {
-          x++;
+        while (x >= startX && !matrix.get(x, y)) {
+          x--;
         }
         let count = 0;
         let lastBit = matrix.get(x, y);
         const stateCount = [0, 0, 0];
         const process = (x, y) => {
-          pushStateCount(stateCount, count);
+          shiftStateCount(stateCount, count);
           if (isFoundAlignmentPattern(stateCount)) {
             if (isEqualsModuleSize(moduleSize, getStateCountTotal(stateCount) / 3))
               return this.#find(patterns, x, y, stateCount, moduleSize, strict);
           }
         };
-        while (x < width) {
+        while (x >= startX) {
           const bit = matrix.get(x, y);
           if (bit === lastBit) {
             count++;
@@ -3739,7 +3755,7 @@
             count = 1;
             lastBit = bit;
           }
-          x++;
+          x--;
         }
         const confirmed = process(x, y);
         if (confirmed != null) {

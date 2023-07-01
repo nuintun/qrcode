@@ -10,6 +10,19 @@ export const DIFF_MODULE_SIZE_RATIO = 0.5;
 export const MIN_MODULE_COUNT_PER_EDGE = 11;
 export const MAX_MODULE_COUNT_PER_EDGE = 175;
 
+export function centerFromStart(stateCount: number[], start: number): number {
+  const { length } = stateCount;
+  const middleIndex = toInt32(length / 2);
+
+  let center = start + stateCount[middleIndex] / 2;
+
+  for (let i = 0; i < middleIndex; i++) {
+    center += stateCount[i];
+  }
+
+  return center;
+}
+
 export function centerFromEnd(stateCount: number[], end: number): number {
   const { length } = stateCount;
   const middleIndex = toInt32(length / 2);
@@ -21,6 +34,16 @@ export function centerFromEnd(stateCount: number[], end: number): number {
   }
 
   return center;
+}
+
+export function shiftStateCount(stateCount: number[], count: number): void {
+  const { length } = stateCount;
+
+  for (let i = 1; i < length; i++) {
+    stateCount[i] = stateCount[i - 1];
+  }
+
+  stateCount[0] = count;
 }
 
 export function pushStateCount(stateCount: number[], count: number): void {
