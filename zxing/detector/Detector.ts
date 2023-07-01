@@ -35,11 +35,18 @@ export class Detector {
       const [bitMatrix, alignmentPattern] = detect(matrix, patterns, strict);
 
       if (bitMatrix != null) {
-        result.push({
-          finder: patterns,
-          matrix: bitMatrix,
-          alignment: alignmentPattern
-        });
+        if (alignmentPattern) {
+          result.push({
+            finder: patterns,
+            matrix: bitMatrix,
+            alignment: alignmentPattern
+          });
+        } else {
+          result.push({
+            finder: patterns,
+            matrix: bitMatrix
+          });
+        }
       }
     }
 
