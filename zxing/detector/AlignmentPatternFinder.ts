@@ -6,6 +6,7 @@ import {
   alignCrossPattern,
   centerFromEnd,
   checkDiagonalPattern,
+  getStateCountTotal,
   isFoundAlignmentPattern,
   pushStateCount
 } from './utils/finder';
@@ -30,11 +31,11 @@ export class AlignmentPatternFinder {
     this.#moduleSize = moduleSize;
   }
 
-  #crossAlignHorizontal(x: number, y: number, moduleSize: number): number {
+  #crossAlignHorizontal(x: number, y: number, moduleSize: number): [offset: number, stateCount: number[]] {
     return alignCrossPattern(this.#matrix, x, y, moduleSize, true, isFoundAlignmentPattern);
   }
 
-  #crossAlignVertical(x: number, y: number, moduleSize: number): number {
+  #crossAlignVertical(x: number, y: number, moduleSize: number): [offset: number, stateCount: number[]] {
     return alignCrossPattern(this.#matrix, x, y, moduleSize, false, isFoundAlignmentPattern);
   }
 
@@ -45,13 +46,15 @@ export class AlignmentPatternFinder {
   #process(patterns: Pattern[], x: number, y: number, stateCount: number[], moduleSize: number): Pattern | undefined {
     let offsetX = centerFromEnd(stateCount, x);
 
-    const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
+    const [offsetY] = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
 
     if (!Number.isNaN(offsetY)) {
       // Re-cross check
-      offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
+      [offsetX, stateCount] = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
 
       if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), moduleSize)) {
+        moduleSize = getStateCountTotal(stateCount) / 5;
+
         for (const pattern of patterns) {
           // Look for about the same center and module size
           if (pattern.equals(offsetX, offsetY, moduleSize)) {
