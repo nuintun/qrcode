@@ -124,7 +124,7 @@ export class FinderPatternFinder {
       offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
 
       if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), moduleSize)) {
-        let found = false;
+        let combined = false;
 
         const { length } = patterns;
 
@@ -133,13 +133,13 @@ export class FinderPatternFinder {
 
           // Look for about the same center and module size:
           if (pattern.equals(offsetX, offsetY, moduleSize)) {
-            found = true;
+            combined = true;
             patterns[i] = pattern.combine(offsetX, offsetY, moduleSize);
             break;
           }
         }
 
-        if (!found) {
+        if (!combined) {
           patterns.push(new Pattern(offsetX, offsetY, moduleSize));
         }
       }

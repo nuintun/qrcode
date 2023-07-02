@@ -4228,18 +4228,18 @@
         // Re-cross check
         offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
         if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), moduleSize)) {
-          let found = false;
+          let combined = false;
           const { length } = patterns;
           for (let i = 0; i < length; i++) {
             const pattern = patterns[i];
             // Look for about the same center and module size:
             if (pattern.equals(offsetX, offsetY, moduleSize)) {
-              found = true;
+              combined = true;
               patterns[i] = pattern.combine(offsetX, offsetY, moduleSize);
               break;
             }
           }
-          if (!found) {
+          if (!combined) {
             patterns.push(new Pattern(offsetX, offsetY, moduleSize));
           }
         }
@@ -4292,8 +4292,8 @@
       this.#options = options;
     }
     detect(matrix) {
-      const { strict } = this.#options;
       const result = [];
+      const { strict = true } = this.#options;
       const finder = new FinderPatternFinder(matrix);
       const finderPatternGroups = finder.find();
       for (const patterns of finderPatternGroups) {

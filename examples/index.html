@@ -431,6 +431,14 @@
 
         if (detected.length > 0) {
           for (const { matrix, finder, alignment } of detected) {
+            console.dir(matrix);
+            console.dir(finder);
+            console.dir(alignment);
+
+            if (alignment) {
+              alignments.push(alignment);
+            }
+
             try {
               const decoded = decoder.decode(matrix);
               const { content } = decoded;
@@ -438,16 +446,6 @@
               if (content) {
                 decodeResult.html(content);
                 success.push(finder);
-
-                console.dir(matrix);
-                console.dir(finder);
-
-                if (alignment) {
-                  console.dir(alignment);
-
-                  alignments.push(alignment);
-                }
-
                 console.dir(decoded);
                 console.dir(content);
               } else {
@@ -458,10 +456,6 @@
               errors.push(finder);
             }
           }
-        }
-
-        for (const alignment of alignments) {
-          markFinderPattern(alignment, '#ff00ff');
         }
 
         for (const { topLeft, topRight, bottomLeft } of errors) {
@@ -478,6 +472,10 @@
           }
         } else {
           decodeResult.html(`<span class="error">未发现二维码</span>`);
+        }
+
+        for (const alignment of alignments) {
+          markFinderPattern(alignment, '#ff00ff');
         }
       });
 
