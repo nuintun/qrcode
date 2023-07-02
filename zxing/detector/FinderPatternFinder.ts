@@ -34,15 +34,13 @@ export class FinderPatternFinder {
     return alignCrossPattern(this.#matrix, x, y, moduleSize, false, isFoundFinderPattern);
   }
 
-  #isDiagonalPassed(x: number, y: number, moduleSize: number, strict?: boolean): boolean {
+  #isDiagonalPassed(x: number, y: number, moduleSize: number): boolean {
     const matrix = this.#matrix;
-    const isSlashPassed = checkDiagonalPattern(matrix, x, y, moduleSize, true, isFoundFinderPattern);
 
-    if (strict) {
-      return isSlashPassed && checkDiagonalPattern(matrix, x, y, moduleSize, false, isFoundFinderPattern);
-    }
-
-    return isSlashPassed || checkDiagonalPattern(matrix, x, y, moduleSize, false, isFoundFinderPattern);
+    return (
+      checkDiagonalPattern(matrix, x, y, moduleSize, true, isFoundFinderPattern) &&
+      checkDiagonalPattern(matrix, x, y, moduleSize, false, isFoundFinderPattern)
+    );
   }
 
   #selectBestPatterns(patterns: Pattern[]): FinderPatternGroup[] {
@@ -116,7 +114,7 @@ export class FinderPatternFinder {
     return finderPatternGroups;
   }
 
-  #find(patterns: Pattern[], x: number, y: number, stateCount: number[], moduleSize: number, strict?: boolean): void {
+  #find(patterns: Pattern[], x: number, y: number, stateCount: number[], moduleSize: number): void {
     let offsetX = centerFromEnd(stateCount, x);
 
     const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
@@ -125,7 +123,7 @@ export class FinderPatternFinder {
       // Re-cross check
       offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
 
-      if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), moduleSize, strict)) {
+      if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), moduleSize)) {
         let found = false;
 
         const { length } = patterns;
@@ -148,7 +146,7 @@ export class FinderPatternFinder {
     }
   }
 
-  public find(strict?: boolean): FinderPatternGroup[] {
+  public find(): FinderPatternGroup[] {
     const matrix = this.#matrix;
     const patterns: Pattern[] = [];
     const { width, height } = matrix;
@@ -156,7 +154,7 @@ export class FinderPatternFinder {
       pushStateCount(stateCount, count);
 
       if (isFoundFinderPattern(stateCount)) {
-        this.#find(patterns, x, y, stateCount, getStateCountTotal(stateCount) / 7, strict);
+        this.#find(patterns, x, y, stateCount, getStateCountTotal(stateCount) / 7);
       }
     };
 

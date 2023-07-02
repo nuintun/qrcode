@@ -4,12 +4,12 @@
 
 import {
   alignCrossPattern,
-  centerFromStart,
+  centerFromEnd,
   checkDiagonalPattern,
   getStateCountTotal,
   isEqualsModuleSize,
   isFoundAlignmentPattern,
-  shiftStateCount
+  pushStateCount
 } from './utils/finder';
 import { Pattern } from './Pattern';
 import { toInt32 } from '/common/utils';
@@ -59,7 +59,7 @@ export class AlignmentPatternFinder {
     moduleSize: number,
     strict?: boolean
   ): Pattern | undefined {
-    let offsetX = centerFromStart(stateCount, x);
+    let offsetX = centerFromEnd(stateCount, x);
 
     const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
 
@@ -86,11 +86,11 @@ export class AlignmentPatternFinder {
     const startY = this.#y;
     const matrix = this.#matrix;
     const patterns: Pattern[] = [];
+    const width = startX + this.#width;
     const moduleSize = this.#moduleSize;
-    const maxX = startX + this.#width - 1;
-    const maxY = startY + this.#height - 1;
+    const height = startY + this.#height;
     const process = (x: number, y: number, stateCount: number[], count: number) => {
-      shiftStateCount(stateCount, count);
+      pushStateCount(stateCount, count);
 
       if (isFoundAlignmentPattern(stateCount)) {
         const newModuleSize = getStateCountTotal(stateCount) / 3;
@@ -103,14 +103,14 @@ export class AlignmentPatternFinder {
 
     // We are looking for black/white/black modules in 1:1:1 ratio;
     // this tracks the number of black/white/black modules seen so far
-    for (let y = maxY; y >= startY; y--) {
-      let x = maxX;
+    for (let y = startY; y < height; y++) {
+      let x = startX;
 
       // Burn off leading white pixels before anything else; if we start in the middle of
       // a white run, it doesn't make sense to count its length, since we don't know if the
       // white run continued to the left of the start point
-      while (x >= startX && !matrix.get(x, y)) {
-        x--;
+      while (x < width && !matrix.get(x, y)) {
+        x++;
       }
 
       let count = 0;
@@ -118,7 +118,7 @@ export class AlignmentPatternFinder {
 
       const stateCount = [0, 0, 0];
 
-      while (x >= startX) {
+      while (x < width) {
         const bit = matrix.get(x, y);
 
         if (bit === lastBit) {
@@ -135,7 +135,7 @@ export class AlignmentPatternFinder {
           lastBit = bit;
         }
 
-        x--;
+        x++;
       }
 
       const confirmed = process(x, y, stateCount, count);

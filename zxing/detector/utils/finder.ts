@@ -65,7 +65,7 @@ export function getStateCountTotal(stateCount: number[], checkZero?: boolean): n
 
   for (const count of stateCount) {
     if (checkZero && count === 0) {
-      return NaN;
+      return -1;
     }
 
     stateCountTotal += count;
@@ -79,12 +79,12 @@ export function isFoundFinderPattern(stateCount: number[]): boolean {
   const { length } = stateCount;
   const stateCountTotal = getStateCountTotal(stateCount, true);
 
-  if (!Number.isNaN(stateCountTotal) && stateCountTotal >= moduleCount) {
+  if (stateCountTotal >= moduleCount) {
     const middleIndex = toInt32(length / 2);
     const moduleSize = stateCountTotal / moduleCount;
     const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
 
-    // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-3-1 or 1-1-3-1-1 proportions
+    // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
     for (let i = 0; i < length; i++) {
       const size = stateCount[i];
       const ratio = i !== middleIndex ? 1 : 3;
@@ -104,7 +104,7 @@ export function isFoundAlignmentPattern(stateCount: number[]): boolean {
   const moduleCount = stateCount.length;
   const stateCountTotal = getStateCountTotal(stateCount, true);
 
-  if (!Number.isNaN(stateCountTotal) && stateCountTotal >= moduleCount) {
+  if (stateCountTotal >= moduleCount) {
     const moduleSize = stateCountTotal / moduleCount;
     const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
 
@@ -160,21 +160,21 @@ export function alignCrossPattern(
   let offset = isHorizontal ? x : y;
 
   const stateCount = [0, 0, 0, 0, 0];
-  const getBit = (offset: number): number => {
+  const isBlackPixel = (): number => {
     return isHorizontal ? matrix.get(offset, y) : matrix.get(x, offset);
   };
 
-  while (offset >= 0 && getBit(offset)) {
+  while (offset >= 0 && isBlackPixel()) {
     offset--;
     stateCount[2]++;
   }
 
-  while (offset >= 0 && !getBit(offset)) {
+  while (offset >= 0 && !isBlackPixel()) {
     offset--;
     stateCount[1]++;
   }
 
-  while (offset >= 0 && stateCount[0] < moduleSize && getBit(offset)) {
+  while (offset >= 0 && stateCount[0] < moduleSize && isBlackPixel()) {
     offset--;
     stateCount[0]++;
   }
@@ -183,17 +183,17 @@ export function alignCrossPattern(
 
   const size = isHorizontal ? matrix.width : matrix.height;
 
-  while (offset < size && getBit(offset)) {
+  while (offset < size && isBlackPixel()) {
     offset++;
     stateCount[2]++;
   }
 
-  while (offset < size && !getBit(offset)) {
+  while (offset < size && !isBlackPixel()) {
     offset++;
     stateCount[3]++;
   }
 
-  while (offset < size && stateCount[4] < moduleSize && getBit(offset)) {
+  while (offset < size && stateCount[4] < moduleSize && isBlackPixel()) {
     offset++;
     stateCount[4]++;
   }
@@ -212,7 +212,7 @@ export function checkDiagonalPattern(
   let offset = 0;
 
   const stateCount = [0, 0, 0, 0, 0];
-  const getBit = (offset: number, isUpward: boolean): number => {
+  const isBlackPixel = (isUpward: boolean): number => {
     if (isBackslash) {
       return isUpward ? matrix.get(x - offset, y - offset) : matrix.get(x + offset, y + offset);
     } else {
@@ -221,19 +221,19 @@ export function checkDiagonalPattern(
   };
 
   // Start counting up, left from center finding black center mass
-  while (x >= offset && y >= offset && getBit(offset, true)) {
+  while (x >= offset && y >= offset && isBlackPixel(true)) {
     offset++;
     stateCount[2]++;
   }
 
   // Continue up, left finding white space
-  while (x >= offset && y >= offset && !getBit(offset, true)) {
+  while (x >= offset && y >= offset && !isBlackPixel(true)) {
     offset++;
     stateCount[1]++;
   }
 
   // Continue up, left finding black border
-  while (x >= offset && y >= offset && stateCount[0] < moduleSize && getBit(offset, true)) {
+  while (x >= offset && y >= offset && stateCount[0] < moduleSize && isBlackPixel(true)) {
     offset++;
     stateCount[0]++;
   }
@@ -242,17 +242,17 @@ export function checkDiagonalPattern(
 
   const { width, height } = matrix;
 
-  while (x + offset < width && y + offset < height && getBit(offset, false)) {
+  while (x + offset < width && y + offset < height && isBlackPixel(false)) {
     offset++;
     stateCount[2]++;
   }
 
-  while (x + offset < width && y + offset < height && !getBit(offset, false)) {
+  while (x + offset < width && y + offset < height && !isBlackPixel(false)) {
     offset++;
     stateCount[3]++;
   }
 
-  while (x + offset < width && y + offset < height && stateCount[4] < moduleSize && getBit(offset, false)) {
+  while (x + offset < width && y + offset < height && stateCount[4] < moduleSize && isBlackPixel(false)) {
     offset++;
     stateCount[4]++;
   }

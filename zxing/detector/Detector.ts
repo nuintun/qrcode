@@ -29,7 +29,7 @@ export class Detector {
     const { strict } = this.#options;
     const result: DetectResult[] = [];
     const finder = new FinderPatternFinder(matrix);
-    const finderPatternGroups = finder.find(strict);
+    const finderPatternGroups = finder.find();
 
     for (const patterns of finderPatternGroups) {
       const [bitMatrix, alignmentPattern] = detect(matrix, patterns, strict);

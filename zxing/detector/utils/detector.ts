@@ -28,7 +28,7 @@ function sizeOfBlackWhiteBlackRun(matrix: BitMatrix, fromX: number, fromY: numbe
 
   // In black pixels, looking for white, first or second time.
   let state = 0;
-  let error = -xDiff / 2;
+  let error = toInt32(-xDiff / 2);
 
   // Loop up until x == toX, but not beyond
   const xLimit = toX + xStep;
@@ -106,20 +106,12 @@ function sizeOfBlackWhiteBlackRunBothWays(matrix: BitMatrix, fromX: number, from
 }
 
 function calculateModuleSizeOneWay(matrix: BitMatrix, pattern1: Pattern, pattern2: Pattern): number {
-  const expectModuleSize1 = sizeOfBlackWhiteBlackRunBothWays(
-    matrix,
-    toInt32(pattern1.x),
-    toInt32(pattern1.y),
-    toInt32(pattern2.x),
-    toInt32(pattern2.y)
-  );
-  const expectModuleSize2 = sizeOfBlackWhiteBlackRunBothWays(
-    matrix,
-    toInt32(pattern2.x),
-    toInt32(pattern2.y),
-    toInt32(pattern1.x),
-    toInt32(pattern1.y)
-  );
+  const x1 = toInt32(pattern1.x);
+  const y1 = toInt32(pattern1.y);
+  const x2 = toInt32(pattern2.x);
+  const y2 = toInt32(pattern2.y);
+  const expectModuleSize1 = sizeOfBlackWhiteBlackRunBothWays(matrix, x1, y1, x2, y2);
+  const expectModuleSize2 = sizeOfBlackWhiteBlackRunBothWays(matrix, x2, y2, x1, y1);
 
   if (Number.isNaN(expectModuleSize1)) {
     return expectModuleSize2 / 7;
