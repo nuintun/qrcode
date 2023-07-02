@@ -15,6 +15,10 @@ export class Pattern extends Point {
     this.#moduleSize = moduleSize;
   }
 
+  public get count() {
+    return this.#count;
+  }
+
   public get moduleSize(): number {
     return this.#moduleSize;
   }

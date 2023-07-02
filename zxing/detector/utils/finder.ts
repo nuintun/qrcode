@@ -3,7 +3,10 @@
  */
 
 import { toInt32 } from '/common/utils';
+import { Pattern } from '/detector/Pattern';
 import { BitMatrix } from '/common/BitMatrix';
+import { isPointInQuadrangle, Point } from '/common/Point';
+import { FinderPatternGroup } from '/detector/FinderPatternGroup';
 
 export const DIFF_EDGE_RATIO = 0.25;
 export const DIFF_MODULE_SIZE_RATIO = 0.5;
@@ -39,7 +42,7 @@ export function centerFromEnd(stateCount: number[], end: number): number {
 export function shiftStateCount(stateCount: number[], count: number): void {
   const { length } = stateCount;
 
-  for (let i = 1; i < length; i++) {
+  for (let i = length - 1; i > 0; i--) {
     stateCount[i] = stateCount[i - 1];
   }
 
@@ -137,6 +140,13 @@ export function isValidModuleCount(edge: number, moduleSize: number): boolean {
   const moduleCount = Math.ceil(edge / moduleSize);
 
   return moduleCount >= MIN_MODULE_COUNT_PER_EDGE && moduleCount <= MAX_MODULE_COUNT_PER_EDGE;
+}
+
+export function isInFinderPatternGroup({ topLeft, topRight, bottomLeft }: FinderPatternGroup, pattern: Pattern): boolean {
+  // Guess where a "bottom right" finder pattern would have been
+  const bottomRight = new Point(topRight.x - topLeft.x + bottomLeft.x, topRight.y - topLeft.y + bottomLeft.y);
+
+  return isPointInQuadrangle(pattern, topLeft, topRight, bottomRight, bottomLeft);
 }
 
 export function alignCrossPattern(

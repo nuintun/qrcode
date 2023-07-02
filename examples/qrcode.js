@@ -3362,9 +3362,9 @@
       return this.#y;
     }
   }
-  function distance$1(point1, point2) {
-    const xDiff = point1.x - point2.x;
-    const yDiff = point1.y - point2.y;
+  function distance$1(a, b) {
+    const xDiff = a.x - b.x;
+    const yDiff = a.y - b.y;
     return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
   }
 
@@ -3486,7 +3486,7 @@
   }
   function shiftStateCount(stateCount, count) {
     const { length } = stateCount;
-    for (let i = 1; i < length; i++) {
+    for (let i = length - 1; i > 0; i--) {
       stateCount[i] = stateCount[i - 1];
     }
     stateCount[0] = count;
@@ -3646,6 +3646,9 @@
       super(x, y);
       this.#count = count;
       this.#moduleSize = moduleSize;
+    }
+    get count() {
+      return this.#count;
     }
     get moduleSize() {
       return this.#moduleSize;
@@ -4013,9 +4016,9 @@
     return (calculateModuleSizeOneWay(matrix, topLeft, topRight) + calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)) / 2;
   }
   function computeSymbolSize(topLeft, topRight, bottomLeft, moduleSize) {
-    const width = round(distance$1(topLeft, topRight) / moduleSize);
-    const height = round(distance$1(topLeft, bottomLeft) / moduleSize);
-    const size = toInt32((width + height) / 2) + 7;
+    const width = distance$1(topLeft, topRight) / moduleSize;
+    const height = distance$1(topLeft, bottomLeft) / moduleSize;
+    const size = round((width + height) / 2) + 7;
     // mod 4
     switch (size & 0x03) {
       case 0:
@@ -4190,55 +4193,54 @@
     }
     #selectBestPatterns(patterns) {
       const { length } = patterns;
-      // Couldn't find enough finder patterns
-      if (length < 3) {
-        return [];
-      }
-      // Max i1
-      const maxI1 = length - 2;
-      // Max i2
-      const maxI2 = length - 1;
       // Groups
       const finderPatternGroups = [];
-      // Sort patterns
-      patterns.sort((pattern1, pattern2) => pattern2.moduleSize - pattern1.moduleSize);
-      for (let i1 = 0; i1 < maxI1; i1++) {
-        const pattern1 = patterns[i1];
-        const moduleSize1 = pattern1.moduleSize;
-        for (let i2 = i1 + 1; i2 < maxI2; i2++) {
-          const pattern2 = patterns[i2];
-          const moduleSize2 = pattern2.moduleSize;
-          if (!isEqualsModuleSize(moduleSize1, moduleSize2)) {
-            break;
-          }
-          for (let i3 = i2 + 1; i3 < length; i3++) {
-            const pattern3 = patterns[i3];
-            if (!isEqualsModuleSize(moduleSize2, pattern3.moduleSize)) {
+      // Find enough finder patterns
+      if (length >= 3) {
+        // Max i1
+        const maxI1 = length - 2;
+        // Max i2
+        const maxI2 = length - 1;
+        // Sort patterns
+        patterns.sort((pattern1, pattern2) => pattern2.moduleSize - pattern1.moduleSize);
+        for (let i1 = 0; i1 < maxI1; i1++) {
+          const pattern1 = patterns[i1];
+          const moduleSize1 = pattern1.moduleSize;
+          for (let i2 = i1 + 1; i2 < maxI2; i2++) {
+            const pattern2 = patterns[i2];
+            const moduleSize2 = pattern2.moduleSize;
+            if (!isEqualsModuleSize(moduleSize1, moduleSize2)) {
               break;
             }
-            const finderPatternGroup = new FinderPatternGroup([pattern1, pattern2, pattern3]);
-            const { topLeft, topRight, bottomLeft } = finderPatternGroup;
-            const edge1 = distance$1(bottomLeft, topLeft);
-            const edge2 = distance$1(topLeft, topRight);
-            // Calculate the difference of the cathetus lengths in percent
-            if (!isEqualsEdge(edge1, edge2)) {
-              continue;
+            for (let i3 = i2 + 1; i3 < length; i3++) {
+              const pattern3 = patterns[i3];
+              if (!isEqualsModuleSize(moduleSize2, pattern3.moduleSize)) {
+                break;
+              }
+              const finderPatternGroup = new FinderPatternGroup([pattern1, pattern2, pattern3]);
+              const { topLeft, topRight, bottomLeft } = finderPatternGroup;
+              const edge1 = distance$1(bottomLeft, topLeft);
+              const edge2 = distance$1(topLeft, topRight);
+              // Calculate the difference of the cathetus lengths in percent
+              if (!isEqualsEdge(edge1, edge2)) {
+                continue;
+              }
+              const hypotenuse = distance$1(topRight, bottomLeft);
+              // Calculate the difference of the hypotenuse lengths in percent
+              if (!isEqualsEdge(Math.sqrt(edge1 * edge1 + edge2 * edge2), hypotenuse)) {
+                continue;
+              }
+              // Check the sizes
+              const topLeftModuleSize = topLeft.moduleSize;
+              if (
+                !isValidModuleCount(edge1, (bottomLeft.moduleSize + topLeftModuleSize) / 2) ||
+                !isValidModuleCount(edge2, (topLeftModuleSize + topRight.moduleSize) / 2)
+              ) {
+                continue;
+              }
+              // All tests passed!
+              finderPatternGroups.push(finderPatternGroup);
             }
-            const hypotenuse = distance$1(topRight, bottomLeft);
-            // Calculate the difference of the hypotenuse lengths in percent
-            if (!isEqualsEdge(Math.sqrt(edge1 * edge1 + edge2 * edge2), hypotenuse)) {
-              continue;
-            }
-            // Check the sizes
-            const topLeftModuleSize = topLeft.moduleSize;
-            if (
-              !isValidModuleCount(edge1, (bottomLeft.moduleSize + topLeftModuleSize) / 2) ||
-              !isValidModuleCount(edge2, (topLeftModuleSize + topRight.moduleSize) / 2)
-            ) {
-              continue;
-            }
-            // All tests passed!
-            finderPatternGroups.push(finderPatternGroup);
           }
         }
       }
@@ -4302,7 +4304,7 @@
         }
         process(x, y, stateCount, count);
       }
-      return this.#selectBestPatterns(patterns);
+      return this.#selectBestPatterns(patterns.filter(({ count }) => count >= 3));
     }
   }
 
@@ -4315,8 +4317,8 @@
       this.#options = options;
     }
     detect(matrix) {
+      const { strict } = this.#options;
       const result = [];
-      const { strict = true } = this.#options;
       const finder = new FinderPatternFinder(matrix);
       const finderPatternGroups = finder.find(strict);
       for (const patterns of finderPatternGroups) {

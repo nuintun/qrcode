@@ -140,9 +140,9 @@ function calculateModuleSize(matrix: BitMatrix, topLeft: Pattern, topRight: Patt
 }
 
 export function computeSymbolSize(topLeft: Pattern, topRight: Pattern, bottomLeft: Pattern, moduleSize: number): number {
-  const width = round(distance(topLeft, topRight) / moduleSize);
-  const height = round(distance(topLeft, bottomLeft) / moduleSize);
-  const size = toInt32((width + height) / 2) + 7;
+  const width = distance(topLeft, topRight) / moduleSize;
+  const height = distance(topLeft, bottomLeft) / moduleSize;
+  const size = round((width + height) / 2) + 7;
 
   // mod 4
   switch (size & 0x03) {

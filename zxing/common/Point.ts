@@ -20,9 +20,20 @@ export class Point {
   }
 }
 
-export function distance(point1: Point, point2: Point): number {
-  const xDiff = point1.x - point2.x;
-  const yDiff = point1.y - point2.y;
+export function distance(a: Point, b: Point): number {
+  const xDiff = a.x - b.x;
+  const yDiff = a.y - b.y;
 
   return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+}
+
+export function calcTriangleArea(a: Point, b: Point, c: Point): number {
+  return Math.abs((a.x * b.y + b.x * c.y + c.x * a.y - b.x * a.y - c.x * b.y - a.x * c.y) / 2.0);
+}
+
+export function isPointInQuadrangle(p: Point, a: Point, b: Point, c: Point, d: Point): boolean {
+  return (
+    calcTriangleArea(a, b, c) + calcTriangleArea(c, d, a) ===
+    calcTriangleArea(a, b, p) + calcTriangleArea(b, c, p) + calcTriangleArea(c, d, p) + calcTriangleArea(d, a, p)
+  );
 }

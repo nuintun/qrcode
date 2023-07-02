@@ -47,70 +47,68 @@ export class FinderPatternFinder {
 
   #selectBestPatterns(patterns: Pattern[]): FinderPatternGroup[] {
     const { length } = patterns;
-
-    // Couldn't find enough finder patterns
-    if (length < 3) {
-      return [];
-    }
-
-    // Max i1
-    const maxI1 = length - 2;
-    // Max i2
-    const maxI2 = length - 1;
     // Groups
     const finderPatternGroups: FinderPatternGroup[] = [];
 
-    // Sort patterns
-    patterns.sort((pattern1, pattern2) => pattern2.moduleSize - pattern1.moduleSize);
+    // Find enough finder patterns
+    if (length >= 3) {
+      // Max i1
+      const maxI1 = length - 2;
+      // Max i2
+      const maxI2 = length - 1;
 
-    for (let i1 = 0; i1 < maxI1; i1++) {
-      const pattern1 = patterns[i1];
-      const moduleSize1 = pattern1.moduleSize;
+      // Sort patterns
+      patterns.sort((pattern1, pattern2) => pattern2.moduleSize - pattern1.moduleSize);
 
-      for (let i2 = i1 + 1; i2 < maxI2; i2++) {
-        const pattern2 = patterns[i2];
-        const moduleSize2 = pattern2.moduleSize;
+      for (let i1 = 0; i1 < maxI1; i1++) {
+        const pattern1 = patterns[i1];
+        const moduleSize1 = pattern1.moduleSize;
 
-        if (!isEqualsModuleSize(moduleSize1, moduleSize2)) {
-          break;
-        }
+        for (let i2 = i1 + 1; i2 < maxI2; i2++) {
+          const pattern2 = patterns[i2];
+          const moduleSize2 = pattern2.moduleSize;
 
-        for (let i3 = i2 + 1; i3 < length; i3++) {
-          const pattern3 = patterns[i3];
-
-          if (!isEqualsModuleSize(moduleSize2, pattern3.moduleSize)) {
+          if (!isEqualsModuleSize(moduleSize1, moduleSize2)) {
             break;
           }
 
-          const finderPatternGroup = new FinderPatternGroup([pattern1, pattern2, pattern3]);
-          const { topLeft, topRight, bottomLeft } = finderPatternGroup;
-          const edge1 = distance(bottomLeft, topLeft);
-          const edge2 = distance(topLeft, topRight);
+          for (let i3 = i2 + 1; i3 < length; i3++) {
+            const pattern3 = patterns[i3];
 
-          // Calculate the difference of the cathetus lengths in percent
-          if (!isEqualsEdge(edge1, edge2)) {
-            continue;
+            if (!isEqualsModuleSize(moduleSize2, pattern3.moduleSize)) {
+              break;
+            }
+
+            const finderPatternGroup = new FinderPatternGroup([pattern1, pattern2, pattern3]);
+            const { topLeft, topRight, bottomLeft } = finderPatternGroup;
+            const edge1 = distance(bottomLeft, topLeft);
+            const edge2 = distance(topLeft, topRight);
+
+            // Calculate the difference of the cathetus lengths in percent
+            if (!isEqualsEdge(edge1, edge2)) {
+              continue;
+            }
+
+            const hypotenuse = distance(topRight, bottomLeft);
+
+            // Calculate the difference of the hypotenuse lengths in percent
+            if (!isEqualsEdge(Math.sqrt(edge1 * edge1 + edge2 * edge2), hypotenuse)) {
+              continue;
+            }
+
+            // Check the sizes
+            const topLeftModuleSize = topLeft.moduleSize;
+
+            if (
+              !isValidModuleCount(edge1, (bottomLeft.moduleSize + topLeftModuleSize) / 2) ||
+              !isValidModuleCount(edge2, (topLeftModuleSize + topRight.moduleSize) / 2)
+            ) {
+              continue;
+            }
+
+            // All tests passed!
+            finderPatternGroups.push(finderPatternGroup);
           }
-
-          const hypotenuse = distance(topRight, bottomLeft);
-
-          // Calculate the difference of the hypotenuse lengths in percent
-          if (!isEqualsEdge(Math.sqrt(edge1 * edge1 + edge2 * edge2), hypotenuse)) {
-            continue;
-          }
-
-          // Check the sizes
-          const topLeftModuleSize = topLeft.moduleSize;
-
-          if (
-            !isValidModuleCount(edge1, (bottomLeft.moduleSize + topLeftModuleSize) / 2) ||
-            !isValidModuleCount(edge2, (topLeftModuleSize + topRight.moduleSize) / 2)
-          ) {
-            continue;
-          }
-
-          // All tests passed!
-          finderPatternGroups.push(finderPatternGroup);
         }
       }
     }
@@ -195,6 +193,6 @@ export class FinderPatternFinder {
       process(x, y, stateCount, count);
     }
 
-    return this.#selectBestPatterns(patterns);
+    return this.#selectBestPatterns(patterns.filter(({ count }) => count >= 3));
   }
 }
