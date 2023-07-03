@@ -126,7 +126,7 @@ function calculateModuleSizeOneWay(matrix: BitMatrix, pattern1: Pattern, pattern
   return (expectModuleSize1 + expectModuleSize2) / 14;
 }
 
-function calculateModuleSize(matrix: BitMatrix, topLeft: Pattern, topRight: Pattern, bottomLeft: Pattern): number {
+export function calculateModuleSize(matrix: BitMatrix, topLeft: Pattern, topRight: Pattern, bottomLeft: Pattern): number {
   // Take the average
   return (calculateModuleSizeOneWay(matrix, topLeft, topRight) + calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)) / 2;
 }
@@ -151,8 +151,8 @@ export function computeSymbolSize(topLeft: Pattern, topRight: Pattern, bottomLef
 
 function findAlignmentInRegion(matrix: BitMatrix, x: number, y: number, moduleSize: number): Pattern | undefined {
   // Look for an alignment pattern (3 modules in size) around where it should be
+  const allowance = Math.ceil(moduleSize * 5);
   const minAlignmentAreaSize = moduleSize * 3;
-  const allowance = Math.floor(moduleSize * 4);
   const alignmentAreaTopY = Math.max(0, y - allowance);
   const alignmentAreaLeftX = Math.max(0, x - allowance);
   const alignmentAreaRightX = Math.min(matrix.width - 1, x + allowance);
@@ -249,14 +249,12 @@ export function detect(
 
       if (version.alignmentPatterns.length > 0) {
         const { x, y } = topLeft;
-        const edge1 = distance(topLeft, topRight);
-        const edge2 = distance(topLeft, bottomLeft);
         // Guess where a "bottom right" finder pattern would have been
         const bottomRightX = topRight.x - x + bottomLeft.x;
         const bottomRightY = topRight.y - y + bottomLeft.y;
         // Estimate that alignment pattern is closer by 3 modules
         // from "bottom right" to known top left location
-        const correctionToTopLeft = 1 - 3 / ((edge1 + edge2) / 2 / moduleSize);
+        const correctionToTopLeft = 1 - 3 / (version.size - 7);
         const expectAlignmentX = toInt32(x + correctionToTopLeft * (bottomRightX - x));
         const expectAlignmentY = toInt32(y + correctionToTopLeft * (bottomRightY - y));
 

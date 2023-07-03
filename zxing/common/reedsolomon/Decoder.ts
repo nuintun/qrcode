@@ -43,7 +43,6 @@ export class Decoder {
   #findErrorMagnitudes(errorEvaluator: Polynomial, errorLocations: Int32Array): Int32Array {
     // This is directly applying Forney's Formula
     const field = this.#field;
-    const { generator } = field;
     const { length } = errorLocations;
     const result = new Int32Array(length);
 
@@ -69,7 +68,7 @@ export class Decoder {
 
       result[i] = field.multiply(errorEvaluator.evaluate(invert), field.invert(denominator));
 
-      if (generator !== 0) {
+      if (field.generator !== 0) {
         result[i] = field.multiply(result[i], invert);
       }
     }
@@ -77,7 +76,7 @@ export class Decoder {
     return result;
   }
 
-  #runEuclideanAlgorithm(a: Polynomial, b: Polynomial, ecBytes: number): [sigma: Polynomial, omega: Polynomial] {
+  #runEuclideanAlgorithm(a: Polynomial, b: Polynomial, ecLength: number): [sigma: Polynomial, omega: Polynomial] {
     // Assume a's degree is >= b's
     if (a.getDegree() < b.getDegree()) {
       [a, b] = [b, a];
@@ -90,8 +89,8 @@ export class Decoder {
     let remainderLast = a;
     let termLast = field.zero;
 
-    // Run Euclidean algorithm until r's degree is less than ecBytes/2
-    while (remainder.getDegree() >= ((ecBytes / 2) | 0)) {
+    // Run Euclidean algorithm until r's degree is less than ecLength/2
+    while (2 * remainder.getDegree() >= ecLength) {
       let termLastLast = termLast;
       let remainderLastLast = remainderLast;
 
@@ -107,22 +106,24 @@ export class Decoder {
       remainder = remainderLastLast;
 
       let quotient = field.zero;
+      let remainderDegree = remainder.getDegree();
 
       const remainderLastDegree = remainderLast.getDegree();
       const denominatorLeadingTerm = remainderLast.getCoefficient(remainderLastDegree);
       const dltInverse = field.invert(denominatorLeadingTerm);
 
-      while (remainder.getDegree() >= remainderLastDegree && !remainder.isZero()) {
+      while (remainderDegree >= remainderLastDegree && !remainder.isZero()) {
         const degreeDiff = remainder.getDegree() - remainderLastDegree;
-        const scale = field.multiply(remainder.getCoefficient(remainder.getDegree()), dltInverse);
+        const scale = field.multiply(remainder.getCoefficient(remainderDegree), dltInverse);
 
         quotient = quotient.addOrSubtract(field.buildPolynomial(degreeDiff, scale));
         remainder = remainder.addOrSubtract(remainderLast.multiplyByMonomial(degreeDiff, scale));
+        remainderDegree = remainder.getDegree();
       }
 
       term = quotient.multiply(termLast).addOrSubtract(termLastLast);
 
-      if (remainder.getDegree() >= remainderLastDegree) {
+      if (remainderDegree >= remainderLastDegree) {
         throw new Error('division algorithm failed to reduce polynomial');
       }
     }
@@ -140,13 +141,13 @@ export class Decoder {
     return [sigma, omega];
   }
 
-  public decode(received: Int32Array, ecLength: number): void {
+  public decode(received: Int32Array, ecLength: number): number {
+    let noError = true;
+
     const field = this.#field;
     const { generator } = field;
     const poly = new Polynomial(field, received);
     const syndromeCoefficients = new Int32Array(ecLength);
-
-    let noError = true;
 
     for (let i = 0; i < ecLength; i++) {
       const evaluate = poly.evaluate(field.exp(i + generator));
@@ -175,6 +176,10 @@ export class Decoder {
 
         received[position] = received[position] ^ errorMagnitudes[i];
       }
+
+      return errorLength;
     }
+
+    return 0;
   }
 }

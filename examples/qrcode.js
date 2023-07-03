@@ -183,27 +183,26 @@
         const toRead = Math.min(length, bitsLeft);
         const bitsToNotRead = bitsLeft - toRead;
         const mask = (0xff >> (8 - toRead)) << bitsToNotRead;
-        result = (bytes[byteOffset] & mask) >> bitsToNotRead;
         length -= toRead;
         bitOffset += toRead;
-        if (bitOffset == 8) {
-          bitOffset = 0;
+        result = (bytes[byteOffset] & mask) >> bitsToNotRead;
+        if (bitOffset === 8) {
           byteOffset++;
+          bitOffset = 0;
         }
       }
       // Next read whole bytes
       if (length > 0) {
         while (length >= 8) {
-          result = (result << 8) | (bytes[byteOffset] & 0xff);
-          byteOffset++;
           length -= 8;
+          result = (result << 8) | (bytes[byteOffset++] & 0xff);
         }
         // Finally read a partial byte
         if (length > 0) {
           const bitsToNotRead = 8 - length;
           const mask = (0xff >> bitsToNotRead) << bitsToNotRead;
-          result = (result << length) | ((bytes[byteOffset] & mask) >> bitsToNotRead);
           bitOffset += length;
+          result = (result << length) | ((bytes[byteOffset] & mask) >> bitsToNotRead);
         }
       }
       this.#bitOffset = bitOffset;
@@ -1051,9 +1050,6 @@
         }
       }
     }
-    clear() {
-      this.#bits.fill(0);
-    }
   }
 
   /**
@@ -1467,19 +1463,20 @@
   }
   // See ISO 18004:2006 Annex E
   function buildFunctionPattern({ size, version, alignmentPatterns }) {
+    // Alignment patterns
+    const { length } = alignmentPatterns;
     const matrix = new BitMatrix(size, size);
+    const max = length - 1;
     // Top left finder pattern + separator + format
     matrix.setRegion(0, 0, 9, 9);
     // Top right finder pattern + separator + format
     matrix.setRegion(size - 8, 0, 8, 9);
     // Bottom left finder pattern + separator + format
     matrix.setRegion(0, size - 8, 9, 8);
-    // Alignment patterns
-    const max = alignmentPatterns.length;
-    for (let x = 0; x < max; x++) {
+    for (let x = 0; x < length; x++) {
       const top = alignmentPatterns[x] - 2;
-      for (let y = 0; y < max; y++) {
-        if ((x !== 0 || (y !== 0 && y !== max - 1)) && (x !== max - 1 || y !== 0)) {
+      for (let y = 0; y < length; y++) {
+        if ((x !== 0 || (y !== 0 && y !== max)) && (x !== max || y !== 0)) {
           matrix.setRegion(alignmentPatterns[y] - 2, top, 5, 5);
         }
         // Else no o alignment patterns near the three finder patterns
@@ -1565,9 +1562,9 @@
     }
     readCodewords(version, ecLevel) {
       let bitsRead = 0;
+      let byteOffset = 0;
       let currentByte = 0;
       let readingUp = true;
-      let resultOffset = 0;
       const size = this.#size;
       const matrix = this.#matrix;
       const ecBlocks = version.getECBlocks(ecLevel);
@@ -1595,7 +1592,7 @@
               }
               // If we've made a whole byte, save it off
               if (bitsRead === 8) {
-                codewords[resultOffset++] = currentByte;
+                codewords[byteOffset++] = currentByte;
                 bitsRead = 0;
                 currentByte = 0;
               }
@@ -1604,6 +1601,10 @@
         }
         // Switch directions
         readingUp = !readingUp;
+      }
+      // TODO 重写错误消息
+      if (byteOffset !== ecBlocks.numTotalCodewords) {
+        throw new Error('byteOffset !== ecBlocks.numTotalCodewords');
       }
       return codewords;
     }
@@ -1910,7 +1911,6 @@
     #findErrorMagnitudes(errorEvaluator, errorLocations) {
       // This is directly applying Forney's Formula
       const field = this.#field;
-      const { generator } = field;
       const { length } = errorLocations;
       const result = new Int32Array(length);
       for (let i = 0; i < length; i++) {
@@ -1930,13 +1930,13 @@
           }
         }
         result[i] = field.multiply(errorEvaluator.evaluate(invert), field.invert(denominator));
-        if (generator !== 0) {
+        if (field.generator !== 0) {
           result[i] = field.multiply(result[i], invert);
         }
       }
       return result;
     }
-    #runEuclideanAlgorithm(a, b, ecBytes) {
+    #runEuclideanAlgorithm(a, b, ecLength) {
       // Assume a's degree is >= b's
       if (a.getDegree() < b.getDegree()) {
         [a, b] = [b, a];
@@ -1946,8 +1946,8 @@
       let term = field.one;
       let remainderLast = a;
       let termLast = field.zero;
-      // Run Euclidean algorithm until r's degree is less than ecBytes/2
-      while (remainder.getDegree() >= ((ecBytes / 2) | 0)) {
+      // Run Euclidean algorithm until r's degree is less than ecLength/2
+      while (2 * remainder.getDegree() >= ecLength) {
         let termLastLast = termLast;
         let remainderLastLast = remainderLast;
         termLast = term;
@@ -1959,17 +1959,19 @@
         }
         remainder = remainderLastLast;
         let quotient = field.zero;
+        let remainderDegree = remainder.getDegree();
         const remainderLastDegree = remainderLast.getDegree();
         const denominatorLeadingTerm = remainderLast.getCoefficient(remainderLastDegree);
         const dltInverse = field.invert(denominatorLeadingTerm);
-        while (remainder.getDegree() >= remainderLastDegree && !remainder.isZero()) {
+        while (remainderDegree >= remainderLastDegree && !remainder.isZero()) {
           const degreeDiff = remainder.getDegree() - remainderLastDegree;
-          const scale = field.multiply(remainder.getCoefficient(remainder.getDegree()), dltInverse);
+          const scale = field.multiply(remainder.getCoefficient(remainderDegree), dltInverse);
           quotient = quotient.addOrSubtract(field.buildPolynomial(degreeDiff, scale));
           remainder = remainder.addOrSubtract(remainderLast.multiplyByMonomial(degreeDiff, scale));
+          remainderDegree = remainder.getDegree();
         }
         term = quotient.multiply(termLast).addOrSubtract(termLastLast);
-        if (remainder.getDegree() >= remainderLastDegree) {
+        if (remainderDegree >= remainderLastDegree) {
           throw new Error('division algorithm failed to reduce polynomial');
         }
       }
@@ -1983,11 +1985,11 @@
       return [sigma, omega];
     }
     decode(received, ecLength) {
+      let noError = true;
       const field = this.#field;
       const { generator } = field;
       const poly = new Polynomial(field, received);
       const syndromeCoefficients = new Int32Array(ecLength);
-      let noError = true;
       for (let i = 0; i < ecLength; i++) {
         const evaluate = poly.evaluate(field.exp(i + generator));
         syndromeCoefficients[ecLength - 1 - i] = evaluate;
@@ -2009,13 +2011,22 @@
           }
           received[position] = received[position] ^ errorMagnitudes[i];
         }
+        return errorLength;
       }
+      return 0;
     }
   };
 
   /**
    * @module decoder
    */
+  function correctErrors(codewords, numDataCodewords) {
+    const buffer = new Int32Array(codewords);
+    const numECCodewords = codewords.length - numDataCodewords;
+    // Reed solomon encode.
+    const errorsCorrected = new Decoder$1().decode(buffer, numECCodewords);
+    return [buffer, errorsCorrected];
+  }
   function getDataBlocks(codewords, version, ecLevel) {
     const { ecBlocks, numTotalCodewords, numECCodewordsPerBlock } = version.getECBlocks(ecLevel);
     if (codewords.length !== numTotalCodewords) {
@@ -2065,14 +2076,6 @@
     }
     return blocks;
   }
-  function correctErrors(codewords, numDataCodewords) {
-    const buffer = new Int32Array(codewords);
-    const numECCodewords = codewords.length - numDataCodewords;
-    // Reed solomon encode.
-    new Decoder$1().decode(buffer, numECCodewords);
-    // Get data codewords.
-    return new Uint8Array(buffer.subarray(0, numDataCodewords));
-  }
 
   /**
    * @module Decoder
@@ -2090,8 +2093,8 @@
       const blocks = getDataBlocks(codewords, version, level);
       const buffer = new Uint8Array(ecBlocks.numTotalDataCodewords);
       for (const { codewords, numDataCodewords } of blocks) {
-        correctErrors(codewords, numDataCodewords);
-        buffer.set(codewords.subarray(0, numDataCodewords), offset);
+        const [bytes, errors] = correctErrors(codewords, numDataCodewords);
+        buffer.set(bytes.subarray(0, numDataCodewords), offset);
         offset += numDataCodewords;
       }
       return buffer;
@@ -2107,11 +2110,11 @@
         formatInfo = parser.readFormatInfo();
         codewords = this.#parse(parser, version, formatInfo);
       } catch {
-        mirror = true;
         if (formatInfo != null) {
           parser.remask(formatInfo.mask);
         }
         parser.mirror();
+        mirror = true;
         version = parser.readVersion();
         formatInfo = parser.readFormatInfo();
         codewords = this.#parse(parser, version, formatInfo);
@@ -3362,7 +3365,7 @@
       return this.#y;
     }
   }
-  function distance$1(a, b) {
+  function distance(a, b) {
     const xDiff = a.x - b.x;
     const yDiff = a.y - b.y;
     return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
@@ -3462,7 +3465,7 @@
   /**
    * @module finder
    */
-  const DIFF_EDGE_RATIO = 0.25;
+  const DIFF_EDGE_RATIO = 0.5;
   const DIFF_MODULE_SIZE_RATIO = 0.5;
   const MIN_MODULE_COUNT_PER_EDGE = 11;
   const MAX_MODULE_COUNT_PER_EDGE = 175;
@@ -3920,7 +3923,7 @@
       // color, advance to next state or end if we are in state 2 already
       if ((state === 1) === (matrix.get(realX, realY) === 1)) {
         if (state++ === 2) {
-          return distance$1(new Point(x, y), new Point(fromX, fromY));
+          return distance(new Point(x, y), new Point(fromX, fromY));
         }
       }
       error += yDiff;
@@ -3936,7 +3939,7 @@
     // is "white" so this last point at (toX+xStep,toY) is the right ending. This is really a
     // small approximation; (toX+xStep,toY+yStep) might be really correct. Ignore this.
     if (state === 2) {
-      return distance$1(new Point(toX + xStep, toY), new Point(fromX, fromY));
+      return distance(new Point(toX + xStep, toY), new Point(fromX, fromY));
     }
     // else we didn't find even black-white-black; no estimate is really possible
     return NaN;
@@ -3990,8 +3993,8 @@
     return (calculateModuleSizeOneWay(matrix, topLeft, topRight) + calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)) / 2;
   }
   function computeSymbolSize(topLeft, topRight, bottomLeft, moduleSize) {
-    const width = distance$1(topLeft, topRight) / moduleSize;
-    const height = distance$1(topLeft, bottomLeft) / moduleSize;
+    const width = distance(topLeft, topRight) / moduleSize;
+    const height = distance(topLeft, bottomLeft) / moduleSize;
     const size = round((width + height) / 2) + 7;
     // mod 4
     switch (size & 0x03) {
@@ -4006,8 +4009,8 @@
   }
   function findAlignmentInRegion(matrix, x, y, moduleSize) {
     // Look for an alignment pattern (3 modules in size) around where it should be
+    const allowance = Math.ceil(moduleSize * 5);
     const minAlignmentAreaSize = moduleSize * 3;
-    const allowance = Math.floor(moduleSize * 4);
     const alignmentAreaTopY = Math.max(0, y - allowance);
     const alignmentAreaLeftX = Math.max(0, x - allowance);
     const alignmentAreaRightX = Math.min(matrix.width - 1, x + allowance);
@@ -4077,14 +4080,12 @@
         let alignmentPattern;
         if (version.alignmentPatterns.length > 0) {
           const { x, y } = topLeft;
-          const edge1 = distance$1(topLeft, topRight);
-          const edge2 = distance$1(topLeft, bottomLeft);
           // Guess where a "bottom right" finder pattern would have been
           const bottomRightX = topRight.x - x + bottomLeft.x;
           const bottomRightY = topRight.y - y + bottomLeft.y;
           // Estimate that alignment pattern is closer by 3 modules
           // from "bottom right" to known top left location
-          const correctionToTopLeft = 1 - 3 / ((edge1 + edge2) / 2 / moduleSize);
+          const correctionToTopLeft = 1 - 3 / (version.size - 7);
           const expectAlignmentX = toInt32(x + correctionToTopLeft * (bottomRightX - x));
           const expectAlignmentY = toInt32(y + correctionToTopLeft * (bottomRightY - y));
           // Kind of arbitrary -- expand search radius before giving up
@@ -4110,9 +4111,9 @@
     let bottomLeft;
     // Find distances between pattern centers
     const [pattern1, pattern2, pattern3] = patterns;
-    const oneTwoDistance = distance$1(pattern1, pattern2);
-    const twoThreeDistance = distance$1(pattern2, pattern3);
-    const oneThreeDistance = distance$1(pattern1, pattern3);
+    const oneTwoDistance = distance(pattern1, pattern2);
+    const twoThreeDistance = distance(pattern2, pattern3);
+    const oneThreeDistance = distance(pattern1, pattern3);
     // Assume one closest to other two is B; A and C will just be guesses at first
     if (twoThreeDistance >= oneTwoDistance && twoThreeDistance >= oneThreeDistance) {
       [topLeft, bottomLeft, topRight] = patterns;
@@ -4195,13 +4196,13 @@
               }
               const finderPatternGroup = new FinderPatternGroup([pattern1, pattern2, pattern3]);
               const { topLeft, topRight, bottomLeft } = finderPatternGroup;
-              const edge1 = distance$1(bottomLeft, topLeft);
-              const edge2 = distance$1(topLeft, topRight);
+              const edge1 = distance(bottomLeft, topLeft);
+              const edge2 = distance(topLeft, topRight);
               // Calculate the difference of the cathetus lengths in percent
               if (!isEqualsEdge(edge1, edge2)) {
                 continue;
               }
-              const hypotenuse = distance$1(topRight, bottomLeft);
+              const hypotenuse = distance(topRight, bottomLeft);
               // Calculate the difference of the hypotenuse lengths in percent
               if (!isEqualsEdge(Math.sqrt(edge1 * edge1 + edge2 * edge2), hypotenuse)) {
                 continue;
@@ -4553,422 +4554,6 @@
   }
 
   /**
-   * @module locator
-   * @author nuintun
-   * @author Cosmo Wolfe
-   * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
-   */
-  const MIN_QUAD_RATIO = 0.5;
-  const MAX_QUAD_RATIO = 1.5;
-  const MAX_FINDERPATTERNS_TO_SEARCH = 4;
-  function distance(a, b) {
-    return Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
-  }
-  function sum(values) {
-    return values.reduce((a, b) => a + b);
-  }
-  // Takes three finder patterns and organizes them into topLeft, topRight, etc
-  function reorderFinderPatterns(pattern1, pattern2, pattern3) {
-    // Find distances between pattern centers
-    const oneTwoDistance = distance(pattern1, pattern2);
-    const twoThreeDistance = distance(pattern2, pattern3);
-    const oneThreeDistance = distance(pattern1, pattern3);
-    let topLeft;
-    let topRight;
-    let bottomLeft;
-    // Assume one closest to other two is B; A and C will just be guesses at first
-    if (twoThreeDistance >= oneTwoDistance && twoThreeDistance >= oneThreeDistance) {
-      [bottomLeft, topLeft, topRight] = [pattern2, pattern1, pattern3];
-    } else if (oneThreeDistance >= twoThreeDistance && oneThreeDistance >= oneTwoDistance) {
-      [bottomLeft, topLeft, topRight] = [pattern1, pattern2, pattern3];
-    } else {
-      [bottomLeft, topLeft, topRight] = [pattern1, pattern3, pattern2];
-    }
-    // Use cross product to figure out whether bottomLeft (A) and topRight (C) are correct or flipped in relation to topLeft (B)
-    // This asks whether BC x BA has a positive z component, which is the arrangement we want. If it's negative, then
-    // we've got it flipped around and should swap topRight and bottomLeft.
-    if ((topRight.x - topLeft.x) * (bottomLeft.y - topLeft.y) - (topRight.y - topLeft.y) * (bottomLeft.x - topLeft.x) < 0) {
-      [bottomLeft, topRight] = [topRight, bottomLeft];
-    }
-    return { bottomLeft, topLeft, topRight };
-  }
-  // Computes the dimension (number of modules on a side) of the QR Code based on the position of the finder patterns
-  function computeDimension(topLeft, topRight, bottomLeft, matrix) {
-    // Divide by 7 since the ratio is 1:1:3:1:1
-    const moduleSize =
-      (sum(countBlackWhiteRun(topLeft, bottomLeft, matrix, 5)) / 7 +
-        sum(countBlackWhiteRun(topLeft, topRight, matrix, 5)) / 7 +
-        sum(countBlackWhiteRun(bottomLeft, topLeft, matrix, 5)) / 7 +
-        sum(countBlackWhiteRun(topRight, topLeft, matrix, 5)) / 7) /
-      4;
-    if (moduleSize < 1) {
-      throw new Error('invalid module size');
-    }
-    const topDimension = Math.round(distance(topLeft, topRight) / moduleSize);
-    const sideDimension = Math.round(distance(topLeft, bottomLeft) / moduleSize);
-    let dimension = Math.floor((topDimension + sideDimension) / 2) + 7;
-    switch (dimension % 4) {
-      case 0:
-        dimension++;
-        break;
-      case 2:
-        dimension--;
-        break;
-    }
-    return { dimension, moduleSize };
-  }
-  // Takes an origin point and an end point and counts the sizes of the black white run from the origin towards the end point.
-  // Returns an array of elements, representing the pixel size of the black white run.
-  // Uses a variant of http://en.wikipedia.org/wiki/Bresenham's_line_algorithm
-  function countBlackWhiteRunTowardsPoint(origin, end, matrix, length) {
-    const switchPoints = [{ x: Math.floor(origin.x), y: Math.floor(origin.y) }];
-    const steep = Math.abs(end.y - origin.y) > Math.abs(end.x - origin.x);
-    let fromX;
-    let fromY;
-    let toX;
-    let toY;
-    if (steep) {
-      fromX = Math.floor(origin.y);
-      fromY = Math.floor(origin.x);
-      toX = Math.floor(end.y);
-      toY = Math.floor(end.x);
-    } else {
-      fromX = Math.floor(origin.x);
-      fromY = Math.floor(origin.y);
-      toX = Math.floor(end.x);
-      toY = Math.floor(end.y);
-    }
-    const dx = Math.abs(toX - fromX);
-    const dy = Math.abs(toY - fromY);
-    const xStep = fromX < toX ? 1 : -1;
-    const yStep = fromY < toY ? 1 : -1;
-    let currentPixel = 1;
-    let error = Math.floor(-dx / 2);
-    // Loop up until x == toX, but not beyond
-    for (let x = fromX, y = fromY; x !== toX + xStep; x += xStep) {
-      // Does current pixel mean we have moved white to black or vice versa?
-      // Scanning black in state 0,2 and white in state 1, so if we find the wrong
-      // color, advance to next state or end if we are in state 2 already
-      const realX = steep ? y : x;
-      const realY = steep ? x : y;
-      if (matrix.get(realX, realY) !== currentPixel) {
-        currentPixel ^= 1;
-        switchPoints.push({ x: realX, y: realY });
-        if (switchPoints.length === length + 1) {
-          break;
-        }
-      }
-      error += dy;
-      if (error > 0) {
-        if (y === toY) {
-          break;
-        }
-        y += yStep;
-        error -= dx;
-      }
-    }
-    const distances = [];
-    for (let i = 0; i < length; i++) {
-      if (switchPoints[i] && switchPoints[i + 1]) {
-        distances.push(distance(switchPoints[i], switchPoints[i + 1]));
-      } else {
-        distances.push(0);
-      }
-    }
-    return distances;
-  }
-  // Takes an origin point and an end point and counts the sizes of the black white run in the origin point
-  // along the line that intersects with the end point. Returns an array of elements, representing the pixel sizes
-  // of the black white run. Takes a length which represents the number of switches from black to white to look for.
-  function countBlackWhiteRun(origin, end, matrix, length) {
-    const rise = end.y - origin.y;
-    const run = end.x - origin.x;
-    const towardsEnd = countBlackWhiteRunTowardsPoint(origin, end, matrix, Math.ceil(length / 2));
-    const awayFromEnd = countBlackWhiteRunTowardsPoint(
-      origin,
-      { x: origin.x - run, y: origin.y - rise },
-      matrix,
-      Math.ceil(length / 2)
-    );
-    const middleValue = towardsEnd.shift() + awayFromEnd.shift() - 1; // Substract one so we don't double count a pixel
-    return awayFromEnd.concat(middleValue).concat(...towardsEnd);
-  }
-  // Takes in a black white run and an array of expected ratios. Returns the average size of the run as well as the "error" -
-  // that is the amount the run diverges from the expected ratio
-  function scoreBlackWhiteRun(sequence, ratios) {
-    const averageSize = sum(sequence) / sum(ratios);
-    let error = 0;
-    ratios.forEach((ratio, i) => {
-      error += (sequence[i] - ratio * averageSize) ** 2;
-    });
-    return { averageSize, error };
-  }
-  // Takes an X,Y point and an array of sizes and scores the point against those ratios.
-  // For example for a finder pattern takes the ratio list of 1:1:3:1:1 and checks horizontal, vertical and diagonal ratios
-  // against that.
-  function scorePattern(point, ratios, matrix) {
-    try {
-      const horizontalRun = countBlackWhiteRun(point, { x: -1, y: point.y }, matrix, ratios.length);
-      const verticalRun = countBlackWhiteRun(point, { x: point.x, y: -1 }, matrix, ratios.length);
-      const topLeftPoint = {
-        x: Math.max(0, point.x - point.y) - 1,
-        y: Math.max(0, point.y - point.x) - 1
-      };
-      const topLeftBottomRightRun = countBlackWhiteRun(point, topLeftPoint, matrix, ratios.length);
-      const bottomLeftPoint = {
-        x: Math.min(matrix.width, point.x + point.y) + 1,
-        y: Math.min(matrix.height, point.y + point.x) + 1
-      };
-      const bottomLeftTopRightRun = countBlackWhiteRun(point, bottomLeftPoint, matrix, ratios.length);
-      const horzError = scoreBlackWhiteRun(horizontalRun, ratios);
-      const vertError = scoreBlackWhiteRun(verticalRun, ratios);
-      const diagDownError = scoreBlackWhiteRun(topLeftBottomRightRun, ratios);
-      const diagUpError = scoreBlackWhiteRun(bottomLeftTopRightRun, ratios);
-      const ratioError = Math.sqrt(
-        horzError.error * horzError.error +
-          vertError.error * vertError.error +
-          diagDownError.error * diagDownError.error +
-          diagUpError.error * diagUpError.error
-      );
-      const avgSize = (horzError.averageSize + vertError.averageSize + diagDownError.averageSize + diagUpError.averageSize) / 4;
-      const sizeError =
-        ((horzError.averageSize - avgSize) ** 2 +
-          (vertError.averageSize - avgSize) ** 2 +
-          (diagDownError.averageSize - avgSize) ** 2 +
-          (diagUpError.averageSize - avgSize) ** 2) /
-        avgSize;
-      return ratioError + sizeError;
-    } catch {
-      return Infinity;
-    }
-  }
-  function recenterLocation(matrix, point) {
-    let leftX = Math.round(point.x);
-    while (matrix.get(leftX, Math.round(point.y))) {
-      leftX--;
-    }
-    let rightX = Math.round(point.x);
-    while (matrix.get(rightX, Math.round(point.y))) {
-      rightX++;
-    }
-    const x = (leftX + rightX) / 2;
-    let topY = Math.round(point.y);
-    while (matrix.get(Math.round(x), topY)) {
-      topY--;
-    }
-    let bottomY = Math.round(point.y);
-    while (matrix.get(Math.round(x), bottomY)) {
-      bottomY++;
-    }
-    const y = (topY + bottomY) / 2;
-    return { x, y };
-  }
-  function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, bottomLeft) {
-    // Now that we've found the three finder patterns we can determine the blockSize and the size of the QR code.
-    // We'll use these to help find the alignment pattern but also later when we do the extraction.
-    let dimension;
-    let moduleSize;
-    try {
-      ({ dimension, moduleSize } = computeDimension(topLeft, topRight, bottomLeft, matrix));
-    } catch {
-      return null;
-    }
-    // Now find the alignment pattern
-    const bottomRightFinderPattern = {
-      // Best guess at where a bottomRight finder pattern would be
-      x: topRight.x - topLeft.x + bottomLeft.x,
-      y: topRight.y - topLeft.y + bottomLeft.y
-    };
-    const modulesBetweenFinderPatterns = (distance(topLeft, bottomLeft) + distance(topLeft, topRight)) / 2 / moduleSize;
-    const correctionToTopLeft = 1 - 3 / modulesBetweenFinderPatterns;
-    const expectedAlignmentPattern = {
-      x: topLeft.x + correctionToTopLeft * (bottomRightFinderPattern.x - topLeft.x),
-      y: topLeft.y + correctionToTopLeft * (bottomRightFinderPattern.y - topLeft.y)
-    };
-    const alignmentPatterns = alignmentPatternQuads
-      .reduce((quads, { top, bottom }) => {
-        const x = (top.startX + top.endX + bottom.startX + bottom.endX) / 4;
-        const y = (top.y + bottom.y + 1) / 2;
-        const intX = Math.floor(x);
-        const intY = Math.floor(y);
-        if (matrix.get(intX, intY)) {
-          const sizeScore = scorePattern({ x: intX, y: intY }, [1, 1, 1], matrix);
-          const score = sizeScore + distance({ x, y }, expectedAlignmentPattern);
-          quads.push({ x, y, score });
-        }
-        return quads;
-      }, [])
-      .sort((a, b) => a.score - b.score);
-    // If there are less than 15 modules between finder patterns it's a version 1 QR code and as such has no alignmemnt pattern
-    // so we can only use our best guess.
-    const alignmentPattern =
-      modulesBetweenFinderPatterns >= 15 && alignmentPatterns.length ? alignmentPatterns[0] : expectedAlignmentPattern;
-    return { alignmentPattern, dimension };
-  }
-  function locate(matrix) {
-    const finderPatternQuads = [];
-    const alignmentPatternQuads = [];
-    let activeFinderPatternQuads = [];
-    let activeAlignmentPatternQuads = [];
-    for (let y = 0; y <= matrix.height; y++) {
-      let length = 0;
-      let scans = [0, 0, 0, 0, 0];
-      let lastBit = matrix.get(0, y);
-      for (let x = -1; x <= matrix.width; x++) {
-        const v = matrix.get(x, y);
-        if (v === lastBit) {
-          length++;
-        } else {
-          scans = [scans[1], scans[2], scans[3], scans[4], length];
-          length = 1;
-          lastBit = v;
-          // Do the last 5 color changes ~ match the expected ratio for a finder pattern? 1:1:3:1:1 of b:w:b:w:b
-          const averageFinderPatternBlocksize = sum(scans) / 7;
-          const validFinderPattern =
-            Math.abs(scans[0] - averageFinderPatternBlocksize) < averageFinderPatternBlocksize &&
-            Math.abs(scans[1] - averageFinderPatternBlocksize) < averageFinderPatternBlocksize &&
-            Math.abs(scans[2] - 3 * averageFinderPatternBlocksize) < 3 * averageFinderPatternBlocksize &&
-            Math.abs(scans[3] - averageFinderPatternBlocksize) < averageFinderPatternBlocksize &&
-            Math.abs(scans[4] - averageFinderPatternBlocksize) < averageFinderPatternBlocksize &&
-            !v; // And make sure the current pixel is white since finder patterns are bordered in white
-          // Do the last 3 color changes ~ match the expected ratio for an alignment pattern? 1:1:1 of w:b:w
-          const averageAlignmentPatternBlocksize = sum(scans.slice(-3)) / 3;
-          const validAlignmentPattern =
-            Math.abs(scans[2] - averageAlignmentPatternBlocksize) < averageAlignmentPatternBlocksize &&
-            Math.abs(scans[3] - averageAlignmentPatternBlocksize) < averageAlignmentPatternBlocksize &&
-            Math.abs(scans[4] - averageAlignmentPatternBlocksize) < averageAlignmentPatternBlocksize &&
-            v; // Is the current pixel black since alignment patterns are bordered in black
-          if (validFinderPattern) {
-            // Compute the start and end x values of the large center black square
-            const endX = x - scans[3] - scans[4];
-            const startX = endX - scans[2];
-            const line = { startX, endX, y };
-            // Is there a quad directly above the current spot? If so, extend it with the new line. Otherwise, create a new quad with
-            // that line as the starting point.
-            const matchingQuads = activeFinderPatternQuads.filter(
-              q =>
-                (startX >= q.bottom.startX && startX <= q.bottom.endX) ||
-                (endX >= q.bottom.startX && startX <= q.bottom.endX) ||
-                (startX <= q.bottom.startX &&
-                  endX >= q.bottom.endX &&
-                  scans[2] / (q.bottom.endX - q.bottom.startX) < MAX_QUAD_RATIO &&
-                  scans[2] / (q.bottom.endX - q.bottom.startX) > MIN_QUAD_RATIO)
-            );
-            if (matchingQuads.length > 0) {
-              matchingQuads[0].bottom = line;
-            } else {
-              activeFinderPatternQuads.push({ top: line, bottom: line });
-            }
-          }
-          if (validAlignmentPattern) {
-            // Compute the start and end x values of the center black square
-            const endX = x - scans[4];
-            const startX = endX - scans[3];
-            const line = { startX, y, endX };
-            // Is there a quad directly above the current spot? If so, extend it with the new line. Otherwise, create a new quad with
-            // that line as the starting point.
-            const matchingQuads = activeAlignmentPatternQuads.filter(
-              q =>
-                (startX >= q.bottom.startX && startX <= q.bottom.endX) ||
-                (endX >= q.bottom.startX && startX <= q.bottom.endX) ||
-                (startX <= q.bottom.startX &&
-                  endX >= q.bottom.endX &&
-                  scans[2] / (q.bottom.endX - q.bottom.startX) < MAX_QUAD_RATIO &&
-                  scans[2] / (q.bottom.endX - q.bottom.startX) > MIN_QUAD_RATIO)
-            );
-            if (matchingQuads.length > 0) {
-              matchingQuads[0].bottom = line;
-            } else {
-              activeAlignmentPatternQuads.push({ top: line, bottom: line });
-            }
-          }
-        }
-      }
-      finderPatternQuads.push(...activeFinderPatternQuads.filter(q => q.bottom.y !== y && q.bottom.y - q.top.y >= 2));
-      activeFinderPatternQuads = activeFinderPatternQuads.filter(q => q.bottom.y === y);
-      alignmentPatternQuads.push(...activeAlignmentPatternQuads.filter(q => q.bottom.y !== y));
-      activeAlignmentPatternQuads = activeAlignmentPatternQuads.filter(q => q.bottom.y === y);
-    }
-    finderPatternQuads.push(...activeFinderPatternQuads.filter(q => q.bottom.y - q.top.y >= 2));
-    alignmentPatternQuads.push(...activeAlignmentPatternQuads);
-    const finderPatterns = finderPatternQuads
-      .reduce((quads, { top, bottom }) => {
-        // All quads must be at least 2px tall since the center square is larger than a block
-        if (bottom.y - top.y >= 2) {
-          // Initial scoring of finder pattern quads by looking at their ratios, not taking into account position
-          const x = (top.startX + top.endX + bottom.startX + bottom.endX) / 4;
-          const y = (top.y + bottom.y + 1) / 2;
-          const intX = Math.round(x);
-          const intY = Math.round(y);
-          if (matrix.get(intX, intY)) {
-            const lengths = [top.endX - top.startX, bottom.endX - bottom.startX, bottom.y - top.y + 1];
-            const size = sum(lengths) / lengths.length;
-            const score = scorePattern({ x: intX, y: intY }, [1, 1, 3, 1, 1], matrix);
-            quads.push({ x, y, size, score });
-          }
-        }
-        return quads;
-      }, [])
-      .sort((a, b) => a.score - b.score);
-    const finderPatternGroups = finderPatterns
-      .reduce((points, point, index, finderPatterns) => {
-        if (index <= MAX_FINDERPATTERNS_TO_SEARCH) {
-          const otherPoints = finderPatterns.reduce((points, { x, y, size, score }, oIndex) => {
-            if (index !== oIndex) {
-              points.push({ x, y, size, score: score + (size - point.size) ** 2 / point.size });
-            }
-            return points;
-          }, []);
-          if (otherPoints.length >= 2) {
-            const score = point.score + otherPoints[0].score + otherPoints[1].score;
-            points.push({ points: [point].concat(otherPoints.sort((a, b) => a.score - b.score).slice(0, 2)), score });
-          }
-        }
-        return points;
-      }, [])
-      .sort((a, b) => a.score - b.score);
-    if (finderPatternGroups.length === 0) {
-      return null;
-    }
-    const result = [];
-    for (const { points } of finderPatternGroups) {
-      const { topRight, topLeft, bottomLeft } = reorderFinderPatterns(points[0], points[1], points[2]);
-      const alignment = findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, bottomLeft);
-      if (alignment !== null) {
-        result.push({
-          alignmentPattern: { x: alignment.alignmentPattern.x, y: alignment.alignmentPattern.y },
-          bottomLeft: { x: bottomLeft.x, y: bottomLeft.y },
-          dimension: alignment.dimension,
-          topLeft: { x: topLeft.x, y: topLeft.y },
-          topRight: { x: topRight.x, y: topRight.y }
-        });
-      }
-      // We normally use the center of the quads as the location of the tracking points, which is optimal for most cases and will account
-      // for a skew in the image. However, In some cases, a slight skew might not be real and instead be caused by image compression
-      // errors and/or low resolution. For those cases, we'd be better off centering the point exactly in the middle of the black area. We
-      // compute and return the location data for the naively centered points as it is little additional work and allows for multiple
-      // attempts at decoding harder images.
-      const midTopRight = recenterLocation(matrix, topRight);
-      const midTopLeft = recenterLocation(matrix, topLeft);
-      const midBottomLeft = recenterLocation(matrix, bottomLeft);
-      const centeredAlignment = findAlignmentPattern(matrix, alignmentPatternQuads, midTopRight, midTopLeft, midBottomLeft);
-      if (centeredAlignment !== null) {
-        result.push({
-          alignmentPattern: { x: centeredAlignment.alignmentPattern.x, y: centeredAlignment.alignmentPattern.y },
-          bottomLeft: { x: midBottomLeft.x, y: midBottomLeft.y },
-          topLeft: { x: midTopLeft.x, y: midTopLeft.y },
-          topRight: { x: midTopRight.x, y: midTopRight.y },
-          dimension: centeredAlignment.dimension
-        });
-      }
-    }
-    if (result.length === 0) {
-      return null;
-    }
-    return result;
-  }
-
-  /**
    * @module extractor
    * @author nuintun
    * @author Cosmo Wolfe
@@ -5039,41 +4624,46 @@
       a33: a.a13 * b.a31 + a.a23 * b.a32 + a.a33 * b.a33
     };
   }
-  function extract(image) {
-    const locations = locate(image);
-    const result = [];
-    if (locations) {
-      for (const location of locations) {
-        const qToS = quadrilateralToSquare(
-          { x: 3.5, y: 3.5 },
-          { x: location.dimension - 3.5, y: 3.5 },
-          { x: location.dimension - 6.5, y: location.dimension - 6.5 },
-          { x: 3.5, y: location.dimension - 3.5 }
-        );
-        const sToQ = squareToQuadrilateral(location.topLeft, location.topRight, location.alignmentPattern, location.bottomLeft);
-        const transform = times(sToQ, qToS);
-        const matrix = new BitMatrix(location.dimension, location.dimension);
-        const mappingFunction = (x, y) => {
-          const denominator = transform.a13 * x + transform.a23 * y + transform.a33;
-          return {
-            x: Math.max(0, (transform.a11 * x + transform.a21 * y + transform.a31) / denominator),
-            y: Math.max(0, (transform.a12 * x + transform.a22 * y + transform.a32) / denominator)
-          };
-        };
-        for (let y = 0; y < location.dimension; y++) {
-          for (let x = 0; x < location.dimension; x++) {
-            const xValue = x + 0.5;
-            const yValue = y + 0.5;
-            const sourcePixel = mappingFunction(xValue, yValue);
-            if (image.get(Math.floor(sourcePixel.x), Math.floor(sourcePixel.y))) {
-              matrix.set(x, y);
-            }
-          }
+  function extract(image, dimension, { topLeft, topRight, bottomLeft }, alignmentPattern) {
+    const moduleSize = calculateModuleSize(image, topLeft, topRight, bottomLeft);
+    const modulesBetweenFinderPatterns = (distance(topLeft, bottomLeft) + distance(topLeft, topRight)) / 2 / moduleSize;
+    const correctionToTopLeft = 1 - 3 / modulesBetweenFinderPatterns;
+    const bottomRightFinderPattern = {
+      // Best guess at where a bottomRight finder pattern would be
+      x: topRight.x - topLeft.x + bottomLeft.x,
+      y: topRight.y - topLeft.y + bottomLeft.y
+    };
+    const expectedAlignmentPattern = new Point(
+      topLeft.x + correctionToTopLeft * (bottomRightFinderPattern.x - topLeft.x),
+      topLeft.y + correctionToTopLeft * (bottomRightFinderPattern.y - topLeft.y)
+    );
+    const qToS = quadrilateralToSquare(
+      new Point(3.5, 3.5),
+      new Point(dimension - 3.5, 3.5),
+      new Point(dimension - 6.5, dimension - 6.5),
+      new Point(3.5, dimension - 3.5)
+    );
+    const sToQ = squareToQuadrilateral(topLeft, topRight, alignmentPattern || expectedAlignmentPattern, bottomLeft);
+    const transform = times(sToQ, qToS);
+    const matrix = new BitMatrix(dimension, dimension);
+    const mappingFunction = (x, y) => {
+      const denominator = transform.a13 * x + transform.a23 * y + transform.a33;
+      return {
+        x: Math.max(0, (transform.a11 * x + transform.a21 * y + transform.a31) / denominator),
+        y: Math.max(0, (transform.a12 * x + transform.a22 * y + transform.a32) / denominator)
+      };
+    };
+    for (let y = 0; y < dimension; y++) {
+      for (let x = 0; x < dimension; x++) {
+        const xValue = x + 0.5;
+        const yValue = y + 0.5;
+        const sourcePixel = mappingFunction(xValue, yValue);
+        if (image.get(Math.floor(sourcePixel.x), Math.floor(sourcePixel.y))) {
+          matrix.set(x, y);
         }
-        result.push({ ...location, matrix });
       }
     }
-    return result;
+    return matrix;
   }
 
   const REGION_SIZE = 8;
@@ -5194,5 +4784,4 @@
   exports.binarize = binarize;
   exports.binarizer = binarizer;
   exports.extract = extract;
-  exports.locate = locate;
 });

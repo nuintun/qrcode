@@ -74,9 +74,7 @@
             <button id="decode-btn">解码</button>
           </p>
           <pre id="decode-result" class="decode-result hide"></pre>
-          <div>
-            <canvas id="canvas1"></canvas>
-          </div>
+          <div id="matrix"></div>
         </li>
       </ul>
     </div>
@@ -240,7 +238,7 @@
       let hasImage = false;
       let imageData = null;
 
-      const canvas1 = $('#canvas1')[0];
+      const matrixBox = $('#matrix');
       const canvas = $('#decode-canvas')[0];
       const decodeResult = $('#decode-result');
       const context = canvas.getContext('2d', { willReadFrequently: true });
@@ -304,21 +302,11 @@
         context.fill();
       }
 
-      function drawDot(context, x, y, dotColor) {
-        context.save();
-        context.strokeStyle = dotColor;
-        context.beginPath();
-        context.moveTo(x, y);
-        context.lineTo(x + 1, y + 1);
-        context.closePath();
-        context.stroke();
-        context.restore();
-      }
-
-      function drawMatrix(canvas, matrix, moduleSize = 1) {
+      function drawMatrix(matrix, moduleSize = 2) {
         const { width, height } = matrix;
         const actualWidth = width * moduleSize;
         const actualHeight = height * moduleSize;
+        const canvas = document.createElement('canvas');
         const canvasContext = canvas.getContext('2d');
         const imageData = canvasContext.createImageData(actualWidth, actualHeight);
 
@@ -343,57 +331,12 @@
         }
 
         canvasContext.putImageData(imageData, 0, 0);
+
+        return canvas;
       }
-
-      class Point {
-        constructor(x, y) {
-          this.x = x;
-          this.y = y;
-        }
-      }
-
-      function calcTriangleArea(point1, point2, point3) {
-        return Math.abs(
-          (point1.x * point2.y +
-            point2.x * point3.y +
-            point3.x * point1.y -
-            point2.x * point1.y -
-            point3.x * point2.y -
-            point1.x * point3.y) /
-            2.0
-        );
-      }
-      function isPointInQuadrangle(point, topLeft, topRight, bottomRight, bottomLeft) {
-        return (
-          calcTriangleArea(topLeft, topRight, point) +
-            calcTriangleArea(topRight, bottomRight, point) +
-            calcTriangleArea(bottomRight, bottomLeft, point) +
-            calcTriangleArea(bottomLeft, topLeft, point) ===
-          calcTriangleArea(topLeft, topRight, bottomRight) + calcTriangleArea(bottomRight, bottomLeft, topLeft)
-        );
-      }
-
-      const ctx = canvas1.getContext('2d');
-
-      const a = new Point(25, 15);
-      const b = new Point(75, 25);
-      const c = new Point(75, 100);
-      const d = new Point(25, 75);
-      const p = new Point(50, 50);
-
-      ctx.beginPath();
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
-      ctx.lineTo(c.x, c.y);
-      ctx.lineTo(d.x, d.y);
-      ctx.lineTo(a.x, a.y);
-      ctx.stroke();
-
-      drawDot(ctx, p.x, p.y, '#ff0000');
-
-      console.log(isPointInQuadrangle(p, a, b, c, d));
 
       $('#decode-btn').on('click', function () {
+        matrixBox.empty();
         decodeResult.removeClass('hide');
 
         if (!hasImage) {
@@ -410,7 +353,7 @@
         const detector = new QRCode.Detector();
         const detected = detector.detect(matrix);
 
-        drawMatrix(canvas1, matrix, 1);
+        matrixBox.append(drawMatrix(matrix, 1), '<br />');
 
         // const x = QRCode.extract(matrix);
 
@@ -431,6 +374,9 @@
 
         if (detected.length > 0) {
           for (const { matrix, finder, alignment } of detected) {
+            const { topLeft, topRight, bottomLeft } = finder;
+
+            console.group();
             console.dir(matrix);
             console.dir(finder);
 
@@ -451,10 +397,18 @@
               } else {
                 errors.push(finder);
               }
+
+              matrixBox.append(drawMatrix(matrix), '&nbsp;&nbsp;');
             } catch (error) {
               // 解码失败，跳过
               errors.push(finder);
+              // console.error(error);
             }
+
+            console.log('topLeft:', topLeft.x, topLeft.y);
+            console.log('topRight:', topRight.x, topRight.y);
+            console.log('bottomLeft:', bottomLeft.x, bottomLeft.y);
+            console.groupEnd();
           }
         }
 

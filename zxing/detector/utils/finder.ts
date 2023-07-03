@@ -8,7 +8,7 @@ import { BitMatrix } from '/common/BitMatrix';
 import { isPointInQuadrangle, Point } from '/common/Point';
 import { FinderPatternGroup } from '/detector/FinderPatternGroup';
 
-export const DIFF_EDGE_RATIO = 0.25;
+export const DIFF_EDGE_RATIO = 0.5;
 export const DIFF_MODULE_SIZE_RATIO = 0.5;
 export const MIN_MODULE_COUNT_PER_EDGE = 11;
 export const MAX_MODULE_COUNT_PER_EDGE = 175;

@@ -35,22 +35,21 @@ export class BitSource {
       const bitsToNotRead = bitsLeft - toRead;
       const mask = (0xff >> (8 - toRead)) << bitsToNotRead;
 
-      result = (bytes[byteOffset] & mask) >> bitsToNotRead;
       length -= toRead;
       bitOffset += toRead;
+      result = (bytes[byteOffset] & mask) >> bitsToNotRead;
 
-      if (bitOffset == 8) {
-        bitOffset = 0;
+      if (bitOffset === 8) {
         byteOffset++;
+        bitOffset = 0;
       }
     }
 
     // Next read whole bytes
     if (length > 0) {
       while (length >= 8) {
-        result = (result << 8) | (bytes[byteOffset] & 0xff);
-        byteOffset++;
         length -= 8;
+        result = (result << 8) | (bytes[byteOffset++] & 0xff);
       }
 
       // Finally read a partial byte
@@ -58,8 +57,8 @@ export class BitSource {
         const bitsToNotRead = 8 - length;
         const mask = (0xff >> bitsToNotRead) << bitsToNotRead;
 
-        result = (result << length) | ((bytes[byteOffset] & mask) >> bitsToNotRead);
         bitOffset += length;
+        result = (result << length) | ((bytes[byteOffset] & mask) >> bitsToNotRead);
       }
     }
 

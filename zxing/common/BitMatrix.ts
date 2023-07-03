@@ -67,8 +67,4 @@ export class BitMatrix {
       }
     }
   }
-
-  public clear(): void {
-    this.#bits.fill(0);
-  }
 }

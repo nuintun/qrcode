@@ -24,6 +24,7 @@ export class Decoder {
 
   #parse(parser: BitMatrixParser, version: Version, { mask, level }: FormatInfo): Uint8Array {
     let offset = 0;
+    let errorsCorrected = 0;
 
     parser.unmask(mask);
 
@@ -33,10 +34,11 @@ export class Decoder {
     const buffer = new Uint8Array(ecBlocks.numTotalDataCodewords);
 
     for (const { codewords, numDataCodewords } of blocks) {
-      correctErrors(codewords, numDataCodewords);
+      const [bytes, errors] = correctErrors(codewords, numDataCodewords);
 
-      buffer.set(codewords.subarray(0, numDataCodewords), offset);
+      buffer.set(bytes.subarray(0, numDataCodewords), offset);
 
+      errorsCorrected += errors;
       offset += numDataCodewords;
     }
 
@@ -56,14 +58,13 @@ export class Decoder {
       formatInfo = parser.readFormatInfo();
       codewords = this.#parse(parser, version, formatInfo);
     } catch {
-      mirror = true;
-
       if (formatInfo != null) {
         parser.remask(formatInfo.mask);
       }
 
       parser.mirror();
 
+      mirror = true;
       version = parser.readVersion();
       formatInfo = parser.readFormatInfo();
       codewords = this.#parse(parser, version, formatInfo);

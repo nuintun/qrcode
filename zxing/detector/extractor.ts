@@ -5,8 +5,11 @@
  * @license https://raw.githubusercontent.com/cozmo/jsQR/master/LICENSE
  */
 
+import { Pattern } from '/detector/Pattern';
 import { BitMatrix } from '/common/BitMatrix';
-import { locate, Point, QRLocation } from './locator';
+import { distance, Point } from '/common/Point';
+import { calculateModuleSize } from './utils/detector';
+import { FinderPatternGroup } from '/detector/FinderPatternGroup';
 
 interface PerspectiveTransform {
   a11: number;
@@ -18,10 +21,6 @@ interface PerspectiveTransform {
   a13: number;
   a23: number;
   a33: number;
-}
-
-export interface ExtractResult extends QRLocation {
-  matrix: BitMatrix;
 }
 
 function squareToQuadrilateral(p1: Point, p2: Point, p3: Point, p4: Point): PerspectiveTransform {
@@ -95,46 +94,53 @@ function times(a: PerspectiveTransform, b: PerspectiveTransform): PerspectiveTra
   };
 }
 
-export function extract(image: BitMatrix): ExtractResult[] {
-  const locations = locate(image);
-  const result: ExtractResult[] = [];
+export function extract(
+  image: BitMatrix,
+  dimension: number,
+  { topLeft, topRight, bottomLeft }: FinderPatternGroup,
+  alignmentPattern?: Pattern
+) {
+  const moduleSize = calculateModuleSize(image, topLeft, topRight, bottomLeft);
+  const modulesBetweenFinderPatterns = (distance(topLeft, bottomLeft) + distance(topLeft, topRight)) / 2 / moduleSize;
+  const correctionToTopLeft = 1 - 3 / modulesBetweenFinderPatterns;
+  const bottomRightFinderPattern = {
+    // Best guess at where a bottomRight finder pattern would be
+    x: topRight.x - topLeft.x + bottomLeft.x,
+    y: topRight.y - topLeft.y + bottomLeft.y
+  };
+  const expectedAlignmentPattern = new Point(
+    topLeft.x + correctionToTopLeft * (bottomRightFinderPattern.x - topLeft.x),
+    topLeft.y + correctionToTopLeft * (bottomRightFinderPattern.y - topLeft.y)
+  );
 
-  if (locations) {
-    for (const location of locations) {
-      const qToS = quadrilateralToSquare(
-        { x: 3.5, y: 3.5 },
-        { x: location.dimension - 3.5, y: 3.5 },
-        { x: location.dimension - 6.5, y: location.dimension - 6.5 },
-        { x: 3.5, y: location.dimension - 3.5 }
-      );
-      const sToQ = squareToQuadrilateral(location.topLeft, location.topRight, location.alignmentPattern, location.bottomLeft);
-      const transform = times(sToQ, qToS);
+  const qToS = quadrilateralToSquare(
+    new Point(3.5, 3.5),
+    new Point(dimension - 3.5, 3.5),
+    new Point(dimension - 6.5, dimension - 6.5),
+    new Point(3.5, dimension - 3.5)
+  );
+  const sToQ = squareToQuadrilateral(topLeft, topRight, alignmentPattern || expectedAlignmentPattern, bottomLeft);
+  const transform = times(sToQ, qToS);
+  const matrix = new BitMatrix(dimension, dimension);
+  const mappingFunction = (x: number, y: number) => {
+    const denominator = transform.a13 * x + transform.a23 * y + transform.a33;
 
-      const matrix = new BitMatrix(location.dimension, location.dimension);
-      const mappingFunction = (x: number, y: number): Point => {
-        const denominator = transform.a13 * x + transform.a23 * y + transform.a33;
+    return {
+      x: Math.max(0, (transform.a11 * x + transform.a21 * y + transform.a31) / denominator),
+      y: Math.max(0, (transform.a12 * x + transform.a22 * y + transform.a32) / denominator)
+    };
+  };
 
-        return {
-          x: Math.max(0, (transform.a11 * x + transform.a21 * y + transform.a31) / denominator),
-          y: Math.max(0, (transform.a12 * x + transform.a22 * y + transform.a32) / denominator)
-        };
-      };
+  for (let y = 0; y < dimension; y++) {
+    for (let x = 0; x < dimension; x++) {
+      const xValue = x + 0.5;
+      const yValue = y + 0.5;
+      const sourcePixel = mappingFunction(xValue, yValue);
 
-      for (let y = 0; y < location.dimension; y++) {
-        for (let x = 0; x < location.dimension; x++) {
-          const xValue = x + 0.5;
-          const yValue = y + 0.5;
-          const sourcePixel = mappingFunction(xValue, yValue);
-
-          if (image.get(Math.floor(sourcePixel.x), Math.floor(sourcePixel.y))) {
-            matrix.set(x, y);
-          }
-        }
+      if (image.get(Math.floor(sourcePixel.x), Math.floor(sourcePixel.y))) {
+        matrix.set(x, y);
       }
-
-      result.push({ ...location, matrix });
     }
   }
-
-  return result;
+  return matrix;
 }

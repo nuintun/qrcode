@@ -440,7 +440,10 @@ export function decodeVersion(version1: number, version2: number): Version {
 
 // See ISO 18004:2006 Annex E
 export function buildFunctionPattern({ size, version, alignmentPatterns }: Version): BitMatrix {
+  // Alignment patterns
+  const { length } = alignmentPatterns;
   const matrix = new BitMatrix(size, size);
+  const max = length - 1;
 
   // Top left finder pattern + separator + format
   matrix.setRegion(0, 0, 9, 9);
@@ -449,14 +452,11 @@ export function buildFunctionPattern({ size, version, alignmentPatterns }: Versi
   // Bottom left finder pattern + separator + format
   matrix.setRegion(0, size - 8, 9, 8);
 
-  // Alignment patterns
-  const max = alignmentPatterns.length;
-
-  for (let x = 0; x < max; x++) {
+  for (let x = 0; x < length; x++) {
     const top = alignmentPatterns[x] - 2;
 
-    for (let y = 0; y < max; y++) {
-      if ((x !== 0 || (y !== 0 && y !== max - 1)) && (x !== max - 1 || y !== 0)) {
+    for (let y = 0; y < length; y++) {
+      if ((x !== 0 || (y !== 0 && y !== max)) && (x !== max || y !== 0)) {
         matrix.setRegion(alignmentPatterns[y] - 2, top, 5, 5);
       }
       // Else no o alignment patterns near the three finder patterns

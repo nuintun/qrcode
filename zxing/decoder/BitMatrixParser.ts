@@ -93,9 +93,9 @@ export class BitMatrixParser {
 
   public readCodewords(version: Version, ecLevel: ECLevel): Uint8Array {
     let bitsRead = 0;
+    let byteOffset = 0;
     let currentByte = 0;
     let readingUp = true;
-    let resultOffset = 0;
 
     const size = this.#size;
     const matrix = this.#matrix;
@@ -130,7 +130,7 @@ export class BitMatrixParser {
 
             // If we've made a whole byte, save it off
             if (bitsRead === 8) {
-              codewords[resultOffset++] = currentByte;
+              codewords[byteOffset++] = currentByte;
 
               bitsRead = 0;
               currentByte = 0;
@@ -141,6 +141,11 @@ export class BitMatrixParser {
 
       // Switch directions
       readingUp = !readingUp;
+    }
+
+    // TODO 重写错误消息
+    if (byteOffset !== ecBlocks.numTotalCodewords) {
+      throw new Error('byteOffset !== ecBlocks.numTotalCodewords');
     }
 
     return codewords;

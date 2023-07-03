@@ -7,6 +7,18 @@ import { Version } from '/common/Version';
 import { DataBlock } from '/decoder/DataBlock';
 import { Decoder as ReedSolomonDecoder } from '/common/reedsolomon/Decoder';
 
+export function correctErrors(
+  codewords: Uint8Array,
+  numDataCodewords: number
+): [codewords: Int32Array, errorsCorrected: number] {
+  const buffer = new Int32Array(codewords);
+  const numECCodewords = codewords.length - numDataCodewords;
+  // Reed solomon encode.
+  const errorsCorrected = new ReedSolomonDecoder().decode(buffer, numECCodewords);
+
+  return [buffer, errorsCorrected];
+}
+
 export function getDataBlocks(codewords: Uint8Array, version: Version, ecLevel: ECLevel): DataBlock[] {
   const { ecBlocks, numTotalCodewords, numECCodewordsPerBlock } = version.getECBlocks(ecLevel);
 
@@ -74,15 +86,4 @@ export function getDataBlocks(codewords: Uint8Array, version: Version, ecLevel: 
   }
 
   return blocks;
-}
-
-export function correctErrors(codewords: Uint8Array, numDataCodewords: number): Uint8Array {
-  const buffer = new Int32Array(codewords);
-  const numECCodewords = codewords.length - numDataCodewords;
-
-  // Reed solomon encode.
-  new ReedSolomonDecoder().decode(buffer, numECCodewords);
-
-  // Get data codewords.
-  return new Uint8Array(buffer.subarray(0, numDataCodewords));
 }
