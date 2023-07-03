@@ -1032,8 +1032,16 @@
       return (this.#bits[offset] >>> (x & 0x1f)) & 0x01;
     }
     flip(x, y) {
-      const offset = this.#offset(x, y);
-      this.#bits[offset] ^= 1 << (x & 0x1f);
+      if (x != null && y != null) {
+        const offset = this.#offset(x, y);
+        this.#bits[offset] ^= 1 << (x & 0x1f);
+      } else {
+        const bits = this.#bits;
+        const { length } = bits;
+        for (let i = 0; i < length; i++) {
+          bits[i] = ~bits[i];
+        }
+      }
     }
     clone() {
       return new BitMatrix(this.#width, this.#height, new Int32Array(this.#bits));
