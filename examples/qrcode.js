@@ -3248,20 +3248,21 @@
     }
   }
 
-  /**
-   * @module binarize
-   * @see https://github.com/FujiHaruka/node-adaptive-threshold
-   */
+  // /**
+  //  * @module binarize
+  //  * @see https://github.com/FujiHaruka/node-adaptive-threshold
+  //  */
   function grayscale(colors, width, height) {
-    const pixels = new Float64Array(width * height);
-    for (let x = 0; x < width; x++) {
-      for (let y = 0; y < height; y++) {
-        const offset = y * width + x;
-        const colorOffset = offset * 4;
-        const r = colors[colorOffset];
-        const g = colors[colorOffset + 1];
-        const b = colors[colorOffset + 2];
-        pixels[offset] = r * 0.2126 + g * 0.7152 + b * 0.0722;
+    const pixels = new Float32Array(width * height);
+    for (let y = 0; y < height; y++) {
+      const offset = y * width;
+      for (let x = 0; x < width; x++) {
+        const index = offset + x;
+        const colorIndex = index * 4;
+        const r = colors[colorIndex];
+        const g = colors[colorIndex + 1];
+        const b = colors[colorIndex + 2];
+        pixels[index] = r * 0.2126 + g * 0.7152 + b * 0.0722;
       }
     }
     return pixels;
@@ -3270,7 +3271,7 @@
     const sums = [];
     for (let y = 0; y < height; y++) {
       const offset = y * width;
-      const sum = new Float64Array(width);
+      const sum = new Float32Array(width);
       for (let x = 0; x < size; x++) {
         sum[0] += pixels[offset + x];
       }
@@ -3282,37 +3283,40 @@
     }
     const averagesWidth = width - size + 1;
     const averagesHeight = height - size + 1;
-    const averages = new Float64Array(averagesWidth * averagesHeight);
-    for (let x = 0; x < averagesWidth; x++) {
-      // Set x, 0
-      for (let y = 0; y < size; y++) {
+    const averages = new Float32Array(averagesWidth * averagesHeight);
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < averagesWidth; x++) {
+        // Set x, 0
         averages[x] += sums[y][x];
       }
     }
-    for (let x = 0; x < averagesWidth; x++) {
-      for (let y = 1; y < averagesHeight; y++) {
-        averages[y * width + x] = averages[(y - 1) * width + x] - sums[y - 1][x] + sums[y + size - 1][x];
+    for (let y = 1; y < averagesHeight; y++) {
+      const offset = y * averagesWidth;
+      const prevOffset = offset - averagesWidth;
+      for (let x = 0; x < averagesWidth; x++) {
+        averages[offset + x] = averages[prevOffset + x] - sums[y - 1][x] + sums[y + size - 1][x];
       }
     }
     // Devide
-    for (let x = 0; x < averagesWidth; x++) {
-      for (let y = 0; y < averagesHeight; y++) {
-        averages[y * width + x] /= size * size;
+    for (let y = 0; y < averagesHeight; y++) {
+      const offset = y * averagesWidth;
+      for (let x = 0; x < averagesWidth; x++) {
+        averages[offset + x] /= size * size;
       }
     }
     return [averages, averagesWidth, averagesHeight];
   }
-  function binarize({ width, height, data }, { size = 7, compensation = 7 } = {}) {
+  function binarize({ width, height, data }, { size = 24, compensation = 8 } = {}) {
     const middleSize = toInt32(size / 2);
     const binarized = new BitMatrix(width, height);
     const grayscaled = grayscale(data, width, height);
     const [averages, averagesWidth, averagesHeight] = calcLocalAverages(grayscaled, width, height, size);
-    for (let x = 0; x < width; x++) {
-      for (let y = 0; y < height; y++) {
+    for (let y = 0; y < height; y++) {
+      const offset = y * width;
+      for (let x = 0; x < width; x++) {
         let averageX = x - middleSize;
         let averageY = y - middleSize;
-        const offset = y * width + x;
-        const pixel = grayscaled[offset];
+        const pixel = grayscaled[offset + x];
         if (x - middleSize < 0) {
           averageX = 0;
         } else if (x - middleSize >= averagesWidth) {
@@ -3323,7 +3327,7 @@
           averageY = averagesHeight - 1;
         }
         const average = averages[averageY * averagesWidth + averageX];
-        if (pixel >= average - compensation) {
+        if (pixel < average - compensation) {
           binarized.set(x, y);
         }
       }
@@ -4680,51 +4684,45 @@
     return matrix;
   }
 
+  /**
+   * @module binarizer
+   */
   const REGION_SIZE = 8;
   const MIN_DYNAMIC_RANGE = 24;
-  function numBetween(value, min, max) {
+  function between(value, min, max) {
     return value < min ? min : value > max ? max : value;
-  }
-  // Like BitMatrix but accepts arbitry Uint8 values
-  class Matrix {
-    data;
-    width;
-    constructor(width, height) {
-      this.width = width;
-      this.data = new Uint8Array(width * height);
-    }
-    get(x, y) {
-      return this.data[y * this.width + x];
-    }
-    set(x, y, value) {
-      this.data[y * this.width + x] = value;
-    }
   }
   function binarizer({ data, width, height }) {
     if (data.length !== width * height * 4) {
       throw new Error('malformed data passed to binarizer');
     }
     // Convert image to greyscale
-    const greyscalePixels = new Matrix(width, height);
-    for (let x = 0; x < width; x++) {
-      for (let y = 0; y < height; y++) {
-        const r = data[(y * width + x) * 4 + 0];
-        const g = data[(y * width + x) * 4 + 1];
-        const b = data[(y * width + x) * 4 + 2];
-        greyscalePixels.set(x, y, 0.2126 * r + 0.7152 * g + 0.0722 * b);
+    const greyscale = new Uint8Array(width * height);
+    for (let y = 0; y < height; y++) {
+      const offset = y * width;
+      for (let x = 0; x < width; x++) {
+        const index = offset + x;
+        const colorIndex = index * 4;
+        const r = data[colorIndex + 0];
+        const g = data[colorIndex + 1];
+        const b = data[colorIndex + 2];
+        greyscale[offset + x] = 0.2126 * r + 0.7152 * g + 0.0722 * b;
       }
     }
-    const verticalRegionCount = Math.ceil(height / REGION_SIZE);
-    const horizontalRegionCount = Math.ceil(width / REGION_SIZE);
-    const blackPoints = new Matrix(horizontalRegionCount, verticalRegionCount);
-    for (let verticalRegion = 0; verticalRegion < verticalRegionCount; verticalRegion++) {
-      for (let hortizontalRegion = 0; hortizontalRegion < horizontalRegionCount; hortizontalRegion++) {
+    const blackPointsHeight = Math.ceil(height / REGION_SIZE);
+    const blackPointsWidth = Math.ceil(width / REGION_SIZE);
+    const blackPoints = new Uint8Array(blackPointsWidth * blackPointsHeight);
+    for (let blackPointsY = 0; blackPointsY < blackPointsHeight; blackPointsY++) {
+      const offset = blackPointsY * blackPointsWidth;
+      const prevOffset = offset - blackPointsWidth;
+      for (let blackPointsX = 0; blackPointsX < blackPointsWidth; blackPointsX++) {
         let sum = 0;
         let max = 0;
         let min = Infinity;
         for (let y = 0; y < REGION_SIZE; y++) {
+          const offset = (blackPointsY * REGION_SIZE + y) * width;
           for (let x = 0; x < REGION_SIZE; x++) {
-            const pixelLumosity = greyscalePixels.get(hortizontalRegion * REGION_SIZE + x, verticalRegion * REGION_SIZE + y);
+            const pixelLumosity = greyscale[offset + blackPointsX * REGION_SIZE + x];
             sum += pixelLumosity;
             min = Math.min(min, pixelLumosity);
             max = Math.max(max, pixelLumosity);
@@ -4738,44 +4736,45 @@
           //
           // Default the blackpoint for these blocks to be half the min - effectively white them out
           average = min / 2;
-          if (verticalRegion > 0 && hortizontalRegion > 0) {
+          if (blackPointsX > 0 && blackPointsY > 0) {
             // Correct the "white background" assumption for blocks that have neighbors by comparing
             // the pixels in this block to the previously calculated black points. This is based on
             // the fact that dark barcode symbology is always surrounded by some amount of light
             // background for which reasonable black point estimates were made. The bp estimated at
             // the boundaries is used for the interior.
             // The (min < bp) is arbitrary but works better than other heuristics that were tried.
-            const averageNeighborBlackPoint =
-              (blackPoints.get(hortizontalRegion, verticalRegion - 1) +
-                2 * blackPoints.get(hortizontalRegion - 1, verticalRegion) +
-                blackPoints.get(hortizontalRegion - 1, verticalRegion - 1)) /
-              4;
+            const topRightPoint = blackPoints[prevOffset + blackPointsX];
+            const bottomLeftPoint = blackPoints[offset + blackPointsX - 1];
+            const topLeftPoint = blackPoints[prevOffset + blackPointsX - 1];
+            const averageNeighborBlackPoint = (topRightPoint + 2 * bottomLeftPoint + topLeftPoint) / 4;
             if (min < averageNeighborBlackPoint) {
               average = averageNeighborBlackPoint;
             }
           }
         }
-        blackPoints.set(hortizontalRegion, verticalRegion, average);
+        blackPoints[offset + blackPointsX] = average;
       }
     }
     const binarized = new BitMatrix(width, height);
-    for (let verticalRegion = 0; verticalRegion < verticalRegionCount; verticalRegion++) {
-      for (let hortizontalRegion = 0; hortizontalRegion < horizontalRegionCount; hortizontalRegion++) {
-        const left = numBetween(hortizontalRegion, 2, horizontalRegionCount - 3);
-        const top = numBetween(verticalRegion, 2, verticalRegionCount - 3);
+    for (let blackPointsY = 0; blackPointsY < blackPointsHeight; blackPointsY++) {
+      const top = between(blackPointsY, 2, blackPointsHeight - 3);
+      for (let blackPointsX = 0; blackPointsX < blackPointsWidth; blackPointsX++) {
         let sum = 0;
-        for (let xRegion = -2; xRegion <= 2; xRegion++) {
-          for (let yRegion = -2; yRegion <= 2; yRegion++) {
-            sum += blackPoints.get(left + xRegion, top + yRegion);
+        const left = between(blackPointsX, 2, blackPointsWidth - 3);
+        for (let regionY = -2; regionY <= 2; regionY++) {
+          const offset = (top + regionY) * blackPointsWidth;
+          for (let regionX = -2; regionX <= 2; regionX++) {
+            sum += blackPoints[offset + left + regionX];
           }
         }
         const threshold = sum / 25;
-        for (let xRegion = 0; xRegion < REGION_SIZE; xRegion++) {
-          for (let yRegion = 0; yRegion < REGION_SIZE; yRegion++) {
-            const x = hortizontalRegion * REGION_SIZE + xRegion;
-            const y = verticalRegion * REGION_SIZE + yRegion;
-            const lum = greyscalePixels.get(x, y);
-            if (lum <= threshold) {
+        for (let regionY = 0; regionY < REGION_SIZE; regionY++) {
+          const y = blackPointsY * REGION_SIZE + regionY;
+          const offset = y * width;
+          for (let regionX = 0; regionX < REGION_SIZE; regionX++) {
+            const x = blackPointsX * REGION_SIZE + regionX;
+            const lumina = greyscale[offset + x];
+            if (lumina <= threshold) {
               binarized.set(x, y);
             }
           }

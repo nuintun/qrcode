@@ -298,7 +298,7 @@
         context.fillStyle = color;
 
         context.beginPath();
-        context.arc(x, y, moduleSize / 2, 0, 2 * Math.PI);
+        context.arc(x, y, moduleSize * 0.6, 0, 2 * Math.PI);
         context.fill();
       }
 
@@ -349,7 +349,7 @@
         const imageData = getImageData();
         const { width, height } = imageData;
         const decoder = new QRCode.Decoder();
-        const matrix = QRCode.binarize(imageData);
+        const matrix = QRCode.binarizer(imageData);
         const detector = new QRCode.Detector();
         const detected = detector.detect(matrix);
 
