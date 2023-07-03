@@ -3250,71 +3250,85 @@
 
   /**
    * @module binarize
+   * @see https://github.com/FujiHaruka/node-adaptive-threshold
    */
-  const MIN_LUMINANCE_VALUE = 0;
-  const MAX_LUMINANCE_VALUE = 255;
-  function convertGreyscale({ width, height, data }) {
-    const luminance = new Uint8Array(width * height);
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const point = x * 4 + y * width * 4;
-        const r = data[point];
-        const g = data[point + 1];
-        const b = data[point + 2];
-        luminance[x + y * width] = toInt32((r * 33 + g * 34 + b * 33) / 100);
+  function grayscale(colors, width, height) {
+    const pixels = new Float64Array(width * height);
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        const offset = y * width + x;
+        const colorOffset = offset * 4;
+        const r = colors[colorOffset];
+        const g = colors[colorOffset + 1];
+        const b = colors[colorOffset + 2];
+        pixels[offset] = r * 0.2126 + g * 0.7152 + b * 0.0722;
       }
     }
-    return luminance;
+    return pixels;
   }
-  function calculateThreshold(luminance) {
-    let max = 0;
-    let threshold = 0;
-    const histogram = [];
-    for (let i = MIN_LUMINANCE_VALUE; i <= MAX_LUMINANCE_VALUE; i++) {
-      histogram[i] = 0;
-    }
-    for (const value of luminance) {
-      histogram[value]++;
-    }
-    for (let i = 0; i <= MAX_LUMINANCE_VALUE; ++i) {
-      const black = { sum: 0, pixels: 0, average: 0 };
-      const white = { sum: 0, pixels: 0, average: 0 };
-      for (let j = MIN_LUMINANCE_VALUE; j <= i; ++j) {
-        black.pixels += histogram[j];
-        black.sum += j * histogram[j];
-      }
-      for (let j = i + 1; j <= MAX_LUMINANCE_VALUE; ++j) {
-        white.pixels += histogram[j];
-        white.sum += j * histogram[j];
-      }
-      if (black.pixels) {
-        black.average = black.sum / black.pixels;
-      }
-      if (white.pixels) {
-        white.average = white.sum / white.pixels;
-      }
-      const value = black.pixels * white.pixels * Math.pow(black.average - white.average, 2);
-      if (max < value) {
-        max = value;
-        threshold = i;
-      }
-    }
-    return threshold;
-  }
-  function binarize(imageData) {
-    const { width, height } = imageData;
-    const matrix = new BitMatrix(width, height);
-    const luminance = convertGreyscale(imageData);
-    const threshold = calculateThreshold(luminance);
+  function calcLocalAverages(pixels, width, height, size) {
+    const sums = [];
     for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const value = luminance[x + y * width];
-        if (value <= threshold) {
-          matrix.set(x, y);
+      const offset = y * width;
+      const sum = new Float64Array(width);
+      for (let x = 0; x < size; x++) {
+        sum[0] += pixels[offset + x];
+      }
+      for (let end = size; end < width; end++) {
+        const start = end - size + 1;
+        sum[start] = sum[start - 1] + pixels[offset + end] - pixels[offset + start - 1];
+      }
+      sums[y] = sum;
+    }
+    const averagesWidth = width - size + 1;
+    const averagesHeight = height - size + 1;
+    const averages = new Float64Array(averagesWidth * averagesHeight);
+    for (let x = 0; x < averagesWidth; x++) {
+      // Set x, 0
+      for (let y = 0; y < size; y++) {
+        averages[x] += sums[y][x];
+      }
+    }
+    for (let x = 0; x < averagesWidth; x++) {
+      for (let y = 1; y < averagesHeight; y++) {
+        averages[y * width + x] = averages[(y - 1) * width + x] - sums[y - 1][x] + sums[y + size - 1][x];
+      }
+    }
+    // Devide
+    for (let x = 0; x < averagesWidth; x++) {
+      for (let y = 0; y < averagesHeight; y++) {
+        averages[y * width + x] /= size * size;
+      }
+    }
+    return [averages, averagesWidth, averagesHeight];
+  }
+  function binarize({ width, height, data }, { size = 7, compensation = 7 } = {}) {
+    const middleSize = toInt32(size / 2);
+    const binarized = new BitMatrix(width, height);
+    const grayscaled = grayscale(data, width, height);
+    const [averages, averagesWidth, averagesHeight] = calcLocalAverages(grayscaled, width, height, size);
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        let averageX = x - middleSize;
+        let averageY = y - middleSize;
+        const offset = y * width + x;
+        const pixel = grayscaled[offset];
+        if (x - middleSize < 0) {
+          averageX = 0;
+        } else if (x - middleSize >= averagesWidth) {
+          averageX = averagesWidth - 1;
+        } else if (y - middleSize < 0) {
+          averageY = 0;
+        } else if (y - middleSize > averagesHeight) {
+          averageY = averagesHeight - 1;
+        }
+        const average = averages[averageY * averagesWidth + averageX];
+        if (pixel >= average - compensation) {
+          binarized.set(x, y);
         }
       }
     }
-    return matrix;
+    return binarized;
   }
 
   /**
