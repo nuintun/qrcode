@@ -7,7 +7,6 @@ import {
   centerFromEnd,
   checkDiagonalPattern,
   getStateCountTotal,
-  isEqualsModuleSize,
   isFoundAlignmentPattern,
   pushStateCount
 } from './utils/finder';
@@ -21,34 +20,32 @@ export class AlignmentPatternFinder {
   #width: number;
   #height: number;
   #matrix: BitMatrix;
-  #moduleSize: number;
 
-  constructor(matrix: BitMatrix, x: number, y: number, width: number, height: number, moduleSize: number) {
+  constructor(matrix: BitMatrix, x: number, y: number, width: number, height: number) {
     this.#x = x;
     this.#y = y;
     this.#width = width;
     this.#height = height;
     this.#matrix = matrix;
-    this.#moduleSize = moduleSize;
   }
 
-  #crossAlignHorizontal(x: number, y: number, moduleSize: number): number {
-    return alignCrossPattern(this.#matrix, x, y, moduleSize, true, isFoundAlignmentPattern);
+  #crossAlignHorizontal(x: number, y: number, maxCount: number): number {
+    return alignCrossPattern(this.#matrix, x, y, maxCount, true, isFoundAlignmentPattern);
   }
 
-  #crossAlignVertical(x: number, y: number, moduleSize: number): number {
-    return alignCrossPattern(this.#matrix, x, y, moduleSize, false, isFoundAlignmentPattern);
+  #crossAlignVertical(x: number, y: number, maxCount: number): number {
+    return alignCrossPattern(this.#matrix, x, y, maxCount, false, isFoundAlignmentPattern);
   }
 
-  #isDiagonalPassed(x: number, y: number, moduleSize: number, strict?: boolean): boolean {
+  #isDiagonalPassed(x: number, y: number, maxCount: number, strict?: boolean): boolean {
     const matrix = this.#matrix;
-    const isSlashPassed = checkDiagonalPattern(matrix, x, y, moduleSize, true, isFoundAlignmentPattern);
+    const isSlashPassed = checkDiagonalPattern(matrix, x, y, maxCount, true, isFoundAlignmentPattern);
 
     if (strict) {
-      return isSlashPassed && checkDiagonalPattern(matrix, x, y, moduleSize, false, isFoundAlignmentPattern);
+      return isSlashPassed && checkDiagonalPattern(matrix, x, y, maxCount, false, isFoundAlignmentPattern);
     }
 
-    return isSlashPassed || checkDiagonalPattern(matrix, x, y, moduleSize, false, isFoundAlignmentPattern);
+    return isSlashPassed || checkDiagonalPattern(matrix, x, y, maxCount, false, isFoundAlignmentPattern);
   }
 
   #find(
@@ -56,18 +53,20 @@ export class AlignmentPatternFinder {
     x: number,
     y: number,
     stateCount: number[],
-    moduleSize: number,
+    maxCount: number,
     strict?: boolean
   ): Pattern | undefined {
     let offsetX = centerFromEnd(stateCount, x);
 
-    const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
+    const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, maxCount);
 
     if (!Number.isNaN(offsetY)) {
       // Re-cross check
-      offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
+      offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), maxCount);
 
-      if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), moduleSize, strict)) {
+      if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), maxCount, strict)) {
+        const moduleSize = getStateCountTotal(stateCount) / 3;
+
         for (const pattern of patterns) {
           // Look for about the same center and module size
           if (pattern.equals(offsetX, offsetY, moduleSize)) {
@@ -87,17 +86,12 @@ export class AlignmentPatternFinder {
     const matrix = this.#matrix;
     const patterns: Pattern[] = [];
     const width = startX + this.#width;
-    const moduleSize = this.#moduleSize;
     const height = startY + this.#height;
     const process = (x: number, y: number, stateCount: number[], count: number) => {
       pushStateCount(stateCount, count);
 
       if (isFoundAlignmentPattern(stateCount)) {
-        const newModuleSize = getStateCountTotal(stateCount) / 3;
-
-        if (isEqualsModuleSize(moduleSize, newModuleSize)) {
-          return this.#find(patterns, x, y, stateCount, newModuleSize, strict);
-        }
+        return this.#find(patterns, x, y, stateCount, stateCount[1], strict);
       }
     };
 

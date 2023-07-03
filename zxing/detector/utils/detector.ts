@@ -219,8 +219,7 @@ function findAlignmentInRegion(
       alignmentAreaLeftX,
       alignmentAreaTopY,
       alignmentAreaWidth,
-      alignmentAreaHeight,
-      moduleSize
+      alignmentAreaHeight
     );
 
     return alignmentFinder.find(strict);

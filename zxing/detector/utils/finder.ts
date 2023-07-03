@@ -80,21 +80,24 @@ export function isFoundFinderPattern(stateCount: number[]): boolean {
   const stateCountTotal = getStateCountTotal(stateCount, true);
 
   if (stateCountTotal >= moduleCount) {
-    const middleIndex = toInt32(length / 2);
     const moduleSize = stateCountTotal / moduleCount;
-    const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
 
-    // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
-    for (let i = 0; i < length; i++) {
-      const size = stateCount[i];
-      const ratio = i !== middleIndex ? 1 : 3;
+    if (moduleSize > 1) {
+      const middleIndex = toInt32(length / 2);
+      const moduleSizeDiff = Math.max(1, moduleSize * DIFF_MODULE_SIZE_RATIO);
 
-      if (Math.abs(size - moduleSize * ratio) > moduleSizeDiff * ratio) {
-        return false;
+      // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
+      for (let i = 0; i < length; i++) {
+        const size = stateCount[i];
+        const ratio = i !== middleIndex ? 1 : 3;
+
+        if (Math.abs(size - moduleSize * ratio) > moduleSizeDiff * ratio) {
+          return false;
+        }
       }
-    }
 
-    return true;
+      return true;
+    }
   }
 
   return false;
@@ -106,16 +109,19 @@ export function isFoundAlignmentPattern(stateCount: number[]): boolean {
 
   if (stateCountTotal >= moduleCount) {
     const moduleSize = stateCountTotal / moduleCount;
-    const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
 
-    // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
-    for (const size of stateCount) {
-      if (Math.abs(size - moduleSize) > moduleSizeDiff) {
-        return false;
+    if (moduleSize > 1) {
+      const moduleSizeDiff = Math.max(1, moduleSize * DIFF_MODULE_SIZE_RATIO);
+
+      // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
+      for (const size of stateCount) {
+        if (Math.abs(size - moduleSize) > moduleSizeDiff) {
+          return false;
+        }
       }
-    }
 
-    return true;
+      return true;
+    }
   }
 
   return false;
@@ -130,9 +136,9 @@ export function isEqualsEdge(edge1: number, edge2: number): boolean {
 
 export function isEqualsModuleSize(moduleSize1: number, moduleSize2: number): boolean {
   const modeSizeAvg = (moduleSize1 + moduleSize2) / 2;
-  const ratio = Math.abs(moduleSize1 - moduleSize2) / modeSizeAvg;
+  const moduleSizeDiff = Math.max(1, modeSizeAvg * DIFF_MODULE_SIZE_RATIO);
 
-  return ratio <= DIFF_MODULE_SIZE_RATIO;
+  return Math.abs(moduleSize1 - moduleSize2) <= moduleSizeDiff;
 }
 
 export function isValidModuleCount(edge: number, moduleSize: number): boolean {
@@ -153,7 +159,7 @@ export function alignCrossPattern(
   matrix: BitMatrix,
   x: number,
   y: number,
-  moduleSize: number,
+  maxCount: number,
   isHorizontal: boolean,
   checker: (stateCount: number[]) => boolean
 ): number {
@@ -174,7 +180,7 @@ export function alignCrossPattern(
     stateCount[1]++;
   }
 
-  while (offset >= 0 && stateCount[0] < moduleSize && isBlackPixel()) {
+  while (offset >= 0 && stateCount[0] < maxCount && isBlackPixel()) {
     offset--;
     stateCount[0]++;
   }
@@ -193,7 +199,7 @@ export function alignCrossPattern(
     stateCount[3]++;
   }
 
-  while (offset < size && stateCount[4] < moduleSize && isBlackPixel()) {
+  while (offset < size && stateCount[4] < maxCount && isBlackPixel()) {
     offset++;
     stateCount[4]++;
   }
@@ -205,7 +211,7 @@ export function checkDiagonalPattern(
   matrix: BitMatrix,
   x: number,
   y: number,
-  moduleSize: number,
+  maxCount: number,
   isBackslash: boolean,
   checker: (stateCount: number[]) => boolean
 ): boolean {
@@ -233,7 +239,7 @@ export function checkDiagonalPattern(
   }
 
   // Continue up, left finding black border
-  while (x >= offset && y >= offset && stateCount[0] < moduleSize && isBlackPixel(true)) {
+  while (x >= offset && y >= offset && stateCount[0] < maxCount && isBlackPixel(true)) {
     offset++;
     stateCount[0]++;
   }
@@ -252,7 +258,7 @@ export function checkDiagonalPattern(
     stateCount[3]++;
   }
 
-  while (x + offset < width && y + offset < height && stateCount[4] < moduleSize && isBlackPixel(false)) {
+  while (x + offset < width && y + offset < height && stateCount[4] < maxCount && isBlackPixel(false)) {
     offset++;
     stateCount[4]++;
   }

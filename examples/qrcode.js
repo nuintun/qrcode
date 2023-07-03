@@ -3498,18 +3498,20 @@
     const { length } = stateCount;
     const stateCountTotal = getStateCountTotal(stateCount, true);
     if (stateCountTotal >= moduleCount) {
-      const middleIndex = toInt32(length / 2);
       const moduleSize = stateCountTotal / moduleCount;
-      const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
-      // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
-      for (let i = 0; i < length; i++) {
-        const size = stateCount[i];
-        const ratio = i !== middleIndex ? 1 : 3;
-        if (Math.abs(size - moduleSize * ratio) > moduleSizeDiff * ratio) {
-          return false;
+      if (moduleSize > 1) {
+        const middleIndex = toInt32(length / 2);
+        const moduleSizeDiff = Math.max(1, moduleSize * DIFF_MODULE_SIZE_RATIO);
+        // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
+        for (let i = 0; i < length; i++) {
+          const size = stateCount[i];
+          const ratio = i !== middleIndex ? 1 : 3;
+          if (Math.abs(size - moduleSize * ratio) > moduleSizeDiff * ratio) {
+            return false;
+          }
         }
+        return true;
       }
-      return true;
     }
     return false;
   }
@@ -3518,14 +3520,16 @@
     const stateCountTotal = getStateCountTotal(stateCount, true);
     if (stateCountTotal >= moduleCount) {
       const moduleSize = stateCountTotal / moduleCount;
-      const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
-      // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
-      for (const size of stateCount) {
-        if (Math.abs(size - moduleSize) > moduleSizeDiff) {
-          return false;
+      if (moduleSize > 1) {
+        const moduleSizeDiff = Math.max(1, moduleSize * DIFF_MODULE_SIZE_RATIO);
+        // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
+        for (const size of stateCount) {
+          if (Math.abs(size - moduleSize) > moduleSizeDiff) {
+            return false;
+          }
         }
+        return true;
       }
-      return true;
     }
     return false;
   }
@@ -3536,15 +3540,15 @@
   }
   function isEqualsModuleSize(moduleSize1, moduleSize2) {
     const modeSizeAvg = (moduleSize1 + moduleSize2) / 2;
-    const ratio = Math.abs(moduleSize1 - moduleSize2) / modeSizeAvg;
-    return ratio <= DIFF_MODULE_SIZE_RATIO;
+    const moduleSizeDiff = Math.max(1, modeSizeAvg * DIFF_MODULE_SIZE_RATIO);
+    return Math.abs(moduleSize1 - moduleSize2) <= moduleSizeDiff;
   }
   function isValidModuleCount(edge, moduleSize) {
     // Check the sizes
     const moduleCount = Math.ceil(edge / moduleSize);
     return moduleCount >= MIN_MODULE_COUNT_PER_EDGE && moduleCount <= MAX_MODULE_COUNT_PER_EDGE;
   }
-  function alignCrossPattern(matrix, x, y, moduleSize, isHorizontal, checker) {
+  function alignCrossPattern(matrix, x, y, maxCount, isHorizontal, checker) {
     let offset = isHorizontal ? x : y;
     const stateCount = [0, 0, 0, 0, 0];
     const isBlackPixel = () => {
@@ -3558,7 +3562,7 @@
       offset--;
       stateCount[1]++;
     }
-    while (offset >= 0 && stateCount[0] < moduleSize && isBlackPixel()) {
+    while (offset >= 0 && stateCount[0] < maxCount && isBlackPixel()) {
       offset--;
       stateCount[0]++;
     }
@@ -3572,13 +3576,13 @@
       offset++;
       stateCount[3]++;
     }
-    while (offset < size && stateCount[4] < moduleSize && isBlackPixel()) {
+    while (offset < size && stateCount[4] < maxCount && isBlackPixel()) {
       offset++;
       stateCount[4]++;
     }
     return checker(stateCount) ? centerFromEnd(stateCount, offset) : NaN;
   }
-  function checkDiagonalPattern(matrix, x, y, moduleSize, isBackslash, checker) {
+  function checkDiagonalPattern(matrix, x, y, maxCount, isBackslash, checker) {
     let offset = 0;
     const stateCount = [0, 0, 0, 0, 0];
     const isBlackPixel = isUpward => {
@@ -3599,7 +3603,7 @@
       stateCount[1]++;
     }
     // Continue up, left finding black border
-    while (x >= offset && y >= offset && stateCount[0] < moduleSize && isBlackPixel(true)) {
+    while (x >= offset && y >= offset && stateCount[0] < maxCount && isBlackPixel(true)) {
       offset++;
       stateCount[0]++;
     }
@@ -3613,7 +3617,7 @@
       offset++;
       stateCount[3]++;
     }
-    while (x + offset < width && y + offset < height && stateCount[4] < moduleSize && isBlackPixel(false)) {
+    while (x + offset < width && y + offset < height && stateCount[4] < maxCount && isBlackPixel(false)) {
       offset++;
       stateCount[4]++;
     }
@@ -3664,36 +3668,35 @@
     #width;
     #height;
     #matrix;
-    #moduleSize;
-    constructor(matrix, x, y, width, height, moduleSize) {
+    constructor(matrix, x, y, width, height) {
       this.#x = x;
       this.#y = y;
       this.#width = width;
       this.#height = height;
       this.#matrix = matrix;
-      this.#moduleSize = moduleSize;
     }
-    #crossAlignHorizontal(x, y, moduleSize) {
-      return alignCrossPattern(this.#matrix, x, y, moduleSize, true, isFoundAlignmentPattern);
+    #crossAlignHorizontal(x, y, maxCount) {
+      return alignCrossPattern(this.#matrix, x, y, maxCount, true, isFoundAlignmentPattern);
     }
-    #crossAlignVertical(x, y, moduleSize) {
-      return alignCrossPattern(this.#matrix, x, y, moduleSize, false, isFoundAlignmentPattern);
+    #crossAlignVertical(x, y, maxCount) {
+      return alignCrossPattern(this.#matrix, x, y, maxCount, false, isFoundAlignmentPattern);
     }
-    #isDiagonalPassed(x, y, moduleSize, strict) {
+    #isDiagonalPassed(x, y, maxCount, strict) {
       const matrix = this.#matrix;
-      const isSlashPassed = checkDiagonalPattern(matrix, x, y, moduleSize, true, isFoundAlignmentPattern);
+      const isSlashPassed = checkDiagonalPattern(matrix, x, y, maxCount, true, isFoundAlignmentPattern);
       if (strict) {
-        return isSlashPassed && checkDiagonalPattern(matrix, x, y, moduleSize, false, isFoundAlignmentPattern);
+        return isSlashPassed && checkDiagonalPattern(matrix, x, y, maxCount, false, isFoundAlignmentPattern);
       }
-      return isSlashPassed || checkDiagonalPattern(matrix, x, y, moduleSize, false, isFoundAlignmentPattern);
+      return isSlashPassed || checkDiagonalPattern(matrix, x, y, maxCount, false, isFoundAlignmentPattern);
     }
-    #find(patterns, x, y, stateCount, moduleSize, strict) {
+    #find(patterns, x, y, stateCount, maxCount, strict) {
       let offsetX = centerFromEnd(stateCount, x);
-      const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
+      const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, maxCount);
       if (!Number.isNaN(offsetY)) {
         // Re-cross check
-        offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
-        if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), moduleSize, strict)) {
+        offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), maxCount);
+        if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), maxCount, strict)) {
+          const moduleSize = getStateCountTotal(stateCount) / 3;
           for (const pattern of patterns) {
             // Look for about the same center and module size
             if (pattern.equals(offsetX, offsetY, moduleSize)) {
@@ -3711,15 +3714,11 @@
       const matrix = this.#matrix;
       const patterns = [];
       const width = startX + this.#width;
-      const moduleSize = this.#moduleSize;
       const height = startY + this.#height;
       const process = (x, y, stateCount, count) => {
         pushStateCount(stateCount, count);
         if (isFoundAlignmentPattern(stateCount)) {
-          const newModuleSize = getStateCountTotal(stateCount) / 3;
-          if (isEqualsModuleSize(moduleSize, newModuleSize)) {
-            return this.#find(patterns, x, y, stateCount, newModuleSize, strict);
-          }
+          return this.#find(patterns, x, y, stateCount, stateCount[1], strict);
         }
       };
       // We are looking for black/white/black modules in 1:1:1 ratio;
@@ -4059,8 +4058,7 @@
         alignmentAreaLeftX,
         alignmentAreaTopY,
         alignmentAreaWidth,
-        alignmentAreaHeight,
-        moduleSize
+        alignmentAreaHeight
       );
       return alignmentFinder.find(strict);
     }
@@ -4153,17 +4151,17 @@
     constructor(matrix) {
       this.#matrix = matrix;
     }
-    #crossAlignHorizontal(x, y, moduleSize) {
-      return alignCrossPattern(this.#matrix, x, y, moduleSize, true, isFoundFinderPattern);
+    #crossAlignHorizontal(x, y, maxCount) {
+      return alignCrossPattern(this.#matrix, x, y, maxCount, true, isFoundFinderPattern);
     }
-    #crossAlignVertical(x, y, moduleSize) {
-      return alignCrossPattern(this.#matrix, x, y, moduleSize, false, isFoundFinderPattern);
+    #crossAlignVertical(x, y, maxCount) {
+      return alignCrossPattern(this.#matrix, x, y, maxCount, false, isFoundFinderPattern);
     }
-    #isDiagonalPassed(x, y, moduleSize) {
+    #isDiagonalPassed(x, y, maxCount) {
       const matrix = this.#matrix;
       return (
-        checkDiagonalPattern(matrix, x, y, moduleSize, true, isFoundFinderPattern) &&
-        checkDiagonalPattern(matrix, x, y, moduleSize, false, isFoundFinderPattern)
+        checkDiagonalPattern(matrix, x, y, maxCount, true, isFoundFinderPattern) &&
+        checkDiagonalPattern(matrix, x, y, maxCount, false, isFoundFinderPattern)
       );
     }
     #selectBestPatterns(patterns) {
@@ -4221,15 +4219,16 @@
       }
       return finderPatternGroups;
     }
-    #find(patterns, x, y, stateCount, moduleSize) {
+    #find(patterns, x, y, stateCount, maxCount) {
       let offsetX = centerFromEnd(stateCount, x);
-      const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, moduleSize);
+      const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, maxCount);
       if (!Number.isNaN(offsetY)) {
         // Re-cross check
-        offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), moduleSize);
-        if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), moduleSize)) {
+        offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), maxCount);
+        if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), maxCount)) {
           let combined = false;
           const { length } = patterns;
+          const moduleSize = getStateCountTotal(stateCount) / 7;
           for (let i = 0; i < length; i++) {
             const pattern = patterns[i];
             // Look for about the same center and module size:
@@ -4252,7 +4251,7 @@
       const process = (x, y, stateCount, count) => {
         pushStateCount(stateCount, count);
         if (isFoundFinderPattern(stateCount)) {
-          this.#find(patterns, x, y, stateCount, getStateCountTotal(stateCount) / 7);
+          this.#find(patterns, x, y, stateCount, stateCount[2]);
         }
       };
       for (let y = 0; y < height; y++) {
