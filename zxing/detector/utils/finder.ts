@@ -82,7 +82,7 @@ export function isFoundFinderPattern(stateCount: number[]): boolean {
   if (stateCountTotal >= moduleCount) {
     const moduleSize = stateCountTotal / moduleCount;
 
-    if (moduleSize > 1) {
+    if (moduleSize >= 1) {
       const middleIndex = toInt32(length / 2);
       const moduleSizeDiff = Math.max(1, moduleSize * DIFF_MODULE_SIZE_RATIO);
 
@@ -110,7 +110,7 @@ export function isFoundAlignmentPattern(stateCount: number[]): boolean {
   if (stateCountTotal >= moduleCount) {
     const moduleSize = stateCountTotal / moduleCount;
 
-    if (moduleSize > 1) {
+    if (moduleSize >= 1) {
       const moduleSizeDiff = Math.max(1, moduleSize * DIFF_MODULE_SIZE_RATIO);
 
       // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions

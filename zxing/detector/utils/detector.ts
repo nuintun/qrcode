@@ -9,8 +9,8 @@ import { distance, Point } from '/common/Point';
 import { GridSampler } from '/common/GridSampler';
 import { FinderPatternGroup } from '/detector/FinderPatternGroup';
 import { AlignmentPatternFinder } from '/detector/AlignmentPatternFinder';
+import { quadrilateralToQuadrilateral } from '/common/PerspectiveTransform';
 import { fromVersionSize, MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
-import { PerspectiveTransform, quadrilateralToQuadrilateral } from '/common/PerspectiveTransform';
 
 function sizeOfBlackWhiteBlackRun(matrix: BitMatrix, fromX: number, fromY: number, toX: number, toY: number): number {
   // Mild variant of Bresenham's algorithm;
@@ -149,60 +149,7 @@ export function computeSymbolSize(topLeft: Pattern, topRight: Pattern, bottomLef
   return size;
 }
 
-function createTransform(
-  size: number,
-  topLeft: Pattern,
-  topRight: Pattern,
-  bottomLeft: Pattern,
-  alignmentPattern?: Pattern
-): PerspectiveTransform {
-  let bottomRightX;
-  let bottomRightY;
-  let sourceBottomRightX;
-  let sourceBottomRightY;
-
-  const dimMinusThree = size - 3.5;
-
-  if (alignmentPattern != null) {
-    bottomRightX = alignmentPattern.x;
-    bottomRightY = alignmentPattern.y;
-    sourceBottomRightX = dimMinusThree - 3;
-    sourceBottomRightY = sourceBottomRightX;
-  } else {
-    // Don't have an alignment pattern, just make up the bottom-right point
-    bottomRightX = topRight.x - topLeft.x + bottomLeft.x;
-    bottomRightY = topRight.y - topLeft.y + bottomLeft.y;
-    sourceBottomRightX = dimMinusThree;
-    sourceBottomRightY = dimMinusThree;
-  }
-
-  return quadrilateralToQuadrilateral(
-    3.5,
-    3.5,
-    dimMinusThree,
-    3.5,
-    sourceBottomRightX,
-    sourceBottomRightY,
-    3.5,
-    dimMinusThree,
-    topLeft.x,
-    topLeft.y,
-    topRight.x,
-    topRight.y,
-    bottomRightX,
-    bottomRightY,
-    bottomLeft.x,
-    bottomLeft.y
-  );
-}
-
-function findAlignmentInRegion(
-  matrix: BitMatrix,
-  x: number,
-  y: number,
-  moduleSize: number,
-  strict?: boolean
-): Pattern | undefined {
+function findAlignmentInRegion(matrix: BitMatrix, x: number, y: number, moduleSize: number): Pattern | undefined {
   // Look for an alignment pattern (3 modules in size) around where it should be
   const minAlignmentAreaSize = moduleSize * 3;
   const allowance = Math.floor(moduleSize * 4);
@@ -222,15 +169,74 @@ function findAlignmentInRegion(
       alignmentAreaHeight
     );
 
-    return alignmentFinder.find(strict);
+    return alignmentFinder.find();
   }
+}
+
+export type Transform = (
+  matrix: BitMatrix,
+  size: number,
+  finderPatternGroup: FinderPatternGroup,
+  alignmentPattern?: Pattern
+) => BitMatrix;
+
+function transformImpl(
+  matrix: BitMatrix,
+  size: number,
+  { topLeft, topRight, bottomLeft }: FinderPatternGroup,
+  alignmentPattern?: Pattern
+) {
+  let bottomRightX;
+  let bottomRightY;
+  let sourceBottomRightX;
+  let sourceBottomRightY;
+
+  const dimMinusThree = size - 3.5;
+  const sampler = new GridSampler(matrix);
+
+  if (alignmentPattern != null) {
+    bottomRightX = alignmentPattern.x;
+    bottomRightY = alignmentPattern.y;
+    sourceBottomRightX = dimMinusThree - 3;
+    sourceBottomRightY = sourceBottomRightX;
+  } else {
+    // Don't have an alignment pattern, just make up the bottom-right point
+    bottomRightX = topRight.x - topLeft.x + bottomLeft.x;
+    bottomRightY = topRight.y - topLeft.y + bottomLeft.y;
+    sourceBottomRightX = dimMinusThree;
+    sourceBottomRightY = dimMinusThree;
+  }
+
+  return sampler.sampleGrid(
+    size,
+    size,
+    quadrilateralToQuadrilateral(
+      3.5,
+      3.5,
+      dimMinusThree,
+      3.5,
+      sourceBottomRightX,
+      sourceBottomRightY,
+      3.5,
+      dimMinusThree,
+      topLeft.x,
+      topLeft.y,
+      topRight.x,
+      topRight.y,
+      bottomRightX,
+      bottomRightY,
+      bottomLeft.x,
+      bottomLeft.y
+    )
+  );
 }
 
 export function detect(
   matrix: BitMatrix,
-  { topLeft, topRight, bottomLeft }: FinderPatternGroup,
-  strict?: boolean
+  finderPatternGroup: FinderPatternGroup,
+  transform: Transform = transformImpl
 ): [matrix?: BitMatrix, alignmentPattern?: Pattern] {
+  const { topLeft, topRight, bottomLeft } = finderPatternGroup;
   const moduleSize = calculateModuleSize(matrix, topLeft, topRight, bottomLeft);
 
   if (moduleSize >= 1) {
@@ -256,13 +262,10 @@ export function detect(
 
         // Kind of arbitrary -- expand search radius before giving up
         // If we didn't find alignment pattern... well try anyway without it
-        alignmentPattern = findAlignmentInRegion(matrix, expectAlignmentX, expectAlignmentY, moduleSize, strict);
+        alignmentPattern = findAlignmentInRegion(matrix, expectAlignmentX, expectAlignmentY, moduleSize);
       }
 
-      const sampler = new GridSampler(matrix);
-      const transform = createTransform(size, topLeft, topRight, bottomLeft, alignmentPattern);
-
-      return [sampler.sampleGrid(size, size, transform), alignmentPattern];
+      return [transform(matrix, size, finderPatternGroup, alignmentPattern), alignmentPattern];
     }
   }
 

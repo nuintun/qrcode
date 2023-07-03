@@ -3499,7 +3499,7 @@
     const stateCountTotal = getStateCountTotal(stateCount, true);
     if (stateCountTotal >= moduleCount) {
       const moduleSize = stateCountTotal / moduleCount;
-      if (moduleSize > 1) {
+      if (moduleSize >= 1) {
         const middleIndex = toInt32(length / 2);
         const moduleSizeDiff = Math.max(1, moduleSize * DIFF_MODULE_SIZE_RATIO);
         // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
@@ -3520,7 +3520,7 @@
     const stateCountTotal = getStateCountTotal(stateCount, true);
     if (stateCountTotal >= moduleCount) {
       const moduleSize = stateCountTotal / moduleCount;
-      if (moduleSize > 1) {
+      if (moduleSize >= 1) {
         const moduleSizeDiff = Math.max(1, moduleSize * DIFF_MODULE_SIZE_RATIO);
         // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
         for (const size of stateCount) {
@@ -3681,21 +3681,20 @@
     #crossAlignVertical(x, y, maxCount) {
       return alignCrossPattern(this.#matrix, x, y, maxCount, false, isFoundAlignmentPattern);
     }
-    #isDiagonalPassed(x, y, maxCount, strict) {
+    #isDiagonalPassed(x, y, maxCount) {
       const matrix = this.#matrix;
-      const isSlashPassed = checkDiagonalPattern(matrix, x, y, maxCount, true, isFoundAlignmentPattern);
-      if (strict) {
-        return isSlashPassed && checkDiagonalPattern(matrix, x, y, maxCount, false, isFoundAlignmentPattern);
-      }
-      return isSlashPassed || checkDiagonalPattern(matrix, x, y, maxCount, false, isFoundAlignmentPattern);
+      return (
+        checkDiagonalPattern(matrix, x, y, maxCount, true, isFoundAlignmentPattern) &&
+        checkDiagonalPattern(matrix, x, y, maxCount, false, isFoundAlignmentPattern)
+      );
     }
-    #find(patterns, x, y, stateCount, maxCount, strict) {
+    #find(patterns, x, y, stateCount, maxCount) {
       let offsetX = centerFromEnd(stateCount, x);
       const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, maxCount);
       if (!Number.isNaN(offsetY)) {
         // Re-cross check
         offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), maxCount);
-        if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), maxCount, strict)) {
+        if (!Number.isNaN(offsetX) && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), maxCount)) {
           const moduleSize = getStateCountTotal(stateCount) / 3;
           for (const pattern of patterns) {
             // Look for about the same center and module size
@@ -3708,7 +3707,7 @@
         }
       }
     }
-    find(strict) {
+    find() {
       const startX = this.#x;
       const startY = this.#y;
       const matrix = this.#matrix;
@@ -3718,7 +3717,7 @@
       const process = (x, y, stateCount, count) => {
         pushStateCount(stateCount, count);
         if (isFoundAlignmentPattern(stateCount)) {
-          return this.#find(patterns, x, y, stateCount, stateCount[1], strict);
+          return this.#find(patterns, x, y, stateCount, stateCount[1]);
         }
       };
       // We are looking for black/white/black modules in 1:1:1 ratio;
@@ -4005,44 +4004,7 @@
     }
     return size;
   }
-  function createTransform(size, topLeft, topRight, bottomLeft, alignmentPattern) {
-    let bottomRightX;
-    let bottomRightY;
-    let sourceBottomRightX;
-    let sourceBottomRightY;
-    const dimMinusThree = size - 3.5;
-    if (alignmentPattern != null) {
-      bottomRightX = alignmentPattern.x;
-      bottomRightY = alignmentPattern.y;
-      sourceBottomRightX = dimMinusThree - 3;
-      sourceBottomRightY = sourceBottomRightX;
-    } else {
-      // Don't have an alignment pattern, just make up the bottom-right point
-      bottomRightX = topRight.x - topLeft.x + bottomLeft.x;
-      bottomRightY = topRight.y - topLeft.y + bottomLeft.y;
-      sourceBottomRightX = dimMinusThree;
-      sourceBottomRightY = dimMinusThree;
-    }
-    return quadrilateralToQuadrilateral(
-      3.5,
-      3.5,
-      dimMinusThree,
-      3.5,
-      sourceBottomRightX,
-      sourceBottomRightY,
-      3.5,
-      dimMinusThree,
-      topLeft.x,
-      topLeft.y,
-      topRight.x,
-      topRight.y,
-      bottomRightX,
-      bottomRightY,
-      bottomLeft.x,
-      bottomLeft.y
-    );
-  }
-  function findAlignmentInRegion(matrix, x, y, moduleSize, strict) {
+  function findAlignmentInRegion(matrix, x, y, moduleSize) {
     // Look for an alignment pattern (3 modules in size) around where it should be
     const minAlignmentAreaSize = moduleSize * 3;
     const allowance = Math.floor(moduleSize * 4);
@@ -4060,10 +4022,53 @@
         alignmentAreaWidth,
         alignmentAreaHeight
       );
-      return alignmentFinder.find(strict);
+      return alignmentFinder.find();
     }
   }
-  function detect(matrix, { topLeft, topRight, bottomLeft }, strict) {
+  function transformImpl(matrix, size, { topLeft, topRight, bottomLeft }, alignmentPattern) {
+    let bottomRightX;
+    let bottomRightY;
+    let sourceBottomRightX;
+    let sourceBottomRightY;
+    const dimMinusThree = size - 3.5;
+    const sampler = new GridSampler(matrix);
+    if (alignmentPattern != null) {
+      bottomRightX = alignmentPattern.x;
+      bottomRightY = alignmentPattern.y;
+      sourceBottomRightX = dimMinusThree - 3;
+      sourceBottomRightY = sourceBottomRightX;
+    } else {
+      // Don't have an alignment pattern, just make up the bottom-right point
+      bottomRightX = topRight.x - topLeft.x + bottomLeft.x;
+      bottomRightY = topRight.y - topLeft.y + bottomLeft.y;
+      sourceBottomRightX = dimMinusThree;
+      sourceBottomRightY = dimMinusThree;
+    }
+    return sampler.sampleGrid(
+      size,
+      size,
+      quadrilateralToQuadrilateral(
+        3.5,
+        3.5,
+        dimMinusThree,
+        3.5,
+        sourceBottomRightX,
+        sourceBottomRightY,
+        3.5,
+        dimMinusThree,
+        topLeft.x,
+        topLeft.y,
+        topRight.x,
+        topRight.y,
+        bottomRightX,
+        bottomRightY,
+        bottomLeft.x,
+        bottomLeft.y
+      )
+    );
+  }
+  function detect(matrix, finderPatternGroup, transform = transformImpl) {
+    const { topLeft, topRight, bottomLeft } = finderPatternGroup;
     const moduleSize = calculateModuleSize(matrix, topLeft, topRight, bottomLeft);
     if (moduleSize >= 1) {
       const size = computeSymbolSize(topLeft, topRight, bottomLeft, moduleSize);
@@ -4084,11 +4089,9 @@
           const expectAlignmentY = toInt32(y + correctionToTopLeft * (bottomRightY - y));
           // Kind of arbitrary -- expand search radius before giving up
           // If we didn't find alignment pattern... well try anyway without it
-          alignmentPattern = findAlignmentInRegion(matrix, expectAlignmentX, expectAlignmentY, moduleSize, strict);
+          alignmentPattern = findAlignmentInRegion(matrix, expectAlignmentX, expectAlignmentY, moduleSize);
         }
-        const sampler = new GridSampler(matrix);
-        const transform = createTransform(size, topLeft, topRight, bottomLeft, alignmentPattern);
-        return [sampler.sampleGrid(size, size, transform), alignmentPattern];
+        return [transform(matrix, size, finderPatternGroup, alignmentPattern), alignmentPattern];
       }
     }
     return [];
@@ -4292,11 +4295,11 @@
     }
     detect(matrix) {
       const result = [];
-      const { strict = true } = this.#options;
+      const { transform } = this.#options;
       const finder = new FinderPatternFinder(matrix);
       const finderPatternGroups = finder.find();
       for (const patterns of finderPatternGroups) {
-        const [bitMatrix, alignmentPattern] = detect(matrix, patterns, strict);
+        const [bitMatrix, alignmentPattern] = detect(matrix, patterns, transform);
         if (bitMatrix != null) {
           if (alignmentPattern) {
             result.push({

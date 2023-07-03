@@ -15,7 +15,12 @@ export interface DetectResult {
 }
 
 export interface Options {
-  strict?: boolean;
+  transform?: (
+    matrix: BitMatrix,
+    size: number,
+    finderPatternGroup: FinderPatternGroup,
+    alignmentPattern?: Pattern
+  ) => BitMatrix;
 }
 
 export class Detector {
@@ -27,12 +32,12 @@ export class Detector {
 
   public detect(matrix: BitMatrix): DetectResult[] {
     const result: DetectResult[] = [];
-    const { strict = true } = this.#options;
+    const { transform } = this.#options;
     const finder = new FinderPatternFinder(matrix);
     const finderPatternGroups = finder.find();
 
     for (const patterns of finderPatternGroups) {
-      const [bitMatrix, alignmentPattern] = detect(matrix, patterns, strict);
+      const [bitMatrix, alignmentPattern] = detect(matrix, patterns, transform);
 
       if (bitMatrix != null) {
         if (alignmentPattern) {
