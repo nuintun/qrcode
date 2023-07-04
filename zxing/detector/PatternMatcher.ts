@@ -48,9 +48,7 @@ export class PatternMatcher {
   }
 
   public match(x: number, y: number, countState: number[]): boolean {
-    const matrix = this.#matrix;
-
-    if (matrix.get(x, y) && this.#matcher(countState)) {
+    if (this.#matcher(countState)) {
       let offsetX = centerFromEnd(countState, x);
 
       const maxCount = countState[toInt32(countState.length / 2)];

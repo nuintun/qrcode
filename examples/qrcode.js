@@ -4092,8 +4092,7 @@
       return this.#patterns;
     }
     match(x, y, countState) {
-      const matrix = this.#matrix;
-      if (matrix.get(x, y) && this.#matcher(countState)) {
+      if (this.#matcher(countState)) {
         let offsetX = centerFromEnd(countState, x);
         const maxCount = countState[toInt32(countState.length / 2)];
         const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, maxCount);
@@ -4240,6 +4239,10 @@
       return finderPatternGroups;
     }
     match(x, y, countState) {
+      const matcher = this.#matcher;
+      if (!matcher.matrix.get(x, y)) {
+        return false;
+      }
       return this.#matcher.match(x, y, countState);
     }
   }
@@ -4256,6 +4259,10 @@
       return this.#matcher.patterns;
     }
     match(x, y, countState) {
+      const matcher = this.#matcher;
+      if (matcher.matrix.get(x, y)) {
+        return false;
+      }
       return this.#matcher.match(x, y, countState);
     }
   }
