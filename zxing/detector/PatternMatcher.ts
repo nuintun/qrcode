@@ -5,7 +5,7 @@
 import { Pattern } from './Pattern';
 import { toInt32 } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
-import { alignCrossPattern, centerFromEnd, checkDiagonalPattern, getCountStateTotal } from './utils/matcher';
+import { alignCrossPattern, centerFromEnd, checkDiagonalPattern } from './utils/matcher';
 
 export interface Matcher {
   (countState: number[]): boolean;
@@ -47,7 +47,7 @@ export class PatternMatcher {
     return this.#patterns;
   }
 
-  public match(x: number, y: number, countState: number[]): boolean {
+  public match(x: number, y: number, countState: number[], moduleSize: number): boolean {
     if (this.#matcher(countState)) {
       let offsetX = centerFromEnd(countState, x);
 
@@ -60,7 +60,6 @@ export class PatternMatcher {
 
         if (offsetX >= 0 && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), maxCount)) {
           const patterns = this.#patterns;
-          const moduleSize = getCountStateTotal(countState) / 3;
           const { length } = patterns;
 
           for (let i = 0; i < length; i++) {

@@ -4091,7 +4091,7 @@
     get patterns() {
       return this.#patterns;
     }
-    match(x, y, countState) {
+    match(x, y, countState, moduleSize) {
       if (this.#matcher(countState)) {
         let offsetX = centerFromEnd(countState, x);
         const maxCount = countState[toInt32(countState.length / 2)];
@@ -4101,7 +4101,6 @@
           offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), maxCount);
           if (offsetX >= 0 && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), maxCount)) {
             const patterns = this.#patterns;
-            const moduleSize = getCountStateTotal(countState) / 3;
             const { length } = patterns;
             for (let i = 0; i < length; i++) {
               const pattern = patterns[i];
@@ -4243,7 +4242,7 @@
       if (!matcher.matrix.get(x, y)) {
         return false;
       }
-      return this.#matcher.match(x, y, countState);
+      return this.#matcher.match(x, y, countState, getCountStateTotal(countState) / 7);
     }
   }
 
@@ -4263,7 +4262,7 @@
       if (matcher.matrix.get(x, y)) {
         return false;
       }
-      return this.#matcher.match(x, y, countState);
+      return this.#matcher.match(x, y, countState, getCountStateTotal(countState) / 3);
     }
   }
 

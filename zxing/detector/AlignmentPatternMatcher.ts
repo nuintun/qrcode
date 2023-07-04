@@ -5,7 +5,7 @@
 import { Pattern } from './Pattern';
 import { BitMatrix } from '/common/BitMatrix';
 import { PatternMatcher } from './PatternMatcher';
-import { isMatchAlignmentPattern } from './utils/matcher';
+import { getCountStateTotal, isMatchAlignmentPattern } from './utils/matcher';
 
 export class AlignmentPatternMatcher {
   #matcher: PatternMatcher;
@@ -25,6 +25,6 @@ export class AlignmentPatternMatcher {
       return false;
     }
 
-    return this.#matcher.match(x, y, countState);
+    return this.#matcher.match(x, y, countState, getCountStateTotal(countState) / 3);
   }
 }

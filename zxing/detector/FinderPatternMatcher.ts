@@ -4,6 +4,7 @@
 
 import {
   checkRepeatPixelsInLine,
+  getCountStateTotal,
   isEqualsEdge,
   isEqualsModuleSize,
   isMatchFinderPattern,
@@ -101,6 +102,6 @@ export class FinderPatternMatcher {
       return false;
     }
 
-    return this.#matcher.match(x, y, countState);
+    return this.#matcher.match(x, y, countState, getCountStateTotal(countState) / 7);
   }
 }
