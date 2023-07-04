@@ -8,7 +8,6 @@ import { round, toInt32 } from '/common/utils';
 import { distance, Point } from '/common/Point';
 import { GridSampler } from '/common/GridSampler';
 import { FinderPatternGroup } from '/detector/FinderPatternGroup';
-import { AlignmentPatternFinder } from '/detector/AlignmentPatternFinder';
 import { quadrilateralToQuadrilateral } from '/common/PerspectiveTransform';
 import { fromVersionSize, MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
 
@@ -149,7 +148,7 @@ export function computeSymbolSize(topLeft: Pattern, topRight: Pattern, bottomLef
   return size;
 }
 
-function findAlignmentInRegion(matrix: BitMatrix, x: number, y: number, moduleSize: number): Pattern | undefined {
+function findAlignmentInRegion(matrix: BitMatrix, x: number, y: number, moduleSize: number): undefined {
   // Look for an alignment pattern (3 modules in size) around where it should be
   const allowance = Math.ceil(moduleSize * 5);
   const minAlignmentAreaSize = moduleSize * 3;
@@ -161,15 +160,14 @@ function findAlignmentInRegion(matrix: BitMatrix, x: number, y: number, moduleSi
   const alignmentAreaHeight = alignmentAreaBottomY - alignmentAreaTopY;
 
   if (alignmentAreaWidth >= minAlignmentAreaSize && alignmentAreaHeight >= minAlignmentAreaSize) {
-    const alignmentFinder = new AlignmentPatternFinder(
-      matrix,
-      alignmentAreaLeftX,
-      alignmentAreaTopY,
-      alignmentAreaWidth,
-      alignmentAreaHeight
-    );
-
-    return alignmentFinder.find();
+    // const alignmentFinder = new AlignmentPatternFinder(
+    //   matrix,
+    //   alignmentAreaLeftX,
+    //   alignmentAreaTopY,
+    //   alignmentAreaWidth,
+    //   alignmentAreaHeight
+    // );
+    // return alignmentFinder.find();
   }
 }
 

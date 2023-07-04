@@ -1,5 +1,5 @@
 /**
- * @module finder
+ * @module matcher
  */
 
 import { toInt32 } from '/common/utils';
@@ -13,74 +13,74 @@ export const DIFF_MODULE_SIZE_RATIO = 0.5;
 export const MIN_MODULE_COUNT_PER_EDGE = 11;
 export const MAX_MODULE_COUNT_PER_EDGE = 175;
 
-export function centerFromStart(stateCount: number[], start: number): number {
-  const { length } = stateCount;
+export function centerFromStart(countState: number[], start: number): number {
+  const { length } = countState;
   const middleIndex = toInt32(length / 2);
 
-  let center = start + stateCount[middleIndex] / 2;
+  let center = start + countState[middleIndex] / 2;
 
   for (let i = 0; i < middleIndex; i++) {
-    center += stateCount[i];
+    center += countState[i];
   }
 
   return center;
 }
 
-export function centerFromEnd(stateCount: number[], end: number): number {
-  const { length } = stateCount;
+export function centerFromEnd(countState: number[], end: number): number {
+  const { length } = countState;
   const middleIndex = toInt32(length / 2);
 
-  let center = end - stateCount[middleIndex] / 2;
+  let center = end - countState[middleIndex] / 2;
 
   for (let i = middleIndex + 1; i < length; i++) {
-    center -= stateCount[i];
+    center -= countState[i];
   }
 
   return center;
 }
 
-export function shiftStateCount(stateCount: number[], count: number): void {
-  const { length } = stateCount;
+export function shiftCountState(countState: number[], count: number): void {
+  const { length } = countState;
 
   for (let i = length - 1; i > 0; i--) {
-    stateCount[i] = stateCount[i - 1];
+    countState[i] = countState[i - 1];
   }
 
-  stateCount[0] = count;
+  countState[0] = count;
 }
 
-export function pushStateCount(stateCount: number[], count: number): void {
-  const { length } = stateCount;
+export function pushCountState(countState: number[], count: number): void {
+  const { length } = countState;
   const lastIndex = length - 1;
 
   for (let i = 0; i < lastIndex; i++) {
-    stateCount[i] = stateCount[i + 1];
+    countState[i] = countState[i + 1];
   }
 
-  stateCount[lastIndex] = count;
+  countState[lastIndex] = count;
 }
 
-export function getStateCountTotal(stateCount: number[], checkZero?: boolean): number {
-  let stateCountTotal = 0;
+export function getCountStateTotal(countState: number[], checkZero?: boolean): number {
+  let countStateTotal = 0;
 
-  for (const count of stateCount) {
+  for (const count of countState) {
     if (checkZero && count === 0) {
       return -1;
     }
 
-    stateCountTotal += count;
+    countStateTotal += count;
   }
 
-  return stateCountTotal;
+  return countStateTotal;
 }
 
-export function isFoundFinderPattern(stateCount: number[]): boolean {
+export function isMatchFinderPattern(countState: number[]): boolean {
   const moduleCount = 7;
-  const { length } = stateCount;
-  const stateCountTotal = getStateCountTotal(stateCount, true);
+  const { length } = countState;
+  const countStateTotal = getCountStateTotal(countState, true);
 
-  if (stateCountTotal >= moduleCount) {
-    const moduleSize = stateCountTotal / moduleCount;
+  if (countStateTotal >= moduleCount) {
+    const moduleSize = countStateTotal / moduleCount;
 
     if (moduleSize >= 1) {
       const middleIndex = toInt32(length / 2);
@@ -88,7 +88,7 @@ export function isFoundFinderPattern(stateCount: number[]): boolean {
 
       // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
       for (let i = 0; i < length; i++) {
-        const size = stateCount[i];
+        const size = countState[i];
         const ratio = i !== middleIndex ? 1 : 3;
 
         if (Math.abs(size - moduleSize * ratio) > moduleSizeDiff * ratio) {
@@ -103,18 +103,18 @@ export function isFoundFinderPattern(stateCount: number[]): boolean {
   return false;
 }
 
-export function isFoundAlignmentPattern(stateCount: number[]): boolean {
-  const moduleCount = stateCount.length;
-  const stateCountTotal = getStateCountTotal(stateCount, true);
+export function isMatchAlignmentPattern(countState: number[]): boolean {
+  const moduleCount = countState.length;
+  const countStateTotal = getCountStateTotal(countState, true);
 
-  if (stateCountTotal >= moduleCount) {
-    const moduleSize = stateCountTotal / moduleCount;
+  if (countStateTotal >= moduleCount) {
+    const moduleSize = countStateTotal / moduleCount;
 
     if (moduleSize >= 1) {
       const moduleSizeDiff = Math.max(1, moduleSize * DIFF_MODULE_SIZE_RATIO);
 
       // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
-      for (const size of stateCount) {
+      for (const size of countState) {
         if (Math.abs(size - moduleSize) > moduleSizeDiff) {
           return false;
         }
@@ -161,28 +161,28 @@ export function alignCrossPattern(
   y: number,
   maxCount: number,
   isHorizontal: boolean,
-  checker: (stateCount: number[]) => boolean
+  checker: (countState: number[]) => boolean
 ): number {
   let offset = isHorizontal ? x : y;
 
-  const stateCount = [0, 0, 0, 0, 0];
+  const countState = [0, 0, 0, 0, 0];
   const isBlackPixel = (): number => {
     return isHorizontal ? matrix.get(offset, y) : matrix.get(x, offset);
   };
 
   while (offset >= 0 && isBlackPixel()) {
     offset--;
-    stateCount[2]++;
+    countState[2]++;
   }
 
   while (offset >= 0 && !isBlackPixel()) {
     offset--;
-    stateCount[1]++;
+    countState[1]++;
   }
 
-  while (offset >= 0 && stateCount[0] < maxCount && isBlackPixel()) {
+  while (offset >= 0 && countState[0] < maxCount && isBlackPixel()) {
     offset--;
-    stateCount[0]++;
+    countState[0]++;
   }
 
   offset = (isHorizontal ? x : y) + 1;
@@ -191,20 +191,20 @@ export function alignCrossPattern(
 
   while (offset < size && isBlackPixel()) {
     offset++;
-    stateCount[2]++;
+    countState[2]++;
   }
 
   while (offset < size && !isBlackPixel()) {
     offset++;
-    stateCount[3]++;
+    countState[3]++;
   }
 
-  while (offset < size && stateCount[4] < maxCount && isBlackPixel()) {
+  while (offset < size && countState[4] < maxCount && isBlackPixel()) {
     offset++;
-    stateCount[4]++;
+    countState[4]++;
   }
 
-  return checker(stateCount) ? centerFromEnd(stateCount, offset) : NaN;
+  return checker(countState) ? centerFromEnd(countState, offset) : -1;
 }
 
 export function checkDiagonalPattern(
@@ -213,11 +213,11 @@ export function checkDiagonalPattern(
   y: number,
   maxCount: number,
   isBackslash: boolean,
-  checker: (stateCount: number[]) => boolean
+  checker: (countState: number[]) => boolean
 ): boolean {
   let offset = 0;
 
-  const stateCount = [0, 0, 0, 0, 0];
+  const countState = [0, 0, 0, 0, 0];
   const isBlackPixel = (isUpward: boolean): number => {
     if (isBackslash) {
       return isUpward ? matrix.get(x - offset, y - offset) : matrix.get(x + offset, y + offset);
@@ -229,19 +229,19 @@ export function checkDiagonalPattern(
   // Start counting up, left from center finding black center mass
   while (x >= offset && y >= offset && isBlackPixel(true)) {
     offset++;
-    stateCount[2]++;
+    countState[2]++;
   }
 
   // Continue up, left finding white space
   while (x >= offset && y >= offset && !isBlackPixel(true)) {
     offset++;
-    stateCount[1]++;
+    countState[1]++;
   }
 
   // Continue up, left finding black border
-  while (x >= offset && y >= offset && stateCount[0] < maxCount && isBlackPixel(true)) {
+  while (x >= offset && y >= offset && countState[0] < maxCount && isBlackPixel(true)) {
     offset++;
-    stateCount[0]++;
+    countState[0]++;
   }
 
   offset = 1;
@@ -250,20 +250,20 @@ export function checkDiagonalPattern(
 
   while (x + offset < width && y + offset < height && isBlackPixel(false)) {
     offset++;
-    stateCount[2]++;
+    countState[2]++;
   }
 
   while (x + offset < width && y + offset < height && !isBlackPixel(false)) {
     offset++;
-    stateCount[3]++;
+    countState[3]++;
   }
 
-  while (x + offset < width && y + offset < height && stateCount[4] < maxCount && isBlackPixel(false)) {
+  while (x + offset < width && y + offset < height && countState[4] < maxCount && isBlackPixel(false)) {
     offset++;
-    stateCount[4]++;
+    countState[4]++;
   }
 
-  return checker(stateCount);
+  return checker(countState);
 }
 
 export function checkRepeatPixelsInLine(matrix: BitMatrix, pattern1: Pattern, pattern2: Pattern): boolean {
