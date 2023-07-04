@@ -295,11 +295,26 @@
       }
 
       function markFinderPattern({ x, y, moduleSize }, color) {
+        context.save();
+
         context.fillStyle = color;
 
         context.beginPath();
         context.arc(x, y, moduleSize * 0.6, 0, 2 * Math.PI);
         context.fill();
+        context.restore();
+      }
+
+      function drawLine({ x: x1, y: y1 }, { x: x2, y: y2 }, color) {
+        context.save();
+
+        context.strokeStyle = color;
+
+        context.beginPath();
+        context.moveTo(x1, y1);
+        context.lineTo(x2, y2);
+        context.stroke();
+        context.restore();
       }
 
       function drawMatrix(matrix, moduleSize = 2) {
@@ -333,6 +348,13 @@
         canvasContext.putImageData(imageData, 0, 0);
 
         return canvas;
+      }
+
+      function distance(a, b) {
+        const xDiff = a.x - b.x;
+        const yDiff = a.y - b.y;
+
+        return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
       }
 
       $('#decode-btn').on('click', function () {
@@ -373,56 +395,60 @@
         console.dir(detected);
 
         if (detected.length > 0) {
-          for (const { matrix, finder, alignment } of detected) {
+          for (const { matrix, finder, alignment, bottomRight } of detected) {
             const { topLeft, topRight, bottomLeft } = finder;
-
-            console.group();
-            console.dir(matrix);
-            console.dir(finder);
-
-            if (alignment) {
-              console.dir(alignment);
-              alignments.push(alignment);
-            }
 
             try {
               const decoded = decoder.decode(matrix);
               const { content } = decoded;
 
+              console.group();
+              console.dir(matrix);
+              console.dir(finder);
+
               if (content) {
                 decodeResult.html(content);
                 success.push(finder);
+
+                if (alignment) {
+                  console.dir(alignment);
+                  alignments.push(alignment);
+                }
+
                 console.dir(decoded);
                 console.dir(content);
               } else {
                 errors.push(finder);
               }
 
+              markFinderPattern(bottomRight, '#ff0000');
+              drawLine(topLeft, topRight, '#ff0000');
+              drawLine(topLeft, bottomLeft, '#ff0000');
               matrixBox.append(drawMatrix(matrix), '&nbsp;&nbsp;');
+
+              console.log('topLeft:', topLeft.x, topLeft.y);
+              console.log('topRight:', topRight.x, topRight.y);
+              console.log('bottomLeft:', bottomLeft.x, bottomLeft.y);
+              console.groupEnd();
             } catch (error) {
               // 解码失败，跳过
               errors.push(finder);
               // console.error(error);
             }
-
-            console.log('topLeft:', topLeft.x, topLeft.y);
-            console.log('topRight:', topRight.x, topRight.y);
-            console.log('bottomLeft:', bottomLeft.x, bottomLeft.y);
-            console.groupEnd();
           }
         }
 
         for (const { topLeft, topRight, bottomLeft } of errors) {
-          markFinderPattern(topLeft, '#ff0000');
-          markFinderPattern(topRight, '#00ff00');
-          markFinderPattern(bottomLeft, '#0000ff');
+          markFinderPattern(topLeft, '#ffff00');
+          markFinderPattern(topRight, '#ffff00');
+          markFinderPattern(bottomLeft, '#ffff00');
         }
 
         if (success.length > 0) {
           for (const { topLeft, topRight, bottomLeft } of success) {
-            markFinderPattern(topLeft, '#00ff00');
+            markFinderPattern(topLeft, '#ff0000');
             markFinderPattern(topRight, '#00ff00');
-            markFinderPattern(bottomLeft, '#00ff00');
+            markFinderPattern(bottomLeft, '#0000ff');
           }
         } else {
           decodeResult.html(`<span class="error">未发现二维码</span>`);

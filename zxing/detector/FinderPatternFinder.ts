@@ -6,6 +6,7 @@ import {
   alignCrossPattern,
   centerFromEnd,
   checkDiagonalPattern,
+  checkRepeatPixelsInLine,
   getStateCountTotal,
   isEqualsEdge,
   isEqualsModuleSize,
@@ -44,6 +45,7 @@ export class FinderPatternFinder {
   }
 
   #selectBestPatterns(patterns: Pattern[]): FinderPatternGroup[] {
+    const matrix = this.#matrix;
     const { length } = patterns;
     // Groups
     const finderPatternGroups: FinderPatternGroup[] = [];
@@ -104,8 +106,10 @@ export class FinderPatternFinder {
               continue;
             }
 
-            // All tests passed!
-            finderPatternGroups.push(finderPatternGroup);
+            if (checkRepeatPixelsInLine(matrix, topLeft, bottomLeft) && checkRepeatPixelsInLine(matrix, topRight, bottomLeft)) {
+              // All tests passed!
+              finderPatternGroups.push(finderPatternGroup);
+            }
           }
         }
       }
@@ -114,7 +118,7 @@ export class FinderPatternFinder {
     return finderPatternGroups;
   }
 
-  #find(patterns: Pattern[], x: number, y: number, stateCount: number[], maxCount: number): void {
+  #match(patterns: Pattern[], x: number, y: number, stateCount: number[], maxCount: number): void {
     let offsetX = centerFromEnd(stateCount, x);
 
     const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, maxCount);
@@ -151,11 +155,11 @@ export class FinderPatternFinder {
     const matrix = this.#matrix;
     const patterns: Pattern[] = [];
     const { width, height } = matrix;
-    const process = (x: number, y: number, stateCount: number[], count: number) => {
+    const match = (x: number, y: number, lastBit: number, stateCount: number[], count: number) => {
       pushStateCount(stateCount, count);
 
-      if (isFoundFinderPattern(stateCount)) {
-        this.#find(patterns, x, y, stateCount, stateCount[2]);
+      if (lastBit && isFoundFinderPattern(stateCount)) {
+        this.#match(patterns, x, y, stateCount, stateCount[2]);
       }
     };
 
@@ -180,7 +184,7 @@ export class FinderPatternFinder {
         if (bit === lastBit) {
           count++;
         } else {
-          process(x, y, stateCount, count);
+          match(x, y, lastBit, stateCount, count);
 
           count = 1;
           lastBit = bit;
@@ -189,7 +193,7 @@ export class FinderPatternFinder {
         x++;
       }
 
-      process(x, y, stateCount, count);
+      match(x, y, lastBit, stateCount, count);
     }
 
     return this.#selectBestPatterns(patterns.filter(({ count }) => count >= 3));

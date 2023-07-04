@@ -317,14 +317,14 @@
     }
     return mapping;
   }
-  function getSerialRanges(start, end, offsets, step = 256) {
+  function getSerialRanges(start, end, offsets, delta = 256) {
     const count = offsets.length - 1;
     const ranges = [];
     for (let i = start; i < end; ) {
       for (let j = 0; j < count; j += 2) {
         ranges.push([i + offsets[j], i + offsets[j + 1]]);
       }
-      i += step;
+      i += delta;
     }
     return ranges;
   }
@@ -3396,6 +3396,74 @@
     const yDiff = a.y - b.y;
     return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
   }
+  // Mild variant of Bresenham's algorithm
+  // see https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+  function plotLine(from, to, callback) {
+    let toX = toInt32(to.x);
+    let toY = toInt32(to.y);
+    let fromX = toInt32(from.x);
+    let fromY = toInt32(from.y);
+    const steep = Math.abs(toY - fromY) > Math.abs(toX - fromX);
+    // Swap coordinate
+    if (steep) {
+      [fromX, fromY, toX, toY] = [fromY, fromX, toY, toX];
+    }
+    const xDiff = Math.abs(toX - fromX);
+    const yDiff = Math.abs(toY - fromY);
+    const deltaX = fromX < toX ? 1 : -1;
+    const deltaY = fromY < toY ? 1 : -1;
+    const xLimit = toX + deltaX;
+    let error = toInt32(-xDiff / 2);
+    // Loop up until x === toX, but not beyond
+    for (let x = fromX, y = fromY; x !== xLimit; x += deltaX) {
+      if (callback(steep ? y : x, steep ? x : y, deltaX, deltaY) === false) {
+        break;
+      }
+      error += yDiff;
+      if (error > 0) {
+        if (y === toY) {
+          break;
+        }
+        y += deltaY;
+        error -= xDiff;
+      }
+    }
+  }
+
+  /**
+   * @module Pattern
+   */
+  class Pattern extends Point {
+    #count;
+    #moduleSize;
+    constructor(x, y, moduleSize, count = 1) {
+      super(x, y);
+      this.#count = count;
+      this.#moduleSize = moduleSize;
+    }
+    get count() {
+      return this.#count;
+    }
+    get moduleSize() {
+      return this.#moduleSize;
+    }
+    combine(x, y, moduleSize) {
+      const count = this.#count;
+      const combinedCount = count + 1;
+      const combinedX = (count * this.x + x) / combinedCount;
+      const combinedY = (count * this.y + y) / combinedCount;
+      const combinedModuleSize = (count * this.#moduleSize + moduleSize) / combinedCount;
+      return new Pattern(combinedX, combinedY, combinedModuleSize, combinedCount);
+    }
+    equals(x, y, moduleSize) {
+      if (Math.abs(x - this.x) <= moduleSize && Math.abs(y - this.y) <= moduleSize) {
+        const currentModuleSize = this.#moduleSize;
+        const moduleSizeDiff = Math.abs(moduleSize - currentModuleSize);
+        return moduleSizeDiff < 1 || moduleSizeDiff <= currentModuleSize;
+      }
+      return false;
+    }
+  }
 
   /**
    * @module GridSampler
@@ -3652,40 +3720,23 @@
     }
     return checker(stateCount);
   }
-
-  /**
-   * @module Pattern
-   */
-  class Pattern extends Point {
-    #count;
-    #moduleSize;
-    constructor(x, y, moduleSize, count = 1) {
-      super(x, y);
-      this.#count = count;
-      this.#moduleSize = moduleSize;
-    }
-    get count() {
-      return this.#count;
-    }
-    get moduleSize() {
-      return this.#moduleSize;
-    }
-    combine(x, y, moduleSize) {
-      const count = this.#count;
-      const combinedCount = count + 1;
-      const combinedX = (count * this.x + x) / combinedCount;
-      const combinedY = (count * this.y + y) / combinedCount;
-      const combinedModuleSize = (count * this.#moduleSize + moduleSize) / combinedCount;
-      return new Pattern(combinedX, combinedY, combinedModuleSize, combinedCount);
-    }
-    equals(x, y, moduleSize) {
-      if (Math.abs(x - this.x) <= moduleSize && Math.abs(y - this.y) <= moduleSize) {
-        const currentModuleSize = this.#moduleSize;
-        const moduleSizeDiff = Math.abs(moduleSize - currentModuleSize);
-        return moduleSizeDiff < 1 || moduleSizeDiff <= currentModuleSize;
+  function checkRepeatPixelsInLine(matrix, pattern1, pattern2) {
+    let black = 0;
+    let white = 0;
+    const maxRepeat = (pattern1.moduleSize + pattern2.moduleSize) * 10;
+    plotLine(pattern1, pattern2, (x, y) => {
+      if (matrix.get(x, y)) {
+        black++;
+        white = 0;
+      } else {
+        white++;
+        black = 0;
       }
-      return false;
-    }
+      if (white > maxRepeat || black > maxRepeat) {
+        return false;
+      }
+    });
+    return white <= maxRepeat && black <= maxRepeat;
   }
 
   /**
@@ -3717,7 +3768,7 @@
         checkDiagonalPattern(matrix, x, y, maxCount, false, isFoundAlignmentPattern)
       );
     }
-    #find(patterns, x, y, stateCount, maxCount) {
+    #match(patterns, x, y, stateCount, maxCount) {
       let offsetX = centerFromEnd(stateCount, x);
       const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, maxCount);
       if (!Number.isNaN(offsetY)) {
@@ -3743,10 +3794,10 @@
       const patterns = [];
       const width = startX + this.#width;
       const height = startY + this.#height;
-      const process = (x, y, stateCount, count) => {
+      const match = (x, y, lastBit, stateCount, count) => {
         pushStateCount(stateCount, count);
-        if (isFoundAlignmentPattern(stateCount)) {
-          return this.#find(patterns, x, y, stateCount, stateCount[1]);
+        if (!lastBit && isFoundAlignmentPattern(stateCount)) {
+          return this.#match(patterns, x, y, stateCount, stateCount[1]);
         }
       };
       // We are looking for black/white/black modules in 1:1:1 ratio;
@@ -3768,7 +3819,7 @@
             count++;
           } else {
             // Yes
-            const confirmed = process(x, y, stateCount, count);
+            const confirmed = match(x, y, lastBit, stateCount, count);
             if (confirmed != null) {
               return confirmed;
             }
@@ -3777,7 +3828,7 @@
           }
           x++;
         }
-        const confirmed = process(x, y, stateCount, count);
+        const confirmed = match(x, y, lastBit, stateCount, count);
         if (confirmed != null) {
           return confirmed;
         }
@@ -3927,7 +3978,7 @@
    */
   function sizeOfBlackWhiteBlackRun(matrix, fromX, fromY, toX, toY) {
     // Mild variant of Bresenham's algorithm;
-    // see http://en.wikipedia.org/wiki/Bresenham's_line_algorithm
+    // see https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
     const steep = Math.abs(toY - fromY) > Math.abs(toX - fromX);
     if (steep) {
       [fromX, fromY, toX, toY] = [fromY, fromX, toY, toX];
@@ -4195,6 +4246,7 @@
       );
     }
     #selectBestPatterns(patterns) {
+      const matrix = this.#matrix;
       const { length } = patterns;
       // Groups
       const finderPatternGroups = [];
@@ -4241,15 +4293,20 @@
               ) {
                 continue;
               }
-              // All tests passed!
-              finderPatternGroups.push(finderPatternGroup);
+              if (
+                checkRepeatPixelsInLine(matrix, topLeft, bottomLeft) &&
+                checkRepeatPixelsInLine(matrix, topRight, bottomLeft)
+              ) {
+                // All tests passed!
+                finderPatternGroups.push(finderPatternGroup);
+              }
             }
           }
         }
       }
       return finderPatternGroups;
     }
-    #find(patterns, x, y, stateCount, maxCount) {
+    #match(patterns, x, y, stateCount, maxCount) {
       let offsetX = centerFromEnd(stateCount, x);
       const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, maxCount);
       if (!Number.isNaN(offsetY)) {
@@ -4278,10 +4335,10 @@
       const matrix = this.#matrix;
       const patterns = [];
       const { width, height } = matrix;
-      const process = (x, y, stateCount, count) => {
+      const match = (x, y, lastBit, stateCount, count) => {
         pushStateCount(stateCount, count);
-        if (isFoundFinderPattern(stateCount)) {
-          this.#find(patterns, x, y, stateCount, stateCount[2]);
+        if (lastBit && isFoundFinderPattern(stateCount)) {
+          this.#match(patterns, x, y, stateCount, stateCount[2]);
         }
       };
       for (let y = 0; y < height; y++) {
@@ -4300,13 +4357,13 @@
           if (bit === lastBit) {
             count++;
           } else {
-            process(x, y, stateCount, count);
+            match(x, y, lastBit, stateCount, count);
             count = 1;
             lastBit = bit;
           }
           x++;
         }
-        process(x, y, stateCount, count);
+        match(x, y, lastBit, stateCount, count);
       }
       return this.#selectBestPatterns(patterns.filter(({ count }) => count >= 3));
     }
@@ -4327,15 +4384,23 @@
       const finderPatternGroups = finder.find();
       for (const patterns of finderPatternGroups) {
         const [bitMatrix, alignmentPattern] = detect(matrix, patterns, transform);
+        const { topLeft, topRight, bottomLeft } = patterns;
+        const bottomRight = new Pattern(
+          topRight.x - topLeft.x + bottomLeft.x,
+          topRight.y - topLeft.y + bottomLeft.y,
+          topLeft.moduleSize
+        );
         if (bitMatrix != null) {
           if (alignmentPattern) {
             result.push({
+              bottomRight,
               finder: patterns,
               matrix: bitMatrix,
               alignment: alignmentPattern
             });
           } else {
             result.push({
+              bottomRight,
               finder: patterns,
               matrix: bitMatrix
             });

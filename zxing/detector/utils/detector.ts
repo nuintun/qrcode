@@ -14,7 +14,7 @@ import { fromVersionSize, MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Ver
 
 function sizeOfBlackWhiteBlackRun(matrix: BitMatrix, fromX: number, fromY: number, toX: number, toY: number): number {
   // Mild variant of Bresenham's algorithm;
-  // see http://en.wikipedia.org/wiki/Bresenham's_line_algorithm
+  // see https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
   const steep = Math.abs(toY - fromY) > Math.abs(toX - fromX);
 
   if (steep) {

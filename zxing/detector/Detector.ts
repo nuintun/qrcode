@@ -11,6 +11,7 @@ import { FinderPatternFinder } from './FinderPatternFinder';
 export interface DetectResult {
   readonly matrix: BitMatrix;
   readonly alignment?: Pattern;
+  readonly bottomRight: Pattern;
   readonly finder: FinderPatternGroup;
 }
 
@@ -38,16 +39,25 @@ export class Detector {
 
     for (const patterns of finderPatternGroups) {
       const [bitMatrix, alignmentPattern] = detect(matrix, patterns, transform);
+      const { topLeft, topRight, bottomLeft } = patterns;
+
+      const bottomRight = new Pattern(
+        topRight.x - topLeft.x + bottomLeft.x,
+        topRight.y - topLeft.y + bottomLeft.y,
+        topLeft.moduleSize
+      );
 
       if (bitMatrix != null) {
         if (alignmentPattern) {
           result.push({
+            bottomRight,
             finder: patterns,
             matrix: bitMatrix,
             alignment: alignmentPattern
           });
         } else {
           result.push({
+            bottomRight,
             finder: patterns,
             matrix: bitMatrix
           });

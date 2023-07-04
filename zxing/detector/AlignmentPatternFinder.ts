@@ -46,7 +46,7 @@ export class AlignmentPatternFinder {
     );
   }
 
-  #find(patterns: Pattern[], x: number, y: number, stateCount: number[], maxCount: number): Pattern | undefined {
+  #match(patterns: Pattern[], x: number, y: number, stateCount: number[], maxCount: number): Pattern | undefined {
     let offsetX = centerFromEnd(stateCount, x);
 
     const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, maxCount);
@@ -78,11 +78,11 @@ export class AlignmentPatternFinder {
     const patterns: Pattern[] = [];
     const width = startX + this.#width;
     const height = startY + this.#height;
-    const process = (x: number, y: number, stateCount: number[], count: number) => {
+    const match = (x: number, y: number, lastBit: number, stateCount: number[], count: number) => {
       pushStateCount(stateCount, count);
 
-      if (isFoundAlignmentPattern(stateCount)) {
-        return this.#find(patterns, x, y, stateCount, stateCount[1]);
+      if (!lastBit && isFoundAlignmentPattern(stateCount)) {
+        return this.#match(patterns, x, y, stateCount, stateCount[1]);
       }
     };
 
@@ -110,7 +110,7 @@ export class AlignmentPatternFinder {
           count++;
         } else {
           // Yes
-          const confirmed = process(x, y, stateCount, count);
+          const confirmed = match(x, y, lastBit, stateCount, count);
 
           if (confirmed != null) {
             return confirmed;
@@ -123,7 +123,7 @@ export class AlignmentPatternFinder {
         x++;
       }
 
-      const confirmed = process(x, y, stateCount, count);
+      const confirmed = match(x, y, lastBit, stateCount, count);
 
       if (confirmed != null) {
         return confirmed;

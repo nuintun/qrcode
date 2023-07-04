@@ -5,8 +5,8 @@
 import { toInt32 } from '/common/utils';
 import { Pattern } from '/detector/Pattern';
 import { BitMatrix } from '/common/BitMatrix';
-import { isPointInQuadrangle, Point } from '/common/Point';
 import { FinderPatternGroup } from '/detector/FinderPatternGroup';
+import { isPointInQuadrangle, plotLine, Point } from '/common/Point';
 
 export const DIFF_EDGE_RATIO = 0.5;
 export const DIFF_MODULE_SIZE_RATIO = 0.5;
@@ -264,4 +264,27 @@ export function checkDiagonalPattern(
   }
 
   return checker(stateCount);
+}
+
+export function checkRepeatPixelsInLine(matrix: BitMatrix, pattern1: Pattern, pattern2: Pattern): boolean {
+  let black = 0;
+  let white = 0;
+
+  const maxRepeat = (pattern1.moduleSize + pattern2.moduleSize) * 10;
+
+  plotLine(pattern1, pattern2, (x, y) => {
+    if (matrix.get(x, y)) {
+      black++;
+      white = 0;
+    } else {
+      white++;
+      black = 0;
+    }
+
+    if (white > maxRepeat || black > maxRepeat) {
+      return false;
+    }
+  });
+
+  return white <= maxRepeat && black <= maxRepeat;
 }

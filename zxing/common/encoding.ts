@@ -87,7 +87,7 @@ export function getEncodingMapping(label: string, ...ranges: EncodingRange[]): M
   return mapping;
 }
 
-export function getSerialRanges(start: number, end: number, offsets: number[], step: number = 256): EncodingRange[] {
+export function getSerialRanges(start: number, end: number, offsets: number[], delta: number = 256): EncodingRange[] {
   const count = offsets.length - 1;
   const ranges: EncodingRange[] = [];
 
@@ -96,7 +96,7 @@ export function getSerialRanges(start: number, end: number, offsets: number[], s
       ranges.push([i + offsets[j], i + offsets[j + 1]]);
     }
 
-    i += step;
+    i += delta;
   }
 
   return ranges;
