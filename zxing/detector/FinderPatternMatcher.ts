@@ -23,8 +23,9 @@ export class FinderPatternMatcher {
   }
 
   public get patterns(): FinderPatternGroup[] {
-    const { matrix, patterns } = this.#matcher;
+    const matcher = this.#matcher;
     const finderPatternGroups: FinderPatternGroup[] = [];
+    const patterns = matcher.patterns.filter(({ count }) => count >= 3);
     const { length } = patterns;
 
     // Find enough finder patterns
@@ -83,6 +84,8 @@ export class FinderPatternMatcher {
               continue;
             }
 
+            const { matrix } = matcher;
+
             if (checkRepeatPixelsInLine(matrix, topLeft, bottomLeft) && checkRepeatPixelsInLine(matrix, topRight, bottomLeft)) {
               // All tests passed!
               finderPatternGroups.push(finderPatternGroup);
@@ -96,12 +99,6 @@ export class FinderPatternMatcher {
   }
 
   public match(x: number, y: number, countState: number[]): boolean {
-    const matcher = this.#matcher;
-
-    if (!matcher.matrix.get(x, y)) {
-      return false;
-    }
-
     return this.#matcher.match(x, y, countState, getCountStateTotal(countState) / 7);
   }
 }

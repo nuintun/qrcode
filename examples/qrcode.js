@@ -3893,7 +3893,7 @@
     }
     return center;
   }
-  function pushCountState(countState, count) {
+  function setCountState(countState, count) {
     const { length } = countState;
     const lastIndex = length - 1;
     for (let i = 0; i < lastIndex; i++) {
@@ -4178,8 +4178,9 @@
       this.#matcher = new PatternMatcher(matrix, isMatchFinderPattern);
     }
     get patterns() {
-      const { matrix, patterns } = this.#matcher;
+      const matcher = this.#matcher;
       const finderPatternGroups = [];
+      const patterns = matcher.patterns.filter(({ count }) => count >= 3);
       const { length } = patterns;
       // Find enough finder patterns
       if (length >= 3) {
@@ -4224,6 +4225,7 @@
               ) {
                 continue;
               }
+              const { matrix } = matcher;
               if (
                 checkRepeatPixelsInLine(matrix, topLeft, bottomLeft) &&
                 checkRepeatPixelsInLine(matrix, topRight, bottomLeft)
@@ -4238,10 +4240,6 @@
       return finderPatternGroups;
     }
     match(x, y, countState) {
-      const matcher = this.#matcher;
-      if (!matcher.matrix.get(x, y)) {
-        return false;
-      }
       return this.#matcher.match(x, y, countState, getCountStateTotal(countState) / 7);
     }
   }
@@ -4258,10 +4256,6 @@
       return this.#matcher.patterns;
     }
     match(x, y, countState) {
-      const matcher = this.#matcher;
-      if (matcher.matrix.get(x, y)) {
-        return false;
-      }
       return this.#matcher.match(x, y, countState, getCountStateTotal(countState) / 3);
     }
   }
@@ -4281,11 +4275,14 @@
       const finder = new FinderPatternMatcher(matrix);
       const alignment = new AlignmentPatternMatcher(matrix);
       // const finderPatternGroups = finder.find();
-      const match = (x, y, countState, count) => {
-        pushCountState(countState, count);
+      const match = (x, y, lastBit, countState, count) => {
+        setCountState(countState, count);
         // Match pattern
-        finder.match(x, y, countState);
-        alignment.match(x, y, countState.slice(-3));
+        if (lastBit) {
+          finder.match(x, y, countState);
+        } else {
+          alignment.match(x, y, countState.slice(-3));
+        }
       };
       for (let y = 0; y < height; y++) {
         let x = 0;
@@ -4303,21 +4300,21 @@
           if (bit === lastBit) {
             count++;
           } else {
-            match(x, y, countState, count);
+            match(x, y, lastBit, countState, count);
             count = 1;
             lastBit = bit;
           }
           x++;
         }
-        match(x, y, countState, count);
+        match(x, y, lastBit, countState, count);
       }
       const finderPatternGroups = finder.patterns;
       for (const patterns of finderPatternGroups) {
         const [bitMatrix, alignmentPattern] = detect(matrix, patterns, transform);
         const { topLeft, topRight, bottomLeft } = patterns;
         const bottomRight = new Pattern(
-          topRight.x - topLeft.x + bottomLeft.x,
-          topRight.y - topLeft.y + bottomLeft.y,
+          topRight.x + bottomLeft.x - topLeft.x,
+          topRight.y + bottomLeft.y - topLeft.y,
           topLeft.moduleSize
         );
         if (bitMatrix != null) {

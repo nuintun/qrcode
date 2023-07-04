@@ -5,7 +5,7 @@
 import { Pattern } from './Pattern';
 import { detect } from './utils/detector';
 import { BitMatrix } from '/common/BitMatrix';
-import { pushCountState } from './utils/matcher';
+import { setCountState } from './utils/matcher';
 import { FinderPatternGroup } from './FinderPatternGroup';
 import { FinderPatternMatcher } from './FinderPatternMatcher';
 import { AlignmentPatternMatcher } from './AlignmentPatternMatcher';
@@ -41,12 +41,15 @@ export class Detector {
     const alignment = new AlignmentPatternMatcher(matrix);
     // const finderPatternGroups = finder.find();
 
-    const match = (x: number, y: number, countState: number[], count: number) => {
-      pushCountState(countState, count);
+    const match = (x: number, y: number, lastBit: number, countState: number[], count: number) => {
+      setCountState(countState, count);
 
       // Match pattern
-      finder.match(x, y, countState);
-      alignment.match(x, y, countState.slice(-3));
+      if (lastBit) {
+        finder.match(x, y, countState);
+      } else {
+        alignment.match(x, y, countState.slice(-3));
+      }
     };
 
     for (let y = 0; y < height; y++) {
@@ -70,7 +73,7 @@ export class Detector {
         if (bit === lastBit) {
           count++;
         } else {
-          match(x, y, countState, count);
+          match(x, y, lastBit, countState, count);
 
           count = 1;
           lastBit = bit;
@@ -79,7 +82,7 @@ export class Detector {
         x++;
       }
 
-      match(x, y, countState, count);
+      match(x, y, lastBit, countState, count);
     }
 
     const finderPatternGroups = finder.patterns;
@@ -89,8 +92,8 @@ export class Detector {
       const { topLeft, topRight, bottomLeft } = patterns;
 
       const bottomRight = new Pattern(
-        topRight.x - topLeft.x + bottomLeft.x,
-        topRight.y - topLeft.y + bottomLeft.y,
+        topRight.x + bottomLeft.x - topLeft.x,
+        topRight.y + bottomLeft.y - topLeft.y,
         topLeft.moduleSize
       );
 

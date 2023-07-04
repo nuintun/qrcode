@@ -19,12 +19,6 @@ export class AlignmentPatternMatcher {
   }
 
   public match(x: number, y: number, countState: number[]): boolean {
-    const matcher = this.#matcher;
-
-    if (matcher.matrix.get(x, y)) {
-      return false;
-    }
-
     return this.#matcher.match(x, y, countState, getCountStateTotal(countState) / 3);
   }
 }
