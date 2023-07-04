@@ -61,14 +61,15 @@ export function isMatchFinderPattern(countState: number[]): boolean {
 
     if (moduleSize >= 1) {
       const middleIndex = toInt32(length / 2);
-      const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
+      const threshold = moduleSize * DIFF_MODULE_SIZE_RATIO;
 
       // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
       for (let i = 0; i < length; i++) {
         const size = countState[i];
         const ratio = i !== middleIndex ? 1 : 3;
+        const moduleSizeDiff = Math.abs(size - moduleSize * ratio);
 
-        if (Math.abs(size - moduleSize * ratio) > moduleSizeDiff * ratio) {
+        if (moduleSizeDiff > 1 && moduleSizeDiff > threshold * ratio) {
           return false;
         }
       }
@@ -88,11 +89,13 @@ export function isMatchAlignmentPattern(countState: number[]): boolean {
     const moduleSize = countStateTotal / moduleCount;
 
     if (moduleSize >= 1) {
-      const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
+      const threshold = moduleSize * DIFF_MODULE_SIZE_RATIO;
 
       // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
       for (const size of countState) {
-        if (Math.abs(size - moduleSize) > moduleSizeDiff) {
+        const moduleSizeDiff = Math.abs(size - moduleSize);
+
+        if (moduleSizeDiff > 1 && moduleSizeDiff > threshold) {
           return false;
         }
       }
