@@ -3919,7 +3919,7 @@
       const moduleSize = countStateTotal / moduleCount;
       if (moduleSize >= 1) {
         const middleIndex = toInt32(length / 2);
-        const moduleSizeDiff = Math.max(1, moduleSize * DIFF_MODULE_SIZE_RATIO);
+        const moduleSizeDiff = Math.ceil(moduleSize * DIFF_MODULE_SIZE_RATIO);
         // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
         for (let i = 0; i < length; i++) {
           const size = countState[i];
@@ -3939,7 +3939,7 @@
     if (countStateTotal >= moduleCount) {
       const moduleSize = countStateTotal / moduleCount;
       if (moduleSize >= 1) {
-        const moduleSizeDiff = Math.max(1, moduleSize * DIFF_MODULE_SIZE_RATIO);
+        const moduleSizeDiff = Math.ceil(moduleSize * DIFF_MODULE_SIZE_RATIO);
         // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
         for (const size of countState) {
           if (Math.abs(size - moduleSize) > moduleSizeDiff) {
