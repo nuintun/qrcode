@@ -14,6 +14,5 @@ export { Numeric } from './encoder/segments/Numeric';
 export { Alphanumeric } from './encoder/segments/Alphanumeric';
 
 // TODO 测试临时导出
-export { extract } from './detector/extractor';
 export { BitMatrix } from './common/BitMatrix';
 export { binarizer } from './common/binarizer';

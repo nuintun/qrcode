@@ -3,19 +3,12 @@
  */
 
 import { Pattern } from './Pattern';
-import { detect } from './utils/detector';
 import { BitMatrix } from '/common/BitMatrix';
 import { setCountState } from './utils/matcher';
+import { DetectResult, detect } from './utils/detector';
 import { FinderPatternGroup } from './FinderPatternGroup';
 import { FinderPatternMatcher } from './FinderPatternMatcher';
 import { AlignmentPatternMatcher } from './AlignmentPatternMatcher';
-
-export interface DetectResult {
-  readonly matrix: BitMatrix;
-  readonly alignment?: Pattern;
-  readonly bottomRight: Pattern;
-  readonly finder: FinderPatternGroup;
-}
 
 export interface Options {
   transform?: (
@@ -35,7 +28,6 @@ export class Detector {
 
   public detect(matrix: BitMatrix): DetectResult[] {
     const { width, height } = matrix;
-    const result: DetectResult[] = [];
     const { transform } = this.#options;
     const finder = new FinderPatternMatcher(matrix);
     const alignment = new AlignmentPatternMatcher(matrix);
@@ -85,36 +77,6 @@ export class Detector {
       match(x, y, lastBit, countState, count);
     }
 
-    const finderPatternGroups = finder.groups;
-
-    for (const patterns of finderPatternGroups) {
-      const [bitMatrix, alignmentPattern] = detect(matrix, patterns, transform);
-      const { topLeft, topRight, bottomLeft } = patterns;
-
-      const bottomRight = new Pattern(
-        topRight.x + bottomLeft.x - topLeft.x,
-        topRight.y + bottomLeft.y - topLeft.y,
-        topLeft.moduleSize
-      );
-
-      if (bitMatrix != null) {
-        if (alignmentPattern) {
-          result.push({
-            bottomRight,
-            finder: patterns,
-            matrix: bitMatrix,
-            alignment: alignmentPattern
-          });
-        } else {
-          result.push({
-            bottomRight,
-            finder: patterns,
-            matrix: bitMatrix
-          });
-        }
-      }
-    }
-
-    return result;
+    return detect(matrix, finder, alignment, transform);
   }
 }

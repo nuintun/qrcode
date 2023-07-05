@@ -12,7 +12,9 @@ import { FinderPatternGroup } from '/detector/FinderPatternGroup';
 export const DIFF_EDGE_RATIO = 0.5;
 export const DIFF_MODULE_SIZE_RATIO = 0.5;
 export const MIN_MODULE_COUNT_PER_EDGE = 11;
+export const DIFF_FINDER_PATTERN_RATIO = 0.5;
 export const MAX_MODULE_COUNT_PER_EDGE = 175;
+export const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
 
 export function centerFromEnd(countState: number[], end: number): number {
   const { length } = countState;
@@ -62,9 +64,9 @@ export function isMatchFinderPattern(countState: number[]): boolean {
 
     if (moduleSize >= 1) {
       const middleIndex = toInt32(length / 2);
-      const threshold = moduleSize * DIFF_MODULE_SIZE_RATIO;
+      const threshold = moduleSize * DIFF_FINDER_PATTERN_RATIO;
 
-      // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
+      // Allow less than DIFF_FINDER_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
       for (let i = 0; i < length; i++) {
         const size = countState[i];
         const ratio = i !== middleIndex ? 1 : 3;
@@ -90,9 +92,9 @@ export function isMatchAlignmentPattern(countState: number[]): boolean {
     const moduleSize = countStateTotal / moduleCount;
 
     if (moduleSize >= 1) {
-      const threshold = moduleSize * DIFF_MODULE_SIZE_RATIO;
+      const threshold = moduleSize * DIFF_ALIGNMENT_PATTERN_RATIO;
 
-      // Allow less than DIFF_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
+      // Allow less than DIFF_ALIGNMENT_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
       for (const size of countState) {
         const moduleSizeDiff = Math.abs(size - moduleSize);
 

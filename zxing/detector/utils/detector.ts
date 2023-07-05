@@ -6,11 +6,21 @@ import { Pattern } from '/detector/Pattern';
 import { PlotLine } from '/common/PlotLine';
 import { BitMatrix } from '/common/BitMatrix';
 import { round, toInt32 } from '/common/utils';
-import { distance, Point } from '/common/Point';
 import { GridSampler } from '/common/GridSampler';
+import { FinderPatternMatcher } from '../FinderPatternMatcher';
 import { FinderPatternGroup } from '/detector/FinderPatternGroup';
+import { AlignmentPatternMatcher } from '../AlignmentPatternMatcher';
+import { distance, isPointInQuadrangle, Point } from '/common/Point';
 import { quadrilateralToQuadrilateral } from '/common/PerspectiveTransform';
-import { fromVersionSize, MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
+import { fromVersionSize, MAX_VERSION_SIZE, MIN_VERSION_SIZE, Version } from '/common/Version';
+import { isEqualsModuleSize } from './matcher';
+
+export interface DetectResult {
+  readonly matrix: BitMatrix;
+  readonly alignment?: Pattern;
+  readonly bottomRight: Pattern;
+  readonly finder: FinderPatternGroup;
+}
 
 function sizeOfBlackWhiteBlackRun(matrix: BitMatrix, from: Point, to: Point): number {
   const line = new PlotLine(from, to);
@@ -32,6 +42,18 @@ function sizeOfBlackWhiteBlackRun(matrix: BitMatrix, from: Point, to: Point): nu
     }
   }
 
+  to = line.to;
+  from = line.from;
+
+  const [deltaX, deltaY] = line.delta;
+
+  // Found black-white-black; give the benefit of the doubt that the next pixel outside the image
+  // is "white" so this last point at (toX+xStep,toY) is the right ending. This is really a
+  // small approximation; (toX+xStep,toY+yStep) might be really correct. Ignore this.
+  if (state === 2) {
+    return distance(new Point(to.x + deltaX, to.y + deltaY), from);
+  }
+
   return NaN;
 }
 
@@ -42,7 +64,7 @@ function sizeOfBlackWhiteBlackRunBothWays(matrix: BitMatrix, from: Point, to: Po
   const { x: fromX, y: fromY } = from;
 
   let scale = 1;
-  let otherToX = toInt32(fromX - (toX - fromX));
+  let otherToX = fromX - (toX - fromX);
   let size = sizeOfBlackWhiteBlackRun(matrix, from, to);
 
   if (otherToX < 0) {
@@ -74,8 +96,10 @@ function sizeOfBlackWhiteBlackRunBothWays(matrix: BitMatrix, from: Point, to: Po
 }
 
 function calculateModuleSizeOneWay(matrix: BitMatrix, pattern1: Pattern, pattern2: Pattern): number {
-  const expectModuleSize1 = sizeOfBlackWhiteBlackRunBothWays(matrix, pattern1, pattern2);
-  const expectModuleSize2 = sizeOfBlackWhiteBlackRunBothWays(matrix, pattern2, pattern1);
+  const point1 = new Point(toInt32(pattern1.x), toInt32(pattern1.y));
+  const point2 = new Point(toInt32(pattern2.x), toInt32(pattern2.y));
+  const expectModuleSize1 = sizeOfBlackWhiteBlackRunBothWays(matrix, point1, point2);
+  const expectModuleSize2 = sizeOfBlackWhiteBlackRunBothWays(matrix, point2, point1);
 
   if (expectModuleSize1 > 0) {
     return expectModuleSize2 / 7;
@@ -90,12 +114,12 @@ function calculateModuleSizeOneWay(matrix: BitMatrix, pattern1: Pattern, pattern
   return (expectModuleSize1 + expectModuleSize2) / 14;
 }
 
-export function calculateModuleSize(matrix: BitMatrix, topLeft: Pattern, topRight: Pattern, bottomLeft: Pattern): number {
+export function calculateModuleSize(matrix: BitMatrix, { topLeft, topRight, bottomLeft }: FinderPatternGroup): number {
   // Take the average
   return (calculateModuleSizeOneWay(matrix, topLeft, topRight) + calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)) / 2;
 }
 
-export function computeSymbolSize(topLeft: Pattern, topRight: Pattern, bottomLeft: Pattern, moduleSize: number): number {
+export function computeSymbolSize({ topLeft, topRight, bottomLeft }: FinderPatternGroup, moduleSize: number): number {
   const width = distance(topLeft, topRight) / moduleSize;
   const height = distance(topLeft, bottomLeft) / moduleSize;
   const size = round((width + height) / 2) + 7;
@@ -107,33 +131,58 @@ export function computeSymbolSize(topLeft: Pattern, topRight: Pattern, bottomLef
     case 2:
       return size - 1;
     case 3:
-      return 0;
+      return NaN;
   }
 
   return size;
 }
 
-function findAlignmentInRegion(matrix: BitMatrix, x: number, y: number, moduleSize: number): undefined {
+function findAlignmentInRegion(
+  matrix: BitMatrix,
+  { topLeft, topRight, bottomLeft }: FinderPatternGroup,
+  alignmentPatterns: Pattern[],
+  version: Version,
+  moduleSize: number
+): Pattern | undefined {
+  const { x, y } = topLeft;
   // Look for an alignment pattern (3 modules in size) around where it should be
   const allowance = Math.ceil(moduleSize * 5);
-  const minAlignmentAreaSize = moduleSize * 3;
-  const alignmentAreaTopY = Math.max(0, y - allowance);
-  const alignmentAreaLeftX = Math.max(0, x - allowance);
-  const alignmentAreaRightX = Math.min(matrix.width - 1, x + allowance);
-  const alignmentAreaBottomY = Math.min(matrix.height - 1, y + allowance);
-  const alignmentAreaWidth = alignmentAreaRightX - alignmentAreaLeftX;
-  const alignmentAreaHeight = alignmentAreaBottomY - alignmentAreaTopY;
+  const bottomRightX = topRight.x - x + bottomLeft.x;
+  const bottomRightY = topRight.y - y + bottomLeft.y;
+  const correctionToTopLeft = 1 - 3 / (version.size - 7);
+  const expectAlignmentX = x + correctionToTopLeft * (bottomRightX - x);
+  const expectAlignmentY = y + correctionToTopLeft * (bottomRightY - y);
+  const alignmentAreaTopY = Math.max(0, expectAlignmentY - allowance);
+  const alignmentAreaLeftX = Math.max(0, expectAlignmentX - allowance);
+  const alignmentAreaRightX = Math.min(matrix.width - 1, expectAlignmentX + allowance);
+  const alignmentAreaBottomY = Math.min(matrix.height - 1, expectAlignmentY + allowance);
+  const alignmentAreaTopLeft = new Point(alignmentAreaLeftX, alignmentAreaTopY);
+  const alignmentAreaTopRight = new Point(alignmentAreaRightX, alignmentAreaTopY);
+  const alignmentAreaBottomRight = new Point(alignmentAreaRightX, alignmentAreaBottomY);
+  const alignmentAreaBottomLeft = new Point(alignmentAreaLeftX, alignmentAreaBottomY);
 
-  if (alignmentAreaWidth >= minAlignmentAreaSize && alignmentAreaHeight >= minAlignmentAreaSize) {
-    // const alignmentFinder = new AlignmentPatternFinder(
-    //   matrix,
-    //   alignmentAreaLeftX,
-    //   alignmentAreaTopY,
-    //   alignmentAreaWidth,
-    //   alignmentAreaHeight
-    // );
-    // return alignmentFinder.find();
+  const patterns = alignmentPatterns.filter(pattern => {
+    return (
+      isEqualsModuleSize(pattern.moduleSize, moduleSize) &&
+      isPointInQuadrangle(
+        pattern,
+        alignmentAreaTopLeft,
+        alignmentAreaTopRight,
+        alignmentAreaBottomRight,
+        alignmentAreaBottomLeft
+      )
+    );
+  });
+
+  if (patterns.length > 1) {
+    const expectAlignment = new Point(expectAlignmentX, expectAlignmentX);
+
+    patterns.sort((pattern1, pattern2) => {
+      return distance(pattern1, expectAlignment) - distance(pattern2, expectAlignment);
+    });
   }
+
+  return patterns[0];
 }
 
 export type Transform = (
@@ -196,39 +245,60 @@ function transformImpl(
 
 export function detect(
   matrix: BitMatrix,
-  finderPatternGroup: FinderPatternGroup,
+  finderMatcher: FinderPatternMatcher,
+  alignmentMatcher: AlignmentPatternMatcher,
   transform: Transform = transformImpl
-): [matrix?: BitMatrix, alignmentPattern?: Pattern] {
-  const { topLeft, topRight, bottomLeft } = finderPatternGroup;
-  const moduleSize = calculateModuleSize(matrix, topLeft, topRight, bottomLeft);
+): DetectResult[] {
+  const result: DetectResult[] = [];
+  const finderPatternGroups = finderMatcher.groups;
+  const alignmentPatterns = alignmentMatcher.patterns;
 
-  if (moduleSize >= 1) {
-    const size = computeSymbolSize(topLeft, topRight, bottomLeft, moduleSize);
+  for (const finderPatternGroup of finderPatternGroups) {
+    const moduleSize = calculateModuleSize(matrix, finderPatternGroup);
 
-    if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
-      const version = fromVersionSize(size);
+    if (moduleSize >= 1) {
+      const size = computeSymbolSize(finderPatternGroup, moduleSize);
 
-      let alignmentPattern: Pattern | undefined;
+      if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
+        const version = fromVersionSize(size);
 
-      if (version.alignmentPatterns.length > 0) {
-        const { x, y } = topLeft;
-        // Guess where a "bottom right" finder pattern would have been
-        const bottomRightX = topRight.x - x + bottomLeft.x;
-        const bottomRightY = topRight.y - y + bottomLeft.y;
-        // Estimate that alignment pattern is closer by 3 modules
-        // from "bottom right" to known top left location
-        const correctionToTopLeft = 1 - 3 / (version.size - 7);
-        const expectAlignmentX = toInt32(x + correctionToTopLeft * (bottomRightX - x));
-        const expectAlignmentY = toInt32(y + correctionToTopLeft * (bottomRightY - y));
+        let alignmentPattern: Pattern | undefined;
 
-        // Kind of arbitrary -- expand search radius before giving up
-        // If we didn't find alignment pattern... well try anyway without it
-        alignmentPattern = findAlignmentInRegion(matrix, expectAlignmentX, expectAlignmentY, moduleSize);
+        if (version.alignmentPatterns.length > 0) {
+          // Kind of arbitrary -- expand search radius before giving up
+          // If we didn't find alignment pattern... well try anyway without it
+          alignmentPattern = findAlignmentInRegion(matrix, finderPatternGroup, alignmentPatterns, version, moduleSize);
+        }
+
+        // TODO 测试
+        const { topLeft, topRight, bottomLeft } = finderPatternGroup;
+        const bottomRight = new Pattern(
+          topRight.x + bottomLeft.x - topLeft.x,
+          topRight.y + bottomLeft.y - topLeft.y,
+          topLeft.moduleSize
+        );
+
+        const bitMatrix = transform(matrix, size, finderPatternGroup, alignmentPattern);
+
+        if (bitMatrix != null) {
+          if (alignmentPattern) {
+            result.push({
+              bottomRight,
+              matrix: bitMatrix,
+              finder: finderPatternGroup,
+              alignment: alignmentPattern
+            });
+          } else {
+            result.push({
+              bottomRight,
+              matrix: bitMatrix,
+              finder: finderPatternGroup
+            });
+          }
+        }
       }
-
-      return [transform(matrix, size, finderPatternGroup, alignmentPattern), alignmentPattern];
     }
   }
 
-  return [];
+  return result;
 }

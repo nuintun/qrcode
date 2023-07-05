@@ -5,13 +5,33 @@
 import { Pattern } from './Pattern';
 import { distance } from '/common/Point';
 
+export class FinderPatternGroup {
+  #patterns: Pattern[];
+
+  constructor(patterns: Pattern[]) {
+    this.#patterns = orderFinderPatterns(patterns);
+  }
+
+  public get topLeft(): Pattern {
+    return this.#patterns[0];
+  }
+
+  public get topRight(): Pattern {
+    return this.#patterns[1];
+  }
+
+  public get bottomLeft(): Pattern {
+    return this.#patterns[2];
+  }
+}
+
 function crossProductZ(pattern1: Pattern, pattern2: Pattern, pattern3: Pattern): number {
   const { x, y } = pattern2;
 
   return (pattern3.x - x) * (pattern1.y - y) - (pattern3.y - y) * (pattern1.x - x);
 }
 
-function orderFinderPatterns(patterns: Pattern[]): [topLeft: Pattern, topRight: Pattern, bottomLeft: Pattern] {
+export function orderFinderPatterns(patterns: Pattern[]): [topLeft: Pattern, topRight: Pattern, bottomLeft: Pattern] {
   let topLeft: Pattern;
   let topRight: Pattern;
   let bottomLeft: Pattern;
@@ -40,24 +60,4 @@ function orderFinderPatterns(patterns: Pattern[]): [topLeft: Pattern, topRight: 
   }
 
   return [topLeft, topRight, bottomLeft];
-}
-
-export class FinderPatternGroup {
-  #patterns: Pattern[];
-
-  constructor(patterns: Pattern[]) {
-    this.#patterns = orderFinderPatterns(patterns);
-  }
-
-  public get topLeft(): Pattern {
-    return this.#patterns[0];
-  }
-
-  public get topRight(): Pattern {
-    return this.#patterns[1];
-  }
-
-  public get bottomLeft(): Pattern {
-    return this.#patterns[2];
-  }
 }

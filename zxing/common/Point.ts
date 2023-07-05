@@ -2,6 +2,8 @@
  * @module Point
  */
 
+import { round } from './utils';
+
 export class Point {
   #x: number;
   #y: number;
@@ -37,7 +39,7 @@ export function calcTriangleArea(a: Point, b: Point, c: Point): number {
 
 export function isPointInQuadrangle(p: Point, a: Point, b: Point, c: Point, d: Point): boolean {
   return (
-    calcTriangleArea(a, b, c) + calcTriangleArea(c, d, a) ===
-    calcTriangleArea(a, b, p) + calcTriangleArea(b, c, p) + calcTriangleArea(c, d, p) + calcTriangleArea(d, a, p)
+    round(calcTriangleArea(a, b, c) + calcTriangleArea(c, d, a)) ===
+    round(calcTriangleArea(a, b, p) + calcTriangleArea(b, c, p) + calcTriangleArea(c, d, p) + calcTriangleArea(d, a, p))
   );
 }
