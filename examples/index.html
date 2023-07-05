@@ -368,6 +368,7 @@
         const errors = [];
         const success = [];
         const alignments = [];
+        const decodeCache = new Set();
         const imageData = getImageData();
         const { width, height } = imageData;
         const decoder = new QRCode.Decoder();
@@ -397,8 +398,14 @@
         if (detected.length > 0) {
           for (const { matrix, finder, alignment } of detected) {
             const { topLeft, topRight, bottomLeft } = finder;
+            const cacheKey = `${topLeft.x}-${topLeft.y}:${topRight.x}-${topRight.y}:${bottomLeft.x}-${bottomLeft.y}`;
 
             try {
+              console.log(decodeCache.has(cacheKey));
+              if (decodeCache.has(cacheKey)) {
+                continue;
+              }
+
               const decoded = decoder.decode(matrix);
               const { content } = decoded;
 
