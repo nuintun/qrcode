@@ -401,7 +401,6 @@
             const cacheKey = `${topLeft.x}-${topLeft.y}:${topRight.x}-${topRight.y}:${bottomLeft.x}-${bottomLeft.y}`;
 
             try {
-              console.log(decodeCache.has(cacheKey));
               if (decodeCache.has(cacheKey)) {
                 continue;
               }
