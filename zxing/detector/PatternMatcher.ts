@@ -39,6 +39,10 @@ export class PatternMatcher {
     return alignCrossPattern(this.#matrix, x, y, maxCount, false, this.#matcher);
   }
 
+  public get matcher(): Matcher {
+    return this.#matcher;
+  }
+
   public get matrix(): BitMatrix {
     return this.#matrix;
   }

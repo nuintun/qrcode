@@ -56,7 +56,7 @@ export class Base64EncodeOutputStream extends OutputStream {
   /**
    * @override
    */
-  public flush(): void {
+  public override flush(): void {
     if (this.bufLength > 0) {
       this.writeEncoded(this.buffer << (6 - this.bufLength));
 

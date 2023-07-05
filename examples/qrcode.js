@@ -3396,39 +3396,6 @@
     const yDiff = a.y - b.y;
     return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
   }
-  // Mild variant of Bresenham's algorithm
-  // see https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-  function plotLine(from, to, callback) {
-    let toX = toInt32(to.x);
-    let toY = toInt32(to.y);
-    let fromX = toInt32(from.x);
-    let fromY = toInt32(from.y);
-    const steep = Math.abs(toY - fromY) > Math.abs(toX - fromX);
-    // Swap coordinate
-    if (steep) {
-      [fromX, fromY, toX, toY] = [fromY, fromX, toY, toX];
-    }
-    const xDiff = Math.abs(toX - fromX);
-    const yDiff = Math.abs(toY - fromY);
-    const deltaX = fromX < toX ? 1 : -1;
-    const deltaY = fromY < toY ? 1 : -1;
-    const xLimit = toX + deltaX;
-    let error = toInt32(-xDiff / 2);
-    // Loop up until x === toX, but not beyond
-    for (let x = fromX, y = fromY; x !== xLimit; x += deltaX) {
-      if (callback(steep ? y : x, steep ? x : y, deltaX, deltaY) === false) {
-        break;
-      }
-      error += yDiff;
-      if (error > 0) {
-        if (y === toY) {
-          break;
-        }
-        y += deltaY;
-        error -= xDiff;
-      }
-    }
-  }
 
   /**
    * @module Pattern
@@ -3462,6 +3429,71 @@
         return moduleSizeDiff < 1 || moduleSizeDiff <= currentModuleSize;
       }
       return false;
+    }
+  }
+
+  /**
+   * @module PlotLine
+   */
+  // Mild variant of Bresenham's algorithm
+  // see https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+  class PlotLine {
+    #limit;
+    #steep;
+    #to;
+    #diff;
+    #from;
+    #delta;
+    constructor(from, to) {
+      let toX = toInt32(to.x);
+      let toY = toInt32(to.y);
+      let fromX = toInt32(from.x);
+      let fromY = toInt32(from.y);
+      const steep = Math.abs(toY - fromY) > Math.abs(toX - fromX);
+      // Steep line
+      if (steep) {
+        [fromX, fromY, toX, toY] = [fromY, fromX, toY, toX];
+      }
+      const deltaX = fromX < toX ? 1 : -1;
+      this.#steep = steep;
+      this.#to = [toX, toY];
+      this.#limit = toX + deltaX;
+      this.#from = [fromX, fromY];
+      this.#delta = [deltaX, fromY < toY ? 1 : -1];
+      this.#diff = [Math.abs(toX - fromX), Math.abs(toY - fromY)];
+    }
+    get steep() {
+      return this.#steep;
+    }
+    get to() {
+      return new Point(...this.#to);
+    }
+    get from() {
+      return new Point(...this.#from);
+    }
+    get delta() {
+      return [...this.#delta];
+    }
+    *points() {
+      const [, toY] = this.#to;
+      const steep = this.#steep;
+      const limit = this.#limit;
+      const [fromX, fromY] = this.#from;
+      const [xDiff, yDiff] = this.#diff;
+      const [deltaX, deltaY] = this.#delta;
+      let error = toInt32(-xDiff / 2);
+      // Loop up until x === toX, but not beyond
+      for (let x = fromX, y = fromY; x !== limit; x += deltaX) {
+        yield [steep ? y : x, steep ? x : y];
+        error += yDiff;
+        if (error > 0) {
+          if (y === toY) {
+            break;
+          }
+          y += deltaY;
+          error -= xDiff;
+        }
+      }
     }
   }
 
@@ -3693,57 +3725,32 @@
   /**
    * @module detector
    */
-  function sizeOfBlackWhiteBlackRun(matrix, fromX, fromY, toX, toY) {
-    // Mild variant of Bresenham's algorithm;
-    // see https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-    const steep = Math.abs(toY - fromY) > Math.abs(toX - fromX);
-    if (steep) {
-      [fromX, fromY, toX, toY] = [fromY, fromX, toY, toX];
-    }
-    const xStep = fromX < toX ? 1 : -1;
-    const yStep = fromY < toY ? 1 : -1;
-    const xDiff = Math.abs(toX - fromX);
-    const yDiff = Math.abs(toY - fromY);
+  function sizeOfBlackWhiteBlackRun(matrix, from, to) {
+    const line = new PlotLine(from, to);
+    const points = line.points();
     // In black pixels, looking for white, first or second time.
     let state = 0;
-    let error = toInt32(-xDiff / 2);
-    // Loop up until x == toX, but not beyond
-    const xLimit = toX + xStep;
-    for (let x = fromX, y = fromY; x !== xLimit; x += xStep) {
-      const realX = steep ? y : x;
-      const realY = steep ? x : y;
+    for (const [x, y] of points) {
       // Does current pixel mean we have moved white to black or vice versa?
       // Scanning black in state 0,2 and white in state 1, so if we find the wrong
       // color, advance to next state or end if we are in state 2 already
-      if ((state === 1) === (matrix.get(realX, realY) === 1)) {
-        if (state++ === 2) {
-          return distance(new Point(x, y), new Point(fromX, fromY));
+      if ((state === 1) === (matrix.get(x, y) === 1)) {
+        if (state === 2) {
+          return distance(new Point(x, y), from);
         }
-      }
-      error += yDiff;
-      if (error > 0) {
-        if (y === toY) {
-          break;
-        }
-        y += yStep;
-        error -= xDiff;
+        state++;
       }
     }
-    // Found black-white-black; give the benefit of the doubt that the next pixel outside the image
-    // is "white" so this last point at (toX+xStep,toY) is the right ending. This is really a
-    // small approximation; (toX+xStep,toY+yStep) might be really correct. Ignore this.
-    if (state === 2) {
-      return distance(new Point(toX + xStep, toY), new Point(fromX, fromY));
-    }
-    // else we didn't find even black-white-black; no estimate is really possible
     return NaN;
   }
-  function sizeOfBlackWhiteBlackRunBothWays(matrix, fromX, fromY, toX, toY) {
+  function sizeOfBlackWhiteBlackRunBothWays(matrix, from, to) {
     // Now count other way -- don't run off image though of course
-    let scale = 1;
-    let otherToX = fromX - (toX - fromX);
-    let size = sizeOfBlackWhiteBlackRun(matrix, fromX, fromY, toX, toY);
+    const { x: toX, y: toY } = to;
     const { width, height } = matrix;
+    const { x: fromX, y: fromY } = from;
+    let scale = 1;
+    let otherToX = toInt32(fromX - (toX - fromX));
+    let size = sizeOfBlackWhiteBlackRun(matrix, from, to);
     if (otherToX < 0) {
       scale = fromX / (fromX - otherToX);
       otherToX = 0;
@@ -3762,20 +3769,16 @@
     }
     otherToX = toInt32(fromX + (otherToX - fromX) * scale);
     // Middle pixel is double-counted this way; subtract 1
-    size += sizeOfBlackWhiteBlackRun(matrix, fromX, fromY, otherToX, otherToY);
+    size += sizeOfBlackWhiteBlackRun(matrix, from, new Point(otherToX, otherToY));
     return size - 1;
   }
   function calculateModuleSizeOneWay(matrix, pattern1, pattern2) {
-    const x1 = toInt32(pattern1.x);
-    const y1 = toInt32(pattern1.y);
-    const x2 = toInt32(pattern2.x);
-    const y2 = toInt32(pattern2.y);
-    const expectModuleSize1 = sizeOfBlackWhiteBlackRunBothWays(matrix, x1, y1, x2, y2);
-    const expectModuleSize2 = sizeOfBlackWhiteBlackRunBothWays(matrix, x2, y2, x1, y1);
-    if (Number.isNaN(expectModuleSize1)) {
+    const expectModuleSize1 = sizeOfBlackWhiteBlackRunBothWays(matrix, pattern1, pattern2);
+    const expectModuleSize2 = sizeOfBlackWhiteBlackRunBothWays(matrix, pattern2, pattern1);
+    if (expectModuleSize1 > 0) {
       return expectModuleSize2 / 7;
     }
-    if (Number.isNaN(expectModuleSize2)) {
+    if (expectModuleSize2 > 0) {
       return expectModuleSize1 / 7;
     }
     // Average them, and divide by 7 since we've counted the width of 3 black modules,
@@ -3905,7 +3908,7 @@
     let countStateTotal = 0;
     for (const count of countState) {
       if (checkZero && count === 0) {
-        return -1;
+        return NaN;
       }
       countStateTotal += count;
     }
@@ -4000,7 +4003,7 @@
       offset++;
       countState[4]++;
     }
-    return checker(countState) ? centerFromEnd(countState, offset) : -1;
+    return checker(countState) ? centerFromEnd(countState, offset) : NaN;
   }
   function checkDiagonalPattern(matrix, x, y, maxCount, isBackslash, checker) {
     let offset = 0;
@@ -4046,8 +4049,9 @@
   function checkRepeatPixelsInLine(matrix, pattern1, pattern2) {
     let black = 0;
     let white = 0;
+    const points = new PlotLine(pattern1, pattern2).points();
     const maxRepeat = (pattern1.moduleSize + pattern2.moduleSize) * 10;
-    plotLine(pattern1, pattern2, (x, y) => {
+    for (const [x, y] of points) {
       if (matrix.get(x, y)) {
         black++;
         white = 0;
@@ -4058,8 +4062,8 @@
       if (white > maxRepeat || black > maxRepeat) {
         return false;
       }
-    });
-    return white <= maxRepeat && black <= maxRepeat;
+    }
+    return true;
   }
 
   /**
@@ -4086,6 +4090,9 @@
     }
     #crossAlignVertical(x, y, maxCount) {
       return alignCrossPattern(this.#matrix, x, y, maxCount, false, this.#matcher);
+    }
+    get matcher() {
+      return this.#matcher;
     }
     get matrix() {
       return this.#matrix;
@@ -4174,15 +4181,13 @@
   /**
    * @module FinderPatternMatcher
    */
-  class FinderPatternMatcher {
-    #matcher;
+  class FinderPatternMatcher extends PatternMatcher {
     constructor(matrix) {
-      this.#matcher = new PatternMatcher(matrix, isMatchFinderPattern);
+      super(matrix, isMatchFinderPattern);
     }
-    get patterns() {
-      const matcher = this.#matcher;
+    get groups() {
       const finderPatternGroups = [];
-      const patterns = matcher.patterns.filter(({ count }) => count >= 3);
+      const patterns = this.patterns.filter(({ count }) => count >= 3);
       const { length } = patterns;
       // Find enough finder patterns
       if (length >= 3) {
@@ -4227,7 +4232,7 @@
               ) {
                 continue;
               }
-              const { matrix } = matcher;
+              const { matrix } = this;
               if (
                 checkRepeatPixelsInLine(matrix, topLeft, bottomLeft) &&
                 checkRepeatPixelsInLine(matrix, topRight, bottomLeft)
@@ -4242,23 +4247,19 @@
       return finderPatternGroups;
     }
     match(x, y, countState) {
-      return this.#matcher.match(x, y, countState, getCountStateTotal(countState) / 7);
+      return super.match(x, y, countState, getCountStateTotal(countState) / 7);
     }
   }
 
   /**
    * @module AlignmentPatternMatcher
    */
-  class AlignmentPatternMatcher {
-    #matcher;
+  class AlignmentPatternMatcher extends PatternMatcher {
     constructor(matrix) {
-      this.#matcher = new PatternMatcher(matrix, isMatchAlignmentPattern);
-    }
-    get patterns() {
-      return this.#matcher.patterns;
+      super(matrix, isMatchAlignmentPattern);
     }
     match(x, y, countState) {
-      return this.#matcher.match(x, y, countState, getCountStateTotal(countState) / 3);
+      return super.match(x, y, countState, getCountStateTotal(countState) / 3);
     }
   }
 
@@ -4310,7 +4311,7 @@
         }
         match(x, y, lastBit, countState, count);
       }
-      const finderPatternGroups = finder.patterns;
+      const finderPatternGroups = finder.groups;
       for (const patterns of finderPatternGroups) {
         const [bitMatrix, alignmentPattern] = detect(matrix, patterns, transform);
         const { topLeft, topRight, bottomLeft } = patterns;

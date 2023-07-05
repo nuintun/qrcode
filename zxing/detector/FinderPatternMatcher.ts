@@ -15,17 +15,14 @@ import { BitMatrix } from '/common/BitMatrix';
 import { PatternMatcher } from './PatternMatcher';
 import { FinderPatternGroup } from './FinderPatternGroup';
 
-export class FinderPatternMatcher {
-  #matcher: PatternMatcher;
-
+export class FinderPatternMatcher extends PatternMatcher {
   constructor(matrix: BitMatrix) {
-    this.#matcher = new PatternMatcher(matrix, isMatchFinderPattern);
+    super(matrix, isMatchFinderPattern);
   }
 
-  public get patterns(): FinderPatternGroup[] {
-    const matcher = this.#matcher;
+  public get groups(): FinderPatternGroup[] {
     const finderPatternGroups: FinderPatternGroup[] = [];
-    const patterns = matcher.patterns.filter(({ count }) => count >= 3);
+    const patterns = this.patterns.filter(({ count }) => count >= 3);
     const { length } = patterns;
 
     // Find enough finder patterns
@@ -52,7 +49,6 @@ export class FinderPatternMatcher {
 
           for (let i3 = i2 + 1; i3 < length; i3++) {
             const pattern3 = patterns[i3];
-
             if (!isEqualsModuleSize(moduleSize2, pattern3.moduleSize)) {
               break;
             }
@@ -68,7 +64,6 @@ export class FinderPatternMatcher {
             }
 
             const hypotenuse = distance(topRight, bottomLeft);
-
             // Calculate the difference of the hypotenuse lengths in percent
             if (!isEqualsEdge(Math.sqrt(edge1 * edge1 + edge2 * edge2), hypotenuse)) {
               continue;
@@ -76,7 +71,6 @@ export class FinderPatternMatcher {
 
             // Check the sizes
             const topLeftModuleSize = topLeft.moduleSize;
-
             if (
               !isValidModuleCount(edge1, (bottomLeft.moduleSize + topLeftModuleSize) / 2) ||
               !isValidModuleCount(edge2, (topLeftModuleSize + topRight.moduleSize) / 2)
@@ -84,7 +78,7 @@ export class FinderPatternMatcher {
               continue;
             }
 
-            const { matrix } = matcher;
+            const { matrix } = this;
 
             if (checkRepeatPixelsInLine(matrix, topLeft, bottomLeft) && checkRepeatPixelsInLine(matrix, topRight, bottomLeft)) {
               // All tests passed!
@@ -98,7 +92,7 @@ export class FinderPatternMatcher {
     return finderPatternGroups;
   }
 
-  public match(x: number, y: number, countState: number[]): boolean {
-    return this.#matcher.match(x, y, countState, getCountStateTotal(countState) / 7);
+  public override match(x: number, y: number, countState: number[]): boolean {
+    return super.match(x, y, countState, getCountStateTotal(countState) / 7);
   }
 }

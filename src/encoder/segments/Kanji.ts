@@ -24,7 +24,7 @@ export class Kanji extends Segment {
    * @method getLength
    * @returns {number}
    */
-  public get length(): number {
+  public override get length(): number {
     return Math.floor(this.bytes.length / 2);
   }
 

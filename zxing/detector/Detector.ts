@@ -85,7 +85,7 @@ export class Detector {
       match(x, y, lastBit, countState, count);
     }
 
-    const finderPatternGroups = finder.patterns;
+    const finderPatternGroups = finder.groups;
 
     for (const patterns of finderPatternGroups) {
       const [bitMatrix, alignmentPattern] = detect(matrix, patterns, transform);

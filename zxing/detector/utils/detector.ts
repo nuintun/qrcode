@@ -3,6 +3,7 @@
  */
 
 import { Pattern } from '/detector/Pattern';
+import { PlotLine } from '/common/PlotLine';
 import { BitMatrix } from '/common/BitMatrix';
 import { round, toInt32 } from '/common/utils';
 import { distance, Point } from '/common/Point';
@@ -11,70 +12,38 @@ import { FinderPatternGroup } from '/detector/FinderPatternGroup';
 import { quadrilateralToQuadrilateral } from '/common/PerspectiveTransform';
 import { fromVersionSize, MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
 
-function sizeOfBlackWhiteBlackRun(matrix: BitMatrix, fromX: number, fromY: number, toX: number, toY: number): number {
-  // Mild variant of Bresenham's algorithm;
-  // see https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-  const steep = Math.abs(toY - fromY) > Math.abs(toX - fromX);
-
-  if (steep) {
-    [fromX, fromY, toX, toY] = [fromY, fromX, toY, toX];
-  }
-
-  const xStep = fromX < toX ? 1 : -1;
-  const yStep = fromY < toY ? 1 : -1;
-  const xDiff = Math.abs(toX - fromX);
-  const yDiff = Math.abs(toY - fromY);
+function sizeOfBlackWhiteBlackRun(matrix: BitMatrix, from: Point, to: Point): number {
+  const line = new PlotLine(from, to);
+  const points = line.points();
 
   // In black pixels, looking for white, first or second time.
   let state = 0;
-  let error = toInt32(-xDiff / 2);
 
-  // Loop up until x == toX, but not beyond
-  const xLimit = toX + xStep;
-
-  for (let x = fromX, y = fromY; x !== xLimit; x += xStep) {
-    const realX = steep ? y : x;
-    const realY = steep ? x : y;
-
+  for (const [x, y] of points) {
     // Does current pixel mean we have moved white to black or vice versa?
     // Scanning black in state 0,2 and white in state 1, so if we find the wrong
     // color, advance to next state or end if we are in state 2 already
-    if ((state === 1) === (matrix.get(realX, realY) === 1)) {
-      if (state++ === 2) {
-        return distance(new Point(x, y), new Point(fromX, fromY));
-      }
-    }
-
-    error += yDiff;
-
-    if (error > 0) {
-      if (y === toY) {
-        break;
+    if ((state === 1) === (matrix.get(x, y) === 1)) {
+      if (state === 2) {
+        return distance(new Point(x, y), from);
       }
 
-      y += yStep;
-      error -= xDiff;
+      state++;
     }
   }
 
-  // Found black-white-black; give the benefit of the doubt that the next pixel outside the image
-  // is "white" so this last point at (toX+xStep,toY) is the right ending. This is really a
-  // small approximation; (toX+xStep,toY+yStep) might be really correct. Ignore this.
-  if (state === 2) {
-    return distance(new Point(toX + xStep, toY), new Point(fromX, fromY));
-  }
-
-  // else we didn't find even black-white-black; no estimate is really possible
   return NaN;
 }
 
-function sizeOfBlackWhiteBlackRunBothWays(matrix: BitMatrix, fromX: number, fromY: number, toX: number, toY: number): number {
+function sizeOfBlackWhiteBlackRunBothWays(matrix: BitMatrix, from: Point, to: Point): number {
   // Now count other way -- don't run off image though of course
-  let scale = 1;
-  let otherToX = fromX - (toX - fromX);
-  let size = sizeOfBlackWhiteBlackRun(matrix, fromX, fromY, toX, toY);
-
+  const { x: toX, y: toY } = to;
   const { width, height } = matrix;
+  const { x: fromX, y: fromY } = from;
+
+  let scale = 1;
+  let otherToX = toInt32(fromX - (toX - fromX));
+  let size = sizeOfBlackWhiteBlackRun(matrix, from, to);
 
   if (otherToX < 0) {
     scale = fromX / (fromX - otherToX);
@@ -99,24 +68,20 @@ function sizeOfBlackWhiteBlackRunBothWays(matrix: BitMatrix, fromX: number, from
   otherToX = toInt32(fromX + (otherToX - fromX) * scale);
 
   // Middle pixel is double-counted this way; subtract 1
-  size += sizeOfBlackWhiteBlackRun(matrix, fromX, fromY, otherToX, otherToY);
+  size += sizeOfBlackWhiteBlackRun(matrix, from, new Point(otherToX, otherToY));
 
   return size - 1;
 }
 
 function calculateModuleSizeOneWay(matrix: BitMatrix, pattern1: Pattern, pattern2: Pattern): number {
-  const x1 = toInt32(pattern1.x);
-  const y1 = toInt32(pattern1.y);
-  const x2 = toInt32(pattern2.x);
-  const y2 = toInt32(pattern2.y);
-  const expectModuleSize1 = sizeOfBlackWhiteBlackRunBothWays(matrix, x1, y1, x2, y2);
-  const expectModuleSize2 = sizeOfBlackWhiteBlackRunBothWays(matrix, x2, y2, x1, y1);
+  const expectModuleSize1 = sizeOfBlackWhiteBlackRunBothWays(matrix, pattern1, pattern2);
+  const expectModuleSize2 = sizeOfBlackWhiteBlackRunBothWays(matrix, pattern2, pattern1);
 
-  if (Number.isNaN(expectModuleSize1)) {
+  if (expectModuleSize1 > 0) {
     return expectModuleSize2 / 7;
   }
 
-  if (Number.isNaN(expectModuleSize2)) {
+  if (expectModuleSize2 > 0) {
     return expectModuleSize1 / 7;
   }
 

@@ -4,9 +4,10 @@
 
 import { toInt32 } from '/common/utils';
 import { Pattern } from '/detector/Pattern';
+import { PlotLine } from '/common/PlotLine';
 import { BitMatrix } from '/common/BitMatrix';
+import { isPointInQuadrangle, Point } from '/common/Point';
 import { FinderPatternGroup } from '/detector/FinderPatternGroup';
-import { isPointInQuadrangle, plotLine, Point } from '/common/Point';
 
 export const DIFF_EDGE_RATIO = 0.5;
 export const DIFF_MODULE_SIZE_RATIO = 0.5;
@@ -42,7 +43,7 @@ export function getCountStateTotal(countState: number[], checkZero?: boolean): n
 
   for (const count of countState) {
     if (checkZero && count === 0) {
-      return -1;
+      return NaN;
     }
 
     countStateTotal += count;
@@ -184,7 +185,7 @@ export function alignCrossPattern(
     countState[4]++;
   }
 
-  return checker(countState) ? centerFromEnd(countState, offset) : -1;
+  return checker(countState) ? centerFromEnd(countState, offset) : NaN;
 }
 
 export function checkDiagonalPattern(
@@ -250,9 +251,10 @@ export function checkRepeatPixelsInLine(matrix: BitMatrix, pattern1: Pattern, pa
   let black = 0;
   let white = 0;
 
+  const points = new PlotLine(pattern1, pattern2).points();
   const maxRepeat = (pattern1.moduleSize + pattern2.moduleSize) * 10;
 
-  plotLine(pattern1, pattern2, (x, y) => {
+  for (const [x, y] of points) {
     if (matrix.get(x, y)) {
       black++;
       white = 0;
@@ -264,7 +266,7 @@ export function checkRepeatPixelsInLine(matrix: BitMatrix, pattern1: Pattern, pa
     if (white > maxRepeat || black > maxRepeat) {
       return false;
     }
-  });
+  }
 
-  return white <= maxRepeat && black <= maxRepeat;
+  return true;
 }
