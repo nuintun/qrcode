@@ -67,6 +67,10 @@ function sizeOfBlackWhiteBlackRunBothWays(matrix: BitMatrix, from: Point, to: Po
   let otherToX = fromX - (toX - fromX);
   let size = sizeOfBlackWhiteBlackRun(matrix, from, to);
 
+  if (Number.isNaN(size)) {
+    return NaN;
+  }
+
   if (otherToX < 0) {
     scale = fromX / (fromX - otherToX);
     otherToX = 0;
@@ -101,11 +105,11 @@ function calculateModuleSizeOneWay(matrix: BitMatrix, pattern1: Pattern, pattern
   const expectModuleSize1 = sizeOfBlackWhiteBlackRunBothWays(matrix, point1, point2);
   const expectModuleSize2 = sizeOfBlackWhiteBlackRunBothWays(matrix, point2, point1);
 
-  if (expectModuleSize1 > 0) {
+  if (Number.isNaN(expectModuleSize1)) {
     return expectModuleSize2 / 7;
   }
 
-  if (expectModuleSize2 > 0) {
+  if (Number.isNaN(expectModuleSize2)) {
     return expectModuleSize1 / 7;
   }
 
