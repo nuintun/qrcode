@@ -14,7 +14,7 @@ export const DIFF_MODULE_SIZE_RATIO = 0.5;
 export const MIN_MODULE_COUNT_PER_EDGE = 11;
 export const DIFF_FINDER_PATTERN_RATIO = 0.5;
 export const MAX_MODULE_COUNT_PER_EDGE = 175;
-export const DIFF_ALIGNMENT_PATTERN_RATIO = 0.5;
+export const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
 
 export function centerFromEnd(countState: number[], end: number): number {
   const { length } = countState;

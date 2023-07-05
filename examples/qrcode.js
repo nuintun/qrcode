@@ -3479,7 +3479,7 @@
   const MIN_MODULE_COUNT_PER_EDGE = 11;
   const DIFF_FINDER_PATTERN_RATIO = 0.5;
   const MAX_MODULE_COUNT_PER_EDGE = 175;
-  const DIFF_ALIGNMENT_PATTERN_RATIO = 0.5;
+  const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
   function centerFromEnd(countState, end) {
     const { length } = countState;
     const middleIndex = toInt32(length / 2);
@@ -4001,9 +4001,9 @@
     return (calculateModuleSizeOneWay(matrix, topLeft, topRight) + calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)) / 2;
   }
   function computeSymbolSize({ topLeft, topRight, bottomLeft }, moduleSize) {
-    const width = distance(topLeft, topRight) / moduleSize;
-    const height = distance(topLeft, bottomLeft) / moduleSize;
-    const size = round((width + height) / 2) + 7;
+    const width = distance(topLeft, topRight);
+    const height = distance(topLeft, bottomLeft);
+    const size = round((width / moduleSize + height / moduleSize) / 2) + 7;
     // mod 4
     switch (size & 0x03) {
       case 0:
@@ -4011,6 +4011,12 @@
       case 2:
         return size - 1;
       case 3:
+        if (size + 2 <= MAX_VERSION_SIZE) {
+          return size + 2;
+        }
+        if (size - 2 >= MIN_VERSION_SIZE) {
+          return size - 2;
+        }
         return NaN;
     }
     return size;
@@ -4050,7 +4056,7 @@
         return distance(pattern1, expectAlignment) - distance(pattern2, expectAlignment);
       });
     }
-    return patterns[0];
+    return patterns;
   }
   function transformImpl(matrix, size, { topLeft, topRight, bottomLeft }, alignmentPattern) {
     let bottomRightX;
@@ -4104,12 +4110,6 @@
         const size = computeSymbolSize(finderPatternGroup, moduleSize);
         if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
           const version = fromVersionSize(size);
-          let alignmentPattern;
-          if (version.alignmentPatterns.length > 0) {
-            // Kind of arbitrary -- expand search radius before giving up
-            // If we didn't find alignment pattern... well try anyway without it
-            alignmentPattern = findAlignmentInRegion(matrix, finderPatternGroup, alignmentPatterns, version, moduleSize);
-          }
           // TODO 测试
           const { topLeft, topRight, bottomLeft } = finderPatternGroup;
           const bottomRight = new Pattern(
@@ -4117,22 +4117,34 @@
             topRight.y + bottomLeft.y - topLeft.y,
             topLeft.moduleSize
           );
-          const bitMatrix = transform(matrix, size, finderPatternGroup, alignmentPattern);
-          if (bitMatrix != null) {
-            if (alignmentPattern) {
-              result.push({
-                bottomRight,
-                matrix: bitMatrix,
-                finder: finderPatternGroup,
-                alignment: alignmentPattern
-              });
+          if (version.alignmentPatterns.length > 0) {
+            // Kind of arbitrary -- expand search radius before giving up
+            // If we didn't find alignment pattern... well try anyway without it
+            const alignments = findAlignmentInRegion(matrix, finderPatternGroup, alignmentPatterns, version, moduleSize);
+            if (alignments.length > 0) {
+              for (const alignmentPattern of alignments) {
+                if (alignmentPattern) {
+                  result.push({
+                    bottomRight,
+                    finder: finderPatternGroup,
+                    alignment: alignmentPattern,
+                    matrix: transform(matrix, size, finderPatternGroup, alignmentPattern)
+                  });
+                }
+              }
             } else {
               result.push({
                 bottomRight,
-                matrix: bitMatrix,
-                finder: finderPatternGroup
+                finder: finderPatternGroup,
+                matrix: transform(matrix, size, finderPatternGroup)
               });
             }
+          } else {
+            result.push({
+              bottomRight,
+              finder: finderPatternGroup,
+              matrix: transform(matrix, size, finderPatternGroup)
+            });
           }
         }
       }

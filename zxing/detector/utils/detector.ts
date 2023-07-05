@@ -124,9 +124,9 @@ export function calculateModuleSize(matrix: BitMatrix, { topLeft, topRight, bott
 }
 
 export function computeSymbolSize({ topLeft, topRight, bottomLeft }: FinderPatternGroup, moduleSize: number): number {
-  const width = distance(topLeft, topRight) / moduleSize;
-  const height = distance(topLeft, bottomLeft) / moduleSize;
-  const size = round((width + height) / 2) + 7;
+  const width = distance(topLeft, topRight);
+  const height = distance(topLeft, bottomLeft);
+  const size = round((width / moduleSize + height / moduleSize) / 2) + 7;
 
   // mod 4
   switch (size & 0x03) {
@@ -135,6 +135,14 @@ export function computeSymbolSize({ topLeft, topRight, bottomLeft }: FinderPatte
     case 2:
       return size - 1;
     case 3:
+      if (size + 2 <= MAX_VERSION_SIZE) {
+        return size + 2;
+      }
+
+      if (size - 2 >= MIN_VERSION_SIZE) {
+        return size - 2;
+      }
+
       return NaN;
   }
 
@@ -147,7 +155,7 @@ function findAlignmentInRegion(
   alignmentPatterns: Pattern[],
   version: Version,
   moduleSize: number
-): Pattern | undefined {
+): Pattern[] {
   const { x, y } = topLeft;
   // Look for an alignment pattern (3 modules in size) around where it should be
   const allowance = Math.ceil(moduleSize * 5);
@@ -186,7 +194,7 @@ function findAlignmentInRegion(
     });
   }
 
-  return patterns[0];
+  return patterns;
 }
 
 export type Transform = (
@@ -266,14 +274,6 @@ export function detect(
       if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
         const version = fromVersionSize(size);
 
-        let alignmentPattern: Pattern | undefined;
-
-        if (version.alignmentPatterns.length > 0) {
-          // Kind of arbitrary -- expand search radius before giving up
-          // If we didn't find alignment pattern... well try anyway without it
-          alignmentPattern = findAlignmentInRegion(matrix, finderPatternGroup, alignmentPatterns, version, moduleSize);
-        }
-
         // TODO 测试
         const { topLeft, topRight, bottomLeft } = finderPatternGroup;
         const bottomRight = new Pattern(
@@ -282,23 +282,35 @@ export function detect(
           topLeft.moduleSize
         );
 
-        const bitMatrix = transform(matrix, size, finderPatternGroup, alignmentPattern);
+        if (version.alignmentPatterns.length > 0) {
+          // Kind of arbitrary -- expand search radius before giving up
+          // If we didn't find alignment pattern... well try anyway without it
+          const alignments = findAlignmentInRegion(matrix, finderPatternGroup, alignmentPatterns, version, moduleSize);
 
-        if (bitMatrix != null) {
-          if (alignmentPattern) {
-            result.push({
-              bottomRight,
-              matrix: bitMatrix,
-              finder: finderPatternGroup,
-              alignment: alignmentPattern
-            });
+          if (alignments.length > 0) {
+            for (const alignmentPattern of alignments) {
+              if (alignmentPattern) {
+                result.push({
+                  bottomRight,
+                  finder: finderPatternGroup,
+                  alignment: alignmentPattern,
+                  matrix: transform(matrix, size, finderPatternGroup, alignmentPattern)
+                });
+              }
+            }
           } else {
             result.push({
               bottomRight,
-              matrix: bitMatrix,
-              finder: finderPatternGroup
+              finder: finderPatternGroup,
+              matrix: transform(matrix, size, finderPatternGroup)
             });
           }
+        } else {
+          result.push({
+            bottomRight,
+            finder: finderPatternGroup,
+            matrix: transform(matrix, size, finderPatternGroup)
+          });
         }
       }
     }

@@ -398,12 +398,6 @@
           for (const { matrix, finder, alignment, bottomRight } of detected) {
             const { topLeft, topRight, bottomLeft } = finder;
 
-            markFinderPattern(bottomRight, '#ff0000');
-
-            if (alignment) {
-              alignments.push(alignment);
-            }
-
             try {
               const decoded = decoder.decode(matrix);
               const { content } = decoded;
@@ -427,9 +421,9 @@
                 errors.push(finder);
               }
 
-              markFinderPattern(bottomRight, '#ff0000');
               drawLine(topLeft, topRight, '#ff0000');
               drawLine(topLeft, bottomLeft, '#ff0000');
+              markFinderPattern(bottomRight, '#ff0000');
               matrixBox.append(drawMatrix(matrix), '&nbsp;&nbsp;');
 
               console.log('topLeft:', topLeft.x, topLeft.y);
