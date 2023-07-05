@@ -5,7 +5,7 @@
 import { Pattern } from './Pattern';
 import { toInt32 } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
-import { alignCrossPattern, centerFromEnd, checkDiagonalPattern } from './utils/matcher';
+import { alignCrossPattern, centerFromEnd, checkDiagonalPattern, getCountStateTotal } from './utils/matcher';
 
 export interface Matcher {
   (countState: number[]): boolean;
@@ -14,9 +14,11 @@ export interface Matcher {
 export class PatternMatcher {
   #matcher: Matcher;
   #matrix: BitMatrix;
+  #count: number;
   #patterns: Pattern[] = [];
 
-  constructor(matrix: BitMatrix, matcher: Matcher) {
+  constructor(matrix: BitMatrix, count: number, matcher: Matcher) {
+    this.#count = count;
     this.#matrix = matrix;
     this.#matcher = matcher;
   }
@@ -31,12 +33,12 @@ export class PatternMatcher {
     );
   }
 
-  #crossAlignHorizontal(x: number, y: number, maxCount: number): number {
-    return alignCrossPattern(this.#matrix, x, y, maxCount, true, this.#matcher);
+  #crossAlignVertical(x: number, y: number, maxCount: number): ReturnType<typeof alignCrossPattern> {
+    return alignCrossPattern(this.#matrix, x, y, maxCount, false, this.#matcher);
   }
 
-  #crossAlignVertical(x: number, y: number, maxCount: number): number {
-    return alignCrossPattern(this.#matrix, x, y, maxCount, false, this.#matcher);
+  #crossAlignHorizontal(x: number, y: number, maxCount: number): ReturnType<typeof alignCrossPattern> {
+    return alignCrossPattern(this.#matrix, x, y, maxCount, true, this.#matcher);
   }
 
   public get matcher(): Matcher {
@@ -51,18 +53,22 @@ export class PatternMatcher {
     return this.#patterns;
   }
 
-  public match(x: number, y: number, countState: number[], moduleSize: number): boolean {
+  public match(x: number, y: number, countState: number[]): boolean {
     if (this.#matcher(countState)) {
+      let countStateHorizontal;
       let offsetX = centerFromEnd(countState, x);
 
       const maxCount = countState[toInt32(countState.length / 2)];
-      const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, maxCount);
+      const [offsetY, countStateVertical] = this.#crossAlignVertical(toInt32(offsetX), y, maxCount);
 
       if (offsetY >= 0) {
         // Re-cross check
-        offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), maxCount);
+        [offsetX, countStateHorizontal] = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), maxCount);
 
         if (offsetX >= 0 && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), maxCount)) {
+          const width = getCountStateTotal(countStateHorizontal);
+          const height = getCountStateTotal(countStateVertical);
+          const moduleSize = (width + height) / this.#count / 2;
           const patterns = this.#patterns;
           const { length } = patterns;
 

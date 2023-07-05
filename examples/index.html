@@ -395,7 +395,7 @@
         console.dir(detected);
 
         if (detected.length > 0) {
-          for (const { matrix, finder, alignment, bottomRight } of detected) {
+          for (const { matrix, finder, alignment } of detected) {
             const { topLeft, topRight, bottomLeft } = finder;
 
             try {
@@ -423,7 +423,6 @@
 
               drawLine(topLeft, topRight, '#ff0000');
               drawLine(topLeft, bottomLeft, '#ff0000');
-              markFinderPattern(bottomRight, '#ff0000');
               matrixBox.append(drawMatrix(matrix), '&nbsp;&nbsp;');
 
               console.log('topLeft:', topLeft.x, topLeft.y);
@@ -450,12 +449,12 @@
             markFinderPattern(topRight, '#00ff00');
             markFinderPattern(bottomLeft, '#0000ff');
           }
+
+          for (const alignment of alignments) {
+            markFinderPattern(alignment, '#ff00ff');
+          }
         } else {
           decodeResult.html(`<span class="error">未发现二维码</span>`);
-        }
-
-        for (const alignment of alignments) {
-          markFinderPattern(alignment, '#ff00ff');
         }
       });
 

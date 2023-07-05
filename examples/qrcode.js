@@ -3596,7 +3596,7 @@
       offset++;
       countState[4]++;
     }
-    return checker(countState) ? centerFromEnd(countState, offset) : NaN;
+    return [checker(countState) ? centerFromEnd(countState, offset) : NaN, countState];
   }
   function checkDiagonalPattern(matrix, x, y, maxCount, isBackslash, checker) {
     let offset = 0;
@@ -3657,41 +3657,6 @@
       }
     }
     return true;
-  }
-
-  /**
-   * @module Pattern
-   */
-  class Pattern extends Point {
-    #count;
-    #moduleSize;
-    constructor(x, y, moduleSize, count = 1) {
-      super(x, y);
-      this.#count = count;
-      this.#moduleSize = moduleSize;
-    }
-    get count() {
-      return this.#count;
-    }
-    get moduleSize() {
-      return this.#moduleSize;
-    }
-    combine(x, y, moduleSize) {
-      const count = this.#count;
-      const combinedCount = count + 1;
-      const combinedX = (count * this.x + x) / combinedCount;
-      const combinedY = (count * this.y + y) / combinedCount;
-      const combinedModuleSize = (count * this.#moduleSize + moduleSize) / combinedCount;
-      return new Pattern(combinedX, combinedY, combinedModuleSize, combinedCount);
-    }
-    equals(x, y, moduleSize) {
-      if (Math.abs(x - this.x) <= moduleSize && Math.abs(y - this.y) <= moduleSize) {
-        const currentModuleSize = this.#moduleSize;
-        const moduleSizeDiff = Math.abs(moduleSize - currentModuleSize);
-        return moduleSizeDiff < 1 || moduleSizeDiff <= currentModuleSize;
-      }
-      return false;
-    }
   }
 
   /**
@@ -3940,12 +3905,12 @@
     }
     to = line.to;
     from = line.from;
-    const [deltaX, deltaY] = line.delta;
+    const [deltaX] = line.delta;
     // Found black-white-black; give the benefit of the doubt that the next pixel outside the image
     // is "white" so this last point at (toX+xStep,toY) is the right ending. This is really a
     // small approximation; (toX+xStep,toY+yStep) might be really correct. Ignore this.
     if (state === 2) {
-      return distance(new Point(to.x + deltaX, to.y + deltaY), from);
+      return distance(new Point(to.x + deltaX, to.y), from);
     }
     return NaN;
   }
@@ -4003,7 +3968,7 @@
   function computeSymbolSize({ topLeft, topRight, bottomLeft }, moduleSize) {
     const width = distance(topLeft, topRight);
     const height = distance(topLeft, bottomLeft);
-    const size = round((width / moduleSize + height / moduleSize) / 2) + 7;
+    const size = round((width + height) / moduleSize / 2) + 7;
     // mod 4
     switch (size & 0x03) {
       case 0:
@@ -4020,43 +3985,6 @@
         return NaN;
     }
     return size;
-  }
-  function findAlignmentInRegion(matrix, { topLeft, topRight, bottomLeft }, alignmentPatterns, version, moduleSize) {
-    const { x, y } = topLeft;
-    // Look for an alignment pattern (3 modules in size) around where it should be
-    const allowance = Math.ceil(moduleSize * 5);
-    const bottomRightX = topRight.x - x + bottomLeft.x;
-    const bottomRightY = topRight.y - y + bottomLeft.y;
-    const correctionToTopLeft = 1 - 3 / (version.size - 7);
-    const expectAlignmentX = x + correctionToTopLeft * (bottomRightX - x);
-    const expectAlignmentY = y + correctionToTopLeft * (bottomRightY - y);
-    const alignmentAreaTopY = Math.max(0, expectAlignmentY - allowance);
-    const alignmentAreaLeftX = Math.max(0, expectAlignmentX - allowance);
-    const alignmentAreaRightX = Math.min(matrix.width - 1, expectAlignmentX + allowance);
-    const alignmentAreaBottomY = Math.min(matrix.height - 1, expectAlignmentY + allowance);
-    const alignmentAreaTopLeft = new Point(alignmentAreaLeftX, alignmentAreaTopY);
-    const alignmentAreaTopRight = new Point(alignmentAreaRightX, alignmentAreaTopY);
-    const alignmentAreaBottomRight = new Point(alignmentAreaRightX, alignmentAreaBottomY);
-    const alignmentAreaBottomLeft = new Point(alignmentAreaLeftX, alignmentAreaBottomY);
-    const patterns = alignmentPatterns.filter(pattern => {
-      return (
-        isEqualsModuleSize(pattern.moduleSize, moduleSize) &&
-        isPointInQuadrangle(
-          pattern,
-          alignmentAreaTopLeft,
-          alignmentAreaTopRight,
-          alignmentAreaBottomRight,
-          alignmentAreaBottomLeft
-        )
-      );
-    });
-    if (patterns.length > 1) {
-      const expectAlignment = new Point(expectAlignmentX, expectAlignmentX);
-      patterns.sort((pattern1, pattern2) => {
-        return distance(pattern1, expectAlignment) - distance(pattern2, expectAlignment);
-      });
-    }
-    return patterns;
   }
   function transformImpl(matrix, size, { topLeft, topRight, bottomLeft }, alignmentPattern) {
     let bottomRightX;
@@ -4101,55 +4029,74 @@
     );
   }
   function detect(matrix, finderMatcher, alignmentMatcher, transform = transformImpl) {
-    const result = [];
-    const finderPatternGroups = finderMatcher.groups;
-    const alignmentPatterns = alignmentMatcher.patterns;
+    const detected = [];
+    const finderPatternGroups = finderMatcher.groups();
     for (const finderPatternGroup of finderPatternGroups) {
       const moduleSize = calculateModuleSize(matrix, finderPatternGroup);
       if (moduleSize >= 1) {
         const size = computeSymbolSize(finderPatternGroup, moduleSize);
         if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
           const version = fromVersionSize(size);
-          // TODO 测试
-          const { topLeft, topRight, bottomLeft } = finderPatternGroup;
-          const bottomRight = new Pattern(
-            topRight.x + bottomLeft.x - topLeft.x,
-            topRight.y + bottomLeft.y - topLeft.y,
-            topLeft.moduleSize
-          );
+          // Find alignment
           if (version.alignmentPatterns.length > 0) {
             // Kind of arbitrary -- expand search radius before giving up
             // If we didn't find alignment pattern... well try anyway without it
-            const alignments = findAlignmentInRegion(matrix, finderPatternGroup, alignmentPatterns, version, moduleSize);
-            if (alignments.length > 0) {
-              for (const alignmentPattern of alignments) {
-                if (alignmentPattern) {
-                  result.push({
-                    bottomRight,
-                    finder: finderPatternGroup,
-                    alignment: alignmentPattern,
-                    matrix: transform(matrix, size, finderPatternGroup, alignmentPattern)
-                  });
-                }
+            const alignmentPatterns = alignmentMatcher.filter(finderPatternGroup, size, moduleSize);
+            // Founded alignment
+            if (alignmentPatterns.length > 0) {
+              for (const alignmentPattern of alignmentPatterns) {
+                detected.push({
+                  finder: finderPatternGroup,
+                  alignment: alignmentPattern,
+                  matrix: transform(matrix, size, finderPatternGroup, alignmentPattern)
+                });
               }
-            } else {
-              result.push({
-                bottomRight,
-                finder: finderPatternGroup,
-                matrix: transform(matrix, size, finderPatternGroup)
-              });
+              continue;
             }
-          } else {
-            result.push({
-              bottomRight,
-              finder: finderPatternGroup,
-              matrix: transform(matrix, size, finderPatternGroup)
-            });
           }
+          detected.push({
+            finder: finderPatternGroup,
+            matrix: transform(matrix, size, finderPatternGroup)
+          });
         }
       }
     }
-    return result;
+    return detected;
+  }
+
+  /**
+   * @module Pattern
+   */
+  class Pattern extends Point {
+    #count;
+    #moduleSize;
+    constructor(x, y, moduleSize, count = 1) {
+      super(x, y);
+      this.#count = count;
+      this.#moduleSize = moduleSize;
+    }
+    get count() {
+      return this.#count;
+    }
+    get moduleSize() {
+      return this.#moduleSize;
+    }
+    combine(x, y, moduleSize) {
+      const count = this.#count;
+      const combinedCount = count + 1;
+      const combinedX = (count * this.x + x) / combinedCount;
+      const combinedY = (count * this.y + y) / combinedCount;
+      const combinedModuleSize = (count * this.#moduleSize + moduleSize) / combinedCount;
+      return new Pattern(combinedX, combinedY, combinedModuleSize, combinedCount);
+    }
+    equals(x, y, moduleSize) {
+      if (Math.abs(x - this.x) <= moduleSize && Math.abs(y - this.y) <= moduleSize) {
+        const currentModuleSize = this.#moduleSize;
+        const moduleSizeDiff = Math.abs(moduleSize - currentModuleSize);
+        return moduleSizeDiff < 1 || moduleSizeDiff <= currentModuleSize;
+      }
+      return false;
+    }
   }
 
   /**
@@ -4158,8 +4105,10 @@
   class PatternMatcher {
     #matcher;
     #matrix;
+    #count;
     #patterns = [];
-    constructor(matrix, matcher) {
+    constructor(matrix, count, matcher) {
+      this.#count = count;
       this.#matrix = matrix;
       this.#matcher = matcher;
     }
@@ -4171,11 +4120,11 @@
         checkDiagonalPattern(matrix, x, y, maxCount, false, matcher)
       );
     }
-    #crossAlignHorizontal(x, y, maxCount) {
-      return alignCrossPattern(this.#matrix, x, y, maxCount, true, this.#matcher);
-    }
     #crossAlignVertical(x, y, maxCount) {
       return alignCrossPattern(this.#matrix, x, y, maxCount, false, this.#matcher);
+    }
+    #crossAlignHorizontal(x, y, maxCount) {
+      return alignCrossPattern(this.#matrix, x, y, maxCount, true, this.#matcher);
     }
     get matcher() {
       return this.#matcher;
@@ -4186,15 +4135,19 @@
     get patterns() {
       return this.#patterns;
     }
-    match(x, y, countState, moduleSize) {
+    match(x, y, countState) {
       if (this.#matcher(countState)) {
+        let countStateHorizontal;
         let offsetX = centerFromEnd(countState, x);
         const maxCount = countState[toInt32(countState.length / 2)];
-        const offsetY = this.#crossAlignVertical(toInt32(offsetX), y, maxCount);
+        const [offsetY, countStateVertical] = this.#crossAlignVertical(toInt32(offsetX), y, maxCount);
         if (offsetY >= 0) {
           // Re-cross check
-          offsetX = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), maxCount);
+          [offsetX, countStateHorizontal] = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), maxCount);
           if (offsetX >= 0 && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), maxCount)) {
+            const width = getCountStateTotal(countStateHorizontal);
+            const height = getCountStateTotal(countStateVertical);
+            const moduleSize = (width + height) / this.#count / 2;
             const patterns = this.#patterns;
             const { length } = patterns;
             for (let i = 0; i < length; i++) {
@@ -4269,9 +4222,9 @@
    */
   class FinderPatternMatcher extends PatternMatcher {
     constructor(matrix) {
-      super(matrix, isMatchFinderPattern);
+      super(matrix, 7, isMatchFinderPattern);
     }
-    get groups() {
+    groups() {
       const finderPatternGroups = [];
       const patterns = this.patterns.filter(({ count }) => count >= 3);
       const { length } = patterns;
@@ -4332,9 +4285,6 @@
       }
       return finderPatternGroups;
     }
-    match(x, y, countState) {
-      return super.match(x, y, countState, getCountStateTotal(countState) / 7);
-    }
   }
 
   /**
@@ -4342,10 +4292,45 @@
    */
   class AlignmentPatternMatcher extends PatternMatcher {
     constructor(matrix) {
-      super(matrix, isMatchAlignmentPattern);
+      super(matrix, 5, isMatchAlignmentPattern);
     }
-    match(x, y, countState) {
-      return super.match(x, y, countState, getCountStateTotal(countState) / 3);
+    filter({ topLeft, topRight, bottomLeft }, size, moduleSize) {
+      const { matrix } = this;
+      const { x, y } = topLeft;
+      // Look for an alignment pattern (3 modules in size) around where it should be
+      const allowance = Math.ceil(moduleSize * 5);
+      const correctionToTopLeft = 1 - 3 / (size - 7);
+      const bottomRightX = topRight.x - x + bottomLeft.x;
+      const bottomRightY = topRight.y - y + bottomLeft.y;
+      const expectAlignmentX = x + correctionToTopLeft * (bottomRightX - x);
+      const expectAlignmentY = y + correctionToTopLeft * (bottomRightY - y);
+      const alignmentAreaTopY = Math.max(0, expectAlignmentY - allowance);
+      const alignmentAreaLeftX = Math.max(0, expectAlignmentX - allowance);
+      const alignmentAreaRightX = Math.min(matrix.width - 1, expectAlignmentX + allowance);
+      const alignmentAreaBottomY = Math.min(matrix.height - 1, expectAlignmentY + allowance);
+      const alignmentAreaTopLeft = new Point(alignmentAreaLeftX, alignmentAreaTopY);
+      const alignmentAreaTopRight = new Point(alignmentAreaRightX, alignmentAreaTopY);
+      const alignmentAreaBottomRight = new Point(alignmentAreaRightX, alignmentAreaBottomY);
+      const alignmentAreaBottomLeft = new Point(alignmentAreaLeftX, alignmentAreaBottomY);
+      const patterns = this.patterns.filter(pattern => {
+        return (
+          isEqualsModuleSize(pattern.moduleSize, moduleSize) &&
+          isPointInQuadrangle(
+            pattern,
+            alignmentAreaTopLeft,
+            alignmentAreaTopRight,
+            alignmentAreaBottomRight,
+            alignmentAreaBottomLeft
+          )
+        );
+      });
+      if (patterns.length > 1) {
+        const expectAlignment = new Point(expectAlignmentX, expectAlignmentX);
+        patterns.sort((pattern1, pattern2) => {
+          return distance(pattern1, expectAlignment) - distance(pattern2, expectAlignment);
+        });
+      }
+      return patterns;
     }
   }
 
@@ -4360,16 +4345,15 @@
     detect(matrix) {
       const { width, height } = matrix;
       const { transform } = this.#options;
-      const finder = new FinderPatternMatcher(matrix);
-      const alignment = new AlignmentPatternMatcher(matrix);
-      // const finderPatternGroups = finder.find();
+      const finderMatcher = new FinderPatternMatcher(matrix);
+      const alignmentMatcher = new AlignmentPatternMatcher(matrix);
       const match = (x, y, lastBit, countState, count) => {
         setCountState(countState, count);
         // Match pattern
         if (lastBit) {
-          finder.match(x, y, countState);
+          finderMatcher.match(x, y, countState);
         } else {
-          alignment.match(x, y, countState.slice(-3));
+          alignmentMatcher.match(x, y, countState.slice(-3));
         }
       };
       for (let y = 0; y < height; y++) {
@@ -4396,7 +4380,7 @@
         }
         match(x, y, lastBit, countState, count);
       }
-      return detect(matrix, finder, alignment, transform);
+      return detect(matrix, finderMatcher, alignmentMatcher, transform);
     }
   }
 

@@ -145,7 +145,7 @@ export function alignCrossPattern(
   maxCount: number,
   isHorizontal: boolean,
   checker: (countState: number[]) => boolean
-): number {
+): [offset: number, countState: number[]] {
   let offset = isHorizontal ? x : y;
 
   const countState = [0, 0, 0, 0, 0];
@@ -187,7 +187,7 @@ export function alignCrossPattern(
     countState[4]++;
   }
 
-  return checker(countState) ? centerFromEnd(countState, offset) : NaN;
+  return [checker(countState) ? centerFromEnd(countState, offset) : NaN, countState];
 }
 
 export function checkDiagonalPattern(

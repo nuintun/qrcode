@@ -6,19 +6,17 @@ import { Pattern } from '/detector/Pattern';
 import { PlotLine } from '/common/PlotLine';
 import { BitMatrix } from '/common/BitMatrix';
 import { round, toInt32 } from '/common/utils';
+import { distance, Point } from '/common/Point';
 import { GridSampler } from '/common/GridSampler';
 import { FinderPatternMatcher } from '../FinderPatternMatcher';
 import { FinderPatternGroup } from '/detector/FinderPatternGroup';
 import { AlignmentPatternMatcher } from '../AlignmentPatternMatcher';
-import { distance, isPointInQuadrangle, Point } from '/common/Point';
 import { quadrilateralToQuadrilateral } from '/common/PerspectiveTransform';
-import { fromVersionSize, MAX_VERSION_SIZE, MIN_VERSION_SIZE, Version } from '/common/Version';
-import { isEqualsModuleSize } from './matcher';
+import { fromVersionSize, MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
 
 export interface DetectResult {
   readonly matrix: BitMatrix;
   readonly alignment?: Pattern;
-  readonly bottomRight: Pattern;
   readonly finder: FinderPatternGroup;
 }
 
@@ -45,13 +43,13 @@ function sizeOfBlackWhiteBlackRun(matrix: BitMatrix, from: Point, to: Point): nu
   to = line.to;
   from = line.from;
 
-  const [deltaX, deltaY] = line.delta;
+  const [deltaX] = line.delta;
 
   // Found black-white-black; give the benefit of the doubt that the next pixel outside the image
   // is "white" so this last point at (toX+xStep,toY) is the right ending. This is really a
   // small approximation; (toX+xStep,toY+yStep) might be really correct. Ignore this.
   if (state === 2) {
-    return distance(new Point(to.x + deltaX, to.y + deltaY), from);
+    return distance(new Point(to.x + deltaX, to.y), from);
   }
 
   return NaN;
@@ -126,7 +124,7 @@ export function calculateModuleSize(matrix: BitMatrix, { topLeft, topRight, bott
 export function computeSymbolSize({ topLeft, topRight, bottomLeft }: FinderPatternGroup, moduleSize: number): number {
   const width = distance(topLeft, topRight);
   const height = distance(topLeft, bottomLeft);
-  const size = round((width / moduleSize + height / moduleSize) / 2) + 7;
+  const size = round((width + height) / moduleSize / 2) + 7;
 
   // mod 4
   switch (size & 0x03) {
@@ -147,54 +145,6 @@ export function computeSymbolSize({ topLeft, topRight, bottomLeft }: FinderPatte
   }
 
   return size;
-}
-
-function findAlignmentInRegion(
-  matrix: BitMatrix,
-  { topLeft, topRight, bottomLeft }: FinderPatternGroup,
-  alignmentPatterns: Pattern[],
-  version: Version,
-  moduleSize: number
-): Pattern[] {
-  const { x, y } = topLeft;
-  // Look for an alignment pattern (3 modules in size) around where it should be
-  const allowance = Math.ceil(moduleSize * 5);
-  const bottomRightX = topRight.x - x + bottomLeft.x;
-  const bottomRightY = topRight.y - y + bottomLeft.y;
-  const correctionToTopLeft = 1 - 3 / (version.size - 7);
-  const expectAlignmentX = x + correctionToTopLeft * (bottomRightX - x);
-  const expectAlignmentY = y + correctionToTopLeft * (bottomRightY - y);
-  const alignmentAreaTopY = Math.max(0, expectAlignmentY - allowance);
-  const alignmentAreaLeftX = Math.max(0, expectAlignmentX - allowance);
-  const alignmentAreaRightX = Math.min(matrix.width - 1, expectAlignmentX + allowance);
-  const alignmentAreaBottomY = Math.min(matrix.height - 1, expectAlignmentY + allowance);
-  const alignmentAreaTopLeft = new Point(alignmentAreaLeftX, alignmentAreaTopY);
-  const alignmentAreaTopRight = new Point(alignmentAreaRightX, alignmentAreaTopY);
-  const alignmentAreaBottomRight = new Point(alignmentAreaRightX, alignmentAreaBottomY);
-  const alignmentAreaBottomLeft = new Point(alignmentAreaLeftX, alignmentAreaBottomY);
-
-  const patterns = alignmentPatterns.filter(pattern => {
-    return (
-      isEqualsModuleSize(pattern.moduleSize, moduleSize) &&
-      isPointInQuadrangle(
-        pattern,
-        alignmentAreaTopLeft,
-        alignmentAreaTopRight,
-        alignmentAreaBottomRight,
-        alignmentAreaBottomLeft
-      )
-    );
-  });
-
-  if (patterns.length > 1) {
-    const expectAlignment = new Point(expectAlignmentX, expectAlignmentX);
-
-    patterns.sort((pattern1, pattern2) => {
-      return distance(pattern1, expectAlignment) - distance(pattern2, expectAlignment);
-    });
-  }
-
-  return patterns;
 }
 
 export type Transform = (
@@ -261,9 +211,8 @@ export function detect(
   alignmentMatcher: AlignmentPatternMatcher,
   transform: Transform = transformImpl
 ): DetectResult[] {
-  const result: DetectResult[] = [];
-  const finderPatternGroups = finderMatcher.groups;
-  const alignmentPatterns = alignmentMatcher.patterns;
+  const detected: DetectResult[] = [];
+  const finderPatternGroups = finderMatcher.groups();
 
   for (const finderPatternGroup of finderPatternGroups) {
     const moduleSize = calculateModuleSize(matrix, finderPatternGroup);
@@ -274,47 +223,32 @@ export function detect(
       if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
         const version = fromVersionSize(size);
 
-        // TODO 测试
-        const { topLeft, topRight, bottomLeft } = finderPatternGroup;
-        const bottomRight = new Pattern(
-          topRight.x + bottomLeft.x - topLeft.x,
-          topRight.y + bottomLeft.y - topLeft.y,
-          topLeft.moduleSize
-        );
-
+        // Find alignment
         if (version.alignmentPatterns.length > 0) {
           // Kind of arbitrary -- expand search radius before giving up
           // If we didn't find alignment pattern... well try anyway without it
-          const alignments = findAlignmentInRegion(matrix, finderPatternGroup, alignmentPatterns, version, moduleSize);
+          const alignmentPatterns = alignmentMatcher.filter(finderPatternGroup, size, moduleSize);
 
-          if (alignments.length > 0) {
-            for (const alignmentPattern of alignments) {
-              if (alignmentPattern) {
-                result.push({
-                  bottomRight,
-                  finder: finderPatternGroup,
-                  alignment: alignmentPattern,
-                  matrix: transform(matrix, size, finderPatternGroup, alignmentPattern)
-                });
-              }
+          // Founded alignment
+          if (alignmentPatterns.length > 0) {
+            for (const alignmentPattern of alignmentPatterns) {
+              detected.push({
+                finder: finderPatternGroup,
+                alignment: alignmentPattern,
+                matrix: transform(matrix, size, finderPatternGroup, alignmentPattern)
+              });
             }
-          } else {
-            result.push({
-              bottomRight,
-              finder: finderPatternGroup,
-              matrix: transform(matrix, size, finderPatternGroup)
-            });
+            continue;
           }
-        } else {
-          result.push({
-            bottomRight,
-            finder: finderPatternGroup,
-            matrix: transform(matrix, size, finderPatternGroup)
-          });
         }
+
+        detected.push({
+          finder: finderPatternGroup,
+          matrix: transform(matrix, size, finderPatternGroup)
+        });
       }
     }
   }
 
-  return result;
+  return detected;
 }

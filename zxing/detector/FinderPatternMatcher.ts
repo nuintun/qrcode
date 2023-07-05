@@ -4,7 +4,6 @@
 
 import {
   checkRepeatPixelsInLine,
-  getCountStateTotal,
   isEqualsEdge,
   isEqualsModuleSize,
   isMatchFinderPattern,
@@ -17,10 +16,10 @@ import { FinderPatternGroup } from './FinderPatternGroup';
 
 export class FinderPatternMatcher extends PatternMatcher {
   constructor(matrix: BitMatrix) {
-    super(matrix, isMatchFinderPattern);
+    super(matrix, 7, isMatchFinderPattern);
   }
 
-  public get groups(): FinderPatternGroup[] {
+  public groups(): FinderPatternGroup[] {
     const finderPatternGroups: FinderPatternGroup[] = [];
     const patterns = this.patterns.filter(({ count }) => count >= 3);
     const { length } = patterns;
@@ -90,9 +89,5 @@ export class FinderPatternMatcher extends PatternMatcher {
     }
 
     return finderPatternGroups;
-  }
-
-  public override match(x: number, y: number, countState: number[]): boolean {
-    return super.match(x, y, countState, getCountStateTotal(countState) / 7);
   }
 }
