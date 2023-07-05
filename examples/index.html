@@ -398,6 +398,12 @@
           for (const { matrix, finder, alignment, bottomRight } of detected) {
             const { topLeft, topRight, bottomLeft } = finder;
 
+            markFinderPattern(bottomRight, '#ff0000');
+
+            if (alignment) {
+              alignments.push(alignment);
+            }
+
             try {
               const decoded = decoder.decode(matrix);
               const { content } = decoded;

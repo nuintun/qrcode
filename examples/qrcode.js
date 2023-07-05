@@ -3479,7 +3479,7 @@
   const MIN_MODULE_COUNT_PER_EDGE = 11;
   const DIFF_FINDER_PATTERN_RATIO = 0.5;
   const MAX_MODULE_COUNT_PER_EDGE = 175;
-  const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
+  const DIFF_ALIGNMENT_PATTERN_RATIO = 0.5;
   function centerFromEnd(countState, end) {
     const { length } = countState;
     const middleIndex = toInt32(length / 2);
