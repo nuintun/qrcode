@@ -3656,6 +3656,56 @@
     }
     return true;
   }
+  function calcTimingRatio(point, anchor) {
+    return anchor > point ? 1 : anchor < point ? -1 : 0;
+  }
+  function isObtuseAngle(start, middle, end) {
+    const edge1 = distance(start, middle);
+    const edge2 = distance(middle, end);
+    const edge3 = distance(start, end);
+    return round(edge1 * edge1 + edge2 * edge2) < round(edge3 * edge3);
+  }
+  function getTimingPointXAxis({ x, rect }, ratio) {
+    const [, right, , left] = rect;
+    return ratio > 0 ? right : ratio < 0 ? left : x;
+  }
+  function getTimingPointYAxis({ y, rect }, ratio) {
+    const [top, , bottom] = rect;
+    return ratio > 0 ? bottom : ratio < 0 ? top : y;
+  }
+  function calcTimingPoints(start, end, anchor) {
+    const { x: endX, y: endY } = end;
+    const { x: startX, y: startY } = start;
+    const { x: anchorX, y: anchorY } = anchor;
+    const endXRatio = calcTimingRatio(endX, anchorX);
+    const endYRatio = calcTimingRatio(endY, anchorY);
+    const startXRatio = calcTimingRatio(startX, anchorX);
+    const startYRatio = calcTimingRatio(startY, anchorY);
+    const steepStarEnd = Math.abs(endY - startY) > Math.abs(endX - startX);
+    const steepStarAnchor = Math.abs(anchorY - startY) > Math.abs(anchorX - startX);
+    if (steepStarAnchor === steepStarEnd && isObtuseAngle(end, start, anchor)) {
+      return [
+        new Point(
+          steepStarEnd ? startX : getTimingPointXAxis(start, startXRatio),
+          steepStarEnd ? getTimingPointYAxis(start, startYRatio) : start.y
+        ),
+        new Point(
+          steepStarEnd ? endX : getTimingPointXAxis(end, endXRatio),
+          steepStarEnd ? getTimingPointYAxis(end, endYRatio) : end.y
+        )
+      ];
+    }
+    return [
+      new Point(
+        steepStarEnd ? getTimingPointXAxis(start, startXRatio) : startX,
+        steepStarEnd ? start.y : getTimingPointYAxis(start, startYRatio)
+      ),
+      new Point(
+        steepStarEnd ? getTimingPointXAxis(end, endXRatio) : endX,
+        steepStarEnd ? end.y : getTimingPointYAxis(end, endYRatio)
+      )
+    ];
+  }
 
   /**
    * @module GridSampler
@@ -4763,4 +4813,5 @@
   exports.Numeric = Numeric;
   exports.binarize = binarize;
   exports.binarizer = binarizer;
+  exports.calcTimingPoints = calcTimingPoints;
 });

@@ -287,11 +287,22 @@ function isObtuseAngle(start: Point, middle: Point, end: Point): boolean {
   return round(edge1 * edge1 + edge2 * edge2) < round(edge3 * edge3);
 }
 
+function getTimingPointXAxis({ x, rect }: Pattern, ratio: number): number {
+  const [, right, , left] = rect;
+
+  return ratio > 0 ? right : ratio < 0 ? left : x;
+}
+
+function getTimingPointYAxis({ y, rect }: Pattern, ratio: number): number {
+  const [top, , bottom] = rect;
+
+  return ratio > 0 ? bottom : ratio < 0 ? top : y;
+}
+
 export function calcTimingPoints(start: Pattern, end: Pattern, anchor: Pattern): [start: Point, end: Point] {
   const { x: endX, y: endY } = end;
   const { x: startX, y: startY } = start;
   const { x: anchorX, y: anchorY } = anchor;
-  const obtuse = isObtuseAngle(end, start, anchor);
   const endXRatio = calcTimingRatio(endX, anchorX);
   const endYRatio = calcTimingRatio(endY, anchorY);
   const startXRatio = calcTimingRatio(startX, anchorX);
@@ -299,42 +310,27 @@ export function calcTimingPoints(start: Pattern, end: Pattern, anchor: Pattern):
   const steepStarEnd = Math.abs(endY - startY) > Math.abs(endX - startX);
   const steepStarAnchor = Math.abs(anchorY - startY) > Math.abs(anchorX - startX);
 
-  const getPointXByRatio = ({ x, rect }: Pattern, ratio: number): number => {
-    const [, right, , left] = rect;
-
-    return ratio > 0 ? right : ratio < 0 ? left : x;
-  };
-
-  const getPointYByRatio = ({ y, rect }: Pattern, ratio: number): number => {
-    const [top, , bottom] = rect;
-
-    return ratio > 0 ? bottom : ratio < 0 ? top : y;
-  };
-
-  if (obtuse && steepStarAnchor === steepStarEnd) {
+  if (steepStarAnchor === steepStarEnd && isObtuseAngle(end, start, anchor)) {
     return [
       new Point(
-        //
-        steepStarEnd ? startX : getPointXByRatio(start, startXRatio),
-        steepStarEnd ? getPointYByRatio(start, startYRatio) : start.y
+        steepStarEnd ? startX : getTimingPointXAxis(start, startXRatio),
+        steepStarEnd ? getTimingPointYAxis(start, startYRatio) : start.y
       ),
       new Point(
-        //
-        steepStarEnd ? endX : getPointXByRatio(end, endXRatio),
-        steepStarEnd ? getPointYByRatio(end, endYRatio) : end.y
+        steepStarEnd ? endX : getTimingPointXAxis(end, endXRatio),
+        steepStarEnd ? getTimingPointYAxis(end, endYRatio) : end.y
       )
     ];
   }
 
   return [
     new Point(
-      steepStarEnd ? getPointXByRatio(start, startXRatio) : startX,
-      steepStarEnd ? start.y : getPointYByRatio(start, startYRatio)
+      steepStarEnd ? getTimingPointXAxis(start, startXRatio) : startX,
+      steepStarEnd ? start.y : getTimingPointYAxis(start, startYRatio)
     ),
     new Point(
-      //
-      steepStarEnd ? getPointXByRatio(end, endXRatio) : endX,
-      steepStarEnd ? end.y : getPointYByRatio(end, endYRatio)
+      steepStarEnd ? getTimingPointXAxis(end, endXRatio) : endX,
+      steepStarEnd ? end.y : getTimingPointYAxis(end, endYRatio)
     )
   ];
 }
