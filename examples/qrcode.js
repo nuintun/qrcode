@@ -3397,7 +3397,10 @@
     return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
   }
   function calcTriangleArea(a, b, c) {
-    return Math.abs((a.x * b.y + b.x * c.y + c.x * a.y - b.x * a.y - c.x * b.y - a.x * c.y) / 2);
+    const { x: ax, y: ay } = a;
+    const { x: bx, y: by } = b;
+    const { x: cx, y: cy } = c;
+    return Math.abs((ax * by + bx * cy + cx * ay - bx * ay - cx * by - ax * cy) / 2);
   }
   function isPointInQuadrangle(p, a, b, c, d) {
     return (

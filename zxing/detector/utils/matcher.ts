@@ -2,12 +2,12 @@
  * @module matcher
  */
 
-import { toInt32 } from '/common/utils';
 import { Pattern } from '/detector/Pattern';
 import { PlotLine } from '/common/PlotLine';
 import { BitMatrix } from '/common/BitMatrix';
-import { isPointInQuadrangle, Point } from '/common/Point';
+import { round, toInt32 } from '/common/utils';
 import { FinderPatternGroup } from '/detector/FinderPatternGroup';
+import { distance, isPointInQuadrangle, Point } from '/common/Point';
 
 export const DIFF_EDGE_RATIO = 0.5;
 export const DIFF_MODULE_SIZE_RATIO = 0.5;
@@ -271,4 +271,48 @@ export function checkRepeatPixelsInLine(matrix: BitMatrix, pattern1: Pattern, pa
   }
 
   return true;
+}
+
+function calcTimingRatio(point: number, anchor: number): number {
+  return anchor > point ? 1 : anchor < point ? -1 : 0;
+}
+
+function isObtuseAngle(start: Point, middle: Point, end: Point): boolean {
+  const edge1 = distance(start, middle);
+  const edge2 = distance(middle, end);
+  const edge3 = distance(start, end);
+
+  return round(edge1 * edge1 + edge2 * edge2) < round(edge3 * edge3);
+}
+
+export function calcTimingPoints(start: Pattern, end: Pattern, anchor: Pattern): [start: Point, end: Point] {
+  const endX = end.x;
+  const endY = end.y;
+  const startX = start.x;
+  const startY = start.y;
+  const anchorX = anchor.x;
+  const anchorY = anchor.y;
+  const endXRatio = calcTimingRatio(endX, anchorX);
+  const endYRatio = calcTimingRatio(endY, anchorY);
+  const startXRatio = calcTimingRatio(startX, anchorX);
+  const startYRatio = calcTimingRatio(startY, anchorY);
+  const obtuseAngle = isObtuseAngle(end, start, anchor);
+  const endXOffsetValue = endXRatio * end.moduleSize * 3;
+  const endYOffsetValue = endYRatio * end.moduleSize * 3;
+  const startXOffsetValue = startXRatio * start.moduleSize * 3;
+  const startYOffsetValue = startYRatio * start.moduleSize * 3;
+  const steepStarEnd = Math.abs(endY - startY) > Math.abs(endX - startX);
+  const steepStarAnchor = Math.abs(anchorY - startY) > Math.abs(anchorX - startX);
+
+  if (obtuseAngle && steepStarAnchor === steepStarEnd) {
+    return [
+      new Point(steepStarEnd ? startX : startX + startXOffsetValue, steepStarEnd ? start.y + startYOffsetValue : start.y),
+      new Point(steepStarEnd ? endX : endX + endXOffsetValue, steepStarEnd ? end.y + endYOffsetValue : end.y)
+    ];
+  }
+
+  return [
+    new Point(steepStarEnd ? startX + startXOffsetValue : startX, steepStarEnd ? start.y : start.y + startYOffsetValue),
+    new Point(steepStarEnd ? endX + endXOffsetValue : endX, steepStarEnd ? end.y : end.y + endYOffsetValue)
+  ];
 }

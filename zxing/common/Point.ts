@@ -34,7 +34,11 @@ export interface PlotLineCallback {
 }
 
 export function calcTriangleArea(a: Point, b: Point, c: Point): number {
-  return Math.abs((a.x * b.y + b.x * c.y + c.x * a.y - b.x * a.y - c.x * b.y - a.x * c.y) / 2);
+  const { x: ax, y: ay } = a;
+  const { x: bx, y: by } = b;
+  const { x: cx, y: cy } = c;
+
+  return Math.abs((ax * by + bx * cy + cx * ay - bx * ay - cx * by - ax * cy) / 2);
 }
 
 export function isPointInQuadrangle(p: Point, a: Point, b: Point, c: Point, d: Point): boolean {
