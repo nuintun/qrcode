@@ -288,6 +288,13 @@
         }
       });
 
+      class Point {
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+        }
+      }
+
       function getImageData() {
         imageData && context.putImageData(imageData, 0, 0);
 
@@ -388,12 +395,70 @@
         //   }
         // }
 
+        function calcTimingRatio(point, anchor) {
+          return anchor > point ? 1 : anchor < point ? -1 : 0;
+        }
+
+        function getTimingPointXAxis({ x, rect }, ratio) {
+          const [, right, , left] = rect;
+
+          return ratio > 0 ? right : ratio < 0 ? left : x;
+        }
+
+        function getTimingPointYAxis({ y, rect }, ratio) {
+          const [top, , bottom] = rect;
+
+          return ratio > 0 ? bottom : ratio < 0 ? top : y;
+        }
+
+        function calcTimingPoints(start, end, anchor) {
+          const { x: endX, y: endY } = end;
+          const { x: startX, y: startY } = start;
+          const { x: anchorX, y: anchorY } = anchor;
+          const endXRatio = calcTimingRatio(endX, anchorX);
+          const endYRatio = calcTimingRatio(endY, anchorY);
+          const startXRatio = calcTimingRatio(startX, anchorX);
+          const startYRatio = calcTimingRatio(startY, anchorY);
+          const steepStarEnd = Math.abs(endY - startY) >= Math.abs(endX - startX);
+          const steepStarAnchor = Math.abs(anchorY - startY) >= Math.abs(anchorX - startX);
+
+          const centerX = (anchor.x + end.x) / 2;
+          const centerY = (anchor.y + end.y) / 2;
+          const steep = Math.abs(startY - centerY) - Math.abs(startX - centerX);
+
+          const xRatio = calcTimingRatio(startX, centerX);
+          const yRatio = calcTimingRatio(startY, centerY);
+
+          console.log(steep, xRatio, yRatio);
+
+          if (startX > centerX && startY < centerY) {
+            if (steep > 0) {
+              return [
+                new Point(start.x, getTimingPointYAxis(start, yRatio)),
+                new Point(end.x, getTimingPointYAxis(end, yRatio))
+              ];
+            }
+
+            return [new Point(getTimingPointXAxis(start, xRatio), start.y), new Point(getTimingPointXAxis(end, xRatio), end.y)];
+          }
+
+          return [
+            new Point(getTimingPointXAxis(start, xRatio), getTimingPointYAxis(start, yRatio)),
+            new Point(getTimingPointXAxis(end, xRatio), getTimingPointYAxis(end, yRatio))
+          ];
+        }
+
         console.dir(detected);
 
         if (detected.length > 0) {
           for (const { matrix, finder, alignment } of detected) {
             const { topLeft, topRight, bottomLeft } = finder;
             const cacheKey = `${topLeft.x}-${topLeft.y}:${topRight.x}-${topRight.y}:${bottomLeft.x}-${bottomLeft.y}`;
+
+            const centerX = (topRight.x + bottomLeft.x) / 2;
+            const centerY = +(bottomLeft.y + topRight.y) / 2;
+
+            markFinderPattern({ x: centerX, y: centerY, width: 28, height: 28 }, '#ffff00');
 
             try {
               if (decodeCache.has(cacheKey)) {
@@ -423,12 +488,12 @@
               }
 
               console.time('calcTimingPoints');
-              const [x1, x2] = QRCode.calcTimingPoints(topLeft, bottomLeft, topRight);
-              const [x3, x4] = QRCode.calcTimingPoints(topLeft, topRight, bottomLeft);
+              const [x1, x2] = calcTimingPoints(topLeft, bottomLeft, topRight);
+              // const [x3, x4] = calcTimingPoints(topLeft, topRight, bottomLeft);
               console.timeEnd('calcTimingPoints');
 
               drawLine(x1, x2, '#00ff00');
-              drawLine(x3, x4, '#00ff00');
+              // drawLine(x3, x4, '#00ff00');
 
               drawLine(topLeft, topRight, '#ff0000');
               drawLine(topLeft, bottomLeft, '#ff0000');
