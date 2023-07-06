@@ -426,20 +426,15 @@
           const centerY = (anchor.y + end.y) / 2;
           const steep = Math.abs(startY - centerY) - Math.abs(startX - centerX);
 
-          const xRatio = calcTimingRatio(startX, centerX);
+          const xRatio = -calcTimingRatio(startX, centerX);
           const yRatio = calcTimingRatio(startY, centerY);
 
-          console.log(steep, xRatio, yRatio);
-
           if (startX > centerX && startY < centerY) {
-            if (steep > 0) {
-              return [
-                new Point(start.x, getTimingPointYAxis(start, yRatio)),
-                new Point(end.x, getTimingPointYAxis(end, yRatio))
-              ];
-            }
+            console.log(steep, xRatio, yRatio);
 
-            return [new Point(getTimingPointXAxis(start, xRatio), start.y), new Point(getTimingPointXAxis(end, xRatio), end.y)];
+            return [new Point(startX, getTimingPointYAxis(start, yRatio)), new Point(endX, getTimingPointYAxis(end, yRatio))];
+          } else if (startX > centerX && startY > centerY) {
+            return [new Point(getTimingPointXAxis(start, xRatio), startY), new Point(getTimingPointXAxis(end, xRatio), endY)];
           }
 
           return [
@@ -489,11 +484,11 @@
 
               console.time('calcTimingPoints');
               const [x1, x2] = calcTimingPoints(topLeft, bottomLeft, topRight);
-              // const [x3, x4] = calcTimingPoints(topLeft, topRight, bottomLeft);
+              const [x3, x4] = calcTimingPoints(topLeft, topRight, bottomLeft);
               console.timeEnd('calcTimingPoints');
 
               drawLine(x1, x2, '#00ff00');
-              // drawLine(x3, x4, '#00ff00');
+              drawLine(x3, x4, '#00ff00');
 
               drawLine(topLeft, topRight, '#ff0000');
               drawLine(topLeft, bottomLeft, '#ff0000');
