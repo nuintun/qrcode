@@ -3479,9 +3479,7 @@
    */
   const DIFF_EDGE_RATIO = 0.5;
   const DIFF_MODULE_SIZE_RATIO = 0.5;
-  const MIN_MODULE_COUNT_PER_EDGE = 11;
   const DIFF_FINDER_PATTERN_RATIO = 0.5;
-  const MAX_MODULE_COUNT_PER_EDGE = 175;
   const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
   function centerFromEnd(countState, end) {
     const { length } = countState;
@@ -3562,11 +3560,6 @@
     const moduleSizeDiff = Math.max(1, modeSizeAvg * DIFF_MODULE_SIZE_RATIO);
     return Math.abs(moduleSize1 - moduleSize2) <= moduleSizeDiff;
   }
-  function isValidModuleCount(edge, moduleSize) {
-    // Check the sizes
-    const moduleCount = Math.ceil(edge / moduleSize);
-    return moduleCount >= MIN_MODULE_COUNT_PER_EDGE && moduleCount <= MAX_MODULE_COUNT_PER_EDGE;
-  }
   function alignCrossPattern(matrix, x, y, maxCount, isHorizontal, checker) {
     let offset = isHorizontal ? x : y;
     const countState = [0, 0, 0, 0, 0];
@@ -3646,7 +3639,9 @@
     let black = 0;
     let white = 0;
     const points = new PlotLine(pattern1, pattern2).points();
-    const maxRepeat = (pattern1.moduleSize + pattern2.moduleSize) * 10;
+    const moduleSize1 = (pattern1.width + pattern1.height) / 14;
+    const moduleSize2 = (pattern2.width + pattern2.height) / 14;
+    const maxRepeat = (moduleSize1 + moduleSize2) * 10;
     for (const [x, y] of points) {
       if (matrix.get(x, y)) {
         black++;
@@ -4071,34 +4066,70 @@
    * @module Pattern
    */
   class Pattern extends Point {
-    #count;
+    #width;
+    #height;
+    #modules;
+    #rect;
+    #combined = 1;
     #moduleSize;
-    constructor(x, y, moduleSize, count = 1) {
+    constructor(x, y, width, height, modules) {
       super(x, y);
-      this.#count = count;
-      this.#moduleSize = moduleSize;
+      const halfWidth = width / 2;
+      const halfHeight = height / 2;
+      const xModuleSize = width / modules;
+      const yModuleSize = height / modules;
+      const xModuleSizeHalf = xModuleSize / 2;
+      const yModuleSizeHalf = yModuleSize / 2;
+      this.#width = width;
+      this.#height = height;
+      this.#modules = modules;
+      this.#rect = [
+        y - halfHeight + yModuleSizeHalf,
+        x + halfWidth - xModuleSizeHalf,
+        y + halfHeight - yModuleSizeHalf,
+        x - halfWidth + xModuleSizeHalf
+      ];
+      this.#moduleSize = [xModuleSize, yModuleSize];
     }
-    get count() {
-      return this.#count;
+    get width() {
+      return this.#width;
     }
-    get moduleSize() {
-      return this.#moduleSize;
+    get height() {
+      return this.#height;
     }
-    combine(x, y, moduleSize) {
-      const count = this.#count;
-      const combinedCount = count + 1;
-      const combinedX = (count * this.x + x) / combinedCount;
-      const combinedY = (count * this.y + y) / combinedCount;
-      const combinedModuleSize = (count * this.#moduleSize + moduleSize) / combinedCount;
-      return new Pattern(combinedX, combinedY, combinedModuleSize, combinedCount);
+    get combined() {
+      return this.#combined;
     }
-    equals(x, y, moduleSize) {
-      if (Math.abs(x - this.x) <= moduleSize && Math.abs(y - this.y) <= moduleSize) {
-        const currentModuleSize = this.#moduleSize;
-        const moduleSizeDiff = Math.abs(moduleSize - currentModuleSize);
-        return moduleSizeDiff < 1 || moduleSizeDiff <= currentModuleSize;
+    get rect() {
+      return this.#rect;
+    }
+    equals(x, y, width, height) {
+      const modules = this.#modules;
+      const xModuleSize = width / modules;
+      const yModuleSize = height / modules;
+      if (Math.abs(x - this.x) <= xModuleSize && Math.abs(y - this.y) <= yModuleSize) {
+        const [xModuleSizeThis, yModuleSizeThis] = this.#moduleSize;
+        const xModuleSizeDiff = Math.abs(xModuleSize - xModuleSizeThis);
+        const yModuleSizeDiff = Math.abs(yModuleSize - yModuleSizeThis);
+        if (
+          (xModuleSizeDiff < 1 || xModuleSizeDiff <= xModuleSizeThis) &&
+          (yModuleSizeDiff < 1 || yModuleSizeDiff <= yModuleSizeThis)
+        ) {
+          return true;
+        }
       }
       return false;
+    }
+    combine(x, y, width, height) {
+      const combined = this.#combined;
+      const nextCombined = combined + 1;
+      const combinedX = (combined * this.x + x) / nextCombined;
+      const combinedY = (combined * this.y + y) / nextCombined;
+      const combinedWidth = (combined * this.#width + width) / nextCombined;
+      const combinedHeight = (combined * this.#height + height) / nextCombined;
+      const pattern = new Pattern(combinedX, combinedY, combinedWidth, combinedHeight, this.#modules);
+      pattern.#combined = nextCombined;
+      return pattern;
     }
   }
 
@@ -4108,12 +4139,12 @@
   class PatternMatcher {
     #matcher;
     #matrix;
-    #count;
+    #modules;
     #patterns = [];
-    constructor(matrix, count, matcher) {
-      this.#count = count;
+    constructor(matrix, modules, matcher) {
       this.#matrix = matrix;
       this.#matcher = matcher;
+      this.#modules = modules;
     }
     #isDiagonalPassed(x, y, maxCount) {
       const matrix = this.#matrix;
@@ -4150,19 +4181,18 @@
           if (offsetX >= 0 && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), maxCount)) {
             const width = getCountStateTotal(countStateHorizontal);
             const height = getCountStateTotal(countStateVertical);
-            const moduleSize = (width + height) / this.#count / 2;
             const patterns = this.#patterns;
             const { length } = patterns;
             for (let i = 0; i < length; i++) {
               const pattern = patterns[i];
               // Look for about the same center and module size
-              if (pattern.equals(offsetX, offsetY, moduleSize)) {
-                patterns[i] = pattern.combine(offsetX, offsetY, moduleSize);
+              if (pattern.equals(offsetX, offsetY, width, height)) {
+                patterns[i] = pattern.combine(offsetX, offsetY, width, height);
                 return true;
               }
             }
             // Hadn't found this before; save it
-            patterns.push(new Pattern(offsetX, offsetY, moduleSize));
+            patterns.push(new Pattern(offsetX, offsetY, width, height, this.#modules));
             return true;
           }
         }
@@ -4228,8 +4258,8 @@
       super(matrix, 7, isMatchFinderPattern);
     }
     groups() {
+      const patterns = this.patterns.filter(({ combined }) => combined >= 3);
       const finderPatternGroups = [];
-      const patterns = this.patterns.filter(({ count }) => count >= 3);
       const { length } = patterns;
       // Find enough finder patterns
       if (length >= 3) {
@@ -4238,20 +4268,28 @@
         // Max i2
         const maxI2 = length - 1;
         // Sort patterns
-        patterns.sort((pattern1, pattern2) => pattern2.moduleSize - pattern1.moduleSize);
+        patterns.sort((pattern1, pattern2) => pattern2.width - pattern1.width);
         for (let i1 = 0; i1 < maxI1; i1++) {
           const pattern1 = patterns[i1];
-          const moduleSize1 = pattern1.moduleSize;
+          const width1 = pattern1.width;
+          const height1 = pattern1.height;
           for (let i2 = i1 + 1; i2 < maxI2; i2++) {
             const pattern2 = patterns[i2];
-            const moduleSize2 = pattern2.moduleSize;
-            if (!isEqualsModuleSize(moduleSize1, moduleSize2)) {
+            const width2 = pattern2.width;
+            const height2 = pattern2.height;
+            if (!isEqualsEdge(width1, width2)) {
               break;
+            }
+            if (!isEqualsEdge(height1, height2)) {
+              continue;
             }
             for (let i3 = i2 + 1; i3 < length; i3++) {
               const pattern3 = patterns[i3];
-              if (!isEqualsModuleSize(moduleSize2, pattern3.moduleSize)) {
+              if (!isEqualsEdge(width2, pattern3.width)) {
                 break;
+              }
+              if (!isEqualsEdge(height2, pattern3.height)) {
+                continue;
               }
               const finderPatternGroup = new FinderPatternGroup([pattern1, pattern2, pattern3]);
               const { topLeft, topRight, bottomLeft } = finderPatternGroup;
@@ -4264,14 +4302,6 @@
               const hypotenuse = distance(topRight, bottomLeft);
               // Calculate the difference of the hypotenuse lengths in percent
               if (!isEqualsEdge(Math.sqrt(edge1 * edge1 + edge2 * edge2), hypotenuse)) {
-                continue;
-              }
-              // Check the sizes
-              const topLeftModuleSize = topLeft.moduleSize;
-              if (
-                !isValidModuleCount(edge1, (bottomLeft.moduleSize + topLeftModuleSize) / 2) ||
-                !isValidModuleCount(edge2, (topLeftModuleSize + topRight.moduleSize) / 2)
-              ) {
                 continue;
               }
               const { matrix } = this;
@@ -4316,8 +4346,9 @@
       const alignmentAreaBottomRight = new Point(alignmentAreaRightX, alignmentAreaBottomY);
       const alignmentAreaBottomLeft = new Point(alignmentAreaLeftX, alignmentAreaBottomY);
       const patterns = this.patterns.filter(pattern => {
+        const alignmentModuleSize = (pattern.width + pattern.height) / 10;
         return (
-          isEqualsModuleSize(pattern.moduleSize, moduleSize) &&
+          isEqualsModuleSize(alignmentModuleSize, moduleSize) &&
           isPointInQuadrangle(
             pattern,
             alignmentAreaTopLeft,

@@ -14,13 +14,13 @@ export interface Matcher {
 export class PatternMatcher {
   #matcher: Matcher;
   #matrix: BitMatrix;
-  #count: number;
+  #modules: number;
   #patterns: Pattern[] = [];
 
-  constructor(matrix: BitMatrix, count: number, matcher: Matcher) {
-    this.#count = count;
+  constructor(matrix: BitMatrix, modules: number, matcher: Matcher) {
     this.#matrix = matrix;
     this.#matcher = matcher;
+    this.#modules = modules;
   }
 
   #isDiagonalPassed(x: number, y: number, maxCount: number): boolean {
@@ -68,7 +68,6 @@ export class PatternMatcher {
         if (offsetX >= 0 && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), maxCount)) {
           const width = getCountStateTotal(countStateHorizontal);
           const height = getCountStateTotal(countStateVertical);
-          const moduleSize = (width + height) / this.#count / 2;
           const patterns = this.#patterns;
           const { length } = patterns;
 
@@ -76,15 +75,15 @@ export class PatternMatcher {
             const pattern = patterns[i];
 
             // Look for about the same center and module size
-            if (pattern.equals(offsetX, offsetY, moduleSize)) {
-              patterns[i] = pattern.combine(offsetX, offsetY, moduleSize);
+            if (pattern.equals(offsetX, offsetY, width, height)) {
+              patterns[i] = pattern.combine(offsetX, offsetY, width, height);
 
               return true;
             }
           }
 
           // Hadn't found this before; save it
-          patterns.push(new Pattern(offsetX, offsetY, moduleSize));
+          patterns.push(new Pattern(offsetX, offsetY, width, height, this.#modules));
 
           return true;
         }

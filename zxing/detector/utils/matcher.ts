@@ -254,7 +254,9 @@ export function checkRepeatPixelsInLine(matrix: BitMatrix, pattern1: Pattern, pa
   let white = 0;
 
   const points = new PlotLine(pattern1, pattern2).points();
-  const maxRepeat = (pattern1.moduleSize + pattern2.moduleSize) * 10;
+  const moduleSize1 = (pattern1.width + pattern1.height) / 14;
+  const moduleSize2 = (pattern2.width + pattern2.height) / 14;
+  const maxRepeat = (moduleSize1 + moduleSize2) * 10;
 
   for (const [x, y] of points) {
     if (matrix.get(x, y)) {
@@ -286,33 +288,53 @@ function isObtuseAngle(start: Point, middle: Point, end: Point): boolean {
 }
 
 export function calcTimingPoints(start: Pattern, end: Pattern, anchor: Pattern): [start: Point, end: Point] {
-  const endX = end.x;
-  const endY = end.y;
-  const startX = start.x;
-  const startY = start.y;
-  const anchorX = anchor.x;
-  const anchorY = anchor.y;
+  const { x: endX, y: endY } = end;
+  const { x: startX, y: startY } = start;
+  const { x: anchorX, y: anchorY } = anchor;
+  const obtuse = isObtuseAngle(end, start, anchor);
   const endXRatio = calcTimingRatio(endX, anchorX);
   const endYRatio = calcTimingRatio(endY, anchorY);
   const startXRatio = calcTimingRatio(startX, anchorX);
   const startYRatio = calcTimingRatio(startY, anchorY);
-  const obtuseAngle = isObtuseAngle(end, start, anchor);
-  const endXOffsetValue = endXRatio * end.moduleSize * 3;
-  const endYOffsetValue = endYRatio * end.moduleSize * 3;
-  const startXOffsetValue = startXRatio * start.moduleSize * 3;
-  const startYOffsetValue = startYRatio * start.moduleSize * 3;
   const steepStarEnd = Math.abs(endY - startY) > Math.abs(endX - startX);
   const steepStarAnchor = Math.abs(anchorY - startY) > Math.abs(anchorX - startX);
 
-  if (obtuseAngle && steepStarAnchor === steepStarEnd) {
+  const getPointXByRatio = ({ x, rect }: Pattern, ratio: number): number => {
+    const [, right, , left] = rect;
+
+    return ratio > 0 ? right : ratio < 0 ? left : x;
+  };
+
+  const getPointYByRatio = ({ y, rect }: Pattern, ratio: number): number => {
+    const [top, , bottom] = rect;
+
+    return ratio > 0 ? bottom : ratio < 0 ? top : y;
+  };
+
+  if (obtuse && steepStarAnchor === steepStarEnd) {
     return [
-      new Point(steepStarEnd ? startX : startX + startXOffsetValue, steepStarEnd ? start.y + startYOffsetValue : start.y),
-      new Point(steepStarEnd ? endX : endX + endXOffsetValue, steepStarEnd ? end.y + endYOffsetValue : end.y)
+      new Point(
+        //
+        steepStarEnd ? startX : getPointXByRatio(start, startXRatio),
+        steepStarEnd ? getPointYByRatio(start, startYRatio) : start.y
+      ),
+      new Point(
+        //
+        steepStarEnd ? endX : getPointXByRatio(end, endXRatio),
+        steepStarEnd ? getPointYByRatio(end, endYRatio) : end.y
+      )
     ];
   }
 
   return [
-    new Point(steepStarEnd ? startX + startXOffsetValue : startX, steepStarEnd ? start.y : start.y + startYOffsetValue),
-    new Point(steepStarEnd ? endX + endXOffsetValue : endX, steepStarEnd ? end.y : end.y + endYOffsetValue)
+    new Point(
+      steepStarEnd ? getPointXByRatio(start, startXRatio) : startX,
+      steepStarEnd ? start.y : getPointYByRatio(start, startYRatio)
+    ),
+    new Point(
+      //
+      steepStarEnd ? getPointXByRatio(end, endXRatio) : endX,
+      steepStarEnd ? end.y : getPointYByRatio(end, endYRatio)
+    )
   ];
 }

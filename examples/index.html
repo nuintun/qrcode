@@ -294,10 +294,12 @@
         return imageData || context.getImageData(0, 0, canvas.width, canvas.height);
       }
 
-      function markFinderPattern({ x, y, moduleSize }, color) {
+      function markFinderPattern({ x, y, width, height }, color) {
         context.save();
 
         context.fillStyle = color;
+
+        const moduleSize = (width + height) / 14;
 
         context.beginPath();
         context.arc(x, y, moduleSize * 0.6, 0, 2 * Math.PI);
@@ -384,35 +386,87 @@
         return round(edge1 * edge1 + edge2 * edge2) < round(edge3 * edge3);
       }
 
+      // function calcTimingPoints(start, end, anchor) {
+      //   const endX = end.x;
+      //   const endY = end.y;
+      //   const startX = start.x;
+      //   const startY = start.y;
+      //   const anchorX = anchor.x;
+      //   const anchorY = anchor.y;
+      //   const endXRatio = calcTimingRatio(endX, anchorX);
+      //   const endYRatio = calcTimingRatio(endY, anchorY);
+      //   const startXRatio = calcTimingRatio(startX, anchorX);
+      //   const startYRatio = calcTimingRatio(startY, anchorY);
+      //   const obtuseAngle = isObtuseAngle(end, start, anchor);
+      //   const endXOffsetValue = endXRatio * end.moduleSize * 3;
+      //   const endYOffsetValue = endYRatio * end.moduleSize * 3;
+      //   const startXOffsetValue = startXRatio * start.moduleSize * 3;
+      //   const startYOffsetValue = startYRatio * start.moduleSize * 3;
+      //   const steepStarEnd = Math.abs(endY - startY) > Math.abs(endX - startX);
+      //   const steepStarAnchor = Math.abs(anchorY - startY) > Math.abs(anchorX - startX);
+
+      //   if (obtuseAngle && steepStarAnchor === steepStarEnd) {
+      //     return [
+      //       new Point(steepStarEnd ? startX : startX + startXOffsetValue, steepStarEnd ? start.y + startYOffsetValue : start.y),
+      //       new Point(steepStarEnd ? endX : endX + endXOffsetValue, steepStarEnd ? end.y + endYOffsetValue : end.y)
+      //     ];
+      //   }
+
+      //   return [
+      //     new Point(steepStarEnd ? startX + startXOffsetValue : startX, steepStarEnd ? start.y : start.y + startYOffsetValue),
+      //     new Point(steepStarEnd ? endX + endXOffsetValue : endX, steepStarEnd ? end.y : end.y + endYOffsetValue)
+      //   ];
+      // }
+
       function calcTimingPoints(start, end, anchor) {
-        const endX = end.x;
-        const endY = end.y;
-        const startX = start.x;
-        const startY = start.y;
-        const anchorX = anchor.x;
-        const anchorY = anchor.y;
+        const { x: endX, y: endY } = end;
+        const { x: startX, y: startY } = start;
+        const { x: anchorX, y: anchorY } = anchor;
+        const obtuse = isObtuseAngle(end, start, anchor);
         const endXRatio = calcTimingRatio(endX, anchorX);
         const endYRatio = calcTimingRatio(endY, anchorY);
         const startXRatio = calcTimingRatio(startX, anchorX);
         const startYRatio = calcTimingRatio(startY, anchorY);
-        const obtuseAngle = isObtuseAngle(end, start, anchor);
-        const endXOffsetValue = endXRatio * end.moduleSize * 3;
-        const endYOffsetValue = endYRatio * end.moduleSize * 3;
-        const startXOffsetValue = startXRatio * start.moduleSize * 3;
-        const startYOffsetValue = startYRatio * start.moduleSize * 3;
         const steepStarEnd = Math.abs(endY - startY) > Math.abs(endX - startX);
         const steepStarAnchor = Math.abs(anchorY - startY) > Math.abs(anchorX - startX);
 
-        if (obtuseAngle && steepStarAnchor === steepStarEnd) {
+        const getPointXByRatio = ({ x, rect }, ratio) => {
+          const [, right, , left] = rect;
+
+          return ratio > 0 ? right : ratio < 0 ? left : x;
+        };
+
+        const getPointYByRatio = ({ y, rect }, ratio) => {
+          const [top, , bottom] = rect;
+
+          return ratio > 0 ? bottom : ratio < 0 ? top : y;
+        };
+
+        if (obtuse && steepStarAnchor === steepStarEnd) {
           return [
-            new Point(steepStarEnd ? startX : startX + startXOffsetValue, steepStarEnd ? start.y + startYOffsetValue : start.y),
-            new Point(steepStarEnd ? endX : endX + endXOffsetValue, steepStarEnd ? end.y + endYOffsetValue : end.y)
+            new Point(
+              //
+              steepStarEnd ? startX : getPointXByRatio(start, startXRatio),
+              steepStarEnd ? getPointYByRatio(start, startYRatio) : start.y
+            ),
+            new Point(
+              //
+              steepStarEnd ? endX : getPointXByRatio(end, endXRatio),
+              steepStarEnd ? getPointYByRatio(end, endYRatio) : end.y
+            )
           ];
         }
 
         return [
-          new Point(steepStarEnd ? startX + startXOffsetValue : startX, steepStarEnd ? start.y : start.y + startYOffsetValue),
-          new Point(steepStarEnd ? endX + endXOffsetValue : endX, steepStarEnd ? end.y : end.y + endYOffsetValue)
+          new Point(
+            steepStarEnd ? getPointXByRatio(start, startXRatio) : startX,
+            steepStarEnd ? start.y : getPointYByRatio(start, startYRatio)
+          ),
+          new Point(
+            //
+            steepStarEnd ? getPointXByRatio(end, endXRatio) : endX,
+            steepStarEnd ? end.y : getPointYByRatio(end, endYRatio)
+          )
         ];
       }
 

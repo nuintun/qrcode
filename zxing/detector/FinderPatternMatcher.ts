@@ -2,17 +2,11 @@
  * @module FinderPatternMatcher
  */
 
-import {
-  checkRepeatPixelsInLine,
-  isEqualsEdge,
-  isEqualsModuleSize,
-  isMatchFinderPattern,
-  isValidModuleCount
-} from './utils/matcher';
 import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
 import { PatternMatcher } from './PatternMatcher';
 import { FinderPatternGroup } from './FinderPatternGroup';
+import { checkRepeatPixelsInLine, isEqualsEdge, isMatchFinderPattern } from './utils/matcher';
 
 export class FinderPatternMatcher extends PatternMatcher {
   constructor(matrix: BitMatrix) {
@@ -20,8 +14,8 @@ export class FinderPatternMatcher extends PatternMatcher {
   }
 
   public groups(): FinderPatternGroup[] {
+    const patterns = this.patterns.filter(({ combined }) => combined >= 3);
     const finderPatternGroups: FinderPatternGroup[] = [];
-    const patterns = this.patterns.filter(({ count }) => count >= 3);
     const { length } = patterns;
 
     // Find enough finder patterns
@@ -32,24 +26,35 @@ export class FinderPatternMatcher extends PatternMatcher {
       const maxI2 = length - 1;
 
       // Sort patterns
-      patterns.sort((pattern1, pattern2) => pattern2.moduleSize - pattern1.moduleSize);
+      patterns.sort((pattern1, pattern2) => pattern2.width - pattern1.width);
 
       for (let i1 = 0; i1 < maxI1; i1++) {
         const pattern1 = patterns[i1];
-        const moduleSize1 = pattern1.moduleSize;
+        const width1 = pattern1.width;
+        const height1 = pattern1.height;
 
         for (let i2 = i1 + 1; i2 < maxI2; i2++) {
           const pattern2 = patterns[i2];
-          const moduleSize2 = pattern2.moduleSize;
+          const width2 = pattern2.width;
+          const height2 = pattern2.height;
 
-          if (!isEqualsModuleSize(moduleSize1, moduleSize2)) {
+          if (!isEqualsEdge(width1, width2)) {
             break;
+          }
+
+          if (!isEqualsEdge(height1, height2)) {
+            continue;
           }
 
           for (let i3 = i2 + 1; i3 < length; i3++) {
             const pattern3 = patterns[i3];
-            if (!isEqualsModuleSize(moduleSize2, pattern3.moduleSize)) {
+
+            if (!isEqualsEdge(width2, pattern3.width)) {
               break;
+            }
+
+            if (!isEqualsEdge(height2, pattern3.height)) {
+              continue;
             }
 
             const finderPatternGroup = new FinderPatternGroup([pattern1, pattern2, pattern3]);
@@ -63,17 +68,9 @@ export class FinderPatternMatcher extends PatternMatcher {
             }
 
             const hypotenuse = distance(topRight, bottomLeft);
+
             // Calculate the difference of the hypotenuse lengths in percent
             if (!isEqualsEdge(Math.sqrt(edge1 * edge1 + edge2 * edge2), hypotenuse)) {
-              continue;
-            }
-
-            // Check the sizes
-            const topLeftModuleSize = topLeft.moduleSize;
-            if (
-              !isValidModuleCount(edge1, (bottomLeft.moduleSize + topLeftModuleSize) / 2) ||
-              !isValidModuleCount(edge2, (topLeftModuleSize + topRight.moduleSize) / 2)
-            ) {
               continue;
             }
 

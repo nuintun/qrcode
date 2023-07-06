@@ -34,8 +34,10 @@ export class AlignmentPatternMatcher extends PatternMatcher {
     const alignmentAreaBottomLeft = new Point(alignmentAreaLeftX, alignmentAreaBottomY);
 
     const patterns = this.patterns.filter(pattern => {
+      const alignmentModuleSize = (pattern.width + pattern.height) / 10;
+
       return (
-        isEqualsModuleSize(pattern.moduleSize, moduleSize) &&
+        isEqualsModuleSize(alignmentModuleSize, moduleSize) &&
         isPointInQuadrangle(
           pattern,
           alignmentAreaTopLeft,
