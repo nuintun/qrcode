@@ -317,11 +317,11 @@ export function calcTimingPoints(start: Pattern, end: Pattern, control: Pattern,
 }
 
 function isInvalidTimingLine(countState: number[]): boolean {
-  countState.sort((a, b) => b - a);
-
   if (countState.length < 4) {
     return true;
   }
+
+  countState = countState.slice(1, -1).sort((a, b) => b - a);
 
   if (countState[1] / countState[countState.length - 2] > 5) {
     return true;
