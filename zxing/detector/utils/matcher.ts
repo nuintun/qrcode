@@ -256,11 +256,10 @@ function getTimingPointYAxis({ y, rect }: Pattern, ratio: number) {
   return ratio > 0 ? bottom : ratio < 0 ? top : y;
 }
 
-export function calculateTimingPoints(start: Pattern, end: Pattern, control: Pattern, isVertical?: boolean): TimingPoints {
+export function calculateTimingPoints(start: Pattern, end: Pattern, control: Point, isVertical?: boolean): TimingPoints {
   const { x: endX, y: endY } = end;
   const { x: startX, y: startY } = start;
-  const controlX = control.x + end.x - startX;
-  const controlY = control.y + end.y - startY;
+  const { x: controlX, y: controlY } = control;
   const xRatio = calculateTimingRatio(startX, controlX);
   const yRatio = calculateTimingRatio(startY, controlY);
   const endXTranslate = getTimingPointXAxis(end, xRatio);
@@ -295,9 +294,15 @@ export function checkPixelsInTimingLine(
   isVertical?: boolean
 ) {
   const countState = [];
+  const bottomRight = new Point(
+    // Bottom right x
+    topRight.x + bottomLeft.x - topLeft.x,
+    // Bottom right y
+    topRight.y + bottomLeft.y - topLeft.y
+  );
   const [start, end] = isVertical
-    ? calculateTimingPoints(topLeft, bottomLeft, topRight, true)
-    : calculateTimingPoints(topLeft, topRight, bottomLeft);
+    ? calculateTimingPoints(topLeft, bottomLeft, bottomRight, true)
+    : calculateTimingPoints(topLeft, topRight, bottomRight);
   const points = new PlotLine(start, end).points();
 
   let count = 0;
