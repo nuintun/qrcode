@@ -323,7 +323,7 @@ function isInvalidTimingLine(countState: number[]): boolean {
     return true;
   }
 
-  if (countState[1] / countState[countState.length - 2] > 4) {
+  if (countState[1] / countState[countState.length - 2] > 5) {
     return true;
   }
 

@@ -3670,7 +3670,7 @@
     if (countState.length < 4) {
       return true;
     }
-    if (countState[1] / countState[countState.length - 2] > 4) {
+    if (countState[1] / countState[countState.length - 2] > 5) {
       return true;
     }
     return false;
