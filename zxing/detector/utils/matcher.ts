@@ -282,12 +282,8 @@ export function calculateTimingLine(start: Pattern, end: Pattern, control: Patte
 function isValidTimingLine(countState: number[]): boolean {
   const { length } = countState;
 
-  if (length >= 5) {
-    if (length === 5) {
-      return true;
-    }
-
-    countState = countState.slice(2, -2).sort((a, b) => b - a);
+  if (length >= 4) {
+    countState = countState.slice(1, -1).sort((a, b) => b - a);
 
     return countState[0] / countState[countState.length - 1] <= 5;
   }
