@@ -454,8 +454,8 @@
               }
 
               console.time('calcTimingPoints');
-              const [x1, x2] = calculateTimingLine(topLeft, topRight, bottomLeft);
-              const [x3, x4] = calculateTimingLine(topLeft, bottomLeft, topRight, true);
+              const [x1, x2] = QRCode.calculateTimingLine(topLeft, topRight, bottomLeft);
+              const [x3, x4] = QRCode.calculateTimingLine(topLeft, bottomLeft, topRight, true);
               console.timeEnd('calcTimingPoints');
 
               drawLine(x1, x2, '#00ff00');
