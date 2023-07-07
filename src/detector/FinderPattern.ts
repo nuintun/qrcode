@@ -5,7 +5,12 @@
 import { ResultPoint } from './ResultPoint';
 
 export class FinderPattern extends ResultPoint {
-  public constructor(x: number, y: number, private estimatedModuleSize: number, private count: number = 1) {
+  public constructor(
+    x: number,
+    y: number,
+    private estimatedModuleSize: number,
+    private count: number = 1
+  ) {
     super(x, y);
   }
 
