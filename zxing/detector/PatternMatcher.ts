@@ -12,33 +12,41 @@ export interface Matcher {
 }
 
 export class PatternMatcher {
+  #strict?: boolean;
   #matcher: Matcher;
   #matrix: BitMatrix;
   #modules: number;
   #patterns: Pattern[] = [];
 
-  constructor(matrix: BitMatrix, modules: number, matcher: Matcher) {
+  constructor(matrix: BitMatrix, modules: number, matcher: Matcher, strict?: boolean) {
     this.#matrix = matrix;
+    this.#strict = strict;
     this.#matcher = matcher;
     this.#modules = modules;
   }
 
   #isDiagonalPassed(x: number, y: number, maxCount: number): boolean {
     const matrix = this.#matrix;
+    const strict = this.#strict;
     const matcher = this.#matcher;
 
-    return (
-      checkDiagonalPattern(matrix, x, y, maxCount, true, matcher) &&
-      checkDiagonalPattern(matrix, x, y, maxCount, false, matcher)
-    );
+    if (checkDiagonalPattern(matrix, x, y, maxCount, matcher)) {
+      if (strict) {
+        return checkDiagonalPattern(matrix, x, y, maxCount, matcher, true);
+      }
+
+      return true;
+    }
+
+    return false;
   }
 
   #crossAlignVertical(x: number, y: number, maxCount: number): ReturnType<typeof alignCrossPattern> {
-    return alignCrossPattern(this.#matrix, x, y, maxCount, false, this.#matcher);
+    return alignCrossPattern(this.#matrix, x, y, maxCount, this.#matcher, true);
   }
 
   #crossAlignHorizontal(x: number, y: number, maxCount: number): ReturnType<typeof alignCrossPattern> {
-    return alignCrossPattern(this.#matrix, x, y, maxCount, true, this.#matcher);
+    return alignCrossPattern(this.#matrix, x, y, maxCount, this.#matcher);
   }
 
   public get matcher(): Matcher {

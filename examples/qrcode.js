@@ -652,15 +652,15 @@
     return matrix.get(x, y) === 1;
   }
   // Helper function for applyMaskPenaltyRule1. We need this for doing this calculation in both
-  // vertical and horizontal orders respectively.
-  function applyMaskPenaltyRule1Internal(matrix, isHorizontal) {
+  // horizontal and vertical orders respectively.
+  function applyMaskPenaltyRule1Internal(matrix, isVertical) {
     let penalty = 0;
     const { size } = matrix;
     for (let y = 0; y < size; y++) {
       let prevBit = -1;
       let numSameBitCells = 0;
       for (let x = 0; x < size; x++) {
-        const bit = isHorizontal ? matrix.get(x, y) : matrix.get(y, x);
+        const bit = isVertical ? matrix.get(y, x) : matrix.get(x, y);
         if (bit === prevBit) {
           numSameBitCells++;
         } else {
@@ -682,7 +682,7 @@
   // Apply mask penalty rule 1 and return the penalty. Find repetitive cells with the same color and
   // give penalty to them. Example: 00000 or 11111.
   function applyMaskPenaltyRule1(matrix) {
-    return applyMaskPenaltyRule1Internal(matrix, true) + applyMaskPenaltyRule1Internal(matrix, false);
+    return applyMaskPenaltyRule1Internal(matrix) + applyMaskPenaltyRule1Internal(matrix, true);
   }
   // Apply mask penalty rule 2 and return the penalty. Find 2x2 blocks with the same color and give
   // penalty to them. This is actually equivalent to the spec's rule, which is to find MxN blocks and give a
@@ -706,12 +706,12 @@
     return penalty;
   }
   // Is is four white, check on horizontal and vertical.
-  function isFourWhite(matrix, offset, from, to, isHorizontal) {
+  function isFourWhite(matrix, offset, from, to, isVertical) {
     if (from < 0 || to > matrix.size) {
       return false;
     }
     for (let i = from; i < to; i++) {
-      if (isHorizontal ? isDark(matrix, i, offset) : isDark(matrix, offset, i)) {
+      if (isVertical ? isDark(matrix, offset, i) : isDark(matrix, i, offset)) {
         return false;
       }
     }
@@ -735,7 +735,7 @@
           isDark(matrix, x + 4, y) &&
           !isDark(matrix, x + 5, y) &&
           isDark(matrix, x + 6, y) &&
-          (isFourWhite(matrix, y, x - 4, x, true) || isFourWhite(matrix, y, x + 7, x + 11, true))
+          (isFourWhite(matrix, y, x - 4, x) || isFourWhite(matrix, y, x + 7, x + 11))
         ) {
           numPenalties++;
         }
@@ -749,7 +749,7 @@
           isDark(matrix, x, y + 4) &&
           !isDark(matrix, x, y + 5) &&
           isDark(matrix, x, y + 6) &&
-          (isFourWhite(matrix, x, y - 4, y, false) || isFourWhite(matrix, x, y + 7, y + 11, false))
+          (isFourWhite(matrix, x, y - 4, y, true) || isFourWhite(matrix, x, y + 7, y + 11, true))
         ) {
           numPenalties++;
         }
@@ -3578,11 +3578,11 @@
   function isEqualsAlignmentModuleSize(moduleSize1, moduleSize2) {
     return Math.abs(moduleSize1 - moduleSize2) <= (moduleSize1 + moduleSize2) / 2;
   }
-  function alignCrossPattern(matrix, x, y, maxCount, isHorizontal, checker) {
-    let offset = isHorizontal ? x : y;
+  function alignCrossPattern(matrix, x, y, maxCount, checker, isVertical) {
+    let offset = isVertical ? y : x;
     const countState = [0, 0, 0, 0, 0];
     const isBlackPixel = () => {
-      return isHorizontal ? matrix.get(offset, y) : matrix.get(x, offset);
+      return isVertical ? matrix.get(x, offset) : matrix.get(offset, y);
     };
     while (offset >= 0 && isBlackPixel()) {
       offset--;
@@ -3596,8 +3596,8 @@
       offset--;
       countState[0]++;
     }
-    offset = (isHorizontal ? x : y) + 1;
-    const size = isHorizontal ? matrix.width : matrix.height;
+    offset = (isVertical ? y : x) + 1;
+    const size = isVertical ? matrix.height : matrix.width;
     while (offset < size && isBlackPixel()) {
       offset++;
       countState[2]++;
@@ -3612,7 +3612,7 @@
     }
     return [checker(countState) ? centerFromEnd(countState, offset) : NaN, countState];
   }
-  function checkDiagonalPattern(matrix, x, y, maxCount, isBackslash, checker) {
+  function checkDiagonalPattern(matrix, x, y, maxCount, checker, isBackslash) {
     let offset = 0;
     const countState = [0, 0, 0, 0, 0];
     const isBlackPixel = isUpward => {
@@ -3664,7 +3664,7 @@
     const [top, , bottom] = rect;
     return ratio > 0 ? bottom : ratio < 0 ? top : y;
   }
-  function calculateTimingPoints(start, end, control, isHorizontal) {
+  function calculateTimingPoints(start, end, control, isVertical) {
     const { x: endX, y: endY } = end;
     const { x: startX, y: startY } = start;
     const controlX = control.x + end.x - startX;
@@ -3678,7 +3678,7 @@
     if (xRatio === 0 || yRatio === 0) {
       return [new Point(startXTranslate, startYTranslate), new Point(endXTranslate, endYTranslate)];
     }
-    if (isHorizontal ? xRatio === yRatio : xRatio !== yRatio) {
+    if (isVertical ? xRatio !== yRatio : xRatio === yRatio) {
       return [new Point(startX, startYTranslate), new Point(endX, endYTranslate)];
     }
     return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
@@ -3690,11 +3690,11 @@
     }
     return false;
   }
-  function checkPixelsInTimingLine(matrix, { topLeft, topRight, bottomLeft }, isHorizontal) {
+  function checkPixelsInTimingLine(matrix, { topLeft, topRight, bottomLeft }, isVertical) {
     const countState = [];
-    const [start, end] = isHorizontal
-      ? calculateTimingPoints(topLeft, topRight, bottomLeft, isHorizontal)
-      : calculateTimingPoints(topLeft, bottomLeft, topRight);
+    const [start, end] = isVertical
+      ? calculateTimingPoints(topLeft, bottomLeft, topRight, true)
+      : calculateTimingPoints(topLeft, topRight, bottomLeft);
     const points = new PlotLine(start, end).points();
     let count = 0;
     let lastBit = matrix.get(toInt32(start.x), toInt32(start.y));
@@ -4163,16 +4163,20 @@
     equals(x, y, width, height) {
       const modules = this.#modules;
       const xModuleSize = width / modules;
-      const yModuleSize = height / modules;
-      if (Math.abs(x - this.x) <= xModuleSize && Math.abs(y - this.y) <= yModuleSize) {
-        const [xModuleSizeThis, yModuleSizeThis] = this.#moduleSize;
+      if (Math.abs(x - this.x) <= xModuleSize) {
+        const moduleSize = this.#moduleSize;
+        const [xModuleSizeThis] = moduleSize;
         const xModuleSizeDiff = Math.abs(xModuleSize - xModuleSizeThis);
-        const yModuleSizeDiff = Math.abs(yModuleSize - yModuleSizeThis);
-        if (
-          (xModuleSizeDiff < 1 || xModuleSizeDiff <= xModuleSizeThis) &&
-          (yModuleSizeDiff < 1 || yModuleSizeDiff <= yModuleSizeThis)
-        ) {
-          return true;
+        if (xModuleSizeDiff >= 1 && xModuleSizeDiff > xModuleSizeThis) {
+          return false;
+        }
+        const yModuleSize = height / modules;
+        if (Math.abs(y - this.y) <= yModuleSize) {
+          const [, yModuleSizeThis] = moduleSize;
+          const yModuleSizeDiff = Math.abs(yModuleSize - yModuleSizeThis);
+          if (yModuleSizeDiff < 1 || yModuleSizeDiff <= yModuleSizeThis) {
+            return true;
+          }
         }
       }
       return false;
@@ -4194,28 +4198,34 @@
    * @module PatternMatcher
    */
   class PatternMatcher {
+    #strict;
     #matcher;
     #matrix;
     #modules;
     #patterns = [];
-    constructor(matrix, modules, matcher) {
+    constructor(matrix, modules, matcher, strict) {
       this.#matrix = matrix;
+      this.#strict = strict;
       this.#matcher = matcher;
       this.#modules = modules;
     }
     #isDiagonalPassed(x, y, maxCount) {
       const matrix = this.#matrix;
+      const strict = this.#strict;
       const matcher = this.#matcher;
-      return (
-        checkDiagonalPattern(matrix, x, y, maxCount, true, matcher) &&
-        checkDiagonalPattern(matrix, x, y, maxCount, false, matcher)
-      );
+      if (checkDiagonalPattern(matrix, x, y, maxCount, matcher)) {
+        if (strict) {
+          return checkDiagonalPattern(matrix, x, y, maxCount, matcher, true);
+        }
+        return true;
+      }
+      return false;
     }
     #crossAlignVertical(x, y, maxCount) {
-      return alignCrossPattern(this.#matrix, x, y, maxCount, false, this.#matcher);
+      return alignCrossPattern(this.#matrix, x, y, maxCount, this.#matcher, true);
     }
     #crossAlignHorizontal(x, y, maxCount) {
-      return alignCrossPattern(this.#matrix, x, y, maxCount, true, this.#matcher);
+      return alignCrossPattern(this.#matrix, x, y, maxCount, this.#matcher);
     }
     get matcher() {
       return this.#matcher;
@@ -4311,8 +4321,8 @@
    * @module FinderPatternMatcher
    */
   class FinderPatternMatcher extends PatternMatcher {
-    constructor(matrix) {
-      super(matrix, 7, isMatchFinderPattern);
+    constructor(matrix, strict) {
+      super(matrix, 7, isMatchFinderPattern, strict);
     }
     groups() {
       const patterns = this.patterns.filter(({ combined }) => combined >= 3);
@@ -4381,8 +4391,8 @@
    * @module AlignmentPatternMatcher
    */
   class AlignmentPatternMatcher extends PatternMatcher {
-    constructor(matrix) {
-      super(matrix, 5, isMatchAlignmentPattern);
+    constructor(matrix, strict) {
+      super(matrix, 5, isMatchAlignmentPattern, strict);
     }
     filter({ topLeft, topRight, bottomLeft }, size, moduleSize) {
       const { matrix } = this;
@@ -4436,9 +4446,9 @@
     }
     detect(matrix) {
       const { width, height } = matrix;
-      const { transform } = this.#options;
-      const finderMatcher = new FinderPatternMatcher(matrix);
-      const alignmentMatcher = new AlignmentPatternMatcher(matrix);
+      const { strict, transform } = this.#options;
+      const finderMatcher = new FinderPatternMatcher(matrix, strict);
+      const alignmentMatcher = new AlignmentPatternMatcher(matrix, strict);
       const match = (x, y, lastBit, countState, count) => {
         setCountState(countState, count);
         // Match pattern

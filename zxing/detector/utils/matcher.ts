@@ -132,14 +132,14 @@ export function alignCrossPattern(
   x: number,
   y: number,
   maxCount: number,
-  isHorizontal: boolean,
-  checker: (countState: number[]) => boolean
+  checker: (countState: number[]) => boolean,
+  isVertical?: boolean
 ): [offset: number, countState: number[]] {
-  let offset = isHorizontal ? x : y;
+  let offset = isVertical ? y : x;
 
   const countState = [0, 0, 0, 0, 0];
   const isBlackPixel = (): number => {
-    return isHorizontal ? matrix.get(offset, y) : matrix.get(x, offset);
+    return isVertical ? matrix.get(x, offset) : matrix.get(offset, y);
   };
 
   while (offset >= 0 && isBlackPixel()) {
@@ -157,9 +157,9 @@ export function alignCrossPattern(
     countState[0]++;
   }
 
-  offset = (isHorizontal ? x : y) + 1;
+  offset = (isVertical ? y : x) + 1;
 
-  const size = isHorizontal ? matrix.width : matrix.height;
+  const size = isVertical ? matrix.height : matrix.width;
 
   while (offset < size && isBlackPixel()) {
     offset++;
@@ -184,8 +184,8 @@ export function checkDiagonalPattern(
   x: number,
   y: number,
   maxCount: number,
-  isBackslash: boolean,
-  checker: (countState: number[]) => boolean
+  checker: (countState: number[]) => boolean,
+  isBackslash?: boolean
 ): boolean {
   let offset = 0;
 
@@ -238,32 +238,6 @@ export function checkDiagonalPattern(
   return checker(countState);
 }
 
-export function checkRepeatPixelsInLine(matrix: BitMatrix, pattern1: Pattern, pattern2: Pattern): boolean {
-  let black = 0;
-  let white = 0;
-
-  const points = new PlotLine(pattern1, pattern2).points();
-  const moduleSize1 = (pattern1.width + pattern1.height) / 14;
-  const moduleSize2 = (pattern2.width + pattern2.height) / 14;
-  const maxRepeat = (moduleSize1 + moduleSize2) * 10;
-
-  for (const [x, y] of points) {
-    if (matrix.get(x, y)) {
-      black++;
-      white = 0;
-    } else {
-      white++;
-      black = 0;
-    }
-
-    if (white > maxRepeat || black > maxRepeat) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 export type TimingPoints = [start: Point, end: Point];
 
 function calculateTimingRatio(axis: number, control: number) {
@@ -282,7 +256,7 @@ function getTimingPointYAxis({ y, rect }: Pattern, ratio: number) {
   return ratio > 0 ? bottom : ratio < 0 ? top : y;
 }
 
-export function calculateTimingPoints(start: Pattern, end: Pattern, control: Pattern, isHorizontal?: boolean): TimingPoints {
+export function calculateTimingPoints(start: Pattern, end: Pattern, control: Pattern, isVertical?: boolean): TimingPoints {
   const { x: endX, y: endY } = end;
   const { x: startX, y: startY } = start;
   const controlX = control.x + end.x - startX;
@@ -298,7 +272,7 @@ export function calculateTimingPoints(start: Pattern, end: Pattern, control: Pat
     return [new Point(startXTranslate, startYTranslate), new Point(endXTranslate, endYTranslate)];
   }
 
-  if (isHorizontal ? xRatio === yRatio : xRatio !== yRatio) {
+  if (isVertical ? xRatio !== yRatio : xRatio === yRatio) {
     return [new Point(startX, startYTranslate), new Point(endX, endYTranslate)];
   }
 
@@ -318,12 +292,12 @@ function isValidTimingLine(countState: number[]): boolean {
 export function checkPixelsInTimingLine(
   matrix: BitMatrix,
   { topLeft, topRight, bottomLeft }: FinderPatternGroup,
-  isHorizontal?: boolean
+  isVertical?: boolean
 ) {
   const countState = [];
-  const [start, end] = isHorizontal
-    ? calculateTimingPoints(topLeft, topRight, bottomLeft, isHorizontal)
-    : calculateTimingPoints(topLeft, bottomLeft, topRight);
+  const [start, end] = isVertical
+    ? calculateTimingPoints(topLeft, bottomLeft, topRight, true)
+    : calculateTimingPoints(topLeft, topRight, bottomLeft);
   const points = new PlotLine(start, end).points();
 
   let count = 0;

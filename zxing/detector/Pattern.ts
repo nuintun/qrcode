@@ -68,18 +68,25 @@ export class Pattern extends Point {
   public equals(x: number, y: number, width: number, height: number): boolean {
     const modules = this.#modules;
     const xModuleSize = width / modules;
-    const yModuleSize = height / modules;
 
-    if (Math.abs(x - this.x) <= xModuleSize && Math.abs(y - this.y) <= yModuleSize) {
-      const [xModuleSizeThis, yModuleSizeThis] = this.#moduleSize;
+    if (Math.abs(x - this.x) <= xModuleSize) {
+      const moduleSize = this.#moduleSize;
+      const [xModuleSizeThis] = moduleSize;
       const xModuleSizeDiff = Math.abs(xModuleSize - xModuleSizeThis);
-      const yModuleSizeDiff = Math.abs(yModuleSize - yModuleSizeThis);
 
-      if (
-        (xModuleSizeDiff < 1 || xModuleSizeDiff <= xModuleSizeThis) &&
-        (yModuleSizeDiff < 1 || yModuleSizeDiff <= yModuleSizeThis)
-      ) {
-        return true;
+      if (xModuleSizeDiff >= 1 && xModuleSizeDiff > xModuleSizeThis) {
+        return false;
+      }
+
+      const yModuleSize = height / modules;
+
+      if (Math.abs(y - this.y) <= yModuleSize) {
+        const [, yModuleSizeThis] = moduleSize;
+        const yModuleSizeDiff = Math.abs(yModuleSize - yModuleSizeThis);
+
+        if (yModuleSizeDiff < 1 || yModuleSizeDiff <= yModuleSizeThis) {
+          return true;
+        }
       }
     }
 

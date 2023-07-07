@@ -11,6 +11,7 @@ import { FinderPatternMatcher } from './FinderPatternMatcher';
 import { AlignmentPatternMatcher } from './AlignmentPatternMatcher';
 
 export interface Options {
+  strict?: boolean;
   transform?: (
     matrix: BitMatrix,
     size: number,
@@ -28,9 +29,9 @@ export class Detector {
 
   public detect(matrix: BitMatrix): DetectResult[] {
     const { width, height } = matrix;
-    const { transform } = this.#options;
-    const finderMatcher = new FinderPatternMatcher(matrix);
-    const alignmentMatcher = new AlignmentPatternMatcher(matrix);
+    const { strict, transform } = this.#options;
+    const finderMatcher = new FinderPatternMatcher(matrix, strict);
+    const alignmentMatcher = new AlignmentPatternMatcher(matrix, strict);
 
     const match = (x: number, y: number, lastBit: number, countState: number[], count: number) => {
       setCountState(countState, count);

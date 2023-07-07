@@ -9,8 +9,8 @@ import { FinderPatternGroup } from './FinderPatternGroup';
 import { checkPixelsInTimingLine, isEqualsEdge, isMatchFinderPattern } from './utils/matcher';
 
 export class FinderPatternMatcher extends PatternMatcher {
-  constructor(matrix: BitMatrix) {
-    super(matrix, 7, isMatchFinderPattern);
+  constructor(matrix: BitMatrix, strict?: boolean) {
+    super(matrix, 7, isMatchFinderPattern, strict);
   }
 
   public groups(): FinderPatternGroup[] {

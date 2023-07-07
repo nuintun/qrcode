@@ -17,9 +17,10 @@ function isDark(matrix: ByteMatrix, x: number, y: number): boolean {
 }
 
 // Helper function for applyMaskPenaltyRule1. We need this for doing this calculation in both
-// vertical and horizontal orders respectively.
-function applyMaskPenaltyRule1Internal(matrix: ByteMatrix, isHorizontal: boolean): number {
+// horizontal and vertical orders respectively.
+function applyMaskPenaltyRule1Internal(matrix: ByteMatrix, isVertical?: boolean): number {
   let penalty = 0;
+
   const { size } = matrix;
 
   for (let y = 0; y < size; y++) {
@@ -27,7 +28,7 @@ function applyMaskPenaltyRule1Internal(matrix: ByteMatrix, isHorizontal: boolean
     let numSameBitCells = 0;
 
     for (let x = 0; x < size; x++) {
-      const bit = isHorizontal ? matrix.get(x, y) : matrix.get(y, x);
+      const bit = isVertical ? matrix.get(y, x) : matrix.get(x, y);
 
       if (bit === prevBit) {
         numSameBitCells++;
@@ -54,7 +55,7 @@ function applyMaskPenaltyRule1Internal(matrix: ByteMatrix, isHorizontal: boolean
 // Apply mask penalty rule 1 and return the penalty. Find repetitive cells with the same color and
 // give penalty to them. Example: 00000 or 11111.
 function applyMaskPenaltyRule1(matrix: ByteMatrix): number {
-  return applyMaskPenaltyRule1Internal(matrix, true) + applyMaskPenaltyRule1Internal(matrix, false);
+  return applyMaskPenaltyRule1Internal(matrix) + applyMaskPenaltyRule1Internal(matrix, true);
 }
 
 // Apply mask penalty rule 2 and return the penalty. Find 2x2 blocks with the same color and give
@@ -84,13 +85,13 @@ function applyMaskPenaltyRule2(matrix: ByteMatrix): number {
 }
 
 // Is is four white, check on horizontal and vertical.
-function isFourWhite(matrix: ByteMatrix, offset: number, from: number, to: number, isHorizontal: boolean): boolean {
+function isFourWhite(matrix: ByteMatrix, offset: number, from: number, to: number, isVertical?: boolean): boolean {
   if (from < 0 || to > matrix.size) {
     return false;
   }
 
   for (let i = from; i < to; i++) {
-    if (isHorizontal ? isDark(matrix, i, offset) : isDark(matrix, offset, i)) {
+    if (isVertical ? isDark(matrix, offset, i) : isDark(matrix, i, offset)) {
       return false;
     }
   }
@@ -118,7 +119,7 @@ function applyMaskPenaltyRule3(matrix: ByteMatrix): number {
         isDark(matrix, x + 4, y) &&
         !isDark(matrix, x + 5, y) &&
         isDark(matrix, x + 6, y) &&
-        (isFourWhite(matrix, y, x - 4, x, true) || isFourWhite(matrix, y, x + 7, x + 11, true))
+        (isFourWhite(matrix, y, x - 4, x) || isFourWhite(matrix, y, x + 7, x + 11))
       ) {
         numPenalties++;
       }
@@ -133,7 +134,7 @@ function applyMaskPenaltyRule3(matrix: ByteMatrix): number {
         isDark(matrix, x, y + 4) &&
         !isDark(matrix, x, y + 5) &&
         isDark(matrix, x, y + 6) &&
-        (isFourWhite(matrix, x, y - 4, y, false) || isFourWhite(matrix, x, y + 7, y + 11, false))
+        (isFourWhite(matrix, x, y - 4, y, true) || isFourWhite(matrix, x, y + 7, y + 11, true))
       ) {
         numPenalties++;
       }
