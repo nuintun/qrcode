@@ -87,6 +87,13 @@ textarea {
   background: #f0f0f0;
 }
 
+.decode-result {
+  max-width: 100%;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  box-sizing: border-box;
+}
+
 .encode-result img {
   display: block;
   max-width: 944px;
