@@ -3664,7 +3664,7 @@
     const [top, , bottom] = rect;
     return ratio > 0 ? bottom : ratio < 0 ? top : y;
   }
-  function calculateTimingPoints(start, end, control, isVertical) {
+  function calculateTimingLine(start, end, control, isVertical) {
     const { x: endX, y: endY } = end;
     const { x: startX, y: startY } = start;
     const controlX = control.x + end.x - startX;
@@ -3693,8 +3693,8 @@
   function checkPixelsInTimingLine(matrix, { topLeft, topRight, bottomLeft }, isVertical) {
     const countState = [];
     const [start, end] = isVertical
-      ? calculateTimingPoints(topLeft, bottomLeft, topRight, true)
-      : calculateTimingPoints(topLeft, topRight, bottomLeft);
+      ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
+      : calculateTimingLine(topLeft, topRight, bottomLeft);
     const points = new PlotLine(start, end).points();
     let count = 0;
     let lastBit = matrix.get(toInt32(start.x), toInt32(start.y));
@@ -4818,5 +4818,5 @@
   exports.Numeric = Numeric;
   exports.binarize = binarize;
   exports.binarizer = binarizer;
-  exports.calculateTimingPoints = calculateTimingPoints;
+  exports.calculateTimingLine = calculateTimingLine;
 });

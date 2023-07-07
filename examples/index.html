@@ -375,7 +375,7 @@
         return ratio > 0 ? bottom : ratio < 0 ? top : y;
       }
 
-      function calculateTimingPoints(start, end, control, isVertical) {
+      function calculateTimingLine(start, end, control, isVertical) {
         const { x: endX, y: endY } = end;
         const { x: startX, y: startY } = start;
         const controlX = control.x + end.x - startX;
@@ -454,8 +454,8 @@
               }
 
               console.time('calcTimingPoints');
-              const [x1, x2] = QRCode.calculateTimingPoints(topLeft, topRight, bottomLeft);
-              const [x3, x4] = QRCode.calculateTimingPoints(topLeft, bottomLeft, topRight, true);
+              const [x1, x2] = QRCode.calculateTimingLine(topLeft, topRight, bottomLeft);
+              const [x3, x4] = QRCode.calculateTimingLine(topLeft, bottomLeft, topRight, true);
               console.timeEnd('calcTimingPoints');
 
               drawLine(x1, x2, '#00ff00');
