@@ -415,7 +415,9 @@
         const decoder = new QRCode.Decoder();
         const detector = new QRCode.Detector();
         const matrix = QRCode.binarize(imageData);
+        console.time('detector');
         const detected = detector.detect(matrix);
+        console.timeEnd('detector');
 
         matrixBox.append(drawMatrix(matrix, 1), '<br />');
 
@@ -453,10 +455,8 @@
                 errors.push(finder);
               }
 
-              console.time('calcTimingPoints');
               const [x1, x2] = QRCode.calculateTimingLine(topLeft, topRight, bottomLeft);
               const [x3, x4] = QRCode.calculateTimingLine(topLeft, bottomLeft, topRight, true);
-              console.timeEnd('calcTimingPoints');
 
               drawLine(x1, x2, '#00ff00');
               drawLine(x3, x4, '#00ff00');
