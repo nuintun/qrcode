@@ -4221,10 +4221,10 @@
       }
       return false;
     }
-    #crossAlignVertical(x, y, maxCount) {
+    #alignVerticalPattern(x, y, maxCount) {
       return alignCrossPattern(this.#matrix, x, y, maxCount, this.#matcher, true);
     }
-    #crossAlignHorizontal(x, y, maxCount) {
+    #alignHorizontalPattern(x, y, maxCount) {
       return alignCrossPattern(this.#matrix, x, y, maxCount, this.#matcher);
     }
     get matcher() {
@@ -4241,10 +4241,10 @@
         let countStateHorizontal;
         let offsetX = centerFromEnd(countState, x);
         const maxCount = countState[toInt32(countState.length / 2)];
-        const [offsetY, countStateVertical] = this.#crossAlignVertical(toInt32(offsetX), y, maxCount);
+        const [offsetY, countStateVertical] = this.#alignVerticalPattern(toInt32(offsetX), y, maxCount);
         if (offsetY >= 0) {
           // Re-cross check
-          [offsetX, countStateHorizontal] = this.#crossAlignHorizontal(toInt32(offsetX), toInt32(offsetY), maxCount);
+          [offsetX, countStateHorizontal] = this.#alignHorizontalPattern(toInt32(offsetX), toInt32(offsetY), maxCount);
           if (offsetX >= 0 && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), maxCount)) {
             const width = getCountStateTotal(countStateHorizontal);
             const height = getCountStateTotal(countStateVertical);
