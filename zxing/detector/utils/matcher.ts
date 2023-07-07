@@ -2,12 +2,12 @@
  * @module matcher
  */
 
+import { toInt32 } from '/common/utils';
 import { Pattern } from '/detector/Pattern';
 import { PlotLine } from '/common/PlotLine';
 import { BitMatrix } from '/common/BitMatrix';
-import { round, toInt32 } from '/common/utils';
+import { isPointInQuadrangle, Point } from '/common/Point';
 import { FinderPatternGroup } from '/detector/FinderPatternGroup';
-import { distance, isPointInQuadrangle, Point } from '/common/Point';
 
 export const DIFF_EDGE_RATIO = 0.5;
 export const DIFF_MODULE_SIZE_RATIO = 0.5;
@@ -275,62 +275,43 @@ export function checkRepeatPixelsInLine(matrix: BitMatrix, pattern1: Pattern, pa
   return true;
 }
 
-function calcTimingRatio(point: number, anchor: number): number {
-  return anchor > point ? 1 : anchor < point ? -1 : 0;
+export type TimingPoints = [start: Point, end: Point];
+
+function calcTimingRatio(axis: number, control: number) {
+  return control > axis ? 1 : control < axis ? -1 : 0;
 }
 
-function isObtuseAngle(start: Point, middle: Point, end: Point): boolean {
-  const edge1 = distance(start, middle);
-  const edge2 = distance(middle, end);
-  const edge3 = distance(start, end);
-
-  return round(edge1 * edge1 + edge2 * edge2) < round(edge3 * edge3);
-}
-
-function getTimingPointXAxis({ x, rect }: Pattern, ratio: number): number {
+function getTimingPointXAxis({ x, rect }: Pattern, ratio: number) {
   const [, right, , left] = rect;
 
   return ratio > 0 ? right : ratio < 0 ? left : x;
 }
 
-function getTimingPointYAxis({ y, rect }: Pattern, ratio: number): number {
+function getTimingPointYAxis({ y, rect }: Pattern, ratio: number) {
   const [top, , bottom] = rect;
 
   return ratio > 0 ? bottom : ratio < 0 ? top : y;
 }
 
-export function calcTimingPoints(start: Pattern, end: Pattern, anchor: Pattern): [start: Point, end: Point] {
+export function calcTimingPoints(start: Pattern, end: Pattern, control: Pattern, isHorizontal?: boolean): TimingPoints {
   const { x: endX, y: endY } = end;
   const { x: startX, y: startY } = start;
-  const { x: anchorX, y: anchorY } = anchor;
-  const endXRatio = calcTimingRatio(endX, anchorX);
-  const endYRatio = calcTimingRatio(endY, anchorY);
-  const startXRatio = calcTimingRatio(startX, anchorX);
-  const startYRatio = calcTimingRatio(startY, anchorY);
-  const steepStarEnd = Math.abs(endY - startY) > Math.abs(endX - startX);
-  const steepStarAnchor = Math.abs(anchorY - startY) > Math.abs(anchorX - startX);
+  const controlX = control.x + end.x - startX;
+  const controlY = control.y + end.y - startY;
+  const xRatio = calcTimingRatio(startX, controlX);
+  const yRatio = calcTimingRatio(startY, controlY);
+  const endXTranslate = getTimingPointXAxis(end, xRatio);
+  const endYTranslate = getTimingPointYAxis(end, yRatio);
+  const startXTranslate = getTimingPointXAxis(start, xRatio);
+  const startYTranslate = getTimingPointYAxis(start, yRatio);
 
-  if (steepStarAnchor === steepStarEnd && isObtuseAngle(end, start, anchor)) {
-    return [
-      new Point(
-        steepStarEnd ? startX : getTimingPointXAxis(start, startXRatio),
-        steepStarEnd ? getTimingPointYAxis(start, startYRatio) : start.y
-      ),
-      new Point(
-        steepStarEnd ? endX : getTimingPointXAxis(end, endXRatio),
-        steepStarEnd ? getTimingPointYAxis(end, endYRatio) : end.y
-      )
-    ];
+  if (xRatio === 0 || yRatio === 0) {
+    return [new Point(startXTranslate, startYTranslate), new Point(endXTranslate, endYTranslate)];
   }
 
-  return [
-    new Point(
-      steepStarEnd ? getTimingPointXAxis(start, startXRatio) : startX,
-      steepStarEnd ? start.y : getTimingPointYAxis(start, startYRatio)
-    ),
-    new Point(
-      steepStarEnd ? getTimingPointXAxis(end, endXRatio) : endX,
-      steepStarEnd ? end.y : getTimingPointYAxis(end, endYRatio)
-    )
-  ];
+  if (isHorizontal ? xRatio === yRatio : xRatio !== yRatio) {
+    return [new Point(startX, startYTranslate), new Point(endX, endYTranslate)];
+  }
+
+  return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
 }
