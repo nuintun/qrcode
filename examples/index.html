@@ -306,10 +306,10 @@
 
         context.fillStyle = color;
 
-        const moduleSize = (moduleSize[0] + moduleSize[1]) / 2;
+        const moduleSizeAvg = (moduleSize[0] + moduleSize[1]) / 2;
 
         context.beginPath();
-        context.arc(x, y, moduleSize * 0.6, 0, 2 * Math.PI);
+        context.arc(x, y, moduleSizeAvg * 0.6, 0, 2 * Math.PI);
         context.fill();
         context.restore();
       }
