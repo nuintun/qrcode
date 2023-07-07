@@ -6,7 +6,7 @@ import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
 import { PatternMatcher } from './PatternMatcher';
 import { FinderPatternGroup } from './FinderPatternGroup';
-import { checkRepeatPixelsInLine, isEqualsEdge, isMatchFinderPattern } from './utils/matcher';
+import { checkPixelsInTimingLine, isEqualsEdge, isMatchFinderPattern } from './utils/matcher';
 
 export class FinderPatternMatcher extends PatternMatcher {
   constructor(matrix: BitMatrix) {
@@ -76,7 +76,10 @@ export class FinderPatternMatcher extends PatternMatcher {
 
             const { matrix } = this;
 
-            if (checkRepeatPixelsInLine(matrix, topLeft, bottomLeft) && checkRepeatPixelsInLine(matrix, topRight, bottomLeft)) {
+            if (
+              checkPixelsInTimingLine(matrix, finderPatternGroup) &&
+              checkPixelsInTimingLine(matrix, finderPatternGroup, true)
+            ) {
               // All tests passed!
               finderPatternGroups.push(finderPatternGroup);
             }

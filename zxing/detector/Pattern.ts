@@ -5,13 +5,13 @@
 import { Point } from '/common/Point';
 
 export type PatternRect = [
-  // Left x
+  // Top border center y
   top: number,
-  // Right x
+  // Right border center x
   right: number,
-  // Bottom y
+  // Bottom border center y
   bottom: number,
-  // Top Y
+  // Left border center x
   left: number
 ];
 

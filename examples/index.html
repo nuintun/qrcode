@@ -441,11 +441,6 @@
             const { topLeft, topRight, bottomLeft } = finder;
             const cacheKey = `${topLeft.x}-${topLeft.y}:${topRight.x}-${topRight.y}:${bottomLeft.x}-${bottomLeft.y}`;
 
-            const controlX = topRight.x + bottomLeft.x - topLeft.x;
-            const controlY = +(bottomLeft.y + topRight.y) - topLeft.y;
-
-            markFinderPattern({ x: controlX, y: controlY, width: 28, height: 28 }, '#ffff00');
-
             try {
               if (decodeCache.has(cacheKey)) {
                 continue;
