@@ -4096,17 +4096,15 @@
             // If we didn't find alignment pattern... well try anyway without it
             const alignmentPatterns = alignmentMatcher.filter(finderPatternGroup, size, moduleSize);
             // Founded alignment
-            if (alignmentPatterns.length > 0) {
-              for (const alignmentPattern of alignmentPatterns) {
-                detected.push({
-                  finder: finderPatternGroup,
-                  alignment: alignmentPattern,
-                  matrix: transform(matrix, size, finderPatternGroup, alignmentPattern)
-                });
-              }
-              continue;
+            for (const alignmentPattern of alignmentPatterns) {
+              detected.push({
+                finder: finderPatternGroup,
+                alignment: alignmentPattern,
+                matrix: transform(matrix, size, finderPatternGroup, alignmentPattern)
+              });
             }
           }
+          // No alignment version and fallback
           detected.push({
             finder: finderPatternGroup,
             matrix: transform(matrix, size, finderPatternGroup)
