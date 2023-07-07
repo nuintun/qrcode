@@ -16,4 +16,4 @@ export { Alphanumeric } from './encoder/segments/Alphanumeric';
 // TODO 测试临时导出
 export { BitMatrix } from './common/BitMatrix';
 export { binarizer } from './common/binarizer';
-export { calcTimingPoints } from './detector/utils/matcher';
+export { calculateTimingPoints } from './detector/utils/matcher';

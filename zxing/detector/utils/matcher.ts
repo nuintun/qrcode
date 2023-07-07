@@ -2,15 +2,14 @@
  * @module matcher
  */
 
+import { Point } from '/common/Point';
 import { toInt32 } from '/common/utils';
 import { Pattern } from '/detector/Pattern';
 import { PlotLine } from '/common/PlotLine';
 import { BitMatrix } from '/common/BitMatrix';
-import { isPointInQuadrangle, Point } from '/common/Point';
 import { FinderPatternGroup } from '/detector/FinderPatternGroup';
 
 export const DIFF_EDGE_RATIO = 0.5;
-export const DIFF_MODULE_SIZE_RATIO = 0.5;
 export const MIN_MODULE_COUNT_PER_EDGE = 11;
 export const DIFF_FINDER_PATTERN_RATIO = 0.5;
 export const MAX_MODULE_COUNT_PER_EDGE = 175;
@@ -117,13 +116,6 @@ export function isEqualsEdge(edge1: number, edge2: number): boolean {
   return ratio < DIFF_EDGE_RATIO;
 }
 
-export function isEqualsModuleSize(moduleSize1: number, moduleSize2: number): boolean {
-  const modeSizeAvg = (moduleSize1 + moduleSize2) / 2;
-  const moduleSizeDiff = Math.max(1, modeSizeAvg * DIFF_MODULE_SIZE_RATIO);
-
-  return Math.abs(moduleSize1 - moduleSize2) <= moduleSizeDiff;
-}
-
 export function isValidModuleCount(edge: number, moduleSize: number): boolean {
   // Check the sizes
   const moduleCount = Math.ceil(edge / moduleSize);
@@ -131,11 +123,8 @@ export function isValidModuleCount(edge: number, moduleSize: number): boolean {
   return moduleCount >= MIN_MODULE_COUNT_PER_EDGE && moduleCount <= MAX_MODULE_COUNT_PER_EDGE;
 }
 
-export function isInFinderPatternGroup({ topLeft, topRight, bottomLeft }: FinderPatternGroup, pattern: Pattern): boolean {
-  // Guess where a "bottom right" finder pattern would have been
-  const bottomRight = new Point(topRight.x - topLeft.x + bottomLeft.x, topRight.y - topLeft.y + bottomLeft.y);
-
-  return isPointInQuadrangle(pattern, topLeft, topRight, bottomRight, bottomLeft);
+export function isEqualsAlignmentModuleSize(moduleSize1: number, moduleSize2: number): boolean {
+  return Math.abs(moduleSize1 - moduleSize2) <= (moduleSize1 + moduleSize2) / 2;
 }
 
 export function alignCrossPattern(
@@ -277,7 +266,7 @@ export function checkRepeatPixelsInLine(matrix: BitMatrix, pattern1: Pattern, pa
 
 export type TimingPoints = [start: Point, end: Point];
 
-function calcTimingRatio(axis: number, control: number) {
+function calculateTimingRatio(axis: number, control: number) {
   return control > axis ? 1 : control < axis ? -1 : 0;
 }
 
@@ -293,13 +282,13 @@ function getTimingPointYAxis({ y, rect }: Pattern, ratio: number) {
   return ratio > 0 ? bottom : ratio < 0 ? top : y;
 }
 
-export function calcTimingPoints(start: Pattern, end: Pattern, control: Pattern, isHorizontal?: boolean): TimingPoints {
+export function calculateTimingPoints(start: Pattern, end: Pattern, control: Pattern, isHorizontal?: boolean): TimingPoints {
   const { x: endX, y: endY } = end;
   const { x: startX, y: startY } = start;
   const controlX = control.x + end.x - startX;
   const controlY = control.y + end.y - startY;
-  const xRatio = calcTimingRatio(startX, controlX);
-  const yRatio = calcTimingRatio(startY, controlY);
+  const xRatio = calculateTimingRatio(startX, controlX);
+  const yRatio = calculateTimingRatio(startY, controlY);
   const endXTranslate = getTimingPointXAxis(end, xRatio);
   const endYTranslate = getTimingPointYAxis(end, yRatio);
   const startXTranslate = getTimingPointXAxis(start, xRatio);
@@ -316,15 +305,11 @@ export function calcTimingPoints(start: Pattern, end: Pattern, control: Pattern,
   return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
 }
 
-function isInvalidTimingLine(countState: number[]): boolean {
-  if (countState.length < 4) {
-    return true;
-  }
+function isValidTimingLine(countState: number[]): boolean {
+  if (countState.length >= 4) {
+    countState = countState.slice(1, -1).sort((a, b) => b - a);
 
-  countState = countState.slice(1, -1).sort((a, b) => b - a);
-
-  if (countState[0] / countState[countState.length - 1] > 5) {
-    return true;
+    return countState[0] / countState[countState.length - 1] <= 5;
   }
 
   return false;
@@ -337,8 +322,8 @@ export function checkPixelsInTimingLine(
 ) {
   const countState = [];
   const [start, end] = isHorizontal
-    ? calcTimingPoints(topLeft, topRight, bottomLeft, isHorizontal)
-    : calcTimingPoints(topLeft, bottomLeft, topRight);
+    ? calculateTimingPoints(topLeft, topRight, bottomLeft, isHorizontal)
+    : calculateTimingPoints(topLeft, bottomLeft, topRight);
   const points = new PlotLine(start, end).points();
 
   let count = 0;
@@ -356,9 +341,5 @@ export function checkPixelsInTimingLine(
     }
   }
 
-  if (isInvalidTimingLine(countState)) {
-    return false;
-  }
-
-  return true;
+  return isValidTimingLine(countState);
 }

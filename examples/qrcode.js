@@ -3478,7 +3478,6 @@
    * @module matcher
    */
   const DIFF_EDGE_RATIO = 0.5;
-  const DIFF_MODULE_SIZE_RATIO = 0.5;
   const DIFF_FINDER_PATTERN_RATIO = 0.5;
   const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
   function centerFromEnd(countState, end) {
@@ -3555,10 +3554,8 @@
     const ratio = Math.abs(edge1 - edge2) / edgeAvg;
     return ratio < DIFF_EDGE_RATIO;
   }
-  function isEqualsModuleSize(moduleSize1, moduleSize2) {
-    const modeSizeAvg = (moduleSize1 + moduleSize2) / 2;
-    const moduleSizeDiff = Math.max(1, modeSizeAvg * DIFF_MODULE_SIZE_RATIO);
-    return Math.abs(moduleSize1 - moduleSize2) <= moduleSizeDiff;
+  function isEqualsAlignmentModuleSize(moduleSize1, moduleSize2) {
+    return Math.abs(moduleSize1 - moduleSize2) <= (moduleSize1 + moduleSize2) / 2;
   }
   function alignCrossPattern(matrix, x, y, maxCount, isHorizontal, checker) {
     let offset = isHorizontal ? x : y;
@@ -3635,7 +3632,7 @@
     }
     return checker(countState);
   }
-  function calcTimingRatio(axis, control) {
+  function calculateTimingRatio(axis, control) {
     return control > axis ? 1 : control < axis ? -1 : 0;
   }
   function getTimingPointXAxis({ x, rect }, ratio) {
@@ -3646,13 +3643,13 @@
     const [top, , bottom] = rect;
     return ratio > 0 ? bottom : ratio < 0 ? top : y;
   }
-  function calcTimingPoints(start, end, control, isHorizontal) {
+  function calculateTimingPoints(start, end, control, isHorizontal) {
     const { x: endX, y: endY } = end;
     const { x: startX, y: startY } = start;
     const controlX = control.x + end.x - startX;
     const controlY = control.y + end.y - startY;
-    const xRatio = calcTimingRatio(startX, controlX);
-    const yRatio = calcTimingRatio(startY, controlY);
+    const xRatio = calculateTimingRatio(startX, controlX);
+    const yRatio = calculateTimingRatio(startY, controlY);
     const endXTranslate = getTimingPointXAxis(end, xRatio);
     const endYTranslate = getTimingPointYAxis(end, yRatio);
     const startXTranslate = getTimingPointXAxis(start, xRatio);
@@ -3665,21 +3662,18 @@
     }
     return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
   }
-  function isInvalidTimingLine(countState) {
-    if (countState.length < 4) {
-      return true;
-    }
-    countState = countState.slice(1, -1).sort((a, b) => b - a);
-    if (countState[0] / countState[countState.length - 1] > 5) {
-      return true;
+  function isValidTimingLine(countState) {
+    if (countState.length >= 4) {
+      countState = countState.slice(1, -1).sort((a, b) => b - a);
+      return countState[0] / countState[countState.length - 1] <= 5;
     }
     return false;
   }
   function checkPixelsInTimingLine(matrix, { topLeft, topRight, bottomLeft }, isHorizontal) {
     const countState = [];
     const [start, end] = isHorizontal
-      ? calcTimingPoints(topLeft, topRight, bottomLeft, isHorizontal)
-      : calcTimingPoints(topLeft, bottomLeft, topRight);
+      ? calculateTimingPoints(topLeft, topRight, bottomLeft, isHorizontal)
+      : calculateTimingPoints(topLeft, bottomLeft, topRight);
     const points = new PlotLine(start, end).points();
     let count = 0;
     let lastBit = matrix.get(toInt32(start.x), toInt32(start.y));
@@ -3693,10 +3687,7 @@
         lastBit = bit;
       }
     }
-    if (isInvalidTimingLine(countState)) {
-      return false;
-    }
-    return true;
+    return isValidTimingLine(countState);
   }
 
   /**
@@ -4005,7 +3996,7 @@
     // Take the average
     return (calculateModuleSizeOneWay(matrix, topLeft, topRight) + calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)) / 2;
   }
-  function computeSymbolSize({ topLeft, topRight, bottomLeft }, moduleSize) {
+  function calculateSymbolSize({ topLeft, topRight, bottomLeft }, moduleSize) {
     const width = distance(topLeft, topRight);
     const height = distance(topLeft, bottomLeft);
     const size = round((width + height) / moduleSize / 2) + 7;
@@ -4074,7 +4065,7 @@
     for (const finderPatternGroup of finderPatternGroups) {
       const moduleSize = calculateModuleSize(matrix, finderPatternGroup);
       if (moduleSize >= 1) {
-        const size = computeSymbolSize(finderPatternGroup, moduleSize);
+        const size = calculateSymbolSize(finderPatternGroup, moduleSize);
         if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
           const version = fromVersionSize(size);
           // Find alignment
@@ -4393,8 +4384,8 @@
       const patterns = this.patterns.filter(pattern => {
         const [xModuleSize, yModuleSize] = pattern.moduleSize;
         return (
-          isEqualsModuleSize(xModuleSize, moduleSize) &&
-          isEqualsModuleSize(yModuleSize, moduleSize) &&
+          isEqualsAlignmentModuleSize(xModuleSize, moduleSize) &&
+          isEqualsAlignmentModuleSize(yModuleSize, moduleSize) &&
           isPointInQuadrangle(
             pattern,
             alignmentAreaTopLeft,
@@ -4809,5 +4800,5 @@
   exports.Numeric = Numeric;
   exports.binarize = binarize;
   exports.binarizer = binarizer;
-  exports.calcTimingPoints = calcTimingPoints;
+  exports.calculateTimingPoints = calculateTimingPoints;
 });

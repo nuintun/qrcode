@@ -121,7 +121,7 @@ export function calculateModuleSize(matrix: BitMatrix, { topLeft, topRight, bott
   return (calculateModuleSizeOneWay(matrix, topLeft, topRight) + calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)) / 2;
 }
 
-export function computeSymbolSize({ topLeft, topRight, bottomLeft }: FinderPatternGroup, moduleSize: number): number {
+export function calculateSymbolSize({ topLeft, topRight, bottomLeft }: FinderPatternGroup, moduleSize: number): number {
   const width = distance(topLeft, topRight);
   const height = distance(topLeft, bottomLeft);
   const size = round((width + height) / moduleSize / 2) + 7;
@@ -218,7 +218,7 @@ export function detect(
     const moduleSize = calculateModuleSize(matrix, finderPatternGroup);
 
     if (moduleSize >= 1) {
-      const size = computeSymbolSize(finderPatternGroup, moduleSize);
+      const size = calculateSymbolSize(finderPatternGroup, moduleSize);
 
       if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
         const version = fromVersionSize(size);
