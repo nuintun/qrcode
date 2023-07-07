@@ -3666,37 +3666,35 @@
     return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
   }
   function isInvalidTimingLine(countState) {
-    let [min, max] = countState;
-    if (min > max) {
-      [min, max] = [max, min];
+    countState.sort((a, b) => b - a);
+    if (countState.length < 4) {
+      return true;
     }
-    if (min > 0) {
-      return max / min > 8;
+    if (countState[1] / countState[countState.length - 2] > 4) {
+      return true;
     }
     return false;
   }
   function checkPixelsInTimingLine(matrix, { topLeft, topRight, bottomLeft }, isHorizontal) {
-    const countState = [0, 0];
+    const countState = [];
     const [start, end] = isHorizontal
       ? calcTimingPoints(topLeft, topRight, bottomLeft, isHorizontal)
       : calcTimingPoints(topLeft, bottomLeft, topRight);
-    const line = new PlotLine(start, end);
-    const points = line.points();
-    const { from } = line;
+    const points = new PlotLine(start, end).points();
     let count = 0;
-    let lastBit = matrix.get(from.x, from.y);
+    let lastBit = matrix.get(toInt32(start.x), toInt32(start.y));
     for (const [x, y] of points) {
       const bit = matrix.get(x, y);
       if (bit === lastBit) {
         count++;
       } else {
-        setCountState(countState, count);
-        if (isInvalidTimingLine(countState)) {
-          return false;
-        }
+        countState.push(count);
         count = 1;
         lastBit = bit;
       }
+    }
+    if (isInvalidTimingLine(countState)) {
+      return false;
     }
     return true;
   }
@@ -4147,6 +4145,9 @@
     get rect() {
       return this.#rect;
     }
+    get moduleSize() {
+      return this.#moduleSize;
+    }
     equals(x, y, width, height) {
       const modules = this.#modules;
       const xModuleSize = width / modules;
@@ -4390,9 +4391,10 @@
       const alignmentAreaBottomRight = new Point(alignmentAreaRightX, alignmentAreaBottomY);
       const alignmentAreaBottomLeft = new Point(alignmentAreaLeftX, alignmentAreaBottomY);
       const patterns = this.patterns.filter(pattern => {
-        const alignmentModuleSize = (pattern.width + pattern.height) / 10;
+        const [xModuleSize, yModuleSize] = pattern.moduleSize;
         return (
-          isEqualsModuleSize(alignmentModuleSize, moduleSize) &&
+          isEqualsModuleSize(xModuleSize, moduleSize) &&
+          isEqualsModuleSize(yModuleSize, moduleSize) &&
           isPointInQuadrangle(
             pattern,
             alignmentAreaTopLeft,

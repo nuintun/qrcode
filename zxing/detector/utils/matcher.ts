@@ -317,14 +317,14 @@ export function calcTimingPoints(start: Pattern, end: Pattern, control: Pattern,
 }
 
 function isInvalidTimingLine(countState: number[]): boolean {
-  let [min, max] = countState;
+  countState.sort((a, b) => b - a);
 
-  if (min > max) {
-    [min, max] = [max, min];
+  if (countState.length < 4) {
+    return true;
   }
 
-  if (min > 0) {
-    return max / min > 8;
+  if (countState[1] / countState[countState.length - 2] > 4) {
+    return true;
   }
 
   return false;
@@ -335,16 +335,14 @@ export function checkPixelsInTimingLine(
   { topLeft, topRight, bottomLeft }: FinderPatternGroup,
   isHorizontal?: boolean
 ) {
-  const countState = [0, 0];
+  const countState = [];
   const [start, end] = isHorizontal
     ? calcTimingPoints(topLeft, topRight, bottomLeft, isHorizontal)
     : calcTimingPoints(topLeft, bottomLeft, topRight);
-  const line = new PlotLine(start, end);
-  const points = line.points();
-  const { from } = line;
+  const points = new PlotLine(start, end).points();
 
   let count = 0;
-  let lastBit = matrix.get(from.x, from.y);
+  let lastBit = matrix.get(toInt32(start.x), toInt32(start.y));
 
   for (const [x, y] of points) {
     const bit = matrix.get(x, y);
@@ -352,15 +350,15 @@ export function checkPixelsInTimingLine(
     if (bit === lastBit) {
       count++;
     } else {
-      setCountState(countState, count);
-
-      if (isInvalidTimingLine(countState)) {
-        return false;
-      }
-
+      countState.push(count);
       count = 1;
       lastBit = bit;
     }
   }
+
+  if (isInvalidTimingLine(countState)) {
+    return false;
+  }
+
   return true;
 }

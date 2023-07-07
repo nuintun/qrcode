@@ -61,6 +61,10 @@ export class Pattern extends Point {
     return this.#rect;
   }
 
+  public get moduleSize(): [x: number, y: number] {
+    return this.#moduleSize;
+  }
+
   public equals(x: number, y: number, width: number, height: number): boolean {
     const modules = this.#modules;
     const xModuleSize = width / modules;
