@@ -29,12 +29,12 @@ export function binarize({ data, width, height }: ImageData): BitMatrix {
       const g = data[colorIndex + 1];
       const b = data[colorIndex + 2];
 
-      greyscale[offset + x] = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      greyscale[offset + x] = r * 0.2126 + g * 0.7152 + b * 0.0722;
     }
   }
 
-  const blackPointsHeight = Math.ceil(height / REGION_SIZE);
   const blackPointsWidth = Math.ceil(width / REGION_SIZE);
+  const blackPointsHeight = Math.ceil(height / REGION_SIZE);
   const blackPoints = new Uint8Array(blackPointsWidth * blackPointsHeight);
 
   for (let blackPointsY = 0; blackPointsY < blackPointsHeight; blackPointsY++) {
