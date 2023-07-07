@@ -413,26 +413,11 @@
         const imageData = getImageData();
         const { width, height } = imageData;
         const decoder = new QRCode.Decoder();
-        const matrix = QRCode.binarizer(imageData);
         const detector = new QRCode.Detector();
+        const matrix = QRCode.binarize(imageData);
         const detected = detector.detect(matrix);
 
         matrixBox.append(drawMatrix(matrix, 1), '<br />');
-
-        // const x = QRCode.extract(matrix);
-
-        // console.dir(x);
-
-        // for (const { matrix: image } of x) {
-        //   try {
-        //     const decoded = decoder.decode(image);
-
-        //     console.dir(image);
-        //     console.dir(decoded.content);
-        //   } catch (error) {
-        //     // console.error(error);
-        //   }
-        // }
 
         console.dir(detected);
 

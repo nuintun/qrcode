@@ -88,7 +88,7 @@ export interface Options {
   compensation?: number;
 }
 
-export function binarize({ width, height, data }: ImageData, { size = 24, compensation = 8 }: Options = {}): BitMatrix {
+export function binarizer({ width, height, data }: ImageData, { size = 24, compensation = 8 }: Options = {}): BitMatrix {
   const middleSize = toInt32(size / 2);
   const binarized = new BitMatrix(width, height);
   const grayscaled = grayscale(data, width, height);

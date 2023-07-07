@@ -1009,10 +1009,18 @@
     #bits;
     constructor(width, height, bits) {
       const rowSize = Math.ceil(width / 32);
+      const bitsCapacity = rowSize * height;
       this.#width = width;
       this.#height = height;
       this.#rowSize = rowSize;
-      this.#bits = bits || new Int32Array(rowSize * height);
+      if (bits instanceof Int32Array) {
+        if (bits.length !== bitsCapacity) {
+          throw new Error(`matrix bits capacity mismatch: ${bitsCapacity}`);
+        }
+        this.#bits = bits;
+      } else {
+        this.#bits = new Int32Array(bitsCapacity);
+      }
     }
     #offset(x, y) {
       return y * this.#rowSize + toInt32(x / 32);
@@ -3256,87 +3264,100 @@
     }
   }
 
-  // /**
-  //  * @module binarize
-  //  * @see https://github.com/FujiHaruka/node-adaptive-threshold
-  //  */
-  function grayscale(colors, width, height) {
-    const pixels = new Float32Array(width * height);
+  /**
+   * @module binarizer
+   */
+  const REGION_SIZE = 8;
+  const MIN_DYNAMIC_RANGE = 24;
+  function between(value, min, max) {
+    return value < min ? min : value > max ? max : value;
+  }
+  function binarize({ data, width, height }) {
+    if (data.length !== width * height * 4) {
+      throw new Error('malformed data passed to binarizer');
+    }
+    // Convert image to greyscale
+    const greyscale = new Uint8Array(width * height);
     for (let y = 0; y < height; y++) {
       const offset = y * width;
       for (let x = 0; x < width; x++) {
         const index = offset + x;
         const colorIndex = index * 4;
-        const r = colors[colorIndex];
-        const g = colors[colorIndex + 1];
-        const b = colors[colorIndex + 2];
-        pixels[index] = r * 0.2126 + g * 0.7152 + b * 0.0722;
+        const r = data[colorIndex + 0];
+        const g = data[colorIndex + 1];
+        const b = data[colorIndex + 2];
+        greyscale[offset + x] = 0.2126 * r + 0.7152 * g + 0.0722 * b;
       }
     }
-    return pixels;
-  }
-  function calcLocalAverages(pixels, width, height, size) {
-    const sums = [];
-    for (let y = 0; y < height; y++) {
-      const offset = y * width;
-      const sum = new Float32Array(width);
-      for (let x = 0; x < size; x++) {
-        sum[0] += pixels[offset + x];
-      }
-      for (let end = size; end < width; end++) {
-        const start = end - size + 1;
-        sum[start] = sum[start - 1] + pixels[offset + end] - pixels[offset + start - 1];
-      }
-      sums[y] = sum;
-    }
-    const averagesWidth = width - size + 1;
-    const averagesHeight = height - size + 1;
-    const averages = new Float32Array(averagesWidth * averagesHeight);
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < averagesWidth; x++) {
-        // Set x, 0
-        averages[x] += sums[y][x];
-      }
-    }
-    for (let y = 1; y < averagesHeight; y++) {
-      const offset = y * averagesWidth;
-      const prevOffset = offset - averagesWidth;
-      for (let x = 0; x < averagesWidth; x++) {
-        averages[offset + x] = averages[prevOffset + x] - sums[y - 1][x] + sums[y + size - 1][x];
-      }
-    }
-    // Devide
-    for (let y = 0; y < averagesHeight; y++) {
-      const offset = y * averagesWidth;
-      for (let x = 0; x < averagesWidth; x++) {
-        averages[offset + x] /= size * size;
-      }
-    }
-    return [averages, averagesWidth, averagesHeight];
-  }
-  function binarize({ width, height, data }, { size = 24, compensation = 8 } = {}) {
-    const middleSize = toInt32(size / 2);
-    const binarized = new BitMatrix(width, height);
-    const grayscaled = grayscale(data, width, height);
-    const [averages, averagesWidth, averagesHeight] = calcLocalAverages(grayscaled, width, height, size);
-    for (let y = 0; y < height; y++) {
-      const offset = y * width;
-      for (let x = 0; x < width; x++) {
-        let averageX = x - middleSize;
-        let averageY = y - middleSize;
-        const pixel = grayscaled[offset + x];
-        if (x - middleSize < 0) {
-          averageX = 0;
-        } else if (x - middleSize >= averagesWidth) {
-          averageX = averagesWidth - 1;
-        } else if (y - middleSize < 0) {
-          averageY = 0;
-        } else if (y - middleSize > averagesHeight) {
-          averageY = averagesHeight - 1;
+    const blackPointsHeight = Math.ceil(height / REGION_SIZE);
+    const blackPointsWidth = Math.ceil(width / REGION_SIZE);
+    const blackPoints = new Uint8Array(blackPointsWidth * blackPointsHeight);
+    for (let blackPointsY = 0; blackPointsY < blackPointsHeight; blackPointsY++) {
+      const offset = blackPointsY * blackPointsWidth;
+      const prevOffset = offset - blackPointsWidth;
+      for (let blackPointsX = 0; blackPointsX < blackPointsWidth; blackPointsX++) {
+        let sum = 0;
+        let max = 0;
+        let min = Infinity;
+        for (let y = 0; y < REGION_SIZE; y++) {
+          const offset = (blackPointsY * REGION_SIZE + y) * width;
+          for (let x = 0; x < REGION_SIZE; x++) {
+            const pixelLumosity = greyscale[offset + blackPointsX * REGION_SIZE + x];
+            sum += pixelLumosity;
+            min = Math.min(min, pixelLumosity);
+            max = Math.max(max, pixelLumosity);
+          }
         }
-        const average = averages[averageY * averagesWidth + averageX];
-        if (pixel < average - compensation) {
-          binarized.set(x, y);
+        let average = sum / REGION_SIZE ** 2;
+        if (max - min <= MIN_DYNAMIC_RANGE) {
+          // If variation within the block is low, assume this is a block with only light or only
+          // dark pixels. In that case we do not want to use the average, as it would divide this
+          // low contrast area into black and white pixels, essentially creating data out of noise.
+          //
+          // Default the blackpoint for these blocks to be half the min - effectively white them out
+          average = min / 2;
+          if (blackPointsX > 0 && blackPointsY > 0) {
+            // Correct the "white background" assumption for blocks that have neighbors by comparing
+            // the pixels in this block to the previously calculated black points. This is based on
+            // the fact that dark barcode symbology is always surrounded by some amount of light
+            // background for which reasonable black point estimates were made. The bp estimated at
+            // the boundaries is used for the interior.
+            // The (min < bp) is arbitrary but works better than other heuristics that were tried.
+            const topRightPoint = blackPoints[prevOffset + blackPointsX];
+            const bottomLeftPoint = blackPoints[offset + blackPointsX - 1];
+            const topLeftPoint = blackPoints[prevOffset + blackPointsX - 1];
+            const averageNeighborBlackPoint = (topRightPoint + 2 * bottomLeftPoint + topLeftPoint) / 4;
+            if (min < averageNeighborBlackPoint) {
+              average = averageNeighborBlackPoint;
+            }
+          }
+        }
+        blackPoints[offset + blackPointsX] = average;
+      }
+    }
+    const binarized = new BitMatrix(width, height);
+    for (let blackPointsY = 0; blackPointsY < blackPointsHeight; blackPointsY++) {
+      const top = between(blackPointsY, 2, blackPointsHeight - 3);
+      for (let blackPointsX = 0; blackPointsX < blackPointsWidth; blackPointsX++) {
+        let sum = 0;
+        const left = between(blackPointsX, 2, blackPointsWidth - 3);
+        for (let regionY = -2; regionY <= 2; regionY++) {
+          const offset = (top + regionY) * blackPointsWidth;
+          for (let regionX = -2; regionX <= 2; regionX++) {
+            sum += blackPoints[offset + left + regionX];
+          }
+        }
+        const threshold = sum / 25;
+        for (let regionY = 0; regionY < REGION_SIZE; regionY++) {
+          const y = blackPointsY * REGION_SIZE + regionY;
+          const offset = y * width;
+          for (let regionX = 0; regionX < REGION_SIZE; regionX++) {
+            const x = blackPointsX * REGION_SIZE + regionX;
+            const lumina = greyscale[offset + x];
+            if (lumina <= threshold) {
+              binarized.set(x, y);
+            }
+          }
         }
       }
     }
@@ -4688,100 +4709,87 @@
     }
   }
 
-  /**
-   * @module binarizer
-   */
-  const REGION_SIZE = 8;
-  const MIN_DYNAMIC_RANGE = 24;
-  function between(value, min, max) {
-    return value < min ? min : value > max ? max : value;
-  }
-  function binarizer({ data, width, height }) {
-    if (data.length !== width * height * 4) {
-      throw new Error('malformed data passed to binarizer');
-    }
-    // Convert image to greyscale
-    const greyscale = new Uint8Array(width * height);
+  // /**
+  //  * @module binarize
+  //  * @see https://github.com/FujiHaruka/node-adaptive-threshold
+  //  */
+  function grayscale(colors, width, height) {
+    const pixels = new Float32Array(width * height);
     for (let y = 0; y < height; y++) {
       const offset = y * width;
       for (let x = 0; x < width; x++) {
         const index = offset + x;
         const colorIndex = index * 4;
-        const r = data[colorIndex + 0];
-        const g = data[colorIndex + 1];
-        const b = data[colorIndex + 2];
-        greyscale[offset + x] = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        const r = colors[colorIndex];
+        const g = colors[colorIndex + 1];
+        const b = colors[colorIndex + 2];
+        pixels[index] = r * 0.2126 + g * 0.7152 + b * 0.0722;
       }
     }
-    const blackPointsHeight = Math.ceil(height / REGION_SIZE);
-    const blackPointsWidth = Math.ceil(width / REGION_SIZE);
-    const blackPoints = new Uint8Array(blackPointsWidth * blackPointsHeight);
-    for (let blackPointsY = 0; blackPointsY < blackPointsHeight; blackPointsY++) {
-      const offset = blackPointsY * blackPointsWidth;
-      const prevOffset = offset - blackPointsWidth;
-      for (let blackPointsX = 0; blackPointsX < blackPointsWidth; blackPointsX++) {
-        let sum = 0;
-        let max = 0;
-        let min = Infinity;
-        for (let y = 0; y < REGION_SIZE; y++) {
-          const offset = (blackPointsY * REGION_SIZE + y) * width;
-          for (let x = 0; x < REGION_SIZE; x++) {
-            const pixelLumosity = greyscale[offset + blackPointsX * REGION_SIZE + x];
-            sum += pixelLumosity;
-            min = Math.min(min, pixelLumosity);
-            max = Math.max(max, pixelLumosity);
-          }
-        }
-        let average = sum / REGION_SIZE ** 2;
-        if (max - min <= MIN_DYNAMIC_RANGE) {
-          // If variation within the block is low, assume this is a block with only light or only
-          // dark pixels. In that case we do not want to use the average, as it would divide this
-          // low contrast area into black and white pixels, essentially creating data out of noise.
-          //
-          // Default the blackpoint for these blocks to be half the min - effectively white them out
-          average = min / 2;
-          if (blackPointsX > 0 && blackPointsY > 0) {
-            // Correct the "white background" assumption for blocks that have neighbors by comparing
-            // the pixels in this block to the previously calculated black points. This is based on
-            // the fact that dark barcode symbology is always surrounded by some amount of light
-            // background for which reasonable black point estimates were made. The bp estimated at
-            // the boundaries is used for the interior.
-            // The (min < bp) is arbitrary but works better than other heuristics that were tried.
-            const topRightPoint = blackPoints[prevOffset + blackPointsX];
-            const bottomLeftPoint = blackPoints[offset + blackPointsX - 1];
-            const topLeftPoint = blackPoints[prevOffset + blackPointsX - 1];
-            const averageNeighborBlackPoint = (topRightPoint + 2 * bottomLeftPoint + topLeftPoint) / 4;
-            if (min < averageNeighborBlackPoint) {
-              average = averageNeighborBlackPoint;
-            }
-          }
-        }
-        blackPoints[offset + blackPointsX] = average;
+    return pixels;
+  }
+  function calcLocalAverages(pixels, width, height, size) {
+    const sums = [];
+    for (let y = 0; y < height; y++) {
+      const offset = y * width;
+      const sum = new Float32Array(width);
+      for (let x = 0; x < size; x++) {
+        sum[0] += pixels[offset + x];
+      }
+      for (let end = size; end < width; end++) {
+        const start = end - size + 1;
+        sum[start] = sum[start - 1] + pixels[offset + end] - pixels[offset + start - 1];
+      }
+      sums[y] = sum;
+    }
+    const averagesWidth = width - size + 1;
+    const averagesHeight = height - size + 1;
+    const averages = new Float32Array(averagesWidth * averagesHeight);
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < averagesWidth; x++) {
+        // Set x, 0
+        averages[x] += sums[y][x];
       }
     }
+    for (let y = 1; y < averagesHeight; y++) {
+      const offset = y * averagesWidth;
+      const prevOffset = offset - averagesWidth;
+      for (let x = 0; x < averagesWidth; x++) {
+        averages[offset + x] = averages[prevOffset + x] - sums[y - 1][x] + sums[y + size - 1][x];
+      }
+    }
+    // Devide
+    for (let y = 0; y < averagesHeight; y++) {
+      const offset = y * averagesWidth;
+      for (let x = 0; x < averagesWidth; x++) {
+        averages[offset + x] /= size * size;
+      }
+    }
+    return [averages, averagesWidth, averagesHeight];
+  }
+  function binarizer({ width, height, data }, { size = 24, compensation = 8 } = {}) {
+    const middleSize = toInt32(size / 2);
     const binarized = new BitMatrix(width, height);
-    for (let blackPointsY = 0; blackPointsY < blackPointsHeight; blackPointsY++) {
-      const top = between(blackPointsY, 2, blackPointsHeight - 3);
-      for (let blackPointsX = 0; blackPointsX < blackPointsWidth; blackPointsX++) {
-        let sum = 0;
-        const left = between(blackPointsX, 2, blackPointsWidth - 3);
-        for (let regionY = -2; regionY <= 2; regionY++) {
-          const offset = (top + regionY) * blackPointsWidth;
-          for (let regionX = -2; regionX <= 2; regionX++) {
-            sum += blackPoints[offset + left + regionX];
-          }
+    const grayscaled = grayscale(data, width, height);
+    const [averages, averagesWidth, averagesHeight] = calcLocalAverages(grayscaled, width, height, size);
+    for (let y = 0; y < height; y++) {
+      const offset = y * width;
+      for (let x = 0; x < width; x++) {
+        let averageX = x - middleSize;
+        let averageY = y - middleSize;
+        const pixel = grayscaled[offset + x];
+        if (x - middleSize < 0) {
+          averageX = 0;
+        } else if (x - middleSize >= averagesWidth) {
+          averageX = averagesWidth - 1;
+        } else if (y - middleSize < 0) {
+          averageY = 0;
+        } else if (y - middleSize > averagesHeight) {
+          averageY = averagesHeight - 1;
         }
-        const threshold = sum / 25;
-        for (let regionY = 0; regionY < REGION_SIZE; regionY++) {
-          const y = blackPointsY * REGION_SIZE + regionY;
-          const offset = y * width;
-          for (let regionX = 0; regionX < REGION_SIZE; regionX++) {
-            const x = blackPointsX * REGION_SIZE + regionX;
-            const lumina = greyscale[offset + x];
-            if (lumina <= threshold) {
-              binarized.set(x, y);
-            }
-          }
+        const average = averages[averageY * averagesWidth + averageX];
+        if (pixel < average - compensation) {
+          binarized.set(x, y);
         }
       }
     }

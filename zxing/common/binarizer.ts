@@ -11,7 +11,7 @@ function between(value: number, min: number, max: number): number {
   return value < min ? min : value > max ? max : value;
 }
 
-export function binarizer({ data, width, height }: ImageData): BitMatrix {
+export function binarize({ data, width, height }: ImageData): BitMatrix {
   if (data.length !== width * height * 4) {
     throw new Error('malformed data passed to binarizer');
   }

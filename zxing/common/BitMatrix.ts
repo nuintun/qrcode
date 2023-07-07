@@ -12,11 +12,21 @@ export class BitMatrix {
 
   constructor(width: number, height: number, bits?: Int32Array) {
     const rowSize = Math.ceil(width / 32);
+    const bitsCapacity = rowSize * height;
 
     this.#width = width;
     this.#height = height;
     this.#rowSize = rowSize;
-    this.#bits = bits || new Int32Array(rowSize * height);
+
+    if (bits instanceof Int32Array) {
+      if (bits.length !== bitsCapacity) {
+        throw new Error(`matrix bits capacity mismatch: ${bitsCapacity}`);
+      }
+
+      this.#bits = bits;
+    } else {
+      this.#bits = new Int32Array(bitsCapacity);
+    }
   }
 
   #offset(x: number, y: number): number {
