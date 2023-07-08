@@ -3584,6 +3584,7 @@
   function alignCrossPattern(matrix, x, y, maxCount, checker, isVertical) {
     let offset = isVertical ? y : x;
     const countState = [0, 0, 0, 0, 0];
+    const size = isVertical ? matrix.height : matrix.width;
     const isBlackPixel = () => {
       return isVertical ? matrix.get(x, offset) : matrix.get(offset, y);
     };
@@ -3600,7 +3601,6 @@
       countState[0]++;
     }
     offset = (isVertical ? y : x) + 1;
-    const size = isVertical ? matrix.height : matrix.width;
     while (offset < size && isBlackPixel()) {
       offset++;
       countState[2]++;
@@ -3615,8 +3615,10 @@
     }
     return [checker(countState) ? centerFromEnd(countState, offset) : NaN, countState];
   }
+  // BUG 有 BUG，需要重新组织逻辑
   function checkDiagonalPattern(matrix, x, y, maxCount, checker, isBackslash) {
     let offset = 0;
+    const { width, height } = matrix;
     const countState = [0, 0, 0, 0, 0];
     const isBlackPixel = isUpward => {
       if (isBackslash) {
@@ -3641,7 +3643,6 @@
       countState[0]++;
     }
     offset = 1;
-    const { width, height } = matrix;
     while (x + offset < width && y + offset < height && isBlackPixel(false)) {
       offset++;
       countState[2]++;
