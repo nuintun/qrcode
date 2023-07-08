@@ -22,8 +22,8 @@ export class Detector {
   public detect(matrix: BitMatrix): DetectResult[] {
     const { strict } = this.#options;
     const { width, height } = matrix;
+    const alignmentMatcher = new AlignmentPatternMatcher(matrix);
     const finderMatcher = new FinderPatternMatcher(matrix, strict);
-    const alignmentMatcher = new AlignmentPatternMatcher(matrix, strict);
 
     const match = (x: number, y: number, lastBit: number, countState: number[], count: number) => {
       setCountState(countState, count);

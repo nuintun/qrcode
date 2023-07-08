@@ -294,7 +294,7 @@
         return imageData || context.getImageData(0, 0, canvas.width, canvas.height);
       }
 
-      function markFinderPattern({ x, y, moduleSize }, color) {
+      function markFinderPattern({ x, y, moduleSize = [6, 6] }, color) {
         context.save();
 
         context.fillStyle = color;

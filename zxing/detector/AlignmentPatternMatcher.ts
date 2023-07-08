@@ -7,18 +7,18 @@ import { BitMatrix } from '/common/BitMatrix';
 import { PatternMatcher } from './PatternMatcher';
 import { FinderPatternGroup } from './FinderPatternGroup';
 import { distance, isPointInQuadrangle, Point } from '/common/Point';
-import { isEqualsAlignmentModuleSize, isMatchAlignmentPattern } from './utils/matcher';
+import { isEqualsModuleSize, isMatchAlignmentPattern } from './utils/matcher';
 
 export class AlignmentPatternMatcher extends PatternMatcher {
-  constructor(matrix: BitMatrix, strict?: boolean) {
-    super(matrix, 5, isMatchAlignmentPattern, strict);
+  constructor(matrix: BitMatrix) {
+    super(matrix, 5, isMatchAlignmentPattern, true);
   }
 
   public filter({ topLeft, topRight, bottomLeft }: FinderPatternGroup, size: number, moduleSize: number): Pattern[] {
     const { matrix } = this;
     const { x, y } = topLeft;
-    // Look for an alignment pattern (3 modules in size) around where it should be
-    const allowance = Math.ceil(moduleSize * 5);
+    // Look for an alignment pattern (10 modules in size) around where it should be
+    const allowance = Math.ceil(moduleSize * 10);
     const correctionToTopLeft = 1 - 3 / (size - 7);
     const bottomRightX = topRight.x - x + bottomLeft.x;
     const bottomRightY = topRight.y - y + bottomLeft.y;
@@ -37,8 +37,8 @@ export class AlignmentPatternMatcher extends PatternMatcher {
       const [xModuleSize, yModuleSize] = pattern.moduleSize;
 
       return (
-        isEqualsAlignmentModuleSize(xModuleSize, moduleSize) &&
-        isEqualsAlignmentModuleSize(yModuleSize, moduleSize) &&
+        isEqualsModuleSize(xModuleSize, moduleSize) &&
+        isEqualsModuleSize(yModuleSize, moduleSize) &&
         isPointInQuadrangle(
           pattern,
           alignmentAreaTopLeft,

@@ -10,6 +10,7 @@ import { BitMatrix } from '/common/BitMatrix';
 import { FinderPatternGroup } from '/detector/FinderPatternGroup';
 
 export const DIFF_EDGE_RATIO = 0.5;
+export const DIFF_MODULE_SIZE_RATIO = 1;
 export const MIN_MODULE_COUNT_PER_EDGE = 11;
 export const DIFF_FINDER_PATTERN_RATIO = 0.5;
 export const MAX_MODULE_COUNT_PER_EDGE = 175;
@@ -116,15 +117,18 @@ export function isEqualsEdge(edge1: number, edge2: number): boolean {
   return ratio < DIFF_EDGE_RATIO;
 }
 
+export function isEqualsModuleSize(moduleSize1: number, moduleSize2: number): boolean {
+  const moduleSize = (moduleSize1 + moduleSize2) / 2;
+  const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
+
+  return Math.abs(moduleSize1 - moduleSize2) <= moduleSizeDiff;
+}
+
 export function isValidModuleCount(edge: number, moduleSize: number): boolean {
   // Check the sizes
   const moduleCount = Math.ceil(edge / moduleSize);
 
   return moduleCount >= MIN_MODULE_COUNT_PER_EDGE && moduleCount <= MAX_MODULE_COUNT_PER_EDGE;
-}
-
-export function isEqualsAlignmentModuleSize(moduleSize1: number, moduleSize2: number): boolean {
-  return Math.abs(moduleSize1 - moduleSize2) <= (moduleSize1 + moduleSize2) / 2;
 }
 
 export function alignCrossPattern(

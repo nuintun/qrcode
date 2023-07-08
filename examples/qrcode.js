@@ -3499,6 +3499,7 @@
    * @module matcher
    */
   const DIFF_EDGE_RATIO = 0.5;
+  const DIFF_MODULE_SIZE_RATIO = 1;
   const DIFF_FINDER_PATTERN_RATIO = 0.5;
   const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
   function centerFromEnd(countState, end) {
@@ -3575,8 +3576,10 @@
     const ratio = Math.abs(edge1 - edge2) / edgeAvg;
     return ratio < DIFF_EDGE_RATIO;
   }
-  function isEqualsAlignmentModuleSize(moduleSize1, moduleSize2) {
-    return Math.abs(moduleSize1 - moduleSize2) <= (moduleSize1 + moduleSize2) / 2;
+  function isEqualsModuleSize(moduleSize1, moduleSize2) {
+    const moduleSize = (moduleSize1 + moduleSize2) / 2;
+    const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
+    return Math.abs(moduleSize1 - moduleSize2) <= moduleSizeDiff;
   }
   function alignCrossPattern(matrix, x, y, maxCount, checker, isVertical) {
     let offset = isVertical ? y : x;
@@ -4397,14 +4400,14 @@
    * @module AlignmentPatternMatcher
    */
   class AlignmentPatternMatcher extends PatternMatcher {
-    constructor(matrix, strict) {
-      super(matrix, 5, isMatchAlignmentPattern, strict);
+    constructor(matrix) {
+      super(matrix, 5, isMatchAlignmentPattern, true);
     }
     filter({ topLeft, topRight, bottomLeft }, size, moduleSize) {
       const { matrix } = this;
       const { x, y } = topLeft;
-      // Look for an alignment pattern (3 modules in size) around where it should be
-      const allowance = Math.ceil(moduleSize * 5);
+      // Look for an alignment pattern (10 modules in size) around where it should be
+      const allowance = Math.ceil(moduleSize * 10);
       const correctionToTopLeft = 1 - 3 / (size - 7);
       const bottomRightX = topRight.x - x + bottomLeft.x;
       const bottomRightY = topRight.y - y + bottomLeft.y;
@@ -4421,8 +4424,8 @@
       const patterns = this.patterns.filter(pattern => {
         const [xModuleSize, yModuleSize] = pattern.moduleSize;
         return (
-          isEqualsAlignmentModuleSize(xModuleSize, moduleSize) &&
-          isEqualsAlignmentModuleSize(yModuleSize, moduleSize) &&
+          isEqualsModuleSize(xModuleSize, moduleSize) &&
+          isEqualsModuleSize(yModuleSize, moduleSize) &&
           isPointInQuadrangle(
             pattern,
             alignmentAreaTopLeft,
@@ -4453,8 +4456,8 @@
     detect(matrix) {
       const { strict } = this.#options;
       const { width, height } = matrix;
+      const alignmentMatcher = new AlignmentPatternMatcher(matrix);
       const finderMatcher = new FinderPatternMatcher(matrix, strict);
-      const alignmentMatcher = new AlignmentPatternMatcher(matrix, strict);
       const match = (x, y, lastBit, countState, count) => {
         setCountState(countState, count);
         // Match pattern
