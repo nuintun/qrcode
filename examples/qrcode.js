@@ -3688,7 +3688,7 @@
     if (length >= 5) {
       const lastIndex = length - 1;
       // Finder pattern size equals countState[0] + countState[lastIndex]
-      const quietZone = (countState[0] + countState[lastIndex] / 7) * 4;
+      const quietZone = ((countState[0] + countState[lastIndex]) / 7) * 4;
       for (let i = 1; i < lastIndex; i++) {
         if (countState[i] > quietZone) {
           return false;
