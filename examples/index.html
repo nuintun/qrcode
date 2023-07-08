@@ -430,8 +430,6 @@
             const { topLeft, topRight, bottomLeft } = finder;
             const cacheKey = `${topLeft.x}-${topLeft.y}:${topRight.x}-${topRight.y}:${bottomLeft.x}-${bottomLeft.y}`;
 
-            console.log(cacheKey);
-
             try {
               if (decodeCache.has(cacheKey)) {
                 continue;
