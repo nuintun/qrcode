@@ -3686,8 +3686,14 @@
   function isValidTimingLine(countState) {
     const { length } = countState;
     if (length >= 5) {
-      countState = countState.slice(1, -1).sort((a, b) => b - a);
-      return countState[0] / countState[countState.length - 2] <= 5;
+      const lastIndex = length - 1;
+      const finderPatternSize = countState[0] + countState[lastIndex];
+      for (let i = 1; i < lastIndex; i++) {
+        if (countState[i] > finderPatternSize) {
+          return false;
+        }
+      }
+      return true;
     }
     return false;
   }
@@ -3709,6 +3715,7 @@
         lastBit = bit;
       }
     }
+    countState.push(count);
     return isValidTimingLine(countState);
   }
 
@@ -4096,15 +4103,12 @@
             // If we didn't find alignment pattern... well try anyway without it
             const alignmentPatterns = alignmentMatcher.filter(finderPatternGroup, size, moduleSize);
             // Founded alignment
-            if (alignmentPatterns.length > 0) {
-              for (const alignmentPattern of alignmentPatterns) {
-                detected.push({
-                  finder: finderPatternGroup,
-                  alignment: alignmentPattern,
-                  matrix: transform(matrix, size, finderPatternGroup, alignmentPattern)
-                });
-              }
-              continue;
+            for (const alignmentPattern of alignmentPatterns) {
+              detected.push({
+                finder: finderPatternGroup,
+                alignment: alignmentPattern,
+                matrix: transform(matrix, size, finderPatternGroup, alignmentPattern)
+              });
             }
           }
           // No alignment version and fallback

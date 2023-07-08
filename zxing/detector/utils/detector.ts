@@ -230,15 +230,12 @@ export function detect(
           const alignmentPatterns = alignmentMatcher.filter(finderPatternGroup, size, moduleSize);
 
           // Founded alignment
-          if (alignmentPatterns.length > 0) {
-            for (const alignmentPattern of alignmentPatterns) {
-              detected.push({
-                finder: finderPatternGroup,
-                alignment: alignmentPattern,
-                matrix: transform(matrix, size, finderPatternGroup, alignmentPattern)
-              });
-            }
-            continue;
+          for (const alignmentPattern of alignmentPatterns) {
+            detected.push({
+              finder: finderPatternGroup,
+              alignment: alignmentPattern,
+              matrix: transform(matrix, size, finderPatternGroup, alignmentPattern)
+            });
           }
         }
 

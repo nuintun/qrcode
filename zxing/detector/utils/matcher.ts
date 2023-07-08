@@ -283,9 +283,16 @@ function isValidTimingLine(countState: number[]): boolean {
   const { length } = countState;
 
   if (length >= 5) {
-    countState = countState.slice(1, -1).sort((a, b) => b - a);
+    const lastIndex = length - 1;
+    const finderPatternSize = countState[0] + countState[lastIndex];
 
-    return countState[0] / countState[countState.length - 2] <= 5;
+    for (let i = 1; i < lastIndex; i++) {
+      if (countState[i] > finderPatternSize) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   return false;
@@ -312,10 +319,13 @@ export function checkPixelsInTimingLine(
       count++;
     } else {
       countState.push(count);
+
       count = 1;
       lastBit = bit;
     }
   }
+
+  countState.push(count);
 
   return isValidTimingLine(countState);
 }
