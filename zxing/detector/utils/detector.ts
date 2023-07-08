@@ -11,8 +11,8 @@ import { GridSampler } from '/common/GridSampler';
 import { FinderPatternMatcher } from '../FinderPatternMatcher';
 import { FinderPatternGroup } from '/detector/FinderPatternGroup';
 import { AlignmentPatternMatcher } from '../AlignmentPatternMatcher';
-import { quadrilateralToQuadrilateral } from '/common/PerspectiveTransform';
 import { fromVersionSize, MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
+import { PerspectiveTransform, quadrilateralToQuadrilateral } from '/common/PerspectiveTransform';
 
 export interface DetectResult {
   readonly matrix: BitMatrix;
@@ -147,69 +147,58 @@ export function calculateSymbolSize({ topLeft, topRight, bottomLeft }: FinderPat
   return size;
 }
 
-export type Transform = (
-  matrix: BitMatrix,
-  size: number,
-  finderPatternGroup: FinderPatternGroup,
-  alignmentPattern?: Pattern
-) => BitMatrix;
-
-function transformImpl(
-  matrix: BitMatrix,
+function createTransform(
   size: number,
   { topLeft, topRight, bottomLeft }: FinderPatternGroup,
   alignmentPattern?: Pattern
-) {
+): PerspectiveTransform {
   let bottomRightX;
   let bottomRightY;
   let sourceBottomRightX;
   let sourceBottomRightY;
 
-  const dimMinusThree = size - 3.5;
-  const sampler = new GridSampler(matrix);
+  const sizeMinusThree = size - 3.5;
+  const { x: topLeftX, y: topLeftY } = topLeft;
+  const { x: topRightX, y: topRightY } = topRight;
+  const { x: bottomLeftX, y: bottomLeftY } = bottomLeft;
 
   if (alignmentPattern != null) {
     bottomRightX = alignmentPattern.x;
     bottomRightY = alignmentPattern.y;
-    sourceBottomRightX = dimMinusThree - 3;
+    sourceBottomRightX = sizeMinusThree - 3;
     sourceBottomRightY = sourceBottomRightX;
   } else {
     // Don't have an alignment pattern, just make up the bottom-right point
-    bottomRightX = topRight.x - topLeft.x + bottomLeft.x;
-    bottomRightY = topRight.y - topLeft.y + bottomLeft.y;
-    sourceBottomRightX = dimMinusThree;
-    sourceBottomRightY = dimMinusThree;
+    bottomRightX = topRightX + bottomLeftX - topLeftX;
+    bottomRightY = topRightY + bottomLeftY - topLeftY;
+    sourceBottomRightX = sizeMinusThree;
+    sourceBottomRightY = sizeMinusThree;
   }
 
-  return sampler.sampleGrid(
-    size,
-    size,
-    quadrilateralToQuadrilateral(
-      3.5,
-      3.5,
-      dimMinusThree,
-      3.5,
-      sourceBottomRightX,
-      sourceBottomRightY,
-      3.5,
-      dimMinusThree,
-      topLeft.x,
-      topLeft.y,
-      topRight.x,
-      topRight.y,
-      bottomRightX,
-      bottomRightY,
-      bottomLeft.x,
-      bottomLeft.y
-    )
+  return quadrilateralToQuadrilateral(
+    3.5,
+    3.5,
+    sizeMinusThree,
+    3.5,
+    sourceBottomRightX,
+    sourceBottomRightY,
+    3.5,
+    sizeMinusThree,
+    topLeftX,
+    topLeftY,
+    topRightX,
+    topRightY,
+    bottomRightX,
+    bottomRightY,
+    bottomLeftX,
+    bottomLeftY
   );
 }
 
 export function detect(
   matrix: BitMatrix,
   finderMatcher: FinderPatternMatcher,
-  alignmentMatcher: AlignmentPatternMatcher,
-  transform: Transform = transformImpl
+  alignmentMatcher: AlignmentPatternMatcher
 ): DetectResult[] {
   const detected: DetectResult[] = [];
   const finderPatternGroups = finderMatcher.groups();
@@ -218,6 +207,7 @@ export function detect(
     const moduleSize = calculateModuleSize(matrix, finderPatternGroup);
 
     if (moduleSize >= 1) {
+      const sampler = new GridSampler(matrix);
       const size = calculateSymbolSize(finderPatternGroup, moduleSize);
 
       if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
@@ -234,7 +224,7 @@ export function detect(
             detected.push({
               finder: finderPatternGroup,
               alignment: alignmentPattern,
-              matrix: transform(matrix, size, finderPatternGroup, alignmentPattern)
+              matrix: sampler.sampleGrid(size, size, createTransform(size, finderPatternGroup, alignmentPattern))
             });
           }
         }
@@ -242,7 +232,7 @@ export function detect(
         // No alignment version and fallback
         detected.push({
           finder: finderPatternGroup,
-          matrix: transform(matrix, size, finderPatternGroup)
+          matrix: sampler.sampleGrid(size, size, createTransform(size, finderPatternGroup))
         });
       }
     }

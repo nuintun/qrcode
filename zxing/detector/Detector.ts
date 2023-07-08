@@ -2,22 +2,14 @@
  * @module Detector
  */
 
-import { Pattern } from './Pattern';
 import { BitMatrix } from '/common/BitMatrix';
 import { setCountState } from './utils/matcher';
 import { detect, DetectResult } from './utils/detector';
-import { FinderPatternGroup } from './FinderPatternGroup';
 import { FinderPatternMatcher } from './FinderPatternMatcher';
 import { AlignmentPatternMatcher } from './AlignmentPatternMatcher';
 
 export interface Options {
   strict?: boolean;
-  transform?: (
-    matrix: BitMatrix,
-    size: number,
-    finderPatternGroup: FinderPatternGroup,
-    alignmentPattern?: Pattern
-  ) => BitMatrix;
 }
 
 export class Detector {
@@ -28,8 +20,8 @@ export class Detector {
   }
 
   public detect(matrix: BitMatrix): DetectResult[] {
+    const { strict } = this.#options;
     const { width, height } = matrix;
-    const { strict, transform } = this.#options;
     const finderMatcher = new FinderPatternMatcher(matrix, strict);
     const alignmentMatcher = new AlignmentPatternMatcher(matrix, strict);
 
@@ -77,6 +69,6 @@ export class Detector {
       match(x, y, lastBit, countState, count);
     }
 
-    return detect(matrix, finderMatcher, alignmentMatcher, transform);
+    return detect(matrix, finderMatcher, alignmentMatcher);
   }
 }

@@ -4047,54 +4047,53 @@
     }
     return size;
   }
-  function transformImpl(matrix, size, { topLeft, topRight, bottomLeft }, alignmentPattern) {
+  function createTransform(size, { topLeft, topRight, bottomLeft }, alignmentPattern) {
     let bottomRightX;
     let bottomRightY;
     let sourceBottomRightX;
     let sourceBottomRightY;
-    const dimMinusThree = size - 3.5;
-    const sampler = new GridSampler(matrix);
+    const sizeMinusThree = size - 3.5;
+    const { x: topLeftX, y: topLeftY } = topLeft;
+    const { x: topRightX, y: topRightY } = topRight;
+    const { x: bottomLeftX, y: bottomLeftY } = bottomLeft;
     if (alignmentPattern != null) {
       bottomRightX = alignmentPattern.x;
       bottomRightY = alignmentPattern.y;
-      sourceBottomRightX = dimMinusThree - 3;
+      sourceBottomRightX = sizeMinusThree - 3;
       sourceBottomRightY = sourceBottomRightX;
     } else {
       // Don't have an alignment pattern, just make up the bottom-right point
-      bottomRightX = topRight.x - topLeft.x + bottomLeft.x;
-      bottomRightY = topRight.y - topLeft.y + bottomLeft.y;
-      sourceBottomRightX = dimMinusThree;
-      sourceBottomRightY = dimMinusThree;
+      bottomRightX = topRightX + bottomLeftX - topLeftX;
+      bottomRightY = topRightY + bottomLeftY - topLeftY;
+      sourceBottomRightX = sizeMinusThree;
+      sourceBottomRightY = sizeMinusThree;
     }
-    return sampler.sampleGrid(
-      size,
-      size,
-      quadrilateralToQuadrilateral(
-        3.5,
-        3.5,
-        dimMinusThree,
-        3.5,
-        sourceBottomRightX,
-        sourceBottomRightY,
-        3.5,
-        dimMinusThree,
-        topLeft.x,
-        topLeft.y,
-        topRight.x,
-        topRight.y,
-        bottomRightX,
-        bottomRightY,
-        bottomLeft.x,
-        bottomLeft.y
-      )
+    return quadrilateralToQuadrilateral(
+      3.5,
+      3.5,
+      sizeMinusThree,
+      3.5,
+      sourceBottomRightX,
+      sourceBottomRightY,
+      3.5,
+      sizeMinusThree,
+      topLeftX,
+      topLeftY,
+      topRightX,
+      topRightY,
+      bottomRightX,
+      bottomRightY,
+      bottomLeftX,
+      bottomLeftY
     );
   }
-  function detect(matrix, finderMatcher, alignmentMatcher, transform = transformImpl) {
+  function detect(matrix, finderMatcher, alignmentMatcher) {
     const detected = [];
     const finderPatternGroups = finderMatcher.groups();
     for (const finderPatternGroup of finderPatternGroups) {
       const moduleSize = calculateModuleSize(matrix, finderPatternGroup);
       if (moduleSize >= 1) {
+        const sampler = new GridSampler(matrix);
         const size = calculateSymbolSize(finderPatternGroup, moduleSize);
         if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
           const version = fromVersionSize(size);
@@ -4108,14 +4107,14 @@
               detected.push({
                 finder: finderPatternGroup,
                 alignment: alignmentPattern,
-                matrix: transform(matrix, size, finderPatternGroup, alignmentPattern)
+                matrix: sampler.sampleGrid(size, size, createTransform(size, finderPatternGroup, alignmentPattern))
               });
             }
           }
           // No alignment version and fallback
           detected.push({
             finder: finderPatternGroup,
-            matrix: transform(matrix, size, finderPatternGroup)
+            matrix: sampler.sampleGrid(size, size, createTransform(size, finderPatternGroup))
           });
         }
       }
@@ -4452,8 +4451,8 @@
       this.#options = options;
     }
     detect(matrix) {
+      const { strict } = this.#options;
       const { width, height } = matrix;
-      const { strict, transform } = this.#options;
       const finderMatcher = new FinderPatternMatcher(matrix, strict);
       const alignmentMatcher = new AlignmentPatternMatcher(matrix, strict);
       const match = (x, y, lastBit, countState, count) => {
@@ -4489,7 +4488,7 @@
         }
         match(x, y, lastBit, countState, count);
       }
-      return detect(matrix, finderMatcher, alignmentMatcher, transform);
+      return detect(matrix, finderMatcher, alignmentMatcher);
     }
   }
 
