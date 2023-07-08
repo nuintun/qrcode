@@ -8,11 +8,11 @@ import { toInt32 } from './utils';
 // Mild variant of Bresenham's algorithm
 // see https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 export class PlotLine {
+  #to: Point;
+  #from: Point;
   #limit: number;
   #steep: boolean;
-  #to: [x: number, y: number];
   #diff: [x: number, y: number];
-  #from: [x: number, y: number];
   #delta: [x: number, y: number];
 
   constructor(from: Point, to: Point) {
@@ -31,36 +31,36 @@ export class PlotLine {
     const deltaX = fromX < toX ? 1 : -1;
 
     this.#steep = steep;
-    this.#to = [toX, toY];
     this.#limit = toX + deltaX;
-    this.#from = [fromX, fromY];
+    this.#to = new Point(toX, toY);
+    this.#from = new Point(fromX, fromY);
     this.#delta = [deltaX, fromY < toY ? 1 : -1];
     this.#diff = [Math.abs(toX - fromX), Math.abs(toY - fromY)];
+  }
+
+  public get to(): Point {
+    return this.#to;
+  }
+
+  public get from(): Point {
+    return this.#from;
   }
 
   public get steep(): boolean {
     return this.#steep;
   }
 
-  public get to(): Point {
-    return new Point(...this.#to);
-  }
-
-  public get from(): Point {
-    return new Point(...this.#from);
-  }
-
   public get delta(): [x: number, y: number] {
-    return [...this.#delta];
+    return this.#delta;
   }
 
   public *points(): Generator<[x: number, y: number]> {
-    const [, toY] = this.#to;
-    const steep = this.#steep;
     const limit = this.#limit;
-    const [fromX, fromY] = this.#from;
+    const steep = this.#steep;
+    const { y: toY } = this.#to;
     const [xDiff, yDiff] = this.#diff;
     const [deltaX, deltaY] = this.#delta;
+    const { x: fromX, y: fromY } = this.#from;
 
     let error = toInt32(-xDiff / 2);
 

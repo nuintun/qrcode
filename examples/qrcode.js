@@ -3436,11 +3436,11 @@
   // Mild variant of Bresenham's algorithm
   // see https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
   class PlotLine {
+    #to;
+    #from;
     #limit;
     #steep;
-    #to;
     #diff;
-    #from;
     #delta;
     constructor(from, to) {
       let toX = toInt32(to.x);
@@ -3454,31 +3454,31 @@
       }
       const deltaX = fromX < toX ? 1 : -1;
       this.#steep = steep;
-      this.#to = [toX, toY];
       this.#limit = toX + deltaX;
-      this.#from = [fromX, fromY];
+      this.#to = new Point(toX, toY);
+      this.#from = new Point(fromX, fromY);
       this.#delta = [deltaX, fromY < toY ? 1 : -1];
       this.#diff = [Math.abs(toX - fromX), Math.abs(toY - fromY)];
+    }
+    get to() {
+      return this.#to;
+    }
+    get from() {
+      return this.#from;
     }
     get steep() {
       return this.#steep;
     }
-    get to() {
-      return new Point(...this.#to);
-    }
-    get from() {
-      return new Point(...this.#from);
-    }
     get delta() {
-      return [...this.#delta];
+      return this.#delta;
     }
     *points() {
-      const [, toY] = this.#to;
-      const steep = this.#steep;
       const limit = this.#limit;
-      const [fromX, fromY] = this.#from;
+      const steep = this.#steep;
+      const { y: toY } = this.#to;
       const [xDiff, yDiff] = this.#diff;
       const [deltaX, deltaY] = this.#delta;
+      const { x: fromX, y: fromY } = this.#from;
       let error = toInt32(-xDiff / 2);
       // Loop up until x === toX, but not beyond
       for (let x = fromX, y = fromY; x !== limit; x += deltaX) {
