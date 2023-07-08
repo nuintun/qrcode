@@ -182,7 +182,6 @@ export function alignCrossPattern(
   return [checker(countState) ? centerFromEnd(countState, offset) : NaN, countState];
 }
 
-// BUG 有 BUG，需要重新组织逻辑
 export function checkDiagonalPattern(
   matrix: BitMatrix,
   x: number,
@@ -191,50 +190,64 @@ export function checkDiagonalPattern(
   checker: (countState: number[]) => boolean,
   isBackslash?: boolean
 ): boolean {
-  let offset = 0;
+  let step = -1;
+  let offsetX = x;
+  let offsetY = y;
 
   const { width, height } = matrix;
   const countState = [0, 0, 0, 0, 0];
-  const isBlackPixel = (isUpward: boolean): number => {
-    if (isBackslash) {
-      return isUpward ? matrix.get(x - offset, y - offset) : matrix.get(x + offset, y + offset);
-    } else {
-      return isUpward ? matrix.get(x + offset, y - offset) : matrix.get(x - offset, y + offset);
-    }
+  const slope = isBackslash ? -1 : 1;
+  const updateAxis = (): void => {
+    offsetX += step;
+    offsetY -= step * slope;
+  };
+  const isBlackPixel = (): number => {
+    return matrix.get(offsetX, offsetY);
   };
 
-  // Start counting up, left from center finding black center mass
-  while (x >= offset && y >= offset && isBlackPixel(true)) {
-    offset++;
+  // Start counting left from center finding black center mass
+  while (offsetX >= 0 && offsetY >= 0 && offsetY < height && isBlackPixel()) {
+    updateAxis();
+
     countState[2]++;
   }
 
-  // Continue up, left finding white space
-  while (x >= offset && y >= offset && !isBlackPixel(true)) {
-    offset++;
+  // Start counting left from center finding black center mass
+  while (offsetX >= 0 && offsetY >= 0 && offsetY < height && !isBlackPixel()) {
+    updateAxis();
+
     countState[1]++;
   }
 
-  // Continue up, left finding black border
-  while (x >= offset && y >= offset && countState[0] < maxCount && isBlackPixel(true)) {
-    offset++;
+  // Start counting left from center finding black center mass
+  while (offsetX >= 0 && offsetY >= 0 && offsetY < height && countState[0] < maxCount && isBlackPixel()) {
+    updateAxis();
+
     countState[0]++;
   }
 
-  offset = 1;
+  step = 1;
+  offsetX = x + step;
+  offsetY = y - step * slope;
 
-  while (x + offset < width && y + offset < height && isBlackPixel(false)) {
-    offset++;
+  // Start counting right from center finding black center mass
+  while (offsetX < width && offsetY >= 0 && offsetY < height && isBlackPixel()) {
+    updateAxis();
+
     countState[2]++;
   }
 
-  while (x + offset < width && y + offset < height && !isBlackPixel(false)) {
-    offset++;
+  // Start counting right from center finding black center mass
+  while (offsetX < width && offsetY >= 0 && offsetY < height && !isBlackPixel()) {
+    updateAxis();
+
     countState[3]++;
   }
 
-  while (x + offset < width && y + offset < height && countState[4] < maxCount && isBlackPixel(false)) {
-    offset++;
+  // Start counting right from center finding black center mass
+  while (offsetX < width && offsetY >= 0 && offsetY < height && countState[4] < maxCount && isBlackPixel()) {
+    updateAxis();
+
     countState[4]++;
   }
 
