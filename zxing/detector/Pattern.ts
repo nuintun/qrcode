@@ -3,6 +3,7 @@
  */
 
 import { Point } from '/common/Point';
+import { ModuleSizeGroup } from './utils/module';
 
 export type PatternRect = [
   // Top border center y
@@ -21,7 +22,7 @@ export class Pattern extends Point {
   #modules: number;
   #rect: PatternRect;
   #combined: number = 1;
-  #moduleSize: [x: number, y: number];
+  #moduleSize: ModuleSizeGroup;
 
   constructor(x: number, y: number, width: number, height: number, modules: number) {
     super(x, y);
@@ -61,7 +62,7 @@ export class Pattern extends Point {
     return this.#rect;
   }
 
-  public get moduleSize(): [x: number, y: number] {
+  public get moduleSize(): ModuleSizeGroup {
     return this.#moduleSize;
   }
 

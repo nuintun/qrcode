@@ -5,8 +5,9 @@
 import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
 import { PatternMatcher } from './PatternMatcher';
+import { checkPixelsInTimingLine } from './utils/timing';
 import { FinderPatternGroup } from './FinderPatternGroup';
-import { checkPixelsInTimingLine, isEqualsEdge, isMatchFinderPattern } from './utils/pattern';
+import { isEqualsEdge, isMatchFinderPattern } from './utils/pattern';
 
 export class FinderPatternMatcher extends PatternMatcher {
   constructor(matrix: BitMatrix, strict?: boolean) {
@@ -57,8 +58,15 @@ export class FinderPatternMatcher extends PatternMatcher {
               continue;
             }
 
-            const finderPatternGroup = new FinderPatternGroup([pattern1, pattern2, pattern3]);
-            const { topLeft, topRight, bottomLeft } = finderPatternGroup;
+            const { matrix } = this;
+            const finderPatternGroup = new FinderPatternGroup(matrix, [pattern1, pattern2, pattern3]);
+            const { topLeft, topRight, bottomLeft, moduleSize } = finderPatternGroup;
+
+            // Invalid module size
+            if (moduleSize[0] < 1 || moduleSize[1] < 1) {
+              continue;
+            }
+
             const edge1 = distance(bottomLeft, topLeft);
             const edge2 = distance(topLeft, topRight);
 
@@ -73,8 +81,6 @@ export class FinderPatternMatcher extends PatternMatcher {
             if (!isEqualsEdge(Math.sqrt(edge1 * edge1 + edge2 * edge2), hypotenuse)) {
               continue;
             }
-
-            const { matrix } = this;
 
             if (
               checkPixelsInTimingLine(matrix, finderPatternGroup) &&

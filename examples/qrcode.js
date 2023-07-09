@@ -3431,71 +3431,6 @@
   }
 
   /**
-   * @module PlotLine
-   */
-  // Mild variant of Bresenham's algorithm
-  // see https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-  class PlotLine {
-    #to;
-    #from;
-    #limit;
-    #steep;
-    #diff;
-    #delta;
-    constructor(from, to) {
-      let toX = toInt32(to.x);
-      let toY = toInt32(to.y);
-      let fromX = toInt32(from.x);
-      let fromY = toInt32(from.y);
-      const steep = Math.abs(toY - fromY) > Math.abs(toX - fromX);
-      // Steep line
-      if (steep) {
-        [fromX, fromY, toX, toY] = [fromY, fromX, toY, toX];
-      }
-      const deltaX = fromX < toX ? 1 : -1;
-      this.#steep = steep;
-      this.#limit = toX + deltaX;
-      this.#to = new Point(toX, toY);
-      this.#from = new Point(fromX, fromY);
-      this.#delta = [deltaX, fromY < toY ? 1 : -1];
-      this.#diff = [Math.abs(toX - fromX), Math.abs(toY - fromY)];
-    }
-    get to() {
-      return this.#to;
-    }
-    get from() {
-      return this.#from;
-    }
-    get steep() {
-      return this.#steep;
-    }
-    get delta() {
-      return this.#delta;
-    }
-    *points() {
-      const limit = this.#limit;
-      const steep = this.#steep;
-      const { y: toY } = this.#to;
-      const [xDiff, yDiff] = this.#diff;
-      const [deltaX, deltaY] = this.#delta;
-      const { x: fromX, y: fromY } = this.#from;
-      let error = toInt32(-xDiff / 2);
-      // Loop up until x === toX, but not beyond
-      for (let x = fromX, y = fromY; x !== limit; x += deltaX) {
-        yield [steep ? y : x, steep ? x : y];
-        error += yDiff;
-        if (error > 0) {
-          if (y === toY) {
-            break;
-          }
-          y += deltaY;
-          error -= xDiff;
-        }
-      }
-    }
-  }
-
-  /**
    * @module matcher
    */
   const DIFF_EDGE_RATIO = 0.5;
@@ -3693,146 +3628,6 @@
       [bottomLeft, topRight] = [topRight, bottomLeft];
     }
     return [topLeft, topRight, bottomLeft];
-  }
-  function sizeOfBlackWhiteBlackRun(matrix, from, to) {
-    const line = new PlotLine(from, to);
-    const points = line.points();
-    // In black pixels, looking for white, first or second time.
-    let state = 0;
-    for (const [x, y] of points) {
-      // Does current pixel mean we have moved white to black or vice versa?
-      // Scanning black in state 0,2 and white in state 1, so if we find the wrong
-      // color, advance to next state or end if we are in state 2 already
-      if ((state === 1) === (matrix.get(x, y) === 1)) {
-        if (state === 2) {
-          return distance(new Point(x, y), from);
-        }
-        state++;
-      }
-    }
-    to = line.to;
-    from = line.from;
-    const [deltaX] = line.delta;
-    // Found black-white-black; give the benefit of the doubt that the next pixel outside the image
-    // is "white" so this last point at (toX+xStep,toY) is the right ending. This is really a
-    // small approximation; (toX+xStep,toY+yStep) might be really correct. Ignore this.
-    if (state === 2) {
-      return distance(new Point(to.x + deltaX, to.y), from);
-    }
-    return NaN;
-  }
-  function sizeOfBlackWhiteBlackRunBothWays(matrix, from, to) {
-    // Now count other way -- don't run off image though of course
-    const { x: toX, y: toY } = to;
-    const { width, height } = matrix;
-    const { x: fromX, y: fromY } = from;
-    let scale = 1;
-    let otherToX = fromX - (toX - fromX);
-    let size = sizeOfBlackWhiteBlackRun(matrix, from, to);
-    if (Number.isNaN(size)) {
-      return NaN;
-    }
-    if (otherToX < 0) {
-      scale = fromX / (fromX - otherToX);
-      otherToX = 0;
-    } else if (otherToX >= width) {
-      scale = (width - 1 - fromX) / (otherToX - fromX);
-      otherToX = width - 1;
-    }
-    let otherToY = toInt32(fromY - (toY - fromY) * scale);
-    scale = 1;
-    if (otherToY < 0) {
-      scale = fromY / (fromY - otherToY);
-      otherToY = 0;
-    } else if (otherToY >= height) {
-      scale = (height - 1 - fromY) / (otherToY - fromY);
-      otherToY = height - 1;
-    }
-    otherToX = toInt32(fromX + (otherToX - fromX) * scale);
-    // Middle pixel is double-counted this way; subtract 1
-    size += sizeOfBlackWhiteBlackRun(matrix, from, new Point(otherToX, otherToY));
-    return size - 1;
-  }
-  function calculateModuleSizeOneWay(matrix, pattern1, pattern2) {
-    const point1 = new Point(toInt32(pattern1.x), toInt32(pattern1.y));
-    const point2 = new Point(toInt32(pattern2.x), toInt32(pattern2.y));
-    const expectModuleSize1 = sizeOfBlackWhiteBlackRunBothWays(matrix, point1, point2);
-    const expectModuleSize2 = sizeOfBlackWhiteBlackRunBothWays(matrix, point2, point1);
-    if (Number.isNaN(expectModuleSize1)) {
-      return expectModuleSize2 / 7;
-    }
-    if (Number.isNaN(expectModuleSize2)) {
-      return expectModuleSize1 / 7;
-    }
-    // Average them, and divide by 7 since we've counted the width of 3 black modules,
-    // and 1 white and 1 black module on either side. Ergo, divide sum by 14.
-    return (expectModuleSize1 + expectModuleSize2) / 14;
-  }
-  function calculateTimingRatio(axis, control) {
-    return control > axis ? 1 : control < axis ? -1 : 0;
-  }
-  function getTimingPointXAxis({ x, rect }, ratio) {
-    const [, right, , left] = rect;
-    return ratio > 0 ? right : ratio < 0 ? left : x;
-  }
-  function getTimingPointYAxis({ y, rect }, ratio) {
-    const [top, , bottom] = rect;
-    return ratio > 0 ? bottom : ratio < 0 ? top : y;
-  }
-  function calculateTimingLine(start, end, control, isVertical) {
-    const { x: endX, y: endY } = end;
-    const { x: startX, y: startY } = start;
-    const controlX = control.x + end.x - startX;
-    const controlY = control.y + end.y - startY;
-    const xRatio = calculateTimingRatio(startX, controlX);
-    const yRatio = calculateTimingRatio(startY, controlY);
-    const endXTranslate = getTimingPointXAxis(end, xRatio);
-    const endYTranslate = getTimingPointYAxis(end, yRatio);
-    const startXTranslate = getTimingPointXAxis(start, xRatio);
-    const startYTranslate = getTimingPointYAxis(start, yRatio);
-    if (xRatio === 0 || yRatio === 0) {
-      return [new Point(startXTranslate, startYTranslate), new Point(endXTranslate, endYTranslate)];
-    }
-    if (isVertical ? xRatio !== yRatio : xRatio === yRatio) {
-      return [new Point(startX, startYTranslate), new Point(endX, endYTranslate)];
-    }
-    return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
-  }
-  function isValidTimingLine(countState) {
-    const { length } = countState;
-    if (length >= 5) {
-      const lastIndex = length - 1;
-      // Finder pattern size equals countState[0] + countState[lastIndex]
-      const quietZone = ((countState[0] + countState[lastIndex]) / 7) * 4;
-      for (let i = 1; i < lastIndex; i++) {
-        if (countState[i] > quietZone) {
-          return false;
-        }
-      }
-      return true;
-    }
-    return false;
-  }
-  function checkPixelsInTimingLine(matrix, { topLeft, topRight, bottomLeft }, isVertical) {
-    const countState = [];
-    const [start, end] = isVertical
-      ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
-      : calculateTimingLine(topLeft, topRight, bottomLeft);
-    const points = new PlotLine(start, end).points();
-    let count = 0;
-    let lastBit = matrix.get(toInt32(start.x), toInt32(start.y));
-    for (const [x, y] of points) {
-      const bit = matrix.get(x, y);
-      if (bit === lastBit) {
-        count++;
-      } else {
-        countState.push(count);
-        count = 1;
-        lastBit = bit;
-      }
-    }
-    countState.push(count);
-    return isValidTimingLine(countState);
   }
 
   /**
@@ -4063,9 +3858,9 @@
   /**
    * @module detector
    */
-  function calculateModuleSize(matrix, { topLeft, topRight, bottomLeft }) {
+  function calculateModuleSize({ moduleSize }) {
     // Take the average
-    return (calculateModuleSizeOneWay(matrix, topLeft, topRight) + calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)) / 2;
+    return (moduleSize[0] + moduleSize[1]) / 2;
   }
   function calculateSymbolSize({ topLeft, topRight, bottomLeft }, moduleSize) {
     const width = distance(topLeft, topRight);
@@ -4132,32 +3927,30 @@
     const detected = [];
     const finderPatternGroups = finderMatcher.groups();
     for (const finderPatternGroup of finderPatternGroups) {
-      const moduleSize = calculateModuleSize(matrix, finderPatternGroup);
-      if (moduleSize >= 1) {
-        const sampler = new GridSampler(matrix);
-        const size = calculateSymbolSize(finderPatternGroup, moduleSize);
-        if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
-          const version = fromVersionSize(size);
-          // Find alignment
-          if (version.alignmentPatterns.length > 0) {
-            // Kind of arbitrary -- expand search radius before giving up
-            // If we didn't find alignment pattern... well try anyway without it
-            const alignmentPatterns = alignmentMatcher.filter(finderPatternGroup, size, moduleSize);
-            // Founded alignment
-            for (const alignmentPattern of alignmentPatterns) {
-              detected.push({
-                finder: finderPatternGroup,
-                alignment: alignmentPattern,
-                matrix: sampler.sampleGrid(size, size, createTransform(size, finderPatternGroup, alignmentPattern))
-              });
-            }
+      const moduleSize = calculateModuleSize(finderPatternGroup);
+      const sampler = new GridSampler(matrix);
+      const size = calculateSymbolSize(finderPatternGroup, moduleSize);
+      if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
+        const version = fromVersionSize(size);
+        // Find alignment
+        if (version.alignmentPatterns.length > 0) {
+          // Kind of arbitrary -- expand search radius before giving up
+          // If we didn't find alignment pattern... well try anyway without it
+          const alignmentPatterns = alignmentMatcher.filter(finderPatternGroup, size, moduleSize);
+          // Founded alignment
+          for (const alignmentPattern of alignmentPatterns) {
+            detected.push({
+              finder: finderPatternGroup,
+              alignment: alignmentPattern,
+              matrix: sampler.sampleGrid(size, size, createTransform(size, finderPatternGroup, alignmentPattern))
+            });
           }
-          // No alignment version and fallback
-          detected.push({
-            finder: finderPatternGroup,
-            matrix: sampler.sampleGrid(size, size, createTransform(size, finderPatternGroup))
-          });
         }
+        // No alignment version and fallback
+        detected.push({
+          finder: finderPatternGroup,
+          matrix: sampler.sampleGrid(size, size, createTransform(size, finderPatternGroup))
+        });
       }
     }
     return detected;
@@ -4316,12 +4109,230 @@
   }
 
   /**
+   * @module PlotLine
+   */
+  // Mild variant of Bresenham's algorithm
+  // see https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+  class PlotLine {
+    #to;
+    #from;
+    #limit;
+    #steep;
+    #diff;
+    #delta;
+    constructor(from, to) {
+      let toX = toInt32(to.x);
+      let toY = toInt32(to.y);
+      let fromX = toInt32(from.x);
+      let fromY = toInt32(from.y);
+      const steep = Math.abs(toY - fromY) > Math.abs(toX - fromX);
+      // Steep line
+      if (steep) {
+        [fromX, fromY, toX, toY] = [fromY, fromX, toY, toX];
+      }
+      const deltaX = fromX < toX ? 1 : -1;
+      this.#steep = steep;
+      this.#limit = toX + deltaX;
+      this.#to = new Point(toX, toY);
+      this.#from = new Point(fromX, fromY);
+      this.#delta = [deltaX, fromY < toY ? 1 : -1];
+      this.#diff = [Math.abs(toX - fromX), Math.abs(toY - fromY)];
+    }
+    get to() {
+      return this.#to;
+    }
+    get from() {
+      return this.#from;
+    }
+    get steep() {
+      return this.#steep;
+    }
+    get delta() {
+      return this.#delta;
+    }
+    *points() {
+      const limit = this.#limit;
+      const steep = this.#steep;
+      const { y: toY } = this.#to;
+      const [xDiff, yDiff] = this.#diff;
+      const [deltaX, deltaY] = this.#delta;
+      const { x: fromX, y: fromY } = this.#from;
+      let error = toInt32(-xDiff / 2);
+      // Loop up until x === toX, but not beyond
+      for (let x = fromX, y = fromY; x !== limit; x += deltaX) {
+        yield [steep ? y : x, steep ? x : y];
+        error += yDiff;
+        if (error > 0) {
+          if (y === toY) {
+            break;
+          }
+          y += deltaY;
+          error -= xDiff;
+        }
+      }
+    }
+  }
+
+  /**
+   * @module timing
+   */
+  function calculateTimingRatio(axis, control) {
+    return control > axis ? 1 : control < axis ? -1 : 0;
+  }
+  function getTimingPointXAxis({ x, rect }, ratio) {
+    const [, right, , left] = rect;
+    return ratio > 0 ? right : ratio < 0 ? left : x;
+  }
+  function getTimingPointYAxis({ y, rect }, ratio) {
+    const [top, , bottom] = rect;
+    return ratio > 0 ? bottom : ratio < 0 ? top : y;
+  }
+  function calculateTimingLine(start, end, control, isVertical) {
+    const { x: endX, y: endY } = end;
+    const { x: startX, y: startY } = start;
+    const controlX = control.x + end.x - startX;
+    const controlY = control.y + end.y - startY;
+    const xRatio = calculateTimingRatio(startX, controlX);
+    const yRatio = calculateTimingRatio(startY, controlY);
+    const endXTranslate = getTimingPointXAxis(end, xRatio);
+    const endYTranslate = getTimingPointYAxis(end, yRatio);
+    const startXTranslate = getTimingPointXAxis(start, xRatio);
+    const startYTranslate = getTimingPointYAxis(start, yRatio);
+    if (xRatio === 0 || yRatio === 0) {
+      return [new Point(startXTranslate, startYTranslate), new Point(endXTranslate, endYTranslate)];
+    }
+    if (isVertical ? xRatio !== yRatio : xRatio === yRatio) {
+      return [new Point(startX, startYTranslate), new Point(endX, endYTranslate)];
+    }
+    return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
+  }
+  function isValidTimingLine(countState, moduleSize) {
+    const { length } = countState;
+    if (length >= 5) {
+      const lastIndex = length - 1;
+      const quietZone = moduleSize * 4;
+      for (let i = 1; i < lastIndex; i++) {
+        if (countState[i] > quietZone) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
+  }
+  function checkPixelsInTimingLine(matrix, { topLeft, topRight, bottomLeft, moduleSize }, isVertical) {
+    const countState = [];
+    const [start, end] = isVertical
+      ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
+      : calculateTimingLine(topLeft, topRight, bottomLeft);
+    const points = new PlotLine(start, end).points();
+    let count = 0;
+    let lastBit = matrix.get(toInt32(start.x), toInt32(start.y));
+    for (const [x, y] of points) {
+      const bit = matrix.get(x, y);
+      if (bit === lastBit) {
+        count++;
+      } else {
+        countState.push(count);
+        count = 1;
+        lastBit = bit;
+      }
+    }
+    countState.push(count);
+    return isValidTimingLine(countState, moduleSize[isVertical ? 1 : 0]);
+  }
+
+  /**
+   * @module module
+   */
+  function sizeOfBlackWhiteBlackRun(matrix, from, to) {
+    const line = new PlotLine(from, to);
+    const points = line.points();
+    // In black pixels, looking for white, first or second time.
+    let state = 0;
+    for (const [x, y] of points) {
+      // Does current pixel mean we have moved white to black or vice versa?
+      // Scanning black in state 0,2 and white in state 1, so if we find the wrong
+      // color, advance to next state or end if we are in state 2 already
+      if ((state === 1) === (matrix.get(x, y) === 1)) {
+        if (state === 2) {
+          return distance(new Point(x, y), from);
+        }
+        state++;
+      }
+    }
+    to = line.to;
+    from = line.from;
+    const [deltaX] = line.delta;
+    // Found black-white-black; give the benefit of the doubt that the next pixel outside the image
+    // is "white" so this last point at (toX+xStep,toY) is the right ending. This is really a
+    // small approximation; (toX+xStep,toY+yStep) might be really correct. Ignore this.
+    if (state === 2) {
+      return distance(new Point(to.x + deltaX, to.y), from);
+    }
+    return NaN;
+  }
+  function sizeOfBlackWhiteBlackRunBothWays(matrix, from, to) {
+    // Now count other way -- don't run off image though of course
+    const { x: toX, y: toY } = to;
+    const { width, height } = matrix;
+    const { x: fromX, y: fromY } = from;
+    let scale = 1;
+    let otherToX = fromX - (toX - fromX);
+    let size = sizeOfBlackWhiteBlackRun(matrix, from, to);
+    if (Number.isNaN(size)) {
+      return NaN;
+    }
+    if (otherToX < 0) {
+      scale = fromX / (fromX - otherToX);
+      otherToX = 0;
+    } else if (otherToX >= width) {
+      scale = (width - 1 - fromX) / (otherToX - fromX);
+      otherToX = width - 1;
+    }
+    let otherToY = toInt32(fromY - (toY - fromY) * scale);
+    scale = 1;
+    if (otherToY < 0) {
+      scale = fromY / (fromY - otherToY);
+      otherToY = 0;
+    } else if (otherToY >= height) {
+      scale = (height - 1 - fromY) / (otherToY - fromY);
+      otherToY = height - 1;
+    }
+    otherToX = toInt32(fromX + (otherToX - fromX) * scale);
+    // Middle pixel is double-counted this way; subtract 1
+    size += sizeOfBlackWhiteBlackRun(matrix, from, new Point(otherToX, otherToY));
+    return size - 1;
+  }
+  function calculateModuleSizeOneWay(matrix, pattern1, pattern2) {
+    const point1 = new Point(toInt32(pattern1.x), toInt32(pattern1.y));
+    const point2 = new Point(toInt32(pattern2.x), toInt32(pattern2.y));
+    const expectModuleSize1 = sizeOfBlackWhiteBlackRunBothWays(matrix, point1, point2);
+    const expectModuleSize2 = sizeOfBlackWhiteBlackRunBothWays(matrix, point2, point1);
+    if (Number.isNaN(expectModuleSize1)) {
+      return expectModuleSize2 / 7;
+    }
+    if (Number.isNaN(expectModuleSize2)) {
+      return expectModuleSize1 / 7;
+    }
+    // Average them, and divide by 7 since we've counted the width of 3 black modules,
+    // and 1 white and 1 black module on either side. Ergo, divide sum by 14.
+    return (expectModuleSize1 + expectModuleSize2) / 14;
+  }
+
+  /**
    * @module FinderPatternGroup
    */
   class FinderPatternGroup {
     #patterns;
-    constructor(patterns) {
+    #moduleSize;
+    constructor(matrix, patterns) {
       this.#patterns = orderFinderPatterns(patterns);
+      const [topLeft, topRight, bottomLeft] = this.#patterns;
+      this.#moduleSize = [
+        calculateModuleSizeOneWay(matrix, topLeft, topRight),
+        calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)
+      ];
     }
     get topLeft() {
       return this.#patterns[0];
@@ -4331,6 +4342,9 @@
     }
     get bottomLeft() {
       return this.#patterns[2];
+    }
+    get moduleSize() {
+      return this.#moduleSize;
     }
   }
 
@@ -4375,8 +4389,13 @@
               if (!isEqualsEdge(height2, pattern3.height)) {
                 continue;
               }
-              const finderPatternGroup = new FinderPatternGroup([pattern1, pattern2, pattern3]);
-              const { topLeft, topRight, bottomLeft } = finderPatternGroup;
+              const { matrix } = this;
+              const finderPatternGroup = new FinderPatternGroup(matrix, [pattern1, pattern2, pattern3]);
+              const { topLeft, topRight, bottomLeft, moduleSize } = finderPatternGroup;
+              // Invalid module size
+              if (moduleSize[0] < 1 || moduleSize[1] < 1) {
+                continue;
+              }
               const edge1 = distance(bottomLeft, topLeft);
               const edge2 = distance(topLeft, topRight);
               // Calculate the difference of the cathetus lengths in percent
@@ -4388,7 +4407,6 @@
               if (!isEqualsEdge(Math.sqrt(edge1 * edge1 + edge2 * edge2), hypotenuse)) {
                 continue;
               }
-              const { matrix } = this;
               if (
                 checkPixelsInTimingLine(matrix, finderPatternGroup) &&
                 checkPixelsInTimingLine(matrix, finderPatternGroup, true)
@@ -4835,5 +4853,4 @@
   exports.Numeric = Numeric;
   exports.binarize = binarize;
   exports.binarizer = binarizer;
-  exports.calculateTimingLine = calculateTimingLine;
 });

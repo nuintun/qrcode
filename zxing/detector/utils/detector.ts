@@ -7,7 +7,6 @@ import { distance } from '/common/Point';
 import { Pattern } from '/detector/Pattern';
 import { BitMatrix } from '/common/BitMatrix';
 import { GridSampler } from '/common/GridSampler';
-import { calculateModuleSizeOneWay } from './pattern';
 import { FinderPatternMatcher } from '../FinderPatternMatcher';
 import { FinderPatternGroup } from '/detector/FinderPatternGroup';
 import { AlignmentPatternMatcher } from '../AlignmentPatternMatcher';
@@ -20,12 +19,12 @@ export interface DetectResult {
   readonly finder: FinderPatternGroup;
 }
 
-export function calculateModuleSize(matrix: BitMatrix, { topLeft, topRight, bottomLeft }: FinderPatternGroup): number {
+function calculateModuleSize({ moduleSize }: FinderPatternGroup): number {
   // Take the average
-  return (calculateModuleSizeOneWay(matrix, topLeft, topRight) + calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)) / 2;
+  return (moduleSize[0] + moduleSize[1]) / 2;
 }
 
-export function calculateSymbolSize({ topLeft, topRight, bottomLeft }: FinderPatternGroup, moduleSize: number): number {
+function calculateSymbolSize({ topLeft, topRight, bottomLeft }: FinderPatternGroup, moduleSize: number): number {
   const width = distance(topLeft, topRight);
   const height = distance(topLeft, bottomLeft);
   const size = round((width + height) / moduleSize / 2) + 7;
@@ -108,37 +107,35 @@ export function detect(
   const finderPatternGroups = finderMatcher.groups();
 
   for (const finderPatternGroup of finderPatternGroups) {
-    const moduleSize = calculateModuleSize(matrix, finderPatternGroup);
+    const moduleSize = calculateModuleSize(finderPatternGroup);
 
-    if (moduleSize >= 1) {
-      const sampler = new GridSampler(matrix);
-      const size = calculateSymbolSize(finderPatternGroup, moduleSize);
+    const sampler = new GridSampler(matrix);
+    const size = calculateSymbolSize(finderPatternGroup, moduleSize);
 
-      if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
-        const version = fromVersionSize(size);
+    if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
+      const version = fromVersionSize(size);
 
-        // Find alignment
-        if (version.alignmentPatterns.length > 0) {
-          // Kind of arbitrary -- expand search radius before giving up
-          // If we didn't find alignment pattern... well try anyway without it
-          const alignmentPatterns = alignmentMatcher.filter(finderPatternGroup, size, moduleSize);
+      // Find alignment
+      if (version.alignmentPatterns.length > 0) {
+        // Kind of arbitrary -- expand search radius before giving up
+        // If we didn't find alignment pattern... well try anyway without it
+        const alignmentPatterns = alignmentMatcher.filter(finderPatternGroup, size, moduleSize);
 
-          // Founded alignment
-          for (const alignmentPattern of alignmentPatterns) {
-            detected.push({
-              finder: finderPatternGroup,
-              alignment: alignmentPattern,
-              matrix: sampler.sampleGrid(size, size, createTransform(size, finderPatternGroup, alignmentPattern))
-            });
-          }
+        // Founded alignment
+        for (const alignmentPattern of alignmentPatterns) {
+          detected.push({
+            finder: finderPatternGroup,
+            alignment: alignmentPattern,
+            matrix: sampler.sampleGrid(size, size, createTransform(size, finderPatternGroup, alignmentPattern))
+          });
         }
-
-        // No alignment version and fallback
-        detected.push({
-          finder: finderPatternGroup,
-          matrix: sampler.sampleGrid(size, size, createTransform(size, finderPatternGroup))
-        });
       }
+
+      // No alignment version and fallback
+      detected.push({
+        finder: finderPatternGroup,
+        matrix: sampler.sampleGrid(size, size, createTransform(size, finderPatternGroup))
+      });
     }
   }
 
