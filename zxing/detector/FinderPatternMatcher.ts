@@ -14,6 +14,10 @@ export class FinderPatternMatcher extends PatternMatcher {
     super(matrix, 7, isMatchFinderPattern, strict);
   }
 
+  public override match(x: number, y: number, scanline: number[]): boolean {
+    return super.match(x, y, scanline, scanline[2]);
+  }
+
   public groups(): FinderPatternGroup[] {
     const patterns = this.patterns.filter(({ combined }) => combined >= 3);
     const finderPatternGroups: FinderPatternGroup[] = [];

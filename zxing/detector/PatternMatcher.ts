@@ -61,12 +61,11 @@ export class PatternMatcher {
     return this.#patterns;
   }
 
-  public match(x: number, y: number, scanline: number[]): boolean {
+  public match(x: number, y: number, scanline: number[], overscan: number): boolean {
     if (this.#matcher(scanline)) {
       let scanlineHorizontal;
       let offsetX = centerFromEnd(scanline, x);
 
-      const overscan = scanline[toInt32(scanline.length / 2)];
       const [offsetY, scanlineVertical] = this.#alignVerticalPattern(toInt32(offsetX), y, overscan);
 
       if (offsetY >= 0) {

@@ -4022,11 +4022,10 @@
     get patterns() {
       return this.#patterns;
     }
-    match(x, y, scanline) {
+    match(x, y, scanline, overscan) {
       if (this.#matcher(scanline)) {
         let scanlineHorizontal;
         let offsetX = centerFromEnd(scanline, x);
-        const overscan = scanline[toInt32(scanline.length / 2)];
         const [offsetY, scanlineVertical] = this.#alignVerticalPattern(toInt32(offsetX), y, overscan);
         if (offsetY >= 0) {
           // Re-cross check
@@ -4362,6 +4361,9 @@
     constructor(matrix, strict) {
       super(matrix, 7, isMatchFinderPattern, strict);
     }
+    match(x, y, scanline) {
+      return super.match(x, y, scanline, scanline[2]);
+    }
     groups() {
       const patterns = this.patterns.filter(({ combined }) => combined >= 3);
       const finderPatternGroups = [];
@@ -4428,6 +4430,10 @@
     constructor(matrix, strict) {
       super(matrix, 5, isMatchAlignmentPattern, strict);
     }
+    match(x, y, scanline) {
+      scanline = scanline.slice(-3);
+      return super.match(x, y, scanline, scanline[1]);
+    }
     filter({ size, moduleSize, topLeft, topRight, bottomLeft }) {
       const { matrix } = this;
       const { x, y } = topLeft;
@@ -4490,7 +4496,7 @@
         if (lastBit) {
           finderMatcher.match(x, y, scanline);
         } else {
-          alignmentMatcher.match(x, y, scanline.slice(-3));
+          alignmentMatcher.match(x, y, scanline);
         }
       };
       for (let y = 0; y < height; y++) {

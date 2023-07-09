@@ -15,6 +15,12 @@ export class AlignmentPatternMatcher extends PatternMatcher {
     super(matrix, 5, isMatchAlignmentPattern, strict);
   }
 
+  public override match(x: number, y: number, scanline: number[]): boolean {
+    scanline = scanline.slice(-3);
+
+    return super.match(x, y, scanline, scanline[1]);
+  }
+
   public filter({ size, moduleSize, topLeft, topRight, bottomLeft }: FinderPatternGroup): Pattern[] {
     const { matrix } = this;
     const { x, y } = topLeft;

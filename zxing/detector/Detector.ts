@@ -33,7 +33,7 @@ export class Detector {
       if (lastBit) {
         finderMatcher.match(x, y, scanline);
       } else {
-        alignmentMatcher.match(x, y, scanline.slice(-3));
+        alignmentMatcher.match(x, y, scanline);
       }
     };
 
