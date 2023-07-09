@@ -10,8 +10,8 @@ import { distance, isPointInQuadrangle, Point } from '/common/Point';
 import { isEqualsModuleSize, isMatchAlignmentPattern } from './utils/matcher';
 
 export class AlignmentPatternMatcher extends PatternMatcher {
-  constructor(matrix: BitMatrix) {
-    super(matrix, 5, isMatchAlignmentPattern, true);
+  constructor(matrix: BitMatrix, strict?: boolean) {
+    super(matrix, 5, isMatchAlignmentPattern, strict);
   }
 
   public filter({ topLeft, topRight, bottomLeft }: FinderPatternGroup, size: number, moduleSize: number): Pattern[] {

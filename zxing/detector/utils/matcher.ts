@@ -135,7 +135,7 @@ export function alignCrossPattern(
   matrix: BitMatrix,
   x: number,
   y: number,
-  maxCount: number,
+  overscan: number,
   checker: (countState: number[]) => boolean,
   isVertical?: boolean
 ): [offset: number, countState: number[]] {
@@ -157,7 +157,7 @@ export function alignCrossPattern(
     countState[1]++;
   }
 
-  while (offset >= 0 && countState[0] < maxCount && isBlackPixel()) {
+  while (offset >= 0 && countState[0] < overscan && isBlackPixel()) {
     offset--;
     countState[0]++;
   }
@@ -174,7 +174,7 @@ export function alignCrossPattern(
     countState[3]++;
   }
 
-  while (offset < size && countState[4] < maxCount && isBlackPixel()) {
+  while (offset < size && countState[4] < overscan && isBlackPixel()) {
     offset++;
     countState[4]++;
   }
@@ -186,7 +186,7 @@ export function checkDiagonalPattern(
   matrix: BitMatrix,
   x: number,
   y: number,
-  maxCount: number,
+  overscan: number,
   checker: (countState: number[]) => boolean,
   isBackslash?: boolean
 ): boolean {
@@ -220,7 +220,7 @@ export function checkDiagonalPattern(
   }
 
   // Start counting left from center finding black center mass
-  while (offsetX >= 0 && offsetY >= 0 && offsetY < height && countState[0] < maxCount && isBlackPixel()) {
+  while (offsetX >= 0 && offsetY >= 0 && offsetY < height && countState[0] < overscan && isBlackPixel()) {
     updateAxis();
 
     countState[0]++;
@@ -245,7 +245,7 @@ export function checkDiagonalPattern(
   }
 
   // Start counting right from center finding black center mass
-  while (offsetX < width && offsetY >= 0 && offsetY < height && countState[4] < maxCount && isBlackPixel()) {
+  while (offsetX < width && offsetY >= 0 && offsetY < height && countState[4] < overscan && isBlackPixel()) {
     updateAxis();
 
     countState[4]++;

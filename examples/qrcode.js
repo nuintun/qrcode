@@ -3581,7 +3581,7 @@
     const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
     return Math.abs(moduleSize1 - moduleSize2) <= moduleSizeDiff;
   }
-  function alignCrossPattern(matrix, x, y, maxCount, checker, isVertical) {
+  function alignCrossPattern(matrix, x, y, overscan, checker, isVertical) {
     let offset = isVertical ? y : x;
     const countState = [0, 0, 0, 0, 0];
     const size = isVertical ? matrix.height : matrix.width;
@@ -3596,7 +3596,7 @@
       offset--;
       countState[1]++;
     }
-    while (offset >= 0 && countState[0] < maxCount && isBlackPixel()) {
+    while (offset >= 0 && countState[0] < overscan && isBlackPixel()) {
       offset--;
       countState[0]++;
     }
@@ -3609,13 +3609,13 @@
       offset++;
       countState[3]++;
     }
-    while (offset < size && countState[4] < maxCount && isBlackPixel()) {
+    while (offset < size && countState[4] < overscan && isBlackPixel()) {
       offset++;
       countState[4]++;
     }
     return [checker(countState) ? centerFromEnd(countState, offset) : NaN, countState];
   }
-  function checkDiagonalPattern(matrix, x, y, maxCount, checker, isBackslash) {
+  function checkDiagonalPattern(matrix, x, y, overscan, checker, isBackslash) {
     let step = -1;
     let offsetX = x;
     let offsetY = y;
@@ -3640,7 +3640,7 @@
       countState[1]++;
     }
     // Start counting left from center finding black center mass
-    while (offsetX >= 0 && offsetY >= 0 && offsetY < height && countState[0] < maxCount && isBlackPixel()) {
+    while (offsetX >= 0 && offsetY >= 0 && offsetY < height && countState[0] < overscan && isBlackPixel()) {
       updateAxis();
       countState[0]++;
     }
@@ -3658,7 +3658,7 @@
       countState[3]++;
     }
     // Start counting right from center finding black center mass
-    while (offsetX < width && offsetY >= 0 && offsetY < height && countState[4] < maxCount && isBlackPixel()) {
+    while (offsetX < width && offsetY >= 0 && offsetY < height && countState[4] < overscan && isBlackPixel()) {
       updateAxis();
       countState[4]++;
     }
@@ -4226,23 +4226,23 @@
       this.#matcher = matcher;
       this.#modules = modules;
     }
-    #isDiagonalPassed(x, y, maxCount) {
+    #isDiagonalPassed(x, y, overscan) {
       const matrix = this.#matrix;
       const strict = this.#strict;
       const matcher = this.#matcher;
-      if (checkDiagonalPattern(matrix, x, y, maxCount, matcher)) {
+      if (checkDiagonalPattern(matrix, x, y, overscan, matcher)) {
         if (strict) {
-          return checkDiagonalPattern(matrix, x, y, maxCount, matcher, true);
+          return checkDiagonalPattern(matrix, x, y, overscan, matcher, true);
         }
         return true;
       }
       return false;
     }
-    #alignVerticalPattern(x, y, maxCount) {
-      return alignCrossPattern(this.#matrix, x, y, maxCount, this.#matcher, true);
+    #alignVerticalPattern(x, y, overscan) {
+      return alignCrossPattern(this.#matrix, x, y, overscan, this.#matcher, true);
     }
-    #alignHorizontalPattern(x, y, maxCount) {
-      return alignCrossPattern(this.#matrix, x, y, maxCount, this.#matcher);
+    #alignHorizontalPattern(x, y, overscan) {
+      return alignCrossPattern(this.#matrix, x, y, overscan, this.#matcher);
     }
     get matcher() {
       return this.#matcher;
@@ -4257,12 +4257,12 @@
       if (this.#matcher(countState)) {
         let countStateHorizontal;
         let offsetX = centerFromEnd(countState, x);
-        const maxCount = countState[toInt32(countState.length / 2)];
-        const [offsetY, countStateVertical] = this.#alignVerticalPattern(toInt32(offsetX), y, maxCount);
+        const overscan = countState[toInt32(countState.length / 2)];
+        const [offsetY, countStateVertical] = this.#alignVerticalPattern(toInt32(offsetX), y, overscan);
         if (offsetY >= 0) {
           // Re-cross check
-          [offsetX, countStateHorizontal] = this.#alignHorizontalPattern(toInt32(offsetX), toInt32(offsetY), maxCount);
-          if (offsetX >= 0 && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), maxCount)) {
+          [offsetX, countStateHorizontal] = this.#alignHorizontalPattern(toInt32(offsetX), toInt32(offsetY), overscan);
+          if (offsetX >= 0 && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), overscan)) {
             const width = getCountStateTotal(countStateHorizontal);
             const height = getCountStateTotal(countStateVertical);
             const patterns = this.#patterns;
@@ -4408,8 +4408,8 @@
    * @module AlignmentPatternMatcher
    */
   class AlignmentPatternMatcher extends PatternMatcher {
-    constructor(matrix) {
-      super(matrix, 5, isMatchAlignmentPattern, true);
+    constructor(matrix, strict) {
+      super(matrix, 5, isMatchAlignmentPattern, strict);
     }
     filter({ topLeft, topRight, bottomLeft }, size, moduleSize) {
       const { matrix } = this;
@@ -4464,8 +4464,8 @@
     detect(matrix) {
       const { strict } = this.#options;
       const { width, height } = matrix;
-      const alignmentMatcher = new AlignmentPatternMatcher(matrix);
       const finderMatcher = new FinderPatternMatcher(matrix, strict);
+      const alignmentMatcher = new AlignmentPatternMatcher(matrix, strict);
       const match = (x, y, lastBit, countState, count) => {
         setCountState(countState, count);
         // Match pattern
