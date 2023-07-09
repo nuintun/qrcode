@@ -5,7 +5,7 @@
 import { Pattern } from './Pattern';
 import { toInt32 } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
-import { alignCrossPattern, centerFromEnd, checkDiagonalPattern, getCountStateTotal } from './utils/matcher';
+import { alignCrossPattern, centerFromEnd, checkDiagonalPattern, getCountStateTotal } from './utils/pattern';
 
 export interface Matcher {
   (countState: number[]): boolean;

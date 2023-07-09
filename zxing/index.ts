@@ -16,4 +16,4 @@ export { Alphanumeric } from './encoder/segments/Alphanumeric';
 
 // TODO 测试临时导出
 export { binarizer } from './common/binarize';
-export { calculateTimingLine } from './detector/utils/matcher';
+export { calculateTimingLine } from './detector/utils/pattern';

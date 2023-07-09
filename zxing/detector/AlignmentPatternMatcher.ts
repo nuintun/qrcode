@@ -7,7 +7,7 @@ import { BitMatrix } from '/common/BitMatrix';
 import { PatternMatcher } from './PatternMatcher';
 import { FinderPatternGroup } from './FinderPatternGroup';
 import { distance, isPointInQuadrangle, Point } from '/common/Point';
-import { isEqualsModuleSize, isMatchAlignmentPattern } from './utils/matcher';
+import { isEqualsModuleSize, isMatchAlignmentPattern } from './utils/pattern';
 
 export class AlignmentPatternMatcher extends PatternMatcher {
   constructor(matrix: BitMatrix, strict?: boolean) {

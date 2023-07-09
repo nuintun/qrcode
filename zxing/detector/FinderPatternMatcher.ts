@@ -6,7 +6,7 @@ import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
 import { PatternMatcher } from './PatternMatcher';
 import { FinderPatternGroup } from './FinderPatternGroup';
-import { checkPixelsInTimingLine, isEqualsEdge, isMatchFinderPattern } from './utils/matcher';
+import { checkPixelsInTimingLine, isEqualsEdge, isMatchFinderPattern } from './utils/pattern';
 
 export class FinderPatternMatcher extends PatternMatcher {
   constructor(matrix: BitMatrix, strict?: boolean) {

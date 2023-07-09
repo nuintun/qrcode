@@ -3,7 +3,7 @@
  */
 
 import { BitMatrix } from '/common/BitMatrix';
-import { setCountState } from './utils/matcher';
+import { setCountState } from './utils/pattern';
 import { detect, DetectResult } from './utils/detector';
 import { FinderPatternMatcher } from './FinderPatternMatcher';
 import { AlignmentPatternMatcher } from './AlignmentPatternMatcher';
