@@ -3856,33 +3856,8 @@
   }
 
   /**
-   * @module detector
+   * @module transform
    */
-  function calculateModuleSize({ moduleSize }) {
-    // Take the average
-    return (moduleSize[0] + moduleSize[1]) / 2;
-  }
-  function calculateSymbolSize({ topLeft, topRight, bottomLeft }, moduleSize) {
-    const width = distance(topLeft, topRight);
-    const height = distance(topLeft, bottomLeft);
-    const size = round((width + height) / moduleSize / 2) + 7;
-    // mod 4
-    switch (size & 0x03) {
-      case 0:
-        return size + 1;
-      case 2:
-        return size - 1;
-      case 3:
-        if (size + 2 <= MAX_VERSION_SIZE) {
-          return size + 2;
-        }
-        if (size - 2 >= MIN_VERSION_SIZE) {
-          return size - 2;
-        }
-        return NaN;
-    }
-    return size;
-  }
   function createTransform(size, { topLeft, topRight, bottomLeft }, alignmentPattern) {
     let bottomRightX;
     let bottomRightY;
@@ -3923,12 +3898,74 @@
       bottomLeftY
     );
   }
+
+  /**
+   * @module Detect
+   */
+  class Detect {
+    #size;
+    #matrix;
+    #alignment;
+    #extract;
+    #finder;
+    constructor(matrix, size, finder, alignment) {
+      this.#size = size;
+      this.#finder = finder;
+      this.#matrix = matrix;
+      this.#alignment = alignment;
+    }
+    get finder() {
+      return this.#finder;
+    }
+    get alignment() {
+      return this.#alignment;
+    }
+    get matrix() {
+      let extract = this.#extract;
+      if (extract) {
+        return extract;
+      }
+      const size = this.#size;
+      const sampler = new GridSampler(this.#matrix);
+      extract = sampler.sampleGrid(size, size, createTransform(size, this.#finder, this.#alignment));
+      this.#extract = extract;
+      return extract;
+    }
+  }
+
+  /**
+   * @module detector
+   */
+  function calculateModuleSize({ moduleSize }) {
+    // Take the average
+    return (moduleSize[0] + moduleSize[1]) / 2;
+  }
+  function calculateSymbolSize({ topLeft, topRight, bottomLeft }, moduleSize) {
+    const width = distance(topLeft, topRight);
+    const height = distance(topLeft, bottomLeft);
+    const size = round((width + height) / moduleSize / 2) + 7;
+    // mod 4
+    switch (size & 0x03) {
+      case 0:
+        return size + 1;
+      case 2:
+        return size - 1;
+      case 3:
+        if (size + 2 <= MAX_VERSION_SIZE) {
+          return size + 2;
+        }
+        if (size - 2 >= MIN_VERSION_SIZE) {
+          return size - 2;
+        }
+        return NaN;
+    }
+    return size;
+  }
   function detect(matrix, finderMatcher, alignmentMatcher) {
     const detected = [];
     const finderPatternGroups = finderMatcher.groups();
     for (const finderPatternGroup of finderPatternGroups) {
       const moduleSize = calculateModuleSize(finderPatternGroup);
-      const sampler = new GridSampler(matrix);
       const size = calculateSymbolSize(finderPatternGroup, moduleSize);
       if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
         const version = fromVersionSize(size);
@@ -3939,18 +3976,11 @@
           const alignmentPatterns = alignmentMatcher.filter(finderPatternGroup, size, moduleSize);
           // Founded alignment
           for (const alignmentPattern of alignmentPatterns) {
-            detected.push({
-              finder: finderPatternGroup,
-              alignment: alignmentPattern,
-              matrix: sampler.sampleGrid(size, size, createTransform(size, finderPatternGroup, alignmentPattern))
-            });
+            detected.push(new Detect(matrix, size, finderPatternGroup, alignmentPattern));
           }
         }
         // No alignment version and fallback
-        detected.push({
-          finder: finderPatternGroup,
-          matrix: sampler.sampleGrid(size, size, createTransform(size, finderPatternGroup))
-        });
+        detected.push(new Detect(matrix, size, finderPatternGroup));
       }
     }
     return detected;
