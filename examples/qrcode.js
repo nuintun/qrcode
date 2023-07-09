@@ -583,6 +583,13 @@
   function round(value) {
     return toInt32(value + (value < 0 ? -0.5 : 0.5));
   }
+  function sumArray(array) {
+    let total = 0;
+    for (const value of array) {
+      total += value;
+    }
+    return total;
+  }
   // Get bit count of int32
   function bitCount(value) {
     // HD, Figure 5-2
@@ -3704,14 +3711,15 @@
   const DIFF_MODULE_SIZE_RATIO = 1;
   const DIFF_FINDER_PATTERN_RATIO = 0.5;
   const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
-  function centerFromEnd(scanline, end) {
-    const { length } = scanline;
-    const middleIndex = toInt32(length / 2);
-    let center = end - scanline[middleIndex] / 2;
-    for (let i = middleIndex + 1; i < length; i++) {
-      center -= scanline[i];
+  function sumScanlineNonzero(scanline) {
+    let scanlineTotal = 0;
+    for (const count of scanline) {
+      if (count === 0) {
+        return NaN;
+      }
+      scanlineTotal += count;
     }
-    return center;
+    return scanlineTotal;
   }
   function scanlineUpdate(scanline, count) {
     const { length } = scanline;
@@ -3721,20 +3729,19 @@
     }
     scanline[lastIndex] = count;
   }
-  function calculateScanlineTotal(scanline, checkZero) {
-    let scanlineTotal = 0;
-    for (const count of scanline) {
-      if (checkZero && count === 0) {
-        return NaN;
-      }
-      scanlineTotal += count;
+  function centerFromEnd(scanline, end) {
+    const { length } = scanline;
+    const middleIndex = toInt32(length / 2);
+    let center = end - scanline[middleIndex] / 2;
+    for (let i = middleIndex + 1; i < length; i++) {
+      center -= scanline[i];
     }
-    return scanlineTotal;
+    return center;
   }
   function isMatchFinderPattern(scanline) {
     const modules = 7;
     const { length } = scanline;
-    const scanlineTotal = calculateScanlineTotal(scanline, true);
+    const scanlineTotal = sumScanlineNonzero(scanline);
     if (scanlineTotal >= modules) {
       const moduleSize = scanlineTotal / modules;
       if (moduleSize >= 1) {
@@ -3756,7 +3763,7 @@
   }
   function isMatchAlignmentPattern(scanline) {
     const modules = scanline.length;
-    const scanlineTotal = calculateScanlineTotal(scanline, true);
+    const scanlineTotal = sumScanlineNonzero(scanline);
     if (scanlineTotal >= modules) {
       const moduleSize = scanlineTotal / modules;
       if (moduleSize >= 1) {
@@ -4031,8 +4038,8 @@
           // Re-cross check
           [offsetX, scanlineHorizontal] = this.#alignHorizontalPattern(toInt32(offsetX), toInt32(offsetY), overscan);
           if (offsetX >= 0 && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), overscan)) {
-            const width = calculateScanlineTotal(scanlineHorizontal);
-            const height = calculateScanlineTotal(scanlineVertical);
+            const width = sumArray(scanlineHorizontal);
+            const height = sumArray(scanlineVertical);
             const patterns = this.#patterns;
             const { length } = patterns;
             for (let i = 0; i < length; i++) {

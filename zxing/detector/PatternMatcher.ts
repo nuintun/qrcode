@@ -3,9 +3,9 @@
  */
 
 import { Pattern } from './Pattern';
-import { toInt32 } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
-import { alignCrossPattern, calculateScanlineTotal, centerFromEnd, checkDiagonalPattern } from './utils/pattern';
+import { sumArray, toInt32 } from '/common/utils';
+import { alignCrossPattern, centerFromEnd, checkDiagonalPattern } from './utils/pattern';
 
 export interface Matcher {
   (scanline: number[]): boolean;
@@ -73,8 +73,8 @@ export class PatternMatcher {
         [offsetX, scanlineHorizontal] = this.#alignHorizontalPattern(toInt32(offsetX), toInt32(offsetY), overscan);
 
         if (offsetX >= 0 && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), overscan)) {
-          const width = calculateScanlineTotal(scanlineHorizontal);
-          const height = calculateScanlineTotal(scanlineVertical);
+          const width = sumArray(scanlineHorizontal);
+          const height = sumArray(scanlineVertical);
           const patterns = this.#patterns;
           const { length } = patterns;
 

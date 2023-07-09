@@ -2,13 +2,38 @@
  * @module matcher
  */
 
-import { toInt32 } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
+import { sumArray, toInt32 } from '/common/utils';
 
 export const DIFF_EDGE_RATIO = 0.5;
 export const DIFF_MODULE_SIZE_RATIO = 1;
 export const DIFF_FINDER_PATTERN_RATIO = 0.5;
 export const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
+
+export function sumScanlineNonzero(scanline: number[]): number {
+  let scanlineTotal = 0;
+
+  for (const count of scanline) {
+    if (count === 0) {
+      return NaN;
+    }
+
+    scanlineTotal += count;
+  }
+
+  return scanlineTotal;
+}
+
+export function scanlineUpdate(scanline: number[], count: number): void {
+  const { length } = scanline;
+  const lastIndex = length - 1;
+
+  for (let i = 0; i < lastIndex; i++) {
+    scanline[i] = scanline[i + 1];
+  }
+
+  scanline[lastIndex] = count;
+}
 
 export function centerFromEnd(scanline: number[], end: number): number {
   const { length } = scanline;
@@ -23,35 +48,10 @@ export function centerFromEnd(scanline: number[], end: number): number {
   return center;
 }
 
-export function scanlineUpdate(scanline: number[], count: number): void {
-  const { length } = scanline;
-  const lastIndex = length - 1;
-
-  for (let i = 0; i < lastIndex; i++) {
-    scanline[i] = scanline[i + 1];
-  }
-
-  scanline[lastIndex] = count;
-}
-
-export function calculateScanlineTotal(scanline: number[], checkZero?: boolean): number {
-  let scanlineTotal = 0;
-
-  for (const count of scanline) {
-    if (checkZero && count === 0) {
-      return NaN;
-    }
-
-    scanlineTotal += count;
-  }
-
-  return scanlineTotal;
-}
-
 export function isMatchFinderPattern(scanline: number[]): boolean {
   const modules = 7;
   const { length } = scanline;
-  const scanlineTotal = calculateScanlineTotal(scanline, true);
+  const scanlineTotal = sumScanlineNonzero(scanline);
 
   if (scanlineTotal >= modules) {
     const moduleSize = scanlineTotal / modules;
@@ -80,7 +80,7 @@ export function isMatchFinderPattern(scanline: number[]): boolean {
 
 export function isMatchAlignmentPattern(scanline: number[]): boolean {
   const modules = scanline.length;
-  const scanlineTotal = calculateScanlineTotal(scanline, true);
+  const scanlineTotal = sumScanlineNonzero(scanline);
 
   if (scanlineTotal >= modules) {
     const moduleSize = scanlineTotal / modules;
@@ -239,4 +239,19 @@ export function checkDiagonalPattern(
   }
 
   return checker(scanline);
+}
+
+export function calculateScanlineScore(scanline: number[], ratios: number[]) {
+  let error = 0;
+
+  const { length } = ratios;
+  const average = sumArray(scanline) / sumArray(ratios);
+
+  for (let i = 0; i < length; i++) {
+    const value = scanline[i] - ratios[i] * average;
+
+    error += value * value;
+  }
+
+  return { average, error };
 }
