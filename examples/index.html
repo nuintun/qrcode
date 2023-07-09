@@ -426,7 +426,8 @@
         console.dir(detected);
 
         if (detected.length > 0) {
-          for (const { matrix, finder, alignment } of detected) {
+          for (const detect of detected) {
+            const { finder, alignment } = detect;
             const { topLeft, topRight, bottomLeft } = finder;
             const cacheKey = `${topLeft.x}-${topLeft.y}:${topRight.x}-${topRight.y}:${bottomLeft.x}-${bottomLeft.y}`;
 
@@ -435,6 +436,7 @@
                 continue;
               }
 
+              const { matrix } = detect;
               const decoded = decoder.decode(matrix);
               const { content } = decoded;
 
