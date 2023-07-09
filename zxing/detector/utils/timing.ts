@@ -53,7 +53,7 @@ function isValidTimingLine(countState: number[], moduleSize: number): boolean {
 
   if (length >= 5) {
     const lastIndex = length - 1;
-    const maxRepeatPixels = moduleSize * 3;
+    const maxRepeatPixels = Math.ceil(moduleSize * 3);
 
     for (let i = 1; i < lastIndex; i++) {
       if (countState[i] > maxRepeatPixels) {

@@ -2,11 +2,11 @@
  * @module FinderPatternMatcher
  */
 
-import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
 import { PatternMatcher } from './PatternMatcher';
 import { checkPixelsInTimingLine } from './utils/timing';
 import { FinderPatternGroup } from './FinderPatternGroup';
+import { MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
 import { isEqualsEdge, isMatchFinderPattern } from './utils/pattern';
 
 export class FinderPatternMatcher extends PatternMatcher {
@@ -60,25 +60,14 @@ export class FinderPatternMatcher extends PatternMatcher {
 
             const { matrix } = this;
             const finderPatternGroup = new FinderPatternGroup(matrix, [pattern1, pattern2, pattern3]);
-            const { topLeft, topRight, bottomLeft, moduleSize } = finderPatternGroup;
+            const { size, moduleSize } = finderPatternGroup;
 
             // Invalid module size
             if (moduleSize[0] < 1 || moduleSize[1] < 1) {
               continue;
             }
 
-            const edge1 = distance(bottomLeft, topLeft);
-            const edge2 = distance(topLeft, topRight);
-
-            // Calculate the difference of the cathetus lengths in percent
-            if (!isEqualsEdge(edge1, edge2)) {
-              continue;
-            }
-
-            const hypotenuse = distance(topRight, bottomLeft);
-
-            // Calculate the difference of the hypotenuse lengths in percent
-            if (!isEqualsEdge(Math.sqrt(edge1 * edge1 + edge2 * edge2), hypotenuse)) {
+            if (size < MIN_VERSION_SIZE || size > MAX_VERSION_SIZE) {
               continue;
             }
 

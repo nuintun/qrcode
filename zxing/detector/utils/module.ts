@@ -10,6 +10,10 @@ import { distance, Point } from '/common/Point';
 
 export type ModuleSizeGroup = [x: number, y: number];
 
+export function calculateModuleSize(moduleSize: ModuleSizeGroup): number {
+  return (moduleSize[0] + moduleSize[1]) / 2;
+}
+
 function sizeOfBlackWhiteBlackRun(matrix: BitMatrix, from: Point, to: Point): number {
   const line = new PlotLine(from, to);
   const points = line.points();

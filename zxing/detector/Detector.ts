@@ -2,9 +2,10 @@
  * @module Detector
  */
 
+import { Detect } from './Detect';
 import { BitMatrix } from '/common/BitMatrix';
 import { setCountState } from './utils/pattern';
-import { detect, DetectResult } from './utils/detector';
+import { fromVersionSize } from '/common/Version';
 import { FinderPatternMatcher } from './FinderPatternMatcher';
 import { AlignmentPatternMatcher } from './AlignmentPatternMatcher';
 
@@ -19,7 +20,7 @@ export class Detector {
     this.#options = options;
   }
 
-  public detect(matrix: BitMatrix): DetectResult[] {
+  public detect(matrix: BitMatrix): Detect[] {
     const { strict } = this.#options;
     const { width, height } = matrix;
     const finderMatcher = new FinderPatternMatcher(matrix, strict);
@@ -71,4 +72,31 @@ export class Detector {
 
     return detect(matrix, finderMatcher, alignmentMatcher);
   }
+}
+
+function detect(matrix: BitMatrix, finderMatcher: FinderPatternMatcher, alignmentMatcher: AlignmentPatternMatcher): Detect[] {
+  const detected: Detect[] = [];
+  const finderPatternGroups = finderMatcher.groups();
+
+  for (const finderPatternGroup of finderPatternGroups) {
+    const { size } = finderPatternGroup;
+    const version = fromVersionSize(size);
+
+    // Find alignment
+    if (version.alignmentPatterns.length > 0) {
+      // Kind of arbitrary -- expand search radius before giving up
+      // If we didn't find alignment pattern... well try anyway without it
+      const alignmentPatterns = alignmentMatcher.filter(finderPatternGroup);
+
+      // Founded alignment
+      for (const alignmentPattern of alignmentPatterns) {
+        detected.push(new Detect(matrix, finderPatternGroup, alignmentPattern));
+      }
+    }
+
+    // No alignment version and fallback
+    detected.push(new Detect(matrix, finderPatternGroup));
+  }
+
+  return detected;
 }

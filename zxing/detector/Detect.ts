@@ -9,14 +9,12 @@ import { createTransform } from './utils/transform';
 import { FinderPatternGroup } from './FinderPatternGroup';
 
 export class Detect {
-  #size: number;
   #matrix: BitMatrix;
   #alignment?: Pattern;
   #extract?: BitMatrix;
   #finder: FinderPatternGroup;
 
-  constructor(matrix: BitMatrix, size: number, finder: FinderPatternGroup, alignment?: Pattern) {
-    this.#size = size;
+  constructor(matrix: BitMatrix, finder: FinderPatternGroup, alignment?: Pattern) {
     this.#finder = finder;
     this.#matrix = matrix;
     this.#alignment = alignment;
@@ -37,10 +35,11 @@ export class Detect {
       return extract;
     }
 
-    const size = this.#size;
     const sampler = new GridSampler(this.#matrix);
+    const finder = this.#finder;
+    const { size } = finder;
 
-    extract = sampler.sampleGrid(size, size, createTransform(size, this.#finder, this.#alignment));
+    extract = sampler.sampleGrid(size, size, createTransform(finder, this.#alignment));
 
     this.#extract = extract;
 

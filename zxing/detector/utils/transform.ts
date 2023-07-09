@@ -7,8 +7,7 @@ import { FinderPatternGroup } from '/detector/FinderPatternGroup';
 import { PerspectiveTransform, quadrilateralToQuadrilateral } from '/common/PerspectiveTransform';
 
 export function createTransform(
-  size: number,
-  { topLeft, topRight, bottomLeft }: FinderPatternGroup,
+  { size, topLeft, topRight, bottomLeft }: FinderPatternGroup,
   alignmentPattern?: Pattern
 ): PerspectiveTransform {
   let bottomRightX;

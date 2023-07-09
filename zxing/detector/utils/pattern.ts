@@ -3,15 +3,11 @@
  */
 
 import { toInt32 } from '/common/utils';
-import { distance } from '/common/Point';
-import { Pattern } from '/detector/Pattern';
 import { BitMatrix } from '/common/BitMatrix';
 
 export const DIFF_EDGE_RATIO = 0.5;
 export const DIFF_MODULE_SIZE_RATIO = 1;
-export const MIN_MODULE_COUNT_PER_EDGE = 11;
 export const DIFF_FINDER_PATTERN_RATIO = 0.5;
-export const MAX_MODULE_COUNT_PER_EDGE = 175;
 export const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
 
 export function centerFromEnd(countState: number[], end: number): number {
@@ -120,13 +116,6 @@ export function isEqualsModuleSize(moduleSize1: number, moduleSize2: number): bo
   const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
 
   return Math.abs(moduleSize1 - moduleSize2) <= moduleSizeDiff;
-}
-
-export function isValidModuleCount(edge: number, moduleSize: number): boolean {
-  // Check the sizes
-  const moduleCount = Math.ceil(edge / moduleSize);
-
-  return moduleCount >= MIN_MODULE_COUNT_PER_EDGE && moduleCount <= MAX_MODULE_COUNT_PER_EDGE;
 }
 
 export function alignCrossPattern(
@@ -250,41 +239,4 @@ export function checkDiagonalPattern(
   }
 
   return checker(countState);
-}
-
-function crossProductZ(pattern1: Pattern, pattern2: Pattern, pattern3: Pattern): number {
-  const { x, y } = pattern2;
-
-  return (pattern3.x - x) * (pattern1.y - y) - (pattern3.y - y) * (pattern1.x - x);
-}
-
-export function orderFinderPatterns(patterns: Pattern[]): [topLeft: Pattern, topRight: Pattern, bottomLeft: Pattern] {
-  let topLeft: Pattern;
-  let topRight: Pattern;
-  let bottomLeft: Pattern;
-
-  // Find distances between pattern centers
-  const [pattern1, pattern2, pattern3] = patterns;
-  const oneTwoDistance = distance(pattern1, pattern2);
-  const twoThreeDistance = distance(pattern2, pattern3);
-  const oneThreeDistance = distance(pattern1, pattern3);
-
-  // Assume one closest to other two is B; A and C will just be guesses at first
-  if (twoThreeDistance >= oneTwoDistance && twoThreeDistance >= oneThreeDistance) {
-    [topLeft, bottomLeft, topRight] = patterns;
-  } else if (oneThreeDistance >= twoThreeDistance && oneThreeDistance >= oneTwoDistance) {
-    [bottomLeft, topLeft, topRight] = patterns;
-  } else {
-    [bottomLeft, topRight, topLeft] = patterns;
-  }
-
-  // Use cross product to figure out whether A and C are correct or flipped.
-  // This asks whether BC x BA has a positive z component, which is the arrangement
-  // we want for A, B, C. If it's negative, then we've got it flipped around and
-  // should swap A and C.
-  if (crossProductZ(bottomLeft, topLeft, topRight) < 0) {
-    [bottomLeft, topRight] = [topRight, bottomLeft];
-  }
-
-  return [topLeft, topRight, bottomLeft];
 }
