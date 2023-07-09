@@ -4,7 +4,7 @@
 
 import { Detect } from './Detect';
 import { BitMatrix } from '/common/BitMatrix';
-import { setCountState } from './utils/pattern';
+import { scanlineUpdate } from './utils/pattern';
 import { fromVersionSize } from '/common/Version';
 import { FinderPatternMatcher } from './FinderPatternMatcher';
 import { AlignmentPatternMatcher } from './AlignmentPatternMatcher';
@@ -26,14 +26,14 @@ export class Detector {
     const finderMatcher = new FinderPatternMatcher(matrix, strict);
     const alignmentMatcher = new AlignmentPatternMatcher(matrix, strict);
 
-    const match = (x: number, y: number, lastBit: number, countState: number[], count: number) => {
-      setCountState(countState, count);
+    const match = (x: number, y: number, lastBit: number, scanline: number[], count: number) => {
+      scanlineUpdate(scanline, count);
 
       // Match pattern
       if (lastBit) {
-        finderMatcher.match(x, y, countState);
+        finderMatcher.match(x, y, scanline);
       } else {
-        alignmentMatcher.match(x, y, countState.slice(-3));
+        alignmentMatcher.match(x, y, scanline.slice(-3));
       }
     };
 
@@ -50,7 +50,7 @@ export class Detector {
       let count = 0;
       let lastBit = matrix.get(x, y);
 
-      const countState = [0, 0, 0, 0, 0];
+      const scanline = [0, 0, 0, 0, 0];
 
       while (x < width) {
         const bit = matrix.get(x, y);
@@ -58,7 +58,7 @@ export class Detector {
         if (bit === lastBit) {
           count++;
         } else {
-          match(x, y, lastBit, countState, count);
+          match(x, y, lastBit, scanline, count);
 
           count = 1;
           lastBit = bit;
@@ -67,7 +67,7 @@ export class Detector {
         x++;
       }
 
-      match(x, y, lastBit, countState, count);
+      match(x, y, lastBit, scanline, count);
     }
 
     return detect(matrix, finderMatcher, alignmentMatcher);

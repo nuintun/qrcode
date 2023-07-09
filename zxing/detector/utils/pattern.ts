@@ -10,51 +10,51 @@ export const DIFF_MODULE_SIZE_RATIO = 1;
 export const DIFF_FINDER_PATTERN_RATIO = 0.5;
 export const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
 
-export function centerFromEnd(countState: number[], end: number): number {
-  const { length } = countState;
+export function centerFromEnd(scanline: number[], end: number): number {
+  const { length } = scanline;
   const middleIndex = toInt32(length / 2);
 
-  let center = end - countState[middleIndex] / 2;
+  let center = end - scanline[middleIndex] / 2;
 
   for (let i = middleIndex + 1; i < length; i++) {
-    center -= countState[i];
+    center -= scanline[i];
   }
 
   return center;
 }
 
-export function setCountState(countState: number[], count: number): void {
-  const { length } = countState;
+export function scanlineUpdate(scanline: number[], count: number): void {
+  const { length } = scanline;
   const lastIndex = length - 1;
 
   for (let i = 0; i < lastIndex; i++) {
-    countState[i] = countState[i + 1];
+    scanline[i] = scanline[i + 1];
   }
 
-  countState[lastIndex] = count;
+  scanline[lastIndex] = count;
 }
 
-export function getCountStateTotal(countState: number[], checkZero?: boolean): number {
-  let countStateTotal = 0;
+export function calculateScanlineTotal(scanline: number[], checkZero?: boolean): number {
+  let scanlineTotal = 0;
 
-  for (const count of countState) {
+  for (const count of scanline) {
     if (checkZero && count === 0) {
       return NaN;
     }
 
-    countStateTotal += count;
+    scanlineTotal += count;
   }
 
-  return countStateTotal;
+  return scanlineTotal;
 }
 
-export function isMatchFinderPattern(countState: number[]): boolean {
-  const moduleCount = 7;
-  const { length } = countState;
-  const countStateTotal = getCountStateTotal(countState, true);
+export function isMatchFinderPattern(scanline: number[]): boolean {
+  const modules = 7;
+  const { length } = scanline;
+  const scanlineTotal = calculateScanlineTotal(scanline, true);
 
-  if (countStateTotal >= moduleCount) {
-    const moduleSize = countStateTotal / moduleCount;
+  if (scanlineTotal >= modules) {
+    const moduleSize = scanlineTotal / modules;
 
     if (moduleSize >= 1) {
       const middleIndex = toInt32(length / 2);
@@ -62,9 +62,9 @@ export function isMatchFinderPattern(countState: number[]): boolean {
 
       // Allow less than DIFF_FINDER_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
       for (let i = 0; i < length; i++) {
-        const size = countState[i];
+        const count = scanline[i];
         const ratio = i !== middleIndex ? 1 : 3;
-        const moduleSizeDiff = Math.abs(size - moduleSize * ratio);
+        const moduleSizeDiff = Math.abs(count - moduleSize * ratio);
 
         if (moduleSizeDiff > 1 && moduleSizeDiff > threshold * ratio) {
           return false;
@@ -78,19 +78,19 @@ export function isMatchFinderPattern(countState: number[]): boolean {
   return false;
 }
 
-export function isMatchAlignmentPattern(countState: number[]): boolean {
-  const moduleCount = countState.length;
-  const countStateTotal = getCountStateTotal(countState, true);
+export function isMatchAlignmentPattern(scanline: number[]): boolean {
+  const modules = scanline.length;
+  const scanlineTotal = calculateScanlineTotal(scanline, true);
 
-  if (countStateTotal >= moduleCount) {
-    const moduleSize = countStateTotal / moduleCount;
+  if (scanlineTotal >= modules) {
+    const moduleSize = scanlineTotal / modules;
 
     if (moduleSize >= 1) {
       const threshold = moduleSize * DIFF_ALIGNMENT_PATTERN_RATIO;
 
       // Allow less than DIFF_ALIGNMENT_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
-      for (const size of countState) {
-        const moduleSizeDiff = Math.abs(size - moduleSize);
+      for (const count of scanline) {
+        const moduleSizeDiff = Math.abs(count - moduleSize);
 
         if (moduleSizeDiff > 1 && moduleSizeDiff > threshold) {
           return false;
@@ -123,12 +123,12 @@ export function alignCrossPattern(
   x: number,
   y: number,
   overscan: number,
-  checker: (countState: number[]) => boolean,
+  checker: (scanline: number[]) => boolean,
   isVertical?: boolean
-): [offset: number, countState: number[]] {
+): [offset: number, scanline: number[]] {
   let offset = isVertical ? y : x;
 
-  const countState = [0, 0, 0, 0, 0];
+  const scanline = [0, 0, 0, 0, 0];
   const size = isVertical ? matrix.height : matrix.width;
   const isBlackPixel = (): number => {
     return isVertical ? matrix.get(x, offset) : matrix.get(offset, y);
@@ -136,37 +136,37 @@ export function alignCrossPattern(
 
   while (offset >= 0 && isBlackPixel()) {
     offset--;
-    countState[2]++;
+    scanline[2]++;
   }
 
   while (offset >= 0 && !isBlackPixel()) {
     offset--;
-    countState[1]++;
+    scanline[1]++;
   }
 
-  while (offset >= 0 && countState[0] < overscan && isBlackPixel()) {
+  while (offset >= 0 && scanline[0] < overscan && isBlackPixel()) {
     offset--;
-    countState[0]++;
+    scanline[0]++;
   }
 
   offset = (isVertical ? y : x) + 1;
 
   while (offset < size && isBlackPixel()) {
     offset++;
-    countState[2]++;
+    scanline[2]++;
   }
 
   while (offset < size && !isBlackPixel()) {
     offset++;
-    countState[3]++;
+    scanline[3]++;
   }
 
-  while (offset < size && countState[4] < overscan && isBlackPixel()) {
+  while (offset < size && scanline[4] < overscan && isBlackPixel()) {
     offset++;
-    countState[4]++;
+    scanline[4]++;
   }
 
-  return [checker(countState) ? centerFromEnd(countState, offset) : NaN, countState];
+  return [checker(scanline) ? centerFromEnd(scanline, offset) : NaN, scanline];
 }
 
 export function checkDiagonalPattern(
@@ -174,15 +174,15 @@ export function checkDiagonalPattern(
   x: number,
   y: number,
   overscan: number,
-  checker: (countState: number[]) => boolean,
+  checker: (scanline: number[]) => boolean,
   isBackslash?: boolean
 ): boolean {
   let step = -1;
   let offsetX = x;
   let offsetY = y;
 
+  const scanline = [0, 0, 0, 0, 0];
   const { width, height } = matrix;
-  const countState = [0, 0, 0, 0, 0];
   const slope = isBackslash ? -1 : 1;
   const updateAxis = (): void => {
     offsetX += step;
@@ -196,21 +196,21 @@ export function checkDiagonalPattern(
   while (offsetX >= 0 && offsetY >= 0 && offsetY < height && isBlackPixel()) {
     updateAxis();
 
-    countState[2]++;
+    scanline[2]++;
   }
 
   // Start counting left from center finding black center mass
   while (offsetX >= 0 && offsetY >= 0 && offsetY < height && !isBlackPixel()) {
     updateAxis();
 
-    countState[1]++;
+    scanline[1]++;
   }
 
   // Start counting left from center finding black center mass
-  while (offsetX >= 0 && offsetY >= 0 && offsetY < height && countState[0] < overscan && isBlackPixel()) {
+  while (offsetX >= 0 && offsetY >= 0 && offsetY < height && scanline[0] < overscan && isBlackPixel()) {
     updateAxis();
 
-    countState[0]++;
+    scanline[0]++;
   }
 
   step = 1;
@@ -221,22 +221,22 @@ export function checkDiagonalPattern(
   while (offsetX < width && offsetY >= 0 && offsetY < height && isBlackPixel()) {
     updateAxis();
 
-    countState[2]++;
+    scanline[2]++;
   }
 
   // Start counting right from center finding black center mass
   while (offsetX < width && offsetY >= 0 && offsetY < height && !isBlackPixel()) {
     updateAxis();
 
-    countState[3]++;
+    scanline[3]++;
   }
 
   // Start counting right from center finding black center mass
-  while (offsetX < width && offsetY >= 0 && offsetY < height && countState[4] < overscan && isBlackPixel()) {
+  while (offsetX < width && offsetY >= 0 && offsetY < height && scanline[4] < overscan && isBlackPixel()) {
     updateAxis();
 
-    countState[4]++;
+    scanline[4]++;
   }
 
-  return checker(countState);
+  return checker(scanline);
 }

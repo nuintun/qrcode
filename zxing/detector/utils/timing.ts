@@ -48,15 +48,15 @@ function calculateTimingLine(start: Pattern, end: Pattern, control: Pattern, isV
   return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
 }
 
-function isValidTimingLine(countState: number[], moduleSize: number): boolean {
-  const { length } = countState;
+function isValidTimingLine(scanline: number[], moduleSize: number): boolean {
+  const { length } = scanline;
 
   if (length >= 5) {
     const lastIndex = length - 1;
     const maxRepeatPixels = Math.ceil(moduleSize * 3);
 
     for (let i = 1; i < lastIndex; i++) {
-      if (countState[i] > maxRepeatPixels) {
+      if (scanline[i] > maxRepeatPixels) {
         return false;
       }
     }
@@ -72,7 +72,7 @@ export function checkPixelsInTimingLine(
   { topLeft, topRight, bottomLeft, moduleSize }: FinderPatternGroup,
   isVertical?: boolean
 ) {
-  const countState = [];
+  const scanline = [];
   const [start, end] = isVertical
     ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
     : calculateTimingLine(topLeft, topRight, bottomLeft);
@@ -87,14 +87,14 @@ export function checkPixelsInTimingLine(
     if (bit === lastBit) {
       count++;
     } else {
-      countState.push(count);
+      scanline.push(count);
 
       count = 1;
       lastBit = bit;
     }
   }
 
-  countState.push(count);
+  scanline.push(count);
 
-  return isValidTimingLine(countState, moduleSize[isVertical ? 1 : 0]);
+  return isValidTimingLine(scanline, moduleSize[isVertical ? 1 : 0]);
 }

@@ -5,10 +5,10 @@
 import { Pattern } from './Pattern';
 import { toInt32 } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
-import { alignCrossPattern, centerFromEnd, checkDiagonalPattern, getCountStateTotal } from './utils/pattern';
+import { alignCrossPattern, calculateScanlineTotal, centerFromEnd, checkDiagonalPattern } from './utils/pattern';
 
 export interface Matcher {
-  (countState: number[]): boolean;
+  (scanline: number[]): boolean;
 }
 
 export class PatternMatcher {
@@ -61,21 +61,21 @@ export class PatternMatcher {
     return this.#patterns;
   }
 
-  public match(x: number, y: number, countState: number[]): boolean {
-    if (this.#matcher(countState)) {
-      let countStateHorizontal;
-      let offsetX = centerFromEnd(countState, x);
+  public match(x: number, y: number, scanline: number[]): boolean {
+    if (this.#matcher(scanline)) {
+      let scanlineHorizontal;
+      let offsetX = centerFromEnd(scanline, x);
 
-      const overscan = countState[toInt32(countState.length / 2)];
-      const [offsetY, countStateVertical] = this.#alignVerticalPattern(toInt32(offsetX), y, overscan);
+      const overscan = scanline[toInt32(scanline.length / 2)];
+      const [offsetY, scanlineVertical] = this.#alignVerticalPattern(toInt32(offsetX), y, overscan);
 
       if (offsetY >= 0) {
         // Re-cross check
-        [offsetX, countStateHorizontal] = this.#alignHorizontalPattern(toInt32(offsetX), toInt32(offsetY), overscan);
+        [offsetX, scanlineHorizontal] = this.#alignHorizontalPattern(toInt32(offsetX), toInt32(offsetY), overscan);
 
         if (offsetX >= 0 && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), overscan)) {
-          const width = getCountStateTotal(countStateHorizontal);
-          const height = getCountStateTotal(countStateVertical);
+          const width = calculateScanlineTotal(scanlineHorizontal);
+          const height = calculateScanlineTotal(scanlineVertical);
           const patterns = this.#patterns;
           const { length } = patterns;
 

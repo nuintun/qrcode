@@ -3704,47 +3704,47 @@
   const DIFF_MODULE_SIZE_RATIO = 1;
   const DIFF_FINDER_PATTERN_RATIO = 0.5;
   const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
-  function centerFromEnd(countState, end) {
-    const { length } = countState;
+  function centerFromEnd(scanline, end) {
+    const { length } = scanline;
     const middleIndex = toInt32(length / 2);
-    let center = end - countState[middleIndex] / 2;
+    let center = end - scanline[middleIndex] / 2;
     for (let i = middleIndex + 1; i < length; i++) {
-      center -= countState[i];
+      center -= scanline[i];
     }
     return center;
   }
-  function setCountState(countState, count) {
-    const { length } = countState;
+  function scanlineUpdate(scanline, count) {
+    const { length } = scanline;
     const lastIndex = length - 1;
     for (let i = 0; i < lastIndex; i++) {
-      countState[i] = countState[i + 1];
+      scanline[i] = scanline[i + 1];
     }
-    countState[lastIndex] = count;
+    scanline[lastIndex] = count;
   }
-  function getCountStateTotal(countState, checkZero) {
-    let countStateTotal = 0;
-    for (const count of countState) {
+  function calculateScanlineTotal(scanline, checkZero) {
+    let scanlineTotal = 0;
+    for (const count of scanline) {
       if (checkZero && count === 0) {
         return NaN;
       }
-      countStateTotal += count;
+      scanlineTotal += count;
     }
-    return countStateTotal;
+    return scanlineTotal;
   }
-  function isMatchFinderPattern(countState) {
-    const moduleCount = 7;
-    const { length } = countState;
-    const countStateTotal = getCountStateTotal(countState, true);
-    if (countStateTotal >= moduleCount) {
-      const moduleSize = countStateTotal / moduleCount;
+  function isMatchFinderPattern(scanline) {
+    const modules = 7;
+    const { length } = scanline;
+    const scanlineTotal = calculateScanlineTotal(scanline, true);
+    if (scanlineTotal >= modules) {
+      const moduleSize = scanlineTotal / modules;
       if (moduleSize >= 1) {
         const middleIndex = toInt32(length / 2);
         const threshold = moduleSize * DIFF_FINDER_PATTERN_RATIO;
         // Allow less than DIFF_FINDER_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
         for (let i = 0; i < length; i++) {
-          const size = countState[i];
+          const count = scanline[i];
           const ratio = i !== middleIndex ? 1 : 3;
-          const moduleSizeDiff = Math.abs(size - moduleSize * ratio);
+          const moduleSizeDiff = Math.abs(count - moduleSize * ratio);
           if (moduleSizeDiff > 1 && moduleSizeDiff > threshold * ratio) {
             return false;
           }
@@ -3754,16 +3754,16 @@
     }
     return false;
   }
-  function isMatchAlignmentPattern(countState) {
-    const moduleCount = countState.length;
-    const countStateTotal = getCountStateTotal(countState, true);
-    if (countStateTotal >= moduleCount) {
-      const moduleSize = countStateTotal / moduleCount;
+  function isMatchAlignmentPattern(scanline) {
+    const modules = scanline.length;
+    const scanlineTotal = calculateScanlineTotal(scanline, true);
+    if (scanlineTotal >= modules) {
+      const moduleSize = scanlineTotal / modules;
       if (moduleSize >= 1) {
         const threshold = moduleSize * DIFF_ALIGNMENT_PATTERN_RATIO;
         // Allow less than DIFF_ALIGNMENT_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
-        for (const size of countState) {
-          const moduleSizeDiff = Math.abs(size - moduleSize);
+        for (const count of scanline) {
+          const moduleSizeDiff = Math.abs(count - moduleSize);
           if (moduleSizeDiff > 1 && moduleSizeDiff > threshold) {
             return false;
           }
@@ -3785,44 +3785,44 @@
   }
   function alignCrossPattern(matrix, x, y, overscan, checker, isVertical) {
     let offset = isVertical ? y : x;
-    const countState = [0, 0, 0, 0, 0];
+    const scanline = [0, 0, 0, 0, 0];
     const size = isVertical ? matrix.height : matrix.width;
     const isBlackPixel = () => {
       return isVertical ? matrix.get(x, offset) : matrix.get(offset, y);
     };
     while (offset >= 0 && isBlackPixel()) {
       offset--;
-      countState[2]++;
+      scanline[2]++;
     }
     while (offset >= 0 && !isBlackPixel()) {
       offset--;
-      countState[1]++;
+      scanline[1]++;
     }
-    while (offset >= 0 && countState[0] < overscan && isBlackPixel()) {
+    while (offset >= 0 && scanline[0] < overscan && isBlackPixel()) {
       offset--;
-      countState[0]++;
+      scanline[0]++;
     }
     offset = (isVertical ? y : x) + 1;
     while (offset < size && isBlackPixel()) {
       offset++;
-      countState[2]++;
+      scanline[2]++;
     }
     while (offset < size && !isBlackPixel()) {
       offset++;
-      countState[3]++;
+      scanline[3]++;
     }
-    while (offset < size && countState[4] < overscan && isBlackPixel()) {
+    while (offset < size && scanline[4] < overscan && isBlackPixel()) {
       offset++;
-      countState[4]++;
+      scanline[4]++;
     }
-    return [checker(countState) ? centerFromEnd(countState, offset) : NaN, countState];
+    return [checker(scanline) ? centerFromEnd(scanline, offset) : NaN, scanline];
   }
   function checkDiagonalPattern(matrix, x, y, overscan, checker, isBackslash) {
     let step = -1;
     let offsetX = x;
     let offsetY = y;
+    const scanline = [0, 0, 0, 0, 0];
     const { width, height } = matrix;
-    const countState = [0, 0, 0, 0, 0];
     const slope = isBackslash ? -1 : 1;
     const updateAxis = () => {
       offsetX += step;
@@ -3834,17 +3834,17 @@
     // Start counting left from center finding black center mass
     while (offsetX >= 0 && offsetY >= 0 && offsetY < height && isBlackPixel()) {
       updateAxis();
-      countState[2]++;
+      scanline[2]++;
     }
     // Start counting left from center finding black center mass
     while (offsetX >= 0 && offsetY >= 0 && offsetY < height && !isBlackPixel()) {
       updateAxis();
-      countState[1]++;
+      scanline[1]++;
     }
     // Start counting left from center finding black center mass
-    while (offsetX >= 0 && offsetY >= 0 && offsetY < height && countState[0] < overscan && isBlackPixel()) {
+    while (offsetX >= 0 && offsetY >= 0 && offsetY < height && scanline[0] < overscan && isBlackPixel()) {
       updateAxis();
-      countState[0]++;
+      scanline[0]++;
     }
     step = 1;
     offsetX = x + step;
@@ -3852,19 +3852,19 @@
     // Start counting right from center finding black center mass
     while (offsetX < width && offsetY >= 0 && offsetY < height && isBlackPixel()) {
       updateAxis();
-      countState[2]++;
+      scanline[2]++;
     }
     // Start counting right from center finding black center mass
     while (offsetX < width && offsetY >= 0 && offsetY < height && !isBlackPixel()) {
       updateAxis();
-      countState[3]++;
+      scanline[3]++;
     }
     // Start counting right from center finding black center mass
-    while (offsetX < width && offsetY >= 0 && offsetY < height && countState[4] < overscan && isBlackPixel()) {
+    while (offsetX < width && offsetY >= 0 && offsetY < height && scanline[4] < overscan && isBlackPixel()) {
       updateAxis();
-      countState[4]++;
+      scanline[4]++;
     }
-    return checker(countState);
+    return checker(scanline);
   }
 
   /**
@@ -4022,18 +4022,18 @@
     get patterns() {
       return this.#patterns;
     }
-    match(x, y, countState) {
-      if (this.#matcher(countState)) {
-        let countStateHorizontal;
-        let offsetX = centerFromEnd(countState, x);
-        const overscan = countState[toInt32(countState.length / 2)];
-        const [offsetY, countStateVertical] = this.#alignVerticalPattern(toInt32(offsetX), y, overscan);
+    match(x, y, scanline) {
+      if (this.#matcher(scanline)) {
+        let scanlineHorizontal;
+        let offsetX = centerFromEnd(scanline, x);
+        const overscan = scanline[toInt32(scanline.length / 2)];
+        const [offsetY, scanlineVertical] = this.#alignVerticalPattern(toInt32(offsetX), y, overscan);
         if (offsetY >= 0) {
           // Re-cross check
-          [offsetX, countStateHorizontal] = this.#alignHorizontalPattern(toInt32(offsetX), toInt32(offsetY), overscan);
+          [offsetX, scanlineHorizontal] = this.#alignHorizontalPattern(toInt32(offsetX), toInt32(offsetY), overscan);
           if (offsetX >= 0 && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), overscan)) {
-            const width = getCountStateTotal(countStateHorizontal);
-            const height = getCountStateTotal(countStateVertical);
+            const width = calculateScanlineTotal(scanlineHorizontal);
+            const height = calculateScanlineTotal(scanlineVertical);
             const patterns = this.#patterns;
             const { length } = patterns;
             for (let i = 0; i < length; i++) {
@@ -4152,13 +4152,13 @@
     }
     return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
   }
-  function isValidTimingLine(countState, moduleSize) {
-    const { length } = countState;
+  function isValidTimingLine(scanline, moduleSize) {
+    const { length } = scanline;
     if (length >= 5) {
       const lastIndex = length - 1;
       const maxRepeatPixels = Math.ceil(moduleSize * 3);
       for (let i = 1; i < lastIndex; i++) {
-        if (countState[i] > maxRepeatPixels) {
+        if (scanline[i] > maxRepeatPixels) {
           return false;
         }
       }
@@ -4167,7 +4167,7 @@
     return false;
   }
   function checkPixelsInTimingLine(matrix, { topLeft, topRight, bottomLeft, moduleSize }, isVertical) {
-    const countState = [];
+    const scanline = [];
     const [start, end] = isVertical
       ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
       : calculateTimingLine(topLeft, topRight, bottomLeft);
@@ -4179,13 +4179,13 @@
       if (bit === lastBit) {
         count++;
       } else {
-        countState.push(count);
+        scanline.push(count);
         count = 1;
         lastBit = bit;
       }
     }
-    countState.push(count);
-    return isValidTimingLine(countState, moduleSize[isVertical ? 1 : 0]);
+    scanline.push(count);
+    return isValidTimingLine(scanline, moduleSize[isVertical ? 1 : 0]);
   }
 
   /**
@@ -4484,13 +4484,13 @@
       const { width, height } = matrix;
       const finderMatcher = new FinderPatternMatcher(matrix, strict);
       const alignmentMatcher = new AlignmentPatternMatcher(matrix, strict);
-      const match = (x, y, lastBit, countState, count) => {
-        setCountState(countState, count);
+      const match = (x, y, lastBit, scanline, count) => {
+        scanlineUpdate(scanline, count);
         // Match pattern
         if (lastBit) {
-          finderMatcher.match(x, y, countState);
+          finderMatcher.match(x, y, scanline);
         } else {
-          alignmentMatcher.match(x, y, countState.slice(-3));
+          alignmentMatcher.match(x, y, scanline.slice(-3));
         }
       };
       for (let y = 0; y < height; y++) {
@@ -4503,19 +4503,19 @@
         }
         let count = 0;
         let lastBit = matrix.get(x, y);
-        const countState = [0, 0, 0, 0, 0];
+        const scanline = [0, 0, 0, 0, 0];
         while (x < width) {
           const bit = matrix.get(x, y);
           if (bit === lastBit) {
             count++;
           } else {
-            match(x, y, lastBit, countState, count);
+            match(x, y, lastBit, scanline, count);
             count = 1;
             lastBit = bit;
           }
           x++;
         }
-        match(x, y, lastBit, countState, count);
+        match(x, y, lastBit, scanline, count);
       }
       return detect(matrix, finderMatcher, alignmentMatcher);
     }
