@@ -4210,9 +4210,9 @@
     const { length } = countState;
     if (length >= 5) {
       const lastIndex = length - 1;
-      const quietZone = moduleSize * 4;
+      const maxRepeatPixels = moduleSize * 3;
       for (let i = 1; i < lastIndex; i++) {
-        if (countState[i] > quietZone) {
+        if (countState[i] > maxRepeatPixels) {
           return false;
         }
       }
