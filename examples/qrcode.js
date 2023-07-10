@@ -4153,40 +4153,30 @@
     }
     return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
   }
-  function isValidTimingLine(scanline, moduleSize) {
-    const { length } = scanline;
-    if (length >= 5) {
-      const lastIndex = length - 1;
-      const maxRepeatPixels = Math.ceil(moduleSize * 3);
-      for (let i = 1; i < lastIndex; i++) {
-        if (scanline[i] > maxRepeatPixels) {
-          return false;
-        }
-      }
-      return true;
-    }
-    return false;
-  }
   function checkPixelsInTimingLine(matrix, { topLeft, topRight, bottomLeft, moduleSize }, isVertical) {
-    const scanline = [];
     const [start, end] = isVertical
       ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
       : calculateTimingLine(topLeft, topRight, bottomLeft);
     const points = new PlotLine(start, end).points();
+    const maxRepeatPixels = Math.ceil(moduleSize[isVertical ? 1 : 0] * 3);
     let count = 0;
+    let isFirst = true;
     let lastBit = matrix.get(toInt32(start.x), toInt32(start.y));
     for (const [x, y] of points) {
       const bit = matrix.get(x, y);
       if (bit === lastBit) {
         count++;
       } else {
-        scanline.push(count);
+        if (isFirst) {
+          isFirst = false;
+        } else if (count > maxRepeatPixels) {
+          return false;
+        }
         count = 1;
         lastBit = bit;
       }
     }
-    scanline.push(count);
-    return isValidTimingLine(scanline, moduleSize[isVertical ? 1 : 0]);
+    return true;
   }
 
   /**

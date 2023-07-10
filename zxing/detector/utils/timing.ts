@@ -47,37 +47,19 @@ function calculateTimingLine(start: Pattern, end: Pattern, control: Pattern, isV
   return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
 }
 
-function isValidTimingLine(scanline: number[], moduleSize: number): boolean {
-  const { length } = scanline;
-
-  if (length >= 5) {
-    const lastIndex = length - 1;
-    const maxRepeatPixels = Math.ceil(moduleSize * 3);
-
-    for (let i = 1; i < lastIndex; i++) {
-      if (scanline[i] > maxRepeatPixels) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  return false;
-}
-
 export function checkPixelsInTimingLine(
   matrix: BitMatrix,
   { topLeft, topRight, bottomLeft, moduleSize }: FinderPatternGroup,
   isVertical?: boolean
 ) {
-  const scanline = [];
   const [start, end] = isVertical
     ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
     : calculateTimingLine(topLeft, topRight, bottomLeft);
   const points = new PlotLine(start, end).points();
+  const maxRepeatPixels = Math.ceil(moduleSize[isVertical ? 1 : 0] * 3);
 
   let count = 0;
+  let isFirst = true;
   let lastBit = matrix.get(toInt32(start.x), toInt32(start.y));
 
   for (const [x, y] of points) {
@@ -86,14 +68,16 @@ export function checkPixelsInTimingLine(
     if (bit === lastBit) {
       count++;
     } else {
-      scanline.push(count);
+      if (isFirst) {
+        isFirst = false;
+      } else if (count > maxRepeatPixels) {
+        return false;
+      }
 
       count = 1;
       lastBit = bit;
     }
   }
 
-  scanline.push(count);
-
-  return isValidTimingLine(scanline, moduleSize[isVertical ? 1 : 0]);
+  return true;
 }
