@@ -4,25 +4,28 @@
 
 import { Pattern } from './Pattern';
 import { BitMatrix } from '/common/BitMatrix';
+import { centerFromEnd } from './utils/scanline';
 import { sumArray, toInt32 } from '/common/utils';
-import { alignCrossPattern, centerFromEnd, checkDiagonalPattern } from './utils/pattern';
+import { alignCrossPattern, calculatePatternNoise, checkDiagonalPattern, getDiagonalScanline } from './utils/pattern';
 
 export interface Matcher {
   (scanline: number[]): boolean;
 }
 
 export class PatternMatcher {
-  #strict?: boolean;
-  #matcher: Matcher;
-  #matrix: BitMatrix;
   #modules: number;
+  #matcher: Matcher;
+  #ratios: number[];
+  #strict?: boolean;
+  #matrix: BitMatrix;
   #patterns: Pattern[] = [];
 
-  constructor(matrix: BitMatrix, modules: number, matcher: Matcher, strict?: boolean) {
+  constructor(matrix: BitMatrix, ratios: number[], matcher: Matcher, strict?: boolean) {
     this.#matrix = matrix;
+    this.#ratios = ratios;
     this.#strict = strict;
     this.#matcher = matcher;
-    this.#modules = modules;
+    this.#modules = sumArray(ratios);
   }
 
   #isDiagonalPassed(x: number, y: number, overscan: number): boolean {
@@ -73,6 +76,15 @@ export class PatternMatcher {
         [offsetX, scanlineHorizontal] = this.#alignHorizontalPattern(toInt32(offsetX), toInt32(offsetY), overscan);
 
         if (offsetX >= 0 && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), overscan)) {
+          const matrix = this.#matrix;
+          // TODO 待优化
+          const noise = calculatePatternNoise(
+            this.#ratios,
+            scanlineHorizontal,
+            scanlineVertical,
+            getDiagonalScanline(matrix, toInt32(offsetX), toInt32(offsetY), overscan),
+            getDiagonalScanline(matrix, toInt32(offsetX), toInt32(offsetY), overscan, true)
+          );
           const width = sumArray(scanlineHorizontal);
           const height = sumArray(scanlineVertical);
           const patterns = this.#patterns;
@@ -83,14 +95,14 @@ export class PatternMatcher {
 
             // Look for about the same center and module size
             if (pattern.equals(offsetX, offsetY, width, height)) {
-              patterns[i] = pattern.combine(offsetX, offsetY, width, height);
+              patterns[i] = pattern.combine(offsetX, offsetY, width, height, noise);
 
               return true;
             }
           }
 
           // Hadn't found this before; save it
-          patterns.push(new Pattern(offsetX, offsetY, width, height, this.#modules));
+          patterns.push(new Pattern(offsetX, offsetY, width, height, this.#modules, noise));
 
           return true;
         }

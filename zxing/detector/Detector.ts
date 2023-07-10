@@ -4,8 +4,8 @@
 
 import { Detect } from './Detect';
 import { BitMatrix } from '/common/BitMatrix';
-import { scanlineUpdate } from './utils/pattern';
 import { fromVersionSize } from '/common/Version';
+import { scanlineUpdate } from './utils/scanline';
 import { FinderPatternMatcher } from './FinderPatternMatcher';
 import { AlignmentPatternMatcher } from './AlignmentPatternMatcher';
 

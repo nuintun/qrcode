@@ -2,51 +2,10 @@
  * @module matcher
  */
 
-import { BitMatrix } from '/common/BitMatrix';
 import { sumArray, toInt32 } from '/common/utils';
-
-export const DIFF_EDGE_RATIO = 0.5;
-export const DIFF_MODULE_SIZE_RATIO = 0.5;
-export const DIFF_FINDER_PATTERN_RATIO = 0.5;
-export const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
-
-export function sumScanlineNonzero(scanline: number[]): number {
-  let scanlineTotal = 0;
-
-  for (const count of scanline) {
-    if (count === 0) {
-      return NaN;
-    }
-
-    scanlineTotal += count;
-  }
-
-  return scanlineTotal;
-}
-
-export function scanlineUpdate(scanline: number[], count: number): void {
-  const { length } = scanline;
-  const lastIndex = length - 1;
-
-  for (let i = 0; i < lastIndex; i++) {
-    scanline[i] = scanline[i + 1];
-  }
-
-  scanline[lastIndex] = count;
-}
-
-export function centerFromEnd(scanline: number[], end: number): number {
-  const { length } = scanline;
-  const middleIndex = toInt32(length / 2);
-
-  let center = end - scanline[middleIndex] / 2;
-
-  for (let i = middleIndex + 1; i < length; i++) {
-    center -= scanline[i];
-  }
-
-  return center;
-}
+import { BitMatrix } from '/common/BitMatrix';
+import { calculateScanlineNoise, centerFromEnd, sumScanlineNonzero } from './scanline';
+import { DIFF_ALIGNMENT_PATTERN_RATIO, DIFF_FINDER_PATTERN_RATIO } from './constants';
 
 export function isMatchFinderPattern(scanline: number[]): boolean {
   const modules = 7;
@@ -235,17 +194,96 @@ export function checkDiagonalPattern(
   return checker(scanline);
 }
 
-export function calculateScanlineScore(scanline: number[], ratios: number[]) {
-  let error = 0;
+export function getDiagonalScanline(
+  matrix: BitMatrix,
+  x: number,
+  y: number,
+  overscan: number,
+  isBackslash?: boolean
+): number[] {
+  let step = -1;
+  let offsetX = x;
+  let offsetY = y;
 
-  const { length } = ratios;
-  const average = sumArray(scanline) / sumArray(ratios);
+  const scanline = [0, 0, 0, 0, 0];
+  const { width, height } = matrix;
+  const slope = isBackslash ? -1 : 1;
+  const updateAxis = (): void => {
+    offsetX += step;
+    offsetY -= step * slope;
+  };
+  const isBlackPixel = (): number => {
+    return matrix.get(offsetX, offsetY);
+  };
 
-  for (let i = 0; i < length; i++) {
-    const value = scanline[i] - ratios[i] * average;
+  // Start counting left from center finding black center mass
+  while (offsetX >= 0 && offsetY >= 0 && offsetY < height && isBlackPixel()) {
+    updateAxis();
 
-    error += value * value;
+    scanline[2]++;
   }
 
-  return { average, error };
+  // Start counting left from center finding black center mass
+  while (offsetX >= 0 && offsetY >= 0 && offsetY < height && !isBlackPixel()) {
+    updateAxis();
+
+    scanline[1]++;
+  }
+
+  // Start counting left from center finding black center mass
+  while (offsetX >= 0 && offsetY >= 0 && offsetY < height && scanline[0] < overscan && isBlackPixel()) {
+    updateAxis();
+
+    scanline[0]++;
+  }
+
+  step = 1;
+  offsetX = x + step;
+  offsetY = y - step * slope;
+
+  // Start counting right from center finding black center mass
+  while (offsetX < width && offsetY >= 0 && offsetY < height && isBlackPixel()) {
+    updateAxis();
+
+    scanline[2]++;
+  }
+
+  // Start counting right from center finding black center mass
+  while (offsetX < width && offsetY >= 0 && offsetY < height && !isBlackPixel()) {
+    updateAxis();
+
+    scanline[3]++;
+  }
+
+  // Start counting right from center finding black center mass
+  while (offsetX < width && offsetY >= 0 && offsetY < height && scanline[4] < overscan && isBlackPixel()) {
+    updateAxis();
+
+    scanline[4]++;
+  }
+
+  return scanline;
+}
+
+export function calculatePatternNoise(ratios: number[], ...scanlines: number[][]): number {
+  const noises: number[] = [];
+  const averages: number[] = [];
+  const averagesDiff: number[] = [];
+
+  for (const scanline of scanlines) {
+    const [noise, average] = calculateScanlineNoise(scanline, ratios);
+
+    averages.push(average);
+    noises.push(noise * noise);
+  }
+
+  const averagesAvg = sumArray(averages) / averages.length;
+
+  for (const average of averages) {
+    const diff = average - averagesAvg;
+
+    averagesDiff.push(diff * diff);
+  }
+
+  return Math.sqrt(sumArray(noises)) + sumArray(averagesDiff) / averagesAvg;
 }

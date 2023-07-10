@@ -7,11 +7,12 @@ import { PatternMatcher } from './PatternMatcher';
 import { checkPixelsInTimingLine } from './utils/timing';
 import { FinderPatternGroup } from './FinderPatternGroup';
 import { MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
-import { DIFF_EDGE_RATIO, isEqualsSize, isMatchFinderPattern } from './utils/pattern';
+import { isEqualsSize, isMatchFinderPattern } from './utils/pattern';
+import { DIFF_EDGE_RATIO, FINDER_PATTERN_RATIOS } from './utils/constants';
 
 export class FinderPatternMatcher extends PatternMatcher {
   constructor(matrix: BitMatrix, strict?: boolean) {
-    super(matrix, 7, isMatchFinderPattern, strict);
+    super(matrix, FINDER_PATTERN_RATIOS, isMatchFinderPattern, strict);
   }
 
   public override match(x: number, y: number, scanline: number[]): boolean {

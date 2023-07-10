@@ -17,6 +17,7 @@ export type PatternRect = [
 ];
 
 export class Pattern extends Point {
+  #noise: number;
   #width: number;
   #height: number;
   #modules: number;
@@ -24,7 +25,7 @@ export class Pattern extends Point {
   #combined: number = 1;
   #moduleSize: ModuleSizeGroup;
 
-  constructor(x: number, y: number, width: number, height: number, modules: number) {
+  constructor(x: number, y: number, width: number, height: number, modules: number, noise: number) {
     super(x, y);
 
     const halfWidth = width / 2;
@@ -34,6 +35,7 @@ export class Pattern extends Point {
     const xModuleSizeHalf = xModuleSize / 2;
     const yModuleSizeHalf = yModuleSize / 2;
 
+    this.#noise = noise;
     this.#width = width;
     this.#height = height;
     this.#modules = modules;
@@ -44,6 +46,10 @@ export class Pattern extends Point {
       x - halfWidth + xModuleSizeHalf
     ];
     this.#moduleSize = [xModuleSize, yModuleSize];
+  }
+
+  public get noise(): number {
+    return this.#noise;
   }
 
   public get width(): number {
@@ -94,14 +100,15 @@ export class Pattern extends Point {
     return false;
   }
 
-  public combine(x: number, y: number, width: number, height: number): Pattern {
+  public combine(x: number, y: number, width: number, height: number, noise: number): Pattern {
     const combined = this.#combined;
     const nextCombined = combined + 1;
     const combinedX = (combined * this.x + x) / nextCombined;
     const combinedY = (combined * this.y + y) / nextCombined;
+    const combinedNoise = (combined * this.#noise + noise) / nextCombined;
     const combinedWidth = (combined * this.#width + width) / nextCombined;
     const combinedHeight = (combined * this.#height + height) / nextCombined;
-    const pattern = new Pattern(combinedX, combinedY, combinedWidth, combinedHeight, this.#modules);
+    const pattern = new Pattern(combinedX, combinedY, combinedWidth, combinedHeight, this.#modules, combinedNoise);
 
     pattern.#combined = nextCombined;
 

@@ -3705,12 +3705,8 @@
   }
 
   /**
-   * @module matcher
+   * @module scanline
    */
-  const DIFF_EDGE_RATIO = 0.5;
-  const DIFF_MODULE_SIZE_RATIO = 0.5;
-  const DIFF_FINDER_PATTERN_RATIO = 0.5;
-  const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
   function sumScanlineNonzero(scanline) {
     let scanlineTotal = 0;
     for (const count of scanline) {
@@ -3738,6 +3734,151 @@
     }
     return center;
   }
+  function calculateScanlineNoise(scanline, ratios) {
+    let noise = 0;
+    const { length } = ratios;
+    const average = sumArray(scanline) / sumArray(ratios);
+    for (let i = 0; i < length; i++) {
+      const diff = scanline[i] - ratios[i] * average;
+      noise += diff * diff;
+    }
+    return [noise, average];
+  }
+
+  /**
+   * @module Point
+   */
+  class Point {
+    #x;
+    #y;
+    constructor(x, y) {
+      this.#x = x;
+      this.#y = y;
+    }
+    get x() {
+      return this.#x;
+    }
+    get y() {
+      return this.#y;
+    }
+  }
+  function distance(a, b) {
+    const xDiff = a.x - b.x;
+    const yDiff = a.y - b.y;
+    return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+  }
+  function calcTriangleArea(a, b, c) {
+    const { x: ax, y: ay } = a;
+    const { x: bx, y: by } = b;
+    const { x: cx, y: cy } = c;
+    return Math.abs((ax * by + bx * cy + cx * ay - bx * ay - cx * by - ax * cy) / 2);
+  }
+  function isPointInQuadrangle(p, a, b, c, d) {
+    return (
+      round(calcTriangleArea(a, b, c) + calcTriangleArea(c, d, a)) ===
+      round(calcTriangleArea(a, b, p) + calcTriangleArea(b, c, p) + calcTriangleArea(c, d, p) + calcTriangleArea(d, a, p))
+    );
+  }
+
+  /**
+   * @module Pattern
+   */
+  class Pattern extends Point {
+    #noise;
+    #width;
+    #height;
+    #modules;
+    #rect;
+    #combined = 1;
+    #moduleSize;
+    constructor(x, y, width, height, modules, noise) {
+      super(x, y);
+      const halfWidth = width / 2;
+      const halfHeight = height / 2;
+      const xModuleSize = width / modules;
+      const yModuleSize = height / modules;
+      const xModuleSizeHalf = xModuleSize / 2;
+      const yModuleSizeHalf = yModuleSize / 2;
+      this.#noise = noise;
+      this.#width = width;
+      this.#height = height;
+      this.#modules = modules;
+      this.#rect = [
+        y - halfHeight + yModuleSizeHalf,
+        x + halfWidth - xModuleSizeHalf,
+        y + halfHeight - yModuleSizeHalf,
+        x - halfWidth + xModuleSizeHalf
+      ];
+      this.#moduleSize = [xModuleSize, yModuleSize];
+    }
+    get noise() {
+      return this.#noise;
+    }
+    get width() {
+      return this.#width;
+    }
+    get height() {
+      return this.#height;
+    }
+    get combined() {
+      return this.#combined;
+    }
+    get rect() {
+      return this.#rect;
+    }
+    get moduleSize() {
+      return this.#moduleSize;
+    }
+    equals(x, y, width, height) {
+      const modules = this.#modules;
+      const xModuleSize = width / modules;
+      if (Math.abs(x - this.x) <= xModuleSize) {
+        const moduleSize = this.#moduleSize;
+        const [xModuleSizeThis] = moduleSize;
+        const xModuleSizeDiff = Math.abs(xModuleSize - xModuleSizeThis);
+        if (xModuleSizeDiff >= 1 && xModuleSizeDiff > xModuleSizeThis) {
+          return false;
+        }
+        const yModuleSize = height / modules;
+        if (Math.abs(y - this.y) <= yModuleSize) {
+          const [, yModuleSizeThis] = moduleSize;
+          const yModuleSizeDiff = Math.abs(yModuleSize - yModuleSizeThis);
+          if (yModuleSizeDiff < 1 || yModuleSizeDiff <= yModuleSizeThis) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+    combine(x, y, width, height, noise) {
+      const combined = this.#combined;
+      const nextCombined = combined + 1;
+      const combinedX = (combined * this.x + x) / nextCombined;
+      const combinedY = (combined * this.y + y) / nextCombined;
+      const combinedNoise = (combined * this.#noise + noise) / nextCombined;
+      const combinedWidth = (combined * this.#width + width) / nextCombined;
+      const combinedHeight = (combined * this.#height + height) / nextCombined;
+      const pattern = new Pattern(combinedX, combinedY, combinedWidth, combinedHeight, this.#modules, combinedNoise);
+      pattern.#combined = nextCombined;
+      return pattern;
+    }
+  }
+
+  /**
+   * @module constants
+   */
+  // Diff ratio
+  const DIFF_EDGE_RATIO = 0.5;
+  const DIFF_MODULE_SIZE_RATIO = 0.5;
+  const DIFF_FINDER_PATTERN_RATIO = 0.5;
+  const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
+  // Pattern scanline size ratios
+  const FINDER_PATTERN_RATIOS = [1, 1, 3, 1, 1];
+  const ALIGNMENT_PATTERN_RATIOS = [1, 1, 1, 1, 1];
+
+  /**
+   * @module matcher
+   */
   function isMatchFinderPattern(scanline) {
     const modules = 7;
     const { length } = scanline;
@@ -3869,134 +4010,88 @@
     }
     return checker(scanline);
   }
-
-  /**
-   * @module Point
-   */
-  class Point {
-    #x;
-    #y;
-    constructor(x, y) {
-      this.#x = x;
-      this.#y = y;
+  function getDiagonalScanline(matrix, x, y, overscan, isBackslash) {
+    let step = -1;
+    let offsetX = x;
+    let offsetY = y;
+    const scanline = [0, 0, 0, 0, 0];
+    const { width, height } = matrix;
+    const slope = isBackslash ? -1 : 1;
+    const updateAxis = () => {
+      offsetX += step;
+      offsetY -= step * slope;
+    };
+    const isBlackPixel = () => {
+      return matrix.get(offsetX, offsetY);
+    };
+    // Start counting left from center finding black center mass
+    while (offsetX >= 0 && offsetY >= 0 && offsetY < height && isBlackPixel()) {
+      updateAxis();
+      scanline[2]++;
     }
-    get x() {
-      return this.#x;
+    // Start counting left from center finding black center mass
+    while (offsetX >= 0 && offsetY >= 0 && offsetY < height && !isBlackPixel()) {
+      updateAxis();
+      scanline[1]++;
     }
-    get y() {
-      return this.#y;
+    // Start counting left from center finding black center mass
+    while (offsetX >= 0 && offsetY >= 0 && offsetY < height && scanline[0] < overscan && isBlackPixel()) {
+      updateAxis();
+      scanline[0]++;
     }
+    step = 1;
+    offsetX = x + step;
+    offsetY = y - step * slope;
+    // Start counting right from center finding black center mass
+    while (offsetX < width && offsetY >= 0 && offsetY < height && isBlackPixel()) {
+      updateAxis();
+      scanline[2]++;
+    }
+    // Start counting right from center finding black center mass
+    while (offsetX < width && offsetY >= 0 && offsetY < height && !isBlackPixel()) {
+      updateAxis();
+      scanline[3]++;
+    }
+    // Start counting right from center finding black center mass
+    while (offsetX < width && offsetY >= 0 && offsetY < height && scanline[4] < overscan && isBlackPixel()) {
+      updateAxis();
+      scanline[4]++;
+    }
+    return scanline;
   }
-  function distance(a, b) {
-    const xDiff = a.x - b.x;
-    const yDiff = a.y - b.y;
-    return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
-  }
-  function calcTriangleArea(a, b, c) {
-    const { x: ax, y: ay } = a;
-    const { x: bx, y: by } = b;
-    const { x: cx, y: cy } = c;
-    return Math.abs((ax * by + bx * cy + cx * ay - bx * ay - cx * by - ax * cy) / 2);
-  }
-  function isPointInQuadrangle(p, a, b, c, d) {
-    return (
-      round(calcTriangleArea(a, b, c) + calcTriangleArea(c, d, a)) ===
-      round(calcTriangleArea(a, b, p) + calcTriangleArea(b, c, p) + calcTriangleArea(c, d, p) + calcTriangleArea(d, a, p))
-    );
-  }
-
-  /**
-   * @module Pattern
-   */
-  class Pattern extends Point {
-    #width;
-    #height;
-    #modules;
-    #rect;
-    #combined = 1;
-    #moduleSize;
-    constructor(x, y, width, height, modules) {
-      super(x, y);
-      const halfWidth = width / 2;
-      const halfHeight = height / 2;
-      const xModuleSize = width / modules;
-      const yModuleSize = height / modules;
-      const xModuleSizeHalf = xModuleSize / 2;
-      const yModuleSizeHalf = yModuleSize / 2;
-      this.#width = width;
-      this.#height = height;
-      this.#modules = modules;
-      this.#rect = [
-        y - halfHeight + yModuleSizeHalf,
-        x + halfWidth - xModuleSizeHalf,
-        y + halfHeight - yModuleSizeHalf,
-        x - halfWidth + xModuleSizeHalf
-      ];
-      this.#moduleSize = [xModuleSize, yModuleSize];
+  function calculatePatternNoise(ratios, ...scanlines) {
+    const noises = [];
+    const averages = [];
+    const averagesDiff = [];
+    for (const scanline of scanlines) {
+      const [noise, average] = calculateScanlineNoise(scanline, ratios);
+      averages.push(average);
+      noises.push(noise * noise);
     }
-    get width() {
-      return this.#width;
+    const averagesAvg = sumArray(averages) / averages.length;
+    for (const average of averages) {
+      const diff = average - averagesAvg;
+      averagesDiff.push(diff * diff);
     }
-    get height() {
-      return this.#height;
-    }
-    get combined() {
-      return this.#combined;
-    }
-    get rect() {
-      return this.#rect;
-    }
-    get moduleSize() {
-      return this.#moduleSize;
-    }
-    equals(x, y, width, height) {
-      const modules = this.#modules;
-      const xModuleSize = width / modules;
-      if (Math.abs(x - this.x) <= xModuleSize) {
-        const moduleSize = this.#moduleSize;
-        const [xModuleSizeThis] = moduleSize;
-        const xModuleSizeDiff = Math.abs(xModuleSize - xModuleSizeThis);
-        if (xModuleSizeDiff >= 1 && xModuleSizeDiff > xModuleSizeThis) {
-          return false;
-        }
-        const yModuleSize = height / modules;
-        if (Math.abs(y - this.y) <= yModuleSize) {
-          const [, yModuleSizeThis] = moduleSize;
-          const yModuleSizeDiff = Math.abs(yModuleSize - yModuleSizeThis);
-          if (yModuleSizeDiff < 1 || yModuleSizeDiff <= yModuleSizeThis) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-    combine(x, y, width, height) {
-      const combined = this.#combined;
-      const nextCombined = combined + 1;
-      const combinedX = (combined * this.x + x) / nextCombined;
-      const combinedY = (combined * this.y + y) / nextCombined;
-      const combinedWidth = (combined * this.#width + width) / nextCombined;
-      const combinedHeight = (combined * this.#height + height) / nextCombined;
-      const pattern = new Pattern(combinedX, combinedY, combinedWidth, combinedHeight, this.#modules);
-      pattern.#combined = nextCombined;
-      return pattern;
-    }
+    return Math.sqrt(sumArray(noises)) + sumArray(averagesDiff) / averagesAvg;
   }
 
   /**
    * @module PatternMatcher
    */
   class PatternMatcher {
-    #strict;
-    #matcher;
-    #matrix;
     #modules;
+    #matcher;
+    #ratios;
+    #strict;
+    #matrix;
     #patterns = [];
-    constructor(matrix, modules, matcher, strict) {
+    constructor(matrix, ratios, matcher, strict) {
       this.#matrix = matrix;
+      this.#ratios = ratios;
       this.#strict = strict;
       this.#matcher = matcher;
-      this.#modules = modules;
+      this.#modules = sumArray(ratios);
     }
     #isDiagonalPassed(x, y, overscan) {
       const matrix = this.#matrix;
@@ -4034,6 +4129,15 @@
           // Re-cross check
           [offsetX, scanlineHorizontal] = this.#alignHorizontalPattern(toInt32(offsetX), toInt32(offsetY), overscan);
           if (offsetX >= 0 && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), overscan)) {
+            const matrix = this.#matrix;
+            // TODO 待优化
+            const noise = calculatePatternNoise(
+              this.#ratios,
+              scanlineHorizontal,
+              scanlineVertical,
+              getDiagonalScanline(matrix, toInt32(offsetX), toInt32(offsetY), overscan),
+              getDiagonalScanline(matrix, toInt32(offsetX), toInt32(offsetY), overscan, true)
+            );
             const width = sumArray(scanlineHorizontal);
             const height = sumArray(scanlineVertical);
             const patterns = this.#patterns;
@@ -4042,12 +4146,12 @@
               const pattern = patterns[i];
               // Look for about the same center and module size
               if (pattern.equals(offsetX, offsetY, width, height)) {
-                patterns[i] = pattern.combine(offsetX, offsetY, width, height);
+                patterns[i] = pattern.combine(offsetX, offsetY, width, height, noise);
                 return true;
               }
             }
             // Hadn't found this before; save it
-            patterns.push(new Pattern(offsetX, offsetY, width, height, this.#modules));
+            patterns.push(new Pattern(offsetX, offsetY, width, height, this.#modules, noise));
             return true;
           }
         }
@@ -4350,7 +4454,7 @@
    */
   class FinderPatternMatcher extends PatternMatcher {
     constructor(matrix, strict) {
-      super(matrix, 7, isMatchFinderPattern, strict);
+      super(matrix, FINDER_PATTERN_RATIOS, isMatchFinderPattern, strict);
     }
     match(x, y, scanline) {
       return super.match(x, y, scanline, scanline[2]);
@@ -4420,7 +4524,7 @@
    */
   class AlignmentPatternMatcher extends PatternMatcher {
     constructor(matrix, strict) {
-      super(matrix, 5, isMatchAlignmentPattern, strict);
+      super(matrix, ALIGNMENT_PATTERN_RATIOS, isMatchAlignmentPattern, strict);
     }
     match(x, y, scanline) {
       scanline = scanline.slice(-3);
@@ -4429,11 +4533,11 @@
     filter({ size, moduleSize, topLeft, topRight, bottomLeft }) {
       const { matrix } = this;
       const { x, y } = topLeft;
-      // Look for an alignment pattern (10 modules in size) around where it should be
       const correctionToTopLeft = 1 - 3 / (size - 7);
       const bottomRightX = topRight.x - x + bottomLeft.x;
       const bottomRightY = topRight.y - y + bottomLeft.y;
       const moduleSizeAvg = calculateModuleSize(moduleSize);
+      // Look for an alignment pattern (10 modules in size) around where it should be
       const alignmentAreaAllowance = Math.ceil(moduleSizeAvg * 10);
       const expectAlignmentX = x + correctionToTopLeft * (bottomRightX - x);
       const expectAlignmentY = y + correctionToTopLeft * (bottomRightY - y);
@@ -4441,10 +4545,6 @@
       const alignmentAreaLeftX = Math.max(0, expectAlignmentX - alignmentAreaAllowance);
       const alignmentAreaRightX = Math.min(matrix.width - 1, expectAlignmentX + alignmentAreaAllowance);
       const alignmentAreaBottomY = Math.min(matrix.height - 1, expectAlignmentY + alignmentAreaAllowance);
-      const alignmentAreaTopLeft = new Point(alignmentAreaLeftX, alignmentAreaTopY);
-      const alignmentAreaTopRight = new Point(alignmentAreaRightX, alignmentAreaTopY);
-      const alignmentAreaBottomRight = new Point(alignmentAreaRightX, alignmentAreaBottomY);
-      const alignmentAreaBottomLeft = new Point(alignmentAreaLeftX, alignmentAreaBottomY);
       const patterns = this.patterns.filter(pattern => {
         const [xModuleSize, yModuleSize] = pattern.moduleSize;
         return (
@@ -4452,20 +4552,22 @@
           isEqualsSize(yModuleSize, moduleSizeAvg, DIFF_MODULE_SIZE_RATIO) &&
           isPointInQuadrangle(
             pattern,
-            alignmentAreaTopLeft,
-            alignmentAreaTopRight,
-            alignmentAreaBottomRight,
-            alignmentAreaBottomLeft
+            new Point(alignmentAreaLeftX, alignmentAreaTopY),
+            new Point(alignmentAreaRightX, alignmentAreaTopY),
+            new Point(alignmentAreaRightX, alignmentAreaBottomY),
+            new Point(alignmentAreaLeftX, alignmentAreaBottomY)
           )
         );
       });
       if (patterns.length > 1) {
-        const expectAlignment = new Point(expectAlignmentX, expectAlignmentX);
+        const expectAlignment = new Point(expectAlignmentX, expectAlignmentY);
         patterns.sort((pattern1, pattern2) => {
-          return distance(pattern1, expectAlignment) - distance(pattern2, expectAlignment);
+          const noise1 = distance(pattern1, expectAlignment) + pattern1.noise;
+          const noise2 = distance(pattern2, expectAlignment) + pattern2.noise;
+          return noise1 - noise2;
         });
       }
-      return patterns;
+      return patterns.slice(0, 2);
     }
   }
 
