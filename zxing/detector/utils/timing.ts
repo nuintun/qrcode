@@ -59,7 +59,7 @@ export function checkPixelsInTimingLine(
   const maxRepeatPixels = Math.ceil(moduleSize[isVertical ? 1 : 0] * 3);
 
   let count = 0;
-  let isFirst = true;
+  let modules = 0;
   let lastBit = matrix.get(toInt32(start.x), toInt32(start.y));
 
   for (const [x, y] of points) {
@@ -68,9 +68,9 @@ export function checkPixelsInTimingLine(
     if (bit === lastBit) {
       count++;
     } else {
-      if (isFirst) {
-        isFirst = false;
-      } else if (count > maxRepeatPixels) {
+      modules++;
+
+      if ((modules > 1 && count > maxRepeatPixels) || modules > 165) {
         return false;
       }
 
@@ -79,5 +79,5 @@ export function checkPixelsInTimingLine(
     }
   }
 
-  return true;
+  return modules >= 7;
 }

@@ -4160,23 +4160,22 @@
     const points = new PlotLine(start, end).points();
     const maxRepeatPixels = Math.ceil(moduleSize[isVertical ? 1 : 0] * 3);
     let count = 0;
-    let isFirst = true;
+    let modules = 0;
     let lastBit = matrix.get(toInt32(start.x), toInt32(start.y));
     for (const [x, y] of points) {
       const bit = matrix.get(x, y);
       if (bit === lastBit) {
         count++;
       } else {
-        if (isFirst) {
-          isFirst = false;
-        } else if (count > maxRepeatPixels) {
+        modules++;
+        if ((modules > 1 && count > maxRepeatPixels) || modules > 165) {
           return false;
         }
         count = 1;
         lastBit = bit;
       }
     }
-    return true;
+    return modules >= 7;
   }
 
   /**
@@ -4393,11 +4392,12 @@
               const { matrix } = this;
               const finderPatternGroup = new FinderPatternGroup(matrix, [pattern1, pattern2, pattern3]);
               const { size, moduleSize } = finderPatternGroup;
-              // Invalid module size
-              if (moduleSize[0] < 1 || moduleSize[1] < 1) {
+              if (Number.isNaN(size) || size < MIN_VERSION_SIZE || size > MAX_VERSION_SIZE) {
                 continue;
               }
-              if (size < MIN_VERSION_SIZE || size > MAX_VERSION_SIZE) {
+              const [moduleSize1, moduleSize2] = moduleSize;
+              // Invalid module size
+              if (Number.isNaN(moduleSize1) || Number.isNaN(moduleSize2) || moduleSize1 < 1 || moduleSize2 < 1) {
                 continue;
               }
               if (

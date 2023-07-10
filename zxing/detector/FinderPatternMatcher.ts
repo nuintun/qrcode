@@ -66,12 +66,14 @@ export class FinderPatternMatcher extends PatternMatcher {
             const finderPatternGroup = new FinderPatternGroup(matrix, [pattern1, pattern2, pattern3]);
             const { size, moduleSize } = finderPatternGroup;
 
-            // Invalid module size
-            if (moduleSize[0] < 1 || moduleSize[1] < 1) {
+            if (Number.isNaN(size) || size < MIN_VERSION_SIZE || size > MAX_VERSION_SIZE) {
               continue;
             }
 
-            if (size < MIN_VERSION_SIZE || size > MAX_VERSION_SIZE) {
+            const [moduleSize1, moduleSize2] = moduleSize;
+
+            // Invalid module size
+            if (Number.isNaN(moduleSize1) || Number.isNaN(moduleSize2) || moduleSize1 < 1 || moduleSize2 < 1) {
               continue;
             }
 
