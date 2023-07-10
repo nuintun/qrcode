@@ -3708,7 +3708,7 @@
    * @module matcher
    */
   const DIFF_EDGE_RATIO = 0.5;
-  const DIFF_MODULE_SIZE_RATIO = 1;
+  const DIFF_MODULE_SIZE_RATIO = 0.5;
   const DIFF_FINDER_PATTERN_RATIO = 0.5;
   const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
   function sumScanlineNonzero(scanline) {
@@ -3780,15 +3780,11 @@
     }
     return false;
   }
-  function isEqualsEdge(edge1, edge2) {
-    const edgeAvg = (edge1 + edge2) / 2;
-    const ratio = Math.abs(edge1 - edge2) / edgeAvg;
-    return ratio < DIFF_EDGE_RATIO;
-  }
-  function isEqualsModuleSize(moduleSize1, moduleSize2) {
-    const moduleSize = (moduleSize1 + moduleSize2) / 2;
-    const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
-    return Math.abs(moduleSize1 - moduleSize2) <= moduleSizeDiff;
+  function isEqualsSize(size1, size2, ratio) {
+    if (size1 > size2) {
+      [size1, size2] = [size2, size1];
+    }
+    return size2 - size1 <= size2 * ratio;
   }
   function alignCrossPattern(matrix, x, y, overscan, checker, isVertical) {
     let offset = isVertical ? y : x;
@@ -4142,10 +4138,9 @@
   function calculateTimingLine(start, end, control, isVertical) {
     const { x: endX, y: endY } = end;
     const { x: startX, y: startY } = start;
-    const controlX = control.x + end.x - startX;
-    const controlY = control.y + end.y - startY;
-    const xRatio = calculateTimingRatio(startX, controlX);
-    const yRatio = calculateTimingRatio(startY, controlY);
+    const { x: controlX, y: controlY } = control;
+    const xRatio = calculateTimingRatio(endX, controlX);
+    const yRatio = calculateTimingRatio(endY, controlY);
     const endXTranslate = getTimingPointXAxis(end, xRatio);
     const endYTranslate = getTimingPointYAxis(end, yRatio);
     const startXTranslate = getTimingPointXAxis(start, xRatio);
@@ -4153,7 +4148,7 @@
     if (xRatio === 0 || yRatio === 0) {
       return [new Point(startXTranslate, startYTranslate), new Point(endXTranslate, endYTranslate)];
     }
-    if (isVertical ? xRatio !== yRatio : xRatio === yRatio) {
+    if (isVertical ? xRatio === yRatio : xRatio !== yRatio) {
       return [new Point(startX, startYTranslate), new Point(endX, endYTranslate)];
     }
     return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
@@ -4391,18 +4386,18 @@
             const pattern2 = patterns[i2];
             const width2 = pattern2.width;
             const height2 = pattern2.height;
-            if (!isEqualsEdge(width1, width2)) {
+            if (!isEqualsSize(width1, width2, DIFF_EDGE_RATIO)) {
               break;
             }
-            if (!isEqualsEdge(height1, height2)) {
+            if (!isEqualsSize(height1, height2, DIFF_EDGE_RATIO)) {
               continue;
             }
             for (let i3 = i2 + 1; i3 < length; i3++) {
               const pattern3 = patterns[i3];
-              if (!isEqualsEdge(width2, pattern3.width)) {
+              if (!isEqualsSize(width2, pattern3.width, DIFF_EDGE_RATIO)) {
                 break;
               }
-              if (!isEqualsEdge(height2, pattern3.height)) {
+              if (!isEqualsSize(height2, pattern3.height, DIFF_EDGE_RATIO)) {
                 continue;
               }
               const { matrix } = this;
@@ -4463,8 +4458,8 @@
       const patterns = this.patterns.filter(pattern => {
         const [xModuleSize, yModuleSize] = pattern.moduleSize;
         return (
-          isEqualsModuleSize(xModuleSize, moduleSizeAvg) &&
-          isEqualsModuleSize(yModuleSize, moduleSizeAvg) &&
+          isEqualsSize(xModuleSize, moduleSizeAvg, DIFF_MODULE_SIZE_RATIO) &&
+          isEqualsSize(yModuleSize, moduleSizeAvg, DIFF_MODULE_SIZE_RATIO) &&
           isPointInQuadrangle(
             pattern,
             alignmentAreaTopLeft,

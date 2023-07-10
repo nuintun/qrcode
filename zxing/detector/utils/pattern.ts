@@ -6,7 +6,7 @@ import { BitMatrix } from '/common/BitMatrix';
 import { sumArray, toInt32 } from '/common/utils';
 
 export const DIFF_EDGE_RATIO = 0.5;
-export const DIFF_MODULE_SIZE_RATIO = 1;
+export const DIFF_MODULE_SIZE_RATIO = 0.5;
 export const DIFF_FINDER_PATTERN_RATIO = 0.5;
 export const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
 
@@ -104,18 +104,12 @@ export function isMatchAlignmentPattern(scanline: number[]): boolean {
   return false;
 }
 
-export function isEqualsEdge(edge1: number, edge2: number): boolean {
-  const edgeAvg = (edge1 + edge2) / 2;
-  const ratio = Math.abs(edge1 - edge2) / edgeAvg;
+export function isEqualsSize(size1: number, size2: number, ratio: number): boolean {
+  if (size1 > size2) {
+    [size1, size2] = [size2, size1];
+  }
 
-  return ratio < DIFF_EDGE_RATIO;
-}
-
-export function isEqualsModuleSize(moduleSize1: number, moduleSize2: number): boolean {
-  const moduleSize = (moduleSize1 + moduleSize2) / 2;
-  const moduleSizeDiff = moduleSize * DIFF_MODULE_SIZE_RATIO;
-
-  return Math.abs(moduleSize1 - moduleSize2) <= moduleSizeDiff;
+  return size2 - size1 <= size2 * ratio;
 }
 
 export function alignCrossPattern(

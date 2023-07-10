@@ -8,7 +8,7 @@ import { PatternMatcher } from './PatternMatcher';
 import { calculateModuleSize } from './utils/module';
 import { FinderPatternGroup } from './FinderPatternGroup';
 import { distance, isPointInQuadrangle, Point } from '/common/Point';
-import { isEqualsModuleSize, isMatchAlignmentPattern } from './utils/pattern';
+import { DIFF_MODULE_SIZE_RATIO, isEqualsSize, isMatchAlignmentPattern } from './utils/pattern';
 
 export class AlignmentPatternMatcher extends PatternMatcher {
   constructor(matrix: BitMatrix, strict?: boolean) {
@@ -45,8 +45,8 @@ export class AlignmentPatternMatcher extends PatternMatcher {
       const [xModuleSize, yModuleSize] = pattern.moduleSize;
 
       return (
-        isEqualsModuleSize(xModuleSize, moduleSizeAvg) &&
-        isEqualsModuleSize(yModuleSize, moduleSizeAvg) &&
+        isEqualsSize(xModuleSize, moduleSizeAvg, DIFF_MODULE_SIZE_RATIO) &&
+        isEqualsSize(yModuleSize, moduleSizeAvg, DIFF_MODULE_SIZE_RATIO) &&
         isPointInQuadrangle(
           pattern,
           alignmentAreaTopLeft,

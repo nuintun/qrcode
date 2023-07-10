@@ -7,7 +7,7 @@ import { PatternMatcher } from './PatternMatcher';
 import { checkPixelsInTimingLine } from './utils/timing';
 import { FinderPatternGroup } from './FinderPatternGroup';
 import { MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
-import { isEqualsEdge, isMatchFinderPattern } from './utils/pattern';
+import { DIFF_EDGE_RATIO, isEqualsSize, isMatchFinderPattern } from './utils/pattern';
 
 export class FinderPatternMatcher extends PatternMatcher {
   constructor(matrix: BitMatrix, strict?: boolean) {
@@ -43,22 +43,22 @@ export class FinderPatternMatcher extends PatternMatcher {
           const width2 = pattern2.width;
           const height2 = pattern2.height;
 
-          if (!isEqualsEdge(width1, width2)) {
+          if (!isEqualsSize(width1, width2, DIFF_EDGE_RATIO)) {
             break;
           }
 
-          if (!isEqualsEdge(height1, height2)) {
+          if (!isEqualsSize(height1, height2, DIFF_EDGE_RATIO)) {
             continue;
           }
 
           for (let i3 = i2 + 1; i3 < length; i3++) {
             const pattern3 = patterns[i3];
 
-            if (!isEqualsEdge(width2, pattern3.width)) {
+            if (!isEqualsSize(width2, pattern3.width, DIFF_EDGE_RATIO)) {
               break;
             }
 
-            if (!isEqualsEdge(height2, pattern3.height)) {
+            if (!isEqualsSize(height2, pattern3.height, DIFF_EDGE_RATIO)) {
               continue;
             }
 

@@ -28,10 +28,9 @@ function getTimingPointYAxis({ y, rect }: Pattern, ratio: number) {
 function calculateTimingLine(start: Pattern, end: Pattern, control: Pattern, isVertical?: boolean): [start: Point, end: Point] {
   const { x: endX, y: endY } = end;
   const { x: startX, y: startY } = start;
-  const controlX = control.x + end.x - startX;
-  const controlY = control.y + end.y - startY;
-  const xRatio = calculateTimingRatio(startX, controlX);
-  const yRatio = calculateTimingRatio(startY, controlY);
+  const { x: controlX, y: controlY } = control;
+  const xRatio = calculateTimingRatio(endX, controlX);
+  const yRatio = calculateTimingRatio(endY, controlY);
   const endXTranslate = getTimingPointXAxis(end, xRatio);
   const endYTranslate = getTimingPointYAxis(end, yRatio);
   const startXTranslate = getTimingPointXAxis(start, xRatio);
@@ -41,7 +40,7 @@ function calculateTimingLine(start: Pattern, end: Pattern, control: Pattern, isV
     return [new Point(startXTranslate, startYTranslate), new Point(endXTranslate, endYTranslate)];
   }
 
-  if (isVertical ? xRatio !== yRatio : xRatio === yRatio) {
+  if (isVertical ? xRatio === yRatio : xRatio !== yRatio) {
     return [new Point(startX, startYTranslate), new Point(endX, endYTranslate)];
   }
 
