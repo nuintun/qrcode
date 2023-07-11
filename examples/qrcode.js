@@ -3734,10 +3734,11 @@
     }
     return center;
   }
-  function calculateScanlineNoise(scanline, ratios) {
+  function calculateScanlineNoise(ratios, scanline) {
     let noise = 0;
     const { length } = ratios;
     const average = sumArray(scanline) / sumArray(ratios);
+    // scanline length must be equals ratios length
     for (let i = 0; i < length; i++) {
       const diff = scanline[i] - ratios[i] * average;
       noise += diff * diff;
@@ -4063,17 +4064,18 @@
     const noises = [];
     const averages = [];
     const averagesDiff = [];
+    // scanline length must be equals ratios length
     for (const scanline of scanlines) {
-      const [noise, average] = calculateScanlineNoise(scanline, ratios);
-      noises.push(noise);
+      const [noise, average] = calculateScanlineNoise(ratios, scanline);
       averages.push(average);
+      noises.push(noise * noise);
     }
     const averagesAvg = sumArray(averages) / averages.length;
     for (const average of averages) {
       const diff = average - averagesAvg;
       averagesDiff.push(diff * diff);
     }
-    return sumArray(noises) + sumArray(averagesDiff) / averagesAvg;
+    return Math.sqrt(sumArray(noises)) + sumArray(averagesDiff) / averagesAvg;
   }
 
   /**

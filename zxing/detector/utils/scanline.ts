@@ -42,12 +42,13 @@ export function centerFromEnd(scanline: number[], end: number): number {
   return center;
 }
 
-export function calculateScanlineNoise(scanline: number[], ratios: number[]): [noise: number, average: number] {
+export function calculateScanlineNoise(ratios: number[], scanline: number[]): [noise: number, average: number] {
   let noise = 0;
 
   const { length } = ratios;
   const average = sumArray(scanline) / sumArray(ratios);
 
+  // scanline length must be equals ratios length
   for (let i = 0; i < length; i++) {
     const diff = scanline[i] - ratios[i] * average;
 
