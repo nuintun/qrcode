@@ -273,8 +273,8 @@ export function calculatePatternNoise(ratios: number[], ...scanlines: number[][]
   for (const scanline of scanlines) {
     const [noise, average] = calculateScanlineNoise(scanline, ratios);
 
+    noises.push(noise);
     averages.push(average);
-    noises.push(noise * noise);
   }
 
   const averagesAvg = sumArray(averages) / averages.length;
@@ -285,5 +285,5 @@ export function calculatePatternNoise(ratios: number[], ...scanlines: number[][]
     averagesDiff.push(diff * diff);
   }
 
-  return Math.sqrt(sumArray(noises)) + sumArray(averagesDiff) / averagesAvg;
+  return sumArray(noises) + sumArray(averagesDiff) / averagesAvg;
 }

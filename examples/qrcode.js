@@ -4065,15 +4065,15 @@
     const averagesDiff = [];
     for (const scanline of scanlines) {
       const [noise, average] = calculateScanlineNoise(scanline, ratios);
+      noises.push(noise);
       averages.push(average);
-      noises.push(noise * noise);
     }
     const averagesAvg = sumArray(averages) / averages.length;
     for (const average of averages) {
       const diff = average - averagesAvg;
       averagesDiff.push(diff * diff);
     }
-    return Math.sqrt(sumArray(noises)) + sumArray(averagesDiff) / averagesAvg;
+    return sumArray(noises) + sumArray(averagesDiff) / averagesAvg;
   }
 
   /**
@@ -4562,8 +4562,8 @@
       if (patterns.length > 1) {
         const expectAlignment = new Point(expectAlignmentX, expectAlignmentY);
         patterns.sort((pattern1, pattern2) => {
-          const noise1 = distance(pattern1, expectAlignment) + pattern1.noise;
-          const noise2 = distance(pattern2, expectAlignment) + pattern2.noise;
+          const noise1 = distance(pattern1, expectAlignment) * pattern1.noise;
+          const noise2 = distance(pattern2, expectAlignment) * pattern2.noise;
           return noise1 - noise2;
         });
       }
