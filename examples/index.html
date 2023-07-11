@@ -421,7 +421,7 @@
 
         matrixBox.append(drawMatrix(matrix, 1), '<br />');
 
-        console.time('decode');
+        console.time('decoder');
 
         let succeedCount = 0;
         let detect = detected.next().value;
@@ -480,7 +480,7 @@
           detect = detected.next(succeed).value;
         }
 
-        console.timeEnd('decode');
+        console.timeEnd('decoder');
 
         if (!succeedCount) {
           for (const { topLeft, topRight, bottomLeft } of errors) {
