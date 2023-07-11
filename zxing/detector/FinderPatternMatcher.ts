@@ -48,42 +48,34 @@ export class FinderPatternMatcher extends PatternMatcher {
             break;
           }
 
-          if (!isEqualsSize(height1, height2, DIFF_EDGE_RATIO)) {
-            continue;
-          }
+          if (isEqualsSize(height1, height2, DIFF_EDGE_RATIO)) {
+            for (let i3 = i2 + 1; i3 < length; i3++) {
+              const pattern3 = patterns[i3];
 
-          for (let i3 = i2 + 1; i3 < length; i3++) {
-            const pattern3 = patterns[i3];
+              if (!isEqualsSize(width2, pattern3.width, DIFF_EDGE_RATIO)) {
+                break;
+              }
 
-            if (!isEqualsSize(width2, pattern3.width, DIFF_EDGE_RATIO)) {
-              break;
-            }
+              if (isEqualsSize(height2, pattern3.height, DIFF_EDGE_RATIO)) {
+                const { matrix } = this;
+                const finderPatternGroup = new FinderPatternGroup(matrix, [pattern1, pattern2, pattern3]);
+                const { size, moduleSize } = finderPatternGroup;
 
-            if (!isEqualsSize(height2, pattern3.height, DIFF_EDGE_RATIO)) {
-              continue;
-            }
+                if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
+                  const [moduleSize1, moduleSize2] = moduleSize;
 
-            const { matrix } = this;
-            const finderPatternGroup = new FinderPatternGroup(matrix, [pattern1, pattern2, pattern3]);
-            const { size, moduleSize } = finderPatternGroup;
-
-            if (Number.isNaN(size) || size < MIN_VERSION_SIZE || size > MAX_VERSION_SIZE) {
-              continue;
-            }
-
-            const [moduleSize1, moduleSize2] = moduleSize;
-
-            // Invalid module size
-            if (Number.isNaN(moduleSize1) || Number.isNaN(moduleSize2) || moduleSize1 < 1 || moduleSize2 < 1) {
-              continue;
-            }
-
-            if (
-              checkPixelsInTimingLine(matrix, finderPatternGroup) &&
-              checkPixelsInTimingLine(matrix, finderPatternGroup, true)
-            ) {
-              // All tests passed!
-              finderPatternGroups.push(finderPatternGroup);
+                  // Valid module size
+                  if (moduleSize1 >= 1 && moduleSize2 >= 1) {
+                    if (
+                      checkPixelsInTimingLine(matrix, finderPatternGroup) &&
+                      checkPixelsInTimingLine(matrix, finderPatternGroup, true)
+                    ) {
+                      // All tests passed!
+                      finderPatternGroups.push(finderPatternGroup);
+                    }
+                  }
+                }
+              }
             }
           }
         }

@@ -94,18 +94,18 @@ function sizeOfBlackWhiteBlackRunBothWays(matrix: BitMatrix, from: Point, to: Po
 export function calculateModuleSizeOneWay(matrix: BitMatrix, pattern1: Pattern, pattern2: Pattern): number {
   const point1 = new Point(toInt32(pattern1.x), toInt32(pattern1.y));
   const point2 = new Point(toInt32(pattern2.x), toInt32(pattern2.y));
-  const expectModuleSize1 = sizeOfBlackWhiteBlackRunBothWays(matrix, point1, point2);
-  const expectModuleSize2 = sizeOfBlackWhiteBlackRunBothWays(matrix, point2, point1);
+  const moduleSize1 = sizeOfBlackWhiteBlackRunBothWays(matrix, point1, point2);
+  const moduleSize2 = sizeOfBlackWhiteBlackRunBothWays(matrix, point2, point1);
 
-  if (Number.isNaN(expectModuleSize1)) {
-    return expectModuleSize2 / 7;
+  if (Number.isNaN(moduleSize1)) {
+    return moduleSize2 / 7;
   }
 
-  if (Number.isNaN(expectModuleSize2)) {
-    return expectModuleSize1 / 7;
+  if (Number.isNaN(moduleSize2)) {
+    return moduleSize1 / 7;
   }
 
   // Average them, and divide by 7 since we've counted the width of 3 black modules,
   // and 1 white and 1 black module on either side. Ergo, divide sum by 14.
-  return (expectModuleSize1 + expectModuleSize2) / 14;
+  return (moduleSize1 + moduleSize2) / 14;
 }

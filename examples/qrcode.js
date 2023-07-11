@@ -3725,7 +3725,7 @@
     }
     scanline[lastIndex] = count;
   }
-  function centerFromEnd(scanline, end) {
+  function centerFromScanlineEnd(scanline, end) {
     const { length } = scanline;
     const middleIndex = toInt32(length / 2);
     let center = end - scanline[middleIndex] / 2;
@@ -3733,6 +3733,93 @@
       center -= scanline[i];
     }
     return center;
+  }
+  function getCrossScanline(matrix, x, y, overscan, isVertical) {
+    x = toInt32(x);
+    y = toInt32(y);
+    let offset = isVertical ? y : x;
+    const scanline = [0, 0, 0, 0, 0];
+    const size = isVertical ? matrix.height : matrix.width;
+    const isBlackPixel = () => {
+      return isVertical ? matrix.get(x, offset) : matrix.get(offset, y);
+    };
+    while (offset >= 0 && isBlackPixel()) {
+      offset--;
+      scanline[2]++;
+    }
+    while (offset >= 0 && !isBlackPixel()) {
+      offset--;
+      scanline[1]++;
+    }
+    while (offset >= 0 && scanline[0] < overscan && isBlackPixel()) {
+      offset--;
+      scanline[0]++;
+    }
+    offset = (isVertical ? y : x) + 1;
+    while (offset < size && isBlackPixel()) {
+      offset++;
+      scanline[2]++;
+    }
+    while (offset < size && !isBlackPixel()) {
+      offset++;
+      scanline[3]++;
+    }
+    while (offset < size && scanline[4] < overscan && isBlackPixel()) {
+      offset++;
+      scanline[4]++;
+    }
+    return [scanline, offset];
+  }
+  function getDiagonalScanline(matrix, x, y, overscan, isBackslash) {
+    x = toInt32(x);
+    y = toInt32(y);
+    let step = -1;
+    let offsetX = x;
+    let offsetY = y;
+    const scanline = [0, 0, 0, 0, 0];
+    const { width, height } = matrix;
+    const slope = isBackslash ? -1 : 1;
+    const updateAxis = () => {
+      offsetX += step;
+      offsetY -= step * slope;
+    };
+    const isBlackPixel = () => {
+      return matrix.get(offsetX, offsetY);
+    };
+    // Start counting left from center finding black center mass
+    while (offsetX >= 0 && offsetY >= 0 && offsetY < height && isBlackPixel()) {
+      updateAxis();
+      scanline[2]++;
+    }
+    // Start counting left from center finding black center mass
+    while (offsetX >= 0 && offsetY >= 0 && offsetY < height && !isBlackPixel()) {
+      updateAxis();
+      scanline[1]++;
+    }
+    // Start counting left from center finding black center mass
+    while (offsetX >= 0 && offsetY >= 0 && offsetY < height && scanline[0] < overscan && isBlackPixel()) {
+      updateAxis();
+      scanline[0]++;
+    }
+    step = 1;
+    offsetX = x + step;
+    offsetY = y - step * slope;
+    // Start counting right from center finding black center mass
+    while (offsetX < width && offsetY >= 0 && offsetY < height && isBlackPixel()) {
+      updateAxis();
+      scanline[2]++;
+    }
+    // Start counting right from center finding black center mass
+    while (offsetX < width && offsetY >= 0 && offsetY < height && !isBlackPixel()) {
+      updateAxis();
+      scanline[3]++;
+    }
+    // Start counting right from center finding black center mass
+    while (offsetX < width && offsetY >= 0 && offsetY < height && scanline[4] < overscan && isBlackPixel()) {
+      updateAxis();
+      scanline[4]++;
+    }
+    return scanline;
   }
   function calculateScanlineNoise(ratios, scanline) {
     let noise = 0;
@@ -3928,138 +4015,6 @@
     }
     return size2 - size1 <= size2 * ratio;
   }
-  function alignCrossPattern(matrix, x, y, overscan, checker, isVertical) {
-    let offset = isVertical ? y : x;
-    const scanline = [0, 0, 0, 0, 0];
-    const size = isVertical ? matrix.height : matrix.width;
-    const isBlackPixel = () => {
-      return isVertical ? matrix.get(x, offset) : matrix.get(offset, y);
-    };
-    while (offset >= 0 && isBlackPixel()) {
-      offset--;
-      scanline[2]++;
-    }
-    while (offset >= 0 && !isBlackPixel()) {
-      offset--;
-      scanline[1]++;
-    }
-    while (offset >= 0 && scanline[0] < overscan && isBlackPixel()) {
-      offset--;
-      scanline[0]++;
-    }
-    offset = (isVertical ? y : x) + 1;
-    while (offset < size && isBlackPixel()) {
-      offset++;
-      scanline[2]++;
-    }
-    while (offset < size && !isBlackPixel()) {
-      offset++;
-      scanline[3]++;
-    }
-    while (offset < size && scanline[4] < overscan && isBlackPixel()) {
-      offset++;
-      scanline[4]++;
-    }
-    return [checker(scanline) ? centerFromEnd(scanline, offset) : NaN, scanline];
-  }
-  function checkDiagonalPattern(matrix, x, y, overscan, checker, isBackslash) {
-    let step = -1;
-    let offsetX = x;
-    let offsetY = y;
-    const scanline = [0, 0, 0, 0, 0];
-    const { width, height } = matrix;
-    const slope = isBackslash ? -1 : 1;
-    const updateAxis = () => {
-      offsetX += step;
-      offsetY -= step * slope;
-    };
-    const isBlackPixel = () => {
-      return matrix.get(offsetX, offsetY);
-    };
-    // Start counting left from center finding black center mass
-    while (offsetX >= 0 && offsetY >= 0 && offsetY < height && isBlackPixel()) {
-      updateAxis();
-      scanline[2]++;
-    }
-    // Start counting left from center finding black center mass
-    while (offsetX >= 0 && offsetY >= 0 && offsetY < height && !isBlackPixel()) {
-      updateAxis();
-      scanline[1]++;
-    }
-    // Start counting left from center finding black center mass
-    while (offsetX >= 0 && offsetY >= 0 && offsetY < height && scanline[0] < overscan && isBlackPixel()) {
-      updateAxis();
-      scanline[0]++;
-    }
-    step = 1;
-    offsetX = x + step;
-    offsetY = y - step * slope;
-    // Start counting right from center finding black center mass
-    while (offsetX < width && offsetY >= 0 && offsetY < height && isBlackPixel()) {
-      updateAxis();
-      scanline[2]++;
-    }
-    // Start counting right from center finding black center mass
-    while (offsetX < width && offsetY >= 0 && offsetY < height && !isBlackPixel()) {
-      updateAxis();
-      scanline[3]++;
-    }
-    // Start counting right from center finding black center mass
-    while (offsetX < width && offsetY >= 0 && offsetY < height && scanline[4] < overscan && isBlackPixel()) {
-      updateAxis();
-      scanline[4]++;
-    }
-    return checker(scanline);
-  }
-  function getDiagonalScanline(matrix, x, y, overscan, isBackslash) {
-    let step = -1;
-    let offsetX = x;
-    let offsetY = y;
-    const scanline = [0, 0, 0, 0, 0];
-    const { width, height } = matrix;
-    const slope = isBackslash ? -1 : 1;
-    const updateAxis = () => {
-      offsetX += step;
-      offsetY -= step * slope;
-    };
-    const isBlackPixel = () => {
-      return matrix.get(offsetX, offsetY);
-    };
-    // Start counting left from center finding black center mass
-    while (offsetX >= 0 && offsetY >= 0 && offsetY < height && isBlackPixel()) {
-      updateAxis();
-      scanline[2]++;
-    }
-    // Start counting left from center finding black center mass
-    while (offsetX >= 0 && offsetY >= 0 && offsetY < height && !isBlackPixel()) {
-      updateAxis();
-      scanline[1]++;
-    }
-    // Start counting left from center finding black center mass
-    while (offsetX >= 0 && offsetY >= 0 && offsetY < height && scanline[0] < overscan && isBlackPixel()) {
-      updateAxis();
-      scanline[0]++;
-    }
-    step = 1;
-    offsetX = x + step;
-    offsetY = y - step * slope;
-    // Start counting right from center finding black center mass
-    while (offsetX < width && offsetY >= 0 && offsetY < height && isBlackPixel()) {
-      updateAxis();
-      scanline[2]++;
-    }
-    // Start counting right from center finding black center mass
-    while (offsetX < width && offsetY >= 0 && offsetY < height && !isBlackPixel()) {
-      updateAxis();
-      scanline[3]++;
-    }
-    // Start counting right from center finding black center mass
-    while (offsetX < width && offsetY >= 0 && offsetY < height && scanline[4] < overscan && isBlackPixel()) {
-      updateAxis();
-      scanline[4]++;
-    }
-    return scanline;
-  }
   function calculatePatternNoise(ratios, ...scanlines) {
     const noises = [];
     const averages = [];
@@ -4095,23 +4050,20 @@
       this.#matcher = matcher;
       this.#modules = sumArray(ratios);
     }
-    #isDiagonalPassed(x, y, overscan) {
-      const matrix = this.#matrix;
+    #isDiagonalPassed(slash, backslash) {
       const strict = this.#strict;
       const matcher = this.#matcher;
-      if (checkDiagonalPattern(matrix, x, y, overscan, matcher)) {
+      if (matcher(slash)) {
         if (strict) {
-          return checkDiagonalPattern(matrix, x, y, overscan, matcher, true);
+          return matcher(backslash);
         }
         return true;
       }
       return false;
     }
-    #alignVerticalPattern(x, y, overscan) {
-      return alignCrossPattern(this.#matrix, x, y, overscan, this.#matcher, true);
-    }
-    #alignHorizontalPattern(x, y, overscan) {
-      return alignCrossPattern(this.#matrix, x, y, overscan, this.#matcher);
+    #alignCrossPattern(x, y, overscan, isVertical) {
+      const [scanline, end] = getCrossScanline(this.#matrix, x, y, overscan, isVertical);
+      return [this.#matcher(scanline) ? centerFromScanlineEnd(scanline, end) : NaN, scanline];
     }
     get matcher() {
       return this.#matcher;
@@ -4124,37 +4076,34 @@
     }
     match(x, y, scanline, overscan) {
       if (this.#matcher(scanline)) {
-        let scanlineHorizontal;
-        let offsetX = centerFromEnd(scanline, x);
-        const [offsetY, scanlineVertical] = this.#alignVerticalPattern(toInt32(offsetX), y, overscan);
-        if (offsetY >= 0) {
+        let horizontal;
+        let centerX = centerFromScanlineEnd(scanline, x);
+        const [centerY, vertical] = this.#alignCrossPattern(centerX, y, overscan, true);
+        if (centerY >= 0) {
           // Re-cross check
-          [offsetX, scanlineHorizontal] = this.#alignHorizontalPattern(toInt32(offsetX), toInt32(offsetY), overscan);
-          if (offsetX >= 0 && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), overscan)) {
+          [centerX, horizontal] = this.#alignCrossPattern(centerX, centerY, overscan);
+          if (centerX >= 0) {
             const matrix = this.#matrix;
-            // TODO 待优化
-            const noise = calculatePatternNoise(
-              this.#ratios,
-              scanlineHorizontal,
-              scanlineVertical,
-              getDiagonalScanline(matrix, toInt32(offsetX), toInt32(offsetY), overscan),
-              getDiagonalScanline(matrix, toInt32(offsetX), toInt32(offsetY), overscan, true)
-            );
-            const width = sumArray(scanlineHorizontal);
-            const height = sumArray(scanlineVertical);
-            const patterns = this.#patterns;
-            const { length } = patterns;
-            for (let i = 0; i < length; i++) {
-              const pattern = patterns[i];
-              // Look for about the same center and module size
-              if (pattern.equals(offsetX, offsetY, width, height)) {
-                patterns[i] = pattern.combine(offsetX, offsetY, width, height, noise);
-                return true;
+            const slash = getDiagonalScanline(matrix, centerX, centerY, overscan);
+            const backslash = getDiagonalScanline(matrix, centerX, centerY, overscan, true);
+            if (this.#isDiagonalPassed(slash, backslash)) {
+              const noise = calculatePatternNoise(this.#ratios, horizontal, vertical, slash, backslash);
+              const width = sumArray(horizontal);
+              const height = sumArray(vertical);
+              const patterns = this.#patterns;
+              const { length } = patterns;
+              for (let i = 0; i < length; i++) {
+                const pattern = patterns[i];
+                // Look for about the same center and module size
+                if (pattern.equals(centerX, centerY, width, height)) {
+                  patterns[i] = pattern.combine(centerX, centerY, width, height, noise);
+                  return true;
+                }
               }
+              // Hadn't found this before; save it
+              patterns.push(new Pattern(centerX, centerY, width, height, this.#modules, noise));
+              return true;
             }
-            // Hadn't found this before; save it
-            patterns.push(new Pattern(offsetX, offsetY, width, height, this.#modules, noise));
-            return true;
           }
         }
       }
@@ -4352,17 +4301,17 @@
   function calculateModuleSizeOneWay(matrix, pattern1, pattern2) {
     const point1 = new Point(toInt32(pattern1.x), toInt32(pattern1.y));
     const point2 = new Point(toInt32(pattern2.x), toInt32(pattern2.y));
-    const expectModuleSize1 = sizeOfBlackWhiteBlackRunBothWays(matrix, point1, point2);
-    const expectModuleSize2 = sizeOfBlackWhiteBlackRunBothWays(matrix, point2, point1);
-    if (Number.isNaN(expectModuleSize1)) {
-      return expectModuleSize2 / 7;
+    const moduleSize1 = sizeOfBlackWhiteBlackRunBothWays(matrix, point1, point2);
+    const moduleSize2 = sizeOfBlackWhiteBlackRunBothWays(matrix, point2, point1);
+    if (Number.isNaN(moduleSize1)) {
+      return moduleSize2 / 7;
     }
-    if (Number.isNaN(expectModuleSize2)) {
-      return expectModuleSize1 / 7;
+    if (Number.isNaN(moduleSize2)) {
+      return moduleSize1 / 7;
     }
     // Average them, and divide by 7 since we've counted the width of 3 black modules,
     // and 1 white and 1 black module on either side. Ergo, divide sum by 14.
-    return (expectModuleSize1 + expectModuleSize2) / 14;
+    return (moduleSize1 + moduleSize2) / 14;
   }
 
   /**
@@ -4484,34 +4433,30 @@
             if (!isEqualsSize(width1, width2, DIFF_EDGE_RATIO)) {
               break;
             }
-            if (!isEqualsSize(height1, height2, DIFF_EDGE_RATIO)) {
-              continue;
-            }
-            for (let i3 = i2 + 1; i3 < length; i3++) {
-              const pattern3 = patterns[i3];
-              if (!isEqualsSize(width2, pattern3.width, DIFF_EDGE_RATIO)) {
-                break;
-              }
-              if (!isEqualsSize(height2, pattern3.height, DIFF_EDGE_RATIO)) {
-                continue;
-              }
-              const { matrix } = this;
-              const finderPatternGroup = new FinderPatternGroup(matrix, [pattern1, pattern2, pattern3]);
-              const { size, moduleSize } = finderPatternGroup;
-              if (Number.isNaN(size) || size < MIN_VERSION_SIZE || size > MAX_VERSION_SIZE) {
-                continue;
-              }
-              const [moduleSize1, moduleSize2] = moduleSize;
-              // Invalid module size
-              if (Number.isNaN(moduleSize1) || Number.isNaN(moduleSize2) || moduleSize1 < 1 || moduleSize2 < 1) {
-                continue;
-              }
-              if (
-                checkPixelsInTimingLine(matrix, finderPatternGroup) &&
-                checkPixelsInTimingLine(matrix, finderPatternGroup, true)
-              ) {
-                // All tests passed!
-                finderPatternGroups.push(finderPatternGroup);
+            if (isEqualsSize(height1, height2, DIFF_EDGE_RATIO)) {
+              for (let i3 = i2 + 1; i3 < length; i3++) {
+                const pattern3 = patterns[i3];
+                if (!isEqualsSize(width2, pattern3.width, DIFF_EDGE_RATIO)) {
+                  break;
+                }
+                if (isEqualsSize(height2, pattern3.height, DIFF_EDGE_RATIO)) {
+                  const { matrix } = this;
+                  const finderPatternGroup = new FinderPatternGroup(matrix, [pattern1, pattern2, pattern3]);
+                  const { size, moduleSize } = finderPatternGroup;
+                  if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
+                    const [moduleSize1, moduleSize2] = moduleSize;
+                    // Valid module size
+                    if (moduleSize1 >= 1 && moduleSize2 >= 1) {
+                      if (
+                        checkPixelsInTimingLine(matrix, finderPatternGroup) &&
+                        checkPixelsInTimingLine(matrix, finderPatternGroup, true)
+                      ) {
+                        // All tests passed!
+                        finderPatternGroups.push(finderPatternGroup);
+                      }
+                    }
+                  }
+                }
               }
             }
           }

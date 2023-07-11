@@ -3,10 +3,10 @@
  */
 
 import { Pattern } from './Pattern';
+import { sumArray } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
-import { centerFromEnd } from './utils/scanline';
-import { sumArray, toInt32 } from '/common/utils';
-import { alignCrossPattern, calculatePatternNoise, checkDiagonalPattern, getDiagonalScanline } from './utils/pattern';
+import { calculatePatternNoise } from './utils/pattern';
+import { centerFromScanlineEnd, getCrossScanline, getDiagonalScanline } from './utils/scanline';
 
 export interface Matcher {
   (scanline: number[]): boolean;
@@ -28,14 +28,13 @@ export class PatternMatcher {
     this.#modules = sumArray(ratios);
   }
 
-  #isDiagonalPassed(x: number, y: number, overscan: number): boolean {
-    const matrix = this.#matrix;
+  #isDiagonalPassed(slash: number[], backslash: number[]): boolean {
     const strict = this.#strict;
     const matcher = this.#matcher;
 
-    if (checkDiagonalPattern(matrix, x, y, overscan, matcher)) {
+    if (matcher(slash)) {
       if (strict) {
-        return checkDiagonalPattern(matrix, x, y, overscan, matcher, true);
+        return matcher(backslash);
       }
 
       return true;
@@ -44,12 +43,10 @@ export class PatternMatcher {
     return false;
   }
 
-  #alignVerticalPattern(x: number, y: number, overscan: number): ReturnType<typeof alignCrossPattern> {
-    return alignCrossPattern(this.#matrix, x, y, overscan, this.#matcher, true);
-  }
+  #alignCrossPattern(x: number, y: number, overscan: number, isVertical?: boolean): [center: number, scanline: number[]] {
+    const [scanline, end] = getCrossScanline(this.#matrix, x, y, overscan, isVertical);
 
-  #alignHorizontalPattern(x: number, y: number, overscan: number): ReturnType<typeof alignCrossPattern> {
-    return alignCrossPattern(this.#matrix, x, y, overscan, this.#matcher);
+    return [this.#matcher(scanline) ? centerFromScanlineEnd(scanline, end) : NaN, scanline];
   }
 
   public get matcher(): Matcher {
@@ -66,45 +63,43 @@ export class PatternMatcher {
 
   public match(x: number, y: number, scanline: number[], overscan: number): boolean {
     if (this.#matcher(scanline)) {
-      let scanlineHorizontal;
-      let offsetX = centerFromEnd(scanline, x);
+      let horizontal: number[];
+      let centerX = centerFromScanlineEnd(scanline, x);
 
-      const [offsetY, scanlineVertical] = this.#alignVerticalPattern(toInt32(offsetX), y, overscan);
+      const [centerY, vertical] = this.#alignCrossPattern(centerX, y, overscan, true);
 
-      if (offsetY >= 0) {
+      if (centerY >= 0) {
         // Re-cross check
-        [offsetX, scanlineHorizontal] = this.#alignHorizontalPattern(toInt32(offsetX), toInt32(offsetY), overscan);
+        [centerX, horizontal] = this.#alignCrossPattern(centerX, centerY, overscan);
 
-        if (offsetX >= 0 && this.#isDiagonalPassed(toInt32(offsetX), toInt32(offsetY), overscan)) {
+        if (centerX >= 0) {
           const matrix = this.#matrix;
-          // TODO 待优化
-          const noise = calculatePatternNoise(
-            this.#ratios,
-            scanlineHorizontal,
-            scanlineVertical,
-            getDiagonalScanline(matrix, toInt32(offsetX), toInt32(offsetY), overscan),
-            getDiagonalScanline(matrix, toInt32(offsetX), toInt32(offsetY), overscan, true)
-          );
-          const width = sumArray(scanlineHorizontal);
-          const height = sumArray(scanlineVertical);
-          const patterns = this.#patterns;
-          const { length } = patterns;
+          const slash = getDiagonalScanline(matrix, centerX, centerY, overscan);
+          const backslash = getDiagonalScanline(matrix, centerX, centerY, overscan, true);
 
-          for (let i = 0; i < length; i++) {
-            const pattern = patterns[i];
+          if (this.#isDiagonalPassed(slash, backslash)) {
+            const noise = calculatePatternNoise(this.#ratios, horizontal, vertical, slash, backslash);
+            const width = sumArray(horizontal);
+            const height = sumArray(vertical);
+            const patterns = this.#patterns;
+            const { length } = patterns;
 
-            // Look for about the same center and module size
-            if (pattern.equals(offsetX, offsetY, width, height)) {
-              patterns[i] = pattern.combine(offsetX, offsetY, width, height, noise);
+            for (let i = 0; i < length; i++) {
+              const pattern = patterns[i];
 
-              return true;
+              // Look for about the same center and module size
+              if (pattern.equals(centerX, centerY, width, height)) {
+                patterns[i] = pattern.combine(centerX, centerY, width, height, noise);
+
+                return true;
+              }
             }
+
+            // Hadn't found this before; save it
+            patterns.push(new Pattern(centerX, centerY, width, height, this.#modules, noise));
+
+            return true;
           }
-
-          // Hadn't found this before; save it
-          patterns.push(new Pattern(offsetX, offsetY, width, height, this.#modules, noise));
-
-          return true;
         }
       }
     }
