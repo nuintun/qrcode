@@ -440,6 +440,15 @@
 
             decodeResult.html(content);
 
+            const [timing11, timing12] = calculateTimingLine(topLeft, topRight, bottomLeft);
+            const [timing21, timing22] = calculateTimingLine(topLeft, bottomLeft, topRight, true);
+
+            drawLine(timing11, timing12, '#00ff00');
+            drawLine(timing21, timing22, '#00ff00');
+
+            drawLine(topLeft, topRight, '#ff0000');
+            drawLine(topLeft, bottomLeft, '#ff0000');
+
             markFinderPattern(topLeft, '#ff0000');
             markFinderPattern(topRight, '#00ff00');
             markFinderPattern(bottomLeft, '#0000ff');
@@ -447,14 +456,6 @@
             if (alignment) {
               markFinderPattern(alignment, '#ff00ff');
             }
-
-            const [x1, x2] = calculateTimingLine(topLeft, topRight, bottomLeft);
-            const [x3, x4] = calculateTimingLine(topLeft, bottomLeft, topRight, true);
-
-            drawLine(x1, x2, '#00ff00');
-            drawLine(x3, x4, '#00ff00');
-            drawLine(topLeft, topRight, '#ff0000');
-            drawLine(topLeft, bottomLeft, '#ff0000');
 
             matrixBox.append(drawMatrix(matrix), '&nbsp;&nbsp;');
 
