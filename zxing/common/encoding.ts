@@ -41,6 +41,11 @@ export function encode(content: string, charset: Charset): Uint8Array {
 }
 
 export function decode(bytes: Uint8Array, charset: Charset): string {
+  // Fallback GB18030 with UTF-8
+  if (charset === Charset.GB18030) {
+    charset = Charset.UTF_8;
+  }
+
   return new TextDecoder(charset.label).decode(bytes);
 }
 

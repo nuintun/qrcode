@@ -284,6 +284,10 @@
     }
   }
   function decode$1(bytes, charset) {
+    // Fallback GB18030 with UTF-8
+    if (charset === Charset.GB18030) {
+      charset = Charset.UTF_8;
+    }
     return new TextDecoder(charset.label).decode(bytes);
   }
   const NUMERIC_CHARACTERS = '0123456789';
