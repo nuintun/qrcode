@@ -35,44 +35,41 @@ export class FinderPatternMatcher extends PatternMatcher {
 
       for (let i1 = 0; i1 < maxI1; i1++) {
         const pattern1 = patterns[i1];
+        const width1 = pattern1.width;
+        const height1 = pattern1.height;
 
         if (used.has(pattern1)) {
           continue;
         }
 
-        const width1 = pattern1.width;
-        const height1 = pattern1.height;
-
         for (let i2 = i1 + 1; i2 < maxI2; i2++) {
           const pattern2 = patterns[i2];
-
-          if (used.has(pattern2)) {
-            continue;
-          }
-
           const width2 = pattern2.width;
           const height2 = pattern2.height;
 
-          if (!isEqualsSize(width1, width2, DIFF_EDGE_RATIO)) {
-            continue;
-          }
-
-          if (!isEqualsSize(height1, height2, DIFF_EDGE_RATIO)) {
+          if (
+            used.has(pattern1) ||
+            used.has(pattern2) ||
+            !isEqualsSize(width1, width2, DIFF_EDGE_RATIO) ||
+            !isEqualsSize(height1, height2, DIFF_EDGE_RATIO)
+          ) {
             continue;
           }
 
           for (let i3 = i2 + 1; i3 < length; i3++) {
             const pattern3 = patterns[i3];
+            const width3 = pattern3.width;
+            const height3 = pattern3.height;
 
-            if (used.has(pattern3)) {
-              continue;
-            }
-
-            if (!isEqualsSize(width2, pattern3.width, DIFF_EDGE_RATIO)) {
-              continue;
-            }
-
-            if (!isEqualsSize(height2, pattern3.height, DIFF_EDGE_RATIO)) {
+            if (
+              used.has(pattern1) ||
+              used.has(pattern2) ||
+              used.has(pattern3) ||
+              !isEqualsSize(width1, width3, DIFF_EDGE_RATIO) ||
+              !isEqualsSize(width2, width3, DIFF_EDGE_RATIO) ||
+              !isEqualsSize(height1, height3, DIFF_EDGE_RATIO) ||
+              !isEqualsSize(height2, height3, DIFF_EDGE_RATIO)
+            ) {
               continue;
             }
 
