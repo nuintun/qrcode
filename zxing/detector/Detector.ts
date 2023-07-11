@@ -20,14 +20,16 @@ function* detect(
 ): Generator<Detect, void, boolean> {
   const finderPatternGroups = finderMatcher.groups();
 
-  for (const finderPatternGroup of finderPatternGroups) {
-    const { size } = finderPatternGroup;
-    const version = fromVersionSize(size);
+  let iterator = finderPatternGroups.next();
+
+  while (!iterator.done) {
+    let succeed = false;
+
+    const finderPatternGroup = iterator.value;
+    const version = fromVersionSize(finderPatternGroup.size);
 
     // Find alignment
     if (version.alignmentPatterns.length > 0) {
-      let succeed: boolean = false;
-
       // Kind of arbitrary -- expand search radius before giving up
       // If we didn't find alignment pattern... well try anyway without it
       const alignmentPatterns = alignmentMatcher.filter(finderPatternGroup);
@@ -45,12 +47,14 @@ function* detect(
       // All failed with alignment pattern
       if (!succeed) {
         // Fallback with no alignment pattern
-        yield new Detect(matrix, finderPatternGroup);
+        succeed = yield new Detect(matrix, finderPatternGroup);
       }
     } else {
       // No alignment pattern version
-      yield new Detect(matrix, finderPatternGroup);
+      succeed = yield new Detect(matrix, finderPatternGroup);
     }
+
+    iterator = finderPatternGroups.next(succeed);
   }
 }
 

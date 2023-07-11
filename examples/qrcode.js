@@ -4419,40 +4419,55 @@
         const maxI1 = length - 2;
         // Max i2
         const maxI2 = length - 1;
-        // Sort patterns
-        patterns.sort((pattern1, pattern2) => pattern2.width - pattern1.width);
+        // Pattern is used
+        const used = new Set();
         for (let i1 = 0; i1 < maxI1; i1++) {
           const pattern1 = patterns[i1];
+          if (used.has(pattern1)) {
+            continue;
+          }
           const width1 = pattern1.width;
           const height1 = pattern1.height;
           for (let i2 = i1 + 1; i2 < maxI2; i2++) {
             const pattern2 = patterns[i2];
+            if (used.has(pattern2)) {
+              continue;
+            }
             const width2 = pattern2.width;
             const height2 = pattern2.height;
             if (!isEqualsSize(width1, width2, DIFF_EDGE_RATIO)) {
-              break;
+              continue;
             }
-            if (isEqualsSize(height1, height2, DIFF_EDGE_RATIO)) {
-              for (let i3 = i2 + 1; i3 < length; i3++) {
-                const pattern3 = patterns[i3];
-                if (!isEqualsSize(width2, pattern3.width, DIFF_EDGE_RATIO)) {
-                  break;
-                }
-                if (isEqualsSize(height2, pattern3.height, DIFF_EDGE_RATIO)) {
-                  const { matrix } = this;
-                  const finderPatternGroup = new FinderPatternGroup(matrix, [pattern1, pattern2, pattern3]);
-                  const { size, moduleSize } = finderPatternGroup;
-                  if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
-                    const [moduleSize1, moduleSize2] = moduleSize;
-                    // All tests passed!
-                    if (
-                      moduleSize1 >= 1 &&
-                      moduleSize2 >= 1 &&
-                      checkPixelsInTimingLine(matrix, finderPatternGroup) &&
-                      checkPixelsInTimingLine(matrix, finderPatternGroup, true)
-                    ) {
-                      yield finderPatternGroup;
-                    }
+            if (!isEqualsSize(height1, height2, DIFF_EDGE_RATIO)) {
+              continue;
+            }
+            for (let i3 = i2 + 1; i3 < length; i3++) {
+              const pattern3 = patterns[i3];
+              if (used.has(pattern3)) {
+                continue;
+              }
+              if (!isEqualsSize(width2, pattern3.width, DIFF_EDGE_RATIO)) {
+                continue;
+              }
+              if (!isEqualsSize(height2, pattern3.height, DIFF_EDGE_RATIO)) {
+                continue;
+              }
+              const { matrix } = this;
+              const finderPatternGroup = new FinderPatternGroup(matrix, [pattern1, pattern2, pattern3]);
+              const { size, moduleSize } = finderPatternGroup;
+              if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
+                const [moduleSize1, moduleSize2] = moduleSize;
+                // All tests passed!
+                if (
+                  moduleSize1 >= 1 &&
+                  moduleSize2 >= 1 &&
+                  checkPixelsInTimingLine(matrix, finderPatternGroup) &&
+                  checkPixelsInTimingLine(matrix, finderPatternGroup, true)
+                ) {
+                  if (yield finderPatternGroup) {
+                    used.add(pattern1);
+                    used.add(pattern2);
+                    used.add(pattern3);
                   }
                 }
               }
@@ -4520,12 +4535,13 @@
    */
   function* detect(matrix, finderMatcher, alignmentMatcher) {
     const finderPatternGroups = finderMatcher.groups();
-    for (const finderPatternGroup of finderPatternGroups) {
-      const { size } = finderPatternGroup;
-      const version = fromVersionSize(size);
+    let iterator = finderPatternGroups.next();
+    while (!iterator.done) {
+      let succeed = false;
+      const finderPatternGroup = iterator.value;
+      const version = fromVersionSize(finderPatternGroup.size);
       // Find alignment
       if (version.alignmentPatterns.length > 0) {
-        let succeed = false;
         // Kind of arbitrary -- expand search radius before giving up
         // If we didn't find alignment pattern... well try anyway without it
         const alignmentPatterns = alignmentMatcher.filter(finderPatternGroup);
@@ -4540,12 +4556,13 @@
         // All failed with alignment pattern
         if (!succeed) {
           // Fallback with no alignment pattern
-          yield new Detect(matrix, finderPatternGroup);
+          succeed = yield new Detect(matrix, finderPatternGroup);
         }
       } else {
         // No alignment pattern version
-        yield new Detect(matrix, finderPatternGroup);
+        succeed = yield new Detect(matrix, finderPatternGroup);
       }
+      iterator = finderPatternGroups.next(succeed);
     }
   }
   class Detector {

@@ -424,11 +424,12 @@
         console.time('decoder');
 
         let succeedCount = 0;
-        let detect = detected.next().value;
+        let iterator = detected.next();
 
-        while (detect) {
+        while (!iterator.done) {
           let succeed = false;
 
+          const detect = iterator.value;
           const { finder, alignment } = detect;
           const { topLeft, topRight, bottomLeft } = finder;
 
@@ -481,7 +482,7 @@
             // console.error(error);
           }
 
-          detect = detected.next(succeed).value;
+          iterator = detected.next(succeed);
         }
 
         console.timeEnd('decoder');
