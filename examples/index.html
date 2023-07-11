@@ -406,99 +406,82 @@
         }
 
         const errors = [];
-        const success = [];
-        const alignments = [];
-        const decodeCache = new Set();
         const imageData = getImageData();
         const { width, height } = imageData;
         const decoder = new QRCode.Decoder();
         const detector = new QRCode.Detector();
+
         console.time('binarize');
         const matrix = QRCode.binarize(imageData);
         console.timeEnd('binarize');
+
         console.time('detector');
         const detected = detector.detect(matrix);
         console.timeEnd('detector');
 
         matrixBox.append(drawMatrix(matrix, 1), '<br />');
 
-        console.dir(detected);
+        let succeedCount = 0;
+        let detect = detected.next().value;
 
-        if (detected.length > 0) {
-          for (const detect of detected) {
-            const { finder, alignment } = detect;
-            const { topLeft, topRight, bottomLeft } = finder;
-            const cacheKey = `${topLeft.x}-${topLeft.y}:${topRight.x}-${topRight.y}:${bottomLeft.x}-${bottomLeft.y}`;
+        do {
+          let succeed = false;
 
-            try {
-              if (decodeCache.has(cacheKey)) {
-                continue;
-              }
+          const { finder, alignment } = detect;
+          const { topLeft, topRight, bottomLeft } = finder;
+          const cacheKey = `${topLeft.x}-${topLeft.y}:${topRight.x}-${topRight.y}:${bottomLeft.x}-${bottomLeft.y}`;
 
-              const { matrix } = detect;
-              const decoded = decoder.decode(matrix);
-              const { content } = decoded;
+          try {
+            const { matrix } = detect;
+            const decoded = decoder.decode(matrix);
+            const { content } = decoded;
 
-              console.group();
-              console.dir(matrix);
-              console.dir(finder);
+            succeed = true;
+            succeedCount++;
 
-              if (content) {
-                decodeResult.html(content);
-                success.push(finder);
+            decodeResult.html(content);
 
-                if (alignment) {
-                  console.dir(alignment);
-                  alignments.push(alignment);
-                }
-
-                console.dir(decoded);
-                console.dir(content);
-              } else {
-                errors.push(finder);
-              }
-
-              const [x1, x2] = calculateTimingLine(topLeft, topRight, bottomLeft);
-              const [x3, x4] = calculateTimingLine(topLeft, bottomLeft, topRight, true);
-
-              drawLine(x1, x2, '#00ff00');
-              drawLine(x3, x4, '#00ff00');
-
-              drawLine(topLeft, topRight, '#ff0000');
-              drawLine(topLeft, bottomLeft, '#ff0000');
-              matrixBox.append(drawMatrix(matrix), '&nbsp;&nbsp;');
-
-              console.log('topLeft:', topLeft.x, topLeft.y);
-              console.log('topRight:', topRight.x, topRight.y);
-              console.log('bottomLeft:', bottomLeft.x, bottomLeft.y);
-              console.groupEnd();
-
-              decodeCache.add(cacheKey);
-            } catch (error) {
-              // 解码失败，跳过
-              errors.push(finder);
-              // console.error(error);
-            }
-          }
-        }
-
-        for (const { topLeft, topRight, bottomLeft } of errors) {
-          markFinderPattern(topLeft, '#ffff00');
-          markFinderPattern(topRight, '#ffff00');
-          markFinderPattern(bottomLeft, '#ffff00');
-        }
-
-        if (success.length > 0) {
-          for (const { topLeft, topRight, bottomLeft } of success) {
             markFinderPattern(topLeft, '#ff0000');
             markFinderPattern(topRight, '#00ff00');
             markFinderPattern(bottomLeft, '#0000ff');
+            markFinderPattern(alignment, '#ff00ff');
+
+            const [x1, x2] = calculateTimingLine(topLeft, topRight, bottomLeft);
+            const [x3, x4] = calculateTimingLine(topLeft, bottomLeft, topRight, true);
+
+            drawLine(x1, x2, '#00ff00');
+            drawLine(x3, x4, '#00ff00');
+            drawLine(topLeft, topRight, '#ff0000');
+            drawLine(topLeft, bottomLeft, '#ff0000');
+
+            matrixBox.append(drawMatrix(matrix), '&nbsp;&nbsp;');
+
+            console.group();
+            console.dir(matrix);
+            console.dir(finder);
+            console.dir(alignment);
+            console.dir(decoded);
+            console.dir(content);
+            console.log('topLeft:', topLeft.x, topLeft.y);
+            console.log('topRight:', topRight.x, topRight.y);
+            console.log('bottomLeft:', bottomLeft.x, bottomLeft.y);
+            console.groupEnd();
+          } catch (error) {
+            // 解码失败，跳过
+            errors.push(finder);
+            // console.error(error);
           }
 
-          for (const alignment of alignments) {
-            markFinderPattern(alignment, '#ff00ff');
+          detect = detected.next(succeed).value;
+        } while (detect);
+
+        if (!succeedCount) {
+          for (const { topLeft, topRight, bottomLeft } of errors) {
+            markFinderPattern(topLeft, '#ffff00');
+            markFinderPattern(topRight, '#ffff00');
+            markFinderPattern(bottomLeft, '#ffff00');
           }
-        } else {
+
           decodeResult.html(`<span class="error">未发现二维码</span>`);
         }
       });

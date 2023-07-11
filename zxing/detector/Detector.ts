@@ -13,6 +13,47 @@ export interface Options {
   strict?: boolean;
 }
 
+function* detect(
+  matrix: BitMatrix,
+  finderMatcher: FinderPatternMatcher,
+  alignmentMatcher: AlignmentPatternMatcher
+): Generator<Detect, void, boolean> {
+  const finderPatternGroups = finderMatcher.groups();
+
+  for (const finderPatternGroup of finderPatternGroups) {
+    const { size } = finderPatternGroup;
+    const version = fromVersionSize(size);
+
+    // Find alignment
+    if (version.alignmentPatterns.length > 0) {
+      let succeed: boolean = false;
+
+      // Kind of arbitrary -- expand search radius before giving up
+      // If we didn't find alignment pattern... well try anyway without it
+      const alignmentPatterns = alignmentMatcher.filter(finderPatternGroup);
+
+      // Founded alignment
+      for (const alignmentPattern of alignmentPatterns) {
+        succeed = yield new Detect(matrix, finderPatternGroup, alignmentPattern);
+
+        // Succeed, skip next alignment pattern
+        if (succeed) {
+          break;
+        }
+      }
+
+      // All failed with alignment pattern
+      if (!succeed) {
+        // Fallback with no alignment pattern
+        yield new Detect(matrix, finderPatternGroup);
+      }
+    } else {
+      // No alignment pattern version
+      yield new Detect(matrix, finderPatternGroup);
+    }
+  }
+}
+
 export class Detector {
   #options: Options;
 
@@ -20,7 +61,7 @@ export class Detector {
     this.#options = options;
   }
 
-  public detect(matrix: BitMatrix): Detect[] {
+  public detect(matrix: BitMatrix): Generator<Detect, void, boolean> {
     const { strict } = this.#options;
     const { width, height } = matrix;
     const finderMatcher = new FinderPatternMatcher(matrix, strict);
@@ -72,31 +113,4 @@ export class Detector {
 
     return detect(matrix, finderMatcher, alignmentMatcher);
   }
-}
-
-function detect(matrix: BitMatrix, finderMatcher: FinderPatternMatcher, alignmentMatcher: AlignmentPatternMatcher): Detect[] {
-  const detected: Detect[] = [];
-  const finderPatternGroups = finderMatcher.groups();
-
-  for (const finderPatternGroup of finderPatternGroups) {
-    const { size } = finderPatternGroup;
-    const version = fromVersionSize(size);
-
-    // Find alignment
-    if (version.alignmentPatterns.length > 0) {
-      // Kind of arbitrary -- expand search radius before giving up
-      // If we didn't find alignment pattern... well try anyway without it
-      const alignmentPatterns = alignmentMatcher.filter(finderPatternGroup);
-
-      // Founded alignment
-      for (const alignmentPattern of alignmentPatterns) {
-        detected.push(new Detect(matrix, finderPatternGroup, alignmentPattern));
-      }
-    }
-
-    // No alignment version and fallback
-    detected.push(new Detect(matrix, finderPatternGroup));
-  }
-
-  return detected;
 }

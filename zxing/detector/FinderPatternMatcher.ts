@@ -19,9 +19,8 @@ export class FinderPatternMatcher extends PatternMatcher {
     return super.match(x, y, scanline, scanline[2]);
   }
 
-  public groups(): FinderPatternGroup[] {
+  public *groups(): Generator<FinderPatternGroup, void, void> {
     const patterns = this.patterns.filter(({ combined }) => combined >= 3);
-    const finderPatternGroups: FinderPatternGroup[] = [];
     const { length } = patterns;
 
     // Find enough finder patterns
@@ -64,15 +63,14 @@ export class FinderPatternMatcher extends PatternMatcher {
                 if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
                   const [moduleSize1, moduleSize2] = moduleSize;
 
-                  // Valid module size
-                  if (moduleSize1 >= 1 && moduleSize2 >= 1) {
-                    if (
-                      checkPixelsInTimingLine(matrix, finderPatternGroup) &&
-                      checkPixelsInTimingLine(matrix, finderPatternGroup, true)
-                    ) {
-                      // All tests passed!
-                      finderPatternGroups.push(finderPatternGroup);
-                    }
+                  // All tests passed!
+                  if (
+                    moduleSize1 >= 1 &&
+                    moduleSize2 >= 1 &&
+                    checkPixelsInTimingLine(matrix, finderPatternGroup) &&
+                    checkPixelsInTimingLine(matrix, finderPatternGroup, true)
+                  ) {
+                    yield finderPatternGroup;
                   }
                 }
               }
@@ -81,7 +79,5 @@ export class FinderPatternMatcher extends PatternMatcher {
         }
       }
     }
-
-    return finderPatternGroups;
   }
 }

@@ -4317,36 +4317,6 @@
   /**
    * @module FinderPatternGroup
    */
-  class FinderPatternGroup {
-    #size;
-    #patterns;
-    #moduleSize;
-    constructor(matrix, patterns) {
-      const ordered = orderFinderPatterns(patterns);
-      const [topLeft, topRight, bottomLeft] = ordered;
-      this.#patterns = ordered;
-      this.#moduleSize = [
-        calculateModuleSizeOneWay(matrix, topLeft, topRight),
-        calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)
-      ];
-      this.#size = calculateSymbolSize(ordered, this.#moduleSize);
-    }
-    get size() {
-      return this.#size;
-    }
-    get topLeft() {
-      return this.#patterns[0];
-    }
-    get topRight() {
-      return this.#patterns[1];
-    }
-    get bottomLeft() {
-      return this.#patterns[2];
-    }
-    get moduleSize() {
-      return this.#moduleSize;
-    }
-  }
   function crossProductZ(pattern1, pattern2, pattern3) {
     const { x, y } = pattern2;
     return (pattern3.x - x) * (pattern1.y - y) - (pattern3.y - y) * (pattern1.x - x);
@@ -4399,6 +4369,36 @@
     }
     return size;
   }
+  class FinderPatternGroup {
+    #size;
+    #patterns;
+    #moduleSize;
+    constructor(matrix, patterns) {
+      const ordered = orderFinderPatterns(patterns);
+      const [topLeft, topRight, bottomLeft] = ordered;
+      this.#patterns = ordered;
+      this.#moduleSize = [
+        calculateModuleSizeOneWay(matrix, topLeft, topRight),
+        calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)
+      ];
+      this.#size = calculateSymbolSize(ordered, this.#moduleSize);
+    }
+    get size() {
+      return this.#size;
+    }
+    get topLeft() {
+      return this.#patterns[0];
+    }
+    get topRight() {
+      return this.#patterns[1];
+    }
+    get bottomLeft() {
+      return this.#patterns[2];
+    }
+    get moduleSize() {
+      return this.#moduleSize;
+    }
+  }
 
   /**
    * @module FinderPatternMatcher
@@ -4410,9 +4410,8 @@
     match(x, y, scanline) {
       return super.match(x, y, scanline, scanline[2]);
     }
-    groups() {
+    *groups() {
       const patterns = this.patterns.filter(({ combined }) => combined >= 3);
-      const finderPatternGroups = [];
       const { length } = patterns;
       // Find enough finder patterns
       if (length >= 3) {
@@ -4445,15 +4444,14 @@
                   const { size, moduleSize } = finderPatternGroup;
                   if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
                     const [moduleSize1, moduleSize2] = moduleSize;
-                    // Valid module size
-                    if (moduleSize1 >= 1 && moduleSize2 >= 1) {
-                      if (
-                        checkPixelsInTimingLine(matrix, finderPatternGroup) &&
-                        checkPixelsInTimingLine(matrix, finderPatternGroup, true)
-                      ) {
-                        // All tests passed!
-                        finderPatternGroups.push(finderPatternGroup);
-                      }
+                    // All tests passed!
+                    if (
+                      moduleSize1 >= 1 &&
+                      moduleSize2 >= 1 &&
+                      checkPixelsInTimingLine(matrix, finderPatternGroup) &&
+                      checkPixelsInTimingLine(matrix, finderPatternGroup, true)
+                    ) {
+                      yield finderPatternGroup;
                     }
                   }
                 }
@@ -4462,7 +4460,6 @@
           }
         }
       }
-      return finderPatternGroups;
     }
   }
 
@@ -4521,6 +4518,36 @@
   /**
    * @module Detector
    */
+  function* detect(matrix, finderMatcher, alignmentMatcher) {
+    const finderPatternGroups = finderMatcher.groups();
+    for (const finderPatternGroup of finderPatternGroups) {
+      const { size } = finderPatternGroup;
+      const version = fromVersionSize(size);
+      // Find alignment
+      if (version.alignmentPatterns.length > 0) {
+        let succeed = false;
+        // Kind of arbitrary -- expand search radius before giving up
+        // If we didn't find alignment pattern... well try anyway without it
+        const alignmentPatterns = alignmentMatcher.filter(finderPatternGroup);
+        // Founded alignment
+        for (const alignmentPattern of alignmentPatterns) {
+          succeed = yield new Detect(matrix, finderPatternGroup, alignmentPattern);
+          // Succeed, skip next alignment pattern
+          if (succeed) {
+            break;
+          }
+        }
+        // All failed with alignment pattern
+        if (!succeed) {
+          // Fallback with no alignment pattern
+          yield new Detect(matrix, finderPatternGroup);
+        }
+      } else {
+        // No alignment pattern version
+        yield new Detect(matrix, finderPatternGroup);
+      }
+    }
+  }
   class Detector {
     #options;
     constructor(options = {}) {
@@ -4566,27 +4593,6 @@
       }
       return detect(matrix, finderMatcher, alignmentMatcher);
     }
-  }
-  function detect(matrix, finderMatcher, alignmentMatcher) {
-    const detected = [];
-    const finderPatternGroups = finderMatcher.groups();
-    for (const finderPatternGroup of finderPatternGroups) {
-      const { size } = finderPatternGroup;
-      const version = fromVersionSize(size);
-      // Find alignment
-      if (version.alignmentPatterns.length > 0) {
-        // Kind of arbitrary -- expand search radius before giving up
-        // If we didn't find alignment pattern... well try anyway without it
-        const alignmentPatterns = alignmentMatcher.filter(finderPatternGroup);
-        // Founded alignment
-        for (const alignmentPattern of alignmentPatterns) {
-          detected.push(new Detect(matrix, finderPatternGroup, alignmentPattern));
-        }
-      }
-      // No alignment version and fallback
-      detected.push(new Detect(matrix, finderPatternGroup));
-    }
-    return detected;
   }
 
   /**

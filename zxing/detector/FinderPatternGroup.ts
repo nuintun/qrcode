@@ -18,45 +18,6 @@ type OrderedPatterns = [
   bottomLeft: Pattern
 ];
 
-export class FinderPatternGroup {
-  #size: number;
-  #patterns: OrderedPatterns;
-  #moduleSize: ModuleSizeGroup;
-
-  constructor(matrix: BitMatrix, patterns: Pattern[]) {
-    const ordered = orderFinderPatterns(patterns);
-
-    const [topLeft, topRight, bottomLeft] = ordered;
-
-    this.#patterns = ordered;
-    this.#moduleSize = [
-      calculateModuleSizeOneWay(matrix, topLeft, topRight),
-      calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)
-    ];
-    this.#size = calculateSymbolSize(ordered, this.#moduleSize);
-  }
-
-  public get size(): number {
-    return this.#size;
-  }
-
-  public get topLeft(): Pattern {
-    return this.#patterns[0];
-  }
-
-  public get topRight(): Pattern {
-    return this.#patterns[1];
-  }
-
-  public get bottomLeft(): Pattern {
-    return this.#patterns[2];
-  }
-
-  public get moduleSize(): ModuleSizeGroup {
-    return this.#moduleSize;
-  }
-}
-
 function crossProductZ(pattern1: Pattern, pattern2: Pattern, pattern3: Pattern): number {
   const { x, y } = pattern2;
 
@@ -119,4 +80,43 @@ function calculateSymbolSize([topLeft, topRight, bottomLeft]: OrderedPatterns, m
   }
 
   return size;
+}
+
+export class FinderPatternGroup {
+  #size: number;
+  #patterns: OrderedPatterns;
+  #moduleSize: ModuleSizeGroup;
+
+  constructor(matrix: BitMatrix, patterns: Pattern[]) {
+    const ordered = orderFinderPatterns(patterns);
+
+    const [topLeft, topRight, bottomLeft] = ordered;
+
+    this.#patterns = ordered;
+    this.#moduleSize = [
+      calculateModuleSizeOneWay(matrix, topLeft, topRight),
+      calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)
+    ];
+    this.#size = calculateSymbolSize(ordered, this.#moduleSize);
+  }
+
+  public get size(): number {
+    return this.#size;
+  }
+
+  public get topLeft(): Pattern {
+    return this.#patterns[0];
+  }
+
+  public get topRight(): Pattern {
+    return this.#patterns[1];
+  }
+
+  public get bottomLeft(): Pattern {
+    return this.#patterns[2];
+  }
+
+  public get moduleSize(): ModuleSizeGroup {
+    return this.#moduleSize;
+  }
 }
