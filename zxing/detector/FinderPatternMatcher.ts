@@ -30,8 +30,8 @@ export class FinderPatternMatcher extends PatternMatcher {
       const maxI1 = length - 2;
       // Max i2
       const maxI2 = length - 1;
-      // Pattern is used
-      const used = new Set<Pattern>();
+      // Used patterns
+      const used = new Map<Pattern, boolean>();
 
       for (let i1 = 0; i1 < maxI1; i1++) {
         const pattern1 = patterns[i1];
@@ -91,9 +91,9 @@ export class FinderPatternMatcher extends PatternMatcher {
                 checkPixelsInTimingLine(matrix, finderPatternGroup, true)
               ) {
                 if (yield finderPatternGroup) {
-                  used.add(pattern1);
-                  used.add(pattern2);
-                  used.add(pattern3);
+                  used.set(pattern1, true);
+                  used.set(pattern2, true);
+                  used.set(pattern3, true);
                 }
               }
             }
