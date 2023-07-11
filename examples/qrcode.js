@@ -284,10 +284,6 @@
     }
   }
   function decode$1(bytes, charset) {
-    // Fallback ISO-8859-1 with UTF-8
-    if (charset === Charset.ISO_8859_1) {
-      charset = Charset.UTF_8;
-    }
     return new TextDecoder(charset.label).decode(bytes);
   }
   const NUMERIC_CHARACTERS = '0123456789';
