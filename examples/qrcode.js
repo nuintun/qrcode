@@ -284,8 +284,8 @@
     }
   }
   function decode$1(bytes, charset) {
-    // Fallback GB18030 with UTF-8
-    if (charset === Charset.GB18030) {
+    // Fallback ISO-8859-1 with UTF-8
+    if (charset === Charset.ISO_8859_1) {
       charset = Charset.UTF_8;
     }
     return new TextDecoder(charset.label).decode(bytes);
