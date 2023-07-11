@@ -424,7 +424,7 @@
         let succeedCount = 0;
         let detect = detected.next().value;
 
-        do {
+        while (detect) {
           let succeed = false;
 
           const { finder, alignment } = detect;
@@ -473,7 +473,7 @@
           }
 
           detect = detected.next(succeed).value;
-        } while (detect);
+        }
 
         if (!succeedCount) {
           for (const { topLeft, topRight, bottomLeft } of errors) {
