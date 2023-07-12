@@ -487,6 +487,9 @@
 
         console.timeEnd('decoder');
 
+        console.log('success:', succeedCount);
+        console.log('errors:', errors.length);
+
         if (!succeedCount) {
           for (const { topLeft, topRight, bottomLeft } of errors) {
             markFinderPattern(topLeft, '#ffff00');
