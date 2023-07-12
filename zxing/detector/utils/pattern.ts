@@ -67,7 +67,7 @@ export function isEqualsSize(size1: number, size2: number, ratio: number): boole
     [size1, size2] = [size2, size1];
   }
 
-  return size2 - size1 <= size2 * ratio;
+  return toInt32(size2 - size1) <= size2 * ratio;
 }
 
 export function calculatePatternNoise(ratios: number[], ...scanlines: number[][]): number {

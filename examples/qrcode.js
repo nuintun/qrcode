@@ -4013,7 +4013,7 @@
     if (size1 > size2) {
       [size1, size2] = [size2, size1];
     }
-    return size2 - size1 <= size2 * ratio;
+    return toInt32(size2 - size1) <= size2 * ratio;
   }
   function calculatePatternNoise(ratios, ...scanlines) {
     const noises = [];
