@@ -10,7 +10,7 @@ import { checkPixelsInTimingLine } from './utils/timing';
 import { FinderPatternGroup } from './FinderPatternGroup';
 import { MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
 import { isEqualsSize, isMatchFinderPattern } from './utils/pattern';
-import { DIFF_EDGE_RATIO, FINDER_PATTERN_RATIOS } from './utils/constants';
+import { DIFF_EDGE_RATIO, DIFF_MODULE_SIZE_RATIO, FINDER_PATTERN_RATIOS } from './utils/constants';
 
 export class FinderPatternMatcher extends PatternMatcher {
   constructor(matrix: BitMatrix, strict?: boolean) {
@@ -36,8 +36,7 @@ export class FinderPatternMatcher extends PatternMatcher {
 
       for (let i1 = 0; i1 < maxI1; i1++) {
         const pattern1 = patterns[i1];
-        const width1 = pattern1.width;
-        const height1 = pattern1.height;
+        const [xModuleSize1, yModuleSize1] = pattern1.moduleSize;
 
         if (used.has(pattern1)) {
           continue;
@@ -45,8 +44,7 @@ export class FinderPatternMatcher extends PatternMatcher {
 
         for (let i2 = i1 + 1; i2 < maxI2; i2++) {
           const pattern2 = patterns[i2];
-          const width2 = pattern2.width;
-          const height2 = pattern2.height;
+          const [xModuleSize2, yModuleSize2] = pattern2.moduleSize;
 
           if (used.has(pattern1)) {
             break;
@@ -54,26 +52,25 @@ export class FinderPatternMatcher extends PatternMatcher {
 
           if (
             used.has(pattern2) ||
-            !isEqualsSize(width1, width2, DIFF_EDGE_RATIO) ||
-            !isEqualsSize(height1, height2, DIFF_EDGE_RATIO)
+            !isEqualsSize(xModuleSize1, xModuleSize2, DIFF_MODULE_SIZE_RATIO) ||
+            !isEqualsSize(yModuleSize1, yModuleSize2, DIFF_MODULE_SIZE_RATIO)
           ) {
             continue;
           }
 
           for (let i3 = i2 + 1; i3 < length; i3++) {
             const pattern3 = patterns[i3];
-            const width3 = pattern3.width;
-            const height3 = pattern3.height;
+            const [xModuleSize3, yModuleSize3] = pattern3.moduleSize;
 
             if (used.has(pattern1) || used.has(pattern2)) {
               break;
             }
 
             if (
-              !isEqualsSize(width1, width3, DIFF_EDGE_RATIO) ||
-              !isEqualsSize(width2, width3, DIFF_EDGE_RATIO) ||
-              !isEqualsSize(height1, height3, DIFF_EDGE_RATIO) ||
-              !isEqualsSize(height2, height3, DIFF_EDGE_RATIO)
+              !isEqualsSize(xModuleSize1, xModuleSize3, DIFF_MODULE_SIZE_RATIO) ||
+              !isEqualsSize(xModuleSize2, xModuleSize3, DIFF_MODULE_SIZE_RATIO) ||
+              !isEqualsSize(yModuleSize1, yModuleSize3, DIFF_MODULE_SIZE_RATIO) ||
+              !isEqualsSize(yModuleSize2, yModuleSize3, DIFF_MODULE_SIZE_RATIO)
             ) {
               continue;
             }

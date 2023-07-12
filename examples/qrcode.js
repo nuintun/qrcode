@@ -3981,7 +3981,7 @@
           const count = scanline[i];
           const ratio = i !== middleIndex ? 1 : 3;
           const moduleSizeDiff = Math.abs(count - moduleSize * ratio);
-          if (moduleSizeDiff > threshold * ratio) {
+          if (moduleSizeDiff > 0.75 && moduleSizeDiff > threshold * ratio) {
             return false;
           }
         }
@@ -4000,7 +4000,7 @@
         // Allow less than DIFF_ALIGNMENT_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
         for (const count of scanline) {
           const moduleSizeDiff = Math.abs(count - moduleSize);
-          if (moduleSizeDiff > threshold) {
+          if (moduleSizeDiff > 0.75 && moduleSizeDiff > threshold) {
             return false;
           }
         }
@@ -4429,37 +4429,34 @@
         const used = new Map();
         for (let i1 = 0; i1 < maxI1; i1++) {
           const pattern1 = patterns[i1];
-          const width1 = pattern1.width;
-          const height1 = pattern1.height;
+          const [xModuleSize1, yModuleSize1] = pattern1.moduleSize;
           if (used.has(pattern1)) {
             continue;
           }
           for (let i2 = i1 + 1; i2 < maxI2; i2++) {
             const pattern2 = patterns[i2];
-            const width2 = pattern2.width;
-            const height2 = pattern2.height;
+            const [xModuleSize2, yModuleSize2] = pattern2.moduleSize;
             if (used.has(pattern1)) {
               break;
             }
             if (
               used.has(pattern2) ||
-              !isEqualsSize(width1, width2, DIFF_EDGE_RATIO) ||
-              !isEqualsSize(height1, height2, DIFF_EDGE_RATIO)
+              !isEqualsSize(xModuleSize1, xModuleSize2, DIFF_MODULE_SIZE_RATIO) ||
+              !isEqualsSize(yModuleSize1, yModuleSize2, DIFF_MODULE_SIZE_RATIO)
             ) {
               continue;
             }
             for (let i3 = i2 + 1; i3 < length; i3++) {
               const pattern3 = patterns[i3];
-              const width3 = pattern3.width;
-              const height3 = pattern3.height;
+              const [xModuleSize3, yModuleSize3] = pattern3.moduleSize;
               if (used.has(pattern1) || used.has(pattern2)) {
                 break;
               }
               if (
-                !isEqualsSize(width1, width3, DIFF_EDGE_RATIO) ||
-                !isEqualsSize(width2, width3, DIFF_EDGE_RATIO) ||
-                !isEqualsSize(height1, height3, DIFF_EDGE_RATIO) ||
-                !isEqualsSize(height2, height3, DIFF_EDGE_RATIO)
+                !isEqualsSize(xModuleSize1, xModuleSize3, DIFF_MODULE_SIZE_RATIO) ||
+                !isEqualsSize(xModuleSize2, xModuleSize3, DIFF_MODULE_SIZE_RATIO) ||
+                !isEqualsSize(yModuleSize1, yModuleSize3, DIFF_MODULE_SIZE_RATIO) ||
+                !isEqualsSize(yModuleSize2, yModuleSize3, DIFF_MODULE_SIZE_RATIO)
               ) {
                 continue;
               }
