@@ -66,7 +66,7 @@ export class AlignmentPatternFinder extends PatternFinder {
       let lastBit = matrix.get(x, y);
 
       const scanline = [0, 0, 0];
-      const scanlineBits = [0, 0, 0];
+      const scanlineBits = [-1, -1, -1];
 
       while (x < right) {
         const bit = matrix.get(x, y);
