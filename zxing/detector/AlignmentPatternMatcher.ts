@@ -65,6 +65,7 @@ export class AlignmentPatternMatcher extends PatternMatcher {
       });
     }
 
+    // Only use the first two patterns
     return patterns.slice(0, 2);
   }
 }

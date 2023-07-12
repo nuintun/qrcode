@@ -3956,7 +3956,7 @@
    * @module constants
    */
   // Diff ratio
-  const DIFF_EDGE_RATIO = 0.5;
+  const DIFF_EDGE_RATIO = 0.52;
   const DIFF_MODULE_SIZE_RATIO = 0.5;
   const DIFF_FINDER_PATTERN_RATIO = 0.5;
   const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
@@ -3981,7 +3981,7 @@
           const count = scanline[i];
           const ratio = i !== middleIndex ? 1 : 3;
           const moduleSizeDiff = Math.abs(count - moduleSize * ratio);
-          if (moduleSizeDiff > 1 && moduleSizeDiff > threshold * ratio) {
+          if (moduleSizeDiff > threshold * ratio) {
             return false;
           }
         }
@@ -4000,7 +4000,7 @@
         // Allow less than DIFF_ALIGNMENT_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
         for (const count of scanline) {
           const moduleSizeDiff = Math.abs(count - moduleSize);
-          if (moduleSizeDiff > 1 && moduleSizeDiff > threshold) {
+          if (moduleSizeDiff > threshold) {
             return false;
           }
         }
@@ -4013,7 +4013,7 @@
     if (size1 > size2) {
       [size1, size2] = [size2, size1];
     }
-    return size2 - size1 - size2 * ratio <= 1;
+    return size2 - size1 <= size2 * ratio;
   }
   function calculatePatternNoise(ratios, ...scanlines) {
     const noises = [];
@@ -4543,6 +4543,7 @@
           return noise1 - noise2;
         });
       }
+      // Only use the first two patterns
       return patterns.slice(0, 2);
     }
   }

@@ -24,7 +24,7 @@ export function isMatchFinderPattern(scanline: number[]): boolean {
         const ratio = i !== middleIndex ? 1 : 3;
         const moduleSizeDiff = Math.abs(count - moduleSize * ratio);
 
-        if (moduleSizeDiff > 1 && moduleSizeDiff > threshold * ratio) {
+        if (moduleSizeDiff > threshold * ratio) {
           return false;
         }
       }
@@ -50,7 +50,7 @@ export function isMatchAlignmentPattern(scanline: number[]): boolean {
       for (const count of scanline) {
         const moduleSizeDiff = Math.abs(count - moduleSize);
 
-        if (moduleSizeDiff > 1 && moduleSizeDiff > threshold) {
+        if (moduleSizeDiff > threshold) {
           return false;
         }
       }
@@ -67,7 +67,7 @@ export function isEqualsSize(size1: number, size2: number, ratio: number): boole
     [size1, size2] = [size2, size1];
   }
 
-  return size2 - size1 - size2 * ratio <= 1;
+  return size2 - size1 <= size2 * ratio;
 }
 
 export function calculatePatternNoise(ratios: number[], ...scanlines: number[][]): number {
