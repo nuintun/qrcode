@@ -4587,8 +4587,8 @@
     const { x, y } = topLeft;
     const correctionToTopLeft = 1 - 3 / (size - 7);
     const allowance = Math.min(15, toInt32(size / 4));
-    const bottomRightX = topRight.x - x + bottomLeft.x;
-    const bottomRightY = topRight.y - y + bottomLeft.y;
+    const bottomRightX = topRight.x + bottomLeft.x - x;
+    const bottomRightY = topRight.y + bottomLeft.y - y;
     const moduleSizeAvg = calculateModuleSize(moduleSize);
     const alignmentFinder = new AlignmentPatternFinder(matrix, strict);
     // Look for an alignment pattern allowance modules in size around where it should be
