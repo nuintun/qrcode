@@ -24,18 +24,19 @@ function findAlignmentInRegion(
 ): Pattern[] {
   const { x, y } = topLeft;
   const correctionToTopLeft = 1 - 3 / (size - 7);
+  const allowance = Math.min(15, toInt32(size / 4));
   const bottomRightX = topRight.x - x + bottomLeft.x;
   const bottomRightY = topRight.y - y + bottomLeft.y;
   const moduleSizeAvg = calculateModuleSize(moduleSize);
-  // Look for an alignment pattern (10 modules in size) around where it should be
-  const alignmentAreaAllowance = Math.ceil(moduleSizeAvg * 10);
+  const alignmentFinder = new AlignmentPatternFinder(matrix, strict);
+  // Look for an alignment pattern allowance modules in size around where it should be
+  const alignmentAreaAllowance = Math.ceil(moduleSizeAvg * allowance);
   const expectAlignmentX = toInt32(x + correctionToTopLeft * (bottomRightX - x));
   const expectAlignmentY = toInt32(y + correctionToTopLeft * (bottomRightY - y));
   const alignmentAreaTop = toInt32(Math.max(0, expectAlignmentY - alignmentAreaAllowance));
   const alignmentAreaLeft = toInt32(Math.max(0, expectAlignmentX - alignmentAreaAllowance));
   const alignmentAreaRight = toInt32(Math.min(matrix.width - 1, expectAlignmentX + alignmentAreaAllowance));
   const alignmentAreaBottom = toInt32(Math.min(matrix.height - 1, expectAlignmentY + alignmentAreaAllowance));
-  const alignmentFinder = new AlignmentPatternFinder(matrix, strict);
 
   alignmentFinder.find(
     alignmentAreaLeft,
