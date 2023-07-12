@@ -31,8 +31,8 @@ function findAlignmentInRegion(
   const alignmentFinder = new AlignmentPatternFinder(matrix, strict);
   // Look for an alignment pattern allowance modules in size around where it should be
   const alignmentAreaAllowance = Math.ceil(moduleSizeAvg * allowance);
-  const expectAlignmentX = toInt32(x + correctionToTopLeft * (bottomRightX - x));
-  const expectAlignmentY = toInt32(y + correctionToTopLeft * (bottomRightY - y));
+  const expectAlignmentX = x + correctionToTopLeft * (bottomRightX - x);
+  const expectAlignmentY = y + correctionToTopLeft * (bottomRightY - y);
   const alignmentAreaTop = toInt32(Math.max(0, expectAlignmentY - alignmentAreaAllowance));
   const alignmentAreaLeft = toInt32(Math.max(0, expectAlignmentX - alignmentAreaAllowance));
   const alignmentAreaRight = toInt32(Math.min(matrix.width - 1, expectAlignmentX + alignmentAreaAllowance));
