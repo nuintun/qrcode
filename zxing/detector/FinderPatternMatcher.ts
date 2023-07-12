@@ -47,8 +47,11 @@ export class FinderPatternMatcher extends PatternMatcher {
           const width2 = pattern2.width;
           const height2 = pattern2.height;
 
+          if (used.has(pattern1)) {
+            break;
+          }
+
           if (
-            used.has(pattern1) ||
             used.has(pattern2) ||
             !isEqualsSize(width1, width2, DIFF_EDGE_RATIO) ||
             !isEqualsSize(height1, height2, DIFF_EDGE_RATIO)
@@ -61,10 +64,11 @@ export class FinderPatternMatcher extends PatternMatcher {
             const width3 = pattern3.width;
             const height3 = pattern3.height;
 
+            if (used.has(pattern1) || used.has(pattern2)) {
+              break;
+            }
+
             if (
-              used.has(pattern1) ||
-              used.has(pattern2) ||
-              used.has(pattern3) ||
               !isEqualsSize(width1, width3, DIFF_EDGE_RATIO) ||
               !isEqualsSize(width2, width3, DIFF_EDGE_RATIO) ||
               !isEqualsSize(height1, height3, DIFF_EDGE_RATIO) ||
