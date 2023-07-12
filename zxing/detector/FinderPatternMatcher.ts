@@ -3,6 +3,7 @@
  */
 
 import { Pattern } from './Pattern';
+import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
 import { PatternMatcher } from './PatternMatcher';
 import { checkPixelsInTimingLine } from './utils/timing';
@@ -79,22 +80,29 @@ export class FinderPatternMatcher extends PatternMatcher {
 
             const { matrix } = this;
             const finderPatternGroup = new FinderPatternGroup(matrix, [pattern1, pattern2, pattern3]);
-            const { size, moduleSize } = finderPatternGroup;
+            const { topLeft, topRight, bottomLeft } = finderPatternGroup;
+            const edge1 = distance(topLeft, topRight);
+            const edge2 = distance(topLeft, bottomLeft);
 
-            if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
-              const [moduleSize1, moduleSize2] = moduleSize;
+            if (isEqualsSize(edge1, edge2, DIFF_EDGE_RATIO)) {
+              const { size } = finderPatternGroup;
 
-              // All tests passed!
-              if (
-                moduleSize1 >= 1 &&
-                moduleSize2 >= 1 &&
-                checkPixelsInTimingLine(matrix, finderPatternGroup) &&
-                checkPixelsInTimingLine(matrix, finderPatternGroup, true)
-              ) {
-                if (yield finderPatternGroup) {
-                  used.set(pattern1, true);
-                  used.set(pattern2, true);
-                  used.set(pattern3, true);
+              if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
+                const { moduleSize } = finderPatternGroup;
+                const [moduleSize1, moduleSize2] = moduleSize;
+
+                // All tests passed!
+                if (
+                  moduleSize1 >= 1 &&
+                  moduleSize2 >= 1 &&
+                  checkPixelsInTimingLine(matrix, finderPatternGroup) &&
+                  checkPixelsInTimingLine(matrix, finderPatternGroup, true)
+                ) {
+                  if (yield finderPatternGroup) {
+                    used.set(pattern1, true);
+                    used.set(pattern2, true);
+                    used.set(pattern3, true);
+                  }
                 }
               }
             }

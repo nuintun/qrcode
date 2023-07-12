@@ -83,25 +83,14 @@ function calculateSymbolSize([topLeft, topRight, bottomLeft]: OrderedPatterns, m
 }
 
 export class FinderPatternGroup {
-  #size: number;
+  #size?: number;
+  #matrix: BitMatrix;
   #patterns: OrderedPatterns;
-  #moduleSize: ModuleSizeGroup;
+  #moduleSize?: ModuleSizeGroup;
 
   constructor(matrix: BitMatrix, patterns: Pattern[]) {
-    const ordered = orderFinderPatterns(patterns);
-
-    const [topLeft, topRight, bottomLeft] = ordered;
-
-    this.#patterns = ordered;
-    this.#moduleSize = [
-      calculateModuleSizeOneWay(matrix, topLeft, topRight),
-      calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)
-    ];
-    this.#size = calculateSymbolSize(ordered, this.#moduleSize);
-  }
-
-  public get size(): number {
-    return this.#size;
+    this.#matrix = matrix;
+    this.#patterns = orderFinderPatterns(patterns);
   }
 
   public get topLeft(): Pattern {
@@ -117,6 +106,24 @@ export class FinderPatternGroup {
   }
 
   public get moduleSize(): ModuleSizeGroup {
+    if (this.#moduleSize == null) {
+      const matrix = this.#matrix;
+      const [topLeft, topRight, bottomLeft] = this.#patterns;
+
+      this.#moduleSize = [
+        calculateModuleSizeOneWay(matrix, topLeft, topRight),
+        calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)
+      ];
+    }
+
     return this.#moduleSize;
+  }
+
+  public get size(): number {
+    if (this.#size == null) {
+      this.#size = calculateSymbolSize(this.#patterns, this.moduleSize);
+    }
+
+    return this.#size;
   }
 }

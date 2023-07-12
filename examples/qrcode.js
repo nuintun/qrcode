@@ -4371,20 +4371,12 @@
   }
   class FinderPatternGroup {
     #size;
+    #matrix;
     #patterns;
     #moduleSize;
     constructor(matrix, patterns) {
-      const ordered = orderFinderPatterns(patterns);
-      const [topLeft, topRight, bottomLeft] = ordered;
-      this.#patterns = ordered;
-      this.#moduleSize = [
-        calculateModuleSizeOneWay(matrix, topLeft, topRight),
-        calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)
-      ];
-      this.#size = calculateSymbolSize(ordered, this.#moduleSize);
-    }
-    get size() {
-      return this.#size;
+      this.#matrix = matrix;
+      this.#patterns = orderFinderPatterns(patterns);
     }
     get topLeft() {
       return this.#patterns[0];
@@ -4396,7 +4388,21 @@
       return this.#patterns[2];
     }
     get moduleSize() {
+      if (this.#moduleSize == null) {
+        const matrix = this.#matrix;
+        const [topLeft, topRight, bottomLeft] = this.#patterns;
+        this.#moduleSize = [
+          calculateModuleSizeOneWay(matrix, topLeft, topRight),
+          calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)
+        ];
+      }
       return this.#moduleSize;
+    }
+    get size() {
+      if (this.#size == null) {
+        this.#size = calculateSymbolSize(this.#patterns, this.moduleSize);
+      }
+      return this.#size;
     }
   }
 
@@ -4459,20 +4465,26 @@
               }
               const { matrix } = this;
               const finderPatternGroup = new FinderPatternGroup(matrix, [pattern1, pattern2, pattern3]);
-              const { size, moduleSize } = finderPatternGroup;
-              if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
-                const [moduleSize1, moduleSize2] = moduleSize;
-                // All tests passed!
-                if (
-                  moduleSize1 >= 1 &&
-                  moduleSize2 >= 1 &&
-                  checkPixelsInTimingLine(matrix, finderPatternGroup) &&
-                  checkPixelsInTimingLine(matrix, finderPatternGroup, true)
-                ) {
-                  if (yield finderPatternGroup) {
-                    used.set(pattern1, true);
-                    used.set(pattern2, true);
-                    used.set(pattern3, true);
+              const { topLeft, topRight, bottomLeft } = finderPatternGroup;
+              const edge1 = distance(topLeft, topRight);
+              const edge2 = distance(topLeft, bottomLeft);
+              if (isEqualsSize(edge1, edge2, DIFF_EDGE_RATIO)) {
+                const { size } = finderPatternGroup;
+                if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
+                  const { moduleSize } = finderPatternGroup;
+                  const [moduleSize1, moduleSize2] = moduleSize;
+                  // All tests passed!
+                  if (
+                    moduleSize1 >= 1 &&
+                    moduleSize2 >= 1 &&
+                    checkPixelsInTimingLine(matrix, finderPatternGroup) &&
+                    checkPixelsInTimingLine(matrix, finderPatternGroup, true)
+                  ) {
+                    if (yield finderPatternGroup) {
+                      used.set(pattern1, true);
+                      used.set(pattern2, true);
+                      used.set(pattern3, true);
+                    }
                   }
                 }
               }
