@@ -3,59 +3,48 @@
  */
 
 import { Detect } from './Detect';
+import { Pattern } from './Pattern';
+import { Point } from '/common/Point';
+import { toInt32 } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
 import { fromVersionSize } from '/common/Version';
-import { scanlineUpdate } from './utils/scanline';
-import { FinderPatternMatcher } from './FinderPatternMatcher';
-import { AlignmentPatternMatcher } from './AlignmentPatternMatcher';
+import { calculateModuleSize } from './utils/module';
+import { FinderPatternGroup } from './FinderPatternGroup';
+import { FinderPatternFinder } from './FinderPatternFinder';
+import { AlignmentPatternFinder } from './AlignmentPatternFinder';
 
 export interface Options {
   strict?: boolean;
 }
 
-function* detect(
+function findAlignmentInRegion(
   matrix: BitMatrix,
-  finderMatcher: FinderPatternMatcher,
-  alignmentMatcher: AlignmentPatternMatcher
-): Generator<Detect, void, boolean> {
-  const finderPatternGroups = finderMatcher.groups();
+  { size, moduleSize, topLeft, topRight, bottomLeft }: FinderPatternGroup,
+  strict?: boolean
+): Pattern[] {
+  const { x, y } = topLeft;
+  const correctionToTopLeft = 1 - 3 / (size - 7);
+  const bottomRightX = topRight.x - x + bottomLeft.x;
+  const bottomRightY = topRight.y - y + bottomLeft.y;
+  const moduleSizeAvg = calculateModuleSize(moduleSize);
+  // Look for an alignment pattern (10 modules in size) around where it should be
+  const alignmentAreaAllowance = Math.ceil(moduleSizeAvg * 10);
+  const expectAlignmentX = toInt32(x + correctionToTopLeft * (bottomRightX - x));
+  const expectAlignmentY = toInt32(y + correctionToTopLeft * (bottomRightY - y));
+  const alignmentAreaTop = toInt32(Math.max(0, expectAlignmentY - alignmentAreaAllowance));
+  const alignmentAreaLeft = toInt32(Math.max(0, expectAlignmentX - alignmentAreaAllowance));
+  const alignmentAreaRight = toInt32(Math.min(matrix.width - 1, expectAlignmentX + alignmentAreaAllowance));
+  const alignmentAreaBottom = toInt32(Math.min(matrix.height - 1, expectAlignmentY + alignmentAreaAllowance));
+  const alignmentFinder = new AlignmentPatternFinder(matrix, strict);
 
-  let iterator = finderPatternGroups.next();
+  alignmentFinder.find(
+    alignmentAreaLeft,
+    alignmentAreaTop,
+    alignmentAreaRight - alignmentAreaLeft,
+    alignmentAreaBottom - alignmentAreaTop
+  );
 
-  while (!iterator.done) {
-    let succeed = false;
-
-    const finderPatternGroup = iterator.value;
-    const version = fromVersionSize(finderPatternGroup.size);
-
-    // Find alignment
-    if (version.alignmentPatterns.length > 0) {
-      // Kind of arbitrary -- expand search radius before giving up
-      // If we didn't find alignment pattern... well try anyway without it
-      const alignmentPatterns = alignmentMatcher.filter(finderPatternGroup);
-
-      // Founded alignment
-      for (const alignmentPattern of alignmentPatterns) {
-        succeed = yield new Detect(matrix, finderPatternGroup, alignmentPattern);
-
-        // Succeed, skip next alignment pattern
-        if (succeed) {
-          break;
-        }
-      }
-
-      // All failed with alignment pattern
-      if (!succeed) {
-        // Fallback with no alignment pattern
-        succeed = yield new Detect(matrix, finderPatternGroup);
-      }
-    } else {
-      // No alignment pattern version
-      succeed = yield new Detect(matrix, finderPatternGroup);
-    }
-
-    iterator = finderPatternGroups.next(succeed);
-  }
+  return alignmentFinder.filter(new Point(expectAlignmentX, expectAlignmentY), moduleSizeAvg);
 }
 
 export class Detector {
@@ -65,56 +54,50 @@ export class Detector {
     this.#options = options;
   }
 
-  public detect(matrix: BitMatrix): Generator<Detect, void, boolean> {
+  public *detect(matrix: BitMatrix): Generator<Detect, void, boolean> {
     const { strict } = this.#options;
     const { width, height } = matrix;
-    const finderMatcher = new FinderPatternMatcher(matrix, strict);
-    const alignmentMatcher = new AlignmentPatternMatcher(matrix, strict);
+    const finderFinder = new FinderPatternFinder(matrix, strict);
 
-    const match = (x: number, y: number, lastBit: number, scanline: number[], count: number) => {
-      scanlineUpdate(scanline, count);
+    finderFinder.find(0, 0, width, height);
 
-      // Match pattern
-      if (lastBit) {
-        finderMatcher.match(x, y, scanline);
-      } else {
-        alignmentMatcher.match(x, y, scanline);
-      }
-    };
+    const finderPatternGroups = finderFinder.groups();
 
-    for (let y = 0; y < height; y++) {
-      let x = 0;
+    let iterator = finderPatternGroups.next();
 
-      // Burn off leading white pixels before anything else; if we start in the middle of
-      // a white run, it doesn't make sense to count its length, since we don't know if the
-      // white run continued to the left of the start point
-      while (x < width && !matrix.get(x, y)) {
-        x++;
-      }
+    while (!iterator.done) {
+      let succeed = false;
 
-      let count = 0;
-      let lastBit = matrix.get(x, y);
+      const finderPatternGroup = iterator.value;
+      const version = fromVersionSize(finderPatternGroup.size);
 
-      const scanline = [0, 0, 0, 0, 0];
+      // Find alignment
+      if (version.alignmentPatterns.length > 0) {
+        // Kind of arbitrary -- expand search radius before giving up
+        // If we didn't find alignment pattern... well try anyway without it
+        const alignmentPatterns = findAlignmentInRegion(matrix, finderPatternGroup);
 
-      while (x < width) {
-        const bit = matrix.get(x, y);
+        // Founded alignment
+        for (const alignmentPattern of alignmentPatterns) {
+          succeed = yield new Detect(matrix, finderPatternGroup, alignmentPattern);
 
-        if (bit === lastBit) {
-          count++;
-        } else {
-          match(x, y, lastBit, scanline, count);
-
-          count = 1;
-          lastBit = bit;
+          // Succeed, skip next alignment pattern
+          if (succeed) {
+            break;
+          }
         }
 
-        x++;
+        // All failed with alignment pattern
+        if (!succeed) {
+          // Fallback with no alignment pattern
+          succeed = yield new Detect(matrix, finderPatternGroup);
+        }
+      } else {
+        // No alignment pattern version
+        succeed = yield new Detect(matrix, finderPatternGroup);
       }
 
-      match(x, y, lastBit, scanline, count);
+      iterator = finderPatternGroups.next(succeed);
     }
-
-    return detect(matrix, finderMatcher, alignmentMatcher);
   }
 }

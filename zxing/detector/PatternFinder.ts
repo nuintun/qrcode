@@ -1,5 +1,5 @@
 /**
- * @module PatternMatcher
+ * @module PatternFinder
  */
 
 import { Pattern } from './Pattern';
@@ -12,7 +12,7 @@ export interface Matcher {
   (scanline: number[]): boolean;
 }
 
-export class PatternMatcher {
+export class PatternFinder {
   #modules: number;
   #matcher: Matcher;
   #ratios: number[];
@@ -61,7 +61,7 @@ export class PatternMatcher {
     return this.#patterns;
   }
 
-  public match(x: number, y: number, scanline: number[], overscan: number): boolean {
+  protected match(x: number, y: number, scanline: number[], overscan: number): void {
     if (this.#matcher(scanline)) {
       let horizontal: number[];
       let centerX = centerFromScanlineEnd(scanline, x);
@@ -84,26 +84,26 @@ export class PatternMatcher {
             const patterns = this.#patterns;
             const { length } = patterns;
 
+            let combined = false;
+
             for (let i = 0; i < length; i++) {
               const pattern = patterns[i];
 
               // Look for about the same center and module size
               if (pattern.equals(centerX, centerY, width, height)) {
+                combined = true;
                 patterns[i] = pattern.combine(centerX, centerY, width, height, noise);
-
-                return true;
+                break;
               }
             }
 
             // Hadn't found this before; save it
-            patterns.push(new Pattern(centerX, centerY, width, height, this.#modules, noise));
-
-            return true;
+            if (!combined) {
+              patterns.push(new Pattern(centerX, centerY, width, height, this.#modules, noise));
+            }
           }
         }
       }
     }
-
-    return false;
   }
 }

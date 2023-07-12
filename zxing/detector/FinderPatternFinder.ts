@@ -1,24 +1,21 @@
 /**
- * @module FinderPatternMatcher
+ * @module FinderPatternFinder
  */
 
 import { Pattern } from './Pattern';
 import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
-import { PatternMatcher } from './PatternMatcher';
+import { PatternFinder } from './PatternFinder';
+import { scanlineUpdate } from './utils/scanline';
 import { checkPixelsInTimingLine } from './utils/timing';
 import { FinderPatternGroup } from './FinderPatternGroup';
 import { MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
 import { isEqualsSize, isMatchFinderPattern } from './utils/pattern';
 import { DIFF_EDGE_RATIO, DIFF_MODULE_SIZE_RATIO, FINDER_PATTERN_RATIOS } from './utils/constants';
 
-export class FinderPatternMatcher extends PatternMatcher {
+export class FinderPatternFinder extends PatternFinder {
   constructor(matrix: BitMatrix, strict?: boolean) {
     super(matrix, FINDER_PATTERN_RATIOS, isMatchFinderPattern, strict);
-  }
-
-  public override match(x: number, y: number, scanline: number[]): boolean {
-    return super.match(x, y, scanline, scanline[2]);
   }
 
   public *groups(): Generator<FinderPatternGroup, void, boolean> {
@@ -106,6 +103,53 @@ export class FinderPatternMatcher extends PatternMatcher {
           }
         }
       }
+    }
+  }
+
+  public find(left: number, top: number, width: number, height: number): void {
+    const { matrix } = this;
+    const right = left + width;
+    const bottom = top + height;
+    const match = (x: number, y: number, lastBit: number, scanline: number[], count: number) => {
+      scanlineUpdate(scanline, count);
+
+      // Match pattern
+      if (lastBit) {
+        this.match(x, y, scanline, scanline[2]);
+      }
+    };
+
+    for (let y = top; y < bottom; y++) {
+      let x = left;
+
+      // Burn off leading white pixels before anything else; if we start in the middle of
+      // a white run, it doesn't make sense to count its length, since we don't know if the
+      // white run continued to the left of the start point
+      while (x < right && !matrix.get(x, y)) {
+        x++;
+      }
+
+      let count = 0;
+      let lastBit = matrix.get(x, y);
+
+      const scanline = [0, 0, 0, 0, 0];
+
+      while (x < right) {
+        const bit = matrix.get(x, y);
+
+        if (bit === lastBit) {
+          count++;
+        } else {
+          match(x, y, lastBit, scanline, count);
+
+          count = 1;
+          lastBit = bit;
+        }
+
+        x++;
+      }
+
+      match(x, y, lastBit, scanline, count);
     }
   }
 }

@@ -2,8 +2,6 @@
  * @module Point
  */
 
-import { round } from './utils';
-
 export class Point {
   #x: number;
   #y: number;
@@ -27,23 +25,4 @@ export function distance(a: Point, b: Point): number {
   const yDiff = a.y - b.y;
 
   return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
-}
-
-export interface PlotLineCallback {
-  (x: number, y: number, deltaX: number, deltaY: number): void | boolean;
-}
-
-export function calcTriangleArea(a: Point, b: Point, c: Point): number {
-  const { x: ax, y: ay } = a;
-  const { x: bx, y: by } = b;
-  const { x: cx, y: cy } = c;
-
-  return Math.abs((ax * by + bx * cy + cx * ay - bx * ay - cx * by - ax * cy) / 2);
-}
-
-export function isPointInQuadrangle(p: Point, a: Point, b: Point, c: Point, d: Point): boolean {
-  return (
-    round(calcTriangleArea(a, b, c) + calcTriangleArea(c, d, a)) ===
-    round(calcTriangleArea(a, b, p) + calcTriangleArea(b, c, p) + calcTriangleArea(c, d, p) + calcTriangleArea(d, a, p))
-  );
 }

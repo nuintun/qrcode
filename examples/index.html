@@ -364,13 +364,13 @@
       }
 
       function getTimingPointXAxis({ x, rect }, ratio) {
-        const [, right, , left] = rect;
+        const [left, , right] = rect;
 
         return ratio > 0 ? right : ratio < 0 ? left : x;
       }
 
       function getTimingPointYAxis({ y, rect }, ratio) {
-        const [top, , bottom] = rect;
+        const [, top, , bottom] = rect;
 
         return ratio > 0 ? bottom : ratio < 0 ? top : y;
       }

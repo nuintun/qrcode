@@ -6,14 +6,14 @@ import { Point } from '/common/Point';
 import { ModuleSizeGroup } from './utils/module';
 
 export type PatternRect = [
+  // Left border center x
+  left: number,
   // Top border center y
   top: number,
   // Right border center x
   right: number,
   // Bottom border center y
-  bottom: number,
-  // Left border center x
-  left: number
+  bottom: number
 ];
 
 export class Pattern extends Point {
@@ -40,10 +40,10 @@ export class Pattern extends Point {
     this.#height = height;
     this.#modules = modules;
     this.#rect = [
+      x - halfWidth + xModuleSizeHalf,
       y - halfHeight + yModuleSizeHalf,
       x + halfWidth - xModuleSizeHalf,
-      y + halfHeight - yModuleSizeHalf,
-      x - halfWidth + xModuleSizeHalf
+      y + halfHeight - yModuleSizeHalf
     ];
     this.#moduleSize = [xModuleSize, yModuleSize];
   }

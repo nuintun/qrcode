@@ -3705,6 +3705,259 @@
   }
 
   /**
+   * @module Point
+   */
+  class Point {
+    #x;
+    #y;
+    constructor(x, y) {
+      this.#x = x;
+      this.#y = y;
+    }
+    get x() {
+      return this.#x;
+    }
+    get y() {
+      return this.#y;
+    }
+  }
+  function distance(a, b) {
+    const xDiff = a.x - b.x;
+    const yDiff = a.y - b.y;
+    return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+  }
+
+  /**
+   * @module PlotLine
+   */
+  // Mild variant of Bresenham's algorithm
+  // see https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+  class PlotLine {
+    #to;
+    #from;
+    #limit;
+    #steep;
+    #diff;
+    #delta;
+    constructor(from, to) {
+      let toX = toInt32(to.x);
+      let toY = toInt32(to.y);
+      let fromX = toInt32(from.x);
+      let fromY = toInt32(from.y);
+      const steep = Math.abs(toY - fromY) > Math.abs(toX - fromX);
+      // Steep line
+      if (steep) {
+        [fromX, fromY, toX, toY] = [fromY, fromX, toY, toX];
+      }
+      const deltaX = fromX < toX ? 1 : -1;
+      this.#steep = steep;
+      this.#limit = toX + deltaX;
+      this.#to = new Point(toX, toY);
+      this.#from = new Point(fromX, fromY);
+      this.#delta = [deltaX, fromY < toY ? 1 : -1];
+      this.#diff = [Math.abs(toX - fromX), Math.abs(toY - fromY)];
+    }
+    get to() {
+      return this.#to;
+    }
+    get from() {
+      return this.#from;
+    }
+    get steep() {
+      return this.#steep;
+    }
+    get delta() {
+      return this.#delta;
+    }
+    *points() {
+      const limit = this.#limit;
+      const steep = this.#steep;
+      const { y: toY } = this.#to;
+      const [xDiff, yDiff] = this.#diff;
+      const [deltaX, deltaY] = this.#delta;
+      const { x: fromX, y: fromY } = this.#from;
+      let error = toInt32(-xDiff / 2);
+      // Loop up until x === toX, but not beyond
+      for (let x = fromX, y = fromY; x !== limit; x += deltaX) {
+        yield [steep ? y : x, steep ? x : y];
+        error += yDiff;
+        if (error > 0) {
+          if (y === toY) {
+            break;
+          }
+          y += deltaY;
+          error -= xDiff;
+        }
+      }
+    }
+  }
+
+  /**
+   * @module module
+   */
+  function calculateModuleSize(moduleSize) {
+    return (moduleSize[0] + moduleSize[1]) / 2;
+  }
+  function sizeOfBlackWhiteBlackRun(matrix, from, to) {
+    const line = new PlotLine(from, to);
+    const points = line.points();
+    // In black pixels, looking for white, first or second time.
+    let state = 0;
+    for (const [x, y] of points) {
+      // Does current pixel mean we have moved white to black or vice versa?
+      // Scanning black in state 0,2 and white in state 1, so if we find the wrong
+      // color, advance to next state or end if we are in state 2 already
+      if ((state === 1) === (matrix.get(x, y) === 1)) {
+        if (state === 2) {
+          return distance(new Point(x, y), from);
+        }
+        state++;
+      }
+    }
+    to = line.to;
+    from = line.from;
+    const [deltaX] = line.delta;
+    // Found black-white-black; give the benefit of the doubt that the next pixel outside the image
+    // is "white" so this last point at (toX+xStep,toY) is the right ending. This is really a
+    // small approximation; (toX+xStep,toY+yStep) might be really correct. Ignore this.
+    if (state === 2) {
+      return distance(new Point(to.x + deltaX, to.y), from);
+    }
+    return NaN;
+  }
+  function sizeOfBlackWhiteBlackRunBothWays(matrix, from, to) {
+    // Now count other way -- don't run off image though of course
+    const { x: toX, y: toY } = to;
+    const { width, height } = matrix;
+    const { x: fromX, y: fromY } = from;
+    let scale = 1;
+    let otherToX = fromX - (toX - fromX);
+    let size = sizeOfBlackWhiteBlackRun(matrix, from, to);
+    if (Number.isNaN(size)) {
+      return NaN;
+    }
+    if (otherToX < 0) {
+      scale = fromX / (fromX - otherToX);
+      otherToX = 0;
+    } else if (otherToX >= width) {
+      scale = (width - 1 - fromX) / (otherToX - fromX);
+      otherToX = width - 1;
+    }
+    let otherToY = toInt32(fromY - (toY - fromY) * scale);
+    scale = 1;
+    if (otherToY < 0) {
+      scale = fromY / (fromY - otherToY);
+      otherToY = 0;
+    } else if (otherToY >= height) {
+      scale = (height - 1 - fromY) / (otherToY - fromY);
+      otherToY = height - 1;
+    }
+    otherToX = toInt32(fromX + (otherToX - fromX) * scale);
+    // Middle pixel is double-counted this way; subtract 1
+    size += sizeOfBlackWhiteBlackRun(matrix, from, new Point(otherToX, otherToY));
+    return size - 1;
+  }
+  function calculateModuleSizeOneWay(matrix, pattern1, pattern2) {
+    const point1 = new Point(toInt32(pattern1.x), toInt32(pattern1.y));
+    const point2 = new Point(toInt32(pattern2.x), toInt32(pattern2.y));
+    const moduleSize1 = sizeOfBlackWhiteBlackRunBothWays(matrix, point1, point2);
+    const moduleSize2 = sizeOfBlackWhiteBlackRunBothWays(matrix, point2, point1);
+    if (Number.isNaN(moduleSize1)) {
+      return moduleSize2 / 7;
+    }
+    if (Number.isNaN(moduleSize2)) {
+      return moduleSize1 / 7;
+    }
+    // Average them, and divide by 7 since we've counted the width of 3 black modules,
+    // and 1 white and 1 black module on either side. Ergo, divide sum by 14.
+    return (moduleSize1 + moduleSize2) / 14;
+  }
+
+  /**
+   * @module Pattern
+   */
+  class Pattern extends Point {
+    #noise;
+    #width;
+    #height;
+    #modules;
+    #rect;
+    #combined = 1;
+    #moduleSize;
+    constructor(x, y, width, height, modules, noise) {
+      super(x, y);
+      const halfWidth = width / 2;
+      const halfHeight = height / 2;
+      const xModuleSize = width / modules;
+      const yModuleSize = height / modules;
+      const xModuleSizeHalf = xModuleSize / 2;
+      const yModuleSizeHalf = yModuleSize / 2;
+      this.#noise = noise;
+      this.#width = width;
+      this.#height = height;
+      this.#modules = modules;
+      this.#rect = [
+        x - halfWidth + xModuleSizeHalf,
+        y - halfHeight + yModuleSizeHalf,
+        x + halfWidth - xModuleSizeHalf,
+        y + halfHeight - yModuleSizeHalf
+      ];
+      this.#moduleSize = [xModuleSize, yModuleSize];
+    }
+    get noise() {
+      return this.#noise;
+    }
+    get width() {
+      return this.#width;
+    }
+    get height() {
+      return this.#height;
+    }
+    get combined() {
+      return this.#combined;
+    }
+    get rect() {
+      return this.#rect;
+    }
+    get moduleSize() {
+      return this.#moduleSize;
+    }
+    equals(x, y, width, height) {
+      const modules = this.#modules;
+      const xModuleSize = width / modules;
+      if (Math.abs(x - this.x) <= xModuleSize) {
+        const moduleSize = this.#moduleSize;
+        const [xModuleSizeThis] = moduleSize;
+        const xModuleSizeDiff = Math.abs(xModuleSize - xModuleSizeThis);
+        if (xModuleSizeDiff >= 1 && xModuleSizeDiff > xModuleSizeThis) {
+          return false;
+        }
+        const yModuleSize = height / modules;
+        if (Math.abs(y - this.y) <= yModuleSize) {
+          const [, yModuleSizeThis] = moduleSize;
+          const yModuleSizeDiff = Math.abs(yModuleSize - yModuleSizeThis);
+          if (yModuleSizeDiff < 1 || yModuleSizeDiff <= yModuleSizeThis) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+    combine(x, y, width, height, noise) {
+      const combined = this.#combined;
+      const nextCombined = combined + 1;
+      const combinedX = (combined * this.x + x) / nextCombined;
+      const combinedY = (combined * this.y + y) / nextCombined;
+      const combinedNoise = (combined * this.#noise + noise) / nextCombined;
+      const combinedWidth = (combined * this.#width + width) / nextCombined;
+      const combinedHeight = (combined * this.#height + height) / nextCombined;
+      const pattern = new Pattern(combinedX, combinedY, combinedWidth, combinedHeight, this.#modules, combinedNoise);
+      pattern.#combined = nextCombined;
+      return pattern;
+    }
+  }
+
+  /**
    * @module scanline
    */
   function sumScanlineNonzero(scanline) {
@@ -3834,125 +4087,6 @@
   }
 
   /**
-   * @module Point
-   */
-  class Point {
-    #x;
-    #y;
-    constructor(x, y) {
-      this.#x = x;
-      this.#y = y;
-    }
-    get x() {
-      return this.#x;
-    }
-    get y() {
-      return this.#y;
-    }
-  }
-  function distance(a, b) {
-    const xDiff = a.x - b.x;
-    const yDiff = a.y - b.y;
-    return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
-  }
-  function calcTriangleArea(a, b, c) {
-    const { x: ax, y: ay } = a;
-    const { x: bx, y: by } = b;
-    const { x: cx, y: cy } = c;
-    return Math.abs((ax * by + bx * cy + cx * ay - bx * ay - cx * by - ax * cy) / 2);
-  }
-  function isPointInQuadrangle(p, a, b, c, d) {
-    return (
-      round(calcTriangleArea(a, b, c) + calcTriangleArea(c, d, a)) ===
-      round(calcTriangleArea(a, b, p) + calcTriangleArea(b, c, p) + calcTriangleArea(c, d, p) + calcTriangleArea(d, a, p))
-    );
-  }
-
-  /**
-   * @module Pattern
-   */
-  class Pattern extends Point {
-    #noise;
-    #width;
-    #height;
-    #modules;
-    #rect;
-    #combined = 1;
-    #moduleSize;
-    constructor(x, y, width, height, modules, noise) {
-      super(x, y);
-      const halfWidth = width / 2;
-      const halfHeight = height / 2;
-      const xModuleSize = width / modules;
-      const yModuleSize = height / modules;
-      const xModuleSizeHalf = xModuleSize / 2;
-      const yModuleSizeHalf = yModuleSize / 2;
-      this.#noise = noise;
-      this.#width = width;
-      this.#height = height;
-      this.#modules = modules;
-      this.#rect = [
-        y - halfHeight + yModuleSizeHalf,
-        x + halfWidth - xModuleSizeHalf,
-        y + halfHeight - yModuleSizeHalf,
-        x - halfWidth + xModuleSizeHalf
-      ];
-      this.#moduleSize = [xModuleSize, yModuleSize];
-    }
-    get noise() {
-      return this.#noise;
-    }
-    get width() {
-      return this.#width;
-    }
-    get height() {
-      return this.#height;
-    }
-    get combined() {
-      return this.#combined;
-    }
-    get rect() {
-      return this.#rect;
-    }
-    get moduleSize() {
-      return this.#moduleSize;
-    }
-    equals(x, y, width, height) {
-      const modules = this.#modules;
-      const xModuleSize = width / modules;
-      if (Math.abs(x - this.x) <= xModuleSize) {
-        const moduleSize = this.#moduleSize;
-        const [xModuleSizeThis] = moduleSize;
-        const xModuleSizeDiff = Math.abs(xModuleSize - xModuleSizeThis);
-        if (xModuleSizeDiff >= 1 && xModuleSizeDiff > xModuleSizeThis) {
-          return false;
-        }
-        const yModuleSize = height / modules;
-        if (Math.abs(y - this.y) <= yModuleSize) {
-          const [, yModuleSizeThis] = moduleSize;
-          const yModuleSizeDiff = Math.abs(yModuleSize - yModuleSizeThis);
-          if (yModuleSizeDiff < 1 || yModuleSizeDiff <= yModuleSizeThis) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-    combine(x, y, width, height, noise) {
-      const combined = this.#combined;
-      const nextCombined = combined + 1;
-      const combinedX = (combined * this.x + x) / nextCombined;
-      const combinedY = (combined * this.y + y) / nextCombined;
-      const combinedNoise = (combined * this.#noise + noise) / nextCombined;
-      const combinedWidth = (combined * this.#width + width) / nextCombined;
-      const combinedHeight = (combined * this.#height + height) / nextCombined;
-      const pattern = new Pattern(combinedX, combinedY, combinedWidth, combinedHeight, this.#modules, combinedNoise);
-      pattern.#combined = nextCombined;
-      return pattern;
-    }
-  }
-
-  /**
    * @module constants
    */
   // Diff ratio
@@ -4036,9 +4170,9 @@
   }
 
   /**
-   * @module PatternMatcher
+   * @module PatternFinder
    */
-  class PatternMatcher {
+  class PatternFinder {
     #modules;
     #matcher;
     #ratios;
@@ -4094,85 +4228,22 @@
               const height = sumArray(vertical);
               const patterns = this.#patterns;
               const { length } = patterns;
+              let combined = false;
               for (let i = 0; i < length; i++) {
                 const pattern = patterns[i];
                 // Look for about the same center and module size
                 if (pattern.equals(centerX, centerY, width, height)) {
+                  combined = true;
                   patterns[i] = pattern.combine(centerX, centerY, width, height, noise);
-                  return true;
+                  break;
                 }
               }
               // Hadn't found this before; save it
-              patterns.push(new Pattern(centerX, centerY, width, height, this.#modules, noise));
-              return true;
+              if (!combined) {
+                patterns.push(new Pattern(centerX, centerY, width, height, this.#modules, noise));
+              }
             }
           }
-        }
-      }
-      return false;
-    }
-  }
-
-  /**
-   * @module PlotLine
-   */
-  // Mild variant of Bresenham's algorithm
-  // see https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-  class PlotLine {
-    #to;
-    #from;
-    #limit;
-    #steep;
-    #diff;
-    #delta;
-    constructor(from, to) {
-      let toX = toInt32(to.x);
-      let toY = toInt32(to.y);
-      let fromX = toInt32(from.x);
-      let fromY = toInt32(from.y);
-      const steep = Math.abs(toY - fromY) > Math.abs(toX - fromX);
-      // Steep line
-      if (steep) {
-        [fromX, fromY, toX, toY] = [fromY, fromX, toY, toX];
-      }
-      const deltaX = fromX < toX ? 1 : -1;
-      this.#steep = steep;
-      this.#limit = toX + deltaX;
-      this.#to = new Point(toX, toY);
-      this.#from = new Point(fromX, fromY);
-      this.#delta = [deltaX, fromY < toY ? 1 : -1];
-      this.#diff = [Math.abs(toX - fromX), Math.abs(toY - fromY)];
-    }
-    get to() {
-      return this.#to;
-    }
-    get from() {
-      return this.#from;
-    }
-    get steep() {
-      return this.#steep;
-    }
-    get delta() {
-      return this.#delta;
-    }
-    *points() {
-      const limit = this.#limit;
-      const steep = this.#steep;
-      const { y: toY } = this.#to;
-      const [xDiff, yDiff] = this.#diff;
-      const [deltaX, deltaY] = this.#delta;
-      const { x: fromX, y: fromY } = this.#from;
-      let error = toInt32(-xDiff / 2);
-      // Loop up until x === toX, but not beyond
-      for (let x = fromX, y = fromY; x !== limit; x += deltaX) {
-        yield [steep ? y : x, steep ? x : y];
-        error += yDiff;
-        if (error > 0) {
-          if (y === toY) {
-            break;
-          }
-          y += deltaY;
-          error -= xDiff;
         }
       }
     }
@@ -4185,11 +4256,11 @@
     return control > axis ? 1 : control < axis ? -1 : 0;
   }
   function getTimingPointXAxis({ x, rect }, ratio) {
-    const [, right, , left] = rect;
+    const [left, , right] = rect;
     return ratio > 0 ? right : ratio < 0 ? left : x;
   }
   function getTimingPointYAxis({ y, rect }, ratio) {
-    const [top, , bottom] = rect;
+    const [, top, , bottom] = rect;
     return ratio > 0 ? bottom : ratio < 0 ? top : y;
   }
   function calculateTimingLine(start, end, control, isVertical) {
@@ -4233,87 +4304,6 @@
       }
     }
     return modules >= 7;
-  }
-
-  /**
-   * @module module
-   */
-  function calculateModuleSize(moduleSize) {
-    return (moduleSize[0] + moduleSize[1]) / 2;
-  }
-  function sizeOfBlackWhiteBlackRun(matrix, from, to) {
-    const line = new PlotLine(from, to);
-    const points = line.points();
-    // In black pixels, looking for white, first or second time.
-    let state = 0;
-    for (const [x, y] of points) {
-      // Does current pixel mean we have moved white to black or vice versa?
-      // Scanning black in state 0,2 and white in state 1, so if we find the wrong
-      // color, advance to next state or end if we are in state 2 already
-      if ((state === 1) === (matrix.get(x, y) === 1)) {
-        if (state === 2) {
-          return distance(new Point(x, y), from);
-        }
-        state++;
-      }
-    }
-    to = line.to;
-    from = line.from;
-    const [deltaX] = line.delta;
-    // Found black-white-black; give the benefit of the doubt that the next pixel outside the image
-    // is "white" so this last point at (toX+xStep,toY) is the right ending. This is really a
-    // small approximation; (toX+xStep,toY+yStep) might be really correct. Ignore this.
-    if (state === 2) {
-      return distance(new Point(to.x + deltaX, to.y), from);
-    }
-    return NaN;
-  }
-  function sizeOfBlackWhiteBlackRunBothWays(matrix, from, to) {
-    // Now count other way -- don't run off image though of course
-    const { x: toX, y: toY } = to;
-    const { width, height } = matrix;
-    const { x: fromX, y: fromY } = from;
-    let scale = 1;
-    let otherToX = fromX - (toX - fromX);
-    let size = sizeOfBlackWhiteBlackRun(matrix, from, to);
-    if (Number.isNaN(size)) {
-      return NaN;
-    }
-    if (otherToX < 0) {
-      scale = fromX / (fromX - otherToX);
-      otherToX = 0;
-    } else if (otherToX >= width) {
-      scale = (width - 1 - fromX) / (otherToX - fromX);
-      otherToX = width - 1;
-    }
-    let otherToY = toInt32(fromY - (toY - fromY) * scale);
-    scale = 1;
-    if (otherToY < 0) {
-      scale = fromY / (fromY - otherToY);
-      otherToY = 0;
-    } else if (otherToY >= height) {
-      scale = (height - 1 - fromY) / (otherToY - fromY);
-      otherToY = height - 1;
-    }
-    otherToX = toInt32(fromX + (otherToX - fromX) * scale);
-    // Middle pixel is double-counted this way; subtract 1
-    size += sizeOfBlackWhiteBlackRun(matrix, from, new Point(otherToX, otherToY));
-    return size - 1;
-  }
-  function calculateModuleSizeOneWay(matrix, pattern1, pattern2) {
-    const point1 = new Point(toInt32(pattern1.x), toInt32(pattern1.y));
-    const point2 = new Point(toInt32(pattern2.x), toInt32(pattern2.y));
-    const moduleSize1 = sizeOfBlackWhiteBlackRunBothWays(matrix, point1, point2);
-    const moduleSize2 = sizeOfBlackWhiteBlackRunBothWays(matrix, point2, point1);
-    if (Number.isNaN(moduleSize1)) {
-      return moduleSize2 / 7;
-    }
-    if (Number.isNaN(moduleSize2)) {
-      return moduleSize1 / 7;
-    }
-    // Average them, and divide by 7 since we've counted the width of 3 black modules,
-    // and 1 white and 1 black module on either side. Ergo, divide sum by 14.
-    return (moduleSize1 + moduleSize2) / 14;
   }
 
   /**
@@ -4409,14 +4399,11 @@
   }
 
   /**
-   * @module FinderPatternMatcher
+   * @module FinderPatternFinder
    */
-  class FinderPatternMatcher extends PatternMatcher {
+  class FinderPatternFinder extends PatternFinder {
     constructor(matrix, strict) {
       super(matrix, FINDER_PATTERN_RATIOS, isMatchFinderPattern, strict);
-    }
-    match(x, y, scanline) {
-      return super.match(x, y, scanline, scanline[2]);
     }
     *groups() {
       const patterns = this.patterns.filter(({ combined }) => combined >= 3);
@@ -4492,127 +4479,29 @@
         }
       }
     }
-  }
-
-  /**
-   * @module AlignmentPatternMatcher
-   */
-  class AlignmentPatternMatcher extends PatternMatcher {
-    constructor(matrix, strict) {
-      super(matrix, ALIGNMENT_PATTERN_RATIOS, isMatchAlignmentPattern, strict);
-    }
-    match(x, y, scanline) {
-      scanline = scanline.slice(-3);
-      return super.match(x, y, scanline, scanline[1]);
-    }
-    filter({ size, moduleSize, topLeft, topRight, bottomLeft }) {
+    find(left, top, width, height) {
       const { matrix } = this;
-      const { x, y } = topLeft;
-      const correctionToTopLeft = 1 - 3 / (size - 7);
-      const bottomRightX = topRight.x - x + bottomLeft.x;
-      const bottomRightY = topRight.y - y + bottomLeft.y;
-      const moduleSizeAvg = calculateModuleSize(moduleSize);
-      // Look for an alignment pattern (10 modules in size) around where it should be
-      const alignmentAreaAllowance = Math.ceil(moduleSizeAvg * 10);
-      const expectAlignmentX = x + correctionToTopLeft * (bottomRightX - x);
-      const expectAlignmentY = y + correctionToTopLeft * (bottomRightY - y);
-      const alignmentAreaTopY = Math.max(0, expectAlignmentY - alignmentAreaAllowance);
-      const alignmentAreaLeftX = Math.max(0, expectAlignmentX - alignmentAreaAllowance);
-      const alignmentAreaRightX = Math.min(matrix.width - 1, expectAlignmentX + alignmentAreaAllowance);
-      const alignmentAreaBottomY = Math.min(matrix.height - 1, expectAlignmentY + alignmentAreaAllowance);
-      const patterns = this.patterns.filter(pattern => {
-        const [xModuleSize, yModuleSize] = pattern.moduleSize;
-        return (
-          isEqualsSize(xModuleSize, moduleSizeAvg, DIFF_MODULE_SIZE_RATIO) &&
-          isEqualsSize(yModuleSize, moduleSizeAvg, DIFF_MODULE_SIZE_RATIO) &&
-          isPointInQuadrangle(
-            pattern,
-            new Point(alignmentAreaLeftX, alignmentAreaTopY),
-            new Point(alignmentAreaRightX, alignmentAreaTopY),
-            new Point(alignmentAreaRightX, alignmentAreaBottomY),
-            new Point(alignmentAreaLeftX, alignmentAreaBottomY)
-          )
-        );
-      });
-      if (patterns.length > 1) {
-        const expectAlignment = new Point(expectAlignmentX, expectAlignmentY);
-        patterns.sort((pattern1, pattern2) => {
-          const noise1 = distance(pattern1, expectAlignment) * pattern1.noise;
-          const noise2 = distance(pattern2, expectAlignment) * pattern2.noise;
-          return noise1 - noise2;
-        });
-      }
-      // Only use the first two patterns
-      return patterns.slice(0, 2);
-    }
-  }
-
-  /**
-   * @module Detector
-   */
-  function* detect(matrix, finderMatcher, alignmentMatcher) {
-    const finderPatternGroups = finderMatcher.groups();
-    let iterator = finderPatternGroups.next();
-    while (!iterator.done) {
-      let succeed = false;
-      const finderPatternGroup = iterator.value;
-      const version = fromVersionSize(finderPatternGroup.size);
-      // Find alignment
-      if (version.alignmentPatterns.length > 0) {
-        // Kind of arbitrary -- expand search radius before giving up
-        // If we didn't find alignment pattern... well try anyway without it
-        const alignmentPatterns = alignmentMatcher.filter(finderPatternGroup);
-        // Founded alignment
-        for (const alignmentPattern of alignmentPatterns) {
-          succeed = yield new Detect(matrix, finderPatternGroup, alignmentPattern);
-          // Succeed, skip next alignment pattern
-          if (succeed) {
-            break;
-          }
-        }
-        // All failed with alignment pattern
-        if (!succeed) {
-          // Fallback with no alignment pattern
-          succeed = yield new Detect(matrix, finderPatternGroup);
-        }
-      } else {
-        // No alignment pattern version
-        succeed = yield new Detect(matrix, finderPatternGroup);
-      }
-      iterator = finderPatternGroups.next(succeed);
-    }
-  }
-  class Detector {
-    #options;
-    constructor(options = {}) {
-      this.#options = options;
-    }
-    detect(matrix) {
-      const { strict } = this.#options;
-      const { width, height } = matrix;
-      const finderMatcher = new FinderPatternMatcher(matrix, strict);
-      const alignmentMatcher = new AlignmentPatternMatcher(matrix, strict);
+      const right = left + width;
+      const bottom = top + height;
       const match = (x, y, lastBit, scanline, count) => {
         scanlineUpdate(scanline, count);
         // Match pattern
         if (lastBit) {
-          finderMatcher.match(x, y, scanline);
-        } else {
-          alignmentMatcher.match(x, y, scanline);
+          this.match(x, y, scanline, scanline[2]);
         }
       };
-      for (let y = 0; y < height; y++) {
-        let x = 0;
+      for (let y = top; y < bottom; y++) {
+        let x = left;
         // Burn off leading white pixels before anything else; if we start in the middle of
         // a white run, it doesn't make sense to count its length, since we don't know if the
         // white run continued to the left of the start point
-        while (x < width && !matrix.get(x, y)) {
+        while (x < right && !matrix.get(x, y)) {
           x++;
         }
         let count = 0;
         let lastBit = matrix.get(x, y);
         const scanline = [0, 0, 0, 0, 0];
-        while (x < width) {
+        while (x < right) {
           const bit = matrix.get(x, y);
           if (bit === lastBit) {
             count++;
@@ -4625,7 +4514,138 @@
         }
         match(x, y, lastBit, scanline, count);
       }
-      return detect(matrix, finderMatcher, alignmentMatcher);
+    }
+  }
+
+  /**
+   * @module AlignmentPatternFinder
+   */
+  class AlignmentPatternFinder extends PatternFinder {
+    constructor(matrix, strict) {
+      super(matrix, ALIGNMENT_PATTERN_RATIOS, isMatchAlignmentPattern, strict);
+    }
+    filter(expectAlignment, moduleSize) {
+      const patterns = this.patterns.filter(pattern => {
+        const [xModuleSize, yModuleSize] = pattern.moduleSize;
+        return (
+          isEqualsSize(xModuleSize, moduleSize, DIFF_MODULE_SIZE_RATIO) &&
+          isEqualsSize(yModuleSize, moduleSize, DIFF_MODULE_SIZE_RATIO)
+        );
+      });
+      if (patterns.length > 1) {
+        patterns.sort((pattern1, pattern2) => {
+          const noise1 = distance(pattern1, expectAlignment) * pattern1.noise;
+          const noise2 = distance(pattern2, expectAlignment) * pattern2.noise;
+          return noise1 - noise2;
+        });
+      }
+      // Only use the first two patterns
+      return patterns.slice(0, 2);
+    }
+    find(left, top, width, height) {
+      const { matrix } = this;
+      const right = left + width;
+      const bottom = top + height;
+      const match = (x, y, lastBit, scanline, count) => {
+        scanlineUpdate(scanline, count);
+        // Match pattern
+        if (!lastBit) {
+          this.match(x, y, scanline, scanline[1]);
+        }
+      };
+      for (let y = top; y < bottom; y++) {
+        let x = left;
+        // Burn off leading white pixels before anything else; if we start in the middle of
+        // a white run, it doesn't make sense to count its length, since we don't know if the
+        // white run continued to the left of the start point
+        while (x < right && !matrix.get(x, y)) {
+          x++;
+        }
+        let count = 0;
+        let lastBit = matrix.get(x, y);
+        const scanline = [0, 0, 0];
+        while (x < right) {
+          const bit = matrix.get(x, y);
+          if (bit === lastBit) {
+            count++;
+          } else {
+            match(x, y, lastBit, scanline, count);
+            count = 1;
+            lastBit = bit;
+          }
+          x++;
+        }
+        match(x, y, lastBit, scanline, count);
+      }
+    }
+  }
+
+  /**
+   * @module Detector
+   */
+  function findAlignmentInRegion(matrix, { size, moduleSize, topLeft, topRight, bottomLeft }, strict) {
+    const { x, y } = topLeft;
+    const correctionToTopLeft = 1 - 3 / (size - 7);
+    const bottomRightX = topRight.x - x + bottomLeft.x;
+    const bottomRightY = topRight.y - y + bottomLeft.y;
+    const moduleSizeAvg = calculateModuleSize(moduleSize);
+    // Look for an alignment pattern (10 modules in size) around where it should be
+    const alignmentAreaAllowance = Math.ceil(moduleSizeAvg * 10);
+    const expectAlignmentX = toInt32(x + correctionToTopLeft * (bottomRightX - x));
+    const expectAlignmentY = toInt32(y + correctionToTopLeft * (bottomRightY - y));
+    const alignmentAreaTop = toInt32(Math.max(0, expectAlignmentY - alignmentAreaAllowance));
+    const alignmentAreaLeft = toInt32(Math.max(0, expectAlignmentX - alignmentAreaAllowance));
+    const alignmentAreaRight = toInt32(Math.min(matrix.width - 1, expectAlignmentX + alignmentAreaAllowance));
+    const alignmentAreaBottom = toInt32(Math.min(matrix.height - 1, expectAlignmentY + alignmentAreaAllowance));
+    const alignmentFinder = new AlignmentPatternFinder(matrix, strict);
+    alignmentFinder.find(
+      alignmentAreaLeft,
+      alignmentAreaTop,
+      alignmentAreaRight - alignmentAreaLeft,
+      alignmentAreaBottom - alignmentAreaTop
+    );
+    return alignmentFinder.filter(new Point(expectAlignmentX, expectAlignmentY), moduleSizeAvg);
+  }
+  class Detector {
+    #options;
+    constructor(options = {}) {
+      this.#options = options;
+    }
+    *detect(matrix) {
+      const { strict } = this.#options;
+      const { width, height } = matrix;
+      const finderFinder = new FinderPatternFinder(matrix, strict);
+      finderFinder.find(0, 0, width, height);
+      const finderPatternGroups = finderFinder.groups();
+      let iterator = finderPatternGroups.next();
+      while (!iterator.done) {
+        let succeed = false;
+        const finderPatternGroup = iterator.value;
+        const version = fromVersionSize(finderPatternGroup.size);
+        // Find alignment
+        if (version.alignmentPatterns.length > 0) {
+          // Kind of arbitrary -- expand search radius before giving up
+          // If we didn't find alignment pattern... well try anyway without it
+          const alignmentPatterns = findAlignmentInRegion(matrix, finderPatternGroup);
+          // Founded alignment
+          for (const alignmentPattern of alignmentPatterns) {
+            succeed = yield new Detect(matrix, finderPatternGroup, alignmentPattern);
+            // Succeed, skip next alignment pattern
+            if (succeed) {
+              break;
+            }
+          }
+          // All failed with alignment pattern
+          if (!succeed) {
+            // Fallback with no alignment pattern
+            succeed = yield new Detect(matrix, finderPatternGroup);
+          }
+        } else {
+          // No alignment pattern version
+          succeed = yield new Detect(matrix, finderPatternGroup);
+        }
+        iterator = finderPatternGroups.next(succeed);
+      }
     }
   }
 

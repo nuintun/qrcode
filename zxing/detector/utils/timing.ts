@@ -14,13 +14,13 @@ function calculateTimingRatio(axis: number, control: number) {
 }
 
 function getTimingPointXAxis({ x, rect }: Pattern, ratio: number) {
-  const [, right, , left] = rect;
+  const [left, , right] = rect;
 
   return ratio > 0 ? right : ratio < 0 ? left : x;
 }
 
 function getTimingPointYAxis({ y, rect }: Pattern, ratio: number) {
-  const [top, , bottom] = rect;
+  const [, top, , bottom] = rect;
 
   return ratio > 0 ? bottom : ratio < 0 ? top : y;
 }
