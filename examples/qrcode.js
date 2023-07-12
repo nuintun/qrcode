@@ -3960,6 +3960,7 @@
   const DIFF_MODULE_SIZE_RATIO = 0.5;
   const DIFF_FINDER_PATTERN_RATIO = 0.5;
   const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
+  const MAX_SKIP_CHECK_DIFF_MODULE_SIZE = 0.75;
   // Pattern scanline size ratios
   const FINDER_PATTERN_RATIOS = [1, 1, 3, 1, 1];
   const ALIGNMENT_PATTERN_RATIOS = [1, 1, 1, 1, 1];
@@ -3981,7 +3982,7 @@
           const count = scanline[i];
           const ratio = i !== middleIndex ? 1 : 3;
           const moduleSizeDiff = Math.abs(count - moduleSize * ratio);
-          if (moduleSizeDiff > 0.75 && moduleSizeDiff > threshold * ratio) {
+          if (moduleSizeDiff > MAX_SKIP_CHECK_DIFF_MODULE_SIZE && moduleSizeDiff > threshold * ratio) {
             return false;
           }
         }
@@ -4000,7 +4001,7 @@
         // Allow less than DIFF_ALIGNMENT_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
         for (const count of scanline) {
           const moduleSizeDiff = Math.abs(count - moduleSize);
-          if (moduleSizeDiff > 0.75 && moduleSizeDiff > threshold) {
+          if (moduleSizeDiff > MAX_SKIP_CHECK_DIFF_MODULE_SIZE && moduleSizeDiff > threshold) {
             return false;
           }
         }

@@ -4,7 +4,7 @@
 
 import { sumArray, toInt32 } from '/common/utils';
 import { calculateScanlineNoise, sumScanlineNonzero } from './scanline';
-import { DIFF_ALIGNMENT_PATTERN_RATIO, DIFF_FINDER_PATTERN_RATIO } from './constants';
+import { DIFF_ALIGNMENT_PATTERN_RATIO, DIFF_FINDER_PATTERN_RATIO, MAX_SKIP_CHECK_DIFF_MODULE_SIZE } from './constants';
 
 export function isMatchFinderPattern(scanline: number[]): boolean {
   const modules = 7;
@@ -24,7 +24,7 @@ export function isMatchFinderPattern(scanline: number[]): boolean {
         const ratio = i !== middleIndex ? 1 : 3;
         const moduleSizeDiff = Math.abs(count - moduleSize * ratio);
 
-        if (moduleSizeDiff > 0.75 && moduleSizeDiff > threshold * ratio) {
+        if (moduleSizeDiff > MAX_SKIP_CHECK_DIFF_MODULE_SIZE && moduleSizeDiff > threshold * ratio) {
           return false;
         }
       }
@@ -50,7 +50,7 @@ export function isMatchAlignmentPattern(scanline: number[]): boolean {
       for (const count of scanline) {
         const moduleSizeDiff = Math.abs(count - moduleSize);
 
-        if (moduleSizeDiff > 0.75 && moduleSizeDiff > threshold) {
+        if (moduleSizeDiff > MAX_SKIP_CHECK_DIFF_MODULE_SIZE && moduleSizeDiff > threshold) {
           return false;
         }
       }
