@@ -4,9 +4,9 @@
 
 import { Pattern } from './Pattern';
 import { BitMatrix } from '/common/BitMatrix';
-import { PatternFinder } from './PatternFinder';
 import { distance, Point } from '/common/Point';
 import { scanlineUpdate } from './utils/scanline';
+import { MatchAction, PatternFinder } from './PatternFinder';
 import { isEqualsSize, isMatchAlignmentPattern } from './utils/pattern';
 import { ALIGNMENT_PATTERN_RATIOS, DIFF_MODULE_SIZE_RATIO } from './utils/constants';
 
@@ -42,11 +42,12 @@ export class AlignmentPatternFinder extends PatternFinder {
     const { matrix } = this;
     const right = left + width;
     const bottom = top + height;
-    const match = (x: number, y: number, lastBit: number, scanline: number[], count: number) => {
+    const match: MatchAction = (x, y, scanline, count, scanlineBits, lastBit) => {
       scanlineUpdate(scanline, count);
+      scanlineUpdate(scanlineBits, lastBit);
 
-      // Match pattern
-      if (!lastBit) {
+      // Match pattern when white-black-white
+      if (scanlineBits[0] === 0 && scanlineBits[1] === 1 && scanlineBits[2] === 0) {
         this.match(x, y, scanline, scanline[1]);
       }
     };
@@ -65,6 +66,7 @@ export class AlignmentPatternFinder extends PatternFinder {
       let lastBit = matrix.get(x, y);
 
       const scanline = [0, 0, 0];
+      const scanlineBits = [0, 0, 0];
 
       while (x < right) {
         const bit = matrix.get(x, y);
@@ -72,7 +74,7 @@ export class AlignmentPatternFinder extends PatternFinder {
         if (bit === lastBit) {
           count++;
         } else {
-          match(x, y, lastBit, scanline, count);
+          match(x, y, scanline, count, scanlineBits, lastBit);
 
           count = 1;
           lastBit = bit;
@@ -81,7 +83,7 @@ export class AlignmentPatternFinder extends PatternFinder {
         x++;
       }
 
-      match(x, y, lastBit, scanline, count);
+      match(x, y, scanline, count, scanlineBits, lastBit);
     }
   }
 }

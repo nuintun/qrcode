@@ -5,10 +5,10 @@
 import { Pattern } from './Pattern';
 import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
-import { PatternFinder } from './PatternFinder';
 import { scanlineUpdate } from './utils/scanline';
 import { checkPixelsInTimingLine } from './utils/timing';
 import { FinderPatternGroup } from './FinderPatternGroup';
+import { MatchAction, PatternFinder } from './PatternFinder';
 import { MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
 import { isEqualsSize, isMatchFinderPattern } from './utils/pattern';
 import { DIFF_EDGE_RATIO, DIFF_MODULE_SIZE_RATIO, FINDER_PATTERN_RATIOS } from './utils/constants';
@@ -110,11 +110,18 @@ export class FinderPatternFinder extends PatternFinder {
     const { matrix } = this;
     const right = left + width;
     const bottom = top + height;
-    const match = (x: number, y: number, lastBit: number, scanline: number[], count: number) => {
+    const match: MatchAction = (x, y, scanline, count, scanlineBits, lastBit) => {
       scanlineUpdate(scanline, count);
+      scanlineUpdate(scanlineBits, lastBit);
 
-      // Match pattern
-      if (lastBit) {
+      // Match pattern black-white-black-white-black
+      if (
+        scanlineBits[0] === 1 &&
+        scanlineBits[1] === 0 &&
+        scanlineBits[2] === 1 &&
+        scanlineBits[3] === 0 &&
+        scanlineBits[4] === 1
+      ) {
         this.match(x, y, scanline, scanline[2]);
       }
     };
@@ -133,6 +140,7 @@ export class FinderPatternFinder extends PatternFinder {
       let lastBit = matrix.get(x, y);
 
       const scanline = [0, 0, 0, 0, 0];
+      const scanlineBits = [0, 0, 0, 0, 0];
 
       while (x < right) {
         const bit = matrix.get(x, y);
@@ -140,7 +148,7 @@ export class FinderPatternFinder extends PatternFinder {
         if (bit === lastBit) {
           count++;
         } else {
-          match(x, y, lastBit, scanline, count);
+          match(x, y, scanline, count, scanlineBits, lastBit);
 
           count = 1;
           lastBit = bit;
@@ -149,7 +157,7 @@ export class FinderPatternFinder extends PatternFinder {
         x++;
       }
 
-      match(x, y, lastBit, scanline, count);
+      match(x, y, scanline, count, scanlineBits, lastBit);
     }
   }
 }

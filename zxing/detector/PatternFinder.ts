@@ -12,6 +12,10 @@ export interface Matcher {
   (scanline: number[]): boolean;
 }
 
+export interface MatchAction {
+  (x: number, y: number, scanline: number[], count: number, scanlineBits: number[], lastBit: number): void;
+}
+
 export class PatternFinder {
   #modules: number;
   #matcher: Matcher;

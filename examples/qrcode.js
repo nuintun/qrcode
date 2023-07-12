@@ -3874,90 +3874,6 @@
   }
 
   /**
-   * @module Pattern
-   */
-  class Pattern extends Point {
-    #noise;
-    #width;
-    #height;
-    #modules;
-    #rect;
-    #combined = 1;
-    #moduleSize;
-    constructor(x, y, width, height, modules, noise) {
-      super(x, y);
-      const halfWidth = width / 2;
-      const halfHeight = height / 2;
-      const xModuleSize = width / modules;
-      const yModuleSize = height / modules;
-      const xModuleSizeHalf = xModuleSize / 2;
-      const yModuleSizeHalf = yModuleSize / 2;
-      this.#noise = noise;
-      this.#width = width;
-      this.#height = height;
-      this.#modules = modules;
-      this.#rect = [
-        x - halfWidth + xModuleSizeHalf,
-        y - halfHeight + yModuleSizeHalf,
-        x + halfWidth - xModuleSizeHalf,
-        y + halfHeight - yModuleSizeHalf
-      ];
-      this.#moduleSize = [xModuleSize, yModuleSize];
-    }
-    get noise() {
-      return this.#noise;
-    }
-    get width() {
-      return this.#width;
-    }
-    get height() {
-      return this.#height;
-    }
-    get combined() {
-      return this.#combined;
-    }
-    get rect() {
-      return this.#rect;
-    }
-    get moduleSize() {
-      return this.#moduleSize;
-    }
-    equals(x, y, width, height) {
-      const modules = this.#modules;
-      const xModuleSize = width / modules;
-      if (Math.abs(x - this.x) <= xModuleSize) {
-        const moduleSize = this.#moduleSize;
-        const [xModuleSizeThis] = moduleSize;
-        const xModuleSizeDiff = Math.abs(xModuleSize - xModuleSizeThis);
-        if (xModuleSizeDiff >= 1 && xModuleSizeDiff > xModuleSizeThis) {
-          return false;
-        }
-        const yModuleSize = height / modules;
-        if (Math.abs(y - this.y) <= yModuleSize) {
-          const [, yModuleSizeThis] = moduleSize;
-          const yModuleSizeDiff = Math.abs(yModuleSize - yModuleSizeThis);
-          if (yModuleSizeDiff < 1 || yModuleSizeDiff <= yModuleSizeThis) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-    combine(x, y, width, height, noise) {
-      const combined = this.#combined;
-      const nextCombined = combined + 1;
-      const combinedX = (combined * this.x + x) / nextCombined;
-      const combinedY = (combined * this.y + y) / nextCombined;
-      const combinedNoise = (combined * this.#noise + noise) / nextCombined;
-      const combinedWidth = (combined * this.#width + width) / nextCombined;
-      const combinedHeight = (combined * this.#height + height) / nextCombined;
-      const pattern = new Pattern(combinedX, combinedY, combinedWidth, combinedHeight, this.#modules, combinedNoise);
-      pattern.#combined = nextCombined;
-      return pattern;
-    }
-  }
-
-  /**
    * @module scanline
    */
   function sumScanlineNonzero(scanline) {
@@ -4084,6 +4000,239 @@
       noise += diff * diff;
     }
     return [noise, average];
+  }
+
+  /**
+   * @module timing
+   */
+  function calculateTimingRatio(axis, control) {
+    return control > axis ? 1 : control < axis ? -1 : 0;
+  }
+  function getTimingPointXAxis({ x, rect }, ratio) {
+    const [left, , right] = rect;
+    return ratio > 0 ? right : ratio < 0 ? left : x;
+  }
+  function getTimingPointYAxis({ y, rect }, ratio) {
+    const [, top, , bottom] = rect;
+    return ratio > 0 ? bottom : ratio < 0 ? top : y;
+  }
+  function calculateTimingLine(start, end, control, isVertical) {
+    const { x: endX, y: endY } = end;
+    const { x: startX, y: startY } = start;
+    const { x: controlX, y: controlY } = control;
+    const xRatio = calculateTimingRatio(endX, controlX);
+    const yRatio = calculateTimingRatio(endY, controlY);
+    const endXTranslate = getTimingPointXAxis(end, xRatio);
+    const endYTranslate = getTimingPointYAxis(end, yRatio);
+    const startXTranslate = getTimingPointXAxis(start, xRatio);
+    const startYTranslate = getTimingPointYAxis(start, yRatio);
+    if (xRatio === 0 || yRatio === 0) {
+      return [new Point(startXTranslate, startYTranslate), new Point(endXTranslate, endYTranslate)];
+    }
+    if (isVertical ? xRatio === yRatio : xRatio !== yRatio) {
+      return [new Point(startX, startYTranslate), new Point(endX, endYTranslate)];
+    }
+    return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
+  }
+  function checkPixelsInTimingLine(matrix, { topLeft, topRight, bottomLeft, moduleSize }, isVertical) {
+    const [start, end] = isVertical
+      ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
+      : calculateTimingLine(topLeft, topRight, bottomLeft);
+    const points = new PlotLine(start, end).points();
+    const maxRepeatPixels = Math.ceil(moduleSize[isVertical ? 1 : 0] * 3);
+    let count = 0;
+    let modules = 0;
+    let lastBit = matrix.get(toInt32(start.x), toInt32(start.y));
+    for (const [x, y] of points) {
+      const bit = matrix.get(x, y);
+      if (bit === lastBit) {
+        count++;
+      } else {
+        modules++;
+        if ((modules > 1 && count > maxRepeatPixels) || modules > 165) {
+          return false;
+        }
+        count = 1;
+        lastBit = bit;
+      }
+    }
+    return modules >= 7;
+  }
+
+  /**
+   * @module FinderPatternGroup
+   */
+  function crossProductZ(pattern1, pattern2, pattern3) {
+    const { x, y } = pattern2;
+    return (pattern3.x - x) * (pattern1.y - y) - (pattern3.y - y) * (pattern1.x - x);
+  }
+  function orderFinderPatterns(patterns) {
+    let topLeft;
+    let topRight;
+    let bottomLeft;
+    // Find distances between pattern centers
+    const [pattern1, pattern2, pattern3] = patterns;
+    const oneTwoDistance = distance(pattern1, pattern2);
+    const twoThreeDistance = distance(pattern2, pattern3);
+    const oneThreeDistance = distance(pattern1, pattern3);
+    // Assume one closest to other two is B; A and C will just be guesses at first
+    if (twoThreeDistance >= oneTwoDistance && twoThreeDistance >= oneThreeDistance) {
+      [topLeft, bottomLeft, topRight] = patterns;
+    } else if (oneThreeDistance >= twoThreeDistance && oneThreeDistance >= oneTwoDistance) {
+      [bottomLeft, topLeft, topRight] = patterns;
+    } else {
+      [bottomLeft, topRight, topLeft] = patterns;
+    }
+    // Use cross product to figure out whether A and C are correct or flipped.
+    // This asks whether BC x BA has a positive z component, which is the arrangement
+    // we want for A, B, C. If it's negative, then we've got it flipped around and
+    // should swap A and C.
+    if (crossProductZ(bottomLeft, topLeft, topRight) < 0) {
+      [bottomLeft, topRight] = [topRight, bottomLeft];
+    }
+    return [topLeft, topRight, bottomLeft];
+  }
+  function calculateSymbolSize([topLeft, topRight, bottomLeft], moduleSize) {
+    const width = distance(topLeft, topRight);
+    const height = distance(topLeft, bottomLeft);
+    const moduleSizeAvg = calculateModuleSize(moduleSize);
+    const size = round((width + height) / 2 / moduleSizeAvg) + 7;
+    // mod 4
+    switch (size & 0x03) {
+      case 0:
+        return size + 1;
+      case 2:
+        return size - 1;
+      case 3:
+        if (size + 2 <= MAX_VERSION_SIZE) {
+          return size + 2;
+        }
+        if (size - 2 >= MIN_VERSION_SIZE) {
+          return size - 2;
+        }
+        return NaN;
+    }
+    return size;
+  }
+  class FinderPatternGroup {
+    #size;
+    #matrix;
+    #patterns;
+    #moduleSize;
+    constructor(matrix, patterns) {
+      this.#matrix = matrix;
+      this.#patterns = orderFinderPatterns(patterns);
+    }
+    get topLeft() {
+      return this.#patterns[0];
+    }
+    get topRight() {
+      return this.#patterns[1];
+    }
+    get bottomLeft() {
+      return this.#patterns[2];
+    }
+    get moduleSize() {
+      if (this.#moduleSize == null) {
+        const matrix = this.#matrix;
+        const [topLeft, topRight, bottomLeft] = this.#patterns;
+        this.#moduleSize = [
+          calculateModuleSizeOneWay(matrix, topLeft, topRight),
+          calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)
+        ];
+      }
+      return this.#moduleSize;
+    }
+    get size() {
+      if (this.#size == null) {
+        this.#size = calculateSymbolSize(this.#patterns, this.moduleSize);
+      }
+      return this.#size;
+    }
+  }
+
+  /**
+   * @module Pattern
+   */
+  class Pattern extends Point {
+    #noise;
+    #width;
+    #height;
+    #modules;
+    #rect;
+    #combined = 1;
+    #moduleSize;
+    constructor(x, y, width, height, modules, noise) {
+      super(x, y);
+      const halfWidth = width / 2;
+      const halfHeight = height / 2;
+      const xModuleSize = width / modules;
+      const yModuleSize = height / modules;
+      const xModuleSizeHalf = xModuleSize / 2;
+      const yModuleSizeHalf = yModuleSize / 2;
+      this.#noise = noise;
+      this.#width = width;
+      this.#height = height;
+      this.#modules = modules;
+      this.#rect = [
+        x - halfWidth + xModuleSizeHalf,
+        y - halfHeight + yModuleSizeHalf,
+        x + halfWidth - xModuleSizeHalf,
+        y + halfHeight - yModuleSizeHalf
+      ];
+      this.#moduleSize = [xModuleSize, yModuleSize];
+    }
+    get noise() {
+      return this.#noise;
+    }
+    get width() {
+      return this.#width;
+    }
+    get height() {
+      return this.#height;
+    }
+    get combined() {
+      return this.#combined;
+    }
+    get rect() {
+      return this.#rect;
+    }
+    get moduleSize() {
+      return this.#moduleSize;
+    }
+    equals(x, y, width, height) {
+      const modules = this.#modules;
+      const xModuleSize = width / modules;
+      if (Math.abs(x - this.x) <= xModuleSize) {
+        const moduleSize = this.#moduleSize;
+        const [xModuleSizeThis] = moduleSize;
+        const xModuleSizeDiff = Math.abs(xModuleSize - xModuleSizeThis);
+        if (xModuleSizeDiff >= 1 && xModuleSizeDiff > xModuleSizeThis) {
+          return false;
+        }
+        const yModuleSize = height / modules;
+        if (Math.abs(y - this.y) <= yModuleSize) {
+          const [, yModuleSizeThis] = moduleSize;
+          const yModuleSizeDiff = Math.abs(yModuleSize - yModuleSizeThis);
+          if (yModuleSizeDiff < 1 || yModuleSizeDiff <= yModuleSizeThis) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+    combine(x, y, width, height, noise) {
+      const combined = this.#combined;
+      const nextCombined = combined + 1;
+      const combinedX = (combined * this.x + x) / nextCombined;
+      const combinedY = (combined * this.y + y) / nextCombined;
+      const combinedNoise = (combined * this.#noise + noise) / nextCombined;
+      const combinedWidth = (combined * this.#width + width) / nextCombined;
+      const combinedHeight = (combined * this.#height + height) / nextCombined;
+      const pattern = new Pattern(combinedX, combinedY, combinedWidth, combinedHeight, this.#modules, combinedNoise);
+      pattern.#combined = nextCombined;
+      return pattern;
+    }
   }
 
   /**
@@ -4250,155 +4399,6 @@
   }
 
   /**
-   * @module timing
-   */
-  function calculateTimingRatio(axis, control) {
-    return control > axis ? 1 : control < axis ? -1 : 0;
-  }
-  function getTimingPointXAxis({ x, rect }, ratio) {
-    const [left, , right] = rect;
-    return ratio > 0 ? right : ratio < 0 ? left : x;
-  }
-  function getTimingPointYAxis({ y, rect }, ratio) {
-    const [, top, , bottom] = rect;
-    return ratio > 0 ? bottom : ratio < 0 ? top : y;
-  }
-  function calculateTimingLine(start, end, control, isVertical) {
-    const { x: endX, y: endY } = end;
-    const { x: startX, y: startY } = start;
-    const { x: controlX, y: controlY } = control;
-    const xRatio = calculateTimingRatio(endX, controlX);
-    const yRatio = calculateTimingRatio(endY, controlY);
-    const endXTranslate = getTimingPointXAxis(end, xRatio);
-    const endYTranslate = getTimingPointYAxis(end, yRatio);
-    const startXTranslate = getTimingPointXAxis(start, xRatio);
-    const startYTranslate = getTimingPointYAxis(start, yRatio);
-    if (xRatio === 0 || yRatio === 0) {
-      return [new Point(startXTranslate, startYTranslate), new Point(endXTranslate, endYTranslate)];
-    }
-    if (isVertical ? xRatio === yRatio : xRatio !== yRatio) {
-      return [new Point(startX, startYTranslate), new Point(endX, endYTranslate)];
-    }
-    return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
-  }
-  function checkPixelsInTimingLine(matrix, { topLeft, topRight, bottomLeft, moduleSize }, isVertical) {
-    const [start, end] = isVertical
-      ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
-      : calculateTimingLine(topLeft, topRight, bottomLeft);
-    const points = new PlotLine(start, end).points();
-    const maxRepeatPixels = Math.ceil(moduleSize[isVertical ? 1 : 0] * 3);
-    let count = 0;
-    let modules = 0;
-    let lastBit = matrix.get(toInt32(start.x), toInt32(start.y));
-    for (const [x, y] of points) {
-      const bit = matrix.get(x, y);
-      if (bit === lastBit) {
-        count++;
-      } else {
-        modules++;
-        if ((modules > 1 && count > maxRepeatPixels) || modules > 165) {
-          return false;
-        }
-        count = 1;
-        lastBit = bit;
-      }
-    }
-    return modules >= 7;
-  }
-
-  /**
-   * @module FinderPatternGroup
-   */
-  function crossProductZ(pattern1, pattern2, pattern3) {
-    const { x, y } = pattern2;
-    return (pattern3.x - x) * (pattern1.y - y) - (pattern3.y - y) * (pattern1.x - x);
-  }
-  function orderFinderPatterns(patterns) {
-    let topLeft;
-    let topRight;
-    let bottomLeft;
-    // Find distances between pattern centers
-    const [pattern1, pattern2, pattern3] = patterns;
-    const oneTwoDistance = distance(pattern1, pattern2);
-    const twoThreeDistance = distance(pattern2, pattern3);
-    const oneThreeDistance = distance(pattern1, pattern3);
-    // Assume one closest to other two is B; A and C will just be guesses at first
-    if (twoThreeDistance >= oneTwoDistance && twoThreeDistance >= oneThreeDistance) {
-      [topLeft, bottomLeft, topRight] = patterns;
-    } else if (oneThreeDistance >= twoThreeDistance && oneThreeDistance >= oneTwoDistance) {
-      [bottomLeft, topLeft, topRight] = patterns;
-    } else {
-      [bottomLeft, topRight, topLeft] = patterns;
-    }
-    // Use cross product to figure out whether A and C are correct or flipped.
-    // This asks whether BC x BA has a positive z component, which is the arrangement
-    // we want for A, B, C. If it's negative, then we've got it flipped around and
-    // should swap A and C.
-    if (crossProductZ(bottomLeft, topLeft, topRight) < 0) {
-      [bottomLeft, topRight] = [topRight, bottomLeft];
-    }
-    return [topLeft, topRight, bottomLeft];
-  }
-  function calculateSymbolSize([topLeft, topRight, bottomLeft], moduleSize) {
-    const width = distance(topLeft, topRight);
-    const height = distance(topLeft, bottomLeft);
-    const moduleSizeAvg = calculateModuleSize(moduleSize);
-    const size = round((width + height) / 2 / moduleSizeAvg) + 7;
-    // mod 4
-    switch (size & 0x03) {
-      case 0:
-        return size + 1;
-      case 2:
-        return size - 1;
-      case 3:
-        if (size + 2 <= MAX_VERSION_SIZE) {
-          return size + 2;
-        }
-        if (size - 2 >= MIN_VERSION_SIZE) {
-          return size - 2;
-        }
-        return NaN;
-    }
-    return size;
-  }
-  class FinderPatternGroup {
-    #size;
-    #matrix;
-    #patterns;
-    #moduleSize;
-    constructor(matrix, patterns) {
-      this.#matrix = matrix;
-      this.#patterns = orderFinderPatterns(patterns);
-    }
-    get topLeft() {
-      return this.#patterns[0];
-    }
-    get topRight() {
-      return this.#patterns[1];
-    }
-    get bottomLeft() {
-      return this.#patterns[2];
-    }
-    get moduleSize() {
-      if (this.#moduleSize == null) {
-        const matrix = this.#matrix;
-        const [topLeft, topRight, bottomLeft] = this.#patterns;
-        this.#moduleSize = [
-          calculateModuleSizeOneWay(matrix, topLeft, topRight),
-          calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)
-        ];
-      }
-      return this.#moduleSize;
-    }
-    get size() {
-      if (this.#size == null) {
-        this.#size = calculateSymbolSize(this.#patterns, this.moduleSize);
-      }
-      return this.#size;
-    }
-  }
-
-  /**
    * @module FinderPatternFinder
    */
   class FinderPatternFinder extends PatternFinder {
@@ -4483,10 +4483,17 @@
       const { matrix } = this;
       const right = left + width;
       const bottom = top + height;
-      const match = (x, y, lastBit, scanline, count) => {
+      const match = (x, y, scanline, count, scanlineBits, lastBit) => {
         scanlineUpdate(scanline, count);
-        // Match pattern
-        if (lastBit) {
+        scanlineUpdate(scanlineBits, lastBit);
+        // Match pattern black-white-black-white-black
+        if (
+          scanlineBits[0] === 1 &&
+          scanlineBits[1] === 0 &&
+          scanlineBits[2] === 1 &&
+          scanlineBits[3] === 0 &&
+          scanlineBits[4] === 1
+        ) {
           this.match(x, y, scanline, scanline[2]);
         }
       };
@@ -4501,18 +4508,19 @@
         let count = 0;
         let lastBit = matrix.get(x, y);
         const scanline = [0, 0, 0, 0, 0];
+        const scanlineBits = [0, 0, 0, 0, 0];
         while (x < right) {
           const bit = matrix.get(x, y);
           if (bit === lastBit) {
             count++;
           } else {
-            match(x, y, lastBit, scanline, count);
+            match(x, y, scanline, count, scanlineBits, lastBit);
             count = 1;
             lastBit = bit;
           }
           x++;
         }
-        match(x, y, lastBit, scanline, count);
+        match(x, y, scanline, count, scanlineBits, lastBit);
       }
     }
   }
@@ -4546,10 +4554,11 @@
       const { matrix } = this;
       const right = left + width;
       const bottom = top + height;
-      const match = (x, y, lastBit, scanline, count) => {
+      const match = (x, y, scanline, count, scanlineBits, lastBit) => {
         scanlineUpdate(scanline, count);
-        // Match pattern
-        if (!lastBit) {
+        scanlineUpdate(scanlineBits, lastBit);
+        // Match pattern when white-black-white
+        if (scanlineBits[0] === 0 && scanlineBits[1] === 1 && scanlineBits[2] === 0) {
           this.match(x, y, scanline, scanline[1]);
         }
       };
@@ -4564,18 +4573,19 @@
         let count = 0;
         let lastBit = matrix.get(x, y);
         const scanline = [0, 0, 0];
+        const scanlineBits = [0, 0, 0];
         while (x < right) {
           const bit = matrix.get(x, y);
           if (bit === lastBit) {
             count++;
           } else {
-            match(x, y, lastBit, scanline, count);
+            match(x, y, scanline, count, scanlineBits, lastBit);
             count = 1;
             lastBit = bit;
           }
           x++;
         }
-        match(x, y, lastBit, scanline, count);
+        match(x, y, scanline, count, scanlineBits, lastBit);
       }
     }
   }
