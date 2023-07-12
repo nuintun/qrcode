@@ -307,10 +307,11 @@
         context.restore();
       }
 
-      function drawLine({ x: x1, y: y1 }, { x: x2, y: y2 }, color) {
+      function drawLine({ x: x1, y: y1 }, { x: x2, y: y2 }, color = '#00ff00', lineWidth = 1) {
         context.save();
 
         context.strokeStyle = color;
+        context.lineWidth = lineWidth;
 
         context.beginPath();
         context.moveTo(x1, y1);
@@ -443,6 +444,17 @@
 
             decodeResult.html(content);
 
+            const { size } = detect;
+            const topLeftCorner = detect.mapping(0, 0);
+            const topRightCorner = detect.mapping(size, 0);
+            const bottomLeftCorner = detect.mapping(0, size);
+            const bottomRightCorner = detect.mapping(size, size);
+
+            drawLine(topLeftCorner, topRightCorner, '#00ff00');
+            drawLine(topRightCorner, bottomRightCorner, '#00ff00');
+            drawLine(bottomRightCorner, bottomLeftCorner, '#00ff00');
+            drawLine(bottomLeftCorner, topLeftCorner, '#00ff00');
+
             const [timing11, timing12] = calculateTimingLine(topLeft, topRight, bottomLeft);
             const [timing21, timing22] = calculateTimingLine(topLeft, bottomLeft, topRight, true);
 
@@ -463,6 +475,7 @@
             matrixBox.append(drawMatrix(matrix), '&nbsp;&nbsp;');
 
             console.group();
+            console.dir(detect);
             console.dir(matrix);
             console.dir(finder);
 

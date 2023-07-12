@@ -60,28 +60,6 @@ export class PerspectiveTransform {
     );
   }
 
-  public transformPoints(points: number[]): void {
-    const a11 = this.#a11;
-    const a12 = this.#a12;
-    const a13 = this.#a13;
-    const a21 = this.#a21;
-    const a22 = this.#a22;
-    const a23 = this.#a23;
-    const a31 = this.#a31;
-    const a32 = this.#a32;
-    const a33 = this.#a33;
-    const maxI = points.length - 1;
-
-    for (let i = 0; i < maxI; i += 2) {
-      const x = points[i];
-      const y = points[i + 1];
-      const denominator = a13 * x + a23 * y + a33;
-
-      points[i] = (a11 * x + a21 * y + a31) / denominator;
-      points[i + 1] = (a12 * x + a22 * y + a32) / denominator;
-    }
-  }
-
   public times(other: PerspectiveTransform): PerspectiveTransform {
     const a11 = this.#a11;
     const a12 = this.#a12;
@@ -113,6 +91,21 @@ export class PerspectiveTransform {
       a13 * b21 + a23 * b22 + a33 * b23,
       a13 * b31 + a23 * b32 + a33 * b33
     );
+  }
+
+  public mapping(x: number, y: number): [x: number, y: number] {
+    const a11 = this.#a11;
+    const a12 = this.#a12;
+    const a13 = this.#a13;
+    const a21 = this.#a21;
+    const a22 = this.#a22;
+    const a23 = this.#a23;
+    const a31 = this.#a31;
+    const a32 = this.#a32;
+    const a33 = this.#a33;
+    const denominator = a13 * x + a23 * y + a33;
+
+    return [(a11 * x + a21 * y + a31) / denominator, (a12 * x + a22 * y + a32) / denominator];
   }
 }
 

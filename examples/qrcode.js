@@ -3403,89 +3403,58 @@
   }
 
   /**
+   * @module Point
+   */
+  class Point {
+    #x;
+    #y;
+    constructor(x, y) {
+      this.#x = x;
+      this.#y = y;
+    }
+    get x() {
+      return this.#x;
+    }
+    get y() {
+      return this.#y;
+    }
+  }
+  function distance(a, b) {
+    const xDiff = a.x - b.x;
+    const yDiff = a.y - b.y;
+    return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+  }
+
+  /**
    * @module GridSampler
    */
   class GridSampler {
     #matrix;
-    constructor(matrix) {
+    #transform;
+    constructor(matrix, transform) {
       this.#matrix = matrix;
+      this.#transform = transform;
     }
-    #checkAndNudgePoints(points) {
-      let nudged = true;
-      const { length } = points;
+    sample(width, height) {
       const matrix = this.#matrix;
-      const maxOffset = length - 1;
-      const { width, height } = matrix;
-      // Check and nudge points from start until we see some that are OK:
-      for (let offset = 0; offset < maxOffset && nudged; offset += 2) {
-        nudged = false;
-        const x = toInt32(points[offset]);
-        const y = toInt32(points[offset + 1]);
-        if (x === -1) {
-          nudged = true;
-          points[offset] = 0;
-        } else if (x === width) {
-          nudged = true;
-          points[offset] = width - 1;
-        }
-        if (y === -1) {
-          nudged = true;
-          points[offset + 1] = 0;
-        } else if (y === height) {
-          nudged = true;
-          points[offset + 1] = height - 1;
-        }
-      }
-      nudged = true;
-      // Check and nudge points from end
-      for (let offset = length - 2; offset >= 0 && nudged; offset -= 2) {
-        nudged = false;
-        const x = toInt32(points[offset]);
-        const y = toInt32(points[offset + 1]);
-        if (x === -1) {
-          nudged = true;
-          points[offset] = 0;
-        } else if (x === width) {
-          nudged = true;
-          points[offset] = width - 1;
-        }
-        if (y === -1) {
-          nudged = true;
-          points[offset + 1] = 0;
-        } else if (y === height) {
-          nudged = true;
-          points[offset + 1] = height - 1;
-        }
-      }
-    }
-    sampleGrid(width, height, transform) {
-      const maxX = 2 * width;
-      const matrix = this.#matrix;
-      const points = [];
       const matrixWidth = matrix.width;
+      const transform = this.#transform;
       const matrixHeight = matrix.height;
       const bits = new BitMatrix(width, height);
       for (let y = 0; y < height; y++) {
-        const value = y + 0.5;
-        for (let x = 0; x < maxX; x += 2) {
-          points[x] = x / 2 + 0.5;
-          points[x + 1] = value;
-        }
-        transform.transformPoints(points);
-        this.#checkAndNudgePoints(points);
-        for (let x = 0; x < maxX; x += 2) {
-          const offsetX = toInt32(points[x]);
-          const offsetY = toInt32(points[x + 1]);
+        for (let x = 0; x < width; x++) {
+          const [mappingX, mappingY] = transform.mapping(x + 0.5, y + 0.5);
+          const offsetX = toInt32(mappingX);
+          const offsetY = toInt32(mappingY);
           if (
-            // Check coordinate range
+            // Assert axis
             offsetX >= 0 &&
             offsetY >= 0 &&
             offsetX < matrixWidth &&
             offsetY < matrixHeight &&
             matrix.get(offsetX, offsetY)
           ) {
-            // Black(-ish) pixel
-            bits.set(x / 2, y);
+            bits.set(x, y);
           }
         }
       }
@@ -3540,25 +3509,6 @@
         a11 * a22 - a12 * a21
       );
     }
-    transformPoints(points) {
-      const a11 = this.#a11;
-      const a12 = this.#a12;
-      const a13 = this.#a13;
-      const a21 = this.#a21;
-      const a22 = this.#a22;
-      const a23 = this.#a23;
-      const a31 = this.#a31;
-      const a32 = this.#a32;
-      const a33 = this.#a33;
-      const maxI = points.length - 1;
-      for (let i = 0; i < maxI; i += 2) {
-        const x = points[i];
-        const y = points[i + 1];
-        const denominator = a13 * x + a23 * y + a33;
-        points[i] = (a11 * x + a21 * y + a31) / denominator;
-        points[i + 1] = (a12 * x + a22 * y + a32) / denominator;
-      }
-    }
     times(other) {
       const a11 = this.#a11;
       const a12 = this.#a12;
@@ -3589,6 +3539,19 @@
         a13 * b21 + a23 * b22 + a33 * b23,
         a13 * b31 + a23 * b32 + a33 * b33
       );
+    }
+    mapping(x, y) {
+      const a11 = this.#a11;
+      const a12 = this.#a12;
+      const a13 = this.#a13;
+      const a21 = this.#a21;
+      const a22 = this.#a22;
+      const a23 = this.#a23;
+      const a31 = this.#a31;
+      const a32 = this.#a32;
+      const a33 = this.#a33;
+      const denominator = a13 * x + a23 * y + a33;
+      return [(a11 * x + a21 * y + a31) / denominator, (a12 * x + a22 * y + a32) / denominator];
     }
   }
   function squareToQuadrilateral(x0, y0, x1, y1, x2, y2, x3, y3) {
@@ -3677,12 +3640,23 @@
   class Detect {
     #matrix;
     #alignment;
-    #extract;
     #finder;
+    #transform;
     constructor(matrix, finder, alignment) {
+      const transform = createTransform(finder, alignment);
+      const sampler = new GridSampler(matrix, transform);
+      const { size } = finder;
       this.#finder = finder;
       this.#matrix = matrix;
       this.#alignment = alignment;
+      this.#transform = transform;
+      this.#matrix = sampler.sample(size, size);
+    }
+    get size() {
+      return this.#finder.size;
+    }
+    get matrix() {
+      return this.#matrix;
     }
     get finder() {
       return this.#finder;
@@ -3690,41 +3664,9 @@
     get alignment() {
       return this.#alignment;
     }
-    get matrix() {
-      let extract = this.#extract;
-      if (extract) {
-        return extract;
-      }
-      const sampler = new GridSampler(this.#matrix);
-      const finder = this.#finder;
-      const { size } = finder;
-      extract = sampler.sampleGrid(size, size, createTransform(finder, this.#alignment));
-      this.#extract = extract;
-      return extract;
+    mapping(x, y) {
+      return new Point(...this.#transform.mapping(x, y));
     }
-  }
-
-  /**
-   * @module Point
-   */
-  class Point {
-    #x;
-    #y;
-    constructor(x, y) {
-      this.#x = x;
-      this.#y = y;
-    }
-    get x() {
-      return this.#x;
-    }
-    get y() {
-      return this.#y;
-    }
-  }
-  function distance(a, b) {
-    const xDiff = a.x - b.x;
-    const yDiff = a.y - b.y;
-    return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
   }
 
   /**
