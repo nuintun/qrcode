@@ -3822,8 +3822,8 @@
   /**
    * @module module
    */
-  function calculateModuleSize(moduleSize) {
-    return (moduleSize[0] + moduleSize[1]) / 2;
+  function calculateModuleSize([xModuleSize, yModuleSize]) {
+    return (xModuleSize + yModuleSize) / 2;
   }
   function sizeOfBlackWhiteBlackRun(matrix, from, to) {
     const line = new PlotLine(from, to);
@@ -4132,7 +4132,6 @@
     const height = distance(topLeft, bottomLeft);
     const moduleSizeAvg = calculateModuleSize(moduleSize);
     const size = round((width + height) / 2 / moduleSizeAvg) + 7;
-    // mod 4
     switch (size & 0x03) {
       case 0:
         return size + 1;
@@ -4359,13 +4358,9 @@
     *groups() {
       const patterns = this.patterns.filter(({ combined }) => combined >= 3);
       const { length } = patterns;
-      // Find enough finder patterns
       if (length >= 3) {
-        // Max i1
         const maxI1 = length - 2;
-        // Max i2
         const maxI2 = length - 1;
-        // Used patterns
         const used = new Map();
         for (let i1 = 0; i1 < maxI1; i1++) {
           const pattern1 = patterns[i1];
@@ -4547,14 +4542,14 @@
   /**
    * @module Detector
    */
-  function getExpectAlignment({ size, moduleSize, topLeft, topRight, bottomLeft }) {
+  function getExpectAlignment({ size, topLeft, topRight, bottomLeft, moduleSize: [xModuleSize, yModuleSize] }) {
     const { x, y } = topLeft;
     const correctionToTopLeft = 1 - 3 / (size - 7);
     const bottomRightX = topRight.x + bottomLeft.x - x;
     const bottomRightY = topRight.y + bottomLeft.y - y;
     const expectAlignmentX = x + correctionToTopLeft * (bottomRightX - x);
     const expectAlignmentY = y + correctionToTopLeft * (bottomRightY - y);
-    return new Pattern(expectAlignmentX, expectAlignmentY, moduleSize[0] * 5, moduleSize[1] * 5, 5, 0);
+    return new Pattern(expectAlignmentX, expectAlignmentY, xModuleSize * 5, yModuleSize * 5, 5, 0);
   }
   function findAlignmentInRegion(matrix, finderPatternGroup, strict) {
     const { size, moduleSize } = finderPatternGroup;

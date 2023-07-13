@@ -16,7 +16,13 @@ export interface Options {
   strict?: boolean;
 }
 
-function getExpectAlignment({ size, moduleSize, topLeft, topRight, bottomLeft }: FinderPatternGroup): Pattern {
+function getExpectAlignment({
+  size,
+  topLeft,
+  topRight,
+  bottomLeft,
+  moduleSize: [xModuleSize, yModuleSize]
+}: FinderPatternGroup): Pattern {
   const { x, y } = topLeft;
   const correctionToTopLeft = 1 - 3 / (size - 7);
   const bottomRightX = topRight.x + bottomLeft.x - x;
@@ -24,7 +30,7 @@ function getExpectAlignment({ size, moduleSize, topLeft, topRight, bottomLeft }:
   const expectAlignmentX = x + correctionToTopLeft * (bottomRightX - x);
   const expectAlignmentY = y + correctionToTopLeft * (bottomRightY - y);
 
-  return new Pattern(expectAlignmentX, expectAlignmentY, moduleSize[0] * 5, moduleSize[1] * 5, 5, 0);
+  return new Pattern(expectAlignmentX, expectAlignmentY, xModuleSize * 5, yModuleSize * 5, 5, 0);
 }
 
 function findAlignmentInRegion(matrix: BitMatrix, finderPatternGroup: FinderPatternGroup, strict?: boolean): Pattern[] {

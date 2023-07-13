@@ -61,7 +61,6 @@ function calculateSymbolSize([topLeft, topRight, bottomLeft]: OrderedPatterns, m
   const moduleSizeAvg = calculateModuleSize(moduleSize);
   const size = round((width + height) / 2 / moduleSizeAvg) + 7;
 
-  // mod 4
   switch (size & 0x03) {
     case 0:
       return size + 1;

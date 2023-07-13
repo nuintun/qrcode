@@ -22,13 +22,9 @@ export class FinderPatternFinder extends PatternFinder {
     const patterns = this.patterns.filter(({ combined }) => combined >= 3);
     const { length } = patterns;
 
-    // Find enough finder patterns
     if (length >= 3) {
-      // Max i1
       const maxI1 = length - 2;
-      // Max i2
       const maxI2 = length - 1;
-      // Used patterns
       const used = new Map<Pattern, boolean>();
 
       for (let i1 = 0; i1 < maxI1; i1++) {
