@@ -3275,7 +3275,7 @@
    * @module binarizer
    */
   const REGION_SIZE = 8;
-  const MIN_DYNAMIC_RANGE = 24;
+  const MIN_DYNAMIC_RANGE = 28;
   function between(value, min, max) {
     return value < min ? min : value > max ? max : value;
   }
