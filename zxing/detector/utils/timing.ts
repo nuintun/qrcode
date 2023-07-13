@@ -49,17 +49,19 @@ function calculateTimingLine(start: Pattern, end: Pattern, control: Pattern, isV
 
 export function checkPixelsInTimingLine(
   matrix: BitMatrix,
-  { topLeft, topRight, bottomLeft, moduleSize }: FinderPatternGroup,
+  { topLeft, topRight, bottomLeft, moduleSize: [xModuleSize, yModuleSize] }: FinderPatternGroup,
   isVertical?: boolean
 ): [passed: boolean, modules: number] {
   const [start, end] = isVertical
     ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
     : calculateTimingLine(topLeft, topRight, bottomLeft);
+  const moduleSize = isVertical ? yModuleSize : xModuleSize;
+  const maxRepeatPixels = Math.ceil(moduleSize * 3);
   const points = new PlotLine(start, end).points();
-  const maxRepeatPixels = Math.ceil(moduleSize[isVertical ? 1 : 0] * 3);
 
   let count = 0;
-  let modules = 0;
+  let pixels = 0;
+  let switchTimes = 0;
   let lastBit = matrix.get(toInt32(start.x), toInt32(start.y));
 
   for (const [x, y] of points) {
@@ -68,10 +70,11 @@ export function checkPixelsInTimingLine(
     if (bit === lastBit) {
       count++;
     } else {
-      modules++;
+      switchTimes++;
+      pixels += count;
 
-      if ((modules > 1 && count > maxRepeatPixels) || modules > 165) {
-        return [false, modules];
+      if ((switchTimes > 1 && count > maxRepeatPixels) || switchTimes > 165) {
+        return [false, pixels / moduleSize];
       }
 
       count = 1;
@@ -79,5 +82,7 @@ export function checkPixelsInTimingLine(
     }
   }
 
-  return [modules >= 7, modules];
+  pixels += count;
+
+  return [switchTimes >= 7, pixels / moduleSize];
 }

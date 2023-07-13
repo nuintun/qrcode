@@ -4061,29 +4061,37 @@
     }
     return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
   }
-  function checkPixelsInTimingLine(matrix, { topLeft, topRight, bottomLeft, moduleSize }, isVertical) {
+  function checkPixelsInTimingLine(
+    matrix,
+    { topLeft, topRight, bottomLeft, moduleSize: [xModuleSize, yModuleSize] },
+    isVertical
+  ) {
     const [start, end] = isVertical
       ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
       : calculateTimingLine(topLeft, topRight, bottomLeft);
+    const moduleSize = isVertical ? yModuleSize : xModuleSize;
+    const maxRepeatPixels = Math.ceil(moduleSize * 3);
     const points = new PlotLine(start, end).points();
-    const maxRepeatPixels = Math.ceil(moduleSize[isVertical ? 1 : 0] * 3);
     let count = 0;
-    let modules = 0;
+    let pixels = 0;
+    let switchTimes = 0;
     let lastBit = matrix.get(toInt32(start.x), toInt32(start.y));
     for (const [x, y] of points) {
       const bit = matrix.get(x, y);
       if (bit === lastBit) {
         count++;
       } else {
-        modules++;
-        if ((modules > 1 && count > maxRepeatPixels) || modules > 165) {
-          return [false, modules];
+        switchTimes++;
+        pixels += count;
+        if ((switchTimes > 1 && count > maxRepeatPixels) || switchTimes > 165) {
+          return [false, pixels / moduleSize];
         }
         count = 1;
         lastBit = bit;
       }
     }
-    return [modules >= 7, modules];
+    pixels += count;
+    return [switchTimes >= 7, pixels / moduleSize];
   }
 
   /**
@@ -4406,7 +4414,7 @@
                     const [passed1, modules1] = checkPixelsInTimingLine(matrix, finderPatternGroup);
                     if (passed1) {
                       const [passed2, modules2] = checkPixelsInTimingLine(matrix, finderPatternGroup, true);
-                      if (passed2 && Math.abs(modules1 - modules2) <= 12) {
+                      if (passed2 && Math.abs(modules1 - modules2) <= 2) {
                         if (yield finderPatternGroup) {
                           used.set(pattern1, true);
                           used.set(pattern2, true);
