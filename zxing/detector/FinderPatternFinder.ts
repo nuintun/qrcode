@@ -87,7 +87,7 @@ export class FinderPatternFinder extends PatternFinder {
                   if (passed1) {
                     const [passed2, modules2] = checkPixelsInTimingLine(matrix, finderPatternGroup, true);
 
-                    if (passed2 && Math.abs(modules1 - modules2) <= 3) {
+                    if (passed2 && Math.abs(modules1 - modules2) <= 4) {
                       if (yield finderPatternGroup) {
                         used.set(pattern1, true);
                         used.set(pattern2, true);

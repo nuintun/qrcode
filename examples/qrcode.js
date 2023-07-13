@@ -4088,7 +4088,7 @@
         lastBit = bit;
       }
     }
-    return switchTimes >= 7 ? [true, Math.ceil(distance(start, end) / moduleSize)] : [false];
+    return switchTimes >= 7 ? [true, round(distance(start, end) / moduleSize)] : [false];
   }
 
   /**
@@ -4406,7 +4406,7 @@
                     const [passed1, modules1] = checkPixelsInTimingLine(matrix, finderPatternGroup);
                     if (passed1) {
                       const [passed2, modules2] = checkPixelsInTimingLine(matrix, finderPatternGroup, true);
-                      if (passed2 && Math.abs(modules1 - modules2) <= 3) {
+                      if (passed2 && Math.abs(modules1 - modules2) <= 4) {
                         if (yield finderPatternGroup) {
                           used.set(pattern1, true);
                           used.set(pattern2, true);

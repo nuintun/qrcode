@@ -2,11 +2,11 @@
  * @module timing
  */
 
-import { distance, Point } from '/common/Point';
-import { toInt32 } from '/common/utils';
 import { Pattern } from '/detector/Pattern';
 import { PlotLine } from '/common/PlotLine';
 import { BitMatrix } from '/common/BitMatrix';
+import { round, toInt32 } from '/common/utils';
+import { distance, Point } from '/common/Point';
 import { FinderPatternGroup } from '/detector/FinderPatternGroup';
 
 function calculateTimingRatio(axis: number, control: number) {
@@ -80,5 +80,5 @@ export function checkPixelsInTimingLine(
     }
   }
 
-  return switchTimes >= 7 ? [true, Math.ceil(distance(start, end) / moduleSize)] : [false];
+  return switchTimes >= 7 ? [true, round(distance(start, end) / moduleSize)] : [false];
 }
