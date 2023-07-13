@@ -5,7 +5,7 @@
 import { BitMatrix } from './BitMatrix';
 
 const REGION_SIZE = 8;
-const MIN_DYNAMIC_RANGE = 28;
+const MIN_DYNAMIC_RANGE = 24;
 
 function between(value: number, min: number, max: number): number {
   return value < min ? min : value > max ? max : value;
