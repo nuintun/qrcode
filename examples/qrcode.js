@@ -4203,21 +4203,19 @@
     const { length } = scanline;
     const scanlineTotal = sumScanlineNonzero(scanline);
     if (scanlineTotal >= modules) {
+      const middleIndex = toInt32(length / 2);
       const moduleSize = scanlineTotal / modules;
-      if (moduleSize >= 1) {
-        const middleIndex = toInt32(length / 2);
-        const threshold = moduleSize * DIFF_FINDER_PATTERN_RATIO;
-        // Allow less than DIFF_FINDER_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
-        for (let i = 0; i < length; i++) {
-          const count = scanline[i];
-          const ratio = i !== middleIndex ? 1 : 3;
-          const moduleSizeDiff = Math.abs(count - moduleSize * ratio);
-          if (moduleSizeDiff > MAX_SKIP_CHECK_DIFF_MODULE_SIZE && moduleSizeDiff > threshold * ratio) {
-            return false;
-          }
+      const threshold = moduleSize * DIFF_FINDER_PATTERN_RATIO;
+      // Allow less than DIFF_FINDER_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
+      for (let i = 0; i < length; i++) {
+        const count = scanline[i];
+        const ratio = i !== middleIndex ? 1 : 3;
+        const moduleSizeDiff = Math.abs(count - moduleSize * ratio);
+        if (moduleSizeDiff > MAX_SKIP_CHECK_DIFF_MODULE_SIZE && moduleSizeDiff > threshold * ratio) {
+          return false;
         }
-        return true;
       }
+      return true;
     }
     return false;
   }
@@ -4226,17 +4224,15 @@
     const scanlineTotal = sumScanlineNonzero(scanline);
     if (scanlineTotal >= modules) {
       const moduleSize = scanlineTotal / modules;
-      if (moduleSize >= 1) {
-        const threshold = moduleSize * DIFF_ALIGNMENT_PATTERN_RATIO;
-        // Allow less than DIFF_ALIGNMENT_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
-        for (const count of scanline) {
-          const moduleSizeDiff = Math.abs(count - moduleSize);
-          if (moduleSizeDiff > MAX_SKIP_CHECK_DIFF_MODULE_SIZE && moduleSizeDiff > threshold) {
-            return false;
-          }
+      const threshold = moduleSize * DIFF_ALIGNMENT_PATTERN_RATIO;
+      // Allow less than DIFF_ALIGNMENT_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
+      for (const count of scanline) {
+        const moduleSizeDiff = Math.abs(count - moduleSize);
+        if (moduleSizeDiff > MAX_SKIP_CHECK_DIFF_MODULE_SIZE && moduleSizeDiff > threshold) {
+          return false;
         }
-        return true;
       }
+      return true;
     }
     return false;
   }
