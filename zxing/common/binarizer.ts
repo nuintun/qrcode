@@ -58,7 +58,7 @@ export function binarize({ data, width, height }: ImageData): BitMatrix {
         }
       }
 
-      let average = sum / REGION_SIZE ** 2;
+      let average = sum / (REGION_SIZE * REGION_SIZE);
 
       if (max - min <= MIN_DYNAMIC_RANGE) {
         // If variation within the block is low, assume this is a block with only light or only
