@@ -3,8 +3,8 @@
  */
 
 import { Pattern } from './Pattern';
+import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
-import { distance, Point } from '/common/Point';
 import { scanlineUpdate } from './utils/scanline';
 import { MatchAction, PatternFinder } from './PatternFinder';
 import { isEqualsSize, isMatchAlignmentPattern } from './utils/pattern';
@@ -15,7 +15,7 @@ export class AlignmentPatternFinder extends PatternFinder {
     super(matrix, ALIGNMENT_PATTERN_RATIOS, isMatchAlignmentPattern, strict);
   }
 
-  public filter(expectAlignment: Point, moduleSize: number): Pattern[] {
+  public filter(expectAlignment: Pattern, moduleSize: number): Pattern[] {
     const patterns = this.patterns.filter(pattern => {
       const [xModuleSize, yModuleSize] = pattern.moduleSize;
 
@@ -35,7 +35,12 @@ export class AlignmentPatternFinder extends PatternFinder {
     }
 
     // Only use the first two patterns
-    return patterns.slice(0, 2);
+    const alignmentPatterns = patterns.slice(0, 2);
+
+    // Add expect alignment for fallback
+    alignmentPatterns.push(expectAlignment);
+
+    return alignmentPatterns;
   }
 
   public find(left: number, top: number, width: number, height: number): void {

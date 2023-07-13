@@ -45,6 +45,8 @@ export class Detect {
   }
 
   public mapping(x: number, y: number): Point {
-    return new Point(...this.#transform.mapping(x, y));
+    [x, y] = this.#transform.mapping(x, y);
+
+    return new Point(x, y);
   }
 }

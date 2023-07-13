@@ -51,7 +51,7 @@ export function checkPixelsInTimingLine(
   matrix: BitMatrix,
   { topLeft, topRight, bottomLeft, moduleSize }: FinderPatternGroup,
   isVertical?: boolean
-) {
+): [passed: boolean, modules: number] {
   const [start, end] = isVertical
     ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
     : calculateTimingLine(topLeft, topRight, bottomLeft);
@@ -71,7 +71,7 @@ export function checkPixelsInTimingLine(
       modules++;
 
       if ((modules > 1 && count > maxRepeatPixels) || modules > 165) {
-        return false;
+        return [false, modules];
       }
 
       count = 1;
@@ -79,5 +79,5 @@ export function checkPixelsInTimingLine(
     }
   }
 
-  return modules >= 7;
+  return [modules >= 7, modules];
 }

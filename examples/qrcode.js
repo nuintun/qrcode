@@ -3665,7 +3665,92 @@
       return this.#alignment;
     }
     mapping(x, y) {
-      return new Point(...this.#transform.mapping(x, y));
+      [x, y] = this.#transform.mapping(x, y);
+      return new Point(x, y);
+    }
+  }
+
+  /**
+   * @module Pattern
+   */
+  class Pattern extends Point {
+    #noise;
+    #width;
+    #height;
+    #modules;
+    #rect;
+    #combined = 1;
+    #moduleSize;
+    constructor(x, y, width, height, modules, noise) {
+      super(x, y);
+      const halfWidth = width / 2;
+      const halfHeight = height / 2;
+      const xModuleSize = width / modules;
+      const yModuleSize = height / modules;
+      const xModuleSizeHalf = xModuleSize / 2;
+      const yModuleSizeHalf = yModuleSize / 2;
+      this.#noise = noise;
+      this.#width = width;
+      this.#height = height;
+      this.#modules = modules;
+      this.#rect = [
+        x - halfWidth + xModuleSizeHalf,
+        y - halfHeight + yModuleSizeHalf,
+        x + halfWidth - xModuleSizeHalf,
+        y + halfHeight - yModuleSizeHalf
+      ];
+      this.#moduleSize = [xModuleSize, yModuleSize];
+    }
+    get noise() {
+      return this.#noise;
+    }
+    get width() {
+      return this.#width;
+    }
+    get height() {
+      return this.#height;
+    }
+    get combined() {
+      return this.#combined;
+    }
+    get rect() {
+      return this.#rect;
+    }
+    get moduleSize() {
+      return this.#moduleSize;
+    }
+    equals(x, y, width, height) {
+      const modules = this.#modules;
+      const xModuleSize = width / modules;
+      if (Math.abs(x - this.x) <= xModuleSize) {
+        const moduleSize = this.#moduleSize;
+        const [xModuleSizeThis] = moduleSize;
+        const xModuleSizeDiff = Math.abs(xModuleSize - xModuleSizeThis);
+        if (xModuleSizeDiff >= 1 && xModuleSizeDiff > xModuleSizeThis) {
+          return false;
+        }
+        const yModuleSize = height / modules;
+        if (Math.abs(y - this.y) <= yModuleSize) {
+          const [, yModuleSizeThis] = moduleSize;
+          const yModuleSizeDiff = Math.abs(yModuleSize - yModuleSizeThis);
+          if (yModuleSizeDiff < 1 || yModuleSizeDiff <= yModuleSizeThis) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+    combine(x, y, width, height, noise) {
+      const combined = this.#combined;
+      const nextCombined = combined + 1;
+      const combinedX = (combined * this.x + x) / nextCombined;
+      const combinedY = (combined * this.y + y) / nextCombined;
+      const combinedNoise = (combined * this.#noise + noise) / nextCombined;
+      const combinedWidth = (combined * this.#width + width) / nextCombined;
+      const combinedHeight = (combined * this.#height + height) / nextCombined;
+      const pattern = new Pattern(combinedX, combinedY, combinedWidth, combinedHeight, this.#modules, combinedNoise);
+      pattern.#combined = nextCombined;
+      return pattern;
     }
   }
 
@@ -3992,13 +4077,13 @@
       } else {
         modules++;
         if ((modules > 1 && count > maxRepeatPixels) || modules > 165) {
-          return false;
+          return [false, modules];
         }
         count = 1;
         lastBit = bit;
       }
     }
-    return modules >= 7;
+    return [modules >= 7, modules];
   }
 
   /**
@@ -4090,90 +4175,6 @@
         this.#size = calculateSymbolSize(this.#patterns, this.moduleSize);
       }
       return this.#size;
-    }
-  }
-
-  /**
-   * @module Pattern
-   */
-  class Pattern extends Point {
-    #noise;
-    #width;
-    #height;
-    #modules;
-    #rect;
-    #combined = 1;
-    #moduleSize;
-    constructor(x, y, width, height, modules, noise) {
-      super(x, y);
-      const halfWidth = width / 2;
-      const halfHeight = height / 2;
-      const xModuleSize = width / modules;
-      const yModuleSize = height / modules;
-      const xModuleSizeHalf = xModuleSize / 2;
-      const yModuleSizeHalf = yModuleSize / 2;
-      this.#noise = noise;
-      this.#width = width;
-      this.#height = height;
-      this.#modules = modules;
-      this.#rect = [
-        x - halfWidth + xModuleSizeHalf,
-        y - halfHeight + yModuleSizeHalf,
-        x + halfWidth - xModuleSizeHalf,
-        y + halfHeight - yModuleSizeHalf
-      ];
-      this.#moduleSize = [xModuleSize, yModuleSize];
-    }
-    get noise() {
-      return this.#noise;
-    }
-    get width() {
-      return this.#width;
-    }
-    get height() {
-      return this.#height;
-    }
-    get combined() {
-      return this.#combined;
-    }
-    get rect() {
-      return this.#rect;
-    }
-    get moduleSize() {
-      return this.#moduleSize;
-    }
-    equals(x, y, width, height) {
-      const modules = this.#modules;
-      const xModuleSize = width / modules;
-      if (Math.abs(x - this.x) <= xModuleSize) {
-        const moduleSize = this.#moduleSize;
-        const [xModuleSizeThis] = moduleSize;
-        const xModuleSizeDiff = Math.abs(xModuleSize - xModuleSizeThis);
-        if (xModuleSizeDiff >= 1 && xModuleSizeDiff > xModuleSizeThis) {
-          return false;
-        }
-        const yModuleSize = height / modules;
-        if (Math.abs(y - this.y) <= yModuleSize) {
-          const [, yModuleSizeThis] = moduleSize;
-          const yModuleSizeDiff = Math.abs(yModuleSize - yModuleSizeThis);
-          if (yModuleSizeDiff < 1 || yModuleSizeDiff <= yModuleSizeThis) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-    combine(x, y, width, height, noise) {
-      const combined = this.#combined;
-      const nextCombined = combined + 1;
-      const combinedX = (combined * this.x + x) / nextCombined;
-      const combinedY = (combined * this.y + y) / nextCombined;
-      const combinedNoise = (combined * this.#noise + noise) / nextCombined;
-      const combinedWidth = (combined * this.#width + width) / nextCombined;
-      const combinedHeight = (combined * this.#height + height) / nextCombined;
-      const pattern = new Pattern(combinedX, combinedY, combinedWidth, combinedHeight, this.#modules, combinedNoise);
-      pattern.#combined = nextCombined;
-      return pattern;
     }
   }
 
@@ -4401,17 +4402,17 @@
                 if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
                   const { moduleSize } = finderPatternGroup;
                   const [moduleSize1, moduleSize2] = moduleSize;
-                  // All tests passed!
-                  if (
-                    moduleSize1 >= 1 &&
-                    moduleSize2 >= 1 &&
-                    checkPixelsInTimingLine(matrix, finderPatternGroup) &&
-                    checkPixelsInTimingLine(matrix, finderPatternGroup, true)
-                  ) {
-                    if (yield finderPatternGroup) {
-                      used.set(pattern1, true);
-                      used.set(pattern2, true);
-                      used.set(pattern3, true);
+                  if (moduleSize1 >= 1 && moduleSize2 >= 1) {
+                    const [passed1, modules1] = checkPixelsInTimingLine(matrix, finderPatternGroup);
+                    if (passed1) {
+                      const [passed2, modules2] = checkPixelsInTimingLine(matrix, finderPatternGroup, true);
+                      if (passed2 && Math.abs(modules1 - modules2) <= 8) {
+                        if (yield finderPatternGroup) {
+                          used.set(pattern1, true);
+                          used.set(pattern2, true);
+                          used.set(pattern3, true);
+                        }
+                      }
                     }
                   }
                 }
@@ -4490,7 +4491,10 @@
         });
       }
       // Only use the first two patterns
-      return patterns.slice(0, 2);
+      const alignmentPatterns = patterns.slice(0, 2);
+      // Add expect alignment for fallback
+      alignmentPatterns.push(expectAlignment);
+      return alignmentPatterns;
     }
     find(left, top, width, height) {
       const { matrix } = this;
@@ -4535,18 +4539,23 @@
   /**
    * @module Detector
    */
-  function findAlignmentInRegion(matrix, { size, moduleSize, topLeft, topRight, bottomLeft }, strict) {
+  function getExpectAlignment({ size, moduleSize, topLeft, topRight, bottomLeft }) {
     const { x, y } = topLeft;
     const correctionToTopLeft = 1 - 3 / (size - 7);
-    const allowance = Math.min(15, toInt32(size / 4));
     const bottomRightX = topRight.x + bottomLeft.x - x;
     const bottomRightY = topRight.y + bottomLeft.y - y;
-    const moduleSizeAvg = calculateModuleSize(moduleSize);
-    const alignmentFinder = new AlignmentPatternFinder(matrix, strict);
-    // Look for an alignment pattern allowance modules in size around where it should be
-    const alignmentAreaAllowance = Math.ceil(moduleSizeAvg * allowance);
     const expectAlignmentX = x + correctionToTopLeft * (bottomRightX - x);
     const expectAlignmentY = y + correctionToTopLeft * (bottomRightY - y);
+    return new Pattern(expectAlignmentX, expectAlignmentY, moduleSize[0] * 5, moduleSize[1] * 5, 5, 0);
+  }
+  function findAlignmentInRegion(matrix, finderPatternGroup, strict) {
+    const { size, moduleSize } = finderPatternGroup;
+    const allowance = Math.min(15, toInt32(size / 4));
+    const moduleSizeAvg = calculateModuleSize(moduleSize);
+    const expectAlignment = getExpectAlignment(finderPatternGroup);
+    const alignmentFinder = new AlignmentPatternFinder(matrix, strict);
+    const alignmentAreaAllowance = Math.ceil(moduleSizeAvg * allowance);
+    const { x: expectAlignmentX, y: expectAlignmentY } = expectAlignment;
     const alignmentAreaTop = toInt32(Math.max(0, expectAlignmentY - alignmentAreaAllowance));
     const alignmentAreaLeft = toInt32(Math.max(0, expectAlignmentX - alignmentAreaAllowance));
     const alignmentAreaRight = toInt32(Math.min(matrix.width - 1, expectAlignmentX + alignmentAreaAllowance));
@@ -4557,7 +4566,7 @@
       alignmentAreaRight - alignmentAreaLeft,
       alignmentAreaBottom - alignmentAreaTop
     );
-    return alignmentFinder.filter(new Point(expectAlignmentX, expectAlignmentY), moduleSizeAvg);
+    return alignmentFinder.filter(expectAlignment, moduleSizeAvg);
   }
   class Detector {
     #options;
@@ -4587,11 +4596,6 @@
             if (succeed) {
               break;
             }
-          }
-          // All failed with alignment pattern
-          if (!succeed) {
-            // Fallback with no alignment pattern
-            succeed = yield new Detect(matrix, finderPatternGroup);
           }
         } else {
           // No alignment pattern version

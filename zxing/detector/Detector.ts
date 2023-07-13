@@ -4,7 +4,6 @@
 
 import { Detect } from './Detect';
 import { Pattern } from './Pattern';
-import { Point } from '/common/Point';
 import { toInt32 } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
 import { fromVersionSize } from '/common/Version';
@@ -17,22 +16,25 @@ export interface Options {
   strict?: boolean;
 }
 
-function findAlignmentInRegion(
-  matrix: BitMatrix,
-  { size, moduleSize, topLeft, topRight, bottomLeft }: FinderPatternGroup,
-  strict?: boolean
-): Pattern[] {
+function getExpectAlignment({ size, moduleSize, topLeft, topRight, bottomLeft }: FinderPatternGroup): Pattern {
   const { x, y } = topLeft;
   const correctionToTopLeft = 1 - 3 / (size - 7);
-  const allowance = Math.min(15, toInt32(size / 4));
   const bottomRightX = topRight.x + bottomLeft.x - x;
   const bottomRightY = topRight.y + bottomLeft.y - y;
-  const moduleSizeAvg = calculateModuleSize(moduleSize);
-  const alignmentFinder = new AlignmentPatternFinder(matrix, strict);
-  // Look for an alignment pattern allowance modules in size around where it should be
-  const alignmentAreaAllowance = Math.ceil(moduleSizeAvg * allowance);
   const expectAlignmentX = x + correctionToTopLeft * (bottomRightX - x);
   const expectAlignmentY = y + correctionToTopLeft * (bottomRightY - y);
+
+  return new Pattern(expectAlignmentX, expectAlignmentY, moduleSize[0] * 5, moduleSize[1] * 5, 5, 0);
+}
+
+function findAlignmentInRegion(matrix: BitMatrix, finderPatternGroup: FinderPatternGroup, strict?: boolean): Pattern[] {
+  const { size, moduleSize } = finderPatternGroup;
+  const allowance = Math.min(15, toInt32(size / 4));
+  const moduleSizeAvg = calculateModuleSize(moduleSize);
+  const expectAlignment = getExpectAlignment(finderPatternGroup);
+  const alignmentFinder = new AlignmentPatternFinder(matrix, strict);
+  const alignmentAreaAllowance = Math.ceil(moduleSizeAvg * allowance);
+  const { x: expectAlignmentX, y: expectAlignmentY } = expectAlignment;
   const alignmentAreaTop = toInt32(Math.max(0, expectAlignmentY - alignmentAreaAllowance));
   const alignmentAreaLeft = toInt32(Math.max(0, expectAlignmentX - alignmentAreaAllowance));
   const alignmentAreaRight = toInt32(Math.min(matrix.width - 1, expectAlignmentX + alignmentAreaAllowance));
@@ -45,7 +47,7 @@ function findAlignmentInRegion(
     alignmentAreaBottom - alignmentAreaTop
   );
 
-  return alignmentFinder.filter(new Point(expectAlignmentX, expectAlignmentY), moduleSizeAvg);
+  return alignmentFinder.filter(expectAlignment, moduleSizeAvg);
 }
 
 export class Detector {
@@ -86,12 +88,6 @@ export class Detector {
           if (succeed) {
             break;
           }
-        }
-
-        // All failed with alignment pattern
-        if (!succeed) {
-          // Fallback with no alignment pattern
-          succeed = yield new Detect(matrix, finderPatternGroup);
         }
       } else {
         // No alignment pattern version
