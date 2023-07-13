@@ -74,7 +74,7 @@ export function checkPixelsInTimingLine(
       pixels += count;
 
       if ((switchTimes > 1 && count > maxRepeatPixels) || switchTimes > 165) {
-        return [false, pixels / moduleSize];
+        return [false, Math.ceil(pixels / moduleSize)];
       }
 
       count = 1;
@@ -84,5 +84,5 @@ export function checkPixelsInTimingLine(
 
   pixels += count;
 
-  return [switchTimes >= 7, pixels / moduleSize];
+  return [switchTimes >= 7, Math.ceil(pixels / moduleSize)];
 }

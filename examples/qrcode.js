@@ -4084,14 +4084,14 @@
         switchTimes++;
         pixels += count;
         if ((switchTimes > 1 && count > maxRepeatPixels) || switchTimes > 165) {
-          return [false, pixels / moduleSize];
+          return [false, Math.ceil(pixels / moduleSize)];
         }
         count = 1;
         lastBit = bit;
       }
     }
     pixels += count;
-    return [switchTimes >= 7, pixels / moduleSize];
+    return [switchTimes >= 7, Math.ceil(pixels / moduleSize)];
   }
 
   /**
@@ -4414,7 +4414,7 @@
                     const [passed1, modules1] = checkPixelsInTimingLine(matrix, finderPatternGroup);
                     if (passed1) {
                       const [passed2, modules2] = checkPixelsInTimingLine(matrix, finderPatternGroup, true);
-                      if (passed2 && Math.abs(modules1 - modules2) <= 2) {
+                      if (passed2 && Math.abs(modules1 - modules2) <= 3) {
                         if (yield finderPatternGroup) {
                           used.set(pattern1, true);
                           used.set(pattern2, true);
