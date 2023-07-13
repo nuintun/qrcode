@@ -2,11 +2,11 @@
  * @module timing
  */
 
+import { Point } from '/common/Point';
+import { toInt32 } from '/common/utils';
 import { Pattern } from '/detector/Pattern';
 import { PlotLine } from '/common/PlotLine';
 import { BitMatrix } from '/common/BitMatrix';
-import { round, toInt32 } from '/common/utils';
-import { distance, Point } from '/common/Point';
 import { FinderPatternGroup } from '/detector/FinderPatternGroup';
 
 function calculateTimingRatio(axis: number, control: number) {
@@ -51,7 +51,7 @@ export function checkPixelsInTimingLine(
   matrix: BitMatrix,
   { topLeft, topRight, bottomLeft, moduleSize: [xModuleSize, yModuleSize] }: FinderPatternGroup,
   isVertical?: boolean
-): [passed: false] | [passed: true, modules: number] {
+): boolean {
   const [start, end] = isVertical
     ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
     : calculateTimingLine(topLeft, topRight, bottomLeft);
@@ -60,7 +60,7 @@ export function checkPixelsInTimingLine(
   const points = new PlotLine(start, end).points();
 
   let count = 0;
-  let switchTimes = 0;
+  let modules = 0;
   let lastBit = matrix.get(toInt32(start.x), toInt32(start.y));
 
   for (const [x, y] of points) {
@@ -69,10 +69,10 @@ export function checkPixelsInTimingLine(
     if (bit === lastBit) {
       count++;
     } else {
-      switchTimes++;
+      modules++;
 
-      if ((switchTimes > 1 && count > maxRepeatPixels) || switchTimes > 165) {
-        return [false];
+      if ((modules > 1 && count > maxRepeatPixels) || modules > 165) {
+        return false;
       }
 
       count = 1;
@@ -80,5 +80,5 @@ export function checkPixelsInTimingLine(
     }
   }
 
-  return switchTimes >= 7 ? [true, round(distance(start, end) / moduleSize)] : [false];
+  return modules >= 7;
 }

@@ -3,6 +3,7 @@
  */
 
 import { Pattern } from './Pattern';
+import { round } from '/common/utils';
 import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
 import { scanlineUpdate } from './utils/scanline';
@@ -11,7 +12,7 @@ import { FinderPatternGroup } from './FinderPatternGroup';
 import { MatchAction, PatternFinder } from './PatternFinder';
 import { MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
 import { isEqualsSize, isMatchFinderPattern } from './utils/pattern';
-import { DIFF_EDGE_RATIO, DIFF_MODULE_SIZE_RATIO, FINDER_PATTERN_RATIOS } from './utils/constants';
+import { DIFF_MODULE_SIZE_RATIO, FINDER_PATTERN_RATIOS } from './utils/constants';
 
 export class FinderPatternFinder extends PatternFinder {
   constructor(matrix: BitMatrix, strict?: boolean) {
@@ -70,30 +71,28 @@ export class FinderPatternFinder extends PatternFinder {
 
             const { matrix } = this;
             const finderPatternGroup = new FinderPatternGroup(matrix, [pattern1, pattern2, pattern3]);
-            const { topLeft, topRight, bottomLeft } = finderPatternGroup;
+            const { topLeft, topRight, bottomLeft, moduleSize } = finderPatternGroup;
+            const [xModuleSize, yModuleSize] = moduleSize;
             const edge1 = distance(topLeft, topRight);
             const edge2 = distance(topLeft, bottomLeft);
 
-            if (isEqualsSize(edge1, edge2, DIFF_EDGE_RATIO)) {
+            if (Math.abs(round(edge1 / xModuleSize) - round(edge2 / yModuleSize)) <= 4) {
               const { size } = finderPatternGroup;
 
               if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
                 const { moduleSize } = finderPatternGroup;
                 const [moduleSize1, moduleSize2] = moduleSize;
 
-                if (moduleSize1 >= 1 && moduleSize2 >= 1) {
-                  const [passed1, modules1] = checkPixelsInTimingLine(matrix, finderPatternGroup);
-
-                  if (passed1) {
-                    const [passed2, modules2] = checkPixelsInTimingLine(matrix, finderPatternGroup, true);
-
-                    if (passed2 && Math.abs(modules1 - modules2) <= 4) {
-                      if (yield finderPatternGroup) {
-                        used.set(pattern1, true);
-                        used.set(pattern2, true);
-                        used.set(pattern3, true);
-                      }
-                    }
+                if (
+                  moduleSize1 >= 1 &&
+                  moduleSize2 >= 1 &&
+                  checkPixelsInTimingLine(matrix, finderPatternGroup) &&
+                  checkPixelsInTimingLine(matrix, finderPatternGroup, true)
+                ) {
+                  if (yield finderPatternGroup) {
+                    used.set(pattern1, true);
+                    used.set(pattern2, true);
+                    used.set(pattern3, true);
                   }
                 }
               }
