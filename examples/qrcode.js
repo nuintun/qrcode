@@ -3302,7 +3302,7 @@
       for (let x = 0; x < width; x++) {
         const index = offset + x;
         const colorIndex = index * 4;
-        const r = data[colorIndex + 0];
+        const r = data[colorIndex];
         const g = data[colorIndex + 1];
         const b = data[colorIndex + 2];
         greyscale[offset + x] = r * 0.2126 + g * 0.7152 + b * 0.0722;
