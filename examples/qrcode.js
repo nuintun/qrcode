@@ -4263,12 +4263,6 @@
       case 2:
         return size - 1;
       case 3:
-        if (size + 2 <= MAX_VERSION_SIZE) {
-          return size + 2;
-        }
-        if (size - 2 >= MIN_VERSION_SIZE) {
-          return size - 2;
-        }
         return NaN;
     }
     return size;

@@ -6,7 +6,6 @@ import { Pattern } from './Pattern';
 import { round } from '/common/utils';
 import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
-import { MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
 import { calculateModuleSize, calculateModuleSizeOneWay, ModuleSizeGroup } from './utils/module';
 
 type OrderedPatterns = [
@@ -67,14 +66,6 @@ function calculateSymbolSize([topLeft, topRight, bottomLeft]: OrderedPatterns, m
     case 2:
       return size - 1;
     case 3:
-      if (size + 2 <= MAX_VERSION_SIZE) {
-        return size + 2;
-      }
-
-      if (size - 2 >= MIN_VERSION_SIZE) {
-        return size - 2;
-      }
-
       return NaN;
   }
 
