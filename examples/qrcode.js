@@ -3317,7 +3317,7 @@
       for (let blackPointsX = 0; blackPointsX < blackPointsWidth; blackPointsX++) {
         let sum = 0;
         let max = 0;
-        let min = Infinity;
+        let min = 0xff;
         for (let y = 0; y < REGION_SIZE; y++) {
           const offset = (blackPointsY * REGION_SIZE + y) * width;
           for (let x = 0; x < REGION_SIZE; x++) {
