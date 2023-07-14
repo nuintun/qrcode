@@ -1,23 +1,58 @@
 /**
  * @module Mode
- * @author nuintun
- * @author Cosmo Wolfe
- * @author Kazuhiko Arase
  */
 
-/**
- * @readonly
- */
-export enum Mode {
-  TERMINATOR = 0x0,
-  NUMERIC = 0x1,
-  ALPHANUMERIC = 0x2,
-  STRUCTURED_APPEND = 0x3,
-  BYTE = 0x4,
-  KANJI = 0x8,
-  ECI = 0x7,
-  FNC1_FIRST_POSITION = 0x5,
-  FNC1_SECOND_POSITION = 0x9,
-  // HANZI 0xD is defined in GBT 18284-2000, may not be supported in foreign country
-  HANZI = 0xd
+import { Version } from './Version';
+
+const VALUES_TO_MODE = new Map<number, Mode>();
+
+export function fromModeBits(bits: number): Mode {
+  const mode = VALUES_TO_MODE.get(bits);
+
+  if (mode != null) {
+    return mode;
+  }
+
+  throw new Error('illegal mode bits');
+}
+
+export class Mode {
+  #bits: number;
+  #characterCountBitsSet: Int32Array;
+
+  public static readonly TERMINATOR = new Mode([0, 0, 0], 0x00);
+  public static readonly NUMERIC = new Mode([10, 12, 14], 0x01);
+  public static readonly ALPHANUMERIC = new Mode([9, 11, 13], 0x02);
+  public static readonly STRUCTURED_APPEND = new Mode([0, 0, 0], 0x03);
+  public static readonly BYTE = new Mode([8, 16, 16], 0x04);
+  public static readonly ECI = new Mode([0, 0, 0], 0x07);
+  public static readonly KANJI = new Mode([8, 10, 12], 0x08);
+  public static readonly FNC1_FIRST_POSITION = new Mode([0, 0, 0], 0x05);
+  public static readonly FNC1_SECOND_POSITION = new Mode([0, 0, 0], 0x09);
+  public static readonly HANZI = new Mode([8, 10, 12], 0x0d);
+
+  constructor(characterCountBitsSet: number[], bits: number) {
+    this.#bits = bits;
+    this.#characterCountBitsSet = new Int32Array(characterCountBitsSet);
+
+    VALUES_TO_MODE.set(bits, this);
+  }
+
+  public get bits(): number {
+    return this.#bits;
+  }
+
+  public getCharacterCountBits({ version }: Version): number {
+    let offset;
+
+    if (version <= 9) {
+      offset = 0;
+    } else if (version <= 26) {
+      offset = 1;
+    } else {
+      offset = 2;
+    }
+
+    return this.#characterCountBitsSet[offset];
+  }
 }

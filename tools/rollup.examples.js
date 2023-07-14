@@ -24,7 +24,7 @@ const banner = `/**
  * @type {import('rollup').RollupOptions}
  */
 export default {
-  input: 'zxing/index.ts',
+  input: 'src/index.ts',
   output: {
     banner,
     format: 'umd',

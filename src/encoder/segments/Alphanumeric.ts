@@ -1,84 +1,64 @@
 /**
  * @module Alphanumeric
- * @author nuintun
- * @author Kazuhiko Arase
  */
 
-import { Mode } from '../../common/Mode';
-import { encode } from '../../encoding/UTF16';
-import { Segment } from '../../encoder/Segment';
-import { BitBuffer } from '../../encoder/BitBuffer';
+import { Mode } from '/common/Mode';
+import { BitArray } from '/common/BitArray';
+import { assertContent } from '/encoder/utils/asserts';
+import { ALPHANUMERIC_CHARACTERS, getCharactersMapping } from '/common/encoding';
 
-function getByte(byte: number): number {
-  if (0x30 <= byte && byte <= 0x39) {
-    // 0 - 9
-    return byte - 0x30;
-  } else if (0x41 <= byte && byte <= 0x5a) {
-    // A - Z
-    return byte - 0x41 + 10;
-  } else {
-    switch (byte) {
-      // space
-      case 0x20:
-        return 36;
-      // $
-      case 0x24:
-        return 37;
-      // %
-      case 0x25:
-        return 38;
-      // *
-      case 0x2a:
-        return 39;
-      // +
-      case 0x2b:
-        return 40;
-      // -
-      case 0x2d:
-        return 41;
-      // .
-      case 0x2e:
-        return 42;
-      // /
-      case 0x2f:
-        return 43;
-      // :
-      case 0x3a:
-        return 44;
-      default:
-        throw new Error(`illegal char: ${String.fromCharCode(byte)}`);
-    }
+const ALPHANUMERIC_MAPPING = getCharactersMapping(ALPHANUMERIC_CHARACTERS);
+
+function getAlphanumericCode(character: string): number {
+  const code = ALPHANUMERIC_MAPPING.get(character);
+
+  if (code != null) {
+    return code;
   }
+
+  throw new Error(`illegal alphanumeric character: ${character}`);
 }
 
-export class Alphanumeric extends Segment {
-  /**
-   * @constructor
-   * @param {string} text
-   */
-  constructor(text: string) {
-    super(Mode.ALPHANUMERIC, encode(text));
+export class Alphanumeric {
+  #content: string;
+
+  constructor(content: string) {
+    assertContent(content);
+
+    this.#content = content;
   }
 
-  /**
-   * @public
-   * @method writeTo
-   * @param {BitBuffer} buffer
-   */
-  public writeTo(buffer: BitBuffer): void {
-    let i = 0;
+  public get mode(): Mode {
+    return Mode.ALPHANUMERIC;
+  }
 
-    const { bytes } = this;
-    const { length } = bytes;
+  public get content(): string {
+    return this.#content;
+  }
 
-    while (i + 1 < length) {
-      buffer.put(getByte(bytes[i]) * 45 + getByte(bytes[i + 1]), 11);
+  public encode(): BitArray {
+    const bits = new BitArray();
+    const content = this.#content;
+    const { length } = content;
 
-      i += 2;
+    for (let i = 0; i < length; ) {
+      const code1 = getAlphanumericCode(content.charAt(i));
+
+      if (i + 1 < length) {
+        const code2 = getAlphanumericCode(content.charAt(i + 1));
+
+        // Encode two alphanumeric letters in 11 bits.
+        bits.append(code1 * 45 + code2, 11);
+
+        i += 2;
+      } else {
+        // Encode one alphanumeric letter in six bits.
+        bits.append(code1, 6);
+
+        i++;
+      }
     }
 
-    if (i < length) {
-      buffer.put(getByte(bytes[i]), 6);
-    }
+    return bits;
   }
 }

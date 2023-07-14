@@ -1,61 +1,45 @@
 /**
  * @module Byte
- * @author nuintun
- * @author Kazuhiko Arase
  */
 
-import { ECI } from '../../common/ECI';
-import { Mode } from '../../common/Mode';
-import { Segment } from '../../encoder/Segment';
-import { BitBuffer } from '../../encoder/BitBuffer';
-import { encode as encodeUTF8 } from '../../encoding/UTF8';
+import { Mode } from '/common/Mode';
+import { Charset } from '/common/Charset';
+import { BitArray } from '/common/BitArray';
+import { TextEncode } from '/common/encoding';
+import { assertCharset, assertContent } from '/encoder/utils/asserts';
 
-interface EncodeResult {
-  readonly bytes: number[];
-  readonly encoding: number;
-}
+export class Byte {
+  #content: string;
+  #charset: Charset;
 
-type TextEncode = (data: string) => EncodeResult;
+  constructor(content: string, charset: Charset = Charset.ISO_8859_1) {
+    assertContent(content);
+    assertCharset(charset);
 
-export class Byte extends Segment {
-  #encoding: number = -1;
-
-  /**
-   * @constructor
-   * @param {string} text
-   * @param {TextEncode} [encode]
-   */
-  constructor(text: string, encode?: TextEncode) {
-    let bytes: number[];
-    let encoding: number;
-
-    if (typeof encode === 'function') {
-      ({ bytes, encoding } = encode(text));
-    } else {
-      bytes = encodeUTF8(text);
-
-      encoding = ECI.UTF8;
-    }
-
-    super(Mode.BYTE, bytes);
-
-    this.#encoding = encoding;
+    this.#content = content;
+    this.#charset = charset;
   }
 
-  public get encoding(): number {
-    return this.#encoding;
+  public get mode(): Mode {
+    return Mode.BYTE;
   }
 
-  /**
-   * @public
-   * @method writeTo
-   * @param {BitBuffer} buffer
-   */
-  public writeTo(buffer: BitBuffer): void {
-    const { bytes } = this;
+  public get content(): string {
+    return this.#content;
+  }
+
+  public get charset(): Charset {
+    return this.#charset;
+  }
+
+  public encode(encode: TextEncode): BitArray {
+    const bits = new BitArray();
+    const bytes = encode(this.#content, this.#charset);
 
     for (const byte of bytes) {
-      buffer.put(byte, 8);
+      bits.append(byte, 8);
     }
+
+    return bits;
   }
 }

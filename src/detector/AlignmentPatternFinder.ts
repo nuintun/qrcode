@@ -2,211 +2,93 @@
  * @module AlignmentPatternFinder
  */
 
-import { BitMatrix } from '../decoder/BitMatrix';
-import { ResultPointCallback } from './ResultPoint';
-import { AlignmentPattern } from './AlignmentPattern';
+import { Pattern } from './Pattern';
+import { distance } from '/common/Point';
+import { BitMatrix } from '/common/BitMatrix';
+import { scanlineUpdate } from './utils/scanline';
+import { MatchAction, PatternFinder } from './PatternFinder';
+import { isEqualsSize, isMatchAlignmentPattern } from './utils/pattern';
+import { ALIGNMENT_PATTERN_RATIOS, DIFF_MODULE_SIZE_RATIO } from './utils/constants';
 
-function centerFromEnd(stateCount: Int32Array, end: number): number {
-  return end - stateCount[2] - stateCount[1] / 2.0;
-}
-
-export class AlignmentPatternFinder {
-  private crossCheckStateCount: Int32Array;
-  private possibleCenters: AlignmentPattern[];
-
-  public constructor(
-    private image: BitMatrix,
-    private startX: number,
-    private startY: number,
-    private width: number,
-    private height: number,
-    private moduleSize: number,
-    private resultPointCallback: ResultPointCallback
-  ) {
-    this.possibleCenters = [];
-    this.crossCheckStateCount = new Int32Array(3);
+export class AlignmentPatternFinder extends PatternFinder {
+  constructor(matrix: BitMatrix, strict?: boolean) {
+    super(matrix, ALIGNMENT_PATTERN_RATIOS, isMatchAlignmentPattern, strict);
   }
 
-  private foundPatternCross(stateCount: Int32Array): boolean {
-    const moduleSize = this.moduleSize;
-    const maxVariance = moduleSize / 2.0;
+  public filter(expectAlignment: Pattern, moduleSize: number): Pattern[] {
+    const patterns = this.patterns.filter(pattern => {
+      const [xModuleSize, yModuleSize] = pattern.moduleSize;
 
-    for (let i = 0; i < 3; i++) {
-      if (Math.abs(moduleSize - stateCount[i]) >= maxVariance) {
-        return false;
+      return (
+        isEqualsSize(xModuleSize, moduleSize, DIFF_MODULE_SIZE_RATIO) &&
+        isEqualsSize(yModuleSize, moduleSize, DIFF_MODULE_SIZE_RATIO)
+      );
+    });
+
+    if (patterns.length > 1) {
+      patterns.sort((pattern1, pattern2) => {
+        const noise1 = distance(pattern1, expectAlignment) * pattern1.noise;
+        const noise2 = distance(pattern2, expectAlignment) * pattern2.noise;
+
+        return noise1 - noise2;
+      });
+    }
+
+    // Only use the first two patterns
+    const alignmentPatterns = patterns.slice(0, 2);
+
+    // Add expect alignment for fallback
+    alignmentPatterns.push(expectAlignment);
+
+    return alignmentPatterns;
+  }
+
+  public find(left: number, top: number, width: number, height: number): void {
+    const { matrix } = this;
+    const right = left + width;
+    const bottom = top + height;
+    const match: MatchAction = (x, y, scanline, count, scanlineBits, lastBit) => {
+      scanlineUpdate(scanline, count);
+      scanlineUpdate(scanlineBits, lastBit);
+
+      // Match pattern when white-black-white
+      if (scanlineBits[0] === 0 && scanlineBits[1] === 1 && scanlineBits[2] === 0) {
+        this.match(x, y, scanline, scanline[1]);
       }
-    }
+    };
 
-    return true;
-  }
-
-  private crossCheckVertical(x: number, y: number, maxCount: number, originalStateCountTotal: number): number {
-    const image = this.image;
-    const maxY = this.height;
-    const stateCount = this.crossCheckStateCount;
-
-    stateCount[0] = 0;
-    stateCount[1] = 0;
-    stateCount[2] = 0;
-
-    // Start counting up from center
-    let i = y;
-
-    while (i >= 0 && image.get(x, i) && stateCount[1] <= maxCount) {
-      i--;
-      stateCount[1]++;
-    }
-
-    // If already too many modules in this state or ran off the edge:
-    if (i < 0 || stateCount[1] > maxCount) {
-      return NaN;
-    }
-
-    while (i >= 0 && !image.get(x, i) && stateCount[0] <= maxCount) {
-      i--;
-      stateCount[0]++;
-    }
-
-    if (stateCount[0] > maxCount) {
-      return NaN;
-    }
-
-    // Now also count down from center
-    i = y + 1;
-
-    while (i < maxY && image.get(x, i) && stateCount[1] <= maxCount) {
-      i++;
-      stateCount[1]++;
-    }
-
-    if (i === maxY || stateCount[1] > maxCount) {
-      return NaN;
-    }
-
-    while (i < maxY && !image.get(x, i) && stateCount[2] <= maxCount) {
-      i++;
-      stateCount[2]++;
-    }
-
-    if (stateCount[2] > maxCount) {
-      return NaN;
-    }
-
-    const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2];
-
-    if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= 2 * originalStateCountTotal) {
-      return NaN;
-    }
-
-    return this.foundPatternCross(stateCount) ? centerFromEnd(stateCount, i) : NaN;
-  }
-
-  private handlePossibleCenter(stateCount: Int32Array, x: number, y: number): AlignmentPattern | null {
-    const centerX = centerFromEnd(stateCount, x);
-    const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2];
-    const centerY = this.crossCheckVertical(centerX, y, 2 * stateCount[1], stateCountTotal);
-
-    if (!Number.isNaN(centerY)) {
-      const estimatedModuleSize = (stateCount[0] + stateCount[1] + stateCount[2]) / 3.0;
-
-      for (const center of this.possibleCenters) {
-        // Look for about the same center and module size:
-        if (center.aboutEquals(centerX, centerY, estimatedModuleSize)) {
-          return center.combineEstimate(centerX, centerY, estimatedModuleSize);
-        }
-      }
-
-      // Hadn't found this before; save it
-      const point = new AlignmentPattern(centerX, centerY, estimatedModuleSize);
-
-      this.possibleCenters.push(point);
-      this.resultPointCallback.foundPossibleResultPoint(point);
-    }
-
-    return null;
-  }
-
-  public find(): AlignmentPattern | null {
-    const { image, height, startX } = this;
-    const maxX = this.width + startX;
-    const centerY = this.startY + height / 2;
-
-    // We are looking for black/white/black modules in 1:1:1 ratio
-    // this tracks the number of black/white/black modules seen so far
-    const stateCount = new Int32Array(3);
-
-    for (let i = 0; i < height; i++) {
-      let x = startX;
-      let currentState = 0;
-      // Search from middle outwards
-      const y = centerY + ((i & 0x01) === 0 ? Math.floor((i + 1) / 2) : -Math.floor((i + 1) / 2));
-
-      stateCount[0] = 0;
-      stateCount[1] = 0;
-      stateCount[2] = 0;
+    for (let y = top; y < bottom; y++) {
+      let x = left;
 
       // Burn off leading white pixels before anything else; if we start in the middle of
       // a white run, it doesn't make sense to count its length, since we don't know if the
       // white run continued to the left of the start point
-      while (x < maxX && !image.get(x, y)) {
+      while (x < right && !matrix.get(x, y)) {
         x++;
       }
 
-      while (x < maxX) {
-        if (image.get(x, y)) {
-          // Black pixel
-          if (currentState === 1) {
-            // Counting black pixels
-            stateCount[1]++;
-          } else {
-            // Counting white pixels
-            if (currentState === 2) {
-              // A winner?
-              if (this.foundPatternCross(stateCount)) {
-                // Yes
-                const confirmed = this.handlePossibleCenter(stateCount, x, y);
+      let count = 0;
+      let lastBit = matrix.get(x, y);
 
-                if (confirmed !== null) {
-                  return confirmed;
-                }
-              }
+      const scanline = [0, 0, 0];
+      const scanlineBits = [-1, -1, -1];
 
-              stateCount[0] = stateCount[2];
-              stateCount[1] = 1;
-              stateCount[2] = 0;
-              currentState = 1;
-            } else {
-              stateCount[++currentState]++;
-            }
-          }
+      while (x < right) {
+        const bit = matrix.get(x, y);
+
+        if (bit === lastBit) {
+          count++;
         } else {
-          // White pixel
-          if (currentState === 1) {
-            // Counting black pixels
-            currentState++;
-          }
+          match(x, y, scanline, count, scanlineBits, lastBit);
 
-          stateCount[currentState]++;
+          count = 1;
+          lastBit = bit;
         }
 
         x++;
       }
 
-      if (this.foundPatternCross(stateCount)) {
-        const confirmed = this.handlePossibleCenter(stateCount, maxX, y);
-
-        if (confirmed !== null) {
-          return confirmed;
-        }
-      }
+      match(x, y, scanline, count, scanlineBits, lastBit);
     }
-
-    // Hmm, nothing we saw was observed and confirmed twice. If we had
-    // any guess at all, return it.
-    if (this.possibleCenters.length !== 0) {
-      return this.possibleCenters[0];
-    }
-
-    return null;
   }
 }

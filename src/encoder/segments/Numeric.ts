@@ -1,65 +1,72 @@
 /**
  * @module Numeric
- * @author nuintun
- * @author Kazuhiko Arase
  */
 
-import { Mode } from '../../common/Mode';
-import { encode } from '../../encoding/UTF16';
-import { Segment } from '../../encoder/Segment';
-import { BitBuffer } from '../../encoder/BitBuffer';
+import { Mode } from '/common/Mode';
+import { BitArray } from '/common/BitArray';
+import { assertContent } from '/encoder/utils/asserts';
+import { getCharactersMapping, NUMERIC_CHARACTERS } from '/common/encoding';
 
-function getByte(byte: number): number {
-  // 0 - 9
-  if (0x30 <= byte && byte <= 0x39) {
-    return byte - 0x30;
+const NUMERIC_MAPPING = getCharactersMapping(NUMERIC_CHARACTERS);
+
+function getNumericCode(character: string): number {
+  const code = NUMERIC_MAPPING.get(character);
+
+  if (code != null) {
+    return code;
   }
 
-  throw new Error(`illegal char: ${String.fromCharCode(byte)}`);
+  throw new Error(`illegal numeric character: ${character}`);
 }
 
-function getBytes(bytes: number[]): number {
-  let num = 0;
+export class Numeric {
+  #content: string;
 
-  for (const byte of bytes) {
-    num = num * 10 + getByte(byte);
+  constructor(content: string) {
+    assertContent(content);
+
+    this.#content = content;
   }
 
-  return num;
-}
-
-export class Numeric extends Segment {
-  /**
-   * @constructor
-   * @param {string} text
-   */
-  constructor(text: string) {
-    super(Mode.NUMERIC, encode(text));
+  public get mode(): Mode {
+    return Mode.NUMERIC;
   }
 
-  /**
-   * @public
-   * @method writeTo
-   * @param {BitBuffer} buffer
-   */
-  public writeTo(buffer: BitBuffer): void {
-    let i = 0;
+  public get content(): string {
+    return this.#content;
+  }
 
-    const { bytes } = this;
-    const { length } = bytes;
+  public encode(): BitArray {
+    const bits = new BitArray();
+    const content = this.#content;
+    const { length } = content;
 
-    while (i + 2 < length) {
-      buffer.put(getBytes([bytes[i], bytes[i + 1], bytes[i + 2]]), 10);
+    for (let i = 0; i < length; ) {
+      const code1 = getNumericCode(content.charAt(i));
 
-      i += 3;
-    }
+      if (i + 2 < length) {
+        // Encode three numeric letters in ten bits.
+        const code2 = getNumericCode(content.charAt(i + 1));
+        const code3 = getNumericCode(content.charAt(i + 2));
 
-    if (i < length) {
-      if (length - i === 1) {
-        buffer.put(getBytes([bytes[i]]), 4);
-      } else if (length - i === 2) {
-        buffer.put(getBytes([bytes[i], bytes[i + 1]]), 7);
+        bits.append(code1 * 100 + code2 * 10 + code3, 10);
+
+        i += 3;
+      } else if (i + 1 < length) {
+        // Encode two numeric letters in seven bits.
+        const code2 = getNumericCode(content.charAt(i + 1));
+
+        bits.append(code1 * 10 + code2, 7);
+
+        i += 2;
+      } else {
+        // Encode one numeric letter in four bits.
+        bits.append(code1, 4);
+
+        i++;
       }
     }
+
+    return bits;
   }
 }

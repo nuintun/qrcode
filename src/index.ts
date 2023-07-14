@@ -1,14 +1,15 @@
 /**
  * @module index
- * @author nuintun
  */
 
-export { Reader } from './Reader';
-export { Writer } from './Writer';
-export { Mode } from './common/Mode';
-export { ECLevel } from './common/ECLevel';
+export { binarize } from './binarizer';
+export { Charset } from './common/Charset';
+export { Decoder } from './decoder/Decoder';
+export { Encoder } from './encoder/Encoder';
+export { BitMatrix } from './common/BitMatrix';
 export { Byte } from './encoder/segments/Byte';
+export { Detector } from './detector/Detector';
+export { Hanzi } from './encoder/segments/Hanzi';
 export { Kanji } from './encoder/segments/Kanji';
-export { EncodeHint } from './encoder/EncodeHint';
 export { Numeric } from './encoder/segments/Numeric';
 export { Alphanumeric } from './encoder/segments/Alphanumeric';

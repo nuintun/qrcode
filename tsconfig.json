@@ -23,13 +23,12 @@
     "forceConsistentCasingInFileNames": true,
     "paths": {
       "/*": [
-        "zxing/*"
+        "src/*"
       ]
     }
   },
   "include": [
-    "src/**/*",
-    "zxing/**/*"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules/**/*"
