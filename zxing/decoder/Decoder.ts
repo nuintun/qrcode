@@ -22,9 +22,9 @@ export class Decoder {
     this.#decode = decode;
   }
 
-  #parse(parser: BitMatrixParser, version: Version, { mask, level }: FormatInfo): Uint8Array {
+  #parse(parser: BitMatrixParser, version: Version, { mask, level }: FormatInfo): [codewords: Uint8Array, corrected: number] {
     let offset = 0;
-    let errorsCorrected = 0;
+    let corrected = 0;
 
     parser.unmask(mask);
 
@@ -38,14 +38,15 @@ export class Decoder {
 
       buffer.set(bytes.subarray(0, numDataCodewords), offset);
 
-      errorsCorrected += errors;
+      corrected += errors;
       offset += numDataCodewords;
     }
 
-    return buffer;
+    return [buffer, corrected];
   }
 
   decode(matrix: BitMatrix): QRCode {
+    let corrected = 0;
     let mirror = false;
     let version: Version;
     let codewords: Uint8Array;
@@ -56,7 +57,7 @@ export class Decoder {
     try {
       version = parser.readVersion();
       formatInfo = parser.readFormatInfo();
-      codewords = this.#parse(parser, version, formatInfo);
+      [codewords, corrected] = this.#parse(parser, version, formatInfo);
     } catch {
       if (formatInfo != null) {
         parser.remask(formatInfo.mask);
@@ -67,9 +68,9 @@ export class Decoder {
       mirror = true;
       version = parser.readVersion();
       formatInfo = parser.readFormatInfo();
-      codewords = this.#parse(parser, version, formatInfo);
+      [codewords, corrected] = this.#parse(parser, version, formatInfo);
     }
 
-    return new QRCode(decode(codewords, version, formatInfo, this.#decode), version, formatInfo, mirror);
+    return new QRCode(decode(codewords, version, formatInfo, this.#decode), version, formatInfo, corrected, mirror);
   }
 }

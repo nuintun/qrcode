@@ -81,13 +81,15 @@
     #level;
     #mirror;
     #version;
+    #corrected;
     #metadata;
-    constructor(metadata, version, { mask, level }, mirror) {
+    constructor(metadata, version, { mask, level }, corrected, mirror) {
       this.#mask = mask;
       this.#level = level;
       this.#mirror = mirror;
       this.#version = version;
       this.#metadata = metadata;
+      this.#corrected = corrected;
     }
     /**
      * @property mask
@@ -123,6 +125,13 @@
      */
     get content() {
       return this.#metadata.content;
+    }
+    /**
+     * @property corrected
+     * @description Get the corrected of qrcode
+     */
+    get corrected() {
+      return this.#corrected;
     }
     /**
      * @property symbology
@@ -2110,6 +2119,7 @@
     }
     #parse(parser, version, { mask, level }) {
       let offset = 0;
+      let corrected = 0;
       parser.unmask(mask);
       const ecBlocks = version.getECBlocks(level);
       const codewords = parser.readCodewords(version, level);
@@ -2118,11 +2128,13 @@
       for (const { codewords, numDataCodewords } of blocks) {
         const [bytes, errors] = correctErrors(codewords, numDataCodewords);
         buffer.set(bytes.subarray(0, numDataCodewords), offset);
+        corrected += errors;
         offset += numDataCodewords;
       }
-      return buffer;
+      return [buffer, corrected];
     }
     decode(matrix) {
+      let corrected = 0;
       let mirror = false;
       let version;
       let codewords;
@@ -2131,7 +2143,7 @@
       try {
         version = parser.readVersion();
         formatInfo = parser.readFormatInfo();
-        codewords = this.#parse(parser, version, formatInfo);
+        [codewords, corrected] = this.#parse(parser, version, formatInfo);
       } catch {
         if (formatInfo != null) {
           parser.remask(formatInfo.mask);
@@ -2140,9 +2152,9 @@
         mirror = true;
         version = parser.readVersion();
         formatInfo = parser.readFormatInfo();
-        codewords = this.#parse(parser, version, formatInfo);
+        [codewords, corrected] = this.#parse(parser, version, formatInfo);
       }
-      return new QRCode$1(decode(codewords, version, formatInfo, this.#decode), version, formatInfo, mirror);
+      return new QRCode$1(decode(codewords, version, formatInfo, this.#decode), version, formatInfo, corrected, mirror);
     }
   }
 

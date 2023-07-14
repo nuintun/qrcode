@@ -13,14 +13,16 @@ export class QRCode {
   #level: ECLevel;
   #mirror: boolean;
   #version: Version;
+  #corrected: number;
   #metadata: DecodeResult;
 
-  constructor(metadata: DecodeResult, version: Version, { mask, level }: FormatInfo, mirror: boolean) {
+  constructor(metadata: DecodeResult, version: Version, { mask, level }: FormatInfo, corrected: number, mirror: boolean) {
     this.#mask = mask;
     this.#level = level;
     this.#mirror = mirror;
     this.#version = version;
     this.#metadata = metadata;
+    this.#corrected = corrected;
   }
 
   /**
@@ -61,6 +63,14 @@ export class QRCode {
    */
   public get content(): string {
     return this.#metadata.content;
+  }
+
+  /**
+   * @property corrected
+   * @description Get the corrected of qrcode
+   */
+  public get corrected(): number {
+    return this.#corrected;
   }
 
   /**
