@@ -18,6 +18,363 @@
   'use strict';
 
   /**
+   * @module utils
+   */
+  function toInt32(value) {
+    return value | 0;
+  }
+  function round(value) {
+    return toInt32(value + (value < 0 ? -0.5 : 0.5));
+  }
+  function sumArray(array) {
+    let total = 0;
+    for (const value of array) {
+      total += value;
+    }
+    return total;
+  }
+  // Get bit count of int32
+  function bitCount(value) {
+    // HD, Figure 5-2
+    value = value - ((value >>> 1) & 0x55555555);
+    value = (value & 0x33333333) + ((value >>> 2) & 0x33333333);
+    value = (value + (value >>> 4)) & 0x0f0f0f0f;
+    value = value + (value >>> 8);
+    value = value + (value >>> 16);
+    return value & 0x3f;
+  }
+  // Return the position of the most significant bit set (to one) in the "value". The most
+  // significant bit is position 32. If there is no bit set, return 0. Examples:
+  // - findMSBSet(0) => 0
+  // - findMSBSet(1) => 1
+  // - findMSBSet(255) => 8
+  function findMSBSet(value) {
+    return 32 - Math.clz32(value);
+  }
+  // Calculate BCH (Bose-Chaudhuri-Hocquenghem) code for "value" using polynomial "poly". The BCH
+  // code is used for encoding type information and version information.
+  // Example: Calculation of version information of 7.
+  // f(x) is created from 7.
+  //   - 7 = 000111 in 6 bits
+  //   - f(x) = x^2 + x^1 + x^0
+  // g(x) is given by the standard (p. 67)
+  //   - g(x) = x^12 + x^11 + x^10 + x^9 + x^8 + x^5 + x^2 + 1
+  // Multiply f(x) by x^(18 - 6)
+  //   - f'(x) = f(x) * x^(18 - 6)
+  //   - f'(x) = x^14 + x^13 + x^12
+  // Calculate the remainder of f'(x) / g(x)
+  //         x^2
+  //         __________________________________________________
+  //   g(x) )x^14 + x^13 + x^12
+  //         x^14 + x^13 + x^12 + x^11 + x^10 + x^7 + x^4 + x^2
+  //         --------------------------------------------------
+  //                              x^11 + x^10 + x^7 + x^4 + x^2
+  //
+  // The remainder is x^11 + x^10 + x^7 + x^4 + x^2
+  // Encode it in binary: 110010010100
+  // The return value is 0xc94 (1100 1001 0100)
+  //
+  // Since all coefficients in the polynomials are 1 or 0, we can do the calculation by bit
+  // operations. We don't care if coefficients are positive or negative.
+  function calculateBCHCode(value, poly) {
+    // If poly is "1 1111 0010 0101" (version info poly), msbSetInPoly is 13. We'll subtract 1
+    // from 13 to make it 12.
+    const msbSetInPoly = findMSBSet(poly);
+    value <<= msbSetInPoly - 1;
+    // Do the division business using exclusive-or operations.
+    while (findMSBSet(value) >= msbSetInPoly) {
+      value ^= poly << (findMSBSet(value) - msbSetInPoly);
+    }
+    // Now the "value" is the remainder (i.e. the BCH code)
+    return value;
+  }
+
+  /**
+   * @module BitMatrix
+   */
+  class BitMatrix {
+    #width;
+    #height;
+    #rowSize;
+    #bits;
+    constructor(width, height, bits) {
+      const rowSize = Math.ceil(width / 32);
+      const bitsCapacity = rowSize * height;
+      this.#width = width;
+      this.#height = height;
+      this.#rowSize = rowSize;
+      if (bits instanceof Int32Array) {
+        if (bits.length !== bitsCapacity) {
+          throw new Error(`matrix bits capacity mismatch: ${bitsCapacity}`);
+        }
+        this.#bits = bits;
+      } else {
+        this.#bits = new Int32Array(bitsCapacity);
+      }
+    }
+    #offset(x, y) {
+      return y * this.#rowSize + toInt32(x / 32);
+    }
+    get width() {
+      return this.#width;
+    }
+    get height() {
+      return this.#height;
+    }
+    set(x, y) {
+      const offset = this.#offset(x, y);
+      this.#bits[offset] |= 1 << (x & 0x1f);
+    }
+    get(x, y) {
+      const offset = this.#offset(x, y);
+      return (this.#bits[offset] >>> (x & 0x1f)) & 0x01;
+    }
+    flip(x, y) {
+      if (x != null && y != null) {
+        const offset = this.#offset(x, y);
+        this.#bits[offset] ^= 1 << (x & 0x1f);
+      } else {
+        const bits = this.#bits;
+        const { length } = bits;
+        for (let i = 0; i < length; i++) {
+          bits[i] = ~bits[i];
+        }
+      }
+    }
+    clone() {
+      return new BitMatrix(this.#width, this.#height, new Int32Array(this.#bits));
+    }
+    setRegion(left, top, width, height) {
+      const bits = this.#bits;
+      const right = left + width;
+      const bottom = top + height;
+      const rowSize = this.#rowSize;
+      for (let y = top; y < bottom; y++) {
+        const offset = y * rowSize;
+        for (let x = left; x < right; x++) {
+          bits[offset + toInt32(x / 32)] |= 1 << (x & 0x1f);
+        }
+      }
+    }
+  }
+
+  /**
+   * @module histogram
+   */
+  const LUMINANCE_BITS = 5;
+  const LUMINANCE_SHIFT = 8 - LUMINANCE_BITS;
+  const LUMINANCE_BUCKETS = 1 << LUMINANCE_BITS;
+  function calculateBlackPoint(buckets) {
+    let firstPeak = 0;
+    let firstPeakSize = 0;
+    let maxBucketCount = 0;
+    // Find the tallest peak in the histogram.
+    const { length } = buckets;
+    for (let x = 0; x < length; x++) {
+      if (buckets[x] > firstPeakSize) {
+        firstPeak = x;
+        firstPeakSize = buckets[x];
+      }
+      if (buckets[x] > maxBucketCount) {
+        maxBucketCount = buckets[x];
+      }
+    }
+    // Find the second-tallest peak which is somewhat far from the tallest peak.
+    let secondPeak = 0;
+    let secondPeakScore = 0;
+    for (let x = 0; x < length; x++) {
+      const distanceToBiggest = x - firstPeak;
+      // Encourage more distant second peaks by multiplying by square of distance.
+      const score = buckets[x] * distanceToBiggest * distanceToBiggest;
+      if (score > secondPeakScore) {
+        secondPeak = x;
+        secondPeakScore = score;
+      }
+    }
+    // Make sure firstPeak corresponds to the black peak.
+    if (firstPeak > secondPeak) {
+      [firstPeak, secondPeak] = [secondPeak, firstPeak];
+    }
+    // Find a valley between them that is low and closer to the white peak.
+    let bestValleyScore = -1;
+    let bestValley = secondPeak - 1;
+    for (let x = secondPeak - 1; x > firstPeak; x--) {
+      const fromFirst = x - firstPeak;
+      const score = fromFirst * fromFirst * (secondPeak - x) * (maxBucketCount - buckets[x]);
+      if (score > bestValleyScore) {
+        bestValley = x;
+        bestValleyScore = score;
+      }
+    }
+    return bestValley << LUMINANCE_SHIFT;
+  }
+  function histogram(luminances, width, height) {
+    const matrix = new BitMatrix(width, height);
+    const buckets = new Int32Array(LUMINANCE_BUCKETS);
+    for (let y = 1; y < 5; y++) {
+      const right = toInt32((width * 4) / 5);
+      const offset = toInt32((height * y) / 5) * width;
+      for (let x = toInt32(width / 5); x < right; x++) {
+        const pixel = luminances[offset + x];
+        buckets[pixel >> LUMINANCE_SHIFT]++;
+      }
+    }
+    const blackPoint = calculateBlackPoint(buckets);
+    // We delay reading the entire image luminance until the black point estimation succeeds.
+    // Although we end up reading four rows twice, it is consistent with our motto of
+    // "fail quickly" which is necessary for continuous scanning.
+    for (let y = 0; y < height; y++) {
+      const offset = y * width;
+      for (let x = 0; x < width; x++) {
+        const pixel = luminances[offset + x];
+        if (pixel < blackPoint) {
+          matrix.set(x, y);
+        }
+      }
+    }
+    return matrix;
+  }
+
+  /**
+   * @module index
+   */
+  const BLOCK_SIZE_POWER = 3;
+  const MIN_DYNAMIC_RANGE = 24;
+  const BLOCK_SIZE = 1 << BLOCK_SIZE_POWER;
+  const BLOCK_SIZE_MASK = BLOCK_SIZE - 1;
+  const MINIMUM_DIMENSION = BLOCK_SIZE * 5;
+  function cap(value, max) {
+    return value < 2 ? 2 : Math.min(value, max);
+  }
+  function calculateSubSize(size) {
+    let subSize = size >> BLOCK_SIZE_POWER;
+    if (size & BLOCK_SIZE_MASK) {
+      subSize++;
+    }
+    return subSize;
+  }
+  function calculateOffset(offset, max) {
+    offset = offset << BLOCK_SIZE_POWER;
+    return offset > max ? max : offset;
+  }
+  function calculateBlackPoints(luminances, width, height) {
+    const blackPoints = [];
+    const maxOffsetX = width - BLOCK_SIZE;
+    const maxOffsetY = height - BLOCK_SIZE;
+    const subWidth = calculateSubSize(width);
+    const subHeight = calculateSubSize(height);
+    for (let y = 0; y < subHeight; y++) {
+      blackPoints[y] = new Int32Array(subWidth);
+      const offsetY = calculateOffset(y, maxOffsetY);
+      for (let x = 0; x < subWidth; x++) {
+        let sum = 0;
+        let max = 0;
+        let min = 0xff;
+        const offsetX = calculateOffset(x, maxOffsetX);
+        for (let y1 = 0, offset = offsetY * width + offsetX; y1 < BLOCK_SIZE; y1++, offset += width) {
+          for (let x1 = 0; x1 < BLOCK_SIZE; x1++) {
+            const pixel = luminances[offset + x1];
+            sum += pixel;
+            // still looking for good contrast
+            if (pixel < min) {
+              min = pixel;
+            }
+            if (pixel > max) {
+              max = pixel;
+            }
+          }
+          // short-circuit min/max tests once dynamic range is met
+          if (max - min > MIN_DYNAMIC_RANGE) {
+            // finish the rest of the rows quickly
+            for (y1++, offset += width; y1 < BLOCK_SIZE; y1++, offset += width) {
+              for (let x1 = 0; x1 < BLOCK_SIZE; x1++) {
+                sum += luminances[offset + x1];
+              }
+            }
+          }
+        }
+        // The default estimate is the average of the values in the block.
+        let average = sum >> (BLOCK_SIZE_POWER * 2);
+        if (max - min <= MIN_DYNAMIC_RANGE) {
+          // If variation within the block is low, assume this is a block with only light or only
+          // dark pixels. In that case we do not want to use the average, as it would divide this
+          // low contrast area into black and white pixels, essentially creating data out of noise.
+          //
+          // The default assumption is that the block is light/background. Since no estimate for
+          // the level of dark pixels exists locally, use half the min for the block.
+          average = min / 2;
+          if (y > 0 && x > 0) {
+            // Correct the "white background" assumption for blocks that have neighbors by comparing
+            // the pixels in this block to the previously calculated black points. This is based on
+            // the fact that dark barcode symbology is always surrounded by some amount of light
+            // background for which reasonable black point estimates were made. The bp estimated at
+            // the boundaries is used for the interior.
+            // The (min < bp) is arbitrary but works better than other heuristics that were tried.
+            const averageNeighborBlackPoint =
+              (blackPoints[y - 1][x] + 2 * blackPoints[y][x - 1] + blackPoints[y - 1][x - 1]) / 4;
+            if (min < averageNeighborBlackPoint) {
+              average = averageNeighborBlackPoint;
+            }
+          }
+        }
+        blackPoints[y][x] = average;
+      }
+    }
+    return blackPoints;
+  }
+  function adaptiveThreshold(luminances, width, height) {
+    const maxOffsetX = width - BLOCK_SIZE;
+    const maxOffsetY = height - BLOCK_SIZE;
+    const subWidth = calculateSubSize(width);
+    const subHeight = calculateSubSize(height);
+    const matrix = new BitMatrix(width, height);
+    const blackPoints = calculateBlackPoints(luminances, width, height);
+    for (let y = 0; y < subHeight; y++) {
+      const top = cap(y, subHeight - 3);
+      const offsetY = calculateOffset(y, maxOffsetY);
+      for (let x = 0; x < subWidth; x++) {
+        let sum = 0;
+        const left = cap(x, subWidth - 3);
+        const offsetX = calculateOffset(x, maxOffsetX);
+        for (let z = -2; z <= 2; z++) {
+          const blackRow = blackPoints[top + z];
+          sum += blackRow[left - 2] + blackRow[left - 1] + blackRow[left] + blackRow[left + 1] + blackRow[left + 2];
+        }
+        const average = sum / 25;
+        for (let y = 0, offset = offsetY * width + offsetX; y < BLOCK_SIZE; y++, offset += width) {
+          for (let x = 0; x < BLOCK_SIZE; x++) {
+            // Comparison needs to be <= so that black == 0 pixels are black even if the threshold is 0.
+            if (luminances[offset + x] <= average) {
+              matrix.set(offsetX + x, offsetY + y);
+            }
+          }
+        }
+      }
+    }
+    return matrix;
+  }
+  function binarize({ data, width, height }) {
+    // Convert image to luminances
+    const luminances = new Uint8Array(width * height);
+    for (let y = 0; y < height; y++) {
+      const offset = y * width;
+      for (let x = 0; x < width; x++) {
+        const index = offset + x;
+        const colorIndex = index * 4;
+        const r = data[colorIndex];
+        const g = data[colorIndex + 1];
+        const b = data[colorIndex + 2];
+        luminances[offset + x] = r * 0.2126 + g * 0.7152 + b * 0.0722;
+      }
+    }
+    if (width < MINIMUM_DIMENSION || height < MINIMUM_DIMENSION) {
+      return histogram(luminances, width, height);
+    } else {
+      return adaptiveThreshold(luminances, width, height);
+    }
+  }
+
+  /**
    * @module Charset
    */
   const VALUES_TO_CHARSET = new Map();
@@ -584,78 +941,6 @@
   }
 
   /**
-   * @module utils
-   */
-  function toInt32(value) {
-    return value | 0;
-  }
-  function round(value) {
-    return toInt32(value + (value < 0 ? -0.5 : 0.5));
-  }
-  function sumArray(array) {
-    let total = 0;
-    for (const value of array) {
-      total += value;
-    }
-    return total;
-  }
-  // Get bit count of int32
-  function bitCount(value) {
-    // HD, Figure 5-2
-    value = value - ((value >>> 1) & 0x55555555);
-    value = (value & 0x33333333) + ((value >>> 2) & 0x33333333);
-    value = (value + (value >>> 4)) & 0x0f0f0f0f;
-    value = value + (value >>> 8);
-    value = value + (value >>> 16);
-    return value & 0x3f;
-  }
-  // Return the position of the most significant bit set (to one) in the "value". The most
-  // significant bit is position 32. If there is no bit set, return 0. Examples:
-  // - findMSBSet(0) => 0
-  // - findMSBSet(1) => 1
-  // - findMSBSet(255) => 8
-  function findMSBSet(value) {
-    return 32 - Math.clz32(value);
-  }
-  // Calculate BCH (Bose-Chaudhuri-Hocquenghem) code for "value" using polynomial "poly". The BCH
-  // code is used for encoding type information and version information.
-  // Example: Calculation of version information of 7.
-  // f(x) is created from 7.
-  //   - 7 = 000111 in 6 bits
-  //   - f(x) = x^2 + x^1 + x^0
-  // g(x) is given by the standard (p. 67)
-  //   - g(x) = x^12 + x^11 + x^10 + x^9 + x^8 + x^5 + x^2 + 1
-  // Multiply f(x) by x^(18 - 6)
-  //   - f'(x) = f(x) * x^(18 - 6)
-  //   - f'(x) = x^14 + x^13 + x^12
-  // Calculate the remainder of f'(x) / g(x)
-  //         x^2
-  //         __________________________________________________
-  //   g(x) )x^14 + x^13 + x^12
-  //         x^14 + x^13 + x^12 + x^11 + x^10 + x^7 + x^4 + x^2
-  //         --------------------------------------------------
-  //                              x^11 + x^10 + x^7 + x^4 + x^2
-  //
-  // The remainder is x^11 + x^10 + x^7 + x^4 + x^2
-  // Encode it in binary: 110010010100
-  // The return value is 0xc94 (1100 1001 0100)
-  //
-  // Since all coefficients in the polynomials are 1 or 0, we can do the calculation by bit
-  // operations. We don't care if coefficients are positive or negative.
-  function calculateBCHCode(value, poly) {
-    // If poly is "1 1111 0010 0101" (version info poly), msbSetInPoly is 13. We'll subtract 1
-    // from 13 to make it 12.
-    const msbSetInPoly = findMSBSet(poly);
-    value <<= msbSetInPoly - 1;
-    // Do the division business using exclusive-or operations.
-    while (findMSBSet(value) >= msbSetInPoly) {
-      value ^= poly << (findMSBSet(value) - msbSetInPoly);
-    }
-    // Now the "value" is the remainder (i.e. the BCH code)
-    return value;
-  }
-
-  /**
    * @module mask
    */
   // Penalty weights from section 6.8.2.1
@@ -1012,75 +1297,6 @@
     }
     get numECCodewordsPerBlock() {
       return this.#numECCodewordsPerBlock;
-    }
-  }
-
-  /**
-   * @module BitMatrix
-   */
-  class BitMatrix {
-    #width;
-    #height;
-    #rowSize;
-    #bits;
-    constructor(width, height, bits) {
-      const rowSize = Math.ceil(width / 32);
-      const bitsCapacity = rowSize * height;
-      this.#width = width;
-      this.#height = height;
-      this.#rowSize = rowSize;
-      if (bits instanceof Int32Array) {
-        if (bits.length !== bitsCapacity) {
-          throw new Error(`matrix bits capacity mismatch: ${bitsCapacity}`);
-        }
-        this.#bits = bits;
-      } else {
-        this.#bits = new Int32Array(bitsCapacity);
-      }
-    }
-    #offset(x, y) {
-      return y * this.#rowSize + toInt32(x / 32);
-    }
-    get width() {
-      return this.#width;
-    }
-    get height() {
-      return this.#height;
-    }
-    set(x, y) {
-      const offset = this.#offset(x, y);
-      this.#bits[offset] |= 1 << (x & 0x1f);
-    }
-    get(x, y) {
-      const offset = this.#offset(x, y);
-      return (this.#bits[offset] >>> (x & 0x1f)) & 0x01;
-    }
-    flip(x, y) {
-      if (x != null && y != null) {
-        const offset = this.#offset(x, y);
-        this.#bits[offset] ^= 1 << (x & 0x1f);
-      } else {
-        const bits = this.#bits;
-        const { length } = bits;
-        for (let i = 0; i < length; i++) {
-          bits[i] = ~bits[i];
-        }
-      }
-    }
-    clone() {
-      return new BitMatrix(this.#width, this.#height, new Int32Array(this.#bits));
-    }
-    setRegion(left, top, width, height) {
-      const bits = this.#bits;
-      const right = left + width;
-      const bottom = top + height;
-      const rowSize = this.#rowSize;
-      for (let y = top; y < bottom; y++) {
-        const offset = y * rowSize;
-        for (let x = left; x < right; x++) {
-          bits[offset + toInt32(x / 32)] |= 1 << (x & 0x1f);
-        }
-      }
     }
   }
 
@@ -3284,106 +3500,6 @@
   }
 
   /**
-   * @module binarizer
-   */
-  const REGION_SIZE = 8;
-  const MIN_DYNAMIC_RANGE = 24;
-  function between(value, min, max) {
-    return value < min ? min : value > max ? max : value;
-  }
-  function binarize({ data, width, height }) {
-    if (data.length !== width * height * 4) {
-      throw new Error('malformed data passed to binarizer');
-    }
-    // Convert image to greyscale
-    const greyscale = new Uint8Array(width * height);
-    for (let y = 0; y < height; y++) {
-      const offset = y * width;
-      for (let x = 0; x < width; x++) {
-        const index = offset + x;
-        const colorIndex = index * 4;
-        const r = data[colorIndex];
-        const g = data[colorIndex + 1];
-        const b = data[colorIndex + 2];
-        greyscale[offset + x] = r * 0.2126 + g * 0.7152 + b * 0.0722;
-      }
-    }
-    const blackPointsWidth = Math.ceil(width / REGION_SIZE);
-    const blackPointsHeight = Math.ceil(height / REGION_SIZE);
-    const blackPoints = new Uint8Array(blackPointsWidth * blackPointsHeight);
-    for (let blackPointsY = 0; blackPointsY < blackPointsHeight; blackPointsY++) {
-      const offset = blackPointsY * blackPointsWidth;
-      const prevOffset = offset - blackPointsWidth;
-      for (let blackPointsX = 0; blackPointsX < blackPointsWidth; blackPointsX++) {
-        let sum = 0;
-        let max = 0;
-        let min = 0xff;
-        for (let y = 0; y < REGION_SIZE; y++) {
-          const offset = (blackPointsY * REGION_SIZE + y) * width;
-          for (let x = 0; x < REGION_SIZE; x++) {
-            const pixelLumosity = greyscale[offset + blackPointsX * REGION_SIZE + x];
-            sum += pixelLumosity;
-            min = Math.min(min, pixelLumosity);
-            max = Math.max(max, pixelLumosity);
-          }
-        }
-        let average = sum / (REGION_SIZE * REGION_SIZE);
-        if (max - min <= MIN_DYNAMIC_RANGE) {
-          // If variation within the block is low, assume this is a block with only light or only
-          // dark pixels. In that case we do not want to use the average, as it would divide this
-          // low contrast area into black and white pixels, essentially creating data out of noise.
-          //
-          // Default the blackpoint for these blocks to be half the min - effectively white them out
-          average = min / 2;
-          if (blackPointsX > 0 && blackPointsY > 0) {
-            // Correct the "white background" assumption for blocks that have neighbors by comparing
-            // the pixels in this block to the previously calculated black points. This is based on
-            // the fact that dark barcode symbology is always surrounded by some amount of light
-            // background for which reasonable black point estimates were made. The bp estimated at
-            // the boundaries is used for the interior.
-            // The (min < bp) is arbitrary but works better than other heuristics that were tried.
-            const topRightPoint = blackPoints[prevOffset + blackPointsX];
-            const bottomLeftPoint = blackPoints[offset + blackPointsX - 1];
-            const topLeftPoint = blackPoints[prevOffset + blackPointsX - 1];
-            const averageNeighborBlackPoint = (topRightPoint + 2 * bottomLeftPoint + topLeftPoint) / 4;
-            if (min < averageNeighborBlackPoint) {
-              average = averageNeighborBlackPoint;
-            }
-          }
-        }
-        blackPoints[offset + blackPointsX] = average;
-      }
-    }
-    const binarized = new BitMatrix(width, height);
-    for (let blackPointsY = 0; blackPointsY < blackPointsHeight; blackPointsY++) {
-      const top = between(blackPointsY, 2, blackPointsHeight - 3);
-      for (let blackPointsX = 0; blackPointsX < blackPointsWidth; blackPointsX++) {
-        let sum = 0;
-        const left = between(blackPointsX, 2, blackPointsWidth - 3);
-        for (let regionY = -2; regionY <= 2; regionY++) {
-          const offset = (top + regionY) * blackPointsWidth;
-          for (let regionX = -2; regionX <= 2; regionX++) {
-            sum += blackPoints[offset + left + regionX];
-          }
-        }
-        const threshold = sum / 25;
-        for (let regionY = 0; regionY < REGION_SIZE; regionY++) {
-          const y = blackPointsY * REGION_SIZE + regionY;
-          const offset = y * width;
-          for (let regionX = 0; regionX < REGION_SIZE; regionX++) {
-            const x = blackPointsX * REGION_SIZE + regionX;
-            const lumina = greyscale[offset + x];
-            if (lumina <= threshold) {
-              binarized.set(x, y);
-            }
-          }
-        }
-      }
-    }
-    return binarized;
-  }
-
-  /**
    * @module Byte
    */
   class Byte {
@@ -4846,93 +4962,6 @@
     }
   }
 
-  // /**
-  //  * @module binarize
-  //  * @see https://github.com/FujiHaruka/node-adaptive-threshold
-  //  */
-  function grayscale(colors, width, height) {
-    const pixels = new Float32Array(width * height);
-    for (let y = 0; y < height; y++) {
-      const offset = y * width;
-      for (let x = 0; x < width; x++) {
-        const index = offset + x;
-        const colorIndex = index * 4;
-        const r = colors[colorIndex];
-        const g = colors[colorIndex + 1];
-        const b = colors[colorIndex + 2];
-        pixels[index] = r * 0.2126 + g * 0.7152 + b * 0.0722;
-      }
-    }
-    return pixels;
-  }
-  function calcLocalAverages(pixels, width, height, size) {
-    const sums = [];
-    for (let y = 0; y < height; y++) {
-      const offset = y * width;
-      const sum = new Float32Array(width);
-      for (let x = 0; x < size; x++) {
-        sum[0] += pixels[offset + x];
-      }
-      for (let end = size; end < width; end++) {
-        const start = end - size + 1;
-        sum[start] = sum[start - 1] + pixels[offset + end] - pixels[offset + start - 1];
-      }
-      sums[y] = sum;
-    }
-    const averagesWidth = width - size + 1;
-    const averagesHeight = height - size + 1;
-    const averages = new Float32Array(averagesWidth * averagesHeight);
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < averagesWidth; x++) {
-        // Set x, 0
-        averages[x] += sums[y][x];
-      }
-    }
-    for (let y = 1; y < averagesHeight; y++) {
-      const offset = y * averagesWidth;
-      const prevOffset = offset - averagesWidth;
-      for (let x = 0; x < averagesWidth; x++) {
-        averages[offset + x] = averages[prevOffset + x] - sums[y - 1][x] + sums[y + size - 1][x];
-      }
-    }
-    // Devide
-    for (let y = 0; y < averagesHeight; y++) {
-      const offset = y * averagesWidth;
-      for (let x = 0; x < averagesWidth; x++) {
-        averages[offset + x] /= size * size;
-      }
-    }
-    return [averages, averagesWidth, averagesHeight];
-  }
-  function binarizer({ width, height, data }, { size = 24, compensation = 8 } = {}) {
-    const middleSize = toInt32(size / 2);
-    const binarized = new BitMatrix(width, height);
-    const grayscaled = grayscale(data, width, height);
-    const [averages, averagesWidth, averagesHeight] = calcLocalAverages(grayscaled, width, height, size);
-    for (let y = 0; y < height; y++) {
-      const offset = y * width;
-      for (let x = 0; x < width; x++) {
-        let averageX = x - middleSize;
-        let averageY = y - middleSize;
-        const pixel = grayscaled[offset + x];
-        if (x - middleSize < 0) {
-          averageX = 0;
-        } else if (x - middleSize >= averagesWidth) {
-          averageX = averagesWidth - 1;
-        } else if (y - middleSize < 0) {
-          averageY = 0;
-        } else if (y - middleSize > averagesHeight) {
-          averageY = averagesHeight - 1;
-        }
-        const average = averages[averageY * averagesWidth + averageX];
-        if (pixel < average - compensation) {
-          binarized.set(x, y);
-        }
-      }
-    }
-    return binarized;
-  }
-
   exports.Alphanumeric = Alphanumeric;
   exports.BitMatrix = BitMatrix;
   exports.Byte = Byte;
@@ -4944,5 +4973,4 @@
   exports.Kanji = Kanji;
   exports.Numeric = Numeric;
   exports.binarize = binarize;
-  exports.binarizer = binarizer;
 });
