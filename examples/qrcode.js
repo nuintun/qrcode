@@ -364,7 +364,7 @@
         const r = data[colorIndex];
         const g = data[colorIndex + 1];
         const b = data[colorIndex + 2];
-        luminances[offset + x] = r * 0.2126 + g * 0.7152 + b * 0.0722;
+        luminances[offset + x] = r * 0.299 + g * 0.587 + b * 0.114;
       }
     }
     if (width < MINIMUM_DIMENSION || height < MINIMUM_DIMENSION) {

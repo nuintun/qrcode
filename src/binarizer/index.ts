@@ -165,7 +165,7 @@ export function binarize({ data, width, height }: ImageData): BitMatrix {
       const g = data[colorIndex + 1];
       const b = data[colorIndex + 2];
 
-      luminances[offset + x] = r * 0.2126 + g * 0.7152 + b * 0.0722;
+      luminances[offset + x] = r * 0.299 + g * 0.587 + b * 0.114;
     }
   }
 
