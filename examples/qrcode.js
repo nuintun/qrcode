@@ -2751,6 +2751,20 @@
   /**
    * @module Encoder
    */
+  function buildGenerator(field, generators, degree) {
+    const { length } = generators;
+    if (degree >= length) {
+      const { generator } = field;
+      let lastGenerator = generators[length - 1];
+      for (let i = length; i <= degree; i++) {
+        const coefficients = new Int32Array([1, field.exp(i - 1 + generator)]);
+        const nextGenerator = lastGenerator.multiply(new Polynomial(field, coefficients));
+        generators.push(nextGenerator);
+        lastGenerator = nextGenerator;
+      }
+    }
+    return generators[degree];
+  }
   let Encoder$1 = class Encoder {
     #field;
     #generators;
@@ -2758,26 +2772,10 @@
       this.#field = field;
       this.#generators = [new Polynomial(field, new Int32Array([1]))];
     }
-    #buildGenerator(degree) {
-      const generators = this.#generators;
-      const { length } = generators;
-      if (degree >= length) {
-        const field = this.#field;
-        const { generator } = field;
-        let lastGenerator = generators[length - 1];
-        for (let i = length; i <= degree; i++) {
-          const coefficients = new Int32Array([1, field.exp(i - 1 + generator)]);
-          const nextGenerator = lastGenerator.multiply(new Polynomial(field, coefficients));
-          generators.push(nextGenerator);
-          lastGenerator = nextGenerator;
-        }
-      }
-      return generators[degree];
-    }
     encode(received, ecLength) {
       const dataBytes = received.length - ecLength;
-      const generator = this.#buildGenerator(ecLength);
       const infoCoefficients = new Int32Array(dataBytes);
+      const generator = buildGenerator(this.#field, this.#generators, ecLength);
       infoCoefficients.set(received.subarray(0, dataBytes));
       const base = new Polynomial(this.#field, infoCoefficients);
       const info = base.multiplyByMonomial(ecLength, 1);
@@ -3210,11 +3208,11 @@
       this.#background = background;
     }
     #encode() {
-      const stream = new ByteStream();
       const width = this.#width;
       const height = this.#height;
-      const foreground = this.#foreground;
+      const stream = new ByteStream();
       const background = this.#background;
+      const foreground = this.#foreground;
       // GIF signature: GIF89a
       stream.writeBytes([0x47, 0x49, 0x46, 0x38, 0x39, 0x61]);
       // Logical screen descriptor

@@ -39,11 +39,11 @@ export class GIFImage {
   }
 
   #encode(): number[] {
-    const stream = new ByteStream();
     const width = this.#width;
     const height = this.#height;
-    const foreground = this.#foreground;
+    const stream = new ByteStream();
     const background = this.#background;
+    const foreground = this.#foreground;
 
     // GIF signature: GIF89a
     stream.writeBytes([0x47, 0x49, 0x46, 0x38, 0x39, 0x61]);
