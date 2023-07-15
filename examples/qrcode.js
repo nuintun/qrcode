@@ -4192,13 +4192,14 @@
   function checkPixelsInTimingLine(
     matrix,
     { topLeft, topRight, bottomLeft, moduleSize: [xModuleSize, yModuleSize] },
+    ratio,
     isVertical
   ) {
     const [start, end] = isVertical
       ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
       : calculateTimingLine(topLeft, topRight, bottomLeft);
     const moduleSize = isVertical ? yModuleSize : xModuleSize;
-    const maxRepeatPixels = Math.ceil(moduleSize * 1.5);
+    const maxRepeatPixels = Math.ceil(moduleSize * ratio);
     const points = new PlotLine(start, end).points();
     let count = 0;
     let modules = 0;
@@ -4517,8 +4518,10 @@
                   const [moduleSize1, moduleSize2] = moduleSize;
                   if (moduleSize1 >= 1 && moduleSize2 >= 1) {
                     if (
-                      checkPixelsInTimingLine(matrix, finderPatternGroup) ||
-                      checkPixelsInTimingLine(matrix, finderPatternGroup, true)
+                      (checkPixelsInTimingLine(matrix, finderPatternGroup, 1.5) &&
+                        checkPixelsInTimingLine(matrix, finderPatternGroup, 4.5, true)) ||
+                      (checkPixelsInTimingLine(matrix, finderPatternGroup, 4.5) &&
+                        checkPixelsInTimingLine(matrix, finderPatternGroup, 1.5, true))
                     ) {
                       if (yield finderPatternGroup) {
                         used.set(pattern1, true);

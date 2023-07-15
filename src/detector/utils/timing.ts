@@ -50,13 +50,14 @@ function calculateTimingLine(start: Pattern, end: Pattern, control: Pattern, isV
 export function checkPixelsInTimingLine(
   matrix: BitMatrix,
   { topLeft, topRight, bottomLeft, moduleSize: [xModuleSize, yModuleSize] }: FinderPatternGroup,
+  ratio: number,
   isVertical?: boolean
 ): boolean {
   const [start, end] = isVertical
     ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
     : calculateTimingLine(topLeft, topRight, bottomLeft);
   const moduleSize = isVertical ? yModuleSize : xModuleSize;
-  const maxRepeatPixels = Math.ceil(moduleSize * 1.5);
+  const maxRepeatPixels = Math.ceil(moduleSize * ratio);
   const points = new PlotLine(start, end).points();
 
   let count = 0;

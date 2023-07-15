@@ -85,8 +85,10 @@ export class FinderPatternFinder extends PatternFinder {
 
                 if (moduleSize1 >= 1 && moduleSize2 >= 1) {
                   if (
-                    checkPixelsInTimingLine(matrix, finderPatternGroup) ||
-                    checkPixelsInTimingLine(matrix, finderPatternGroup, true)
+                    (checkPixelsInTimingLine(matrix, finderPatternGroup, 1.5) &&
+                      checkPixelsInTimingLine(matrix, finderPatternGroup, 4.5, true)) ||
+                    (checkPixelsInTimingLine(matrix, finderPatternGroup, 4.5) &&
+                      checkPixelsInTimingLine(matrix, finderPatternGroup, 1.5, true))
                   ) {
                     if (yield finderPatternGroup) {
                       used.set(pattern1, true);
