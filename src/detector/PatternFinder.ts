@@ -73,7 +73,7 @@ export class PatternFinder {
       const [centerY, vertical] = this.#alignCrossPattern(centerX, y, overscan, true);
 
       if (centerY >= 0) {
-        // Re-cross check
+        // Re-horizontal check
         [centerX, horizontal] = this.#alignCrossPattern(centerX, centerY, overscan);
 
         if (centerX >= 0) {
