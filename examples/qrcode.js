@@ -4198,7 +4198,7 @@
       ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
       : calculateTimingLine(topLeft, topRight, bottomLeft);
     const moduleSize = isVertical ? yModuleSize : xModuleSize;
-    const maxRepeatPixels = Math.ceil(moduleSize * 3);
+    const maxRepeatPixels = Math.ceil(moduleSize * 1.5);
     const points = new PlotLine(start, end).points();
     let count = 0;
     let modules = 0;
@@ -4515,16 +4515,16 @@
                 if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
                   const { moduleSize } = finderPatternGroup;
                   const [moduleSize1, moduleSize2] = moduleSize;
-                  if (
-                    moduleSize1 >= 1 &&
-                    moduleSize2 >= 1 &&
-                    checkPixelsInTimingLine(matrix, finderPatternGroup) &&
-                    checkPixelsInTimingLine(matrix, finderPatternGroup, true)
-                  ) {
-                    if (yield finderPatternGroup) {
-                      used.set(pattern1, true);
-                      used.set(pattern2, true);
-                      used.set(pattern3, true);
+                  if (moduleSize1 >= 1 && moduleSize2 >= 1) {
+                    if (
+                      checkPixelsInTimingLine(matrix, finderPatternGroup) ||
+                      checkPixelsInTimingLine(matrix, finderPatternGroup, true)
+                    ) {
+                      if (yield finderPatternGroup) {
+                        used.set(pattern1, true);
+                        used.set(pattern2, true);
+                        used.set(pattern3, true);
+                      }
                     }
                   }
                 }

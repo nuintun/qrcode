@@ -56,7 +56,7 @@ export function checkPixelsInTimingLine(
     ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
     : calculateTimingLine(topLeft, topRight, bottomLeft);
   const moduleSize = isVertical ? yModuleSize : xModuleSize;
-  const maxRepeatPixels = Math.ceil(moduleSize * 3);
+  const maxRepeatPixels = Math.ceil(moduleSize * 1.5);
   const points = new PlotLine(start, end).points();
 
   let count = 0;

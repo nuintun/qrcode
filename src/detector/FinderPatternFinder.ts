@@ -83,16 +83,16 @@ export class FinderPatternFinder extends PatternFinder {
                 const { moduleSize } = finderPatternGroup;
                 const [moduleSize1, moduleSize2] = moduleSize;
 
-                if (
-                  moduleSize1 >= 1 &&
-                  moduleSize2 >= 1 &&
-                  checkPixelsInTimingLine(matrix, finderPatternGroup) &&
-                  checkPixelsInTimingLine(matrix, finderPatternGroup, true)
-                ) {
-                  if (yield finderPatternGroup) {
-                    used.set(pattern1, true);
-                    used.set(pattern2, true);
-                    used.set(pattern3, true);
+                if (moduleSize1 >= 1 && moduleSize2 >= 1) {
+                  if (
+                    checkPixelsInTimingLine(matrix, finderPatternGroup) ||
+                    checkPixelsInTimingLine(matrix, finderPatternGroup, true)
+                  ) {
+                    if (yield finderPatternGroup) {
+                      used.set(pattern1, true);
+                      used.set(pattern2, true);
+                      used.set(pattern3, true);
+                    }
                   }
                 }
               }
