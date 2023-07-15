@@ -4256,7 +4256,7 @@
     const width = distance(topLeft, topRight);
     const height = distance(topLeft, bottomLeft);
     const moduleSizeAvg = calculateModuleSize(moduleSize);
-    const size = round((width + height) / 2 / moduleSizeAvg) + 7;
+    const size = round((round(width / moduleSizeAvg) + round(height / moduleSizeAvg)) / 2) + 7;
     switch (size & 0x03) {
       case 0:
         return size + 1;
