@@ -3973,8 +3973,8 @@
     from = line.from;
     const [stepX] = line.step;
     // Found black-white-black; give the benefit of the doubt that the next pixel outside the image
-    // is "white" so this last point at (toX+xStep,toY) is the right ending. This is really a
-    // small approximation; (toX+xStep,toY+yStep) might be really correct. Ignore this.
+    // is "white" so this last point at (toX + stepX, toY) is the right ending. This is really a
+    // small approximation; (toX + stepX, toY + stepY) might be really correct. Ignore this.
     if (state === 2) {
       return distance(new Point(to.x + stepX, to.y), from);
     }
