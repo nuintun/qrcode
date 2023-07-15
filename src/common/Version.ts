@@ -6,7 +6,7 @@ import { ECB } from './ECB';
 import { ECLevel } from './ECLevel';
 import { ECBlocks } from './ECBlocks';
 import { BitMatrix } from './BitMatrix';
-import { bitCount, toInt32 } from './utils';
+import { hammingWeight, toInt32 } from './utils';
 
 const VERSION_DECODE_TABLE = [
   // Version 7 - 11
@@ -411,7 +411,7 @@ export function decodeVersion(version1: number, version2: number): Version {
     }
 
     // Otherwise see if this is the closest to a real version info bit string we have seen so far
-    let bitsDiff = bitCount(version1 ^ maskedVersion);
+    let bitsDiff = hammingWeight(version1 ^ maskedVersion);
 
     if (bitsDiff < bestDiff) {
       bestDiff = bitsDiff;
@@ -420,7 +420,7 @@ export function decodeVersion(version1: number, version2: number): Version {
 
     if (version1 !== version2) {
       // Also try the other option
-      bitsDiff = bitCount(version2 ^ maskedVersion);
+      bitsDiff = hammingWeight(version2 ^ maskedVersion);
 
       if (bitsDiff < bestDiff) {
         bestDiff = bitsDiff;

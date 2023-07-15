@@ -33,15 +33,12 @@
     }
     return total;
   }
-  // Get bit count of int32
-  function bitCount(value) {
+  // Get hamming weight of int32
+  function hammingWeight(value) {
     // HD, Figure 5-2
-    value = value - ((value >>> 1) & 0x55555555);
-    value = (value & 0x33333333) + ((value >>> 2) & 0x33333333);
-    value = (value + (value >>> 4)) & 0x0f0f0f0f;
-    value = value + (value >>> 8);
-    value = value + (value >>> 16);
-    return value & 0x3f;
+    value = value - ((value >> 1) & 0x55555555);
+    value = (value & 0x33333333) + ((value >> 2) & 0x33333333);
+    return (((value + (value >> 4)) & 0xf0f0f0f) * 0x1010101) >> 24;
   }
   // Return the position of the most significant bit set (to one) in the "value". The most
   // significant bit is position 32. If there is no bit set, return 0. Examples:
@@ -1221,14 +1218,14 @@
         // Found an exact match
         return new FormatInfo(formatInfo);
       }
-      let bitsDiff = bitCount(formatInfo1 ^ maskedFormatInfo);
+      let bitsDiff = hammingWeight(formatInfo1 ^ maskedFormatInfo);
       if (bitsDiff < bestDiff) {
         bestDiff = bitsDiff;
         bestFormatInfo = formatInfo;
       }
       if (formatInfo1 !== formatInfo2) {
         // Also try the other option
-        bitsDiff = bitCount(formatInfo2 ^ maskedFormatInfo);
+        bitsDiff = hammingWeight(formatInfo2 ^ maskedFormatInfo);
         if (bitsDiff < bestDiff) {
           bestDiff = bitsDiff;
           bestFormatInfo = formatInfo;
@@ -1688,14 +1685,14 @@
         return VERSIONS[i + 6];
       }
       // Otherwise see if this is the closest to a real version info bit string we have seen so far
-      let bitsDiff = bitCount(version1 ^ maskedVersion);
+      let bitsDiff = hammingWeight(version1 ^ maskedVersion);
       if (bitsDiff < bestDiff) {
         bestDiff = bitsDiff;
         bestVersion = i + 7;
       }
       if (version1 !== version2) {
         // Also try the other option
-        bitsDiff = bitCount(version2 ^ maskedVersion);
+        bitsDiff = hammingWeight(version2 ^ maskedVersion);
         if (bitsDiff < bestDiff) {
           bestDiff = bitsDiff;
           bestVersion = i + 7;

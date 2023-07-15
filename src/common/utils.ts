@@ -20,16 +20,13 @@ export function sumArray(array: number[]): number {
   return total;
 }
 
-// Get bit count of int32
-export function bitCount(value: number): number {
+// Get hamming weight of int32
+export function hammingWeight(value: number): number {
   // HD, Figure 5-2
-  value = value - ((value >>> 1) & 0x55555555);
-  value = (value & 0x33333333) + ((value >>> 2) & 0x33333333);
-  value = (value + (value >>> 4)) & 0x0f0f0f0f;
-  value = value + (value >>> 8);
-  value = value + (value >>> 16);
+  value = value - ((value >> 1) & 0x55555555);
+  value = (value & 0x33333333) + ((value >> 2) & 0x33333333);
 
-  return value & 0x3f;
+  return (((value + (value >> 4)) & 0xf0f0f0f) * 0x1010101) >> 24;
 }
 
 // Return the position of the most significant bit set (to one) in the "value". The most

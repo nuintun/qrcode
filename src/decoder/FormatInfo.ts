@@ -2,7 +2,7 @@
  * @module FormatInfo
  */
 
-import { bitCount } from '/common/utils';
+import { hammingWeight } from '/common/utils';
 import { ECLevel, fromECLevelBits } from '/common/ECLevel';
 
 const FORMAT_INFO_DECODE_TABLE = [
@@ -69,7 +69,7 @@ export function decodeFormatInfo(formatInfo1: number, formatInfo2: number): Form
       return new FormatInfo(formatInfo);
     }
 
-    let bitsDiff = bitCount(formatInfo1 ^ maskedFormatInfo);
+    let bitsDiff = hammingWeight(formatInfo1 ^ maskedFormatInfo);
 
     if (bitsDiff < bestDiff) {
       bestDiff = bitsDiff;
@@ -78,7 +78,7 @@ export function decodeFormatInfo(formatInfo1: number, formatInfo2: number): Form
 
     if (formatInfo1 !== formatInfo2) {
       // Also try the other option
-      bitsDiff = bitCount(formatInfo2 ^ maskedFormatInfo);
+      bitsDiff = hammingWeight(formatInfo2 ^ maskedFormatInfo);
 
       if (bitsDiff < bestDiff) {
         bestDiff = bitsDiff;
