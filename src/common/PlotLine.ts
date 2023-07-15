@@ -28,13 +28,13 @@ export class PlotLine {
       [fromX, fromY, toX, toY] = [fromY, fromX, toY, toX];
     }
 
-    const stepX = fromX < toX ? 1 : -1;
+    const stepX = fromX < toX ? 1 : fromX > toX ? -1 : 0;
 
     this.#steep = steep;
     this.#limit = toX + stepX;
     this.#to = new Point(toX, toY);
     this.#from = new Point(fromX, fromY);
-    this.#step = [stepX, fromY < toY ? 1 : -1];
+    this.#step = [stepX, fromY < toY ? 1 : fromY > toY ? -1 : 0];
     this.#delta = [Math.abs(toX - fromX), Math.abs(toY - fromY)];
   }
 

@@ -3904,12 +3904,12 @@
       if (steep) {
         [fromX, fromY, toX, toY] = [fromY, fromX, toY, toX];
       }
-      const stepX = fromX < toX ? 1 : -1;
+      const stepX = fromX < toX ? 1 : fromX > toX ? -1 : 0;
       this.#steep = steep;
       this.#limit = toX + stepX;
       this.#to = new Point(toX, toY);
       this.#from = new Point(fromX, fromY);
-      this.#step = [stepX, fromY < toY ? 1 : -1];
+      this.#step = [stepX, fromY < toY ? 1 : fromY > toY ? -1 : 0];
       this.#delta = [Math.abs(toX - fromX), Math.abs(toY - fromY)];
     }
     get to() {
@@ -4192,14 +4192,13 @@
   function checkPixelsInTimingLine(
     matrix,
     { topLeft, topRight, bottomLeft, moduleSize: [xModuleSize, yModuleSize] },
-    ratio,
     isVertical
   ) {
     const [start, end] = isVertical
       ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
       : calculateTimingLine(topLeft, topRight, bottomLeft);
     const moduleSize = isVertical ? yModuleSize : xModuleSize;
-    const maxRepeatPixels = Math.ceil(moduleSize * ratio);
+    const maxRepeatPixels = Math.ceil(moduleSize * 3);
     const points = new PlotLine(start, end).points();
     let count = 0;
     let modules = 0;
@@ -4516,18 +4515,16 @@
                 if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
                   const { moduleSize } = finderPatternGroup;
                   const [moduleSize1, moduleSize2] = moduleSize;
-                  if (moduleSize1 >= 1 && moduleSize2 >= 1) {
-                    if (
-                      (checkPixelsInTimingLine(matrix, finderPatternGroup, 1.5) &&
-                        checkPixelsInTimingLine(matrix, finderPatternGroup, 4.5, true)) ||
-                      (checkPixelsInTimingLine(matrix, finderPatternGroup, 4.5) &&
-                        checkPixelsInTimingLine(matrix, finderPatternGroup, 1.5, true))
-                    ) {
-                      if (yield finderPatternGroup) {
-                        used.set(pattern1, true);
-                        used.set(pattern2, true);
-                        used.set(pattern3, true);
-                      }
+                  if (
+                    moduleSize1 >= 1 &&
+                    moduleSize2 >= 1 &&
+                    checkPixelsInTimingLine(matrix, finderPatternGroup) &&
+                    checkPixelsInTimingLine(matrix, finderPatternGroup, true)
+                  ) {
+                    if (yield finderPatternGroup) {
+                      used.set(pattern1, true);
+                      used.set(pattern2, true);
+                      used.set(pattern3, true);
                     }
                   }
                 }
