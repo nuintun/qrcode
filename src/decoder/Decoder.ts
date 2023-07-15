@@ -15,34 +15,38 @@ export interface Options {
   decode?: TextDecode;
 }
 
+function parse(
+  parser: BitMatrixParser,
+  version: Version,
+  { mask, level }: FormatInfo
+): [codewords: Uint8Array, corrected: number] {
+  let offset = 0;
+  let corrected = 0;
+
+  parser.unmask(mask);
+
+  const ecBlocks = version.getECBlocks(level);
+  const codewords = parser.readCodewords(version, level);
+  const blocks = getDataBlocks(codewords, version, level);
+  const buffer = new Uint8Array(ecBlocks.numTotalDataCodewords);
+
+  for (const { codewords, numDataCodewords } of blocks) {
+    const [bytes, errors] = correctErrors(codewords, numDataCodewords);
+
+    buffer.set(bytes.subarray(0, numDataCodewords), offset);
+
+    corrected += errors;
+    offset += numDataCodewords;
+  }
+
+  return [buffer, corrected];
+}
+
 export class Decoder {
   #decode: TextDecode;
 
   constructor({ decode = textDecode }: Options = {}) {
     this.#decode = decode;
-  }
-
-  #parse(parser: BitMatrixParser, version: Version, { mask, level }: FormatInfo): [codewords: Uint8Array, corrected: number] {
-    let offset = 0;
-    let corrected = 0;
-
-    parser.unmask(mask);
-
-    const ecBlocks = version.getECBlocks(level);
-    const codewords = parser.readCodewords(version, level);
-    const blocks = getDataBlocks(codewords, version, level);
-    const buffer = new Uint8Array(ecBlocks.numTotalDataCodewords);
-
-    for (const { codewords, numDataCodewords } of blocks) {
-      const [bytes, errors] = correctErrors(codewords, numDataCodewords);
-
-      buffer.set(bytes.subarray(0, numDataCodewords), offset);
-
-      corrected += errors;
-      offset += numDataCodewords;
-    }
-
-    return [buffer, corrected];
   }
 
   decode(matrix: BitMatrix): QRCode {
@@ -57,7 +61,7 @@ export class Decoder {
     try {
       version = parser.readVersion();
       formatInfo = parser.readFormatInfo();
-      [codewords, corrected] = this.#parse(parser, version, formatInfo);
+      [codewords, corrected] = parse(parser, version, formatInfo);
     } catch {
       if (formatInfo != null) {
         parser.remask(formatInfo.mask);
@@ -68,7 +72,7 @@ export class Decoder {
       mirror = true;
       version = parser.readVersion();
       formatInfo = parser.readFormatInfo();
-      [codewords, corrected] = this.#parse(parser, version, formatInfo);
+      [codewords, corrected] = parse(parser, version, formatInfo);
     }
 
     return new QRCode(decode(codewords, version, formatInfo, this.#decode), version, formatInfo, corrected, mirror);

@@ -1743,6 +1743,9 @@
   /**
    * @module BitMatrixParser
    */
+  function copyBit(matrix, x, y, bits) {
+    return matrix.get(x, y) ? (bits << 1) | 0x01 : bits << 1;
+  }
   class BitMatrixParser {
     #size;
     #matrix;
@@ -1754,9 +1757,6 @@
       this.#size = width;
       this.#matrix = matrix.clone();
     }
-    #copyBit(x, y, bits) {
-      return this.#matrix.get(x, y) ? (bits << 1) | 0x01 : bits << 1;
-    }
     readVersion() {
       const size = this.#size;
       let version = toInt32((size - 17) / 4);
@@ -1767,14 +1767,15 @@
       let version1 = 0;
       let version2 = 0;
       const min = size - 11;
+      const matrix = this.#matrix;
       for (let y = 5; y >= 0; y--) {
         for (let x = size - 9; x >= min; x--) {
-          version1 = this.#copyBit(x, y, version1);
+          version1 = copyBit(matrix, x, y, version1);
         }
       }
       for (let x = 5; x >= 0; x--) {
         for (let y = size - 9; y >= min; y--) {
-          version2 = this.#copyBit(x, y, version2);
+          version2 = copyBit(matrix, x, y, version2);
         }
       }
       return decodeVersion(version1, version2);
@@ -1782,26 +1783,27 @@
     readFormatInfo() {
       let formatInfo1 = 0;
       let formatInfo2 = 0;
+      const matrix = this.#matrix;
       const size = this.#size;
       const max = size - 7;
       // Read top-left format info bits
       for (let x = 0; x <= 8; x++) {
         if (x !== 6) {
           // Skip timing pattern bit
-          formatInfo1 = this.#copyBit(x, 8, formatInfo1);
+          formatInfo1 = copyBit(matrix, x, 8, formatInfo1);
         }
       }
       for (let y = 7; y >= 0; y--) {
         if (y !== 6) {
           // Skip timing pattern bit
-          formatInfo1 = this.#copyBit(8, y, formatInfo1);
+          formatInfo1 = copyBit(matrix, 8, y, formatInfo1);
         }
       }
       for (let y = size - 1; y >= max; y--) {
-        formatInfo2 = this.#copyBit(8, y, formatInfo2);
+        formatInfo2 = copyBit(matrix, 8, y, formatInfo2);
       }
       for (let x = size - 8; x < size; x++) {
-        formatInfo2 = this.#copyBit(x, 8, formatInfo2);
+        formatInfo2 = copyBit(matrix, x, 8, formatInfo2);
       }
       return decodeFormatInfo(formatInfo1, formatInfo2);
     }
@@ -2322,26 +2324,26 @@
   /**
    * @module Decoder
    */
+  function parse(parser, version, { mask, level }) {
+    let offset = 0;
+    let corrected = 0;
+    parser.unmask(mask);
+    const ecBlocks = version.getECBlocks(level);
+    const codewords = parser.readCodewords(version, level);
+    const blocks = getDataBlocks(codewords, version, level);
+    const buffer = new Uint8Array(ecBlocks.numTotalDataCodewords);
+    for (const { codewords, numDataCodewords } of blocks) {
+      const [bytes, errors] = correctErrors(codewords, numDataCodewords);
+      buffer.set(bytes.subarray(0, numDataCodewords), offset);
+      corrected += errors;
+      offset += numDataCodewords;
+    }
+    return [buffer, corrected];
+  }
   class Decoder {
     #decode;
     constructor({ decode = decode$1 } = {}) {
       this.#decode = decode;
-    }
-    #parse(parser, version, { mask, level }) {
-      let offset = 0;
-      let corrected = 0;
-      parser.unmask(mask);
-      const ecBlocks = version.getECBlocks(level);
-      const codewords = parser.readCodewords(version, level);
-      const blocks = getDataBlocks(codewords, version, level);
-      const buffer = new Uint8Array(ecBlocks.numTotalDataCodewords);
-      for (const { codewords, numDataCodewords } of blocks) {
-        const [bytes, errors] = correctErrors(codewords, numDataCodewords);
-        buffer.set(bytes.subarray(0, numDataCodewords), offset);
-        corrected += errors;
-        offset += numDataCodewords;
-      }
-      return [buffer, corrected];
     }
     decode(matrix) {
       let corrected = 0;
@@ -2353,7 +2355,7 @@
       try {
         version = parser.readVersion();
         formatInfo = parser.readFormatInfo();
-        [codewords, corrected] = this.#parse(parser, version, formatInfo);
+        [codewords, corrected] = parse(parser, version, formatInfo);
       } catch {
         if (formatInfo != null) {
           parser.remask(formatInfo.mask);
@@ -2362,7 +2364,7 @@
         mirror = true;
         version = parser.readVersion();
         formatInfo = parser.readFormatInfo();
-        [codewords, corrected] = this.#parse(parser, version, formatInfo);
+        [codewords, corrected] = parse(parser, version, formatInfo);
       }
       return new QRCode$1(decode(codewords, version, formatInfo, this.#decode), version, formatInfo, corrected, mirror);
     }

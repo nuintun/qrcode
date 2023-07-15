@@ -9,6 +9,10 @@ import { BitMatrix } from '/common/BitMatrix';
 import { decodeFormatInfo, FormatInfo } from './FormatInfo';
 import { buildFunctionPattern, decodeVersion, MAX_VERSION_SIZE, MIN_VERSION_SIZE, Version, VERSIONS } from '/common/Version';
 
+function copyBit(matrix: BitMatrix, x: number, y: number, bits: number): number {
+  return matrix.get(x, y) ? (bits << 1) | 0x01 : bits << 1;
+}
+
 export class BitMatrixParser {
   #size: number;
   #matrix: BitMatrix;
@@ -22,10 +26,6 @@ export class BitMatrixParser {
 
     this.#size = width;
     this.#matrix = matrix.clone();
-  }
-
-  #copyBit(x: number, y: number, bits: number) {
-    return this.#matrix.get(x, y) ? (bits << 1) | 0x01 : bits << 1;
   }
 
   public readVersion(): Version {
@@ -42,16 +42,17 @@ export class BitMatrixParser {
     let version2 = 0;
 
     const min = size - 11;
+    const matrix = this.#matrix;
 
     for (let y = 5; y >= 0; y--) {
       for (let x = size - 9; x >= min; x--) {
-        version1 = this.#copyBit(x, y, version1);
+        version1 = copyBit(matrix, x, y, version1);
       }
     }
 
     for (let x = 5; x >= 0; x--) {
       for (let y = size - 9; y >= min; y--) {
-        version2 = this.#copyBit(x, y, version2);
+        version2 = copyBit(matrix, x, y, version2);
       }
     }
 
@@ -62,6 +63,7 @@ export class BitMatrixParser {
     let formatInfo1 = 0;
     let formatInfo2 = 0;
 
+    const matrix = this.#matrix;
     const size = this.#size;
     const max = size - 7;
 
@@ -69,23 +71,23 @@ export class BitMatrixParser {
     for (let x = 0; x <= 8; x++) {
       if (x !== 6) {
         // Skip timing pattern bit
-        formatInfo1 = this.#copyBit(x, 8, formatInfo1);
+        formatInfo1 = copyBit(matrix, x, 8, formatInfo1);
       }
     }
 
     for (let y = 7; y >= 0; y--) {
       if (y !== 6) {
         // Skip timing pattern bit
-        formatInfo1 = this.#copyBit(8, y, formatInfo1);
+        formatInfo1 = copyBit(matrix, 8, y, formatInfo1);
       }
     }
 
     for (let y = size - 1; y >= max; y--) {
-      formatInfo2 = this.#copyBit(8, y, formatInfo2);
+      formatInfo2 = copyBit(matrix, 8, y, formatInfo2);
     }
 
     for (let x = size - 8; x < size; x++) {
-      formatInfo2 = this.#copyBit(x, 8, formatInfo2);
+      formatInfo2 = copyBit(matrix, x, 8, formatInfo2);
     }
 
     return decodeFormatInfo(formatInfo1, formatInfo2);
