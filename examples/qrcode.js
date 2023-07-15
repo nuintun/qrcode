@@ -4309,7 +4309,7 @@
    */
   // Diff ratio
   const DIFF_MODULE_SIZE_RATIO = 0.5;
-  const DIFF_FINDER_PATTERN_RATIO = 0.6;
+  const DIFF_FINDER_PATTERN_RATIO = 0.56;
   const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
   // Pattern scanline size ratios
   const FINDER_PATTERN_RATIOS = [1, 1, 3, 1, 1];
