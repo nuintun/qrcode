@@ -12,7 +12,7 @@ export class PlotLine {
   #from: Point;
   #limit: number;
   #steep: boolean;
-  #diff: [x: number, y: number];
+  #step: [x: number, y: number];
   #delta: [x: number, y: number];
 
   constructor(from: Point, to: Point) {
@@ -28,14 +28,14 @@ export class PlotLine {
       [fromX, fromY, toX, toY] = [fromY, fromX, toY, toX];
     }
 
-    const deltaX = fromX < toX ? 1 : -1;
+    const stepX = fromX < toX ? 1 : -1;
 
     this.#steep = steep;
-    this.#limit = toX + deltaX;
+    this.#limit = toX + stepX;
     this.#to = new Point(toX, toY);
     this.#from = new Point(fromX, fromY);
-    this.#delta = [deltaX, fromY < toY ? 1 : -1];
-    this.#diff = [Math.abs(toX - fromX), Math.abs(toY - fromY)];
+    this.#step = [stepX, fromY < toY ? 1 : -1];
+    this.#delta = [Math.abs(toX - fromX), Math.abs(toY - fromY)];
   }
 
   public get to(): Point {
@@ -50,33 +50,33 @@ export class PlotLine {
     return this.#steep;
   }
 
-  public get delta(): [x: number, y: number] {
-    return this.#delta;
+  public get step(): [x: number, y: number] {
+    return this.#step;
   }
 
   public *points(): Generator<[x: number, y: number]> {
     const limit = this.#limit;
     const steep = this.#steep;
     const { y: toY } = this.#to;
-    const [xDiff, yDiff] = this.#diff;
+    const [stepX, stepY] = this.#step;
     const [deltaX, deltaY] = this.#delta;
     const { x: fromX, y: fromY } = this.#from;
 
-    let error = toInt32(-xDiff / 2);
+    let error = toInt32(-deltaX / 2);
 
     // Loop up until x === toX, but not beyond
-    for (let x = fromX, y = fromY; x !== limit; x += deltaX) {
+    for (let x = fromX, y = fromY; x !== limit; x += stepX) {
       yield [steep ? y : x, steep ? x : y];
 
-      error += yDiff;
+      error += deltaY;
 
       if (error > 0) {
         if (y === toY) {
           break;
         }
 
-        y += deltaY;
-        error -= xDiff;
+        y += stepY;
+        error -= deltaX;
       }
     }
   }

@@ -3892,7 +3892,7 @@
     #from;
     #limit;
     #steep;
-    #diff;
+    #step;
     #delta;
     constructor(from, to) {
       let toX = toInt32(to.x);
@@ -3904,13 +3904,13 @@
       if (steep) {
         [fromX, fromY, toX, toY] = [fromY, fromX, toY, toX];
       }
-      const deltaX = fromX < toX ? 1 : -1;
+      const stepX = fromX < toX ? 1 : -1;
       this.#steep = steep;
-      this.#limit = toX + deltaX;
+      this.#limit = toX + stepX;
       this.#to = new Point(toX, toY);
       this.#from = new Point(fromX, fromY);
-      this.#delta = [deltaX, fromY < toY ? 1 : -1];
-      this.#diff = [Math.abs(toX - fromX), Math.abs(toY - fromY)];
+      this.#step = [stepX, fromY < toY ? 1 : -1];
+      this.#delta = [Math.abs(toX - fromX), Math.abs(toY - fromY)];
     }
     get to() {
       return this.#to;
@@ -3921,27 +3921,27 @@
     get steep() {
       return this.#steep;
     }
-    get delta() {
-      return this.#delta;
+    get step() {
+      return this.#step;
     }
     *points() {
       const limit = this.#limit;
       const steep = this.#steep;
       const { y: toY } = this.#to;
-      const [xDiff, yDiff] = this.#diff;
+      const [stepX, stepY] = this.#step;
       const [deltaX, deltaY] = this.#delta;
       const { x: fromX, y: fromY } = this.#from;
-      let error = toInt32(-xDiff / 2);
+      let error = toInt32(-deltaX / 2);
       // Loop up until x === toX, but not beyond
-      for (let x = fromX, y = fromY; x !== limit; x += deltaX) {
+      for (let x = fromX, y = fromY; x !== limit; x += stepX) {
         yield [steep ? y : x, steep ? x : y];
-        error += yDiff;
+        error += deltaY;
         if (error > 0) {
           if (y === toY) {
             break;
           }
-          y += deltaY;
-          error -= xDiff;
+          y += stepY;
+          error -= deltaX;
         }
       }
     }
@@ -3971,12 +3971,12 @@
     }
     to = line.to;
     from = line.from;
-    const [deltaX] = line.delta;
+    const [stepX] = line.step;
     // Found black-white-black; give the benefit of the doubt that the next pixel outside the image
     // is "white" so this last point at (toX+xStep,toY) is the right ending. This is really a
     // small approximation; (toX+xStep,toY+yStep) might be really correct. Ignore this.
     if (state === 2) {
-      return distance(new Point(to.x + deltaX, to.y), from);
+      return distance(new Point(to.x + stepX, to.y), from);
     }
     return NaN;
   }

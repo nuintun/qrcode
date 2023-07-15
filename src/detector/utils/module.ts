@@ -37,13 +37,13 @@ function sizeOfBlackWhiteBlackRun(matrix: BitMatrix, from: Point, to: Point): nu
   to = line.to;
   from = line.from;
 
-  const [deltaX] = line.delta;
+  const [stepX] = line.step;
 
   // Found black-white-black; give the benefit of the doubt that the next pixel outside the image
   // is "white" so this last point at (toX+xStep,toY) is the right ending. This is really a
   // small approximation; (toX+xStep,toY+yStep) might be really correct. Ignore this.
   if (state === 2) {
-    return distance(new Point(to.x + deltaX, to.y), from);
+    return distance(new Point(to.x + stepX, to.y), from);
   }
 
   return NaN;
