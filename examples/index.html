@@ -500,9 +500,9 @@
         console.log('errors:', errors.length);
 
         for (const { topLeft, topRight, bottomLeft } of errors) {
-          markFinderPattern(topLeft, '#ff0000');
-          markFinderPattern(topRight, '#00ff00');
-          markFinderPattern(bottomLeft, '#0000ff');
+          markFinderPattern(topLeft, '#ffff00');
+          markFinderPattern(topRight, '#ffff00');
+          markFinderPattern(bottomLeft, '#ffff00');
         }
 
         for (const { topLeft, topRight, bottomLeft } of success) {
