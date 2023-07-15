@@ -408,7 +408,6 @@
 
         const errors = [];
         const success = [];
-        const alignments = [];
         const imageData = getImageData();
         const { width, height } = imageData;
         const decoder = new QRCode.Decoder();
@@ -442,33 +441,8 @@
 
             succeed = true;
 
-            success.push(finder);
+            success.push(detect);
             decodeResult.html(content);
-
-            const { size } = detect;
-            const topLeftCorner = detect.mapping(0, 0);
-            const topRightCorner = detect.mapping(size, 0);
-            const bottomLeftCorner = detect.mapping(0, size);
-            const bottomRightCorner = detect.mapping(size, size);
-
-            drawLine(topLeftCorner, topRightCorner, '#00ff00');
-            drawLine(topRightCorner, bottomRightCorner, '#00ff00');
-            drawLine(bottomRightCorner, bottomLeftCorner, '#00ff00');
-            drawLine(bottomLeftCorner, topLeftCorner, '#00ff00');
-
-            const [timing11, timing12] = calculateTimingLine(topLeft, topRight, bottomLeft);
-            const [timing21, timing22] = calculateTimingLine(topLeft, bottomLeft, topRight, true);
-
-            drawLine(timing11, timing12, '#00ff00');
-            drawLine(timing21, timing22, '#00ff00');
-
-            drawLine(topLeft, topRight, '#ff0000');
-            drawLine(topLeft, bottomLeft, '#ff0000');
-
-            if (alignment) {
-              alignments.push(alignments);
-            }
-
             matrixBox.append(drawMatrix(matrix), '&nbsp;&nbsp;');
 
             console.group();
@@ -485,7 +459,7 @@
             console.groupEnd();
           } catch (error) {
             // 解码失败，跳过
-            errors.push(finder);
+            errors.push(detect);
             // console.error(error);
           }
 
@@ -499,20 +473,43 @@
         console.log('success:', succeedCount);
         console.log('errors:', errors.length);
 
-        for (const { topLeft, topRight, bottomLeft } of errors) {
+        for (const { finder } of errors) {
+          const { topLeft, topRight, bottomLeft } = finder;
+
           markFinderPattern(topLeft, '#ffff00');
           markFinderPattern(topRight, '#ffff00');
           markFinderPattern(bottomLeft, '#ffff00');
         }
 
-        for (const { topLeft, topRight, bottomLeft } of success) {
+        for (const detect of success) {
+          const { size, finder, alignment } = detect;
+          const { topLeft, topRight, bottomLeft } = finder;
+          const topLeftCorner = detect.mapping(0, 0);
+          const topRightCorner = detect.mapping(size, 0);
+          const bottomLeftCorner = detect.mapping(0, size);
+          const bottomRightCorner = detect.mapping(size, size);
+
+          drawLine(topLeftCorner, topRightCorner, '#00ff00');
+          drawLine(topRightCorner, bottomRightCorner, '#00ff00');
+          drawLine(bottomRightCorner, bottomLeftCorner, '#00ff00');
+          drawLine(bottomLeftCorner, topLeftCorner, '#00ff00');
+
+          const [timing11, timing12] = calculateTimingLine(topLeft, topRight, bottomLeft);
+          const [timing21, timing22] = calculateTimingLine(topLeft, bottomLeft, topRight, true);
+
+          drawLine(timing11, timing12, '#00ff00');
+          drawLine(timing21, timing22, '#00ff00');
+
+          drawLine(topLeft, topRight, '#ff0000');
+          drawLine(topLeft, bottomLeft, '#ff0000');
+
           markFinderPattern(topLeft, '#ff0000');
           markFinderPattern(topRight, '#00ff00');
           markFinderPattern(bottomLeft, '#0000ff');
-        }
 
-        for (const alignment of alignments) {
-          markFinderPattern(alignment, '#ff00ff');
+          if (alignment) {
+            markFinderPattern(alignment, '#ff00ff');
+          }
         }
 
         if (!succeedCount) {
