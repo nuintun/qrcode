@@ -3797,16 +3797,19 @@
    */
   class Pattern extends Point {
     #noise;
+    #ratio;
     #width;
     #height;
     #modules;
+    #ratios;
     #rect;
     #combined = 1;
     #moduleSize;
-    constructor(x, y, width, height, modules, noise) {
+    constructor(x, y, width, height, ratios, noise) {
       super(x, y);
       const halfWidth = width / 2;
       const halfHeight = height / 2;
+      const modules = sumArray(ratios);
       const xModuleSize = width / modules;
       const yModuleSize = height / modules;
       const xModuleSizeHalf = xModuleSize / 2;
@@ -3814,6 +3817,7 @@
       this.#noise = noise;
       this.#width = width;
       this.#height = height;
+      this.#ratios = ratios;
       this.#modules = modules;
       this.#rect = [
         x - halfWidth + xModuleSizeHalf,
@@ -3822,6 +3826,7 @@
         y + halfHeight - yModuleSizeHalf
       ];
       this.#moduleSize = [xModuleSize, yModuleSize];
+      this.#ratio = ratios[toInt32(ratios.length / 2)];
     }
     get noise() {
       return this.#noise;
@@ -3842,18 +3847,19 @@
       return this.#moduleSize;
     }
     equals(x, y, width, height) {
+      const ratio = this.#ratio;
       const modules = this.#modules;
+      const moduleSize = this.#moduleSize;
       const xModuleSize = width / modules;
-      if (Math.abs(x - this.x) <= xModuleSize) {
-        const moduleSize = this.#moduleSize;
-        const [xModuleSizeThis] = moduleSize;
+      const [xModuleSizeThis] = moduleSize;
+      if (Math.abs(x - this.x) <= Math.max(xModuleSize, xModuleSizeThis) * ratio) {
         const xModuleSizeDiff = Math.abs(xModuleSize - xModuleSizeThis);
         if (xModuleSizeDiff >= 1 && xModuleSizeDiff > xModuleSizeThis) {
           return false;
         }
         const yModuleSize = height / modules;
-        if (Math.abs(y - this.y) <= yModuleSize) {
-          const [, yModuleSizeThis] = moduleSize;
+        const [, yModuleSizeThis] = moduleSize;
+        if (Math.abs(y - this.y) <= Math.max(yModuleSize, yModuleSizeThis) * ratio) {
           const yModuleSizeDiff = Math.abs(yModuleSize - yModuleSizeThis);
           if (yModuleSizeDiff < 1 || yModuleSizeDiff <= yModuleSizeThis) {
             return true;
@@ -3870,7 +3876,7 @@
       const combinedNoise = (combined * this.#noise + noise) / nextCombined;
       const combinedWidth = (combined * this.#width + width) / nextCombined;
       const combinedHeight = (combined * this.#height + height) / nextCombined;
-      const pattern = new Pattern(combinedX, combinedY, combinedWidth, combinedHeight, this.#modules, combinedNoise);
+      const pattern = new Pattern(combinedX, combinedY, combinedWidth, combinedHeight, this.#ratios, combinedNoise);
       pattern.#combined = nextCombined;
       return pattern;
     }
@@ -4393,7 +4399,6 @@
    * @module PatternFinder
    */
   class PatternFinder {
-    #modules;
     #matcher;
     #ratios;
     #strict;
@@ -4404,7 +4409,6 @@
       this.#ratios = ratios;
       this.#strict = strict;
       this.#matcher = matcher;
-      this.#modules = sumArray(ratios);
     }
     get matcher() {
       return this.#matcher;
@@ -4446,7 +4450,7 @@
               }
               // Hadn't found this before; save it
               if (!combined) {
-                patterns.push(new Pattern(centerX, centerY, width, height, this.#modules, noise));
+                patterns.push(new Pattern(centerX, centerY, width, height, this.#ratios, noise));
               }
             }
           }
@@ -4656,7 +4660,7 @@
     const bottomRightY = topRight.y + bottomLeft.y - y;
     const expectAlignmentX = x + correctionToTopLeft * (bottomRightX - x);
     const expectAlignmentY = y + correctionToTopLeft * (bottomRightY - y);
-    return new Pattern(expectAlignmentX, expectAlignmentY, xModuleSize * 5, yModuleSize * 5, 5, 0);
+    return new Pattern(expectAlignmentX, expectAlignmentY, xModuleSize * 5, yModuleSize * 5, ALIGNMENT_PATTERN_RATIOS, 0);
   }
   function findAlignmentInRegion(matrix, finderPatternGroup, strict) {
     const { size, moduleSize } = finderPatternGroup;

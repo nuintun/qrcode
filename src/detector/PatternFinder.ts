@@ -9,7 +9,6 @@ import { centerFromScanlineEnd, getDiagonalScanline } from './utils/scanline';
 import { alignCrossPattern, calculatePatternNoise, isDiagonalScanlineCheckPassed, Matcher } from './utils/pattern';
 
 export class PatternFinder {
-  #modules: number;
   #matcher: Matcher;
   #ratios: number[];
   #strict?: boolean;
@@ -21,7 +20,6 @@ export class PatternFinder {
     this.#ratios = ratios;
     this.#strict = strict;
     this.#matcher = matcher;
-    this.#modules = sumArray(ratios);
   }
 
   public get matcher(): Matcher {
@@ -76,7 +74,7 @@ export class PatternFinder {
 
             // Hadn't found this before; save it
             if (!combined) {
-              patterns.push(new Pattern(centerX, centerY, width, height, this.#modules, noise));
+              patterns.push(new Pattern(centerX, centerY, width, height, this.#ratios, noise));
             }
           }
         }

@@ -10,6 +10,7 @@ import { fromVersionSize } from '/common/Version';
 import { calculateModuleSize } from './utils/module';
 import { FinderPatternGroup } from './FinderPatternGroup';
 import { FinderPatternFinder } from './FinderPatternFinder';
+import { ALIGNMENT_PATTERN_RATIOS } from './utils/constants';
 import { AlignmentPatternFinder } from './AlignmentPatternFinder';
 
 export interface Options {
@@ -30,7 +31,7 @@ function getExpectAlignment({
   const expectAlignmentX = x + correctionToTopLeft * (bottomRightX - x);
   const expectAlignmentY = y + correctionToTopLeft * (bottomRightY - y);
 
-  return new Pattern(expectAlignmentX, expectAlignmentY, xModuleSize * 5, yModuleSize * 5, 5, 0);
+  return new Pattern(expectAlignmentX, expectAlignmentY, xModuleSize * 5, yModuleSize * 5, ALIGNMENT_PATTERN_RATIOS, 0);
 }
 
 function findAlignmentInRegion(matrix: BitMatrix, finderPatternGroup: FinderPatternGroup, strict?: boolean): Pattern[] {

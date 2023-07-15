@@ -407,6 +407,8 @@
         }
 
         const errors = [];
+        const success = [];
+        const alignments = [];
         const imageData = getImageData();
         const { width, height } = imageData;
         const decoder = new QRCode.Decoder();
@@ -424,7 +426,6 @@
 
         console.time('decoder');
 
-        let succeedCount = 0;
         let iterator = detected.next();
 
         while (!iterator.done) {
@@ -440,8 +441,8 @@
             const { content } = decoded;
 
             succeed = true;
-            succeedCount++;
 
+            success.push(finder);
             decodeResult.html(content);
 
             const { size } = detect;
@@ -464,12 +465,8 @@
             drawLine(topLeft, topRight, '#ff0000');
             drawLine(topLeft, bottomLeft, '#ff0000');
 
-            markFinderPattern(topLeft, '#ff0000');
-            markFinderPattern(topRight, '#00ff00');
-            markFinderPattern(bottomLeft, '#0000ff');
-
             if (alignment) {
-              markFinderPattern(alignment, '#ff00ff');
+              alignments.push(alignments);
             }
 
             matrixBox.append(drawMatrix(matrix), '&nbsp;&nbsp;');
@@ -497,16 +494,28 @@
 
         console.timeEnd('decoder');
 
+        const succeedCount = success.length;
+
         console.log('success:', succeedCount);
         console.log('errors:', errors.length);
 
-        if (!succeedCount) {
-          for (const { topLeft, topRight, bottomLeft } of errors) {
-            markFinderPattern(topLeft, '#ffff00');
-            markFinderPattern(topRight, '#ffff00');
-            markFinderPattern(bottomLeft, '#ffff00');
-          }
+        for (const { topLeft, topRight, bottomLeft } of errors) {
+          markFinderPattern(topLeft, '#ff0000');
+          markFinderPattern(topRight, '#00ff00');
+          markFinderPattern(bottomLeft, '#0000ff');
+        }
 
+        for (const { topLeft, topRight, bottomLeft } of success) {
+          markFinderPattern(topLeft, '#ff0000');
+          markFinderPattern(topRight, '#00ff00');
+          markFinderPattern(bottomLeft, '#0000ff');
+        }
+
+        for (const alignment of alignments) {
+          markFinderPattern(alignment, '#ff00ff');
+        }
+
+        if (!succeedCount) {
           decodeResult.html(`<span class="error">未发现二维码</span>`);
         }
       });

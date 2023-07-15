@@ -4,6 +4,7 @@
 
 import { Point } from '/common/Point';
 import { ModuleSizeGroup } from './utils/module';
+import { sumArray, toInt32 } from '/common/utils';
 
 export type PatternRect = [
   // Left border center x
@@ -18,18 +19,21 @@ export type PatternRect = [
 
 export class Pattern extends Point {
   #noise: number;
+  #ratio: number;
   #width: number;
   #height: number;
   #modules: number;
+  #ratios: number[];
   #rect: PatternRect;
   #combined: number = 1;
   #moduleSize: ModuleSizeGroup;
 
-  constructor(x: number, y: number, width: number, height: number, modules: number, noise: number) {
+  constructor(x: number, y: number, width: number, height: number, ratios: number[], noise: number) {
     super(x, y);
 
     const halfWidth = width / 2;
     const halfHeight = height / 2;
+    const modules = sumArray(ratios);
     const xModuleSize = width / modules;
     const yModuleSize = height / modules;
     const xModuleSizeHalf = xModuleSize / 2;
@@ -38,6 +42,7 @@ export class Pattern extends Point {
     this.#noise = noise;
     this.#width = width;
     this.#height = height;
+    this.#ratios = ratios;
     this.#modules = modules;
     this.#rect = [
       x - halfWidth + xModuleSizeHalf,
@@ -46,6 +51,7 @@ export class Pattern extends Point {
       y + halfHeight - yModuleSizeHalf
     ];
     this.#moduleSize = [xModuleSize, yModuleSize];
+    this.#ratio = ratios[toInt32(ratios.length / 2)];
   }
 
   public get noise(): number {
@@ -73,12 +79,13 @@ export class Pattern extends Point {
   }
 
   public equals(x: number, y: number, width: number, height: number): boolean {
+    const ratio = this.#ratio;
     const modules = this.#modules;
+    const moduleSize = this.#moduleSize;
     const xModuleSize = width / modules;
+    const [xModuleSizeThis] = moduleSize;
 
-    if (Math.abs(x - this.x) <= xModuleSize) {
-      const moduleSize = this.#moduleSize;
-      const [xModuleSizeThis] = moduleSize;
+    if (Math.abs(x - this.x) <= Math.max(xModuleSize, xModuleSizeThis) * ratio) {
       const xModuleSizeDiff = Math.abs(xModuleSize - xModuleSizeThis);
 
       if (xModuleSizeDiff >= 1 && xModuleSizeDiff > xModuleSizeThis) {
@@ -86,9 +93,9 @@ export class Pattern extends Point {
       }
 
       const yModuleSize = height / modules;
+      const [, yModuleSizeThis] = moduleSize;
 
-      if (Math.abs(y - this.y) <= yModuleSize) {
-        const [, yModuleSizeThis] = moduleSize;
+      if (Math.abs(y - this.y) <= Math.max(yModuleSize, yModuleSizeThis) * ratio) {
         const yModuleSizeDiff = Math.abs(yModuleSize - yModuleSizeThis);
 
         if (yModuleSizeDiff < 1 || yModuleSizeDiff <= yModuleSizeThis) {
@@ -108,7 +115,7 @@ export class Pattern extends Point {
     const combinedNoise = (combined * this.#noise + noise) / nextCombined;
     const combinedWidth = (combined * this.#width + width) / nextCombined;
     const combinedHeight = (combined * this.#height + height) / nextCombined;
-    const pattern = new Pattern(combinedX, combinedY, combinedWidth, combinedHeight, this.#modules, combinedNoise);
+    const pattern = new Pattern(combinedX, combinedY, combinedWidth, combinedHeight, this.#ratios, combinedNoise);
 
     pattern.#combined = nextCombined;
 
