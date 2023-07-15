@@ -117,3 +117,15 @@ export class FinderPatternGroup {
     return this.#size;
   }
 }
+
+export function calculateTopLeftAngle({ topLeft, topRight, bottomLeft }: FinderPatternGroup): number {
+  const { x, y } = topLeft;
+  const dx1 = topRight.x - x;
+  const dy1 = topRight.y - y;
+  const dx2 = bottomLeft.x - x;
+  const dy2 = bottomLeft.y - y;
+  const d = dx1 * dx2 + dy1 * dy2;
+  const l2 = (dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2);
+
+  return Math.acos(d / Math.sqrt(l2));
+}

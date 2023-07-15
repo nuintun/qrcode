@@ -8,11 +8,11 @@ import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
 import { scanlineUpdate } from './utils/scanline';
 import { checkPixelsInTimingLine } from './utils/timing';
-import { FinderPatternGroup } from './FinderPatternGroup';
 import { MatchAction, PatternFinder } from './PatternFinder';
 import { MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
 import { isEqualsSize, isMatchFinderPattern } from './utils/pattern';
-import { DIFF_MODULE_SIZE_RATIO, FINDER_PATTERN_RATIOS } from './utils/constants';
+import { calculateTopLeftAngle, FinderPatternGroup } from './FinderPatternGroup';
+import { DIFF_MODULE_SIZE_RATIO, FINDER_PATTERN_RATIOS, MAX_TOP_LEFT_ANGLE, MIN_TOP_LEFT_ANGLE } from './utils/constants';
 
 export class FinderPatternFinder extends PatternFinder {
   constructor(matrix: BitMatrix, strict?: boolean) {
@@ -77,22 +77,26 @@ export class FinderPatternFinder extends PatternFinder {
             const edge2 = distance(topLeft, bottomLeft);
 
             if (Math.abs(round(edge1 / xModuleSize) - round(edge2 / yModuleSize)) <= 4) {
-              const { size } = finderPatternGroup;
+              const angle = calculateTopLeftAngle(finderPatternGroup);
 
-              if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
-                const { moduleSize } = finderPatternGroup;
-                const [moduleSize1, moduleSize2] = moduleSize;
+              if (angle >= MIN_TOP_LEFT_ANGLE && angle <= MAX_TOP_LEFT_ANGLE) {
+                const { size } = finderPatternGroup;
 
-                if (
-                  moduleSize1 >= 1 &&
-                  moduleSize2 >= 1 &&
-                  checkPixelsInTimingLine(matrix, finderPatternGroup) &&
-                  checkPixelsInTimingLine(matrix, finderPatternGroup, true)
-                ) {
-                  if (yield finderPatternGroup) {
-                    used.set(pattern1, true);
-                    used.set(pattern2, true);
-                    used.set(pattern3, true);
+                if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
+                  const { moduleSize } = finderPatternGroup;
+                  const [moduleSize1, moduleSize2] = moduleSize;
+
+                  if (
+                    moduleSize1 >= 1 &&
+                    moduleSize2 >= 1 &&
+                    checkPixelsInTimingLine(matrix, finderPatternGroup) &&
+                    checkPixelsInTimingLine(matrix, finderPatternGroup, true)
+                  ) {
+                    if (yield finderPatternGroup) {
+                      used.set(pattern1, true);
+                      used.set(pattern2, true);
+                      used.set(pattern3, true);
+                    }
                   }
                 }
               }
