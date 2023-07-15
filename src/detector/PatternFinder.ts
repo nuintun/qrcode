@@ -5,16 +5,8 @@
 import { Pattern } from './Pattern';
 import { sumArray } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
-import { calculatePatternNoise } from './utils/pattern';
-import { centerFromScanlineEnd, getCrossScanline, getDiagonalScanline } from './utils/scanline';
-
-export interface Matcher {
-  (scanline: number[]): boolean;
-}
-
-export interface MatchAction {
-  (x: number, y: number, scanline: number[], count: number, scanlineBits: number[], lastBit: number): void;
-}
+import { centerFromScanlineEnd, getDiagonalScanline } from './utils/scanline';
+import { alignCrossPattern, calculatePatternNoise, isDiagonalScanlineCheckPassed, Matcher } from './utils/pattern';
 
 export class PatternFinder {
   #modules: number;
@@ -32,27 +24,6 @@ export class PatternFinder {
     this.#modules = sumArray(ratios);
   }
 
-  #isDiagonalPassed(slash: number[], backslash: number[]): boolean {
-    const strict = this.#strict;
-    const matcher = this.#matcher;
-
-    if (matcher(slash)) {
-      if (strict) {
-        return matcher(backslash);
-      }
-
-      return true;
-    }
-
-    return false;
-  }
-
-  #alignCrossPattern(x: number, y: number, overscan: number, isVertical?: boolean): [center: number, scanline: number[]] {
-    const [scanline, end] = getCrossScanline(this.#matrix, x, y, overscan, isVertical);
-
-    return [this.#matcher(scanline) ? centerFromScanlineEnd(scanline, end) : NaN, scanline];
-  }
-
   public get matcher(): Matcher {
     return this.#matcher;
   }
@@ -66,22 +37,24 @@ export class PatternFinder {
   }
 
   protected match(x: number, y: number, scanline: number[], overscan: number): void {
-    if (this.#matcher(scanline)) {
+    const matcher = this.#matcher;
+
+    if (matcher(scanline)) {
       let horizontal: number[];
       let centerX = centerFromScanlineEnd(scanline, x);
 
-      const [centerY, vertical] = this.#alignCrossPattern(centerX, y, overscan, true);
+      const matrix = this.#matrix;
+      const [centerY, vertical] = alignCrossPattern(matrix, centerX, y, overscan, matcher, true);
 
       if (centerY >= 0) {
         // Re-horizontal check
-        [centerX, horizontal] = this.#alignCrossPattern(centerX, centerY, overscan);
+        [centerX, horizontal] = alignCrossPattern(matrix, centerX, centerY, overscan, matcher);
 
         if (centerX >= 0) {
-          const matrix = this.#matrix;
           const slash = getDiagonalScanline(matrix, centerX, centerY, overscan);
           const backslash = getDiagonalScanline(matrix, centerX, centerY, overscan, true);
 
-          if (this.#isDiagonalPassed(slash, backslash)) {
+          if (isDiagonalScanlineCheckPassed(slash, backslash, matcher, this.#strict)) {
             const noise = calculatePatternNoise(this.#ratios, horizontal, vertical, slash, backslash);
             const width = sumArray(horizontal);
             const height = sumArray(vertical);
@@ -110,4 +83,8 @@ export class PatternFinder {
       }
     }
   }
+}
+
+export interface MatchAction {
+  (x: number, y: number, scanline: number[], count: number, scanlineBits: number[], lastBit: number): void;
 }

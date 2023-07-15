@@ -2,9 +2,14 @@
  * @module matcher
  */
 
+import { BitMatrix } from '/common/BitMatrix';
 import { sumArray, toInt32 } from '/common/utils';
-import { calculateScanlineNoise, sumScanlineNonzero } from './scanline';
+import { calculateScanlineNoise, centerFromScanlineEnd, getCrossScanline, sumScanlineNonzero } from './scanline';
 import { DIFF_ALIGNMENT_PATTERN_RATIO, DIFF_FINDER_PATTERN_RATIO, MAX_SKIP_CHECK_DIFF_MODULE_SIZE } from './constants';
+
+export interface Matcher {
+  (scanline: number[]): boolean;
+}
 
 export function isMatchFinderPattern(scanline: number[]): boolean {
   const modules = 7;
@@ -86,4 +91,34 @@ export function calculatePatternNoise(ratios: number[], ...scanlines: number[][]
   }
 
   return Math.sqrt(sumArray(noises)) + sumArray(averagesDiff) / averagesAvg;
+}
+
+export function isDiagonalScanlineCheckPassed(
+  slash: number[],
+  backslash: number[],
+  matcher: Matcher,
+  strict?: boolean
+): boolean {
+  if (matcher(slash)) {
+    if (strict) {
+      return matcher(backslash);
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+export function alignCrossPattern(
+  matrix: BitMatrix,
+  x: number,
+  y: number,
+  overscan: number,
+  matcher: Matcher,
+  isVertical?: boolean
+): [center: number, scanline: number[]] {
+  const [scanline, end] = getCrossScanline(matrix, x, y, overscan, isVertical);
+
+  return [matcher(scanline) ? centerFromScanlineEnd(scanline, end) : NaN, scanline];
 }
