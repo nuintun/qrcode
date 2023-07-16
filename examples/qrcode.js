@@ -4189,34 +4189,24 @@
     }
     return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
   }
-  function checkPixelsInTimingLine(
-    matrix,
-    { topLeft, topRight, bottomLeft, moduleSize: [xModuleSize, yModuleSize] },
-    isVertical
-  ) {
+  function checkPixelsInTimingLine(matrix, { size, topLeft, topRight, bottomLeft }, isVertical) {
     const [start, end] = isVertical
       ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
       : calculateTimingLine(topLeft, topRight, bottomLeft);
-    const moduleSize = isVertical ? yModuleSize : xModuleSize;
-    const maxRepeatPixels = Math.ceil(moduleSize * 3);
     const points = new PlotLine(start, end).points();
-    let count = 0;
-    let modules = 0;
+    let modules = 1;
     let lastBit = matrix.get(toInt32(start.x), toInt32(start.y));
     for (const [x, y] of points) {
       const bit = matrix.get(x, y);
-      if (bit === lastBit) {
-        count++;
-      } else {
+      if (bit !== lastBit) {
         modules++;
-        if ((modules > 1 && count > maxRepeatPixels) || modules > 165) {
+        lastBit = bit;
+        if (modules > size) {
           return false;
         }
-        count = 1;
-        lastBit = bit;
       }
     }
-    return modules >= 7;
+    return modules >= size - 18;
   }
 
   /**
