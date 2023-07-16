@@ -24,7 +24,12 @@ export class FinderPatternFinder extends PatternFinder {
     const { length } = patterns;
 
     if (length === 3) {
-      yield new FinderPatternGroup(this.matrix, patterns);
+      const finderPatternGroup = new FinderPatternGroup(this.matrix, patterns);
+      const { size } = finderPatternGroup;
+
+      if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
+        yield finderPatternGroup;
+      }
     } else if (length > 3) {
       const maxI1 = length - 2;
       const maxI2 = length - 1;
