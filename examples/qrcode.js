@@ -4203,7 +4203,7 @@
         }
       }
     }
-    return modules >= size - 16;
+    return modules >= size - 18;
   }
   function checkModulesInTimingLine(matrix, { size, topLeft, topRight, bottomLeft }, isVertical) {
     const [start, end] = isVertical
