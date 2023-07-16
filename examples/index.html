@@ -71,6 +71,12 @@
             <canvas id="decode-canvas"></canvas>
           </div>
           <p>
+            <label>严格模式：</label>
+            <input id="strict-mode" type="checkbox" />
+            <label class="indent">图片反色：</label>
+            <input id="flip-color" type="checkbox" />
+          </p>
+          <p>
             <button id="decode-btn">解码</button>
           </p>
           <pre id="decode-result" class="decode-result hide"></pre>
@@ -95,9 +101,11 @@
         content.removeClass('selected').eq(target.index()).addClass('selected');
       });
 
+      const flipColor = $('#flip-color');
       const hintsFNC1 = $('#hints-fnc1');
       const encodeMode = $('#encode-mode');
       const encodeText = $('#encode-text');
+      const strictMode = $('#strict-mode');
       const encodeLevel = $('#encode-level');
       const encodeMSize = $('#encode-msize');
       const aimIndicator = $('#aim-indicator');
@@ -411,11 +419,17 @@
         const imageData = getImageData();
         const { width, height } = imageData;
         const decoder = new QRCode.Decoder();
-        const detector = new QRCode.Detector();
+        const detector = new QRCode.Detector({
+          strict: strictMode.prop('checked')
+        });
 
         console.time('binarize');
         const matrix = QRCode.binarize(imageData);
         console.timeEnd('binarize');
+
+        if (flipColor.prop('checked')) {
+          matrix.flip();
+        }
 
         console.time('detector');
         const detected = detector.detect(matrix);
