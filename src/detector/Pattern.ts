@@ -3,8 +3,7 @@
  */
 
 import { Point } from '/common/Point';
-import { ModuleSizeGroup } from './utils/module';
-import { sumArray, toInt32 } from '/common/utils';
+import { sumArray } from '/common/utils';
 
 export type PatternRect = [
   // Left border center x
@@ -19,14 +18,13 @@ export type PatternRect = [
 
 export class Pattern extends Point {
   #noise: number;
-  #ratio: number;
   #width: number;
   #height: number;
   #modules: number;
   #ratios: number[];
   #rect: PatternRect;
+  #moduleSize: number;
   #combined: number = 1;
-  #moduleSize: ModuleSizeGroup;
 
   constructor(x: number, y: number, width: number, height: number, ratios: number[], noise: number) {
     super(x, y);
@@ -50,8 +48,7 @@ export class Pattern extends Point {
       x + halfWidth - xModuleSizeHalf,
       y + halfHeight - yModuleSizeHalf
     ];
-    this.#moduleSize = [xModuleSize, yModuleSize];
-    this.#ratio = ratios[toInt32(ratios.length / 2)];
+    this.#moduleSize = (xModuleSize + yModuleSize) / 2;
   }
 
   public get noise(): number {
@@ -74,33 +71,20 @@ export class Pattern extends Point {
     return this.#rect;
   }
 
-  public get moduleSize(): ModuleSizeGroup {
+  public get moduleSize(): number {
     return this.#moduleSize;
   }
 
   public equals(x: number, y: number, width: number, height: number): boolean {
-    const ratio = this.#ratio;
     const modules = this.#modules;
-    const xModuleSize = width / modules;
+    const moduleSizeThis = this.#moduleSize;
+    const moduleSize = (width + height) / modules / 2;
 
-    if (Math.abs(x - this.x) <= xModuleSize * ratio) {
-      const moduleSize = this.#moduleSize;
-      const [xModuleSizeThis] = moduleSize;
-      const xModuleSizeDiff = Math.abs(xModuleSize - xModuleSizeThis);
+    if (Math.abs(x - this.x) <= moduleSize && Math.abs(y - this.y) <= moduleSize) {
+      const moduleSizeDiff = Math.abs(moduleSize - moduleSizeThis);
 
-      if (xModuleSizeDiff >= 1 && xModuleSizeDiff > xModuleSizeThis) {
-        return false;
-      }
-
-      const yModuleSize = height / modules;
-
-      if (Math.abs(y - this.y) <= yModuleSize * ratio) {
-        const [, yModuleSizeThis] = moduleSize;
-        const yModuleSizeDiff = Math.abs(yModuleSize - yModuleSizeThis);
-
-        if (yModuleSizeDiff < 1 || yModuleSizeDiff <= yModuleSizeThis) {
-          return true;
-        }
+      if (moduleSizeDiff < 1 || moduleSizeDiff <= moduleSizeThis) {
+        return true;
       }
     }
 

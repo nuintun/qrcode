@@ -3624,14 +3624,13 @@
    */
   class Pattern extends Point {
     #noise;
-    #ratio;
     #width;
     #height;
     #modules;
     #ratios;
     #rect;
-    #combined = 1;
     #moduleSize;
+    #combined = 1;
     constructor(x, y, width, height, ratios, noise) {
       super(x, y);
       const halfWidth = width / 2;
@@ -3652,8 +3651,7 @@
         x + halfWidth - xModuleSizeHalf,
         y + halfHeight - yModuleSizeHalf
       ];
-      this.#moduleSize = [xModuleSize, yModuleSize];
-      this.#ratio = ratios[toInt32(ratios.length / 2)];
+      this.#moduleSize = (xModuleSize + yModuleSize) / 2;
     }
     get noise() {
       return this.#noise;
@@ -3674,23 +3672,13 @@
       return this.#moduleSize;
     }
     equals(x, y, width, height) {
-      const ratio = this.#ratio;
       const modules = this.#modules;
-      const xModuleSize = width / modules;
-      if (Math.abs(x - this.x) <= xModuleSize * ratio) {
-        const moduleSize = this.#moduleSize;
-        const [xModuleSizeThis] = moduleSize;
-        const xModuleSizeDiff = Math.abs(xModuleSize - xModuleSizeThis);
-        if (xModuleSizeDiff >= 1 && xModuleSizeDiff > xModuleSizeThis) {
-          return false;
-        }
-        const yModuleSize = height / modules;
-        if (Math.abs(y - this.y) <= yModuleSize * ratio) {
-          const [, yModuleSizeThis] = moduleSize;
-          const yModuleSizeDiff = Math.abs(yModuleSize - yModuleSizeThis);
-          if (yModuleSizeDiff < 1 || yModuleSizeDiff <= yModuleSizeThis) {
-            return true;
-          }
+      const moduleSizeThis = this.#moduleSize;
+      const moduleSize = (width + height) / modules / 2;
+      if (Math.abs(x - this.x) <= moduleSize && Math.abs(y - this.y) <= moduleSize) {
+        const moduleSizeDiff = Math.abs(moduleSize - moduleSizeThis);
+        if (moduleSizeDiff < 1 || moduleSizeDiff <= moduleSizeThis) {
+          return true;
         }
       }
       return false;
@@ -4491,53 +4479,59 @@
         const used = new Map();
         for (let i1 = 0; i1 < maxI1; i1++) {
           const pattern1 = patterns[i1];
-          const [xModuleSize1, yModuleSize1] = pattern1.moduleSize;
+          const moduleSize1 = pattern1.moduleSize;
+          // Pattern 1 used
           if (used.has(pattern1)) {
             continue;
           }
           for (let i2 = i1 + 1; i2 < maxI2; i2++) {
             const pattern2 = patterns[i2];
-            const [xModuleSize2, yModuleSize2] = pattern2.moduleSize;
+            const moduleSize2 = pattern2.moduleSize;
+            // Pattern 1 used
             if (used.has(pattern1)) {
               break;
             }
             if (
+              // Pattern 2 used
               used.has(pattern2) ||
-              !isEqualsSize(xModuleSize1, xModuleSize2, DIFF_MODULE_SIZE_RATIO) ||
-              !isEqualsSize(yModuleSize1, yModuleSize2, DIFF_MODULE_SIZE_RATIO)
+              // Non equals module size
+              !isEqualsSize(moduleSize1, moduleSize2, DIFF_MODULE_SIZE_RATIO)
             ) {
               continue;
             }
             for (let i3 = i2 + 1; i3 < length; i3++) {
               const pattern3 = patterns[i3];
-              const [xModuleSize3, yModuleSize3] = pattern3.moduleSize;
-              if (used.has(pattern1) || used.has(pattern2)) {
+              const moduleSize3 = pattern3.moduleSize;
+              if (
+                // Pattern 1 used
+                used.has(pattern1) ||
+                // Pattern 2 used
+                used.has(pattern2)
+              ) {
                 break;
               }
               if (
-                !isEqualsSize(xModuleSize1, xModuleSize3, DIFF_MODULE_SIZE_RATIO) ||
-                !isEqualsSize(xModuleSize2, xModuleSize3, DIFF_MODULE_SIZE_RATIO) ||
-                !isEqualsSize(yModuleSize1, yModuleSize3, DIFF_MODULE_SIZE_RATIO) ||
-                !isEqualsSize(yModuleSize2, yModuleSize3, DIFF_MODULE_SIZE_RATIO)
+                // Non equals module size
+                !isEqualsSize(moduleSize1, moduleSize3, DIFF_MODULE_SIZE_RATIO) ||
+                // Non equals module size
+                !isEqualsSize(moduleSize2, moduleSize3, DIFF_MODULE_SIZE_RATIO)
               ) {
                 continue;
               }
               const { matrix } = this;
               const finderPatternGroup = new FinderPatternGroup(matrix, [pattern1, pattern2, pattern3]);
-              const { topLeft, topRight, bottomLeft, moduleSize } = finderPatternGroup;
-              const [xModuleSize, yModuleSize] = moduleSize;
-              const edge1 = distance(topLeft, topRight);
-              const edge2 = distance(topLeft, bottomLeft);
-              if (Math.abs(round(edge1 / xModuleSize) - round(edge2 / yModuleSize)) <= 4) {
-                const angle = calculateTopLeftAngle(finderPatternGroup);
-                if (angle >= MIN_TOP_LEFT_ANGLE && angle <= MAX_TOP_LEFT_ANGLE) {
-                  const { size } = finderPatternGroup;
-                  if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
-                    const { moduleSize } = finderPatternGroup;
-                    const [moduleSize1, moduleSize2] = moduleSize;
+              const angle = calculateTopLeftAngle(finderPatternGroup);
+              if (angle >= MIN_TOP_LEFT_ANGLE && angle <= MAX_TOP_LEFT_ANGLE) {
+                const [xModuleSize, yModuleSize] = finderPatternGroup.moduleSize;
+                if (xModuleSize >= 1 && yModuleSize >= 1) {
+                  const { topLeft, topRight, bottomLeft } = finderPatternGroup;
+                  const edge1 = distance(topLeft, topRight);
+                  const edge2 = distance(topLeft, bottomLeft);
+                  if (Math.abs(round(edge1 / xModuleSize) - round(edge2 / yModuleSize)) <= 4) {
+                    const { size } = finderPatternGroup;
                     if (
-                      moduleSize1 >= 1 &&
-                      moduleSize2 >= 1 &&
+                      size >= MIN_VERSION_SIZE &&
+                      size <= MAX_VERSION_SIZE &&
                       checkModulesInTimingLine(matrix, finderPatternGroup) &&
                       checkModulesInTimingLine(matrix, finderPatternGroup, true)
                     ) {
@@ -4610,11 +4604,7 @@
     }
     filter(expectAlignment, moduleSize) {
       const patterns = this.patterns.filter(pattern => {
-        const [xModuleSize, yModuleSize] = pattern.moduleSize;
-        return (
-          isEqualsSize(xModuleSize, moduleSize, DIFF_MODULE_SIZE_RATIO) &&
-          isEqualsSize(yModuleSize, moduleSize, DIFF_MODULE_SIZE_RATIO)
-        );
+        return isEqualsSize(pattern.moduleSize, moduleSize, DIFF_MODULE_SIZE_RATIO);
       });
       if (patterns.length > 1) {
         patterns.sort((pattern1, pattern2) => {

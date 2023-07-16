@@ -17,12 +17,7 @@ export class AlignmentPatternFinder extends PatternFinder {
 
   public filter(expectAlignment: Pattern, moduleSize: number): Pattern[] {
     const patterns = this.patterns.filter(pattern => {
-      const [xModuleSize, yModuleSize] = pattern.moduleSize;
-
-      return (
-        isEqualsSize(xModuleSize, moduleSize, DIFF_MODULE_SIZE_RATIO) &&
-        isEqualsSize(yModuleSize, moduleSize, DIFF_MODULE_SIZE_RATIO)
-      );
+      return isEqualsSize(pattern.moduleSize, moduleSize, DIFF_MODULE_SIZE_RATIO);
     });
 
     if (patterns.length > 1) {
