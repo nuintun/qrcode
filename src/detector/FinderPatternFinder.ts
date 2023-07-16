@@ -7,7 +7,7 @@ import { round } from '/common/utils';
 import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
 import { scanlineUpdate } from './utils/scanline';
-import { checkPixelsInTimingLine } from './utils/timing';
+import { checkModulesInTimingLine } from './utils/timing';
 import { MatchAction, PatternFinder } from './PatternFinder';
 import { MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
 import { isEqualsSize, isMatchFinderPattern } from './utils/pattern';
@@ -89,8 +89,8 @@ export class FinderPatternFinder extends PatternFinder {
                   if (
                     moduleSize1 >= 1 &&
                     moduleSize2 >= 1 &&
-                    checkPixelsInTimingLine(matrix, finderPatternGroup) &&
-                    checkPixelsInTimingLine(matrix, finderPatternGroup, true)
+                    checkModulesInTimingLine(matrix, finderPatternGroup) &&
+                    checkModulesInTimingLine(matrix, finderPatternGroup, true)
                   ) {
                     if (yield finderPatternGroup) {
                       used.set(pattern1, true);

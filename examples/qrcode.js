@@ -4189,7 +4189,7 @@
     }
     return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
   }
-  function checkPixelsInTimingLine(matrix, { size, topLeft, topRight, bottomLeft }, isVertical) {
+  function checkModulesInTimingLine(matrix, { size, topLeft, topRight, bottomLeft }, isVertical) {
     const [start, end] = isVertical
       ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
       : calculateTimingLine(topLeft, topRight, bottomLeft);
@@ -4524,8 +4524,8 @@
                     if (
                       moduleSize1 >= 1 &&
                       moduleSize2 >= 1 &&
-                      checkPixelsInTimingLine(matrix, finderPatternGroup) &&
-                      checkPixelsInTimingLine(matrix, finderPatternGroup, true)
+                      checkModulesInTimingLine(matrix, finderPatternGroup) &&
+                      checkModulesInTimingLine(matrix, finderPatternGroup, true)
                     ) {
                       if (yield finderPatternGroup) {
                         used.set(pattern1, true);

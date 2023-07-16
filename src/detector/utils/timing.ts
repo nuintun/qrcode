@@ -47,7 +47,7 @@ function calculateTimingLine(start: Pattern, end: Pattern, control: Pattern, isV
   return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
 }
 
-export function checkPixelsInTimingLine(
+export function checkModulesInTimingLine(
   matrix: BitMatrix,
   { size, topLeft, topRight, bottomLeft }: FinderPatternGroup,
   isVertical?: boolean
