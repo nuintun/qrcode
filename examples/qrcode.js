@@ -3585,6 +3585,131 @@
   }
 
   /**
+   * @module Detect
+   */
+  class Detect {
+    #matrix;
+    #alignment;
+    #finder;
+    #transform;
+    constructor(matrix, transform, finder, alignment) {
+      const sampler = new GridSampler(matrix, transform);
+      const { size } = finder;
+      this.#finder = finder;
+      this.#matrix = matrix;
+      this.#alignment = alignment;
+      this.#transform = transform;
+      this.#matrix = sampler.sample(size, size);
+    }
+    get size() {
+      return this.#finder.size;
+    }
+    get matrix() {
+      return this.#matrix;
+    }
+    get finder() {
+      return this.#finder;
+    }
+    get alignment() {
+      return this.#alignment;
+    }
+    mapping(x, y) {
+      [x, y] = this.#transform.mapping(x, y);
+      return new Point(x, y);
+    }
+  }
+
+  /**
+   * @module Pattern
+   */
+  class Pattern extends Point {
+    #noise;
+    #ratio;
+    #width;
+    #height;
+    #modules;
+    #ratios;
+    #rect;
+    #combined = 1;
+    #moduleSize;
+    constructor(x, y, width, height, ratios, noise) {
+      super(x, y);
+      const halfWidth = width / 2;
+      const halfHeight = height / 2;
+      const modules = sumArray(ratios);
+      const xModuleSize = width / modules;
+      const yModuleSize = height / modules;
+      const xModuleSizeHalf = xModuleSize / 2;
+      const yModuleSizeHalf = yModuleSize / 2;
+      this.#noise = noise;
+      this.#width = width;
+      this.#height = height;
+      this.#ratios = ratios;
+      this.#modules = modules;
+      this.#rect = [
+        x - halfWidth + xModuleSizeHalf,
+        y - halfHeight + yModuleSizeHalf,
+        x + halfWidth - xModuleSizeHalf,
+        y + halfHeight - yModuleSizeHalf
+      ];
+      this.#moduleSize = [xModuleSize, yModuleSize];
+      this.#ratio = ratios[toInt32(ratios.length / 2)];
+    }
+    get noise() {
+      return this.#noise;
+    }
+    get width() {
+      return this.#width;
+    }
+    get height() {
+      return this.#height;
+    }
+    get combined() {
+      return this.#combined;
+    }
+    get rect() {
+      return this.#rect;
+    }
+    get moduleSize() {
+      return this.#moduleSize;
+    }
+    equals(x, y, width, height) {
+      const ratio = this.#ratio;
+      const modules = this.#modules;
+      const moduleSize = this.#moduleSize;
+      const xModuleSize = width / modules;
+      const [xModuleSizeThis] = moduleSize;
+      if (Math.abs(x - this.x) <= Math.max(xModuleSize, xModuleSizeThis) * ratio) {
+        const xModuleSizeDiff = Math.abs(xModuleSize - xModuleSizeThis);
+        if (xModuleSizeDiff >= 1 && xModuleSizeDiff > xModuleSizeThis) {
+          return false;
+        }
+        const yModuleSize = height / modules;
+        const [, yModuleSizeThis] = moduleSize;
+        if (Math.abs(y - this.y) <= Math.max(yModuleSize, yModuleSizeThis) * ratio) {
+          const yModuleSizeDiff = Math.abs(yModuleSize - yModuleSizeThis);
+          if (yModuleSizeDiff < 1 || yModuleSizeDiff <= yModuleSizeThis) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+    combine(x, y, width, height, noise) {
+      const combined = this.#combined;
+      const nextCombined = combined + 1;
+      const combinedX = (combined * this.x + x) / nextCombined;
+      const combinedY = (combined * this.y + y) / nextCombined;
+      const combinedNoise = (combined * this.#noise + noise) / nextCombined;
+      const combinedWidth = (combined * this.#width + width) / nextCombined;
+      const combinedHeight = (combined * this.#height + height) / nextCombined;
+      const pattern = new Pattern(combinedX, combinedY, combinedWidth, combinedHeight, this.#ratios, combinedNoise);
+      pattern.#combined = nextCombined;
+      return pattern;
+    }
+  }
+
+  /**
    * @module PerspectiveTransform
    */
   class PerspectiveTransform {
@@ -3754,132 +3879,6 @@
       bottomLeftX,
       bottomLeftY
     );
-  }
-
-  /**
-   * @module Detect
-   */
-  class Detect {
-    #matrix;
-    #alignment;
-    #finder;
-    #transform;
-    constructor(matrix, finder, alignment) {
-      const transform = createTransform(finder, alignment);
-      const sampler = new GridSampler(matrix, transform);
-      const { size } = finder;
-      this.#finder = finder;
-      this.#matrix = matrix;
-      this.#alignment = alignment;
-      this.#transform = transform;
-      this.#matrix = sampler.sample(size, size);
-    }
-    get size() {
-      return this.#finder.size;
-    }
-    get matrix() {
-      return this.#matrix;
-    }
-    get finder() {
-      return this.#finder;
-    }
-    get alignment() {
-      return this.#alignment;
-    }
-    mapping(x, y) {
-      [x, y] = this.#transform.mapping(x, y);
-      return new Point(x, y);
-    }
-  }
-
-  /**
-   * @module Pattern
-   */
-  class Pattern extends Point {
-    #noise;
-    #ratio;
-    #width;
-    #height;
-    #modules;
-    #ratios;
-    #rect;
-    #combined = 1;
-    #moduleSize;
-    constructor(x, y, width, height, ratios, noise) {
-      super(x, y);
-      const halfWidth = width / 2;
-      const halfHeight = height / 2;
-      const modules = sumArray(ratios);
-      const xModuleSize = width / modules;
-      const yModuleSize = height / modules;
-      const xModuleSizeHalf = xModuleSize / 2;
-      const yModuleSizeHalf = yModuleSize / 2;
-      this.#noise = noise;
-      this.#width = width;
-      this.#height = height;
-      this.#ratios = ratios;
-      this.#modules = modules;
-      this.#rect = [
-        x - halfWidth + xModuleSizeHalf,
-        y - halfHeight + yModuleSizeHalf,
-        x + halfWidth - xModuleSizeHalf,
-        y + halfHeight - yModuleSizeHalf
-      ];
-      this.#moduleSize = [xModuleSize, yModuleSize];
-      this.#ratio = ratios[toInt32(ratios.length / 2)];
-    }
-    get noise() {
-      return this.#noise;
-    }
-    get width() {
-      return this.#width;
-    }
-    get height() {
-      return this.#height;
-    }
-    get combined() {
-      return this.#combined;
-    }
-    get rect() {
-      return this.#rect;
-    }
-    get moduleSize() {
-      return this.#moduleSize;
-    }
-    equals(x, y, width, height) {
-      const ratio = this.#ratio;
-      const modules = this.#modules;
-      const moduleSize = this.#moduleSize;
-      const xModuleSize = width / modules;
-      const [xModuleSizeThis] = moduleSize;
-      if (Math.abs(x - this.x) <= Math.max(xModuleSize, xModuleSizeThis) * ratio) {
-        const xModuleSizeDiff = Math.abs(xModuleSize - xModuleSizeThis);
-        if (xModuleSizeDiff >= 1 && xModuleSizeDiff > xModuleSizeThis) {
-          return false;
-        }
-        const yModuleSize = height / modules;
-        const [, yModuleSizeThis] = moduleSize;
-        if (Math.abs(y - this.y) <= Math.max(yModuleSize, yModuleSizeThis) * ratio) {
-          const yModuleSizeDiff = Math.abs(yModuleSize - yModuleSizeThis);
-          if (yModuleSizeDiff < 1 || yModuleSizeDiff <= yModuleSizeThis) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-    combine(x, y, width, height, noise) {
-      const combined = this.#combined;
-      const nextCombined = combined + 1;
-      const combinedX = (combined * this.x + x) / nextCombined;
-      const combinedY = (combined * this.y + y) / nextCombined;
-      const combinedNoise = (combined * this.#noise + noise) / nextCombined;
-      const combinedWidth = (combined * this.#width + width) / nextCombined;
-      const combinedHeight = (combined * this.#height + height) / nextCombined;
-      const pattern = new Pattern(combinedX, combinedY, combinedWidth, combinedHeight, this.#ratios, combinedNoise);
-      pattern.#combined = nextCombined;
-      return pattern;
-    }
   }
 
   /**
@@ -4207,6 +4206,27 @@
       }
     }
     return modules >= size - 18;
+  }
+  function checkModulesInMappingTimingLine(matrix, transform, size, isVertical) {
+    const [startX, startY] = transform.mapping(isVertical ? 6.5 : 7.5, isVertical ? 7.5 : 6.5);
+    const [endX, endY] = transform.mapping(isVertical ? 6.5 : size - 7.5, isVertical ? size - 7.5 : 6.5);
+    const start = new Point(toInt32(startX), toInt32(startY));
+    const end = new Point(toInt32(endX), toInt32(endY));
+    const points = new PlotLine(start, end).points();
+    const expectModules = size - 14;
+    let modules = 1;
+    let lastBit = matrix.get(start.x, start.y);
+    for (const [x, y] of points) {
+      const bit = matrix.get(x, y);
+      if (bit !== lastBit) {
+        modules++;
+        lastBit = bit;
+        if (modules > expectModules) {
+          return false;
+        }
+      }
+    }
+    return modules === expectModules;
   }
 
   /**
@@ -4708,7 +4728,8 @@
       while (!iterator.done) {
         let succeed = false;
         const finderPatternGroup = iterator.value;
-        const version = fromVersionSize(finderPatternGroup.size);
+        const { size } = finderPatternGroup;
+        const version = fromVersionSize(size);
         // Find alignment
         if (version.alignmentPatterns.length > 0) {
           // Kind of arbitrary -- expand search radius before giving up
@@ -4716,15 +4737,27 @@
           const alignmentPatterns = findAlignmentInRegion(matrix, finderPatternGroup);
           // Founded alignment
           for (const alignmentPattern of alignmentPatterns) {
-            succeed = yield new Detect(matrix, finderPatternGroup, alignmentPattern);
-            // Succeed, skip next alignment pattern
-            if (succeed) {
-              break;
+            const transform = createTransform(finderPatternGroup, alignmentPattern);
+            if (
+              checkModulesInMappingTimingLine(matrix, transform, size) ||
+              checkModulesInMappingTimingLine(matrix, transform, size, true)
+            ) {
+              succeed = yield new Detect(matrix, transform, finderPatternGroup, alignmentPattern);
+              // Succeed, skip next alignment pattern
+              if (succeed) {
+                break;
+              }
             }
           }
         } else {
-          // No alignment pattern version
-          succeed = yield new Detect(matrix, finderPatternGroup);
+          const transform = createTransform(finderPatternGroup);
+          if (
+            checkModulesInMappingTimingLine(matrix, transform, size) ||
+            checkModulesInMappingTimingLine(matrix, transform, size, true)
+          ) {
+            // No alignment pattern version
+            succeed = yield new Detect(matrix, transform, finderPatternGroup);
+          }
         }
         iterator = finderPatternGroups.next(succeed);
       }

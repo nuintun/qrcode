@@ -6,7 +6,6 @@ import { Pattern } from './Pattern';
 import { Point } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
 import { GridSampler } from '/common/GridSampler';
-import { createTransform } from './utils/transform';
 import { FinderPatternGroup } from './FinderPatternGroup';
 import { PerspectiveTransform } from '/common/PerspectiveTransform';
 
@@ -16,8 +15,7 @@ export class Detect {
   #finder: FinderPatternGroup;
   #transform: PerspectiveTransform;
 
-  constructor(matrix: BitMatrix, finder: FinderPatternGroup, alignment?: Pattern) {
-    const transform = createTransform(finder, alignment);
+  constructor(matrix: BitMatrix, transform: PerspectiveTransform, finder: FinderPatternGroup, alignment?: Pattern) {
     const sampler = new GridSampler(matrix, transform);
     const { size } = finder;
 

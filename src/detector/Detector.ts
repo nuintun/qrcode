@@ -7,10 +7,12 @@ import { Pattern } from './Pattern';
 import { toInt32 } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
 import { fromVersionSize } from '/common/Version';
+import { createTransform } from './utils/transform';
 import { calculateModuleSize } from './utils/module';
 import { FinderPatternGroup } from './FinderPatternGroup';
 import { FinderPatternFinder } from './FinderPatternFinder';
 import { ALIGNMENT_PATTERN_RATIOS } from './utils/constants';
+import { checkModulesInMappingTimingLine } from './utils/timing';
 import { AlignmentPatternFinder } from './AlignmentPatternFinder';
 
 export interface Options {
@@ -79,7 +81,8 @@ export class Detector {
       let succeed = false;
 
       const finderPatternGroup = iterator.value;
-      const version = fromVersionSize(finderPatternGroup.size);
+      const { size } = finderPatternGroup;
+      const version = fromVersionSize(size);
 
       // Find alignment
       if (version.alignmentPatterns.length > 0) {
@@ -89,16 +92,30 @@ export class Detector {
 
         // Founded alignment
         for (const alignmentPattern of alignmentPatterns) {
-          succeed = yield new Detect(matrix, finderPatternGroup, alignmentPattern);
+          const transform = createTransform(finderPatternGroup, alignmentPattern);
 
-          // Succeed, skip next alignment pattern
-          if (succeed) {
-            break;
+          if (
+            checkModulesInMappingTimingLine(matrix, transform, size) ||
+            checkModulesInMappingTimingLine(matrix, transform, size, true)
+          ) {
+            succeed = yield new Detect(matrix, transform, finderPatternGroup, alignmentPattern);
+
+            // Succeed, skip next alignment pattern
+            if (succeed) {
+              break;
+            }
           }
         }
       } else {
-        // No alignment pattern version
-        succeed = yield new Detect(matrix, finderPatternGroup);
+        const transform = createTransform(finderPatternGroup);
+
+        if (
+          checkModulesInMappingTimingLine(matrix, transform, size) ||
+          checkModulesInMappingTimingLine(matrix, transform, size, true)
+        ) {
+          // No alignment pattern version
+          succeed = yield new Detect(matrix, transform, finderPatternGroup);
+        }
       }
 
       iterator = finderPatternGroups.next(succeed);

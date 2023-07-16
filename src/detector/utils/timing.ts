@@ -8,6 +8,7 @@ import { Pattern } from '/detector/Pattern';
 import { PlotLine } from '/common/PlotLine';
 import { BitMatrix } from '/common/BitMatrix';
 import { FinderPatternGroup } from '/detector/FinderPatternGroup';
+import { PerspectiveTransform } from '/common/PerspectiveTransform';
 
 function calculateTimingRatio(axis: number, control: number) {
   return control > axis ? 1 : control < axis ? -1 : 0;
@@ -74,4 +75,35 @@ export function checkModulesInTimingLine(
   }
 
   return modules >= size - 18;
+}
+
+export function checkModulesInMappingTimingLine(
+  matrix: BitMatrix,
+  transform: PerspectiveTransform,
+  size: number,
+  isVertical?: boolean
+): boolean {
+  const [startX, startY] = transform.mapping(isVertical ? 6.5 : 7.5, isVertical ? 7.5 : 6.5);
+  const [endX, endY] = transform.mapping(isVertical ? 6.5 : size - 7.5, isVertical ? size - 7.5 : 6.5);
+  const start = new Point(toInt32(startX), toInt32(startY));
+  const end = new Point(toInt32(endX), toInt32(endY));
+  const points = new PlotLine(start, end).points();
+  const expectModules = size - 14;
+
+  let modules = 1;
+  let lastBit = matrix.get(start.x, start.y);
+
+  for (const [x, y] of points) {
+    const bit = matrix.get(x, y);
+    if (bit !== lastBit) {
+      modules++;
+      lastBit = bit;
+
+      if (modules > expectModules) {
+        return false;
+      }
+    }
+  }
+
+  return modules === expectModules;
 }
