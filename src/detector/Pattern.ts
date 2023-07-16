@@ -4,17 +4,7 @@
 
 import { Point } from '/common/Point';
 import { sumArray } from '/common/utils';
-
-export type PatternRect = [
-  // Left border center x
-  left: number,
-  // Top border center y
-  top: number,
-  // Right border center x
-  right: number,
-  // Bottom border center y
-  bottom: number
-];
+import { PatternRect } from './utils/pattern';
 
 export class Pattern extends Point {
   #noise: number;
@@ -42,12 +32,12 @@ export class Pattern extends Point {
     this.#height = height;
     this.#ratios = ratios;
     this.#modules = modules;
-    this.#rect = [
+    this.#rect = Object.freeze([
       x - halfWidth + xModuleSizeHalf,
       y - halfHeight + yModuleSizeHalf,
       x + halfWidth - xModuleSizeHalf,
       y + halfHeight - yModuleSizeHalf
-    ];
+    ]);
     this.#moduleSize = (xModuleSize + yModuleSize) / 2;
   }
 

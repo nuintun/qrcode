@@ -3645,12 +3645,12 @@
       this.#height = height;
       this.#ratios = ratios;
       this.#modules = modules;
-      this.#rect = [
+      this.#rect = Object.freeze([
         x - halfWidth + xModuleSizeHalf,
         y - halfHeight + yModuleSizeHalf,
         x + halfWidth - xModuleSizeHalf,
         y + halfHeight - yModuleSizeHalf
-      ];
+      ]);
       this.#moduleSize = (xModuleSize + yModuleSize) / 2;
     }
     get noise() {
@@ -4432,10 +4432,10 @@
       if (this.#moduleSize == null) {
         const matrix = this.#matrix;
         const [topLeft, topRight, bottomLeft] = this.#patterns;
-        this.#moduleSize = [
+        this.#moduleSize = Object.freeze([
           calculateModuleSizeOneWay(matrix, topLeft, topRight),
           calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)
-        ];
+        ]);
       }
       return this.#moduleSize;
     }

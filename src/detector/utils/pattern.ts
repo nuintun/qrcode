@@ -11,6 +11,17 @@ export interface Matcher {
   (scanline: number[]): boolean;
 }
 
+export type PatternRect = readonly [
+  // Left border center x
+  left: number,
+  // Top border center y
+  top: number,
+  // Right border center x
+  right: number,
+  // Bottom border center y
+  bottom: number
+];
+
 export function isMatchFinderPattern(scanline: number[]): boolean {
   const modules = 7;
   const { length } = scanline;

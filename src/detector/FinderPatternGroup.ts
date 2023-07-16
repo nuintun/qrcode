@@ -100,10 +100,10 @@ export class FinderPatternGroup {
       const matrix = this.#matrix;
       const [topLeft, topRight, bottomLeft] = this.#patterns;
 
-      this.#moduleSize = [
+      this.#moduleSize = Object.freeze([
         calculateModuleSizeOneWay(matrix, topLeft, topRight),
         calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)
-      ];
+      ]);
     }
 
     return this.#moduleSize;

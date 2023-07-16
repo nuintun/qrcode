@@ -8,7 +8,7 @@ import { PlotLine } from '/common/PlotLine';
 import { BitMatrix } from '/common/BitMatrix';
 import { distance, Point } from '/common/Point';
 
-export type ModuleSizeGroup = [x: number, y: number];
+export type ModuleSizeGroup = readonly [x: number, y: number];
 
 export function calculateModuleSize([xModuleSize, yModuleSize]: ModuleSizeGroup): number {
   return (xModuleSize + yModuleSize) / 2;
