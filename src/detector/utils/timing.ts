@@ -48,14 +48,8 @@ function calculateTimingLine(start: Pattern, end: Pattern, control: Pattern, isV
   return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
 }
 
-export function checkModulesInTimingLine(
-  matrix: BitMatrix,
-  { size, topLeft, topRight, bottomLeft }: FinderPatternGroup,
-  isVertical?: boolean
-): boolean {
-  const [start, end] = isVertical
-    ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
-    : calculateTimingLine(topLeft, topRight, bottomLeft);
+function isValidTimingLine(matrix: BitMatrix, start: Point, end: Point, size: number): boolean {
+  const maxModules = size + 8;
   const points = new PlotLine(start, end).points();
 
   let modules = 1;
@@ -68,13 +62,25 @@ export function checkModulesInTimingLine(
       modules++;
       lastBit = bit;
 
-      if (modules > size) {
+      if (modules > maxModules) {
         return false;
       }
     }
   }
 
-  return modules >= size - 18;
+  return modules >= size - 16;
+}
+
+export function checkModulesInTimingLine(
+  matrix: BitMatrix,
+  { size, topLeft, topRight, bottomLeft }: FinderPatternGroup,
+  isVertical?: boolean
+): boolean {
+  const [start, end] = isVertical
+    ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
+    : calculateTimingLine(topLeft, topRight, bottomLeft);
+
+  return isValidTimingLine(matrix, start, end, size);
 }
 
 export function checkModulesInMappingTimingLine(
@@ -85,25 +91,6 @@ export function checkModulesInMappingTimingLine(
 ): boolean {
   const [startX, startY] = transform.mapping(isVertical ? 6.5 : 7.5, isVertical ? 7.5 : 6.5);
   const [endX, endY] = transform.mapping(isVertical ? 6.5 : size - 7.5, isVertical ? size - 7.5 : 6.5);
-  const start = new Point(toInt32(startX), toInt32(startY));
-  const end = new Point(toInt32(endX), toInt32(endY));
-  const points = new PlotLine(start, end).points();
-  const expectModules = size - 14;
 
-  let modules = 1;
-  let lastBit = matrix.get(start.x, start.y);
-
-  for (const [x, y] of points) {
-    const bit = matrix.get(x, y);
-    if (bit !== lastBit) {
-      modules++;
-      lastBit = bit;
-
-      if (modules > expectModules) {
-        return false;
-      }
-    }
-  }
-
-  return modules === expectModules;
+  return isValidTimingLine(matrix, new Point(startX, startY), new Point(endX, endY), size);
 }

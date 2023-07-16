@@ -95,7 +95,7 @@ export class Detector {
           const transform = createTransform(finderPatternGroup, alignmentPattern);
 
           if (
-            checkModulesInMappingTimingLine(matrix, transform, size) ||
+            checkModulesInMappingTimingLine(matrix, transform, size) &&
             checkModulesInMappingTimingLine(matrix, transform, size, true)
           ) {
             succeed = yield new Detect(matrix, transform, finderPatternGroup, alignmentPattern);
@@ -110,7 +110,7 @@ export class Detector {
         const transform = createTransform(finderPatternGroup);
 
         if (
-          checkModulesInMappingTimingLine(matrix, transform, size) ||
+          checkModulesInMappingTimingLine(matrix, transform, size) &&
           checkModulesInMappingTimingLine(matrix, transform, size, true)
         ) {
           // No alignment pattern version
