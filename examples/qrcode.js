@@ -4471,7 +4471,9 @@
     *groups() {
       const patterns = this.patterns.filter(({ combined }) => combined >= 3);
       const { length } = patterns;
-      if (length >= 3) {
+      if (length === 3) {
+        yield new FinderPatternGroup(this.matrix, patterns);
+      } else if (length > 3) {
         const maxI1 = length - 2;
         const maxI2 = length - 1;
         const used = new Map();
