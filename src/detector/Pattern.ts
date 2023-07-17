@@ -8,7 +8,6 @@ import { sumArray, toInt32 } from '/common/utils';
 
 export class Pattern extends Point {
   #noise: number;
-  #ratio: number;
   #width: number;
   #height: number;
   #modules: number;
@@ -16,6 +15,7 @@ export class Pattern extends Point {
   #rect: PatternRect;
   #moduleSize: number;
   #combined: number = 1;
+  #intersectRadius: number;
 
   constructor(x: number, y: number, width: number, height: number, ratios: number[], noise: number) {
     super(x, y);
@@ -27,20 +27,22 @@ export class Pattern extends Point {
     const yModuleSize = height / modules;
     const xModuleSizeHalf = xModuleSize / 2;
     const yModuleSizeHalf = yModuleSize / 2;
+    const moduleSize = (xModuleSize + yModuleSize) / 2;
+    const ratio = ratios[toInt32(ratios.length / 2)] / 2;
 
     this.#noise = noise;
     this.#width = width;
     this.#height = height;
     this.#ratios = ratios;
     this.#modules = modules;
+    this.#moduleSize = moduleSize;
     this.#rect = Object.freeze([
       x - halfWidth + xModuleSizeHalf,
       y - halfHeight + yModuleSizeHalf,
       x + halfWidth - xModuleSizeHalf,
       y + halfHeight - yModuleSizeHalf
     ]);
-    this.#moduleSize = (xModuleSize + yModuleSize) / 2;
-    this.#ratio = ratios[toInt32(ratios.length / 2)] / 2;
+    this.#intersectRadius = moduleSize * ratio;
   }
 
   public get noise(): number {
@@ -68,12 +70,11 @@ export class Pattern extends Point {
   }
 
   public equals(x: number, y: number, width: number, height: number): boolean {
-    const ratio = this.#ratio;
     const modules = this.#modules;
-    const moduleSizeThis = this.#moduleSize;
-    const maxDistance = moduleSizeThis * ratio;
+    const intersectRadius = this.#intersectRadius;
 
-    if (Math.abs(x - this.x) <= maxDistance && Math.abs(y - this.y) <= maxDistance) {
+    if (Math.abs(x - this.x) <= intersectRadius && Math.abs(y - this.y) <= intersectRadius) {
+      const moduleSizeThis = this.#moduleSize;
       const moduleSize = (width + height) / modules / 2;
       const moduleSizeDiff = Math.abs(moduleSize - moduleSizeThis);
 

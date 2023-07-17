@@ -3624,7 +3624,6 @@
    */
   class Pattern extends Point {
     #noise;
-    #ratio;
     #width;
     #height;
     #modules;
@@ -3632,6 +3631,7 @@
     #rect;
     #moduleSize;
     #combined = 1;
+    #intersectRadius;
     constructor(x, y, width, height, ratios, noise) {
       super(x, y);
       const halfWidth = width / 2;
@@ -3641,19 +3641,21 @@
       const yModuleSize = height / modules;
       const xModuleSizeHalf = xModuleSize / 2;
       const yModuleSizeHalf = yModuleSize / 2;
+      const moduleSize = (xModuleSize + yModuleSize) / 2;
+      const ratio = ratios[toInt32(ratios.length / 2)] / 2;
       this.#noise = noise;
       this.#width = width;
       this.#height = height;
       this.#ratios = ratios;
       this.#modules = modules;
+      this.#moduleSize = moduleSize;
       this.#rect = Object.freeze([
         x - halfWidth + xModuleSizeHalf,
         y - halfHeight + yModuleSizeHalf,
         x + halfWidth - xModuleSizeHalf,
         y + halfHeight - yModuleSizeHalf
       ]);
-      this.#moduleSize = (xModuleSize + yModuleSize) / 2;
-      this.#ratio = ratios[toInt32(ratios.length / 2)] / 2;
+      this.#intersectRadius = moduleSize * ratio;
     }
     get noise() {
       return this.#noise;
@@ -3674,11 +3676,10 @@
       return this.#moduleSize;
     }
     equals(x, y, width, height) {
-      const ratio = this.#ratio;
       const modules = this.#modules;
-      const moduleSizeThis = this.#moduleSize;
-      const maxDistance = moduleSizeThis * ratio;
-      if (Math.abs(x - this.x) <= maxDistance && Math.abs(y - this.y) <= maxDistance) {
+      const intersectRadius = this.#intersectRadius;
+      if (Math.abs(x - this.x) <= intersectRadius && Math.abs(y - this.y) <= intersectRadius) {
+        const moduleSizeThis = this.#moduleSize;
         const moduleSize = (width + height) / modules / 2;
         const moduleSizeDiff = Math.abs(moduleSize - moduleSizeThis);
         if (moduleSizeDiff < 1 || moduleSizeDiff <= moduleSizeThis) {
