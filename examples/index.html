@@ -485,12 +485,16 @@
         console.log('success:', succeedCount);
         console.log('errors:', errors.length);
 
-        for (const { finder } of errors) {
+        for (const { finder, alignment } of errors) {
           const { topLeft, topRight, bottomLeft } = finder;
 
           markFinderPattern(topLeft, '#ffff00');
           markFinderPattern(topRight, '#ffff00');
           markFinderPattern(bottomLeft, '#ffff00');
+
+          if (alignment) {
+            markFinderPattern(alignment, '#00ffff');
+          }
         }
 
         for (const detect of success) {
