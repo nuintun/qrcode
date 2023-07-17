@@ -3,11 +3,12 @@
  */
 
 import { Point } from '/common/Point';
-import { sumArray } from '/common/utils';
 import { PatternRect } from './utils/pattern';
+import { sumArray, toInt32 } from '/common/utils';
 
 export class Pattern extends Point {
   #noise: number;
+  #ratio: number;
   #width: number;
   #height: number;
   #modules: number;
@@ -39,6 +40,7 @@ export class Pattern extends Point {
       y + halfHeight - yModuleSizeHalf
     ]);
     this.#moduleSize = (xModuleSize + yModuleSize) / 2;
+    this.#ratio = ratios[toInt32(ratios.length / 2)] / 2;
   }
 
   public get noise(): number {
@@ -66,10 +68,12 @@ export class Pattern extends Point {
   }
 
   public equals(x: number, y: number, width: number, height: number): boolean {
+    const ratio = this.#ratio;
     const modules = this.#modules;
     const moduleSizeThis = this.#moduleSize;
+    const maxDistance = moduleSizeThis * ratio;
 
-    if (Math.abs(x - this.x) <= moduleSizeThis && Math.abs(y - this.y) <= moduleSizeThis) {
+    if (Math.abs(x - this.x) <= maxDistance && Math.abs(y - this.y) <= maxDistance) {
       const moduleSize = (width + height) / modules / 2;
       const moduleSizeDiff = Math.abs(moduleSize - moduleSizeThis);
 

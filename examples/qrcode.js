@@ -3624,6 +3624,7 @@
    */
   class Pattern extends Point {
     #noise;
+    #ratio;
     #width;
     #height;
     #modules;
@@ -3652,6 +3653,7 @@
         y + halfHeight - yModuleSizeHalf
       ]);
       this.#moduleSize = (xModuleSize + yModuleSize) / 2;
+      this.#ratio = ratios[toInt32(ratios.length / 2)] / 2;
     }
     get noise() {
       return this.#noise;
@@ -3672,9 +3674,11 @@
       return this.#moduleSize;
     }
     equals(x, y, width, height) {
+      const ratio = this.#ratio;
       const modules = this.#modules;
       const moduleSizeThis = this.#moduleSize;
-      if (Math.abs(x - this.x) <= moduleSizeThis && Math.abs(y - this.y) <= moduleSizeThis) {
+      const maxDistance = moduleSizeThis * ratio;
+      if (Math.abs(x - this.x) <= maxDistance && Math.abs(y - this.y) <= maxDistance) {
         const moduleSize = (width + height) / modules / 2;
         const moduleSizeDiff = Math.abs(moduleSize - moduleSizeThis);
         if (moduleSizeDiff < 1 || moduleSizeDiff <= moduleSizeThis) {
