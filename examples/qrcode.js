@@ -4218,7 +4218,7 @@
         }
       }
     }
-    return modules >= size - 18;
+    return modules >= Math.max(5, size - 22);
   }
   function checkModulesInTimingLine(matrix, { size, topLeft, topRight, bottomLeft }, isVertical) {
     const [start, end] = isVertical
@@ -4405,7 +4405,7 @@
       case 2:
         return size - 1;
       case 3:
-        return NaN;
+        return Math.min(size + 2, MAX_VERSION_SIZE);
     }
     return size;
   }
@@ -4610,8 +4610,10 @@
       });
       if (patterns.length > 1) {
         patterns.sort((pattern1, pattern2) => {
-          const noise1 = distance(pattern1, expectAlignment) * pattern1.noise;
-          const noise2 = distance(pattern2, expectAlignment) * pattern2.noise;
+          const moduleSizeDiff1 = Math.abs(pattern1.moduleSize - moduleSize);
+          const moduleSizeDiff2 = Math.abs(pattern2.moduleSize - moduleSize);
+          const noise1 = distance(pattern1, expectAlignment) * pattern1.noise * moduleSizeDiff1;
+          const noise2 = distance(pattern2, expectAlignment) * pattern2.noise * moduleSizeDiff2;
           return noise1 - noise2;
         });
       }
