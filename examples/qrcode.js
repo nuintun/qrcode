@@ -4242,8 +4242,8 @@
   const MIN_TOP_LEFT_ANGLE = RADIAN * 45;
   const MAX_TOP_LEFT_ANGLE = RADIAN * 135;
   // Diff pattern
-  const DIFF_PATTERN_RATIO = 0.75;
-  const DIFF_PATTERN_ALLOWANCE_SIZE = 0.25;
+  const DIFF_PATTERN_RATIO = 0.625;
+  const DIFF_PATTERN_ALLOWANCE_SIZE = 0.5;
 
   /**
    * @module matcher
@@ -4398,7 +4398,7 @@
     const width = distance(topLeft, topRight);
     const height = distance(topLeft, bottomLeft);
     const moduleSizeAvg = calculateModuleSize(moduleSize);
-    const size = round((round(width / moduleSizeAvg) + round(height / moduleSizeAvg)) / 2) + 7;
+    const size = round((width + height) / moduleSizeAvg / 2) + 7;
     switch (size & 0x03) {
       case 0:
         return size + 1;
