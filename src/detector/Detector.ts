@@ -10,8 +10,8 @@ import { fromVersionSize } from '/common/Version';
 import { createTransform } from './utils/transform';
 import { calculateModuleSize } from './utils/module';
 import { FinderPatternGroup } from './FinderPatternGroup';
+import { ALIGNMENT_PATTERN_RATIOS } from './PatternRatios';
 import { FinderPatternFinder } from './FinderPatternFinder';
-import { ALIGNMENT_PATTERN_RATIOS } from './utils/constants';
 import { checkModulesInMappingTimingLine } from './utils/timing';
 import { AlignmentPatternFinder } from './AlignmentPatternFinder';
 
@@ -33,7 +33,7 @@ function getExpectAlignment({
   const expectAlignmentX = x + correctionToTopLeft * (bottomRightX - x);
   const expectAlignmentY = y + correctionToTopLeft * (bottomRightY - y);
 
-  return new Pattern(expectAlignmentX, expectAlignmentY, xModuleSize * 5, yModuleSize * 5, ALIGNMENT_PATTERN_RATIOS, 0);
+  return new Pattern(ALIGNMENT_PATTERN_RATIOS, expectAlignmentX, expectAlignmentY, xModuleSize * 5, yModuleSize * 5, 0);
 }
 
 function findAlignmentInRegion(matrix: BitMatrix, finderPatternGroup: FinderPatternGroup, strict?: boolean): Pattern[] {
@@ -88,7 +88,7 @@ export class Detector {
       if (version.alignmentPatterns.length > 0) {
         // Kind of arbitrary -- expand search radius before giving up
         // If we didn't find alignment pattern... well try anyway without it
-        const alignmentPatterns = findAlignmentInRegion(matrix, finderPatternGroup);
+        const alignmentPatterns = findAlignmentInRegion(matrix, finderPatternGroup, strict);
 
         // Founded alignment
         for (const alignmentPattern of alignmentPatterns) {

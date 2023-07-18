@@ -3,38 +3,41 @@
  */
 
 import { Point } from '/common/Point';
+import { toInt32 } from '/common/utils';
 import { PatternRect } from './utils/pattern';
-import { sumArray, toInt32 } from '/common/utils';
+import { PatternRatios } from './PatternRatios';
+
+function getRatio({ ratios }: PatternRatios): number {
+  return ratios[toInt32(ratios.length / 2)] / 2;
+}
 
 export class Pattern extends Point {
   #noise: number;
   #width: number;
   #height: number;
-  #modules: number;
-  #ratios: number[];
   #rect: PatternRect;
   #moduleSize: number;
   #combined: number = 1;
+  #ratios: PatternRatios;
   #intersectRadius: number;
 
-  constructor(x: number, y: number, width: number, height: number, ratios: number[], noise: number) {
+  constructor(ratios: PatternRatios, x: number, y: number, width: number, height: number, noise: number) {
     super(x, y);
 
+    const { modules } = ratios;
     const halfWidth = width / 2;
     const halfHeight = height / 2;
-    const modules = sumArray(ratios);
+    const ratio = getRatio(ratios);
     const xModuleSize = width / modules;
     const yModuleSize = height / modules;
     const xModuleSizeHalf = xModuleSize / 2;
     const yModuleSizeHalf = yModuleSize / 2;
     const moduleSize = (xModuleSize + yModuleSize) / 2;
-    const ratio = ratios[toInt32(ratios.length / 2)] / 2;
 
     this.#noise = noise;
     this.#width = width;
     this.#height = height;
     this.#ratios = ratios;
-    this.#modules = modules;
     this.#moduleSize = moduleSize;
     this.#rect = Object.freeze([
       x - halfWidth + xModuleSizeHalf,
@@ -70,7 +73,7 @@ export class Pattern extends Point {
   }
 
   public equals(x: number, y: number, width: number, height: number): boolean {
-    const modules = this.#modules;
+    const { modules } = this.#ratios;
     const intersectRadius = this.#intersectRadius;
 
     if (Math.abs(x - this.x) <= intersectRadius && Math.abs(y - this.y) <= intersectRadius) {
@@ -94,7 +97,7 @@ export class Pattern extends Point {
     const combinedNoise = (combined * this.#noise + noise) / nextCombined;
     const combinedWidth = (combined * this.#width + width) / nextCombined;
     const combinedHeight = (combined * this.#height + height) / nextCombined;
-    const pattern = new Pattern(combinedX, combinedY, combinedWidth, combinedHeight, this.#ratios, combinedNoise);
+    const pattern = new Pattern(this.#ratios, combinedX, combinedY, combinedWidth, combinedHeight, combinedNoise);
 
     pattern.#combined = nextCombined;
 

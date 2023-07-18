@@ -2,14 +2,11 @@
  * @module matcher
  */
 
+import { sumArray } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
-import { sumArray, toInt32 } from '/common/utils';
-import { DIFF_ALIGNMENT_PATTERN_RATIO, DIFF_FINDER_PATTERN_RATIO } from './constants';
+import { PatternRatios } from '/detector/PatternRatios';
+import { DIFF_PATTERN_ALLOWANCE_SIZE, DIFF_PATTERN_RATIO } from './constants';
 import { calculateScanlineNoise, centerFromScanlineEnd, getCrossScanline, sumScanlineNonzero } from './scanline';
-
-export interface Matcher {
-  (scanline: number[]): boolean;
-}
 
 export type PatternRect = readonly [
   // Left border center x
@@ -22,25 +19,15 @@ export type PatternRect = readonly [
   bottom: number
 ];
 
-export function isMatchFinderPattern(scanline: number[]): boolean {
-  const modules = 7;
-  const { length } = scanline;
-  const scanlineTotal = sumScanlineNonzero(scanline);
-
-  if (scanlineTotal >= modules) {
-    const middleIndex = toInt32(length / 2);
-    const moduleSize = scanlineTotal / modules;
-    const threshold = moduleSize * DIFF_FINDER_PATTERN_RATIO;
-
-    // Allow less than DIFF_FINDER_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
-    for (let i = 0; i < length; i++) {
-      const count = scanline[i];
-      const ratio = i !== middleIndex ? 1 : 3;
-      const moduleSizeDiff = Math.abs(count - moduleSize * ratio);
-
-      if (moduleSizeDiff > threshold * ratio) {
-        return false;
-      }
+export function isDiagonalScanlineCheckPassed(
+  slash: number[],
+  backslash: number[],
+  ratios: PatternRatios,
+  strict?: boolean
+): boolean {
+  if (isMatchPattern(slash, ratios)) {
+    if (strict) {
+      return isMatchPattern(backslash, ratios);
     }
 
     return true;
@@ -49,17 +36,40 @@ export function isMatchFinderPattern(scanline: number[]): boolean {
   return false;
 }
 
-export function isMatchAlignmentPattern(scanline: number[]): boolean {
-  const modules = scanline.length;
+export function alignCrossPattern(
+  matrix: BitMatrix,
+  x: number,
+  y: number,
+  overscan: number,
+  ratios: PatternRatios,
+  isVertical?: boolean
+): [center: number, scanline: number[]] {
+  const [scanline, end] = getCrossScanline(matrix, x, y, overscan, isVertical);
+
+  return [isMatchPattern(scanline, ratios) ? centerFromScanlineEnd(scanline, end) : NaN, scanline];
+}
+
+export function isEqualsSize(size1: number, size2: number, ratio: number): boolean {
+  if (size1 > size2) {
+    [size1, size2] = [size2, size1];
+  }
+
+  return size2 - size1 <= size2 * ratio;
+}
+
+export function isMatchPattern(scanline: number[], { ratios, modules }: PatternRatios): boolean {
+  const { length } = scanline;
   const scanlineTotal = sumScanlineNonzero(scanline);
 
   if (scanlineTotal >= modules) {
     const moduleSize = scanlineTotal / modules;
-    const threshold = moduleSize * DIFF_ALIGNMENT_PATTERN_RATIO;
+    const threshold = moduleSize * DIFF_PATTERN_RATIO + DIFF_PATTERN_ALLOWANCE_SIZE;
 
-    // Allow less than DIFF_ALIGNMENT_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
-    for (const count of scanline) {
-      const moduleSizeDiff = Math.abs(count - moduleSize);
+    // Allow less than DIFF_FINDER_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
+    for (let i = 0; i < length; i++) {
+      const ratio = ratios[i];
+      const count = scanline[i];
+      const moduleSizeDiff = Math.abs(count - moduleSize * ratio);
 
       if (moduleSizeDiff > threshold) {
         return false;
@@ -72,22 +82,14 @@ export function isMatchAlignmentPattern(scanline: number[]): boolean {
   return false;
 }
 
-export function isEqualsSize(size1: number, size2: number, ratio: number): boolean {
-  if (size1 > size2) {
-    [size1, size2] = [size2, size1];
-  }
-
-  return size2 - size1 <= size2 * ratio;
-}
-
-export function calculatePatternNoise(ratios: number[], ...scanlines: number[][]): number {
+export function calculatePatternNoise(ratios: PatternRatios, ...scanlines: number[][]): number {
   const noises: number[] = [];
   const averages: number[] = [];
   const averagesDiff: number[] = [];
 
   // scanline length must be equals ratios length
   for (const scanline of scanlines) {
-    const [noise, average] = calculateScanlineNoise(ratios, scanline);
+    const [noise, average] = calculateScanlineNoise(scanline, ratios);
 
     averages.push(average);
     noises.push(noise * noise);
@@ -102,34 +104,4 @@ export function calculatePatternNoise(ratios: number[], ...scanlines: number[][]
   }
 
   return Math.sqrt(sumArray(noises)) + sumArray(averagesDiff) / averagesAvg;
-}
-
-export function isDiagonalScanlineCheckPassed(
-  slash: number[],
-  backslash: number[],
-  matcher: Matcher,
-  strict?: boolean
-): boolean {
-  if (matcher(slash)) {
-    if (strict) {
-      return matcher(backslash);
-    }
-
-    return true;
-  }
-
-  return false;
-}
-
-export function alignCrossPattern(
-  matrix: BitMatrix,
-  x: number,
-  y: number,
-  overscan: number,
-  matcher: Matcher,
-  isVertical?: boolean
-): [center: number, scanline: number[]] {
-  const [scanline, end] = getCrossScanline(matrix, x, y, overscan, isVertical);
-
-  return [matcher(scanline) ? centerFromScanlineEnd(scanline, end) : NaN, scanline];
 }

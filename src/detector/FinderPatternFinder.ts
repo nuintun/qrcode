@@ -7,16 +7,17 @@ import { round } from '/common/utils';
 import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
 import { scanlineUpdate } from './utils/scanline';
+import { FINDER_PATTERN_RATIOS } from './PatternRatios';
 import { checkModulesInTimingLine } from './utils/timing';
 import { MatchAction, PatternFinder } from './PatternFinder';
+import { isEqualsSize, isMatchPattern } from './utils/pattern';
 import { MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
-import { isEqualsSize, isMatchFinderPattern } from './utils/pattern';
 import { calculateTopLeftAngle, FinderPatternGroup } from './FinderPatternGroup';
-import { DIFF_MODULE_SIZE_RATIO, FINDER_PATTERN_RATIOS, MAX_TOP_LEFT_ANGLE, MIN_TOP_LEFT_ANGLE } from './utils/constants';
+import { DIFF_MODULE_SIZE_RATIO, MAX_TOP_LEFT_ANGLE, MIN_TOP_LEFT_ANGLE } from './utils/constants';
 
 export class FinderPatternFinder extends PatternFinder {
   constructor(matrix: BitMatrix, strict?: boolean) {
-    super(matrix, FINDER_PATTERN_RATIOS, isMatchFinderPattern, strict);
+    super(matrix, FINDER_PATTERN_RATIOS, strict);
   }
 
   public *groups(): Generator<FinderPatternGroup, void, boolean> {
@@ -95,8 +96,10 @@ export class FinderPatternFinder extends PatternFinder {
                 const { topLeft, topRight, bottomLeft } = finderPatternGroup;
                 const edge1 = distance(topLeft, topRight);
                 const edge2 = distance(topLeft, bottomLeft);
+                const edge1Modules = round(edge1 / xModuleSize);
+                const edge2Modules = round(edge2 / yModuleSize);
 
-                if (Math.abs(round(edge1 / xModuleSize) - round(edge2 / yModuleSize)) <= 4) {
+                if (Math.abs(edge1Modules - edge2Modules) <= 4) {
                   const { size } = finderPatternGroup;
 
                   if (
@@ -134,7 +137,8 @@ export class FinderPatternFinder extends PatternFinder {
         scanlineBits[1] === 0 &&
         scanlineBits[2] === 1 &&
         scanlineBits[3] === 0 &&
-        scanlineBits[4] === 1
+        scanlineBits[4] === 1 &&
+        isMatchPattern(scanline, FINDER_PATTERN_RATIOS)
       ) {
         this.match(x, y, scanline, scanline[2]);
       }

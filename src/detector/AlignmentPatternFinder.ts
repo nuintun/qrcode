@@ -6,13 +6,14 @@ import { Pattern } from './Pattern';
 import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
 import { scanlineUpdate } from './utils/scanline';
+import { DIFF_MODULE_SIZE_RATIO } from './utils/constants';
 import { MatchAction, PatternFinder } from './PatternFinder';
-import { isEqualsSize, isMatchAlignmentPattern } from './utils/pattern';
-import { ALIGNMENT_PATTERN_RATIOS, DIFF_MODULE_SIZE_RATIO } from './utils/constants';
+import { isEqualsSize, isMatchPattern } from './utils/pattern';
+import { ALIGNMENT_PATTERN_LOOSE_MODE_RATIOS, ALIGNMENT_PATTERN_RATIOS } from './PatternRatios';
 
 export class AlignmentPatternFinder extends PatternFinder {
   constructor(matrix: BitMatrix, strict?: boolean) {
-    super(matrix, ALIGNMENT_PATTERN_RATIOS, isMatchAlignmentPattern, strict);
+    super(matrix, ALIGNMENT_PATTERN_RATIOS, strict);
   }
 
   public filter(expectAlignment: Pattern, moduleSize: number): Pattern[] {
@@ -47,7 +48,12 @@ export class AlignmentPatternFinder extends PatternFinder {
       scanlineUpdate(scanlineBits, lastBit);
 
       // Match pattern when white-black-white
-      if (scanlineBits[0] === 0 && scanlineBits[1] === 1 && scanlineBits[2] === 0) {
+      if (
+        scanlineBits[0] === 0 &&
+        scanlineBits[1] === 1 &&
+        scanlineBits[2] === 0 &&
+        isMatchPattern(scanline, ALIGNMENT_PATTERN_LOOSE_MODE_RATIOS)
+      ) {
         this.match(x, y, scanline, scanline[1]);
       }
     };

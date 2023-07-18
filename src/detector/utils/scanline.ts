@@ -4,6 +4,26 @@
 
 import { BitMatrix } from '/common/BitMatrix';
 import { sumArray, toInt32 } from '/common/utils';
+import { PatternRatios } from '/detector/PatternRatios';
+
+export function calculateScanlineNoise(
+  scanline: number[],
+  { ratios, modules }: PatternRatios
+): [noise: number, average: number] {
+  let noise = 0;
+
+  const { length } = ratios;
+  const average = sumArray(scanline) / modules;
+
+  // scanline length must be equals ratios length
+  for (let i = 0; i < length; i++) {
+    const diff = scanline[i] - ratios[i] * average;
+
+    noise += diff * diff;
+  }
+
+  return [noise, average];
+}
 
 export function sumScanlineNonzero(scanline: number[]): number {
   let scanlineTotal = 0;
@@ -168,20 +188,4 @@ export function getDiagonalScanline(
   }
 
   return scanline;
-}
-
-export function calculateScanlineNoise(ratios: number[], scanline: number[]): [noise: number, average: number] {
-  let noise = 0;
-
-  const { length } = ratios;
-  const average = sumArray(scanline) / sumArray(ratios);
-
-  // scanline length must be equals ratios length
-  for (let i = 0; i < length; i++) {
-    const diff = scanline[i] - ratios[i] * average;
-
-    noise += diff * diff;
-  }
-
-  return [noise, average];
 }

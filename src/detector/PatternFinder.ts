@@ -5,25 +5,20 @@
 import { Pattern } from './Pattern';
 import { sumArray } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
+import { PatternRatios } from './PatternRatios';
 import { centerFromScanlineEnd, getDiagonalScanline } from './utils/scanline';
-import { alignCrossPattern, calculatePatternNoise, isDiagonalScanlineCheckPassed, Matcher } from './utils/pattern';
+import { alignCrossPattern, calculatePatternNoise, isDiagonalScanlineCheckPassed } from './utils/pattern';
 
 export class PatternFinder {
-  #matcher: Matcher;
-  #ratios: number[];
   #strict?: boolean;
   #matrix: BitMatrix;
+  #ratios: PatternRatios;
   #patterns: Pattern[] = [];
 
-  constructor(matrix: BitMatrix, ratios: number[], matcher: Matcher, strict?: boolean) {
+  constructor(matrix: BitMatrix, ratios: PatternRatios, strict?: boolean) {
     this.#matrix = matrix;
     this.#ratios = ratios;
     this.#strict = strict;
-    this.#matcher = matcher;
-  }
-
-  public get matcher(): Matcher {
-    return this.#matcher;
   }
 
   public get matrix(): BitMatrix {
@@ -35,47 +30,46 @@ export class PatternFinder {
   }
 
   protected match(x: number, y: number, scanline: number[], overscan: number): void {
-    const matcher = this.#matcher;
+    const matrix = this.#matrix;
+    const ratios = this.#ratios;
 
-    if (matcher(scanline)) {
+    let centerX = centerFromScanlineEnd(scanline, x);
+
+    const [centerY, vertical] = alignCrossPattern(matrix, centerX, y, overscan, ratios, true);
+
+    if (centerY >= 0) {
       let horizontal: number[];
-      let centerX = centerFromScanlineEnd(scanline, x);
 
-      const matrix = this.#matrix;
-      const [centerY, vertical] = alignCrossPattern(matrix, centerX, y, overscan, matcher, true);
+      // Re-horizontal check
+      [centerX, horizontal] = alignCrossPattern(matrix, centerX, centerY, overscan, ratios);
 
-      if (centerY >= 0) {
-        // Re-horizontal check
-        [centerX, horizontal] = alignCrossPattern(matrix, centerX, centerY, overscan, matcher);
+      if (centerX >= 0) {
+        const slash = getDiagonalScanline(matrix, centerX, centerY, overscan);
+        const backslash = getDiagonalScanline(matrix, centerX, centerY, overscan, true);
 
-        if (centerX >= 0) {
-          const slash = getDiagonalScanline(matrix, centerX, centerY, overscan);
-          const backslash = getDiagonalScanline(matrix, centerX, centerY, overscan, true);
+        if (isDiagonalScanlineCheckPassed(slash, backslash, ratios, this.#strict)) {
+          const noise = calculatePatternNoise(ratios, horizontal, vertical, slash, backslash);
+          const width = sumArray(horizontal);
+          const height = sumArray(vertical);
+          const patterns = this.#patterns;
+          const { length } = patterns;
 
-          if (isDiagonalScanlineCheckPassed(slash, backslash, matcher, this.#strict)) {
-            const noise = calculatePatternNoise(this.#ratios, horizontal, vertical, slash, backslash);
-            const width = sumArray(horizontal);
-            const height = sumArray(vertical);
-            const patterns = this.#patterns;
-            const { length } = patterns;
+          let combined = false;
 
-            let combined = false;
+          for (let i = 0; i < length; i++) {
+            const pattern = patterns[i];
 
-            for (let i = 0; i < length; i++) {
-              const pattern = patterns[i];
-
-              // Look for about the same center and module size
-              if (pattern.equals(centerX, centerY, width, height)) {
-                combined = true;
-                patterns[i] = pattern.combine(centerX, centerY, width, height, noise);
-                break;
-              }
+            // Look for about the same center and module size
+            if (pattern.equals(centerX, centerY, width, height)) {
+              combined = true;
+              patterns[i] = pattern.combine(centerX, centerY, width, height, noise);
+              break;
             }
+          }
 
-            // Hadn't found this before; save it
-            if (!combined) {
-              patterns.push(new Pattern(centerX, centerY, width, height, this.#ratios, noise));
-            }
+          // Hadn't found this before; save it
+          if (!combined) {
+            patterns.push(new Pattern(ratios, centerX, centerY, width, height, noise));
           }
         }
       }

@@ -3622,32 +3622,33 @@
   /**
    * @module Pattern
    */
+  function getRatio({ ratios }) {
+    return ratios[toInt32(ratios.length / 2)] / 2;
+  }
   class Pattern extends Point {
     #noise;
     #width;
     #height;
-    #modules;
-    #ratios;
     #rect;
     #moduleSize;
     #combined = 1;
+    #ratios;
     #intersectRadius;
-    constructor(x, y, width, height, ratios, noise) {
+    constructor(ratios, x, y, width, height, noise) {
       super(x, y);
+      const { modules } = ratios;
       const halfWidth = width / 2;
       const halfHeight = height / 2;
-      const modules = sumArray(ratios);
+      const ratio = getRatio(ratios);
       const xModuleSize = width / modules;
       const yModuleSize = height / modules;
       const xModuleSizeHalf = xModuleSize / 2;
       const yModuleSizeHalf = yModuleSize / 2;
       const moduleSize = (xModuleSize + yModuleSize) / 2;
-      const ratio = ratios[toInt32(ratios.length / 2)] / 2;
       this.#noise = noise;
       this.#width = width;
       this.#height = height;
       this.#ratios = ratios;
-      this.#modules = modules;
       this.#moduleSize = moduleSize;
       this.#rect = Object.freeze([
         x - halfWidth + xModuleSizeHalf,
@@ -3676,7 +3677,7 @@
       return this.#moduleSize;
     }
     equals(x, y, width, height) {
-      const modules = this.#modules;
+      const { modules } = this.#ratios;
       const intersectRadius = this.#intersectRadius;
       if (Math.abs(x - this.x) <= intersectRadius && Math.abs(y - this.y) <= intersectRadius) {
         const moduleSizeThis = this.#moduleSize;
@@ -3696,7 +3697,7 @@
       const combinedNoise = (combined * this.#noise + noise) / nextCombined;
       const combinedWidth = (combined * this.#width + width) / nextCombined;
       const combinedHeight = (combined * this.#height + height) / nextCombined;
-      const pattern = new Pattern(combinedX, combinedY, combinedWidth, combinedHeight, this.#ratios, combinedNoise);
+      const pattern = new Pattern(this.#ratios, combinedX, combinedY, combinedWidth, combinedHeight, combinedNoise);
       pattern.#combined = nextCombined;
       return pattern;
     }
@@ -4021,8 +4022,40 @@
   }
 
   /**
+   * @module PatternRatios
+   */
+  class PatternRatios {
+    #modules;
+    #ratios;
+    constructor(ratios) {
+      this.#ratios = ratios;
+      this.#modules = sumArray(ratios);
+    }
+    get modules() {
+      return this.#modules;
+    }
+    get ratios() {
+      return this.#ratios;
+    }
+  }
+  const FINDER_PATTERN_RATIOS = new PatternRatios([1, 1, 3, 1, 1]);
+  const ALIGNMENT_PATTERN_RATIOS = new PatternRatios([1, 1, 1, 1, 1]);
+  const ALIGNMENT_PATTERN_LOOSE_MODE_RATIOS = new PatternRatios([1, 1, 1]);
+
+  /**
    * @module scanline
    */
+  function calculateScanlineNoise(scanline, { ratios, modules }) {
+    let noise = 0;
+    const { length } = ratios;
+    const average = sumArray(scanline) / modules;
+    // scanline length must be equals ratios length
+    for (let i = 0; i < length; i++) {
+      const diff = scanline[i] - ratios[i] * average;
+      noise += diff * diff;
+    }
+    return [noise, average];
+  }
   function sumScanlineNonzero(scanline) {
     let scanlineTotal = 0;
     for (const count of scanline) {
@@ -4137,17 +4170,6 @@
     }
     return scanline;
   }
-  function calculateScanlineNoise(ratios, scanline) {
-    let noise = 0;
-    const { length } = ratios;
-    const average = sumArray(scanline) / sumArray(ratios);
-    // scanline length must be equals ratios length
-    for (let i = 0; i < length; i++) {
-      const diff = scanline[i] - ratios[i] * average;
-      noise += diff * diff;
-    }
-    return [noise, average];
-  }
 
   /**
    * @module timing
@@ -4214,50 +4236,48 @@
    * @module constants
    */
   const RADIAN = Math.PI / 180;
+  // Diff module size
+  const DIFF_MODULE_SIZE_RATIO = 0.5;
   // Top left min and max angle
   const MIN_TOP_LEFT_ANGLE = RADIAN * 45;
   const MAX_TOP_LEFT_ANGLE = RADIAN * 135;
-  // Diff ratio
-  const DIFF_MODULE_SIZE_RATIO = 0.5;
-  const DIFF_FINDER_PATTERN_RATIO = 0.58;
-  const DIFF_ALIGNMENT_PATTERN_RATIO = 0.8;
-  // Pattern scanline size ratios
-  const FINDER_PATTERN_RATIOS = [1, 1, 3, 1, 1];
-  const ALIGNMENT_PATTERN_RATIOS = [1, 1, 1, 1, 1];
+  // Diff pattern
+  const DIFF_PATTERN_RATIO = 0.75;
+  const DIFF_PATTERN_ALLOWANCE_SIZE = 0.25;
 
   /**
    * @module matcher
    */
-  function isMatchFinderPattern(scanline) {
-    const modules = 7;
-    const { length } = scanline;
-    const scanlineTotal = sumScanlineNonzero(scanline);
-    if (scanlineTotal >= modules) {
-      const middleIndex = toInt32(length / 2);
-      const moduleSize = scanlineTotal / modules;
-      const threshold = moduleSize * DIFF_FINDER_PATTERN_RATIO;
-      // Allow less than DIFF_FINDER_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
-      for (let i = 0; i < length; i++) {
-        const count = scanline[i];
-        const ratio = i !== middleIndex ? 1 : 3;
-        const moduleSizeDiff = Math.abs(count - moduleSize * ratio);
-        if (moduleSizeDiff > threshold * ratio) {
-          return false;
-        }
+  function isDiagonalScanlineCheckPassed(slash, backslash, ratios, strict) {
+    if (isMatchPattern(slash, ratios)) {
+      if (strict) {
+        return isMatchPattern(backslash, ratios);
       }
       return true;
     }
     return false;
   }
-  function isMatchAlignmentPattern(scanline) {
-    const modules = scanline.length;
+  function alignCrossPattern(matrix, x, y, overscan, ratios, isVertical) {
+    const [scanline, end] = getCrossScanline(matrix, x, y, overscan, isVertical);
+    return [isMatchPattern(scanline, ratios) ? centerFromScanlineEnd(scanline, end) : NaN, scanline];
+  }
+  function isEqualsSize(size1, size2, ratio) {
+    if (size1 > size2) {
+      [size1, size2] = [size2, size1];
+    }
+    return size2 - size1 <= size2 * ratio;
+  }
+  function isMatchPattern(scanline, { ratios, modules }) {
+    const { length } = scanline;
     const scanlineTotal = sumScanlineNonzero(scanline);
     if (scanlineTotal >= modules) {
       const moduleSize = scanlineTotal / modules;
-      const threshold = moduleSize * DIFF_ALIGNMENT_PATTERN_RATIO;
-      // Allow less than DIFF_ALIGNMENT_MODULE_SIZE_RATIO variance from 1-1-1 or 1-1-1-1-1 proportions
-      for (const count of scanline) {
-        const moduleSizeDiff = Math.abs(count - moduleSize);
+      const threshold = moduleSize * DIFF_PATTERN_RATIO + DIFF_PATTERN_ALLOWANCE_SIZE;
+      // Allow less than DIFF_FINDER_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
+      for (let i = 0; i < length; i++) {
+        const ratio = ratios[i];
+        const count = scanline[i];
+        const moduleSizeDiff = Math.abs(count - moduleSize * ratio);
         if (moduleSizeDiff > threshold) {
           return false;
         }
@@ -4266,19 +4286,13 @@
     }
     return false;
   }
-  function isEqualsSize(size1, size2, ratio) {
-    if (size1 > size2) {
-      [size1, size2] = [size2, size1];
-    }
-    return size2 - size1 <= size2 * ratio;
-  }
   function calculatePatternNoise(ratios, ...scanlines) {
     const noises = [];
     const averages = [];
     const averagesDiff = [];
     // scanline length must be equals ratios length
     for (const scanline of scanlines) {
-      const [noise, average] = calculateScanlineNoise(ratios, scanline);
+      const [noise, average] = calculateScanlineNoise(scanline, ratios);
       averages.push(average);
       noises.push(noise * noise);
     }
@@ -4289,37 +4303,19 @@
     }
     return Math.sqrt(sumArray(noises)) + sumArray(averagesDiff) / averagesAvg;
   }
-  function isDiagonalScanlineCheckPassed(slash, backslash, matcher, strict) {
-    if (matcher(slash)) {
-      if (strict) {
-        return matcher(backslash);
-      }
-      return true;
-    }
-    return false;
-  }
-  function alignCrossPattern(matrix, x, y, overscan, matcher, isVertical) {
-    const [scanline, end] = getCrossScanline(matrix, x, y, overscan, isVertical);
-    return [matcher(scanline) ? centerFromScanlineEnd(scanline, end) : NaN, scanline];
-  }
 
   /**
    * @module PatternFinder
    */
   class PatternFinder {
-    #matcher;
-    #ratios;
     #strict;
     #matrix;
+    #ratios;
     #patterns = [];
-    constructor(matrix, ratios, matcher, strict) {
+    constructor(matrix, ratios, strict) {
       this.#matrix = matrix;
       this.#ratios = ratios;
       this.#strict = strict;
-      this.#matcher = matcher;
-    }
-    get matcher() {
-      return this.#matcher;
     }
     get matrix() {
       return this.#matrix;
@@ -4328,38 +4324,36 @@
       return this.#patterns;
     }
     match(x, y, scanline, overscan) {
-      const matcher = this.#matcher;
-      if (matcher(scanline)) {
+      const matrix = this.#matrix;
+      const ratios = this.#ratios;
+      let centerX = centerFromScanlineEnd(scanline, x);
+      const [centerY, vertical] = alignCrossPattern(matrix, centerX, y, overscan, ratios, true);
+      if (centerY >= 0) {
         let horizontal;
-        let centerX = centerFromScanlineEnd(scanline, x);
-        const matrix = this.#matrix;
-        const [centerY, vertical] = alignCrossPattern(matrix, centerX, y, overscan, matcher, true);
-        if (centerY >= 0) {
-          // Re-horizontal check
-          [centerX, horizontal] = alignCrossPattern(matrix, centerX, centerY, overscan, matcher);
-          if (centerX >= 0) {
-            const slash = getDiagonalScanline(matrix, centerX, centerY, overscan);
-            const backslash = getDiagonalScanline(matrix, centerX, centerY, overscan, true);
-            if (isDiagonalScanlineCheckPassed(slash, backslash, matcher, this.#strict)) {
-              const noise = calculatePatternNoise(this.#ratios, horizontal, vertical, slash, backslash);
-              const width = sumArray(horizontal);
-              const height = sumArray(vertical);
-              const patterns = this.#patterns;
-              const { length } = patterns;
-              let combined = false;
-              for (let i = 0; i < length; i++) {
-                const pattern = patterns[i];
-                // Look for about the same center and module size
-                if (pattern.equals(centerX, centerY, width, height)) {
-                  combined = true;
-                  patterns[i] = pattern.combine(centerX, centerY, width, height, noise);
-                  break;
-                }
+        // Re-horizontal check
+        [centerX, horizontal] = alignCrossPattern(matrix, centerX, centerY, overscan, ratios);
+        if (centerX >= 0) {
+          const slash = getDiagonalScanline(matrix, centerX, centerY, overscan);
+          const backslash = getDiagonalScanline(matrix, centerX, centerY, overscan, true);
+          if (isDiagonalScanlineCheckPassed(slash, backslash, ratios, this.#strict)) {
+            const noise = calculatePatternNoise(ratios, horizontal, vertical, slash, backslash);
+            const width = sumArray(horizontal);
+            const height = sumArray(vertical);
+            const patterns = this.#patterns;
+            const { length } = patterns;
+            let combined = false;
+            for (let i = 0; i < length; i++) {
+              const pattern = patterns[i];
+              // Look for about the same center and module size
+              if (pattern.equals(centerX, centerY, width, height)) {
+                combined = true;
+                patterns[i] = pattern.combine(centerX, centerY, width, height, noise);
+                break;
               }
-              // Hadn't found this before; save it
-              if (!combined) {
-                patterns.push(new Pattern(centerX, centerY, width, height, this.#ratios, noise));
-              }
+            }
+            // Hadn't found this before; save it
+            if (!combined) {
+              patterns.push(new Pattern(ratios, centerX, centerY, width, height, noise));
             }
           }
         }
@@ -4467,7 +4461,7 @@
    */
   class FinderPatternFinder extends PatternFinder {
     constructor(matrix, strict) {
-      super(matrix, FINDER_PATTERN_RATIOS, isMatchFinderPattern, strict);
+      super(matrix, FINDER_PATTERN_RATIOS, strict);
     }
     *groups() {
       const patterns = this.patterns.filter(({ combined }) => combined >= 3);
@@ -4532,7 +4526,9 @@
                   const { topLeft, topRight, bottomLeft } = finderPatternGroup;
                   const edge1 = distance(topLeft, topRight);
                   const edge2 = distance(topLeft, bottomLeft);
-                  if (Math.abs(round(edge1 / xModuleSize) - round(edge2 / yModuleSize)) <= 4) {
+                  const edge1Modules = round(edge1 / xModuleSize);
+                  const edge2Modules = round(edge2 / yModuleSize);
+                  if (Math.abs(edge1Modules - edge2Modules) <= 4) {
                     const { size } = finderPatternGroup;
                     if (
                       size >= MIN_VERSION_SIZE &&
@@ -4567,7 +4563,8 @@
           scanlineBits[1] === 0 &&
           scanlineBits[2] === 1 &&
           scanlineBits[3] === 0 &&
-          scanlineBits[4] === 1
+          scanlineBits[4] === 1 &&
+          isMatchPattern(scanline, FINDER_PATTERN_RATIOS)
         ) {
           this.match(x, y, scanline, scanline[2]);
         }
@@ -4605,7 +4602,7 @@
    */
   class AlignmentPatternFinder extends PatternFinder {
     constructor(matrix, strict) {
-      super(matrix, ALIGNMENT_PATTERN_RATIOS, isMatchAlignmentPattern, strict);
+      super(matrix, ALIGNMENT_PATTERN_RATIOS, strict);
     }
     filter(expectAlignment, moduleSize) {
       const patterns = this.patterns.filter(pattern => {
@@ -4632,7 +4629,12 @@
         scanlineUpdate(scanline, count);
         scanlineUpdate(scanlineBits, lastBit);
         // Match pattern when white-black-white
-        if (scanlineBits[0] === 0 && scanlineBits[1] === 1 && scanlineBits[2] === 0) {
+        if (
+          scanlineBits[0] === 0 &&
+          scanlineBits[1] === 1 &&
+          scanlineBits[2] === 0 &&
+          isMatchPattern(scanline, ALIGNMENT_PATTERN_LOOSE_MODE_RATIOS)
+        ) {
           this.match(x, y, scanline, scanline[1]);
         }
       };
@@ -4674,7 +4676,7 @@
     const bottomRightY = topRight.y + bottomLeft.y - y;
     const expectAlignmentX = x + correctionToTopLeft * (bottomRightX - x);
     const expectAlignmentY = y + correctionToTopLeft * (bottomRightY - y);
-    return new Pattern(expectAlignmentX, expectAlignmentY, xModuleSize * 5, yModuleSize * 5, ALIGNMENT_PATTERN_RATIOS, 0);
+    return new Pattern(ALIGNMENT_PATTERN_RATIOS, expectAlignmentX, expectAlignmentY, xModuleSize * 5, yModuleSize * 5, 0);
   }
   function findAlignmentInRegion(matrix, finderPatternGroup, strict) {
     const { size, moduleSize } = finderPatternGroup;
@@ -4717,7 +4719,7 @@
         if (version.alignmentPatterns.length > 0) {
           // Kind of arbitrary -- expand search radius before giving up
           // If we didn't find alignment pattern... well try anyway without it
-          const alignmentPatterns = findAlignmentInRegion(matrix, finderPatternGroup);
+          const alignmentPatterns = findAlignmentInRegion(matrix, finderPatternGroup, strict);
           // Founded alignment
           for (const alignmentPattern of alignmentPatterns) {
             const transform = createTransform(finderPatternGroup, alignmentPattern);
