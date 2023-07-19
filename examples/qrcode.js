@@ -4192,7 +4192,7 @@
         }
       }
     }
-    return modules >= Math.max(5, size - 22);
+    return modules >= Math.max(5, size - 18);
   }
   function checkModulesInTimingLine(matrix, { size, topLeft, topRight, bottomLeft }, isVertical) {
     const [start, end] = isVertical
