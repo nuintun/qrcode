@@ -15,80 +15,60 @@ export function calculateModuleSize([xModuleSize, yModuleSize]: ModuleSizeGroup)
 }
 
 function sizeOfBlackWhiteBlackRun(matrix: BitMatrix, from: Point, to: Point): number {
-  const line = new PlotLine(from, to);
-  const points = line.points();
-
   // In black pixels, looking for white, first or second time.
   let state = 0;
 
+  const { width, height } = matrix;
+  const centerX = (from.x + to.x) / 2;
+  const centerY = (from.y + to.y) / 2;
+  // Center point is already enough
+  const center = new Point(centerX, centerY);
+  const points = new PlotLine(from, center).points();
+
   for (const [x, y] of points) {
+    // Now count other way -- don't run off image though of course
+    if (x < 0 || y < 0 || x >= width || y >= height) {
+      if (state === 2) {
+        return distance(from, new Point(x, y));
+      }
+
+      return NaN;
+    }
+
     // Does current pixel mean we have moved white to black or vice versa?
     // Scanning black in state 0,2 and white in state 1, so if we find the wrong
     // color, advance to next state or end if we are in state 2 already
     if ((state === 1) === (matrix.get(x, y) === 1)) {
       if (state === 2) {
-        return distance(new Point(x, y), from);
+        return distance(from, new Point(x, y));
       }
 
       state++;
     }
   }
 
-  to = line.to;
-  from = line.from;
-
-  const [stepX] = line.step;
-
-  // Found black-white-black; give the benefit of the doubt that the next pixel outside the image
-  // is "white" so this last point at (toX + stepX, toY) is the right ending. This is really a
-  // small approximation; (toX + stepX, toY + stepY) might be really correct. Ignore this.
-  if (state === 2) {
-    return distance(new Point(to.x + stepX, to.y), from);
-  }
-
   return NaN;
 }
 
 function sizeOfBlackWhiteBlackRunBothWays(matrix: BitMatrix, from: Point, to: Point): number {
-  // Now count other way -- don't run off image though of course
-  const { x: toX, y: toY } = to;
-  const { width, height } = matrix;
-  const { x: fromX, y: fromY } = from;
+  const size1 = sizeOfBlackWhiteBlackRun(matrix, from, to);
 
-  let scale = 1;
-  let otherToX = fromX - (toX - fromX);
-  let size = sizeOfBlackWhiteBlackRun(matrix, from, to);
-
-  if (Number.isNaN(size)) {
+  if (Number.isNaN(size1)) {
     return NaN;
   }
 
-  if (otherToX < 0) {
-    scale = fromX / (fromX - otherToX);
-    otherToX = 0;
-  } else if (otherToX >= width) {
-    scale = (width - 1 - fromX) / (otherToX - fromX);
-    otherToX = width - 1;
+  const { x: toX, y: toY } = to;
+  const { x: fromX, y: fromY } = from;
+  const otherToX = fromX - (toX - fromX);
+  const otherToY = fromY - (toY - fromY);
+  const size2 = sizeOfBlackWhiteBlackRun(matrix, from, new Point(otherToX, otherToY));
+
+  if (Number.isNaN(size2)) {
+    return NaN;
   }
-
-  let otherToY = toInt32(fromY - (toY - fromY) * scale);
-
-  scale = 1;
-
-  if (otherToY < 0) {
-    scale = fromY / (fromY - otherToY);
-    otherToY = 0;
-  } else if (otherToY >= height) {
-    scale = (height - 1 - fromY) / (otherToY - fromY);
-    otherToY = height - 1;
-  }
-
-  otherToX = toInt32(fromX + (otherToX - fromX) * scale);
 
   // Middle pixel is double-counted this way; subtract 1
-  size += sizeOfBlackWhiteBlackRun(matrix, from, new Point(otherToX, otherToY));
-
-  return size - 1;
+  return size1 + size2 - 1;
 }
 
 export function calculateModuleSizeOneWay(matrix: BitMatrix, pattern1: Pattern, pattern2: Pattern): number {

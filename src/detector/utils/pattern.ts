@@ -5,7 +5,7 @@
 import { sumArray } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
 import { PatternRatios } from '/detector/PatternRatios';
-import { DIFF_PATTERN_ALLOWANCE_SIZE, DIFF_PATTERN_RATIO } from './constants';
+import { DIFF_PATTERN_ALLOWANCE, DIFF_PATTERN_RATIO } from './constants';
 import { calculateScanlineNoise, centerFromScanlineEnd, getCrossScanline, sumScanlineNonzero } from './scanline';
 
 export type PatternRect = readonly [
@@ -63,7 +63,7 @@ export function isMatchPattern(scanline: number[], { ratios, modules }: PatternR
 
   if (scanlineTotal >= modules) {
     const moduleSize = scanlineTotal / modules;
-    const threshold = moduleSize * DIFF_PATTERN_RATIO + DIFF_PATTERN_ALLOWANCE_SIZE;
+    const threshold = moduleSize * DIFF_PATTERN_RATIO + DIFF_PATTERN_ALLOWANCE;
 
     // Allow less than DIFF_FINDER_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
     for (let i = 0; i < length; i++) {

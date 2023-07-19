@@ -23,12 +23,14 @@ export class AlignmentPatternFinder extends PatternFinder {
 
     if (patterns.length > 1) {
       patterns.sort((pattern1, pattern2) => {
-        const moduleSizeDiff1 = Math.abs(pattern1.moduleSize - moduleSize);
-        const moduleSizeDiff2 = Math.abs(pattern2.moduleSize - moduleSize);
-        const noise1 = distance(pattern1, expectAlignment) * pattern1.noise * moduleSizeDiff1;
-        const noise2 = distance(pattern2, expectAlignment) * pattern2.noise * moduleSizeDiff2;
+        const noise1 = pattern1.noise + 0.1;
+        const noise2 = pattern2.noise + 0.1;
+        const moduleSizeDiff1 = Math.abs(pattern1.moduleSize - moduleSize) + 0.1;
+        const moduleSizeDiff2 = Math.abs(pattern2.moduleSize - moduleSize) + 0.1;
+        const score1 = distance(pattern1, expectAlignment) * moduleSizeDiff1 * noise1;
+        const score2 = distance(pattern2, expectAlignment) * moduleSizeDiff2 * noise2;
 
-        return noise1 - noise2;
+        return score1 - score2;
       });
     }
 

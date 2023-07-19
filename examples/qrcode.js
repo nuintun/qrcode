@@ -3905,18 +3905,6 @@
       this.#step = [stepX, fromY < toY ? 1 : fromY > toY ? -1 : 0];
       this.#delta = [Math.abs(toX - fromX), Math.abs(toY - fromY)];
     }
-    get to() {
-      return this.#to;
-    }
-    get from() {
-      return this.#from;
-    }
-    get steep() {
-      return this.#steep;
-    }
-    get step() {
-      return this.#step;
-    }
     *points() {
       const limit = this.#limit;
       const steep = this.#steep;
@@ -3947,63 +3935,49 @@
     return (xModuleSize + yModuleSize) / 2;
   }
   function sizeOfBlackWhiteBlackRun(matrix, from, to) {
-    const line = new PlotLine(from, to);
-    const points = line.points();
     // In black pixels, looking for white, first or second time.
     let state = 0;
+    const { width, height } = matrix;
+    const centerX = (from.x + to.x) / 2;
+    const centerY = (from.y + to.y) / 2;
+    // Center point is already enough
+    const center = new Point(centerX, centerY);
+    const points = new PlotLine(from, center).points();
     for (const [x, y] of points) {
+      // Now count other way -- don't run off image though of course
+      if (x < 0 || y < 0 || x >= width || y >= height) {
+        if (state === 2) {
+          return distance(from, new Point(x, y));
+        }
+        return NaN;
+      }
       // Does current pixel mean we have moved white to black or vice versa?
       // Scanning black in state 0,2 and white in state 1, so if we find the wrong
       // color, advance to next state or end if we are in state 2 already
       if ((state === 1) === (matrix.get(x, y) === 1)) {
         if (state === 2) {
-          return distance(new Point(x, y), from);
+          return distance(from, new Point(x, y));
         }
         state++;
       }
     }
-    to = line.to;
-    from = line.from;
-    const [stepX] = line.step;
-    // Found black-white-black; give the benefit of the doubt that the next pixel outside the image
-    // is "white" so this last point at (toX + stepX, toY) is the right ending. This is really a
-    // small approximation; (toX + stepX, toY + stepY) might be really correct. Ignore this.
-    if (state === 2) {
-      return distance(new Point(to.x + stepX, to.y), from);
-    }
     return NaN;
   }
   function sizeOfBlackWhiteBlackRunBothWays(matrix, from, to) {
-    // Now count other way -- don't run off image though of course
-    const { x: toX, y: toY } = to;
-    const { width, height } = matrix;
-    const { x: fromX, y: fromY } = from;
-    let scale = 1;
-    let otherToX = fromX - (toX - fromX);
-    let size = sizeOfBlackWhiteBlackRun(matrix, from, to);
-    if (Number.isNaN(size)) {
+    const size1 = sizeOfBlackWhiteBlackRun(matrix, from, to);
+    if (Number.isNaN(size1)) {
       return NaN;
     }
-    if (otherToX < 0) {
-      scale = fromX / (fromX - otherToX);
-      otherToX = 0;
-    } else if (otherToX >= width) {
-      scale = (width - 1 - fromX) / (otherToX - fromX);
-      otherToX = width - 1;
+    const { x: toX, y: toY } = to;
+    const { x: fromX, y: fromY } = from;
+    const otherToX = fromX - (toX - fromX);
+    const otherToY = fromY - (toY - fromY);
+    const size2 = sizeOfBlackWhiteBlackRun(matrix, from, new Point(otherToX, otherToY));
+    if (Number.isNaN(size2)) {
+      return NaN;
     }
-    let otherToY = toInt32(fromY - (toY - fromY) * scale);
-    scale = 1;
-    if (otherToY < 0) {
-      scale = fromY / (fromY - otherToY);
-      otherToY = 0;
-    } else if (otherToY >= height) {
-      scale = (height - 1 - fromY) / (otherToY - fromY);
-      otherToY = height - 1;
-    }
-    otherToX = toInt32(fromX + (otherToX - fromX) * scale);
     // Middle pixel is double-counted this way; subtract 1
-    size += sizeOfBlackWhiteBlackRun(matrix, from, new Point(otherToX, otherToY));
-    return size - 1;
+    return size1 + size2 - 1;
   }
   function calculateModuleSizeOneWay(matrix, pattern1, pattern2) {
     const point1 = new Point(toInt32(pattern1.x), toInt32(pattern1.y));
@@ -4236,14 +4210,14 @@
    * @module constants
    */
   const RADIAN = Math.PI / 180;
+  // Diff pattern
+  const DIFF_PATTERN_RATIO = 0.625;
+  const DIFF_PATTERN_ALLOWANCE = 0.5;
   // Diff module size
   const DIFF_MODULE_SIZE_RATIO = 0.5;
   // Top left min and max angle
   const MIN_TOP_LEFT_ANGLE = RADIAN * 45;
   const MAX_TOP_LEFT_ANGLE = RADIAN * 135;
-  // Diff pattern
-  const DIFF_PATTERN_RATIO = 0.625;
-  const DIFF_PATTERN_ALLOWANCE_SIZE = 0.5;
 
   /**
    * @module matcher
@@ -4272,7 +4246,7 @@
     const scanlineTotal = sumScanlineNonzero(scanline);
     if (scanlineTotal >= modules) {
       const moduleSize = scanlineTotal / modules;
-      const threshold = moduleSize * DIFF_PATTERN_RATIO + DIFF_PATTERN_ALLOWANCE_SIZE;
+      const threshold = moduleSize * DIFF_PATTERN_RATIO + DIFF_PATTERN_ALLOWANCE;
       // Allow less than DIFF_FINDER_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
       for (let i = 0; i < length; i++) {
         const ratio = ratios[i];
@@ -4610,11 +4584,13 @@
       });
       if (patterns.length > 1) {
         patterns.sort((pattern1, pattern2) => {
-          const moduleSizeDiff1 = Math.abs(pattern1.moduleSize - moduleSize);
-          const moduleSizeDiff2 = Math.abs(pattern2.moduleSize - moduleSize);
-          const noise1 = distance(pattern1, expectAlignment) * pattern1.noise * moduleSizeDiff1;
-          const noise2 = distance(pattern2, expectAlignment) * pattern2.noise * moduleSizeDiff2;
-          return noise1 - noise2;
+          const noise1 = pattern1.noise + 0.1;
+          const noise2 = pattern2.noise + 0.1;
+          const moduleSizeDiff1 = Math.abs(pattern1.moduleSize - moduleSize) + 0.1;
+          const moduleSizeDiff2 = Math.abs(pattern2.moduleSize - moduleSize) + 0.1;
+          const score1 = distance(pattern1, expectAlignment) * moduleSizeDiff1 * noise1;
+          const score2 = distance(pattern2, expectAlignment) * moduleSizeDiff2 * noise2;
+          return score1 - score2;
         });
       }
       // Only use the first two patterns

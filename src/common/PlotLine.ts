@@ -38,22 +38,6 @@ export class PlotLine {
     this.#delta = [Math.abs(toX - fromX), Math.abs(toY - fromY)];
   }
 
-  public get to(): Point {
-    return this.#to;
-  }
-
-  public get from(): Point {
-    return this.#from;
-  }
-
-  public get steep(): boolean {
-    return this.#steep;
-  }
-
-  public get step(): [x: number, y: number] {
-    return this.#step;
-  }
-
   public *points(): Generator<[x: number, y: number]> {
     const limit = this.#limit;
     const steep = this.#steep;
