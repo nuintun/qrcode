@@ -68,7 +68,7 @@ function isValidTimingLine(matrix: BitMatrix, start: Point, end: Point, size: nu
     }
   }
 
-  return modules >= Math.max(5, size - 18);
+  return modules >= size - 14 - (size - 17) / 4;
 }
 
 export function checkModulesInTimingLine(

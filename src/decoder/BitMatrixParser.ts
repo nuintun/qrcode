@@ -7,7 +7,7 @@ import { ECLevel } from '/common/ECLevel';
 import { isApplyMask } from '/common/mask';
 import { BitMatrix } from '/common/BitMatrix';
 import { decodeFormatInfo, FormatInfo } from './FormatInfo';
-import { buildFunctionPattern, decodeVersion, MAX_VERSION_SIZE, MIN_VERSION_SIZE, Version, VERSIONS } from '/common/Version';
+import { buildFunctionPattern, decodeVersion, Version, VERSIONS } from '/common/Version';
 
 function copyBit(matrix: BitMatrix, x: number, y: number, bits: number): number {
   return matrix.get(x, y) ? (bits << 1) | 0x01 : bits << 1;
@@ -20,18 +20,13 @@ export class BitMatrixParser {
   constructor(matrix: BitMatrix) {
     const { width, height } = matrix;
 
-    if (width !== height || width < MIN_VERSION_SIZE || width > MAX_VERSION_SIZE || (width - 17) & 0x03) {
-      throw new Error('illegal qrcode size');
-    }
-
-    this.#size = width;
     this.#matrix = matrix.clone();
+    this.#size = Math.min(width, height);
   }
 
   public readVersion(): Version {
     const size = this.#size;
-
-    let version = toInt32((size - 17) / 4);
+    const version = toInt32((size - 17) / 4);
 
     if (version >= 1 && version <= 6) {
       return VERSIONS[version - 1];

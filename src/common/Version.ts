@@ -383,17 +383,15 @@ export const MIN_VERSION_SIZE = VERSIONS[0].size;
 export const MAX_VERSION_SIZE = VERSIONS[39].size;
 
 export function fromVersionSize(size: number): Version {
-  if ((size & 0x03) !== 1) {
-    throw new Error('');
+  if ((size & 0x03) === 1) {
+    const version = VERSIONS[toInt32((size - 17) / 4) - 1];
+
+    if (version != null) {
+      return version;
+    }
   }
 
-  const version = VERSIONS[toInt32((size - 17) / 4) - 1];
-
-  if (version != null) {
-    return version;
-  }
-
-  throw new Error('');
+  throw new Error('illegal version size');
 }
 
 export function decodeVersion(version1: number, version2: number): Version {

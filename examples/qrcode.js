@@ -1665,14 +1665,13 @@
   const MIN_VERSION_SIZE = VERSIONS[0].size;
   const MAX_VERSION_SIZE = VERSIONS[39].size;
   function fromVersionSize(size) {
-    if ((size & 0x03) !== 1) {
-      throw new Error('');
+    if ((size & 0x03) === 1) {
+      const version = VERSIONS[toInt32((size - 17) / 4) - 1];
+      if (version != null) {
+        return version;
+      }
     }
-    const version = VERSIONS[toInt32((size - 17) / 4) - 1];
-    if (version != null) {
-      return version;
-    }
-    throw new Error('');
+    throw new Error('illegal version size');
   }
   function decodeVersion(version1, version2) {
     let bestDiff = 32;
@@ -1751,15 +1750,12 @@
     #matrix;
     constructor(matrix) {
       const { width, height } = matrix;
-      if (width !== height || width < MIN_VERSION_SIZE || width > MAX_VERSION_SIZE || (width - 17) & 0x03) {
-        throw new Error('illegal qrcode size');
-      }
-      this.#size = width;
       this.#matrix = matrix.clone();
+      this.#size = Math.min(width, height);
     }
     readVersion() {
       const size = this.#size;
-      let version = toInt32((size - 17) / 4);
+      const version = toInt32((size - 17) / 4);
       if (version >= 1 && version <= 6) {
         return VERSIONS[version - 1];
       }
@@ -4192,7 +4188,7 @@
         }
       }
     }
-    return modules >= Math.max(5, size - 18);
+    return modules >= size - 14 - (size - 17) / 4;
   }
   function checkModulesInTimingLine(matrix, { size, topLeft, topRight, bottomLeft }, isVertical) {
     const [start, end] = isVertical
