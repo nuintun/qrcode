@@ -4654,8 +4654,8 @@
   }
   function findAlignmentInRegion(matrix, finderPatternGroup, strict) {
     const { size, moduleSize } = finderPatternGroup;
-    const allowance = Math.min(15, toInt32(size / 4));
     const moduleSizeAvg = calculateModuleSize(moduleSize);
+    const allowance = Math.min(20, toInt32((size - 7) / 4));
     const expectAlignment = getExpectAlignment(finderPatternGroup);
     const alignmentFinder = new AlignmentPatternFinder(matrix, strict);
     const alignmentAreaAllowance = Math.ceil(moduleSizeAvg * allowance);
