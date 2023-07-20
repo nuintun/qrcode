@@ -4655,15 +4655,15 @@
   function findAlignmentInRegion(matrix, finderPatternGroup, strict) {
     const { size, moduleSize } = finderPatternGroup;
     const moduleSizeAvg = calculateModuleSize(moduleSize);
-    const allowance = Math.min(20, toInt32((size - 7) / 4));
     const expectAlignment = getExpectAlignment(finderPatternGroup);
     const alignmentFinder = new AlignmentPatternFinder(matrix, strict);
-    const alignmentAreaAllowance = Math.ceil(moduleSizeAvg * allowance);
     const { x: expectAlignmentX, y: expectAlignmentY } = expectAlignment;
-    const alignmentAreaTop = toInt32(Math.max(0, expectAlignmentY - alignmentAreaAllowance));
-    const alignmentAreaLeft = toInt32(Math.max(0, expectAlignmentX - alignmentAreaAllowance));
-    const alignmentAreaRight = toInt32(Math.min(matrix.width - 1, expectAlignmentX + alignmentAreaAllowance));
-    const alignmentAreaBottom = toInt32(Math.min(matrix.height - 1, expectAlignmentY + alignmentAreaAllowance));
+    const allowance = Math.max(5, Math.min(20, toInt32((size - 7) / 4)));
+    const alignmentAreaAllowanceSize = Math.ceil(moduleSizeAvg * allowance);
+    const alignmentAreaTop = toInt32(Math.max(0, expectAlignmentY - alignmentAreaAllowanceSize));
+    const alignmentAreaLeft = toInt32(Math.max(0, expectAlignmentX - alignmentAreaAllowanceSize));
+    const alignmentAreaRight = toInt32(Math.min(matrix.width - 1, expectAlignmentX + alignmentAreaAllowanceSize));
+    const alignmentAreaBottom = toInt32(Math.min(matrix.height - 1, expectAlignmentY + alignmentAreaAllowanceSize));
     alignmentFinder.find(
       alignmentAreaLeft,
       alignmentAreaTop,
