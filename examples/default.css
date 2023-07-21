@@ -9,9 +9,9 @@ body .hide {
 }
 
 .main {
-  width: 1000px;
   margin: 20px auto;
   background: #fff;
+  width: fit-content;
   border: 1px solid #bbb;
 }
 
@@ -27,12 +27,12 @@ li {
 }
 
 .clearfix:after {
-  visibility: hidden;
-  display: block;
-  font-size: 0;
-  content: " ";
-  clear: both;
   height: 0;
+  clear: both;
+  content: " ";
+  font-size: 0;
+  display: block;
+  visibility: hidden;
 }
 
 .indent {
@@ -40,17 +40,16 @@ li {
 }
 
 .tabs {
-  width: 1002px;
   margin: -1px;
   height: 40px;
 }
 
 .tabs li {
   float: left;
-  width: 500px;
   height: 38px;
   line-height: 38px;
   text-align: center;
+  width: calc(50% - 1px);
   border: 1px solid #bbb;
 }
 
@@ -66,6 +65,7 @@ li {
 
 .content li {
   display: none;
+  width: 1026px;
 }
 
 .content li.selected {

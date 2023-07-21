@@ -23,8 +23,8 @@ export class AlignmentPatternFinder extends PatternFinder {
 
     if (patterns.length > 1) {
       patterns.sort((pattern1, pattern2) => {
-        const noise1 = pattern1.noise + 0.1;
-        const noise2 = pattern2.noise + 0.1;
+        const noise1 = Pattern.noise(pattern1) + 0.1;
+        const noise2 = Pattern.noise(pattern2) + 0.1;
         const moduleSizeDiff1 = Math.abs(pattern1.moduleSize - moduleSize) + 0.1;
         const moduleSizeDiff2 = Math.abs(pattern2.moduleSize - moduleSize) + 0.1;
         const score1 = distance(pattern1, expectAlignment) * moduleSizeDiff1 * noise1;

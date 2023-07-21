@@ -264,7 +264,7 @@
         img.onload = function () {
           const width = img.width;
           const height = img.height;
-          const actualWidth = Math.min(960, width);
+          const actualWidth = Math.min(1024, width);
           const actualHeight = height * (actualWidth / width);
 
           hasImage = true;
@@ -357,51 +357,6 @@
         canvasContext.putImageData(imageData, 0, 0);
 
         return canvas;
-      }
-
-      class Point {
-        constructor(x, y) {
-          this.x = x;
-          this.y = y;
-        }
-      }
-
-      function calculateTimingRatio(axis, control) {
-        return control > axis ? 1 : control < axis ? -1 : 0;
-      }
-
-      function getTimingPointXAxis({ x, rect }, ratio) {
-        const [left, , right] = rect;
-
-        return ratio > 0 ? right : ratio < 0 ? left : x;
-      }
-
-      function getTimingPointYAxis({ y, rect }, ratio) {
-        const [, top, , bottom] = rect;
-
-        return ratio > 0 ? bottom : ratio < 0 ? top : y;
-      }
-
-      function calculateTimingLine(start, end, control, isVertical) {
-        const { x: endX, y: endY } = end;
-        const { x: startX, y: startY } = start;
-        const { x: controlX, y: controlY } = control;
-        const xRatio = calculateTimingRatio(endX, controlX);
-        const yRatio = calculateTimingRatio(endY, controlY);
-        const endXTranslate = getTimingPointXAxis(end, xRatio);
-        const endYTranslate = getTimingPointYAxis(end, yRatio);
-        const startXTranslate = getTimingPointXAxis(start, xRatio);
-        const startYTranslate = getTimingPointYAxis(start, yRatio);
-
-        if (xRatio === 0 || yRatio === 0) {
-          return [new Point(startXTranslate, startYTranslate), new Point(endXTranslate, endYTranslate)];
-        }
-
-        if (isVertical ? xRatio === yRatio : xRatio !== yRatio) {
-          return [new Point(startX, startYTranslate), new Point(endX, endYTranslate)];
-        }
-
-        return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
       }
 
       $('#decode-btn').on('click', function () {
@@ -510,18 +465,19 @@
           drawLine(bottomRightCorner, bottomLeftCorner, '#00ff00');
           drawLine(bottomLeftCorner, topLeftCorner, '#00ff00');
 
-          const [timing11, timing12] = calculateTimingLine(topLeft, topRight, bottomLeft);
-          const [timing21, timing22] = calculateTimingLine(topLeft, bottomLeft, topRight, true);
+          const topLeftTiming = detect.mapping(6.5, 6.5);
+          const topRightTiming = detect.mapping(size - 6.5, 6.5);
+          const bottomLeftTiming = detect.mapping(6.5, size - 6.5);
 
-          drawLine(timing11, timing12, '#00ff00');
-          drawLine(timing21, timing22, '#00ff00');
+          drawLine(topLeftTiming, topRightTiming, '#00ff00');
+          drawLine(topLeftTiming, bottomLeftTiming, '#00ff00');
 
           drawLine(topLeft, topRight, '#ff0000');
           drawLine(topLeft, bottomLeft, '#ff0000');
 
-          markFinderPattern(topLeft, '#ff0000');
-          markFinderPattern(topRight, '#00ff00');
-          markFinderPattern(bottomLeft, '#0000ff');
+          // markFinderPattern(topLeft, '#ff0000');
+          // markFinderPattern(topRight, '#00ff00');
+          // markFinderPattern(bottomLeft, '#0000ff');
 
           if (alignment) {
             markFinderPattern(alignment, '#ff00ff');

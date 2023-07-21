@@ -1,5 +1,5 @@
 /**
- * @module matcher
+ * @module pattern
  */
 
 import { sumArray } from '/common/utils';
@@ -7,17 +7,6 @@ import { BitMatrix } from '/common/BitMatrix';
 import { PatternRatios } from '/detector/PatternRatios';
 import { DIFF_PATTERN_ALLOWANCE, DIFF_PATTERN_RATIO } from './constants';
 import { calculateScanlineNoise, centerFromScanlineEnd, getCrossScanline, sumScanlineNonzero } from './scanline';
-
-export type PatternRect = readonly [
-  // Left border center x
-  left: number,
-  // Top border center y
-  top: number,
-  // Right border center x
-  right: number,
-  // Bottom border center y
-  bottom: number
-];
 
 export function isDiagonalScanlineCheckPassed(
   slash: number[],

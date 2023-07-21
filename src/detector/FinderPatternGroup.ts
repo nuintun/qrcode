@@ -4,9 +4,9 @@
 
 import { Pattern } from './Pattern';
 import { round } from '/common/utils';
-import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
 import { MAX_VERSION_SIZE } from '/common/Version';
+import { calculateTriangleArea, distance, Point } from '/common/Point';
 import { calculateModuleSize, calculateModuleSizeOneWay, ModuleSizeGroup } from './utils/module';
 
 type OrderedPatterns = [
@@ -55,11 +55,18 @@ function orderFinderPatterns(patterns: Pattern[]): OrderedPatterns {
   return [topLeft, topRight, bottomLeft];
 }
 
-function calculateSymbolSize([topLeft, topRight, bottomLeft]: OrderedPatterns, moduleSize: ModuleSizeGroup): number {
+function calculateBottomRightPoint([topLeft, topRight, bottomLeft]: OrderedPatterns): Point {
+  const { x, y } = topLeft;
+  const bottomRightX = topRight.x + bottomLeft.x - x;
+  const bottomRightY = topRight.y + bottomLeft.y - y;
+
+  return new Point(bottomRightX, bottomRightY);
+}
+
+function calculateSymbolSize([topLeft, topRight, bottomLeft]: OrderedPatterns, moduleSize: number): number {
   const width = distance(topLeft, topRight);
   const height = distance(topLeft, bottomLeft);
-  const moduleSizeAvg = calculateModuleSize(moduleSize);
-  const size = round((width + height) / moduleSizeAvg / 2) + 7;
+  const size = round((width + height) / moduleSize / 2) + 7;
 
   switch (size & 0x03) {
     case 0:
@@ -74,10 +81,62 @@ function calculateSymbolSize([topLeft, topRight, bottomLeft]: OrderedPatterns, m
 }
 
 export class FinderPatternGroup {
+  #area?: number;
   #size?: number;
   #matrix: BitMatrix;
+  #bottomRight?: Point;
+  #moduleSize?: number;
   #patterns: OrderedPatterns;
-  #moduleSize?: ModuleSizeGroup;
+  #moduleSizes?: ModuleSizeGroup;
+
+  private static area(finderPatternGroup: FinderPatternGroup): number {
+    const [topLeft, topRight, bottomLeft] = finderPatternGroup.#patterns;
+    const bottomRight = FinderPatternGroup.bottomRight(finderPatternGroup);
+
+    if (finderPatternGroup.#area == null) {
+      const s1 = calculateTriangleArea(topLeft, topRight, bottomRight);
+      const s2 = calculateTriangleArea(bottomRight, bottomLeft, topLeft);
+
+      finderPatternGroup.#area = s1 + s2;
+    }
+
+    return finderPatternGroup.#area;
+  }
+
+  public static moduleSizes(finderPatternGroup: FinderPatternGroup): ModuleSizeGroup {
+    if (finderPatternGroup.#moduleSizes == null) {
+      const matrix = finderPatternGroup.#matrix;
+      const [topLeft, topRight, bottomLeft] = finderPatternGroup.#patterns;
+
+      finderPatternGroup.#moduleSizes = Object.freeze([
+        calculateModuleSizeOneWay(matrix, topLeft, topRight),
+        calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)
+      ]);
+    }
+
+    return finderPatternGroup.#moduleSizes;
+  }
+
+  public static contains(finderPatternGroup: FinderPatternGroup, pattern: Pattern): boolean {
+    const area = FinderPatternGroup.area(finderPatternGroup);
+    const [topLeft, topRight, bottomLeft] = finderPatternGroup.#patterns;
+    const bottomRight = FinderPatternGroup.bottomRight(finderPatternGroup);
+    const s1 = calculateTriangleArea(topLeft, topRight, pattern);
+    const s2 = calculateTriangleArea(topRight, bottomRight, pattern);
+    const s3 = calculateTriangleArea(bottomRight, bottomLeft, pattern);
+    const s4 = calculateTriangleArea(bottomLeft, topLeft, pattern);
+
+    // Pattern not a point, increase the detection margin appropriately.
+    return s1 + s2 + s3 + s4 - area < 1;
+  }
+
+  public static bottomRight(finderPatternGroup: FinderPatternGroup): Point {
+    if (finderPatternGroup.#bottomRight == null) {
+      finderPatternGroup.#bottomRight = calculateBottomRightPoint(finderPatternGroup.#patterns);
+    }
+
+    return finderPatternGroup.#bottomRight;
+  }
 
   constructor(matrix: BitMatrix, patterns: Pattern[]) {
     this.#matrix = matrix;
@@ -96,26 +155,20 @@ export class FinderPatternGroup {
     return this.#patterns[2];
   }
 
-  public get moduleSize(): ModuleSizeGroup {
-    if (this.#moduleSize == null) {
-      const matrix = this.#matrix;
-      const [topLeft, topRight, bottomLeft] = this.#patterns;
-
-      this.#moduleSize = Object.freeze([
-        calculateModuleSizeOneWay(matrix, topLeft, topRight),
-        calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)
-      ]);
-    }
-
-    return this.#moduleSize;
-  }
-
   public get size(): number {
     if (this.#size == null) {
       this.#size = calculateSymbolSize(this.#patterns, this.moduleSize);
     }
 
     return this.#size;
+  }
+
+  public get moduleSize(): number {
+    if (this.#moduleSize == null) {
+      this.#moduleSize = calculateModuleSize(FinderPatternGroup.moduleSizes(this));
+    }
+
+    return this.#moduleSize;
   }
 }
 

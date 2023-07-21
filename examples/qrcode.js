@@ -3542,6 +3542,12 @@
     const yDiff = a.y - b.y;
     return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
   }
+  function calculateTriangleArea(a, b, c) {
+    const { x: ax, y: ay } = a;
+    const { x: bx, y: by } = b;
+    const { x: cx, y: cy } = c;
+    return Math.abs(ax * (by - cy) + bx * (cy - ay) + cx * (ay - by)) / 2;
+  }
 
   /**
    * @module GridSampler
@@ -3625,49 +3631,35 @@
     #noise;
     #width;
     #height;
-    #rect;
     #moduleSize;
     #combined = 1;
     #ratios;
     #intersectRadius;
+    static noise(pattern) {
+      return pattern.#noise;
+    }
+    static combined(pattern) {
+      return pattern.#combined;
+    }
     constructor(ratios, x, y, width, height, noise) {
       super(x, y);
       const { modules } = ratios;
-      const halfWidth = width / 2;
-      const halfHeight = height / 2;
       const ratio = getRatio(ratios);
       const xModuleSize = width / modules;
       const yModuleSize = height / modules;
-      const xModuleSizeHalf = xModuleSize / 2;
-      const yModuleSizeHalf = yModuleSize / 2;
       const moduleSize = (xModuleSize + yModuleSize) / 2;
       this.#noise = noise;
       this.#width = width;
       this.#height = height;
       this.#ratios = ratios;
       this.#moduleSize = moduleSize;
-      this.#rect = Object.freeze([
-        x - halfWidth + xModuleSizeHalf,
-        y - halfHeight + yModuleSizeHalf,
-        x + halfWidth - xModuleSizeHalf,
-        y + halfHeight - yModuleSizeHalf
-      ]);
       this.#intersectRadius = moduleSize * ratio;
-    }
-    get noise() {
-      return this.#noise;
     }
     get width() {
       return this.#width;
     }
     get height() {
       return this.#height;
-    }
-    get combined() {
-      return this.#combined;
-    }
-    get rect() {
-      return this.#rect;
     }
     get moduleSize() {
       return this.#moduleSize;
@@ -3992,6 +3984,168 @@
   }
 
   /**
+   * @module FinderPatternGroup
+   */
+  function crossProductZ(pattern1, pattern2, pattern3) {
+    const { x, y } = pattern2;
+    return (pattern3.x - x) * (pattern1.y - y) - (pattern3.y - y) * (pattern1.x - x);
+  }
+  function orderFinderPatterns(patterns) {
+    let topLeft;
+    let topRight;
+    let bottomLeft;
+    // Find distances between pattern centers
+    const [pattern1, pattern2, pattern3] = patterns;
+    const oneTwoDistance = distance(pattern1, pattern2);
+    const twoThreeDistance = distance(pattern2, pattern3);
+    const oneThreeDistance = distance(pattern1, pattern3);
+    // Assume one closest to other two is B; A and C will just be guesses at first
+    if (twoThreeDistance >= oneTwoDistance && twoThreeDistance >= oneThreeDistance) {
+      [topLeft, bottomLeft, topRight] = patterns;
+    } else if (oneThreeDistance >= twoThreeDistance && oneThreeDistance >= oneTwoDistance) {
+      [bottomLeft, topLeft, topRight] = patterns;
+    } else {
+      [bottomLeft, topRight, topLeft] = patterns;
+    }
+    // Use cross product to figure out whether A and C are correct or flipped.
+    // This asks whether BC x BA has a positive z component, which is the arrangement
+    // we want for A, B, C. If it's negative, then we've got it flipped around and
+    // should swap A and C.
+    if (crossProductZ(bottomLeft, topLeft, topRight) < 0) {
+      [bottomLeft, topRight] = [topRight, bottomLeft];
+    }
+    return [topLeft, topRight, bottomLeft];
+  }
+  function calculateBottomRightPoint([topLeft, topRight, bottomLeft]) {
+    const { x, y } = topLeft;
+    const bottomRightX = topRight.x + bottomLeft.x - x;
+    const bottomRightY = topRight.y + bottomLeft.y - y;
+    return new Point(bottomRightX, bottomRightY);
+  }
+  function calculateSymbolSize([topLeft, topRight, bottomLeft], moduleSize) {
+    const width = distance(topLeft, topRight);
+    const height = distance(topLeft, bottomLeft);
+    const size = round((width + height) / moduleSize / 2) + 7;
+    switch (size & 0x03) {
+      case 0:
+        return size + 1;
+      case 2:
+        return size - 1;
+      case 3:
+        return Math.min(size + 2, MAX_VERSION_SIZE);
+    }
+    return size;
+  }
+  class FinderPatternGroup {
+    #area;
+    #size;
+    #matrix;
+    #bottomRight;
+    #moduleSize;
+    #patterns;
+    #moduleSizes;
+    static area(finderPatternGroup) {
+      const [topLeft, topRight, bottomLeft] = finderPatternGroup.#patterns;
+      const bottomRight = FinderPatternGroup.bottomRight(finderPatternGroup);
+      if (finderPatternGroup.#area == null) {
+        const s1 = calculateTriangleArea(topLeft, topRight, bottomRight);
+        const s2 = calculateTriangleArea(bottomRight, bottomLeft, topLeft);
+        finderPatternGroup.#area = s1 + s2;
+      }
+      return finderPatternGroup.#area;
+    }
+    static moduleSizes(finderPatternGroup) {
+      if (finderPatternGroup.#moduleSizes == null) {
+        const matrix = finderPatternGroup.#matrix;
+        const [topLeft, topRight, bottomLeft] = finderPatternGroup.#patterns;
+        finderPatternGroup.#moduleSizes = Object.freeze([
+          calculateModuleSizeOneWay(matrix, topLeft, topRight),
+          calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)
+        ]);
+      }
+      return finderPatternGroup.#moduleSizes;
+    }
+    static contains(finderPatternGroup, pattern) {
+      const area = FinderPatternGroup.area(finderPatternGroup);
+      const [topLeft, topRight, bottomLeft] = finderPatternGroup.#patterns;
+      const bottomRight = FinderPatternGroup.bottomRight(finderPatternGroup);
+      const s1 = calculateTriangleArea(topLeft, topRight, pattern);
+      const s2 = calculateTriangleArea(topRight, bottomRight, pattern);
+      const s3 = calculateTriangleArea(bottomRight, bottomLeft, pattern);
+      const s4 = calculateTriangleArea(bottomLeft, topLeft, pattern);
+      // Pattern not a point, increase the detection margin appropriately.
+      return s1 + s2 + s3 + s4 - area < 1;
+    }
+    static bottomRight(finderPatternGroup) {
+      if (finderPatternGroup.#bottomRight == null) {
+        finderPatternGroup.#bottomRight = calculateBottomRightPoint(finderPatternGroup.#patterns);
+      }
+      return finderPatternGroup.#bottomRight;
+    }
+    constructor(matrix, patterns) {
+      this.#matrix = matrix;
+      this.#patterns = orderFinderPatterns(patterns);
+    }
+    get topLeft() {
+      return this.#patterns[0];
+    }
+    get topRight() {
+      return this.#patterns[1];
+    }
+    get bottomLeft() {
+      return this.#patterns[2];
+    }
+    get size() {
+      if (this.#size == null) {
+        this.#size = calculateSymbolSize(this.#patterns, this.moduleSize);
+      }
+      return this.#size;
+    }
+    get moduleSize() {
+      if (this.#moduleSize == null) {
+        this.#moduleSize = calculateModuleSize(FinderPatternGroup.moduleSizes(this));
+      }
+      return this.#moduleSize;
+    }
+  }
+  function calculateTopLeftAngle({ topLeft, topRight, bottomLeft }) {
+    const { x, y } = topLeft;
+    const dx1 = topRight.x - x;
+    const dy1 = topRight.y - y;
+    const dx2 = bottomLeft.x - x;
+    const dy2 = bottomLeft.y - y;
+    const d = dx1 * dx2 + dy1 * dy2;
+    const l2 = (dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2);
+    return Math.acos(d / Math.sqrt(l2));
+  }
+
+  /**
+   * @module timing
+   */
+  function isValidTimingLine(matrix, start, end, size) {
+    const maxModules = size + 8;
+    const points = new PlotLine(start, end).points();
+    let modules = 1;
+    let lastBit = matrix.get(toInt32(start.x), toInt32(start.y));
+    for (const [x, y] of points) {
+      const bit = matrix.get(x, y);
+      if (bit !== lastBit) {
+        modules++;
+        lastBit = bit;
+        if (modules > maxModules) {
+          return false;
+        }
+      }
+    }
+    return modules >= size - 14 - Math.max(2, (size - 17) / 4);
+  }
+  function checkModulesInTimingLine(matrix, transform, size, isVertical) {
+    const [startX, startY] = transform.mapping(isVertical ? 6.5 : 7.5, isVertical ? 7.5 : 6.5);
+    const [endX, endY] = transform.mapping(isVertical ? 6.5 : size - 7.5, isVertical ? size - 7.5 : 6.5);
+    return isValidTimingLine(matrix, new Point(startX, startY), new Point(endX, endY), size);
+  }
+
+  /**
    * @module PatternRatios
    */
   class PatternRatios {
@@ -4142,67 +4296,6 @@
   }
 
   /**
-   * @module timing
-   */
-  function calculateTimingRatio(axis, control) {
-    return control > axis ? 1 : control < axis ? -1 : 0;
-  }
-  function getTimingPointXAxis({ x, rect }, ratio) {
-    const [left, , right] = rect;
-    return ratio > 0 ? right : ratio < 0 ? left : x;
-  }
-  function getTimingPointYAxis({ y, rect }, ratio) {
-    const [, top, , bottom] = rect;
-    return ratio > 0 ? bottom : ratio < 0 ? top : y;
-  }
-  function calculateTimingLine(start, end, control, isVertical) {
-    const { x: endX, y: endY } = end;
-    const { x: startX, y: startY } = start;
-    const { x: controlX, y: controlY } = control;
-    const xRatio = calculateTimingRatio(endX, controlX);
-    const yRatio = calculateTimingRatio(endY, controlY);
-    const endXTranslate = getTimingPointXAxis(end, xRatio);
-    const endYTranslate = getTimingPointYAxis(end, yRatio);
-    const startXTranslate = getTimingPointXAxis(start, xRatio);
-    const startYTranslate = getTimingPointYAxis(start, yRatio);
-    if (xRatio === 0 || yRatio === 0) {
-      return [new Point(startXTranslate, startYTranslate), new Point(endXTranslate, endYTranslate)];
-    }
-    if (isVertical ? xRatio === yRatio : xRatio !== yRatio) {
-      return [new Point(startX, startYTranslate), new Point(endX, endYTranslate)];
-    }
-    return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
-  }
-  function isValidTimingLine(matrix, start, end, size) {
-    const maxModules = size + 8;
-    const points = new PlotLine(start, end).points();
-    let modules = 1;
-    let lastBit = matrix.get(toInt32(start.x), toInt32(start.y));
-    for (const [x, y] of points) {
-      const bit = matrix.get(x, y);
-      if (bit !== lastBit) {
-        modules++;
-        lastBit = bit;
-        if (modules > maxModules) {
-          return false;
-        }
-      }
-    }
-    return modules >= size - 14 - (size - 17) / 4;
-  }
-  function checkModulesInTimingLine(matrix, { size, topLeft, topRight, bottomLeft }, isVertical) {
-    const [start, end] = isVertical
-      ? calculateTimingLine(topLeft, bottomLeft, topRight, true)
-      : calculateTimingLine(topLeft, topRight, bottomLeft);
-    return isValidTimingLine(matrix, start, end, size);
-  }
-  function checkModulesInMappingTimingLine(matrix, transform, size, isVertical) {
-    const [startX, startY] = transform.mapping(isVertical ? 6.5 : 7.5, isVertical ? 7.5 : 6.5);
-    const [endX, endY] = transform.mapping(isVertical ? 6.5 : size - 7.5, isVertical ? size - 7.5 : 6.5);
-    return isValidTimingLine(matrix, new Point(startX, startY), new Point(endX, endY), size);
-  }
-
-  /**
    * @module constants
    */
   const RADIAN = Math.PI / 180;
@@ -4216,7 +4309,7 @@
   const MAX_TOP_LEFT_ANGLE = RADIAN * 135;
 
   /**
-   * @module matcher
+   * @module pattern
    */
   function isDiagonalScanlineCheckPassed(slash, backslash, ratios, strict) {
     if (isMatchPattern(slash, ratios)) {
@@ -4332,109 +4425,40 @@
   }
 
   /**
-   * @module FinderPatternGroup
-   */
-  function crossProductZ(pattern1, pattern2, pattern3) {
-    const { x, y } = pattern2;
-    return (pattern3.x - x) * (pattern1.y - y) - (pattern3.y - y) * (pattern1.x - x);
-  }
-  function orderFinderPatterns(patterns) {
-    let topLeft;
-    let topRight;
-    let bottomLeft;
-    // Find distances between pattern centers
-    const [pattern1, pattern2, pattern3] = patterns;
-    const oneTwoDistance = distance(pattern1, pattern2);
-    const twoThreeDistance = distance(pattern2, pattern3);
-    const oneThreeDistance = distance(pattern1, pattern3);
-    // Assume one closest to other two is B; A and C will just be guesses at first
-    if (twoThreeDistance >= oneTwoDistance && twoThreeDistance >= oneThreeDistance) {
-      [topLeft, bottomLeft, topRight] = patterns;
-    } else if (oneThreeDistance >= twoThreeDistance && oneThreeDistance >= oneTwoDistance) {
-      [bottomLeft, topLeft, topRight] = patterns;
-    } else {
-      [bottomLeft, topRight, topLeft] = patterns;
-    }
-    // Use cross product to figure out whether A and C are correct or flipped.
-    // This asks whether BC x BA has a positive z component, which is the arrangement
-    // we want for A, B, C. If it's negative, then we've got it flipped around and
-    // should swap A and C.
-    if (crossProductZ(bottomLeft, topLeft, topRight) < 0) {
-      [bottomLeft, topRight] = [topRight, bottomLeft];
-    }
-    return [topLeft, topRight, bottomLeft];
-  }
-  function calculateSymbolSize([topLeft, topRight, bottomLeft], moduleSize) {
-    const width = distance(topLeft, topRight);
-    const height = distance(topLeft, bottomLeft);
-    const moduleSizeAvg = calculateModuleSize(moduleSize);
-    const size = round((width + height) / moduleSizeAvg / 2) + 7;
-    switch (size & 0x03) {
-      case 0:
-        return size + 1;
-      case 2:
-        return size - 1;
-      case 3:
-        return Math.min(size + 2, MAX_VERSION_SIZE);
-    }
-    return size;
-  }
-  class FinderPatternGroup {
-    #size;
-    #matrix;
-    #patterns;
-    #moduleSize;
-    constructor(matrix, patterns) {
-      this.#matrix = matrix;
-      this.#patterns = orderFinderPatterns(patterns);
-    }
-    get topLeft() {
-      return this.#patterns[0];
-    }
-    get topRight() {
-      return this.#patterns[1];
-    }
-    get bottomLeft() {
-      return this.#patterns[2];
-    }
-    get moduleSize() {
-      if (this.#moduleSize == null) {
-        const matrix = this.#matrix;
-        const [topLeft, topRight, bottomLeft] = this.#patterns;
-        this.#moduleSize = Object.freeze([
-          calculateModuleSizeOneWay(matrix, topLeft, topRight),
-          calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)
-        ]);
-      }
-      return this.#moduleSize;
-    }
-    get size() {
-      if (this.#size == null) {
-        this.#size = calculateSymbolSize(this.#patterns, this.moduleSize);
-      }
-      return this.#size;
-    }
-  }
-  function calculateTopLeftAngle({ topLeft, topRight, bottomLeft }) {
-    const { x, y } = topLeft;
-    const dx1 = topRight.x - x;
-    const dy1 = topRight.y - y;
-    const dx2 = bottomLeft.x - x;
-    const dy2 = bottomLeft.y - y;
-    const d = dx1 * dx2 + dy1 * dy2;
-    const l2 = (dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2);
-    return Math.acos(d / Math.sqrt(l2));
-  }
-
-  /**
    * @module FinderPatternFinder
    */
+  function isGroupNested(finderPatternGroup, patterns, used) {
+    let count = 0;
+    const { topLeft, topRight, bottomLeft } = finderPatternGroup;
+    for (const pattern of patterns) {
+      if (pattern !== topLeft && pattern !== topRight && pattern !== bottomLeft) {
+        let contain;
+        if (used.has(pattern)) {
+          contain = FinderPatternGroup.contains(finderPatternGroup, pattern);
+          if (contain) {
+            return true;
+          }
+        }
+        if (
+          Pattern.noise(pattern) <= 15 &&
+          (contain == null ? FinderPatternGroup.contains(finderPatternGroup, pattern) : contain)
+        ) {
+          if (++count >= 3) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
   class FinderPatternFinder extends PatternFinder {
     constructor(matrix, strict) {
       super(matrix, FINDER_PATTERN_RATIOS, strict);
     }
     *groups() {
-      const patterns = this.patterns.filter(({ combined }) => combined >= 3);
+      const patterns = this.patterns.filter(pattern => {
+        return Pattern.combined(pattern) >= 3;
+      });
       const { length } = patterns;
       if (length === 3) {
         const finderPatternGroup = new FinderPatternGroup(this.matrix, patterns);
@@ -4491,7 +4515,7 @@
               const finderPatternGroup = new FinderPatternGroup(matrix, [pattern1, pattern2, pattern3]);
               const angle = calculateTopLeftAngle(finderPatternGroup);
               if (angle >= MIN_TOP_LEFT_ANGLE && angle <= MAX_TOP_LEFT_ANGLE) {
-                const [xModuleSize, yModuleSize] = finderPatternGroup.moduleSize;
+                const [xModuleSize, yModuleSize] = FinderPatternGroup.moduleSizes(finderPatternGroup);
                 if (xModuleSize >= 1 && yModuleSize >= 1) {
                   const { topLeft, topRight, bottomLeft } = finderPatternGroup;
                   const edge1 = distance(topLeft, topRight);
@@ -4503,8 +4527,7 @@
                     if (
                       size >= MIN_VERSION_SIZE &&
                       size <= MAX_VERSION_SIZE &&
-                      checkModulesInTimingLine(matrix, finderPatternGroup) &&
-                      checkModulesInTimingLine(matrix, finderPatternGroup, true)
+                      !isGroupNested(finderPatternGroup, patterns, used)
                     ) {
                       if (yield finderPatternGroup) {
                         used.set(pattern1, true);
@@ -4580,8 +4603,8 @@
       });
       if (patterns.length > 1) {
         patterns.sort((pattern1, pattern2) => {
-          const noise1 = pattern1.noise + 0.1;
-          const noise2 = pattern2.noise + 0.1;
+          const noise1 = Pattern.noise(pattern1) + 0.1;
+          const noise2 = Pattern.noise(pattern2) + 0.1;
           const moduleSizeDiff1 = Math.abs(pattern1.moduleSize - moduleSize) + 0.1;
           const moduleSizeDiff2 = Math.abs(pattern2.moduleSize - moduleSize) + 0.1;
           const score1 = distance(pattern1, expectAlignment) * moduleSizeDiff1 * noise1;
@@ -4643,23 +4666,22 @@
   /**
    * @module Detector
    */
-  function getExpectAlignment({ size, topLeft, topRight, bottomLeft, moduleSize: [xModuleSize, yModuleSize] }) {
-    const { x, y } = topLeft;
-    const correctionToTopLeft = 1 - 3 / (size - 7);
-    const bottomRightX = topRight.x + bottomLeft.x - x;
-    const bottomRightY = topRight.y + bottomLeft.y - y;
-    const expectAlignmentX = x + correctionToTopLeft * (bottomRightX - x);
-    const expectAlignmentY = y + correctionToTopLeft * (bottomRightY - y);
+  function getExpectAlignment(finderPatternGroup) {
+    const { x, y } = finderPatternGroup.topLeft;
+    const correctionToTopLeft = 1 - 3 / (finderPatternGroup.size - 7);
+    const bottomRight = FinderPatternGroup.bottomRight(finderPatternGroup);
+    const expectAlignmentX = x + correctionToTopLeft * (bottomRight.x - x);
+    const expectAlignmentY = y + correctionToTopLeft * (bottomRight.y - y);
+    const [xModuleSize, yModuleSize] = FinderPatternGroup.moduleSizes(finderPatternGroup);
     return new Pattern(ALIGNMENT_PATTERN_RATIOS, expectAlignmentX, expectAlignmentY, xModuleSize * 5, yModuleSize * 5, 0);
   }
   function findAlignmentInRegion(matrix, finderPatternGroup, strict) {
     const { size, moduleSize } = finderPatternGroup;
-    const moduleSizeAvg = calculateModuleSize(moduleSize);
     const expectAlignment = getExpectAlignment(finderPatternGroup);
     const alignmentFinder = new AlignmentPatternFinder(matrix, strict);
-    const { x: expectAlignmentX, y: expectAlignmentY } = expectAlignment;
     const allowance = Math.max(5, Math.min(20, toInt32((size - 7) / 4)));
-    const alignmentAreaAllowanceSize = Math.ceil(moduleSizeAvg * allowance);
+    const alignmentAreaAllowanceSize = Math.ceil(moduleSize * allowance);
+    const { x: expectAlignmentX, y: expectAlignmentY } = expectAlignment;
     const alignmentAreaTop = toInt32(Math.max(0, expectAlignmentY - alignmentAreaAllowanceSize));
     const alignmentAreaLeft = toInt32(Math.max(0, expectAlignmentX - alignmentAreaAllowanceSize));
     const alignmentAreaRight = toInt32(Math.min(matrix.width - 1, expectAlignmentX + alignmentAreaAllowanceSize));
@@ -4670,7 +4692,7 @@
       alignmentAreaRight - alignmentAreaLeft,
       alignmentAreaBottom - alignmentAreaTop
     );
-    return alignmentFinder.filter(expectAlignment, moduleSizeAvg);
+    return alignmentFinder.filter(expectAlignment, moduleSize);
   }
   class Detector {
     #options;
@@ -4698,8 +4720,10 @@
           for (const alignmentPattern of alignmentPatterns) {
             const transform = createTransform(finderPatternGroup, alignmentPattern);
             if (
-              checkModulesInMappingTimingLine(matrix, transform, size) &&
-              checkModulesInMappingTimingLine(matrix, transform, size, true)
+              // Top left to top right
+              checkModulesInTimingLine(matrix, transform, size) &&
+              // Top left to bottom left
+              checkModulesInTimingLine(matrix, transform, size, true)
             ) {
               succeed = yield new Detect(matrix, transform, finderPatternGroup, alignmentPattern);
               // Succeed, skip next alignment pattern
@@ -4711,8 +4735,10 @@
         } else {
           const transform = createTransform(finderPatternGroup);
           if (
-            checkModulesInMappingTimingLine(matrix, transform, size) &&
-            checkModulesInMappingTimingLine(matrix, transform, size, true)
+            // Top left to top right
+            checkModulesInTimingLine(matrix, transform, size) &&
+            // Top left to bottom left
+            checkModulesInTimingLine(matrix, transform, size, true)
           ) {
             // No alignment pattern version
             succeed = yield new Detect(matrix, transform, finderPatternGroup);

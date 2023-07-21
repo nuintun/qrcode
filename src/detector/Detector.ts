@@ -8,42 +8,34 @@ import { toInt32 } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
 import { fromVersionSize } from '/common/Version';
 import { createTransform } from './utils/transform';
-import { calculateModuleSize } from './utils/module';
 import { FinderPatternGroup } from './FinderPatternGroup';
+import { checkModulesInTimingLine } from './utils/timing';
 import { ALIGNMENT_PATTERN_RATIOS } from './PatternRatios';
 import { FinderPatternFinder } from './FinderPatternFinder';
-import { checkModulesInMappingTimingLine } from './utils/timing';
 import { AlignmentPatternFinder } from './AlignmentPatternFinder';
 
 export interface Options {
   strict?: boolean;
 }
 
-function getExpectAlignment({
-  size,
-  topLeft,
-  topRight,
-  bottomLeft,
-  moduleSize: [xModuleSize, yModuleSize]
-}: FinderPatternGroup): Pattern {
-  const { x, y } = topLeft;
-  const correctionToTopLeft = 1 - 3 / (size - 7);
-  const bottomRightX = topRight.x + bottomLeft.x - x;
-  const bottomRightY = topRight.y + bottomLeft.y - y;
-  const expectAlignmentX = x + correctionToTopLeft * (bottomRightX - x);
-  const expectAlignmentY = y + correctionToTopLeft * (bottomRightY - y);
+function getExpectAlignment(finderPatternGroup: FinderPatternGroup): Pattern {
+  const { x, y } = finderPatternGroup.topLeft;
+  const correctionToTopLeft = 1 - 3 / (finderPatternGroup.size - 7);
+  const bottomRight = FinderPatternGroup.bottomRight(finderPatternGroup);
+  const expectAlignmentX = x + correctionToTopLeft * (bottomRight.x - x);
+  const expectAlignmentY = y + correctionToTopLeft * (bottomRight.y - y);
+  const [xModuleSize, yModuleSize] = FinderPatternGroup.moduleSizes(finderPatternGroup);
 
   return new Pattern(ALIGNMENT_PATTERN_RATIOS, expectAlignmentX, expectAlignmentY, xModuleSize * 5, yModuleSize * 5, 0);
 }
 
 function findAlignmentInRegion(matrix: BitMatrix, finderPatternGroup: FinderPatternGroup, strict?: boolean): Pattern[] {
   const { size, moduleSize } = finderPatternGroup;
-  const moduleSizeAvg = calculateModuleSize(moduleSize);
   const expectAlignment = getExpectAlignment(finderPatternGroup);
   const alignmentFinder = new AlignmentPatternFinder(matrix, strict);
-  const { x: expectAlignmentX, y: expectAlignmentY } = expectAlignment;
   const allowance = Math.max(5, Math.min(20, toInt32((size - 7) / 4)));
-  const alignmentAreaAllowanceSize = Math.ceil(moduleSizeAvg * allowance);
+  const alignmentAreaAllowanceSize = Math.ceil(moduleSize * allowance);
+  const { x: expectAlignmentX, y: expectAlignmentY } = expectAlignment;
   const alignmentAreaTop = toInt32(Math.max(0, expectAlignmentY - alignmentAreaAllowanceSize));
   const alignmentAreaLeft = toInt32(Math.max(0, expectAlignmentX - alignmentAreaAllowanceSize));
   const alignmentAreaRight = toInt32(Math.min(matrix.width - 1, expectAlignmentX + alignmentAreaAllowanceSize));
@@ -56,7 +48,7 @@ function findAlignmentInRegion(matrix: BitMatrix, finderPatternGroup: FinderPatt
     alignmentAreaBottom - alignmentAreaTop
   );
 
-  return alignmentFinder.filter(expectAlignment, moduleSizeAvg);
+  return alignmentFinder.filter(expectAlignment, moduleSize);
 }
 
 export class Detector {
@@ -95,8 +87,10 @@ export class Detector {
           const transform = createTransform(finderPatternGroup, alignmentPattern);
 
           if (
-            checkModulesInMappingTimingLine(matrix, transform, size) &&
-            checkModulesInMappingTimingLine(matrix, transform, size, true)
+            // Top left to top right
+            checkModulesInTimingLine(matrix, transform, size) &&
+            // Top left to bottom left
+            checkModulesInTimingLine(matrix, transform, size, true)
           ) {
             succeed = yield new Detect(matrix, transform, finderPatternGroup, alignmentPattern);
 
@@ -110,8 +104,10 @@ export class Detector {
         const transform = createTransform(finderPatternGroup);
 
         if (
-          checkModulesInMappingTimingLine(matrix, transform, size) &&
-          checkModulesInMappingTimingLine(matrix, transform, size, true)
+          // Top left to top right
+          checkModulesInTimingLine(matrix, transform, size) &&
+          // Top left to bottom left
+          checkModulesInTimingLine(matrix, transform, size, true)
         ) {
           // No alignment pattern version
           succeed = yield new Detect(matrix, transform, finderPatternGroup);

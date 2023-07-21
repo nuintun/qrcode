@@ -8,12 +8,42 @@ import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
 import { scanlineUpdate } from './utils/scanline';
 import { FINDER_PATTERN_RATIOS } from './PatternRatios';
-import { checkModulesInTimingLine } from './utils/timing';
 import { MatchAction, PatternFinder } from './PatternFinder';
 import { isEqualsSize, isMatchPattern } from './utils/pattern';
 import { MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
 import { calculateTopLeftAngle, FinderPatternGroup } from './FinderPatternGroup';
 import { DIFF_MODULE_SIZE_RATIO, MAX_TOP_LEFT_ANGLE, MIN_TOP_LEFT_ANGLE } from './utils/constants';
+
+function isGroupNested(finderPatternGroup: FinderPatternGroup, patterns: Pattern[], used: Map<Pattern, boolean>): boolean {
+  let count = 0;
+
+  const { topLeft, topRight, bottomLeft } = finderPatternGroup;
+
+  for (const pattern of patterns) {
+    if (pattern !== topLeft && pattern !== topRight && pattern !== bottomLeft) {
+      let contain: boolean | undefined;
+
+      if (used.has(pattern)) {
+        contain = FinderPatternGroup.contains(finderPatternGroup, pattern);
+
+        if (contain) {
+          return true;
+        }
+      }
+
+      if (
+        Pattern.noise(pattern) <= 15 &&
+        (contain == null ? FinderPatternGroup.contains(finderPatternGroup, pattern) : contain)
+      ) {
+        if (++count >= 3) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
 
 export class FinderPatternFinder extends PatternFinder {
   constructor(matrix: BitMatrix, strict?: boolean) {
@@ -21,7 +51,9 @@ export class FinderPatternFinder extends PatternFinder {
   }
 
   public *groups(): Generator<FinderPatternGroup, void, boolean> {
-    const patterns = this.patterns.filter(({ combined }) => combined >= 3);
+    const patterns = this.patterns.filter(pattern => {
+      return Pattern.combined(pattern) >= 3;
+    });
     const { length } = patterns;
 
     if (length === 3) {
@@ -90,7 +122,7 @@ export class FinderPatternFinder extends PatternFinder {
             const angle = calculateTopLeftAngle(finderPatternGroup);
 
             if (angle >= MIN_TOP_LEFT_ANGLE && angle <= MAX_TOP_LEFT_ANGLE) {
-              const [xModuleSize, yModuleSize] = finderPatternGroup.moduleSize;
+              const [xModuleSize, yModuleSize] = FinderPatternGroup.moduleSizes(finderPatternGroup);
 
               if (xModuleSize >= 1 && yModuleSize >= 1) {
                 const { topLeft, topRight, bottomLeft } = finderPatternGroup;
@@ -105,8 +137,7 @@ export class FinderPatternFinder extends PatternFinder {
                   if (
                     size >= MIN_VERSION_SIZE &&
                     size <= MAX_VERSION_SIZE &&
-                    checkModulesInTimingLine(matrix, finderPatternGroup) &&
-                    checkModulesInTimingLine(matrix, finderPatternGroup, true)
+                    !isGroupNested(finderPatternGroup, patterns, used)
                   ) {
                     if (yield finderPatternGroup) {
                       used.set(pattern1, true);

@@ -4,7 +4,6 @@
 
 import { Point } from '/common/Point';
 import { toInt32 } from '/common/utils';
-import { PatternRect } from './utils/pattern';
 import { PatternRatios } from './PatternRatios';
 
 function getRatio({ ratios }: PatternRatios): number {
@@ -15,23 +14,26 @@ export class Pattern extends Point {
   #noise: number;
   #width: number;
   #height: number;
-  #rect: PatternRect;
   #moduleSize: number;
   #combined: number = 1;
   #ratios: PatternRatios;
   #intersectRadius: number;
 
+  public static noise(pattern: Pattern): number {
+    return pattern.#noise;
+  }
+
+  public static combined(pattern: Pattern): number {
+    return pattern.#combined;
+  }
+
   constructor(ratios: PatternRatios, x: number, y: number, width: number, height: number, noise: number) {
     super(x, y);
 
     const { modules } = ratios;
-    const halfWidth = width / 2;
-    const halfHeight = height / 2;
     const ratio = getRatio(ratios);
     const xModuleSize = width / modules;
     const yModuleSize = height / modules;
-    const xModuleSizeHalf = xModuleSize / 2;
-    const yModuleSizeHalf = yModuleSize / 2;
     const moduleSize = (xModuleSize + yModuleSize) / 2;
 
     this.#noise = noise;
@@ -39,17 +41,7 @@ export class Pattern extends Point {
     this.#height = height;
     this.#ratios = ratios;
     this.#moduleSize = moduleSize;
-    this.#rect = Object.freeze([
-      x - halfWidth + xModuleSizeHalf,
-      y - halfHeight + yModuleSizeHalf,
-      x + halfWidth - xModuleSizeHalf,
-      y + halfHeight - yModuleSizeHalf
-    ]);
     this.#intersectRadius = moduleSize * ratio;
-  }
-
-  public get noise(): number {
-    return this.#noise;
   }
 
   public get width(): number {
@@ -58,14 +50,6 @@ export class Pattern extends Point {
 
   public get height(): number {
     return this.#height;
-  }
-
-  public get combined(): number {
-    return this.#combined;
-  }
-
-  public get rect(): PatternRect {
-    return this.#rect;
   }
 
   public get moduleSize(): number {
