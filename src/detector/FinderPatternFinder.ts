@@ -35,7 +35,8 @@ function isGroupNested(finderPatternGroup: FinderPatternGroup, patterns: Pattern
         Pattern.noise(pattern) <= 1 &&
         (contain == null ? FinderPatternGroup.contains(finderPatternGroup, pattern) : contain)
       ) {
-        if (++count >= 3) {
+        // Maybe contain another QR code, but only allow one.
+        if (++count > 3) {
           return true;
         }
       }
