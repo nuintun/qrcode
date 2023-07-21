@@ -18,17 +18,17 @@ export class AlignmentPatternFinder extends PatternFinder {
 
   public filter(expectAlignment: Pattern, moduleSize: number): Pattern[] {
     const patterns = this.patterns.filter(pattern => {
-      return isEqualsSize(pattern.moduleSize, moduleSize, DIFF_MODULE_SIZE_RATIO);
+      return Pattern.noise(pattern) <= 2.5 && isEqualsSize(pattern.moduleSize, moduleSize, DIFF_MODULE_SIZE_RATIO);
     });
 
     if (patterns.length > 1) {
       patterns.sort((pattern1, pattern2) => {
-        const noise1 = Pattern.noise(pattern1) + 0.1;
-        const noise2 = Pattern.noise(pattern2) + 0.1;
-        const moduleSizeDiff1 = Math.abs(pattern1.moduleSize - moduleSize) + 0.1;
-        const moduleSizeDiff2 = Math.abs(pattern2.moduleSize - moduleSize) + 0.1;
-        const score1 = distance(pattern1, expectAlignment) * moduleSizeDiff1 * noise1;
-        const score2 = distance(pattern2, expectAlignment) * moduleSizeDiff2 * noise2;
+        const noise1 = Pattern.noise(pattern1);
+        const noise2 = Pattern.noise(pattern2);
+        const moduleSizeDiff1 = Math.abs(pattern1.moduleSize - moduleSize);
+        const moduleSizeDiff2 = Math.abs(pattern2.moduleSize - moduleSize);
+        const score1 = (distance(pattern1, expectAlignment) + moduleSizeDiff1) * noise1 * noise1;
+        const score2 = (distance(pattern2, expectAlignment) + moduleSizeDiff2) * noise2 * noise2;
 
         return score1 - score2;
       });

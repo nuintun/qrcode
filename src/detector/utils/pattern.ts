@@ -2,7 +2,7 @@
  * @module pattern
  */
 
-import { sumArray } from '/common/utils';
+import { accumulate } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
 import { PatternRatios } from '/detector/PatternRatios';
 import { DIFF_PATTERN_ALLOWANCE, DIFF_PATTERN_RATIO } from './constants';
@@ -72,25 +72,26 @@ export function isMatchPattern(scanline: number[], { ratios, modules }: PatternR
 }
 
 export function calculatePatternNoise(ratios: PatternRatios, ...scanlines: number[][]): number {
-  const noises: number[] = [];
+  let noises = 0;
+  let averageNoises = 0;
+
+  const { length } = scanlines;
   const averages: number[] = [];
-  const averagesDiff: number[] = [];
 
   // scanline length must be equals ratios length
   for (const scanline of scanlines) {
     const [noise, average] = calculateScanlineNoise(scanline, ratios);
 
+    noises += noise;
     averages.push(average);
-    noises.push(noise * noise);
   }
 
-  const averagesAvg = sumArray(averages) / averages.length;
+  const total = accumulate(averages);
+  const averagesAvg = total / length;
 
   for (const average of averages) {
-    const diff = average - averagesAvg;
-
-    averagesDiff.push(diff * diff);
+    averageNoises += Math.abs(average - averagesAvg);
   }
 
-  return Math.sqrt(sumArray(noises)) + sumArray(averagesDiff) / averagesAvg;
+  return noises + averageNoises / total;
 }

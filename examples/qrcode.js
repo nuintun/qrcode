@@ -26,7 +26,7 @@
   function round(value) {
     return toInt32(value + (value < 0 ? -0.5 : 0.5));
   }
-  function sumArray(array) {
+  function accumulate(array) {
     let total = 0;
     for (const value of array) {
       total += value;
@@ -4151,7 +4151,7 @@
     #ratios;
     constructor(ratios) {
       this.#ratios = ratios;
-      this.#modules = sumArray(ratios);
+      this.#modules = accumulate(ratios);
     }
     get modules() {
       return this.#modules;
@@ -4170,13 +4170,13 @@
   function calculateScanlineNoise(scanline, { ratios, modules }) {
     let noise = 0;
     const { length } = ratios;
-    const average = sumArray(scanline) / modules;
+    const total = accumulate(scanline);
+    const average = total / modules;
     // scanline length must be equals ratios length
     for (let i = 0; i < length; i++) {
-      const diff = scanline[i] - ratios[i] * average;
-      noise += diff * diff;
+      noise += Math.abs(scanline[i] - ratios[i] * average);
     }
-    return [noise, average];
+    return [noise / total, average];
   }
   function sumScanlineNonzero(scanline) {
     let scanlineTotal = 0;
@@ -4348,21 +4348,22 @@
     return false;
   }
   function calculatePatternNoise(ratios, ...scanlines) {
-    const noises = [];
+    let noises = 0;
+    let averageNoises = 0;
+    const { length } = scanlines;
     const averages = [];
-    const averagesDiff = [];
     // scanline length must be equals ratios length
     for (const scanline of scanlines) {
       const [noise, average] = calculateScanlineNoise(scanline, ratios);
+      noises += noise;
       averages.push(average);
-      noises.push(noise * noise);
     }
-    const averagesAvg = sumArray(averages) / averages.length;
+    const total = accumulate(averages);
+    const averagesAvg = total / length;
     for (const average of averages) {
-      const diff = average - averagesAvg;
-      averagesDiff.push(diff * diff);
+      averageNoises += Math.abs(average - averagesAvg);
     }
-    return Math.sqrt(sumArray(noises)) + sumArray(averagesDiff) / averagesAvg;
+    return noises + averageNoises / total;
   }
 
   /**
@@ -4398,8 +4399,8 @@
           const backslash = getDiagonalScanline(matrix, centerX, centerY, overscan, true);
           if (isDiagonalScanlineCheckPassed(slash, backslash, ratios, this.#strict)) {
             const noise = calculatePatternNoise(ratios, horizontal, vertical, slash, backslash);
-            const width = sumArray(horizontal);
-            const height = sumArray(vertical);
+            const width = accumulate(horizontal);
+            const height = accumulate(vertical);
             const patterns = this.#patterns;
             const { length } = patterns;
             let combined = false;
@@ -4438,7 +4439,7 @@
           }
         }
         if (
-          Pattern.noise(pattern) <= 15 &&
+          Pattern.noise(pattern) <= 0.75 &&
           (contain == null ? FinderPatternGroup.contains(finderPatternGroup, pattern) : contain)
         ) {
           if (++count >= 3) {
@@ -4455,7 +4456,7 @@
     }
     *groups() {
       const patterns = this.patterns.filter(pattern => {
-        return Pattern.combined(pattern) >= 3;
+        return Pattern.combined(pattern) >= 3 && Pattern.noise(pattern) <= 1.5;
       });
       const { length } = patterns;
       if (length === 3) {
@@ -4597,16 +4598,16 @@
     }
     filter(expectAlignment, moduleSize) {
       const patterns = this.patterns.filter(pattern => {
-        return isEqualsSize(pattern.moduleSize, moduleSize, DIFF_MODULE_SIZE_RATIO);
+        return Pattern.noise(pattern) <= 2.5 && isEqualsSize(pattern.moduleSize, moduleSize, DIFF_MODULE_SIZE_RATIO);
       });
       if (patterns.length > 1) {
         patterns.sort((pattern1, pattern2) => {
-          const noise1 = Pattern.noise(pattern1) + 0.1;
-          const noise2 = Pattern.noise(pattern2) + 0.1;
-          const moduleSizeDiff1 = Math.abs(pattern1.moduleSize - moduleSize) + 0.1;
-          const moduleSizeDiff2 = Math.abs(pattern2.moduleSize - moduleSize) + 0.1;
-          const score1 = distance(pattern1, expectAlignment) * moduleSizeDiff1 * noise1;
-          const score2 = distance(pattern2, expectAlignment) * moduleSizeDiff2 * noise2;
+          const noise1 = Pattern.noise(pattern1);
+          const noise2 = Pattern.noise(pattern2);
+          const moduleSizeDiff1 = Math.abs(pattern1.moduleSize - moduleSize);
+          const moduleSizeDiff2 = Math.abs(pattern2.moduleSize - moduleSize);
+          const score1 = (distance(pattern1, expectAlignment) + moduleSizeDiff1) * noise1 * noise1;
+          const score2 = (distance(pattern2, expectAlignment) + moduleSizeDiff2) * noise2 * noise2;
           return score1 - score2;
         });
       }

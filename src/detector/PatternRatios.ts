@@ -2,7 +2,7 @@
  * @module PatternRatios
  */
 
-import { sumArray } from '/common/utils';
+import { accumulate } from '/common/utils';
 
 export class PatternRatios {
   #modules: number;
@@ -10,7 +10,7 @@ export class PatternRatios {
 
   constructor(ratios: number[]) {
     this.#ratios = ratios;
-    this.#modules = sumArray(ratios);
+    this.#modules = accumulate(ratios);
   }
 
   public get modules(): number {

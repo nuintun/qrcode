@@ -10,7 +10,7 @@ export function round(value: number): number {
   return toInt32(value + (value < 0 ? -0.5 : 0.5));
 }
 
-export function sumArray(array: number[]): number {
+export function accumulate(array: number[]): number {
   let total = 0;
 
   for (const value of array) {

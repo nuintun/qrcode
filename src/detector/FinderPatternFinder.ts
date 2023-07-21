@@ -32,7 +32,7 @@ function isGroupNested(finderPatternGroup: FinderPatternGroup, patterns: Pattern
       }
 
       if (
-        Pattern.noise(pattern) <= 15 &&
+        Pattern.noise(pattern) <= 0.75 &&
         (contain == null ? FinderPatternGroup.contains(finderPatternGroup, pattern) : contain)
       ) {
         if (++count >= 3) {
@@ -52,7 +52,7 @@ export class FinderPatternFinder extends PatternFinder {
 
   public *groups(): Generator<FinderPatternGroup, void, boolean> {
     const patterns = this.patterns.filter(pattern => {
-      return Pattern.combined(pattern) >= 3;
+      return Pattern.combined(pattern) >= 3 && Pattern.noise(pattern) <= 1.5;
     });
     const { length } = patterns;
 

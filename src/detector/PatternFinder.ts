@@ -3,7 +3,7 @@
  */
 
 import { Pattern } from './Pattern';
-import { sumArray } from '/common/utils';
+import { accumulate } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
 import { PatternRatios } from './PatternRatios';
 import { centerFromScanlineEnd, getDiagonalScanline } from './utils/scanline';
@@ -49,8 +49,8 @@ export class PatternFinder {
 
         if (isDiagonalScanlineCheckPassed(slash, backslash, ratios, this.#strict)) {
           const noise = calculatePatternNoise(ratios, horizontal, vertical, slash, backslash);
-          const width = sumArray(horizontal);
-          const height = sumArray(vertical);
+          const width = accumulate(horizontal);
+          const height = accumulate(vertical);
           const patterns = this.#patterns;
           const { length } = patterns;
 
