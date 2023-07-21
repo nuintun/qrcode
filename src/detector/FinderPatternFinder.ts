@@ -32,7 +32,7 @@ function isGroupNested(finderPatternGroup: FinderPatternGroup, patterns: Pattern
       }
 
       if (
-        Pattern.noise(pattern) <= 0.75 &&
+        Pattern.noise(pattern) <= 1 &&
         (contain == null ? FinderPatternGroup.contains(finderPatternGroup, pattern) : contain)
       ) {
         if (++count >= 3) {
