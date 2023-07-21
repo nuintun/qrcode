@@ -3587,283 +3587,6 @@
   }
 
   /**
-   * @module Detect
-   */
-  class Detect {
-    #matrix;
-    #alignment;
-    #finder;
-    #transform;
-    constructor(matrix, transform, finder, alignment) {
-      const sampler = new GridSampler(matrix, transform);
-      const { size } = finder;
-      this.#finder = finder;
-      this.#matrix = matrix;
-      this.#alignment = alignment;
-      this.#transform = transform;
-      this.#matrix = sampler.sample(size, size);
-    }
-    get size() {
-      return this.#finder.size;
-    }
-    get matrix() {
-      return this.#matrix;
-    }
-    get finder() {
-      return this.#finder;
-    }
-    get alignment() {
-      return this.#alignment;
-    }
-    mapping(x, y) {
-      [x, y] = this.#transform.mapping(x, y);
-      return new Point(x, y);
-    }
-  }
-
-  /**
-   * @module Pattern
-   */
-  function getRatio({ ratios }) {
-    return ratios[toInt32(ratios.length / 2)] / 2;
-  }
-  class Pattern extends Point {
-    #noise;
-    #width;
-    #height;
-    #moduleSize;
-    #combined = 1;
-    #ratios;
-    #intersectRadius;
-    static noise(pattern) {
-      return pattern.#noise;
-    }
-    static combined(pattern) {
-      return pattern.#combined;
-    }
-    constructor(ratios, x, y, width, height, noise) {
-      super(x, y);
-      const { modules } = ratios;
-      const ratio = getRatio(ratios);
-      const xModuleSize = width / modules;
-      const yModuleSize = height / modules;
-      const moduleSize = (xModuleSize + yModuleSize) / 2;
-      this.#noise = noise;
-      this.#width = width;
-      this.#height = height;
-      this.#ratios = ratios;
-      this.#moduleSize = moduleSize;
-      this.#intersectRadius = moduleSize * ratio;
-    }
-    get width() {
-      return this.#width;
-    }
-    get height() {
-      return this.#height;
-    }
-    get moduleSize() {
-      return this.#moduleSize;
-    }
-    equals(x, y, width, height) {
-      const { modules } = this.#ratios;
-      const intersectRadius = this.#intersectRadius;
-      if (Math.abs(x - this.x) <= intersectRadius && Math.abs(y - this.y) <= intersectRadius) {
-        const moduleSizeThis = this.#moduleSize;
-        const moduleSize = (width + height) / modules / 2;
-        const moduleSizeDiff = Math.abs(moduleSize - moduleSizeThis);
-        if (moduleSizeDiff < 1 || moduleSizeDiff <= moduleSizeThis) {
-          return true;
-        }
-      }
-      return false;
-    }
-    combine(x, y, width, height, noise) {
-      const combined = this.#combined;
-      const nextCombined = combined + 1;
-      const combinedX = (combined * this.x + x) / nextCombined;
-      const combinedY = (combined * this.y + y) / nextCombined;
-      const combinedNoise = (combined * this.#noise + noise) / nextCombined;
-      const combinedWidth = (combined * this.#width + width) / nextCombined;
-      const combinedHeight = (combined * this.#height + height) / nextCombined;
-      const pattern = new Pattern(this.#ratios, combinedX, combinedY, combinedWidth, combinedHeight, combinedNoise);
-      pattern.#combined = nextCombined;
-      return pattern;
-    }
-  }
-
-  /**
-   * @module PerspectiveTransform
-   */
-  class PerspectiveTransform {
-    #a11;
-    #a12;
-    #a13;
-    #a21;
-    #a22;
-    #a23;
-    #a31;
-    #a32;
-    #a33;
-    constructor(a11, a21, a31, a12, a22, a32, a13, a23, a33) {
-      this.#a11 = a11;
-      this.#a12 = a12;
-      this.#a13 = a13;
-      this.#a21 = a21;
-      this.#a22 = a22;
-      this.#a23 = a23;
-      this.#a31 = a31;
-      this.#a32 = a32;
-      this.#a33 = a33;
-    }
-    buildAdjoint() {
-      // Adjoint is the transpose of the cofactor matrix:
-      const a11 = this.#a11;
-      const a12 = this.#a12;
-      const a13 = this.#a13;
-      const a21 = this.#a21;
-      const a22 = this.#a22;
-      const a23 = this.#a23;
-      const a31 = this.#a31;
-      const a32 = this.#a32;
-      const a33 = this.#a33;
-      return new PerspectiveTransform(
-        a22 * a33 - a23 * a32,
-        a23 * a31 - a21 * a33,
-        a21 * a32 - a22 * a31,
-        a13 * a32 - a12 * a33,
-        a11 * a33 - a13 * a31,
-        a12 * a31 - a11 * a32,
-        a12 * a23 - a13 * a22,
-        a13 * a21 - a11 * a23,
-        a11 * a22 - a12 * a21
-      );
-    }
-    times(other) {
-      const a11 = this.#a11;
-      const a12 = this.#a12;
-      const a13 = this.#a13;
-      const a21 = this.#a21;
-      const a22 = this.#a22;
-      const a23 = this.#a23;
-      const a31 = this.#a31;
-      const a32 = this.#a32;
-      const a33 = this.#a33;
-      const b11 = other.#a11;
-      const b12 = other.#a12;
-      const b13 = other.#a13;
-      const b21 = other.#a21;
-      const b22 = other.#a22;
-      const b23 = other.#a23;
-      const b31 = other.#a31;
-      const b32 = other.#a32;
-      const b33 = other.#a33;
-      return new PerspectiveTransform(
-        a11 * b11 + a21 * b12 + a31 * b13,
-        a11 * b21 + a21 * b22 + a31 * b23,
-        a11 * b31 + a21 * b32 + a31 * b33,
-        a12 * b11 + a22 * b12 + a32 * b13,
-        a12 * b21 + a22 * b22 + a32 * b23,
-        a12 * b31 + a22 * b32 + a32 * b33,
-        a13 * b11 + a23 * b12 + a33 * b13,
-        a13 * b21 + a23 * b22 + a33 * b23,
-        a13 * b31 + a23 * b32 + a33 * b33
-      );
-    }
-    mapping(x, y) {
-      const a11 = this.#a11;
-      const a12 = this.#a12;
-      const a13 = this.#a13;
-      const a21 = this.#a21;
-      const a22 = this.#a22;
-      const a23 = this.#a23;
-      const a31 = this.#a31;
-      const a32 = this.#a32;
-      const a33 = this.#a33;
-      const denominator = a13 * x + a23 * y + a33;
-      return [(a11 * x + a21 * y + a31) / denominator, (a12 * x + a22 * y + a32) / denominator];
-    }
-  }
-  function squareToQuadrilateral(x0, y0, x1, y1, x2, y2, x3, y3) {
-    const dx3 = x0 - x1 + x2 - x3;
-    const dy3 = y0 - y1 + y2 - y3;
-    if (dx3 === 0 && dy3 === 0) {
-      return new PerspectiveTransform(x1 - x0, x2 - x1, x0, y1 - y0, y2 - y1, y0, 0, 0, 1);
-    } else {
-      const dx1 = x1 - x2;
-      const dx2 = x3 - x2;
-      const dy1 = y1 - y2;
-      const dy2 = y3 - y2;
-      const denominator = dx1 * dy2 - dx2 * dy1;
-      const a13 = (dx3 * dy2 - dx2 * dy3) / denominator;
-      const a23 = (dx1 * dy3 - dx3 * dy1) / denominator;
-      return new PerspectiveTransform(
-        x1 - x0 + a13 * x1,
-        x3 - x0 + a23 * x3,
-        x0,
-        y1 - y0 + a13 * y1,
-        y3 - y0 + a23 * y3,
-        y0,
-        a13,
-        a23,
-        1
-      );
-    }
-  }
-  function quadrilateralToSquare(x0, y0, x1, y1, x2, y2, x3, y3) {
-    // Here, the adjoint serves as the inverse:
-    return squareToQuadrilateral(x0, y0, x1, y1, x2, y2, x3, y3).buildAdjoint();
-  }
-  function quadrilateralToQuadrilateral(x0, y0, x1, y1, x2, y2, x3, y3, x0p, y0p, x1p, y1p, x2p, y2p, x3p, y3p) {
-    const qToS = quadrilateralToSquare(x0, y0, x1, y1, x2, y2, x3, y3);
-    const sToQ = squareToQuadrilateral(x0p, y0p, x1p, y1p, x2p, y2p, x3p, y3p);
-    return sToQ.times(qToS);
-  }
-
-  /**
-   * @module transform
-   */
-  function createTransform({ size, topLeft, topRight, bottomLeft }, alignmentPattern) {
-    let bottomRightX;
-    let bottomRightY;
-    let sourceBottomRightX;
-    let sourceBottomRightY;
-    const sizeMinusThree = size - 3.5;
-    const { x: topLeftX, y: topLeftY } = topLeft;
-    const { x: topRightX, y: topRightY } = topRight;
-    const { x: bottomLeftX, y: bottomLeftY } = bottomLeft;
-    if (alignmentPattern != null) {
-      bottomRightX = alignmentPattern.x;
-      bottomRightY = alignmentPattern.y;
-      sourceBottomRightX = sizeMinusThree - 3;
-      sourceBottomRightY = sourceBottomRightX;
-    } else {
-      // Don't have an alignment pattern, just make up the bottom-right point
-      bottomRightX = topRightX + bottomLeftX - topLeftX;
-      bottomRightY = topRightY + bottomLeftY - topLeftY;
-      sourceBottomRightX = sizeMinusThree;
-      sourceBottomRightY = sizeMinusThree;
-    }
-    return quadrilateralToQuadrilateral(
-      3.5,
-      3.5,
-      sizeMinusThree,
-      3.5,
-      sourceBottomRightX,
-      sourceBottomRightY,
-      3.5,
-      sizeMinusThree,
-      topLeftX,
-      topLeftY,
-      topRightX,
-      topRightY,
-      bottomRightX,
-      bottomRightY,
-      bottomLeftX,
-      bottomLeftY
-    );
-  }
-
-  /**
    * @module PlotLine
    */
   // Mild variant of Bresenham's algorithm
@@ -4058,12 +3781,25 @@
       if (finderPatternGroup.#moduleSizes == null) {
         const matrix = finderPatternGroup.#matrix;
         const [topLeft, topRight, bottomLeft] = finderPatternGroup.#patterns;
-        finderPatternGroup.#moduleSizes = Object.freeze([
+        finderPatternGroup.#moduleSizes = [
           calculateModuleSizeOneWay(matrix, topLeft, topRight),
           calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)
-        ]);
+        ];
       }
       return finderPatternGroup.#moduleSizes;
+    }
+    static size(finderPatternGroup) {
+      if (finderPatternGroup.#size == null) {
+        const moduleSize = FinderPatternGroup.moduleSize(finderPatternGroup);
+        finderPatternGroup.#size = calculateSymbolSize(finderPatternGroup.#patterns, moduleSize);
+      }
+      return finderPatternGroup.#size;
+    }
+    static moduleSize(finderPatternGroup) {
+      if (finderPatternGroup.#moduleSize == null) {
+        finderPatternGroup.#moduleSize = calculateModuleSize(FinderPatternGroup.moduleSizes(finderPatternGroup));
+      }
+      return finderPatternGroup.#moduleSize;
     }
     static contains(finderPatternGroup, pattern) {
       const area = FinderPatternGroup.area(finderPatternGroup);
@@ -4095,18 +3831,6 @@
     get bottomLeft() {
       return this.#patterns[2];
     }
-    get size() {
-      if (this.#size == null) {
-        this.#size = calculateSymbolSize(this.#patterns, this.moduleSize);
-      }
-      return this.#size;
-    }
-    get moduleSize() {
-      if (this.#moduleSize == null) {
-        this.#moduleSize = calculateModuleSize(FinderPatternGroup.moduleSizes(this));
-      }
-      return this.#moduleSize;
-    }
   }
   function calculateTopLeftAngle({ topLeft, topRight, bottomLeft }) {
     const { x, y } = topLeft;
@@ -4117,6 +3841,280 @@
     const d = dx1 * dx2 + dy1 * dy2;
     const l2 = (dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2);
     return Math.acos(d / Math.sqrt(l2));
+  }
+
+  /**
+   * @module Detect
+   */
+  class Detect {
+    #matrix;
+    #alignment;
+    #finder;
+    #transform;
+    constructor(matrix, transform, finderPatternGroup, alignmentPattern) {
+      const sampler = new GridSampler(matrix, transform);
+      const size = FinderPatternGroup.size(finderPatternGroup);
+      this.#matrix = matrix;
+      this.#transform = transform;
+      this.#finder = finderPatternGroup;
+      this.#alignment = alignmentPattern;
+      this.#matrix = sampler.sample(size, size);
+    }
+    get matrix() {
+      return this.#matrix;
+    }
+    get finder() {
+      return this.#finder;
+    }
+    get alignment() {
+      return this.#alignment;
+    }
+    get size() {
+      return FinderPatternGroup.size(this.#finder);
+    }
+    get moduleSize() {
+      return FinderPatternGroup.moduleSize(this.#finder);
+    }
+    mapping(x, y) {
+      [x, y] = this.#transform.mapping(x, y);
+      return new Point(x, y);
+    }
+  }
+
+  /**
+   * @module Pattern
+   */
+  function getRatio({ ratios }) {
+    return ratios[toInt32(ratios.length / 2)] / 2;
+  }
+  class Pattern extends Point {
+    #noise;
+    #width;
+    #height;
+    #moduleSize;
+    #combined = 1;
+    #ratios;
+    #intersectRadius;
+    static noise(pattern) {
+      return pattern.#noise;
+    }
+    static combined(pattern) {
+      return pattern.#combined;
+    }
+    constructor(ratios, x, y, width, height, noise) {
+      super(x, y);
+      const { modules } = ratios;
+      const ratio = getRatio(ratios);
+      const xModuleSize = width / modules;
+      const yModuleSize = height / modules;
+      const moduleSize = (xModuleSize + yModuleSize) / 2;
+      this.#noise = noise;
+      this.#width = width;
+      this.#height = height;
+      this.#ratios = ratios;
+      this.#moduleSize = moduleSize;
+      this.#intersectRadius = moduleSize * ratio;
+    }
+    get moduleSize() {
+      return this.#moduleSize;
+    }
+    equals(x, y, width, height) {
+      const { modules } = this.#ratios;
+      const intersectRadius = this.#intersectRadius;
+      if (Math.abs(x - this.x) <= intersectRadius && Math.abs(y - this.y) <= intersectRadius) {
+        const moduleSizeThis = this.#moduleSize;
+        const moduleSize = (width + height) / modules / 2;
+        const moduleSizeDiff = Math.abs(moduleSize - moduleSizeThis);
+        if (moduleSizeDiff < 1 || moduleSizeDiff <= moduleSizeThis) {
+          return true;
+        }
+      }
+      return false;
+    }
+    combine(x, y, width, height, noise) {
+      const combined = this.#combined;
+      const nextCombined = combined + 1;
+      const combinedX = (combined * this.x + x) / nextCombined;
+      const combinedY = (combined * this.y + y) / nextCombined;
+      const combinedNoise = (combined * this.#noise + noise) / nextCombined;
+      const combinedWidth = (combined * this.#width + width) / nextCombined;
+      const combinedHeight = (combined * this.#height + height) / nextCombined;
+      const pattern = new Pattern(this.#ratios, combinedX, combinedY, combinedWidth, combinedHeight, combinedNoise);
+      pattern.#combined = nextCombined;
+      return pattern;
+    }
+  }
+
+  /**
+   * @module PerspectiveTransform
+   */
+  class PerspectiveTransform {
+    #a11;
+    #a12;
+    #a13;
+    #a21;
+    #a22;
+    #a23;
+    #a31;
+    #a32;
+    #a33;
+    constructor(a11, a21, a31, a12, a22, a32, a13, a23, a33) {
+      this.#a11 = a11;
+      this.#a12 = a12;
+      this.#a13 = a13;
+      this.#a21 = a21;
+      this.#a22 = a22;
+      this.#a23 = a23;
+      this.#a31 = a31;
+      this.#a32 = a32;
+      this.#a33 = a33;
+    }
+    buildAdjoint() {
+      // Adjoint is the transpose of the cofactor matrix:
+      const a11 = this.#a11;
+      const a12 = this.#a12;
+      const a13 = this.#a13;
+      const a21 = this.#a21;
+      const a22 = this.#a22;
+      const a23 = this.#a23;
+      const a31 = this.#a31;
+      const a32 = this.#a32;
+      const a33 = this.#a33;
+      return new PerspectiveTransform(
+        a22 * a33 - a23 * a32,
+        a23 * a31 - a21 * a33,
+        a21 * a32 - a22 * a31,
+        a13 * a32 - a12 * a33,
+        a11 * a33 - a13 * a31,
+        a12 * a31 - a11 * a32,
+        a12 * a23 - a13 * a22,
+        a13 * a21 - a11 * a23,
+        a11 * a22 - a12 * a21
+      );
+    }
+    times(other) {
+      const a11 = this.#a11;
+      const a12 = this.#a12;
+      const a13 = this.#a13;
+      const a21 = this.#a21;
+      const a22 = this.#a22;
+      const a23 = this.#a23;
+      const a31 = this.#a31;
+      const a32 = this.#a32;
+      const a33 = this.#a33;
+      const b11 = other.#a11;
+      const b12 = other.#a12;
+      const b13 = other.#a13;
+      const b21 = other.#a21;
+      const b22 = other.#a22;
+      const b23 = other.#a23;
+      const b31 = other.#a31;
+      const b32 = other.#a32;
+      const b33 = other.#a33;
+      return new PerspectiveTransform(
+        a11 * b11 + a21 * b12 + a31 * b13,
+        a11 * b21 + a21 * b22 + a31 * b23,
+        a11 * b31 + a21 * b32 + a31 * b33,
+        a12 * b11 + a22 * b12 + a32 * b13,
+        a12 * b21 + a22 * b22 + a32 * b23,
+        a12 * b31 + a22 * b32 + a32 * b33,
+        a13 * b11 + a23 * b12 + a33 * b13,
+        a13 * b21 + a23 * b22 + a33 * b23,
+        a13 * b31 + a23 * b32 + a33 * b33
+      );
+    }
+    mapping(x, y) {
+      const a11 = this.#a11;
+      const a12 = this.#a12;
+      const a13 = this.#a13;
+      const a21 = this.#a21;
+      const a22 = this.#a22;
+      const a23 = this.#a23;
+      const a31 = this.#a31;
+      const a32 = this.#a32;
+      const a33 = this.#a33;
+      const denominator = a13 * x + a23 * y + a33;
+      return [(a11 * x + a21 * y + a31) / denominator, (a12 * x + a22 * y + a32) / denominator];
+    }
+  }
+  function squareToQuadrilateral(x0, y0, x1, y1, x2, y2, x3, y3) {
+    const dx3 = x0 - x1 + x2 - x3;
+    const dy3 = y0 - y1 + y2 - y3;
+    if (dx3 === 0 && dy3 === 0) {
+      return new PerspectiveTransform(x1 - x0, x2 - x1, x0, y1 - y0, y2 - y1, y0, 0, 0, 1);
+    } else {
+      const dx1 = x1 - x2;
+      const dx2 = x3 - x2;
+      const dy1 = y1 - y2;
+      const dy2 = y3 - y2;
+      const denominator = dx1 * dy2 - dx2 * dy1;
+      const a13 = (dx3 * dy2 - dx2 * dy3) / denominator;
+      const a23 = (dx1 * dy3 - dx3 * dy1) / denominator;
+      return new PerspectiveTransform(
+        x1 - x0 + a13 * x1,
+        x3 - x0 + a23 * x3,
+        x0,
+        y1 - y0 + a13 * y1,
+        y3 - y0 + a23 * y3,
+        y0,
+        a13,
+        a23,
+        1
+      );
+    }
+  }
+  function quadrilateralToSquare(x0, y0, x1, y1, x2, y2, x3, y3) {
+    // Here, the adjoint serves as the inverse:
+    return squareToQuadrilateral(x0, y0, x1, y1, x2, y2, x3, y3).buildAdjoint();
+  }
+  function quadrilateralToQuadrilateral(x0, y0, x1, y1, x2, y2, x3, y3, x0p, y0p, x1p, y1p, x2p, y2p, x3p, y3p) {
+    const qToS = quadrilateralToSquare(x0, y0, x1, y1, x2, y2, x3, y3);
+    const sToQ = squareToQuadrilateral(x0p, y0p, x1p, y1p, x2p, y2p, x3p, y3p);
+    return sToQ.times(qToS);
+  }
+
+  /**
+   * @module transform
+   */
+  function createTransform(finderPatternGroup, alignmentPattern) {
+    let bottomRightX;
+    let bottomRightY;
+    let sourceBottomRightX;
+    let sourceBottomRightY;
+    const { x: topLeftX, y: topLeftY } = finderPatternGroup.topLeft;
+    const { x: topRightX, y: topRightY } = finderPatternGroup.topRight;
+    const { x: bottomLeftX, y: bottomLeftY } = finderPatternGroup.bottomLeft;
+    const sizeMinusThree = FinderPatternGroup.size(finderPatternGroup) - 3.5;
+    if (alignmentPattern != null) {
+      bottomRightX = alignmentPattern.x;
+      bottomRightY = alignmentPattern.y;
+      sourceBottomRightX = sizeMinusThree - 3;
+      sourceBottomRightY = sourceBottomRightX;
+    } else {
+      // Don't have an alignment pattern, just make up the bottom-right point
+      bottomRightX = topRightX + bottomLeftX - topLeftX;
+      bottomRightY = topRightY + bottomLeftY - topLeftY;
+      sourceBottomRightX = sizeMinusThree;
+      sourceBottomRightY = sizeMinusThree;
+    }
+    return quadrilateralToQuadrilateral(
+      3.5,
+      3.5,
+      sizeMinusThree,
+      3.5,
+      sourceBottomRightX,
+      sourceBottomRightY,
+      3.5,
+      sizeMinusThree,
+      topLeftX,
+      topLeftY,
+      topRightX,
+      topRightY,
+      bottomRightX,
+      bottomRightY,
+      bottomLeftX,
+      bottomLeftY
+    );
   }
 
   /**
@@ -4462,7 +4460,7 @@
       const { length } = patterns;
       if (length === 3) {
         const finderPatternGroup = new FinderPatternGroup(this.matrix, patterns);
-        const { size } = finderPatternGroup;
+        const size = FinderPatternGroup.size(finderPatternGroup);
         if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
           yield finderPatternGroup;
         }
@@ -4523,7 +4521,7 @@
                   const edge1Modules = round(edge1 / xModuleSize);
                   const edge2Modules = round(edge2 / yModuleSize);
                   if (Math.abs(edge1Modules - edge2Modules) <= 4) {
-                    const { size } = finderPatternGroup;
+                    const size = FinderPatternGroup.size(finderPatternGroup);
                     if (
                       size >= MIN_VERSION_SIZE &&
                       size <= MAX_VERSION_SIZE &&
@@ -4668,7 +4666,8 @@
    */
   function getExpectAlignment(finderPatternGroup) {
     const { x, y } = finderPatternGroup.topLeft;
-    const correctionToTopLeft = 1 - 3 / (finderPatternGroup.size - 7);
+    const size = FinderPatternGroup.size(finderPatternGroup);
+    const correctionToTopLeft = 1 - 3 / (size - 7);
     const bottomRight = FinderPatternGroup.bottomRight(finderPatternGroup);
     const expectAlignmentX = x + correctionToTopLeft * (bottomRight.x - x);
     const expectAlignmentY = y + correctionToTopLeft * (bottomRight.y - y);
@@ -4676,10 +4675,11 @@
     return new Pattern(ALIGNMENT_PATTERN_RATIOS, expectAlignmentX, expectAlignmentY, xModuleSize * 5, yModuleSize * 5, 0);
   }
   function findAlignmentInRegion(matrix, finderPatternGroup, strict) {
-    const { size, moduleSize } = finderPatternGroup;
+    const size = FinderPatternGroup.size(finderPatternGroup);
     const expectAlignment = getExpectAlignment(finderPatternGroup);
     const alignmentFinder = new AlignmentPatternFinder(matrix, strict);
     const allowance = Math.max(5, Math.min(20, toInt32((size - 7) / 4)));
+    const moduleSize = FinderPatternGroup.moduleSize(finderPatternGroup);
     const alignmentAreaAllowanceSize = Math.ceil(moduleSize * allowance);
     const { x: expectAlignmentX, y: expectAlignmentY } = expectAlignment;
     const alignmentAreaTop = toInt32(Math.max(0, expectAlignmentY - alignmentAreaAllowanceSize));
@@ -4709,7 +4709,7 @@
       while (!iterator.done) {
         let succeed = false;
         const finderPatternGroup = iterator.value;
-        const { size } = finderPatternGroup;
+        const size = FinderPatternGroup.size(finderPatternGroup);
         const version = fromVersionSize(size);
         // Find alignment
         if (version.alignmentPatterns.length > 0) {

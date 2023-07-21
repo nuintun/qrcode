@@ -6,19 +6,16 @@ import { Pattern } from '/detector/Pattern';
 import { FinderPatternGroup } from '/detector/FinderPatternGroup';
 import { PerspectiveTransform, quadrilateralToQuadrilateral } from '/common/PerspectiveTransform';
 
-export function createTransform(
-  { size, topLeft, topRight, bottomLeft }: FinderPatternGroup,
-  alignmentPattern?: Pattern
-): PerspectiveTransform {
+export function createTransform(finderPatternGroup: FinderPatternGroup, alignmentPattern?: Pattern): PerspectiveTransform {
   let bottomRightX;
   let bottomRightY;
   let sourceBottomRightX;
   let sourceBottomRightY;
 
-  const sizeMinusThree = size - 3.5;
-  const { x: topLeftX, y: topLeftY } = topLeft;
-  const { x: topRightX, y: topRightY } = topRight;
-  const { x: bottomLeftX, y: bottomLeftY } = bottomLeft;
+  const { x: topLeftX, y: topLeftY } = finderPatternGroup.topLeft;
+  const { x: topRightX, y: topRightY } = finderPatternGroup.topRight;
+  const { x: bottomLeftX, y: bottomLeftY } = finderPatternGroup.bottomLeft;
+  const sizeMinusThree = FinderPatternGroup.size(finderPatternGroup) - 3.5;
 
   if (alignmentPattern != null) {
     bottomRightX = alignmentPattern.x;

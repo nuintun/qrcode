@@ -108,13 +108,31 @@ export class FinderPatternGroup {
       const matrix = finderPatternGroup.#matrix;
       const [topLeft, topRight, bottomLeft] = finderPatternGroup.#patterns;
 
-      finderPatternGroup.#moduleSizes = Object.freeze([
+      finderPatternGroup.#moduleSizes = [
         calculateModuleSizeOneWay(matrix, topLeft, topRight),
         calculateModuleSizeOneWay(matrix, topLeft, bottomLeft)
-      ]);
+      ];
     }
 
     return finderPatternGroup.#moduleSizes;
+  }
+
+  public static size(finderPatternGroup: FinderPatternGroup): number {
+    if (finderPatternGroup.#size == null) {
+      const moduleSize = FinderPatternGroup.moduleSize(finderPatternGroup);
+
+      finderPatternGroup.#size = calculateSymbolSize(finderPatternGroup.#patterns, moduleSize);
+    }
+
+    return finderPatternGroup.#size;
+  }
+
+  public static moduleSize(finderPatternGroup: FinderPatternGroup): number {
+    if (finderPatternGroup.#moduleSize == null) {
+      finderPatternGroup.#moduleSize = calculateModuleSize(FinderPatternGroup.moduleSizes(finderPatternGroup));
+    }
+
+    return finderPatternGroup.#moduleSize;
   }
 
   public static contains(finderPatternGroup: FinderPatternGroup, pattern: Pattern): boolean {
@@ -153,22 +171,6 @@ export class FinderPatternGroup {
 
   public get bottomLeft(): Pattern {
     return this.#patterns[2];
-  }
-
-  public get size(): number {
-    if (this.#size == null) {
-      this.#size = calculateSymbolSize(this.#patterns, this.moduleSize);
-    }
-
-    return this.#size;
-  }
-
-  public get moduleSize(): number {
-    if (this.#moduleSize == null) {
-      this.#moduleSize = calculateModuleSize(FinderPatternGroup.moduleSizes(this));
-    }
-
-    return this.#moduleSize;
   }
 }
 

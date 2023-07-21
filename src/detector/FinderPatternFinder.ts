@@ -58,7 +58,7 @@ export class FinderPatternFinder extends PatternFinder {
 
     if (length === 3) {
       const finderPatternGroup = new FinderPatternGroup(this.matrix, patterns);
-      const { size } = finderPatternGroup;
+      const size = FinderPatternGroup.size(finderPatternGroup);
 
       if (size >= MIN_VERSION_SIZE && size <= MAX_VERSION_SIZE) {
         yield finderPatternGroup;
@@ -132,7 +132,7 @@ export class FinderPatternFinder extends PatternFinder {
                 const edge2Modules = round(edge2 / yModuleSize);
 
                 if (Math.abs(edge1Modules - edge2Modules) <= 4) {
-                  const { size } = finderPatternGroup;
+                  const size = FinderPatternGroup.size(finderPatternGroup);
 
                   if (
                     size >= MIN_VERSION_SIZE &&

@@ -44,14 +44,6 @@ export class Pattern extends Point {
     this.#intersectRadius = moduleSize * ratio;
   }
 
-  public get width(): number {
-    return this.#width;
-  }
-
-  public get height(): number {
-    return this.#height;
-  }
-
   public get moduleSize(): number {
     return this.#moduleSize;
   }

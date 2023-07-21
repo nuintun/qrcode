@@ -20,7 +20,8 @@ export interface Options {
 
 function getExpectAlignment(finderPatternGroup: FinderPatternGroup): Pattern {
   const { x, y } = finderPatternGroup.topLeft;
-  const correctionToTopLeft = 1 - 3 / (finderPatternGroup.size - 7);
+  const size = FinderPatternGroup.size(finderPatternGroup);
+  const correctionToTopLeft = 1 - 3 / (size - 7);
   const bottomRight = FinderPatternGroup.bottomRight(finderPatternGroup);
   const expectAlignmentX = x + correctionToTopLeft * (bottomRight.x - x);
   const expectAlignmentY = y + correctionToTopLeft * (bottomRight.y - y);
@@ -30,10 +31,11 @@ function getExpectAlignment(finderPatternGroup: FinderPatternGroup): Pattern {
 }
 
 function findAlignmentInRegion(matrix: BitMatrix, finderPatternGroup: FinderPatternGroup, strict?: boolean): Pattern[] {
-  const { size, moduleSize } = finderPatternGroup;
+  const size = FinderPatternGroup.size(finderPatternGroup);
   const expectAlignment = getExpectAlignment(finderPatternGroup);
   const alignmentFinder = new AlignmentPatternFinder(matrix, strict);
   const allowance = Math.max(5, Math.min(20, toInt32((size - 7) / 4)));
+  const moduleSize = FinderPatternGroup.moduleSize(finderPatternGroup);
   const alignmentAreaAllowanceSize = Math.ceil(moduleSize * allowance);
   const { x: expectAlignmentX, y: expectAlignmentY } = expectAlignment;
   const alignmentAreaTop = toInt32(Math.max(0, expectAlignmentY - alignmentAreaAllowanceSize));
@@ -73,7 +75,7 @@ export class Detector {
       let succeed = false;
 
       const finderPatternGroup = iterator.value;
-      const { size } = finderPatternGroup;
+      const size = FinderPatternGroup.size(finderPatternGroup);
       const version = fromVersionSize(size);
 
       // Find alignment

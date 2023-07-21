@@ -15,19 +15,20 @@ export class Detect {
   #finder: FinderPatternGroup;
   #transform: PerspectiveTransform;
 
-  constructor(matrix: BitMatrix, transform: PerspectiveTransform, finder: FinderPatternGroup, alignment?: Pattern) {
+  constructor(
+    matrix: BitMatrix,
+    transform: PerspectiveTransform,
+    finderPatternGroup: FinderPatternGroup,
+    alignmentPattern?: Pattern
+  ) {
     const sampler = new GridSampler(matrix, transform);
-    const { size } = finder;
+    const size = FinderPatternGroup.size(finderPatternGroup);
 
-    this.#finder = finder;
     this.#matrix = matrix;
-    this.#alignment = alignment;
     this.#transform = transform;
+    this.#finder = finderPatternGroup;
+    this.#alignment = alignmentPattern;
     this.#matrix = sampler.sample(size, size);
-  }
-
-  public get size(): number {
-    return this.#finder.size;
   }
 
   public get matrix(): BitMatrix {
@@ -40,6 +41,14 @@ export class Detect {
 
   public get alignment(): Pattern | undefined {
     return this.#alignment;
+  }
+
+  public get size(): number {
+    return FinderPatternGroup.size(this.#finder);
+  }
+
+  public get moduleSize(): number {
+    return FinderPatternGroup.moduleSize(this.#finder);
   }
 
   public mapping(x: number, y: number): Point {
