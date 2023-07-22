@@ -22,6 +22,7 @@ function calculateBlackPoint(buckets: Int32Array): number {
       firstPeak = x;
       firstPeakSize = buckets[x];
     }
+
     if (buckets[x] > maxBucketCount) {
       maxBucketCount = buckets[x];
     }
@@ -45,6 +46,12 @@ function calculateBlackPoint(buckets: Int32Array): number {
   // Make sure firstPeak corresponds to the black peak.
   if (firstPeak > secondPeak) {
     [firstPeak, secondPeak] = [secondPeak, firstPeak];
+  }
+
+  // If there is too little contrast in the image to pick a meaningful black point, throw rather
+  // than waste time trying to decode the image, and risk false positives.
+  if (secondPeak - firstPeak <= LUMINANCE_BUCKETS / 16) {
+    return -1;
   }
 
   // Find a valley between them that is low and closer to the white peak.
@@ -84,14 +91,16 @@ export function histogram(luminances: Uint8Array, width: number, height: number)
   // We delay reading the entire image luminance until the black point estimation succeeds.
   // Although we end up reading four rows twice, it is consistent with our motto of
   // "fail quickly" which is necessary for continuous scanning.
-  for (let y = 0; y < height; y++) {
-    const offset = y * width;
+  if (blackPoint > 0) {
+    for (let y = 0; y < height; y++) {
+      const offset = y * width;
 
-    for (let x = 0; x < width; x++) {
-      const pixel = luminances[offset + x];
+      for (let x = 0; x < width; x++) {
+        const pixel = luminances[offset + x];
 
-      if (pixel < blackPoint) {
-        matrix.set(x, y);
+        if (pixel < blackPoint) {
+          matrix.set(x, y);
+        }
       }
     }
   }

@@ -192,6 +192,11 @@
     if (firstPeak > secondPeak) {
       [firstPeak, secondPeak] = [secondPeak, firstPeak];
     }
+    // If there is too little contrast in the image to pick a meaningful black point, throw rather
+    // than waste time trying to decode the image, and risk false positives.
+    if (secondPeak - firstPeak <= LUMINANCE_BUCKETS / 16) {
+      return -1;
+    }
     // Find a valley between them that is low and closer to the white peak.
     let bestValleyScore = -1;
     let bestValley = secondPeak - 1;
@@ -220,12 +225,14 @@
     // We delay reading the entire image luminance until the black point estimation succeeds.
     // Although we end up reading four rows twice, it is consistent with our motto of
     // "fail quickly" which is necessary for continuous scanning.
-    for (let y = 0; y < height; y++) {
-      const offset = y * width;
-      for (let x = 0; x < width; x++) {
-        const pixel = luminances[offset + x];
-        if (pixel < blackPoint) {
-          matrix.set(x, y);
+    if (blackPoint > 0) {
+      for (let y = 0; y < height; y++) {
+        const offset = y * width;
+        for (let x = 0; x < width; x++) {
+          const pixel = luminances[offset + x];
+          if (pixel < blackPoint) {
+            matrix.set(x, y);
+          }
         }
       }
     }
