@@ -69,20 +69,12 @@ export function calculateBCHCode(value: number, poly: number): number {
   return value;
 }
 
-export function accumulate(array: ArrayLike<number>, start: number = 0, end: number = array.length - 1): number {
-  if (start < end) {
-    let total = 0;
+export function accumulate(array: ArrayLike<number>, start: number = 0, end: number = array.length): number {
+  let total = 0;
 
-    for (let i = start; i <= end; i++) {
-      total += array[i];
-    }
-
-    return total;
+  for (let i = start; i < end; i++) {
+    total += array[i];
   }
 
-  if (start > end) {
-    return 0;
-  }
-
-  return array[start];
+  return total;
 }

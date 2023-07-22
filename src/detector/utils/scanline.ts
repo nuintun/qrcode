@@ -178,15 +178,13 @@ export function getDiagonalScanline(
 
 // @see https://github.com/zxing-cpp/zxing-cpp/blob/master/core/src/ConcentricFinder.h
 export function centerFromScanlineEnd(scanline: number[], end: number): number {
-  const { length } = scanline;
-  const maxIndex = length - 1;
   const centers: number[] = [];
   const middleIndex = toInt32(scanline.length / 2);
 
   for (let i = 0; i <= middleIndex; i++) {
-    const splitIndex = middleIndex + i;
+    const splitIndex = middleIndex + i + 1;
 
-    centers.push(accumulate(scanline, middleIndex - i, splitIndex) / 2 + accumulate(scanline, splitIndex + 1, maxIndex));
+    centers.push(accumulate(scanline, middleIndex - i, splitIndex) / 2 + accumulate(scanline, splitIndex));
   }
 
   return end - (centers[0] * 2 + accumulate(centers, 1)) / (middleIndex + 2);

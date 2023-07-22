@@ -78,18 +78,12 @@
     // Now the "value" is the remainder (i.e. the BCH code)
     return value;
   }
-  function accumulate(array, start = 0, end = array.length - 1) {
-    if (start < end) {
-      let total = 0;
-      for (let i = start; i <= end; i++) {
-        total += array[i];
-      }
-      return total;
+  function accumulate(array, start = 0, end = array.length) {
+    let total = 0;
+    for (let i = start; i < end; i++) {
+      total += array[i];
     }
-    if (start > end) {
-      return 0;
-    }
-    return array[start];
+    return total;
   }
 
   /**
@@ -4298,13 +4292,11 @@
   }
   // @see https://github.com/zxing-cpp/zxing-cpp/blob/master/core/src/ConcentricFinder.h
   function centerFromScanlineEnd(scanline, end) {
-    const { length } = scanline;
-    const maxIndex = length - 1;
     const centers = [];
     const middleIndex = toInt32(scanline.length / 2);
     for (let i = 0; i <= middleIndex; i++) {
-      const splitIndex = middleIndex + i;
-      centers.push(accumulate(scanline, middleIndex - i, splitIndex) / 2 + accumulate(scanline, splitIndex + 1, maxIndex));
+      const splitIndex = middleIndex + i + 1;
+      centers.push(accumulate(scanline, middleIndex - i, splitIndex) / 2 + accumulate(scanline, splitIndex));
     }
     return end - (centers[0] * 2 + accumulate(centers, 1)) / (middleIndex + 2);
   }
