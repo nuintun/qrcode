@@ -10,16 +10,6 @@ export function round(value: number): number {
   return toInt32(value + (value < 0 ? -0.5 : 0.5));
 }
 
-export function accumulate(array: number[]): number {
-  let total = 0;
-
-  for (const value of array) {
-    total += value;
-  }
-
-  return total;
-}
-
 // Get hamming weight of int32
 export function hammingWeight(value: number): number {
   // HD, Figure 5-2
@@ -77,4 +67,18 @@ export function calculateBCHCode(value: number, poly: number): number {
 
   // Now the "value" is the remainder (i.e. the BCH code)
   return value;
+}
+
+export function accumulate(array: ArrayLike<number>, start: number = 0, end: number = array.length - 1): number {
+  if (start !== end) {
+    let total = 0;
+
+    for (let i = start; i <= end; i++) {
+      total += array[i];
+    }
+
+    return total;
+  }
+
+  return array[start];
 }

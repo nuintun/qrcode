@@ -26,13 +26,6 @@
   function round(value) {
     return toInt32(value + (value < 0 ? -0.5 : 0.5));
   }
-  function accumulate(array) {
-    let total = 0;
-    for (const value of array) {
-      total += value;
-    }
-    return total;
-  }
   // Get hamming weight of int32
   function hammingWeight(value) {
     // HD, Figure 5-2
@@ -84,6 +77,16 @@
     }
     // Now the "value" is the remainder (i.e. the BCH code)
     return value;
+  }
+  function accumulate(array, start = 0, end = array.length - 1) {
+    if (start !== end) {
+      let total = 0;
+      for (let i = start; i <= end; i++) {
+        total += array[i];
+      }
+      return total;
+    }
+    return array[start];
   }
 
   /**
@@ -4203,15 +4206,6 @@
     }
     scanline[lastIndex] = count;
   }
-  function centerFromScanlineEnd(scanline, end) {
-    const { length } = scanline;
-    const middleIndex = toInt32(length / 2);
-    let center = end - scanline[middleIndex] / 2;
-    for (let i = middleIndex + 1; i < length; i++) {
-      center -= scanline[i];
-    }
-    return center;
-  }
   function getCrossScanline(matrix, x, y, overscan, isVertical) {
     x = toInt32(x);
     y = toInt32(y);
@@ -4298,6 +4292,18 @@
       scanline[4]++;
     }
     return scanline;
+  }
+  // @see https://github.com/zxing-cpp/zxing-cpp/blob/master/core/src/ConcentricFinder.h
+  function centerFromScanlineEnd(scanline, end) {
+    const { length } = scanline;
+    const maxIndex = length - 1;
+    const centers = [];
+    const middleIndex = toInt32(scanline.length / 2);
+    for (let i = 0; i <= middleIndex; i++) {
+      const splitIndex = middleIndex + i;
+      centers.push(accumulate(scanline, middleIndex - i, splitIndex) / 2 + accumulate(scanline, splitIndex + 1, maxIndex));
+    }
+    return end - (centers[0] * 2 + accumulate(centers, 1)) / (middleIndex + 2);
   }
 
   /**

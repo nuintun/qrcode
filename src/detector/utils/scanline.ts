@@ -49,19 +49,6 @@ export function scanlineUpdate(scanline: number[], count: number): void {
   scanline[lastIndex] = count;
 }
 
-export function centerFromScanlineEnd(scanline: number[], end: number): number {
-  const { length } = scanline;
-  const middleIndex = toInt32(length / 2);
-
-  let center = end - scanline[middleIndex] / 2;
-
-  for (let i = middleIndex + 1; i < length; i++) {
-    center -= scanline[i];
-  }
-
-  return center;
-}
-
 export function getCrossScanline(
   matrix: BitMatrix,
   x: number,
@@ -187,4 +174,20 @@ export function getDiagonalScanline(
   }
 
   return scanline;
+}
+
+// @see https://github.com/zxing-cpp/zxing-cpp/blob/master/core/src/ConcentricFinder.h
+export function centerFromScanlineEnd(scanline: number[], end: number): number {
+  const { length } = scanline;
+  const maxIndex = length - 1;
+  const centers: number[] = [];
+  const middleIndex = toInt32(scanline.length / 2);
+
+  for (let i = 0; i <= middleIndex; i++) {
+    const splitIndex = middleIndex + i;
+
+    centers.push(accumulate(scanline, middleIndex - i, splitIndex) / 2 + accumulate(scanline, splitIndex + 1, maxIndex));
+  }
+
+  return end - (centers[0] * 2 + accumulate(centers, 1)) / (middleIndex + 2);
 }
