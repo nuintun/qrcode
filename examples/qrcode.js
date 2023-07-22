@@ -79,12 +79,15 @@
     return value;
   }
   function accumulate(array, start = 0, end = array.length - 1) {
-    if (start !== end) {
+    if (start < end) {
       let total = 0;
       for (let i = start; i <= end; i++) {
         total += array[i];
       }
       return total;
+    }
+    if (start > end) {
+      return 0;
     }
     return array[start];
   }

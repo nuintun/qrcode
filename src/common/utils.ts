@@ -70,7 +70,7 @@ export function calculateBCHCode(value: number, poly: number): number {
 }
 
 export function accumulate(array: ArrayLike<number>, start: number = 0, end: number = array.length - 1): number {
-  if (start !== end) {
+  if (start < end) {
     let total = 0;
 
     for (let i = start; i <= end; i++) {
@@ -78,6 +78,10 @@ export function accumulate(array: ArrayLike<number>, start: number = 0, end: num
     }
 
     return total;
+  }
+
+  if (start > end) {
+    return 0;
   }
 
   return array[start];
