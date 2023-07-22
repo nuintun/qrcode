@@ -240,15 +240,15 @@
   const BLOCK_SIZE = 1 << BLOCK_SIZE_POWER;
   const BLOCK_SIZE_MASK = BLOCK_SIZE - 1;
   const MINIMUM_DIMENSION = BLOCK_SIZE * 5;
-  function cap(value, max) {
-    return value < 2 ? 2 : Math.min(value, max);
-  }
   function calculateSubSize(size) {
     let subSize = size >> BLOCK_SIZE_POWER;
     if (size & BLOCK_SIZE_MASK) {
       subSize++;
     }
     return subSize;
+  }
+  function clamp(value, max) {
+    return value < 2 ? 2 : Math.min(value, max);
   }
   function calculateOffset(offset, max) {
     offset = offset << BLOCK_SIZE_POWER;
@@ -327,11 +327,11 @@
     const matrix = new BitMatrix(width, height);
     const blackPoints = calculateBlackPoints(luminances, width, height);
     for (let y = 0; y < subHeight; y++) {
-      const top = cap(y, subHeight - 3);
+      const top = clamp(y, subHeight - 3);
       const offsetY = calculateOffset(y, maxOffsetY);
       for (let x = 0; x < subWidth; x++) {
         let sum = 0;
-        const left = cap(x, subWidth - 3);
+        const left = clamp(x, subWidth - 3);
         const offsetX = calculateOffset(x, maxOffsetX);
         for (let z = -2; z <= 2; z++) {
           const blackRow = blackPoints[top + z];

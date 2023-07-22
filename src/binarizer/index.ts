@@ -11,10 +11,6 @@ const BLOCK_SIZE = 1 << BLOCK_SIZE_POWER;
 const BLOCK_SIZE_MASK = BLOCK_SIZE - 1;
 const MINIMUM_DIMENSION = BLOCK_SIZE * 5;
 
-function cap(value: number, max: number): number {
-  return value < 2 ? 2 : Math.min(value, max);
-}
-
 function calculateSubSize(size: number): number {
   let subSize = size >> BLOCK_SIZE_POWER;
 
@@ -23,6 +19,10 @@ function calculateSubSize(size: number): number {
   }
 
   return subSize;
+}
+
+function clamp(value: number, max: number): number {
+  return value < 2 ? 2 : Math.min(value, max);
 }
 
 function calculateOffset(offset: number, max: number): number {
@@ -120,13 +120,13 @@ function adaptiveThreshold(luminances: Uint8Array, width: number, height: number
   const blackPoints = calculateBlackPoints(luminances, width, height);
 
   for (let y = 0; y < subHeight; y++) {
-    const top = cap(y, subHeight - 3);
+    const top = clamp(y, subHeight - 3);
     const offsetY = calculateOffset(y, maxOffsetY);
 
     for (let x = 0; x < subWidth; x++) {
       let sum = 0;
 
-      const left = cap(x, subWidth - 3);
+      const left = clamp(x, subWidth - 3);
       const offsetX = calculateOffset(x, maxOffsetX);
 
       for (let z = -2; z <= 2; z++) {
