@@ -6,7 +6,7 @@ import { Pattern } from './Pattern';
 import { round } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
 import { MAX_VERSION_SIZE } from '/common/Version';
-import { calculateTriangleArea, distance, Point } from '/common/Point';
+import { calculateTriangleArea, distance, Point, squaredDistance } from '/common/Point';
 import { calculateModuleSize, calculateModuleSizeOneWay, ModuleSizeGroup } from './utils/module';
 
 type OrderedPatterns = [
@@ -17,6 +17,22 @@ type OrderedPatterns = [
   // Bottom left finder
   bottomLeft: Pattern
 ];
+
+// @see https://github.com/zxing-cpp/zxing-cpp/blob/master/core/src/qrcode/QRDetector.cpp
+function calculateDistanceRatio(pattern1: Pattern, pattern2: Pattern): number {
+  let ratio: number;
+
+  const moduleSize1 = pattern1.moduleSize;
+  const moduleSize2 = pattern2.moduleSize;
+
+  if (moduleSize1 > moduleSize2) {
+    ratio = moduleSize1 / moduleSize2;
+  } else {
+    ratio = moduleSize2 / moduleSize1;
+  }
+
+  return ratio * ratio;
+}
 
 function crossProductZ(pattern1: Pattern, pattern2: Pattern, pattern3: Pattern): number {
   const { x, y } = pattern2;
@@ -31,9 +47,9 @@ function orderFinderPatterns(patterns: Pattern[]): OrderedPatterns {
 
   // Find distances between pattern centers
   const [pattern1, pattern2, pattern3] = patterns;
-  const oneTwoDistance = distance(pattern1, pattern2);
-  const twoThreeDistance = distance(pattern2, pattern3);
-  const oneThreeDistance = distance(pattern1, pattern3);
+  const oneTwoDistance = squaredDistance(pattern1, pattern2) * calculateDistanceRatio(pattern1, pattern2);
+  const oneThreeDistance = squaredDistance(pattern1, pattern3) * calculateDistanceRatio(pattern1, pattern3);
+  const twoThreeDistance = squaredDistance(pattern2, pattern3) * calculateDistanceRatio(pattern2, pattern3);
 
   // Assume one closest to other two is B; A and C will just be guesses at first
   if (twoThreeDistance >= oneTwoDistance && twoThreeDistance >= oneThreeDistance) {

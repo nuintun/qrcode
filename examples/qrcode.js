@@ -3545,9 +3545,12 @@
     }
   }
   function distance(a, b) {
+    return Math.sqrt(squaredDistance(a, b));
+  }
+  function squaredDistance(a, b) {
     const xDiff = a.x - b.x;
     const yDiff = a.y - b.y;
-    return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+    return xDiff * xDiff + yDiff * yDiff;
   }
   function calculateTriangleArea(a, b, c) {
     const { x: ax, y: ay } = a;
@@ -3716,6 +3719,18 @@
   /**
    * @module FinderPatternGroup
    */
+  // @see https://github.com/zxing-cpp/zxing-cpp/blob/master/core/src/qrcode/QRDetector.cpp
+  function calculateDistanceRatio(pattern1, pattern2) {
+    let ratio;
+    const moduleSize1 = pattern1.moduleSize;
+    const moduleSize2 = pattern2.moduleSize;
+    if (moduleSize1 > moduleSize2) {
+      ratio = moduleSize1 / moduleSize2;
+    } else {
+      ratio = moduleSize2 / moduleSize1;
+    }
+    return ratio * ratio;
+  }
   function crossProductZ(pattern1, pattern2, pattern3) {
     const { x, y } = pattern2;
     return (pattern3.x - x) * (pattern1.y - y) - (pattern3.y - y) * (pattern1.x - x);
@@ -3726,9 +3741,9 @@
     let bottomLeft;
     // Find distances between pattern centers
     const [pattern1, pattern2, pattern3] = patterns;
-    const oneTwoDistance = distance(pattern1, pattern2);
-    const twoThreeDistance = distance(pattern2, pattern3);
-    const oneThreeDistance = distance(pattern1, pattern3);
+    const oneTwoDistance = squaredDistance(pattern1, pattern2) * calculateDistanceRatio(pattern1, pattern2);
+    const oneThreeDistance = squaredDistance(pattern1, pattern3) * calculateDistanceRatio(pattern1, pattern3);
+    const twoThreeDistance = squaredDistance(pattern2, pattern3) * calculateDistanceRatio(pattern2, pattern3);
     // Assume one closest to other two is B; A and C will just be guesses at first
     if (twoThreeDistance >= oneTwoDistance && twoThreeDistance >= oneThreeDistance) {
       [topLeft, bottomLeft, topRight] = patterns;

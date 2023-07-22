@@ -21,10 +21,14 @@ export class Point {
 }
 
 export function distance(a: Point, b: Point): number {
+  return Math.sqrt(squaredDistance(a, b));
+}
+
+export function squaredDistance(a: Point, b: Point): number {
   const xDiff = a.x - b.x;
   const yDiff = a.y - b.y;
 
-  return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+  return xDiff * xDiff + yDiff * yDiff;
 }
 
 export function calculateTriangleArea(a: Point, b: Point, c: Point): number {
