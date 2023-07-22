@@ -57,7 +57,7 @@ export class Pattern extends Point {
       const moduleSize = (width + height) / modules / 2;
       const moduleSizeDiff = Math.abs(moduleSize - moduleSizeThis);
 
-      if (moduleSizeDiff < 1 || moduleSizeDiff <= moduleSizeThis) {
+      if (moduleSizeDiff <= 1 || moduleSizeDiff <= moduleSizeThis) {
         return true;
       }
     }
