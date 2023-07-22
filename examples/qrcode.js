@@ -4310,13 +4310,9 @@
    * @module pattern
    */
   function isDiagonalScanlineCheckPassed(slash, backslash, ratios, strict) {
-    if (isMatchPattern(slash, ratios)) {
-      if (strict) {
-        return isMatchPattern(backslash, ratios);
-      }
-      return true;
-    }
-    return false;
+    return strict
+      ? isMatchPattern(slash, ratios) && isMatchPattern(backslash, ratios)
+      : isMatchPattern(slash, ratios) || isMatchPattern(backslash, ratios);
   }
   function alignCrossPattern(matrix, x, y, overscan, ratios, isVertical) {
     const [scanline, end] = getCrossScanline(matrix, x, y, overscan, isVertical);

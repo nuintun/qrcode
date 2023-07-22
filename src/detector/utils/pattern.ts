@@ -14,15 +14,9 @@ export function isDiagonalScanlineCheckPassed(
   ratios: PatternRatios,
   strict?: boolean
 ): boolean {
-  if (isMatchPattern(slash, ratios)) {
-    if (strict) {
-      return isMatchPattern(backslash, ratios);
-    }
-
-    return true;
-  }
-
-  return false;
+  return strict
+    ? isMatchPattern(slash, ratios) && isMatchPattern(backslash, ratios)
+    : isMatchPattern(slash, ratios) || isMatchPattern(backslash, ratios);
 }
 
 export function alignCrossPattern(
