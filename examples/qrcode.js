@@ -4363,12 +4363,12 @@
     if (scanlineTotal >= modules) {
       const moduleSize = scanlineTotal / modules;
       const threshold = moduleSize * DIFF_PATTERN_RATIO + DIFF_PATTERN_ALLOWANCE;
-      // Allow less than DIFF_FINDER_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
+      // Allow less than DIFF_PATTERN_RATIO variance from 1-1-3-1-1 or 1-1-1-1-1 proportions
       for (let i = 0; i < length; i++) {
         const ratio = ratios[i];
         const count = scanline[i];
-        const moduleSizeDiff = Math.abs(count - moduleSize * ratio);
-        if (moduleSizeDiff > threshold) {
+        const countDiff = Math.abs(count - moduleSize * ratio);
+        if (countDiff > threshold) {
           return false;
         }
       }
@@ -4698,21 +4698,21 @@
   function getExpectAlignment(finderPatternGroup) {
     const { x, y } = finderPatternGroup.topLeft;
     const size = FinderPatternGroup.size(finderPatternGroup);
-    const correctionToTopLeft = 1 - 3 / (size - 7);
+    const expectAlignmentCorrectionToTopLeftRatio = 1 - 3 / (size - 7);
     const bottomRight = FinderPatternGroup.bottomRight(finderPatternGroup);
-    const expectAlignmentX = x + correctionToTopLeft * (bottomRight.x - x);
-    const expectAlignmentY = y + correctionToTopLeft * (bottomRight.y - y);
     const [xModuleSize, yModuleSize] = FinderPatternGroup.moduleSizes(finderPatternGroup);
+    const expectAlignmentX = x + (bottomRight.x - x) * expectAlignmentCorrectionToTopLeftRatio;
+    const expectAlignmentY = y + (bottomRight.y - y) * expectAlignmentCorrectionToTopLeftRatio;
     return new Pattern(ALIGNMENT_PATTERN_RATIOS, expectAlignmentX, expectAlignmentY, xModuleSize * 5, yModuleSize * 5, 0);
   }
   function findAlignmentInRegion(matrix, finderPatternGroup, strict) {
     const size = FinderPatternGroup.size(finderPatternGroup);
+    const scanAllowanceRatio = Math.min(20, toInt32(size / 4));
     const expectAlignment = getExpectAlignment(finderPatternGroup);
     const alignmentFinder = new AlignmentPatternFinder(matrix, strict);
-    const allowance = Math.max(5, Math.min(20, toInt32((size - 7) / 4)));
     const moduleSize = FinderPatternGroup.moduleSize(finderPatternGroup);
-    const alignmentAreaAllowanceSize = Math.ceil(moduleSize * allowance);
     const { x: expectAlignmentX, y: expectAlignmentY } = expectAlignment;
+    const alignmentAreaAllowanceSize = Math.ceil(moduleSize * scanAllowanceRatio);
     const alignmentAreaTop = toInt32(Math.max(0, expectAlignmentY - alignmentAreaAllowanceSize));
     const alignmentAreaLeft = toInt32(Math.max(0, expectAlignmentX - alignmentAreaAllowanceSize));
     const alignmentAreaRight = toInt32(Math.min(matrix.width - 1, expectAlignmentX + alignmentAreaAllowanceSize));

@@ -21,23 +21,23 @@ export interface Options {
 function getExpectAlignment(finderPatternGroup: FinderPatternGroup): Pattern {
   const { x, y } = finderPatternGroup.topLeft;
   const size = FinderPatternGroup.size(finderPatternGroup);
-  const correctionToTopLeft = 1 - 3 / (size - 7);
+  const expectAlignmentCorrectionToTopLeftRatio = 1 - 3 / (size - 7);
   const bottomRight = FinderPatternGroup.bottomRight(finderPatternGroup);
-  const expectAlignmentX = x + correctionToTopLeft * (bottomRight.x - x);
-  const expectAlignmentY = y + correctionToTopLeft * (bottomRight.y - y);
   const [xModuleSize, yModuleSize] = FinderPatternGroup.moduleSizes(finderPatternGroup);
+  const expectAlignmentX = x + (bottomRight.x - x) * expectAlignmentCorrectionToTopLeftRatio;
+  const expectAlignmentY = y + (bottomRight.y - y) * expectAlignmentCorrectionToTopLeftRatio;
 
   return new Pattern(ALIGNMENT_PATTERN_RATIOS, expectAlignmentX, expectAlignmentY, xModuleSize * 5, yModuleSize * 5, 0);
 }
 
 function findAlignmentInRegion(matrix: BitMatrix, finderPatternGroup: FinderPatternGroup, strict?: boolean): Pattern[] {
   const size = FinderPatternGroup.size(finderPatternGroup);
+  const scanAllowanceRatio = Math.min(20, toInt32(size / 4));
   const expectAlignment = getExpectAlignment(finderPatternGroup);
   const alignmentFinder = new AlignmentPatternFinder(matrix, strict);
-  const allowance = Math.max(5, Math.min(20, toInt32((size - 7) / 4)));
   const moduleSize = FinderPatternGroup.moduleSize(finderPatternGroup);
-  const alignmentAreaAllowanceSize = Math.ceil(moduleSize * allowance);
   const { x: expectAlignmentX, y: expectAlignmentY } = expectAlignment;
+  const alignmentAreaAllowanceSize = Math.ceil(moduleSize * scanAllowanceRatio);
   const alignmentAreaTop = toInt32(Math.max(0, expectAlignmentY - alignmentAreaAllowanceSize));
   const alignmentAreaLeft = toInt32(Math.max(0, expectAlignmentX - alignmentAreaAllowanceSize));
   const alignmentAreaRight = toInt32(Math.min(matrix.width - 1, expectAlignmentX + alignmentAreaAllowanceSize));

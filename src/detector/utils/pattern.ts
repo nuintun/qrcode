@@ -48,13 +48,13 @@ export function isMatchPattern(scanline: number[], { ratios, modules }: PatternR
     const moduleSize = scanlineTotal / modules;
     const threshold = moduleSize * DIFF_PATTERN_RATIO + DIFF_PATTERN_ALLOWANCE;
 
-    // Allow less than DIFF_FINDER_MODULE_SIZE_RATIO variance from 1-1-3-1-1 proportions
+    // Allow less than DIFF_PATTERN_RATIO variance from 1-1-3-1-1 or 1-1-1-1-1 proportions
     for (let i = 0; i < length; i++) {
       const ratio = ratios[i];
       const count = scanline[i];
-      const moduleSizeDiff = Math.abs(count - moduleSize * ratio);
+      const countDiff = Math.abs(count - moduleSize * ratio);
 
-      if (moduleSizeDiff > threshold) {
+      if (countDiff > threshold) {
         return false;
       }
     }
