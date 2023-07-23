@@ -3597,6 +3597,76 @@
   }
 
   /**
+   * @module Pattern
+   */
+  function getRatio({ ratios }) {
+    return ratios[toInt32(ratios.length / 2)] / 2;
+  }
+  class Pattern extends Point {
+    #noise;
+    #width;
+    #height;
+    #moduleSize;
+    #combined = 1;
+    #ratios;
+    #intersectRadius;
+    static noise(pattern) {
+      return pattern.#noise;
+    }
+    static width(pattern) {
+      return pattern.#width;
+    }
+    static height(pattern) {
+      return pattern.#height;
+    }
+    static combined(pattern) {
+      return pattern.#combined;
+    }
+    constructor(ratios, x, y, width, height, noise) {
+      super(x, y);
+      const { modules } = ratios;
+      const ratio = getRatio(ratios);
+      const xModuleSize = width / modules;
+      const yModuleSize = height / modules;
+      const moduleSize = (xModuleSize + yModuleSize) / 2;
+      this.#noise = noise;
+      this.#width = width;
+      this.#height = height;
+      this.#ratios = ratios;
+      this.#moduleSize = moduleSize;
+      this.#intersectRadius = moduleSize * ratio;
+    }
+    get moduleSize() {
+      return this.#moduleSize;
+    }
+    equals(x, y, width, height) {
+      const { modules } = this.#ratios;
+      const intersectRadius = this.#intersectRadius;
+      if (Math.abs(x - this.x) <= intersectRadius && Math.abs(y - this.y) <= intersectRadius) {
+        const moduleSizeThis = this.#moduleSize;
+        const moduleSize = (width + height) / modules / 2;
+        const moduleSizeDiff = Math.abs(moduleSize - moduleSizeThis);
+        if (moduleSizeDiff <= 1 || moduleSizeDiff <= moduleSizeThis) {
+          return true;
+        }
+      }
+      return false;
+    }
+    combine(x, y, width, height, noise) {
+      const combined = this.#combined;
+      const nextCombined = combined + 1;
+      const combinedX = (combined * this.x + x) / nextCombined;
+      const combinedY = (combined * this.y + y) / nextCombined;
+      const combinedNoise = (combined * this.#noise + noise) / nextCombined;
+      const combinedWidth = (combined * this.#width + width) / nextCombined;
+      const combinedHeight = (combined * this.#height + height) / nextCombined;
+      const pattern = new Pattern(this.#ratios, combinedX, combinedY, combinedWidth, combinedHeight, combinedNoise);
+      pattern.#combined = nextCombined;
+      return pattern;
+    }
+  }
+
+  /**
    * @module PlotLine
    */
   // Mild variant of Bresenham's algorithm
@@ -3719,17 +3789,20 @@
   /**
    * @module FinderPatternGroup
    */
-  // @see https://github.com/zxing-cpp/zxing-cpp/blob/master/core/src/qrcode/QRDetector.cpp
-  function calculateDistanceRatio(pattern1, pattern2) {
+  function calculateSizeRatio(size1, size2) {
     let ratio;
-    const moduleSize1 = pattern1.moduleSize;
-    const moduleSize2 = pattern2.moduleSize;
-    if (moduleSize1 > moduleSize2) {
-      ratio = moduleSize1 / moduleSize2;
+    if (size1 > size2) {
+      ratio = size1 / size2;
     } else {
-      ratio = moduleSize2 / moduleSize1;
+      ratio = size2 / size1;
     }
     return ratio * ratio;
+  }
+  function calculateDistanceRatio(pattern1, pattern2) {
+    return Math.max(
+      calculateSizeRatio(Pattern.width(pattern1), Pattern.width(pattern2)),
+      calculateSizeRatio(Pattern.height(pattern1), Pattern.height(pattern2))
+    );
   }
   function crossProductZ(pattern1, pattern2, pattern3) {
     const { x, y } = pattern2;
@@ -3741,6 +3814,7 @@
     let bottomLeft;
     // Find distances between pattern centers
     const [pattern1, pattern2, pattern3] = patterns;
+    // @see https://github.com/zxing-cpp/zxing-cpp/blob/master/core/src/qrcode/QRDetector.cpp
     const oneTwoDistance = squaredDistance(pattern1, pattern2) * calculateDistanceRatio(pattern1, pattern2);
     const oneThreeDistance = squaredDistance(pattern1, pattern3) * calculateDistanceRatio(pattern1, pattern3);
     const twoThreeDistance = squaredDistance(pattern2, pattern3) * calculateDistanceRatio(pattern2, pattern3);
@@ -3900,70 +3974,6 @@
     mapping(x, y) {
       [x, y] = this.#transform.mapping(x, y);
       return new Point(x, y);
-    }
-  }
-
-  /**
-   * @module Pattern
-   */
-  function getRatio({ ratios }) {
-    return ratios[toInt32(ratios.length / 2)] / 2;
-  }
-  class Pattern extends Point {
-    #noise;
-    #width;
-    #height;
-    #moduleSize;
-    #combined = 1;
-    #ratios;
-    #intersectRadius;
-    static noise(pattern) {
-      return pattern.#noise;
-    }
-    static combined(pattern) {
-      return pattern.#combined;
-    }
-    constructor(ratios, x, y, width, height, noise) {
-      super(x, y);
-      const { modules } = ratios;
-      const ratio = getRatio(ratios);
-      const xModuleSize = width / modules;
-      const yModuleSize = height / modules;
-      const moduleSize = (xModuleSize + yModuleSize) / 2;
-      this.#noise = noise;
-      this.#width = width;
-      this.#height = height;
-      this.#ratios = ratios;
-      this.#moduleSize = moduleSize;
-      this.#intersectRadius = moduleSize * ratio;
-    }
-    get moduleSize() {
-      return this.#moduleSize;
-    }
-    equals(x, y, width, height) {
-      const { modules } = this.#ratios;
-      const intersectRadius = this.#intersectRadius;
-      if (Math.abs(x - this.x) <= intersectRadius && Math.abs(y - this.y) <= intersectRadius) {
-        const moduleSizeThis = this.#moduleSize;
-        const moduleSize = (width + height) / modules / 2;
-        const moduleSizeDiff = Math.abs(moduleSize - moduleSizeThis);
-        if (moduleSizeDiff <= 1 || moduleSizeDiff <= moduleSizeThis) {
-          return true;
-        }
-      }
-      return false;
-    }
-    combine(x, y, width, height, noise) {
-      const combined = this.#combined;
-      const nextCombined = combined + 1;
-      const combinedX = (combined * this.x + x) / nextCombined;
-      const combinedY = (combined * this.y + y) / nextCombined;
-      const combinedNoise = (combined * this.#noise + noise) / nextCombined;
-      const combinedWidth = (combined * this.#width + width) / nextCombined;
-      const combinedHeight = (combined * this.#height + height) / nextCombined;
-      const pattern = new Pattern(this.#ratios, combinedX, combinedY, combinedWidth, combinedHeight, combinedNoise);
-      pattern.#combined = nextCombined;
-      return pattern;
     }
   }
 

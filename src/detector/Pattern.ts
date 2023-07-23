@@ -23,6 +23,14 @@ export class Pattern extends Point {
     return pattern.#noise;
   }
 
+  public static width(pattern: Pattern): number {
+    return pattern.#width;
+  }
+
+  public static height(pattern: Pattern): number {
+    return pattern.#height;
+  }
+
   public static combined(pattern: Pattern): number {
     return pattern.#combined;
   }
