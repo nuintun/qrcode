@@ -341,8 +341,10 @@
         decodeResult.removeClass('hide');
 
         if (!hasImage) {
-          return decodeResult.html(`<span class="error">请选择二维码图片</span>`);
+          return decodeResult.html('<span class="error">请选择二维码图片</span>');
         }
+
+        let html = '';
 
         const errors = [];
         const success = [];
@@ -365,7 +367,7 @@
         const detected = detector.detect(matrix);
         console.timeEnd('detector');
 
-        matrixBox.append(drawMatrix(matrix, 1), '<br />');
+        matrixBox.append($(drawMatrix(matrix, 1)).addClass('binarized'));
 
         console.time('decoder');
 
@@ -386,8 +388,8 @@
             succeed = true;
 
             success.push(detect);
-            decodeResult.html(content);
-            matrixBox.append(drawMatrix(matrix), '&nbsp;&nbsp;');
+
+            html += `<div class="decode-item">${content}</div>`;
 
             console.group();
             console.dir(detect);
@@ -430,7 +432,7 @@
         }
 
         for (const detect of success) {
-          const { size, finder, alignment } = detect;
+          const { size, matrix, finder, alignment } = detect;
           const { topLeft, topRight, bottomLeft } = finder;
           const topLeftCorner = detect.mapping(0, 0);
           const topRightCorner = detect.mapping(size, 0);
@@ -459,10 +461,14 @@
           if (alignment) {
             markFinderPattern(alignment, '#ff00ff');
           }
+
+          matrixBox.append($(drawMatrix(matrix)).addClass('decode-canvas-item'));
         }
 
-        if (!succeedCount) {
-          decodeResult.html(`<span class="error">未发现二维码</span>`);
+        if (succeedCount) {
+          decodeResult.html(html);
+        } else {
+          decodeResult.html('<span class="error">未发现二维码</span>');
         }
       });
 

@@ -94,6 +94,12 @@ textarea {
   box-sizing: border-box;
 }
 
+.decode-item {
+  padding: 4px;
+  margin: 6px 0;
+  border: 1px dashed #f00;
+}
+
 .encode-result img {
   display: block;
   max-width: 944px;
@@ -118,4 +124,13 @@ input[type="number"] {
 
 #decode-canvas {
   border: 1px dotted #ccc;
+}
+
+.binarized {
+  margin: 0;
+  display: block;
+}
+
+.decode-canvas-item {
+  margin: 4px 8px 4px 0;
 }
