@@ -6,7 +6,7 @@ import { Point } from '/common/Point';
 import { toInt32 } from '/common/utils';
 import { PatternRatios } from './PatternRatios';
 
-function getRatio({ ratios }: PatternRatios): number {
+function calculateIntersectRadius({ ratios }: PatternRatios): number {
   return ratios[toInt32(ratios.length / 2)] / 2;
 }
 
@@ -39,9 +39,9 @@ export class Pattern extends Point {
     super(x, y);
 
     const { modules } = ratios;
-    const ratio = getRatio(ratios);
     const xModuleSize = width / modules;
     const yModuleSize = height / modules;
+    const ratio = calculateIntersectRadius(ratios);
     const moduleSize = (xModuleSize + yModuleSize) / 2;
 
     this.#noise = noise;
@@ -76,11 +76,11 @@ export class Pattern extends Point {
   public combine(x: number, y: number, width: number, height: number, noise: number): Pattern {
     const combined = this.#combined;
     const nextCombined = combined + 1;
-    const combinedX = (combined * this.x + x) / nextCombined;
-    const combinedY = (combined * this.y + y) / nextCombined;
-    const combinedNoise = (combined * this.#noise + noise) / nextCombined;
-    const combinedWidth = (combined * this.#width + width) / nextCombined;
-    const combinedHeight = (combined * this.#height + height) / nextCombined;
+    const combinedX = (this.x * combined + x) / nextCombined;
+    const combinedY = (this.y * combined + y) / nextCombined;
+    const combinedNoise = (this.#noise * combined + noise) / nextCombined;
+    const combinedWidth = (this.#width * combined + width) / nextCombined;
+    const combinedHeight = (this.#height * combined + height) / nextCombined;
     const pattern = new Pattern(this.#ratios, combinedX, combinedY, combinedWidth, combinedHeight, combinedNoise);
 
     pattern.#combined = nextCombined;

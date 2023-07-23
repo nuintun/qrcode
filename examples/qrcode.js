@@ -3599,7 +3599,7 @@
   /**
    * @module Pattern
    */
-  function getRatio({ ratios }) {
+  function calculateIntersectRadius({ ratios }) {
     return ratios[toInt32(ratios.length / 2)] / 2;
   }
   class Pattern extends Point {
@@ -3625,9 +3625,9 @@
     constructor(ratios, x, y, width, height, noise) {
       super(x, y);
       const { modules } = ratios;
-      const ratio = getRatio(ratios);
       const xModuleSize = width / modules;
       const yModuleSize = height / modules;
+      const ratio = calculateIntersectRadius(ratios);
       const moduleSize = (xModuleSize + yModuleSize) / 2;
       this.#noise = noise;
       this.#width = width;
@@ -3655,11 +3655,11 @@
     combine(x, y, width, height, noise) {
       const combined = this.#combined;
       const nextCombined = combined + 1;
-      const combinedX = (combined * this.x + x) / nextCombined;
-      const combinedY = (combined * this.y + y) / nextCombined;
-      const combinedNoise = (combined * this.#noise + noise) / nextCombined;
-      const combinedWidth = (combined * this.#width + width) / nextCombined;
-      const combinedHeight = (combined * this.#height + height) / nextCombined;
+      const combinedX = (this.x * combined + x) / nextCombined;
+      const combinedY = (this.y * combined + y) / nextCombined;
+      const combinedNoise = (this.#noise * combined + noise) / nextCombined;
+      const combinedWidth = (this.#width * combined + width) / nextCombined;
+      const combinedHeight = (this.#height * combined + height) / nextCombined;
       const pattern = new Pattern(this.#ratios, combinedX, combinedY, combinedWidth, combinedHeight, combinedNoise);
       pattern.#combined = nextCombined;
       return pattern;
@@ -3722,9 +3722,6 @@
   /**
    * @module module
    */
-  function calculateModuleSize([xModuleSize, yModuleSize]) {
-    return (xModuleSize + yModuleSize) / 2;
-  }
   function sizeOfBlackWhiteBlackRun(matrix, from, to) {
     // In black pixels, looking for white, first or second time.
     let state = 0;
@@ -3893,7 +3890,7 @@
     }
     static moduleSize(finderPatternGroup) {
       if (finderPatternGroup.#moduleSize == null) {
-        finderPatternGroup.#moduleSize = calculateModuleSize(FinderPatternGroup.moduleSizes(finderPatternGroup));
+        finderPatternGroup.#moduleSize = accumulate(FinderPatternGroup.moduleSizes(finderPatternGroup)) / 2;
       }
       return finderPatternGroup.#moduleSize;
     }

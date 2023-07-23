@@ -3,11 +3,11 @@
  */
 
 import { Pattern } from './Pattern';
-import { round } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
+import { accumulate, round } from '/common/utils';
 import { MAX_VERSION_SIZE } from '/common/Version';
+import { calculateModuleSizeOneWay, ModuleSizeGroup } from './utils/module';
 import { calculateTriangleArea, distance, Point, squaredDistance } from '/common/Point';
-import { calculateModuleSize, calculateModuleSizeOneWay, ModuleSizeGroup } from './utils/module';
 
 type OrderedPatterns = [
   // Top left finder
@@ -149,7 +149,7 @@ export class FinderPatternGroup {
 
   public static moduleSize(finderPatternGroup: FinderPatternGroup): number {
     if (finderPatternGroup.#moduleSize == null) {
-      finderPatternGroup.#moduleSize = calculateModuleSize(FinderPatternGroup.moduleSizes(finderPatternGroup));
+      finderPatternGroup.#moduleSize = accumulate(FinderPatternGroup.moduleSizes(finderPatternGroup)) / 2;
     }
 
     return finderPatternGroup.#moduleSize;

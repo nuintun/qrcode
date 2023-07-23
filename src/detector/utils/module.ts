@@ -10,10 +10,6 @@ import { distance, Point } from '/common/Point';
 
 export type ModuleSizeGroup = readonly [x: number, y: number];
 
-export function calculateModuleSize([xModuleSize, yModuleSize]: ModuleSizeGroup): number {
-  return (xModuleSize + yModuleSize) / 2;
-}
-
 function sizeOfBlackWhiteBlackRun(matrix: BitMatrix, from: Point, to: Point): number {
   // In black pixels, looking for white, first or second time.
   let state = 0;
