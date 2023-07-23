@@ -19,22 +19,16 @@ type OrderedPatterns = [
 ];
 
 function calculateSizeRatio(size1: number, size2: number): number {
-  let ratio: number;
-
-  if (size1 > size2) {
-    ratio = size1 / size2;
-  } else {
-    ratio = size2 / size1;
-  }
-
-  return ratio * ratio;
+  return size1 > size2 ? size1 / size2 : size2 / size1;
 }
 
 function calculateDistanceRatio(pattern1: Pattern, pattern2: Pattern): number {
-  return Math.max(
+  const ratio = Math.max(
     calculateSizeRatio(Pattern.width(pattern1), Pattern.width(pattern2)),
     calculateSizeRatio(Pattern.height(pattern1), Pattern.height(pattern2))
   );
+
+  return ratio * ratio;
 }
 
 function crossProductZ(pattern1: Pattern, pattern2: Pattern, pattern3: Pattern): number {
