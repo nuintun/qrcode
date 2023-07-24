@@ -4513,7 +4513,7 @@
           Pattern.noise(pattern) < 1 &&
           (contain == null ? FinderPatternGroup.contains(finderPatternGroup, pattern) : contain)
         ) {
-          // Maybe contain another QR code, but only allow one.
+          // Maybe contain another QR code, but we only allow one, because this is not a normal mode.
           if (++count > 3) {
             return true;
           }
