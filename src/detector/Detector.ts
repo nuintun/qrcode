@@ -8,8 +8,8 @@ import { toInt32 } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
 import { fromVersionSize } from '/common/Version';
 import { createTransform } from './utils/transform';
+import { checkMappingTimingLine } from './utils/timing';
 import { FinderPatternGroup } from './FinderPatternGroup';
-import { checkModulesInTimingLine } from './utils/timing';
 import { ALIGNMENT_PATTERN_RATIOS } from './PatternRatios';
 import { FinderPatternFinder } from './FinderPatternFinder';
 import { AlignmentPatternFinder } from './AlignmentPatternFinder';
@@ -90,9 +90,9 @@ export class Detector {
 
           if (
             // Top left to top right
-            checkModulesInTimingLine(matrix, transform, size) &&
+            checkMappingTimingLine(matrix, transform, size) &&
             // Top left to bottom left
-            checkModulesInTimingLine(matrix, transform, size, true)
+            checkMappingTimingLine(matrix, transform, size, true)
           ) {
             succeed = yield new Detect(matrix, transform, finderPatternGroup, alignmentPattern);
 
@@ -107,9 +107,9 @@ export class Detector {
 
         if (
           // Top left to top right
-          checkModulesInTimingLine(matrix, transform, size) &&
+          checkMappingTimingLine(matrix, transform, size) &&
           // Top left to bottom left
-          checkModulesInTimingLine(matrix, transform, size, true)
+          checkMappingTimingLine(matrix, transform, size, true)
         ) {
           // No alignment pattern version
           succeed = yield new Detect(matrix, transform, finderPatternGroup);

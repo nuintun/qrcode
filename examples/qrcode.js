@@ -3599,13 +3599,14 @@
   /**
    * @module Pattern
    */
-  function calculateIntersectRadius({ ratios }) {
+  function calculateIntersectRatio({ ratios }) {
     return ratios[toInt32(ratios.length / 2)] / 2;
   }
   class Pattern extends Point {
     #noise;
     #width;
     #height;
+    #rect;
     #moduleSize;
     #combined = 1;
     #ratios;
@@ -3622,18 +3623,31 @@
     static combined(pattern) {
       return pattern.#combined;
     }
+    static rect(pattern) {
+      return pattern.#rect;
+    }
     constructor(ratios, x, y, width, height, noise) {
       super(x, y);
       const { modules } = ratios;
+      const widthHalf = width / 2;
+      const heightHalf = height / 2;
       const xModuleSize = width / modules;
       const yModuleSize = height / modules;
-      const ratio = calculateIntersectRadius(ratios);
+      const xModuleSizeHalf = xModuleSize / 2;
+      const yModuleSizeHalf = yModuleSize / 2;
+      const ratio = calculateIntersectRatio(ratios);
       const moduleSize = (xModuleSize + yModuleSize) / 2;
       this.#noise = noise;
       this.#width = width;
       this.#height = height;
       this.#ratios = ratios;
       this.#moduleSize = moduleSize;
+      this.#rect = [
+        x - widthHalf + xModuleSizeHalf,
+        y - heightHalf + yModuleSizeHalf,
+        x + widthHalf - xModuleSizeHalf,
+        y + heightHalf - yModuleSizeHalf
+      ];
       this.#intersectRadius = moduleSize * ratio;
     }
     get moduleSize() {
@@ -4144,6 +4158,35 @@
   /**
    * @module timing
    */
+  function calculateEstimateTimingRatio(axis, control) {
+    return control > axis ? 1 : control < axis ? -1 : 0;
+  }
+  function getEstimateTimingPointXAxis(pattern, ratio) {
+    const [left, , right] = Pattern.rect(pattern);
+    return ratio > 0 ? right : ratio < 0 ? left : pattern.x;
+  }
+  function getEstimateTimingPointYAxis(pattern, ratio) {
+    const [, top, , bottom] = Pattern.rect(pattern);
+    return ratio > 0 ? bottom : ratio < 0 ? top : pattern.y;
+  }
+  function getEstimateTimingLine(start, end, control, isVertical) {
+    const { x: endX, y: endY } = end;
+    const { x: startX, y: startY } = start;
+    const { x: controlX, y: controlY } = control;
+    const xRatio = calculateEstimateTimingRatio(endX, controlX);
+    const yRatio = calculateEstimateTimingRatio(endY, controlY);
+    const endXTranslate = getEstimateTimingPointXAxis(end, xRatio);
+    const endYTranslate = getEstimateTimingPointYAxis(end, yRatio);
+    const startXTranslate = getEstimateTimingPointXAxis(start, xRatio);
+    const startYTranslate = getEstimateTimingPointYAxis(start, yRatio);
+    if (xRatio === 0 || yRatio === 0) {
+      return [new Point(startXTranslate, startYTranslate), new Point(endXTranslate, endYTranslate)];
+    }
+    if (isVertical ? xRatio === yRatio : xRatio !== yRatio) {
+      return [new Point(startX, startYTranslate), new Point(endX, endYTranslate)];
+    }
+    return [new Point(startXTranslate, startY), new Point(endXTranslate, endY)];
+  }
   function isValidTimingLine(matrix, start, end, size) {
     const maxModules = size + 8;
     const points = new PlotLine(start, end).points();
@@ -4161,7 +4204,14 @@
     }
     return modules >= size - 14 - Math.max(2, (size - 17) / 4);
   }
-  function checkModulesInTimingLine(matrix, transform, size, isVertical) {
+  function checkEstimateTimingLine(matrix, finderPatternGroup, isVertical) {
+    const { topLeft, topRight, bottomLeft } = finderPatternGroup;
+    const [start, end] = isVertical
+      ? getEstimateTimingLine(topLeft, bottomLeft, topRight, true)
+      : getEstimateTimingLine(topLeft, topRight, bottomLeft);
+    return isValidTimingLine(matrix, start, end, FinderPatternGroup.size(finderPatternGroup));
+  }
+  function checkMappingTimingLine(matrix, transform, size, isVertical) {
     const [startX, startY] = transform.mapping(isVertical ? 6.5 : 7.5, isVertical ? 7.5 : 6.5);
     const [endX, endY] = transform.mapping(isVertical ? 6.5 : size - 7.5, isVertical ? size - 7.5 : 6.5);
     return isValidTimingLine(matrix, new Point(startX, startY), new Point(endX, endY), size);
@@ -4328,8 +4378,8 @@
   // Diff module size
   const DIFF_MODULE_SIZE_RATIO = 0.5;
   // Top left min and max angle
-  const MIN_TOP_LEFT_ANGLE = RADIAN * 45;
-  const MAX_TOP_LEFT_ANGLE = RADIAN * 135;
+  const MIN_TOP_LEFT_ANGLE = RADIAN * 40;
+  const MAX_TOP_LEFT_ANGLE = RADIAN * 140;
 
   /**
    * @module pattern
@@ -4450,6 +4500,8 @@
   function isGroupNested(finderPatternGroup, patterns, used) {
     let count = 0;
     const { topLeft, topRight, bottomLeft } = finderPatternGroup;
+    // Only version > 15 can contain other QR code.
+    const maxContainPatterns = FinderPatternGroup.size(finderPatternGroup) >= 77 ? 3 : 2;
     for (const pattern of patterns) {
       if (pattern !== topLeft && pattern !== topRight && pattern !== bottomLeft) {
         let contain;
@@ -4460,11 +4512,11 @@
           }
         }
         if (
-          Pattern.noise(pattern) <= 1 &&
+          Pattern.noise(pattern) < 1 &&
           (contain == null ? FinderPatternGroup.contains(finderPatternGroup, pattern) : contain)
         ) {
           // Maybe contain another QR code, but only allow one.
-          if (++count > 3) {
+          if (++count > maxContainPatterns) {
             return true;
           }
         }
@@ -4550,10 +4602,15 @@
                       size <= MAX_VERSION_SIZE &&
                       !isGroupNested(finderPatternGroup, patterns, used)
                     ) {
-                      if (yield finderPatternGroup) {
-                        used.set(pattern1, true);
-                        used.set(pattern2, true);
-                        used.set(pattern3, true);
+                      if (
+                        checkEstimateTimingLine(matrix, finderPatternGroup) ||
+                        checkEstimateTimingLine(matrix, finderPatternGroup, true)
+                      ) {
+                        if (yield finderPatternGroup) {
+                          used.set(pattern1, true);
+                          used.set(pattern2, true);
+                          used.set(pattern3, true);
+                        }
                       }
                     }
                   }
@@ -4628,8 +4685,8 @@
           const noise2 = Pattern.noise(pattern2);
           const moduleSizeDiff1 = Math.abs(pattern1.moduleSize - moduleSize);
           const moduleSizeDiff2 = Math.abs(pattern2.moduleSize - moduleSize);
-          const score1 = (distance(pattern1, expectAlignment) + moduleSizeDiff1) * noise1 * noise1;
-          const score2 = (distance(pattern2, expectAlignment) + moduleSizeDiff2) * noise2 * noise2;
+          const score1 = (distance(pattern1, expectAlignment) + moduleSizeDiff1) * noise1;
+          const score2 = (distance(pattern2, expectAlignment) + moduleSizeDiff2) * noise2;
           return score1 - score2;
         });
       }
@@ -4744,9 +4801,9 @@
             const transform = createTransform(finderPatternGroup, alignmentPattern);
             if (
               // Top left to top right
-              checkModulesInTimingLine(matrix, transform, size) &&
+              checkMappingTimingLine(matrix, transform, size) &&
               // Top left to bottom left
-              checkModulesInTimingLine(matrix, transform, size, true)
+              checkMappingTimingLine(matrix, transform, size, true)
             ) {
               succeed = yield new Detect(matrix, transform, finderPatternGroup, alignmentPattern);
               // Succeed, skip next alignment pattern
@@ -4759,9 +4816,9 @@
           const transform = createTransform(finderPatternGroup);
           if (
             // Top left to top right
-            checkModulesInTimingLine(matrix, transform, size) &&
+            checkMappingTimingLine(matrix, transform, size) &&
             // Top left to bottom left
-            checkModulesInTimingLine(matrix, transform, size, true)
+            checkMappingTimingLine(matrix, transform, size, true)
           ) {
             // No alignment pattern version
             succeed = yield new Detect(matrix, transform, finderPatternGroup);

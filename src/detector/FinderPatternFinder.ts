@@ -8,6 +8,7 @@ import { distance } from '/common/Point';
 import { BitMatrix } from '/common/BitMatrix';
 import { scanlineUpdate } from './utils/scanline';
 import { FINDER_PATTERN_RATIOS } from './PatternRatios';
+import { checkEstimateTimingLine } from './utils/timing';
 import { MatchAction, PatternFinder } from './PatternFinder';
 import { isEqualsSize, isMatchPattern } from './utils/pattern';
 import { MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
@@ -18,6 +19,8 @@ function isGroupNested(finderPatternGroup: FinderPatternGroup, patterns: Pattern
   let count = 0;
 
   const { topLeft, topRight, bottomLeft } = finderPatternGroup;
+  // Only version > 15 can contain other QR code.
+  const maxContainPatterns = FinderPatternGroup.size(finderPatternGroup) >= 77 ? 3 : 2;
 
   for (const pattern of patterns) {
     if (pattern !== topLeft && pattern !== topRight && pattern !== bottomLeft) {
@@ -32,11 +35,11 @@ function isGroupNested(finderPatternGroup: FinderPatternGroup, patterns: Pattern
       }
 
       if (
-        Pattern.noise(pattern) <= 1 &&
+        Pattern.noise(pattern) < 1 &&
         (contain == null ? FinderPatternGroup.contains(finderPatternGroup, pattern) : contain)
       ) {
         // Maybe contain another QR code, but only allow one.
-        if (++count > 3) {
+        if (++count > maxContainPatterns) {
           return true;
         }
       }
@@ -140,10 +143,15 @@ export class FinderPatternFinder extends PatternFinder {
                     size <= MAX_VERSION_SIZE &&
                     !isGroupNested(finderPatternGroup, patterns, used)
                   ) {
-                    if (yield finderPatternGroup) {
-                      used.set(pattern1, true);
-                      used.set(pattern2, true);
-                      used.set(pattern3, true);
+                    if (
+                      checkEstimateTimingLine(matrix, finderPatternGroup) ||
+                      checkEstimateTimingLine(matrix, finderPatternGroup, true)
+                    ) {
+                      if (yield finderPatternGroup) {
+                        used.set(pattern1, true);
+                        used.set(pattern2, true);
+                        used.set(pattern3, true);
+                      }
                     }
                   }
                 }

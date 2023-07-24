@@ -27,8 +27,8 @@ export class AlignmentPatternFinder extends PatternFinder {
         const noise2 = Pattern.noise(pattern2);
         const moduleSizeDiff1 = Math.abs(pattern1.moduleSize - moduleSize);
         const moduleSizeDiff2 = Math.abs(pattern2.moduleSize - moduleSize);
-        const score1 = (distance(pattern1, expectAlignment) + moduleSizeDiff1) * noise1 * noise1;
-        const score2 = (distance(pattern2, expectAlignment) + moduleSizeDiff2) * noise2 * noise2;
+        const score1 = (distance(pattern1, expectAlignment) + moduleSizeDiff1) * noise1;
+        const score2 = (distance(pattern2, expectAlignment) + moduleSizeDiff2) * noise2;
 
         return score1 - score2;
       });

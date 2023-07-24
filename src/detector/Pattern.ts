@@ -6,7 +6,18 @@ import { Point } from '/common/Point';
 import { toInt32 } from '/common/utils';
 import { PatternRatios } from './PatternRatios';
 
-function calculateIntersectRadius({ ratios }: PatternRatios): number {
+type PatternRect = readonly [
+  // Left border center x
+  left: number,
+  // Top border center y
+  top: number,
+  // Right border center x
+  right: number,
+  // Bottom border center y
+  bottom: number
+];
+
+function calculateIntersectRatio({ ratios }: PatternRatios): number {
   return ratios[toInt32(ratios.length / 2)] / 2;
 }
 
@@ -14,6 +25,7 @@ export class Pattern extends Point {
   #noise: number;
   #width: number;
   #height: number;
+  #rect: PatternRect;
   #moduleSize: number;
   #combined: number = 1;
   #ratios: PatternRatios;
@@ -35,13 +47,21 @@ export class Pattern extends Point {
     return pattern.#combined;
   }
 
+  public static rect(pattern: Pattern): PatternRect {
+    return pattern.#rect;
+  }
+
   constructor(ratios: PatternRatios, x: number, y: number, width: number, height: number, noise: number) {
     super(x, y);
 
     const { modules } = ratios;
+    const widthHalf = width / 2;
+    const heightHalf = height / 2;
     const xModuleSize = width / modules;
     const yModuleSize = height / modules;
-    const ratio = calculateIntersectRadius(ratios);
+    const xModuleSizeHalf = xModuleSize / 2;
+    const yModuleSizeHalf = yModuleSize / 2;
+    const ratio = calculateIntersectRatio(ratios);
     const moduleSize = (xModuleSize + yModuleSize) / 2;
 
     this.#noise = noise;
@@ -49,6 +69,12 @@ export class Pattern extends Point {
     this.#height = height;
     this.#ratios = ratios;
     this.#moduleSize = moduleSize;
+    this.#rect = [
+      x - widthHalf + xModuleSizeHalf,
+      y - heightHalf + yModuleSizeHalf,
+      x + widthHalf - xModuleSizeHalf,
+      y + heightHalf - yModuleSizeHalf
+    ];
     this.#intersectRadius = moduleSize * ratio;
   }
 

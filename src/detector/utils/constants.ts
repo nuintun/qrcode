@@ -12,5 +12,5 @@ export const DIFF_PATTERN_ALLOWANCE = 0.5;
 export const DIFF_MODULE_SIZE_RATIO = 0.5;
 
 // Top left min and max angle
-export const MIN_TOP_LEFT_ANGLE = RADIAN * 45;
-export const MAX_TOP_LEFT_ANGLE = RADIAN * 135;
+export const MIN_TOP_LEFT_ANGLE = RADIAN * 40;
+export const MAX_TOP_LEFT_ANGLE = RADIAN * 140;
