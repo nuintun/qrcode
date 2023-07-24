@@ -4500,8 +4500,6 @@
   function isGroupNested(finderPatternGroup, patterns, used) {
     let count = 0;
     const { topLeft, topRight, bottomLeft } = finderPatternGroup;
-    // Only version > 15 can contain other QR code.
-    const maxContainPatterns = FinderPatternGroup.size(finderPatternGroup) >= 77 ? 3 : 2;
     for (const pattern of patterns) {
       if (pattern !== topLeft && pattern !== topRight && pattern !== bottomLeft) {
         let contain;
@@ -4516,7 +4514,7 @@
           (contain == null ? FinderPatternGroup.contains(finderPatternGroup, pattern) : contain)
         ) {
           // Maybe contain another QR code, but only allow one.
-          if (++count > maxContainPatterns) {
+          if (++count > 3) {
             return true;
           }
         }
