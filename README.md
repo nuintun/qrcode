@@ -31,7 +31,7 @@ const encoder = new Encoder({
 });
 
 const qrcode = encoder.encode(
-  // Byte
+  // Hanzi
   new Hanzi('你好世界'),
   // Byte
   new Byte('\nhello world\n'),
