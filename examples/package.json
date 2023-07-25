@@ -1,0 +1,74 @@
+{
+  "name": "webpack-antd-build",
+  "version": "1.0.0",
+  "description": "A webpack antd build tools.",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "author": {
+    "name": "nuintun",
+    "email": "nuintun@qq.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/nuintun/webpack-antd-builder",
+  "nodemonConfig": {
+    "quiet": true,
+    "delay": "128ms",
+    "watch": [
+      ".swcrc.js",
+      "tools/**/*",
+      ".postcssrc.js",
+      "app.config.js",
+      ".browserslistrc",
+      "wwwroot/favicon.ico"
+    ]
+  },
+  "scripts": {
+    "lint": "tsc --noEmit",
+    "format": "prettier --write .",
+    "prod": "node tools/bin/webpack.config.prod.js",
+    "dev": "nodemon tools/bin/webpack.config.dev.js"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^5.1.4",
+    "antd": "^5.7.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-error-boundary": "^4.0.10"
+  },
+  "devDependencies": {
+    "@nuintun/svgo-loader": "^0.1.2",
+    "@swc/core": "^1.3.71",
+    "@swc/helpers": "^0.5.1",
+    "@types/react": "^18.2.16",
+    "@types/react-dom": "^18.2.7",
+    "autoprefixer": "^10.4.14",
+    "bufferutil": "^4.0.7",
+    "case-sensitive-paths-webpack-plugin": "^2.4.0",
+    "clean-webpack-plugin": "^4.0.0",
+    "css-loader": "^6.8.1",
+    "css-minimizer-webpack-plugin": "5.0.1",
+    "css-modules-types-loader": "^0.3.21",
+    "find-free-ports": "^3.1.1",
+    "html-webpack-plugin": "^5.5.3",
+    "koa": "^2.14.2",
+    "koa-compress": "^5.1.1",
+    "memfs": "^4.2.0",
+    "mini-css-extract-plugin": "^2.7.6",
+    "nodemon": "^3.0.1",
+    "postcss": "^8.4.27",
+    "postcss-loader": "^7.3.3",
+    "prettier": "^3.0.0",
+    "sass": "^1.64.1",
+    "sass-loader": "^13.3.2",
+    "svgc-loader": "^0.1.15",
+    "swc-loader": "^0.2.3",
+    "terser-webpack-plugin": "^5.3.9",
+    "typescript": "^5.1.6",
+    "utf-8-validate": "^6.0.3",
+    "webpack": "^5.88.2",
+    "webpack-dev-service": "^0.5.4"
+  }
+}

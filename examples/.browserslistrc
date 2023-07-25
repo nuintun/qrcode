@@ -1,0 +1,4 @@
+# 默认规则
+defaults
+# 忽略 IE 浏览器
+not IE >= 0
