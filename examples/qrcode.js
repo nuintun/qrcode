@@ -835,10 +835,12 @@
     if (count === 2) {
       // Two digits left over to read, encoded in 7 bits
       if (source.available() < 7) {
+        // TODO 重写错误消息
         throw new Error('illegal numeric');
       }
       const twoDigitsBits = source.read(7);
       if (twoDigitsBits >= 100) {
+        // TODO 重写错误消息
         throw new Error('illegal numeric codeword');
       }
       content += NUMERIC_CHARACTERS.charAt(twoDigitsBits / 10);
@@ -846,10 +848,12 @@
     } else if (count === 1) {
       // One digit left over to read
       if (source.available() < 4) {
+        // TODO 重写错误消息
         throw new Error('illegal numeric');
       }
       const digitBits = source.read(4);
       if (digitBits >= 10) {
+        // TODO 重写错误消息
         throw new Error('illegal numeric codeword');
       }
       content += NUMERIC_CHARACTERS.charAt(digitBits);
