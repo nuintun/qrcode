@@ -6,7 +6,11 @@ import { ECB } from './ECB';
 import { ECLevel } from './ECLevel';
 import { ECBlocks } from './ECBlocks';
 import { BitMatrix } from './BitMatrix';
-import { hammingWeight, toInt32 } from './utils';
+import { hammingWeight } from './utils';
+
+export const MIN_VERSION_SIZE = 21;
+
+export const MAX_VERSION_SIZE = 177;
 
 const VERSION_DECODE_TABLE = [
   // Version 7 - 11
@@ -24,6 +28,9 @@ const VERSION_DECODE_TABLE = [
   // Version 37 - 40
   0x2542e, 0x26a64, 0x27541, 0x28c69
 ];
+
+// Version > 2 has alignment patterns
+export const MIN_VERSION_SIZE_WITH_ALIGNMENTS = 25;
 
 export class Version {
   #size: number;
@@ -377,22 +384,6 @@ export const VERSIONS = [
     new ECBlocks(30, new ECB(20, 15), new ECB(61, 16))
   )
 ];
-
-export const MIN_VERSION_SIZE = VERSIONS[0].size;
-
-export const MAX_VERSION_SIZE = VERSIONS[39].size;
-
-export function fromVersionSize(size: number): Version {
-  if ((size & 0x03) === 1) {
-    const version = VERSIONS[toInt32((size - 17) / 4) - 1];
-
-    if (version != null) {
-      return version;
-    }
-  }
-
-  throw new Error('illegal version size');
-}
 
 export function decodeVersion(version1: number, version2: number): Version {
   let bestDiff = 32;

@@ -6,13 +6,13 @@ import { Detect } from './Detect';
 import { Pattern } from './Pattern';
 import { toInt32 } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
-import { fromVersionSize } from '/common/Version';
 import { createTransform } from './utils/transform';
 import { checkMappingTimingLine } from './utils/timing';
 import { FinderPatternGroup } from './FinderPatternGroup';
 import { ALIGNMENT_PATTERN_RATIOS } from './PatternRatios';
 import { FinderPatternFinder } from './FinderPatternFinder';
 import { AlignmentPatternFinder } from './AlignmentPatternFinder';
+import { MIN_VERSION_SIZE_WITH_ALIGNMENTS } from '/common/Version';
 
 export interface Options {
   strict?: boolean;
@@ -76,10 +76,9 @@ export class Detector {
 
       const finderPatternGroup = iterator.value;
       const size = FinderPatternGroup.size(finderPatternGroup);
-      const version = fromVersionSize(size);
 
       // Find alignment
-      if (version.alignmentPatterns.length > 0) {
+      if (size >= MIN_VERSION_SIZE_WITH_ALIGNMENTS) {
         // Kind of arbitrary -- expand search radius before giving up
         // If we didn't find alignment pattern... well try anyway without it
         const alignmentPatterns = findAlignmentInRegion(matrix, finderPatternGroup, strict);

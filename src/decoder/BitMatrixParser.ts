@@ -26,10 +26,15 @@ export class BitMatrixParser {
 
   public readVersion(): Version {
     const size = this.#size;
-    const version = toInt32((size - 17) / 4);
+    const versionNumber = toInt32((size - 17) / 4);
 
-    if (version >= 1 && version <= 6) {
-      return VERSIONS[version - 1];
+    if (versionNumber < 1) {
+      // TODO 重写错误消息
+      throw new Error('');
+    }
+
+    if (versionNumber >= 1 && versionNumber <= 6) {
+      return VERSIONS[versionNumber - 1];
     }
 
     // Hmm, failed. Try bottom left: 6 wide by 3 tall
@@ -51,7 +56,14 @@ export class BitMatrixParser {
       }
     }
 
-    return decodeVersion(version1, version2);
+    const version = decodeVersion(version1, version2);
+
+    if (version.size > size) {
+      // TODO 重写错误消息
+      throw new Error('');
+    }
+
+    return version;
   }
 
   public readFormatInfo(): FormatInfo {

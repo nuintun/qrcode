@@ -1307,6 +1307,8 @@
   /**
    * @module Version
    */
+  const MIN_VERSION_SIZE = 21;
+  const MAX_VERSION_SIZE = 177;
   const VERSION_DECODE_TABLE = [
     // Version 7 - 11
     0x07c94, 0x085bc, 0x09a99, 0x0a4d3, 0x0bbf6,
@@ -1323,6 +1325,8 @@
     // Version 37 - 40
     0x2542e, 0x26a64, 0x27541, 0x28c69
   ];
+  // Version > 2 has alignment patterns
+  const MIN_VERSION_SIZE_WITH_ALIGNMENTS = 25;
   class Version {
     #size;
     #version;
@@ -1669,17 +1673,6 @@
       new ECBlocks(30, new ECB(20, 15), new ECB(61, 16))
     )
   ];
-  const MIN_VERSION_SIZE = VERSIONS[0].size;
-  const MAX_VERSION_SIZE = VERSIONS[39].size;
-  function fromVersionSize(size) {
-    if ((size & 0x03) === 1) {
-      const version = VERSIONS[toInt32((size - 17) / 4) - 1];
-      if (version != null) {
-        return version;
-      }
-    }
-    throw new Error('illegal version size');
-  }
   function decodeVersion(version1, version2) {
     let bestDiff = 32;
     let bestVersion = 0;
@@ -1762,9 +1755,13 @@
     }
     readVersion() {
       const size = this.#size;
-      const version = toInt32((size - 17) / 4);
-      if (version >= 1 && version <= 6) {
-        return VERSIONS[version - 1];
+      const versionNumber = toInt32((size - 17) / 4);
+      if (versionNumber < 1) {
+        // TODO 重写错误消息
+        throw new Error('');
+      }
+      if (versionNumber >= 1 && versionNumber <= 6) {
+        return VERSIONS[versionNumber - 1];
       }
       // Hmm, failed. Try bottom left: 6 wide by 3 tall
       let version1 = 0;
@@ -1781,7 +1778,12 @@
           version2 = copyBit(matrix, x, y, version2);
         }
       }
-      return decodeVersion(version1, version2);
+      const version = decodeVersion(version1, version2);
+      if (version.size > size) {
+        // TODO 重写错误消息
+        throw new Error('');
+      }
+      return version;
     }
     readFormatInfo() {
       let formatInfo1 = 0;
@@ -4788,9 +4790,8 @@
         let succeed = false;
         const finderPatternGroup = iterator.value;
         const size = FinderPatternGroup.size(finderPatternGroup);
-        const version = fromVersionSize(size);
         // Find alignment
-        if (version.alignmentPatterns.length > 0) {
+        if (size >= MIN_VERSION_SIZE_WITH_ALIGNMENTS) {
           // Kind of arbitrary -- expand search radius before giving up
           // If we didn't find alignment pattern... well try anyway without it
           const alignmentPatterns = findAlignmentInRegion(matrix, finderPatternGroup, strict);
