@@ -718,6 +718,7 @@
       const secondThirdBytes = source.read(16);
       return ((firstByte & 0x1f) << 16) | secondThirdBytes;
     }
+    // TODO 重写错误消息
     throw new Error('');
   }
   const GS = String.fromCharCode(0x1d);
@@ -732,6 +733,7 @@
     let content = '';
     while (count > 1) {
       if (source.available() < 11) {
+        // TODO 重写错误消息
         throw new Error('');
       }
       const nextTwoCharsBits = source.read(11);
@@ -742,6 +744,7 @@
     if (count == 1) {
       // special case: one character left
       if (source.available() < 6) {
+        // TODO 重写错误消息
         throw new Error('');
       }
       content += ALPHANUMERIC_CHARACTERS.charAt(source.read(6));
@@ -751,6 +754,7 @@
   function decodeByteSegment(source, count, decode, fnc1, eciValue) {
     // Don't crash trying to read more bits than we have available.
     if (source.available() < 8 * count) {
+      // TODO 重写错误消息
       throw new Error('');
     }
     const bytes = new Uint8Array(count);
@@ -763,6 +767,7 @@
   }
   function decodeHanziSegment(source, count) {
     if (source.available() < 13 * count) {
+      // TODO 重写错误消息
       throw new Error('');
     }
     let offset = 0;
@@ -786,6 +791,7 @@
   }
   function decodeKanjiSegment(source, count) {
     if (source.available() < 13 * count) {
+      // TODO 重写错误消息
       throw new Error('');
     }
     let offset = 0;
@@ -813,10 +819,12 @@
     while (count >= 3) {
       // Each 10 bits encodes three digits
       if (source.available() < 10) {
+        // TODO 重写错误消息
         throw new Error('');
       }
       const threeDigitsBits = source.read(10);
       if (threeDigitsBits >= 1000) {
+        // TODO 重写错误消息
         throw new Error('');
       }
       content += NUMERIC_CHARACTERS.charAt(threeDigitsBits / 100);
@@ -915,6 +923,7 @@
               content += decodeNumericSegment(source, count);
               break;
             default:
+              // TODO 重写错误消息
               throw new Error('');
           }
       }

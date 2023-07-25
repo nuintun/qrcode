@@ -45,6 +45,7 @@ function parseECIValue(source: BitSource): number {
     return ((firstByte & 0x1f) << 16) | secondThirdBytes;
   }
 
+  // TODO 重写错误消息
   throw new Error('');
 }
 
@@ -65,6 +66,7 @@ function decodeAlphanumericSegment(source: BitSource, count: number, fnc1: boole
 
   while (count > 1) {
     if (source.available() < 11) {
+      // TODO 重写错误消息
       throw new Error('');
     }
 
@@ -79,6 +81,7 @@ function decodeAlphanumericSegment(source: BitSource, count: number, fnc1: boole
   if (count == 1) {
     // special case: one character left
     if (source.available() < 6) {
+      // TODO 重写错误消息
       throw new Error('');
     }
 
@@ -91,6 +94,7 @@ function decodeAlphanumericSegment(source: BitSource, count: number, fnc1: boole
 function decodeByteSegment(source: BitSource, count: number, decode: TextDecode, fnc1: boolean, eciValue?: number): string {
   // Don't crash trying to read more bits than we have available.
   if (source.available() < 8 * count) {
+    // TODO 重写错误消息
     throw new Error('');
   }
 
@@ -108,6 +112,7 @@ function decodeByteSegment(source: BitSource, count: number, decode: TextDecode,
 
 function decodeHanziSegment(source: BitSource, count: number): string {
   if (source.available() < 13 * count) {
+    // TODO 重写错误消息
     throw new Error('');
   }
 
@@ -140,6 +145,7 @@ function decodeHanziSegment(source: BitSource, count: number): string {
 
 function decodeKanjiSegment(source: BitSource, count: number): string {
   if (source.available() < 13 * count) {
+    // TODO 重写错误消息
     throw new Error('');
   }
 
@@ -177,11 +183,13 @@ function decodeNumericSegment(source: BitSource, count: number): string {
   while (count >= 3) {
     // Each 10 bits encodes three digits
     if (source.available() < 10) {
+      // TODO 重写错误消息
       throw new Error('');
     }
 
     const threeDigitsBits = source.read(10);
     if (threeDigitsBits >= 1000) {
+      // TODO 重写错误消息
       throw new Error('');
     }
 
@@ -298,6 +306,7 @@ export function decode(codewords: Uint8Array, version: Version, {}: FormatInfo, 
             content += decodeNumericSegment(source, count);
             break;
           default:
+            // TODO 重写错误消息
             throw new Error('');
         }
     }
