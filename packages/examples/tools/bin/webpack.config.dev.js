@@ -14,6 +14,7 @@ process.env.BABEL_ENV = mode;
 import Koa from 'koa';
 import path from 'path';
 import memfs from 'memfs';
+import { URL } from 'url';
 import webpack from 'webpack';
 import resolveIp from '../lib/ip.js';
 import { URLSearchParams } from 'url';
@@ -132,7 +133,7 @@ async function resolveEntry(entry, options) {
   const port = await resolvePort(ports);
   const devServerHost = `http://${ip}:${port}`;
   const configure = await resolveConfigure(mode);
-  const devServerPublicPath = devServerHost + publicPath;
+  const devServerPublicPath = new URL(publicPath, devServerHost).toString();
   const entry = await resolveEntry(configure.entry, { host: `${ip}:${port}` });
 
   configure.entry = entry;
