@@ -104,6 +104,6 @@ dist
 .tern-port
 
 # Build dist
-/cjs/
-/esm/
-/types/
+cjs/
+esm/
+types/

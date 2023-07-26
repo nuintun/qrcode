@@ -7,7 +7,6 @@
     {
       "files": [
         "*.json",
-        "*.jsonc",
         ".prettierrc"
       ],
       "options": {
@@ -18,7 +17,6 @@
       "files": [
         "*.css",
         "*.less",
-        "*.sass",
         "*.scss"
       ],
       "options": {

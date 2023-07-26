@@ -13,7 +13,7 @@ import targets from './tools/lib/targets.js';
 export default async () => {
   return {
     jsc: {
-      target: 'es2015',
+      target: 'es2022',
       externalHelpers: true,
       parser: {
         tsx: true,

@@ -4,10 +4,12 @@
 
 import '/css/global.scss';
 
-import React, { memo, Suspense } from 'react';
+import React, { memo, Suspense, useMemo } from 'react';
 
-import { App, Button, ConfigProvider, Result, theme } from 'antd';
+import zh_CN from 'antd/locale/zh_CN';
+import { Encoder, Hanzi } from '@nuintun/qrcode';
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
+import { App, Button, ConfigProvider, Image, Result, theme } from 'antd';
 
 const { useToken } = theme;
 
@@ -58,11 +60,22 @@ const ErrorFallback = memo(function ErrorFallback({ error, resetErrorBoundary }:
 const Page = memo(function Page() {
   const { token } = useToken();
   const { colorBgContainer } = token;
+  const qrcode = useMemo<string>(() => {
+    const encoder = new Encoder({
+      level: 'H'
+    });
+
+    const qrcode = encoder.encode(new Hanzi('你好啊'));
+
+    return qrcode.toDataURL(4);
+  }, []);
 
   return (
     <App className="ui-app" style={{ backgroundColor: colorBgContainer }} message={{ maxCount: 3 }}>
       <ErrorBoundary FallbackComponent={ErrorFallback}>
-        <Suspense fallback="loading">hello</Suspense>
+        <Suspense fallback="loading">
+          <Image src={qrcode} alt="qrcode" />
+        </Suspense>
       </ErrorBoundary>
     </App>
   );
@@ -70,7 +83,7 @@ const Page = memo(function Page() {
 
 export default memo(function App() {
   return (
-    <ConfigProvider>
+    <ConfigProvider locale={zh_CN}>
       <Page />
     </ConfigProvider>
   );
