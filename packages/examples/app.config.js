@@ -15,7 +15,7 @@ const images = path.resolve('src/images');
 export default {
   name: '二维码',
   lang: 'zh-CN',
-  publicPath: 'public',
+  publicPath: 'public/',
   context: path.resolve('src'),
   entry: [path.resolve('src/js/index.tsx')],
   outputPath: path.resolve('static/public'),

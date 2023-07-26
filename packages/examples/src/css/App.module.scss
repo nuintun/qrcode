@@ -1,0 +1,17 @@
+.tabs {
+  .logo {
+    margin: 0 8px;
+  }
+
+  .tabBarItem {
+    gap: 4px;
+    align-items: center;
+    display: inline-flex;
+    justify-content: flex-start;
+
+    .icon {
+      margin: 0;
+      font-size: 16px;
+    }
+  }
+}

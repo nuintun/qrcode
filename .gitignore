@@ -107,3 +107,4 @@ dist
 cjs/
 esm/
 types/
+*.module.scss.d.ts

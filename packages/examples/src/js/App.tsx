@@ -3,15 +3,22 @@
  */
 
 import '/css/global.scss';
+import styles from '/css/App.module.scss';
 
-import React, { memo, Suspense, useMemo } from 'react';
+import React, { memo, Suspense, lazy, useMemo } from 'react';
 
+import Icon from '@ant-design/icons';
 import zh_CN from 'antd/locale/zh_CN';
-import { Encoder, Hanzi } from '@nuintun/qrcode';
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
-import { App, Button, ConfigProvider, Image, Result, theme } from 'antd';
+import { App, Button, ConfigProvider, Result, Spin, Tabs, theme } from 'antd';
+
+import favicon from '/images/favicon.ico';
+import EncodeIcon from '/images/encode.svg';
+import DecodeIcon from '/images/decode.svg';
 
 const { useToken } = theme;
+const Encode = lazy(() => import('/js/pages/Encode'));
+const Decode = lazy(() => import('/js/pages/Decode'));
 
 const ErrorFallback = memo(function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
   if (__DEV__) {
@@ -60,22 +67,58 @@ const ErrorFallback = memo(function ErrorFallback({ error, resetErrorBoundary }:
 const Page = memo(function Page() {
   const { token } = useToken();
   const { colorBgContainer } = token;
-  const qrcode = useMemo<string>(() => {
-    const encoder = new Encoder({
-      level: 'H'
-    });
-
-    const qrcode = encoder.encode(new Hanzi('你好啊'));
-
-    return qrcode.toDataURL(4);
+  const fallback = useMemo(() => {
+    return (
+      <Spin delay={120}>
+        <div style={{ height: 360 }} />
+      </Spin>
+    );
   }, []);
+  const items = useMemo(
+    () => [
+      {
+        key: 'encode',
+        label: (
+          <div className={styles.tabBarItem}>
+            <Icon className={styles.icon} component={EncodeIcon} />
+            <span>二维码编码</span>
+          </div>
+        ),
+        children: (
+          <Suspense fallback={fallback}>
+            <Encode />
+          </Suspense>
+        )
+      },
+      {
+        key: 'decode',
+        label: (
+          <div className={styles.tabBarItem}>
+            <Icon className={styles.icon} component={DecodeIcon} />
+            <span>二维码解码</span>
+          </div>
+        ),
+        children: (
+          <Suspense fallback={fallback}>
+            <Decode />
+          </Suspense>
+        )
+      }
+    ],
+    []
+  );
 
   return (
     <App className="ui-app" style={{ backgroundColor: colorBgContainer }} message={{ maxCount: 3 }}>
       <ErrorBoundary FallbackComponent={ErrorFallback}>
-        <Suspense fallback="loading">
-          <Image src={qrcode} alt="qrcode" />
-        </Suspense>
+        <Tabs
+          centered
+          items={items}
+          className={styles.tabs}
+          tabBarExtraContent={{
+            left: <img className={styles.logo} src={favicon} alt="logo" />
+          }}
+        />
       </ErrorBoundary>
     </App>
   );
