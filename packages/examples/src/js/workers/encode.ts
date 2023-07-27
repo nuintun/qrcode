@@ -22,7 +22,6 @@ export interface EncodeResultMessage {
 type CharsetNames = keyof typeof Charset;
 
 function hex2rgb(hex: string): [R: number, G: number, B: number] {
-  console.log(hex);
   const value = parseInt(hex.replace('#', '0x'));
 
   return [(value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff];
