@@ -1,4 +1,6 @@
 .tabs {
+  height: 100%;
+
   .logo {
     margin: 0 8px;
   }
@@ -13,5 +15,9 @@
       margin: 0;
       font-size: 16px;
     }
+  }
+
+  :global(.ant-tabs-content-holder) {
+    overflow: auto;
   }
 }

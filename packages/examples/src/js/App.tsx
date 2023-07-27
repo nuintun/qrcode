@@ -5,20 +5,27 @@
 import '/css/global.scss';
 import styles from '/css/App.module.scss';
 
-import React, { memo, Suspense, lazy, useMemo } from 'react';
+import React, { lazy, memo, Suspense, useMemo } from 'react';
 
 import Icon from '@ant-design/icons';
 import zh_CN from 'antd/locale/zh_CN';
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
-import { App, Button, ConfigProvider, Result, Spin, Tabs, theme } from 'antd';
+import { App, Button, ConfigProvider, Result, Spin, Tabs } from 'antd';
 
 import favicon from '/images/favicon.ico';
 import EncodeIcon from '/images/encode.svg';
 import DecodeIcon from '/images/decode.svg';
 
-const { useToken } = theme;
 const Encode = lazy(() => import('/js/pages/Encode'));
 const Decode = lazy(() => import('/js/pages/Decode'));
+
+const Loading = memo(function Loading() {
+  return (
+    <Spin delay={120}>
+      <div style={{ height: 360 }} />
+    </Spin>
+  );
+});
 
 const ErrorFallback = memo(function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
   if (__DEV__) {
@@ -65,15 +72,6 @@ const ErrorFallback = memo(function ErrorFallback({ error, resetErrorBoundary }:
 });
 
 const Page = memo(function Page() {
-  const { token } = useToken();
-  const { colorBgContainer } = token;
-  const fallback = useMemo(() => {
-    return (
-      <Spin delay={120}>
-        <div style={{ height: 360 }} />
-      </Spin>
-    );
-  }, []);
   const items = useMemo(
     () => [
       {
@@ -85,7 +83,7 @@ const Page = memo(function Page() {
           </div>
         ),
         children: (
-          <Suspense fallback={fallback}>
+          <Suspense fallback={<Loading />}>
             <Encode />
           </Suspense>
         )
@@ -99,7 +97,7 @@ const Page = memo(function Page() {
           </div>
         ),
         children: (
-          <Suspense fallback={fallback}>
+          <Suspense fallback={<Loading />}>
             <Decode />
           </Suspense>
         )
@@ -109,12 +107,13 @@ const Page = memo(function Page() {
   );
 
   return (
-    <App className="ui-app" style={{ backgroundColor: colorBgContainer }} message={{ maxCount: 3 }}>
+    <App className="ui-app" message={{ maxCount: 3 }}>
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         <Tabs
           centered
           items={items}
           className={styles.tabs}
+          tabBarStyle={{ margin: 0 }}
           tabBarExtraContent={{
             left: <img className={styles.logo} src={favicon} alt="logo" />
           }}
