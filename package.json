@@ -21,11 +21,12 @@
   "homepage": "https://github.com/nuintun/qrcode#readme",
   "scripts": {
     "lint": "pnpm --filter ./packages/* lint",
+    "clean": "pnpm --filter ./packages/* clean",
     "format": "pnpm --filter ./packages/* format",
     "build": "pnpm --filter ./packages/core build",
     "dev": "pnpm --filter ./packages/examples dev",
     "prod": "pnpm --filter ./packages/examples prod",
-    "clean": "pnpm -s dlx rimraf -g **/node_modules **/pnpm-lock.yaml"
+    "reset": "pnpm -s dlx rimraf -g **/node_modules **/pnpm-lock.yaml"
   },
   "dependencies": {
     "@swc/helpers": "^0.5.1",
