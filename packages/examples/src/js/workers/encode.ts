@@ -21,12 +21,28 @@ export interface EncodeResultMessage {
 
 type CharsetNames = keyof typeof Charset;
 
-const NUMERIC_RE = /^\d+$/;
-const ALPHANUMERIC_RE = /^[0-9A-Z$%*+-./: ]+$/;
+function hex2rgb(hex: string): [R: number, G: number, B: number] {
+  console.log(hex);
+  const value = parseInt(hex.replace('#', '0x'));
 
-function chooseBestMode({ mode, content, charset }: EncodeMessage) {
+  return [(value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff];
+}
+
+function getFNC1Hint({ fnc1, aimIndicator }: EncodeMessage): ['GS1'] | ['AIM', number] | undefined {
+  switch (fnc1) {
+    case 'GS1':
+      return ['GS1'];
+    case 'AIM':
+      return ['AIM', +aimIndicator];
+  }
+}
+
+function chooseBestMode({ mode, content, charset }: EncodeMessage): Byte | Hanzi | Kanji | Numeric | Alphanumeric {
   switch (mode) {
     case 'Auto':
+      const NUMERIC_RE = /^\d+$/;
+      const ALPHANUMERIC_RE = /^[0-9A-Z$%*+-./: ]+$/;
+
       if (NUMERIC_RE.test(content)) {
         return new Numeric(content);
       } else if (ALPHANUMERIC_RE.test(content)) {
@@ -64,21 +80,6 @@ function chooseBestMode({ mode, content, charset }: EncodeMessage) {
       return new Alphanumeric(content);
     default:
       return new Byte(content, Charset[charset as CharsetNames]);
-  }
-}
-
-function hex2rgb(hex: string): [R: number, G: number, B: number] {
-  const value = parseInt(hex.replace('#', '0x'));
-
-  return [(value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff];
-}
-
-function getFNC1Hint({ fnc1, aimIndicator }: EncodeMessage): ['GS1'] | ['AIM', number] | undefined {
-  switch (fnc1) {
-    case 'GS1':
-      return ['GS1'];
-    case 'AIM':
-      return ['AIM', +aimIndicator];
   }
 }
 

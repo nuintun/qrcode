@@ -2,14 +2,26 @@ import styles from '/css/Encode.module.scss';
 
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
+import Icon from '@ant-design/icons';
+import { Color } from 'antd/es/color-picker';
 import useLazyState from '/js/hooks/useLazyState';
 import { EncodeMessage, EncodeResultMessage } from '/js/workers/encode';
 import { Alert, Button, Col, ColorPicker, Form, Image, Input, InputNumber, Row, Select } from 'antd';
+
+import EncodeIcon from '/images/encode.svg';
 
 const { Option } = Select;
 const { TextArea } = Input;
 const { Item: FormItem, useForm, useWatch } = Form;
 const worker = new Worker(new URL('/js/workers/encode.ts', import.meta.url));
+
+function convertColor(color: string | Color): string {
+  if (typeof color === 'string') {
+    return color;
+  }
+
+  return color.toHexString();
+}
 
 interface ResultProps {
   value?: EncodeResultMessage;
@@ -23,9 +35,9 @@ const Result = memo(function Result({ value }: ResultProps) {
       case 'ok':
         return <Image className={styles.qrcode} src={data} alt="qrcode" />;
       case 'error':
-        return <Alert type="error" message={data} />;
+        return <Alert type="error" message={data} showIcon />;
       default:
-        return <Alert type="error" message="unknown error" />;
+        return <Alert type="error" message="unknown error" showIcon />;
     }
   }
 
@@ -92,7 +104,13 @@ export default memo(function Encode() {
   const onFinish = useCallback((values: EncodeMessage) => {
     setLoading(true);
 
-    worker.postMessage(values);
+    const { background, foreground } = values;
+
+    worker.postMessage({
+      ...values,
+      background: convertColor(background),
+      foreground: convertColor(foreground)
+    });
   }, []);
 
   return (
@@ -158,26 +176,32 @@ export default memo(function Encode() {
           </Col>
           <Col md={6} sm={12} xs={24}>
             <FormItem name="moduleSize" label="模块大小">
-              <InputNumber min={1} style={{ width: '100%' }} />
+              <InputNumber min={1} max={50} style={{ width: '100%' }} />
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
             <FormItem name="quietZone" label="静区大小">
-              <InputNumber min={0} style={{ width: '100%' }} />
+              <InputNumber min={0} max={200} style={{ width: '100%' }} />
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
             <FormItem name="foreground" label="前景颜色">
-              <ColorPicker showText />
+              <ColorPicker showText format="hex" />
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
             <FormItem name="background" label="背景颜色">
-              <ColorPicker showText />
+              <ColorPicker showText format="hex" />
             </FormItem>
           </Col>
           <Col span={24}>
-            <Button loading={loading} disabled={!content} htmlType="submit" type="primary">
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              disabled={!content}
+              icon={<Icon component={EncodeIcon} />}
+            >
               编码
             </Button>
           </Col>
