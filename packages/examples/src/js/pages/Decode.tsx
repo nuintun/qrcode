@@ -3,7 +3,7 @@ import styles from '/css/Decode.module.scss';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import useLazyState from '/js/hooks/useLazyState';
-import ImageUpload from '/js/components/ImageUpload';
+import ImagePicker from '/js/components/ImagePicker';
 import Icon, { UploadOutlined } from '@ant-design/icons';
 import { EncodeResultMessage } from '/js/workers/encode';
 import { Alert, Button, Col, Form, Image, Row, Switch } from 'antd';
@@ -103,9 +103,9 @@ export default memo(function Encode() {
         <Row gutter={24}>
           <Col span={24}>
             <FormItem name="image">
-              <ImageUpload>
+              <ImagePicker>
                 <Button icon={<UploadOutlined />}>选择图片</Button>
-              </ImageUpload>
+              </ImagePicker>
             </FormItem>
           </Col>
           <Col span={24}>
