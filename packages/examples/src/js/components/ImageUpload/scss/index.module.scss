@@ -1,0 +1,11 @@
+.upload {
+  gap: 8px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  .preview {
+    max-height: 256px;
+    border: 1px dashed #d9d9d9;
+  }
+}

@@ -1,6 +1,6 @@
 import styles from '/css/Encode.module.scss';
 
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import Icon from '@ant-design/icons';
 import { Color } from 'antd/es/color-picker';
@@ -13,7 +13,7 @@ import EncodeIcon from '/images/encode.svg';
 const { Option } = Select;
 const { TextArea } = Input;
 const { Item: FormItem, useForm, useWatch } = Form;
-const worker = new Worker(new URL('/js/workers/encode.ts', import.meta.url));
+const worker = new Worker(new URL('/js/workers/encode', import.meta.url));
 
 function convertColor(color: string | Color): string {
   if (typeof color === 'string') {
@@ -37,7 +37,7 @@ const Result = memo(function Result({ value }: ResultProps) {
       case 'error':
         return <Alert type="error" message={data} showIcon />;
       default:
-        return <Alert type="error" message="unknown error" showIcon />;
+        return <Alert type="error" message="发生未知错误" showIcon />;
     }
   }
 
@@ -45,7 +45,7 @@ const Result = memo(function Result({ value }: ResultProps) {
 });
 
 export default memo(function Encode() {
-  const [form] = useForm();
+  const [form] = useForm<EncodeMessage>();
 
   const fnc1 = useWatch(['fnc1'], form);
 
@@ -85,6 +85,7 @@ export default memo(function Encode() {
     };
   }, []);
 
+  const lockRef = useRef(false);
   const [loading, setLoading] = useLazyState(false);
   const [state, setState] = useState<EncodeResultMessage>();
 
@@ -92,6 +93,8 @@ export default memo(function Encode() {
     const onMessage = ({ data }: MessageEvent<EncodeResultMessage>) => {
       setState(data);
       setLoading(false);
+
+      lockRef.current = false;
     };
 
     worker.addEventListener('message', onMessage);
@@ -102,15 +105,19 @@ export default memo(function Encode() {
   }, []);
 
   const onFinish = useCallback((values: EncodeMessage) => {
-    setLoading(true);
+    if (!lockRef.current) {
+      setLoading(true);
 
-    const { background, foreground } = values;
+      lockRef.current = true;
 
-    worker.postMessage({
-      ...values,
-      background: convertColor(background),
-      foreground: convertColor(foreground)
-    });
+      const { background, foreground } = values;
+
+      worker.postMessage({
+        ...values,
+        background: convertColor(background),
+        foreground: convertColor(foreground)
+      });
+    }
   }, []);
 
   return (
@@ -152,7 +159,7 @@ export default memo(function Encode() {
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
-            <FormItem name="mode" label="编码方式">
+            <FormItem name="mode" label="编码模式">
               <Select>
                 <Option value="Auto" selected>
                   Auto
@@ -166,7 +173,7 @@ export default memo(function Encode() {
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
-            <FormItem name="charset" label="字符集">
+            <FormItem name="charset" label="字符编码">
               <Select>
                 <Option value="ASCII">ASCII</Option>
                 <Option value="UTF_8">UTF-8</Option>
@@ -186,12 +193,12 @@ export default memo(function Encode() {
           </Col>
           <Col md={6} sm={12} xs={24}>
             <FormItem name="foreground" label="前景颜色">
-              <ColorPicker showText format="hex" />
+              <ColorPicker showText disabledAlpha />
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
             <FormItem name="background" label="背景颜色">
-              <ColorPicker showText format="hex" />
+              <ColorPicker showText disabledAlpha />
             </FormItem>
           </Col>
           <Col span={24}>

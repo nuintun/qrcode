@@ -1,3 +1,7 @@
+/**
+ * @module encode
+ */
+
 import { Alphanumeric, Byte, Charset, Encoder, Hanzi, Kanji, Numeric } from '@nuintun/qrcode';
 
 export interface EncodeMessage {
@@ -22,7 +26,7 @@ export interface EncodeResultMessage {
 type CharsetNames = keyof typeof Charset;
 
 function hex2rgb(hex: string): [R: number, G: number, B: number] {
-  const value = parseInt(hex.replace('#', '0x'));
+  const value = parseInt(`0x${hex.slice(1, 7)}`);
 
   return [(value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff];
 }

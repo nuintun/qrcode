@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunk=self.webpackChunk||[]).push([[997],{1997:function(e,n,s){s.r(n);var u=s(9980),a=s(2363);n.default=(0,a.memo)(function(){return(0,u.jsx)("div",{className:"page",children:"二维码解码"})})}}]);
