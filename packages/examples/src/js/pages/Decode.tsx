@@ -5,28 +5,60 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useLazyState from '/js/hooks/useLazyState';
 import ImagePicker from '/js/components/ImagePicker';
 import Icon, { UploadOutlined } from '@ant-design/icons';
-import { EncodeResultMessage } from '/js/workers/encode';
+import { DecodeResultMessage } from '/js/workers/decode';
+
 import { Alert, Button, Col, Form, Image, Row, Switch } from 'antd';
 
 import qrcode from '/images/qrcode.jpg';
 import DncodeIcon from '/images/decode.svg';
 
+const { PreviewGroup } = Image;
 const { Item: FormItem, useForm, useWatch } = Form;
 const worker = new Worker(new URL('/js/workers/decode', import.meta.url));
 
 interface ResultProps {
-  value?: EncodeResultMessage;
+  value?: DecodeResultMessage;
 }
 
 const Result = memo(function Result({ value }: ResultProps) {
-  if (value) {
-    const { data } = value;
+  useEffect(() => {
+    return () => {
+      if (value && value.type === 'ok') {
+        const { data } = value;
 
+        for (const { image } of data) {
+          URL.revokeObjectURL(image);
+        }
+      }
+    };
+  }, [value]);
+
+  if (value) {
     switch (value.type) {
       case 'ok':
-        return <Image className={styles.qrcode} src={data} alt="qrcode" />;
+        return (
+          <PreviewGroup
+            preview={{
+              // @ts-ignore
+              countRender(current, total) {
+                return (
+                  <div className={styles.tips}>
+                    <p>
+                      {current}/{total}
+                    </p>
+                    <pre>{value.data[current - 1].content}</pre>
+                  </div>
+                );
+              }
+            }}
+          >
+            {value.data.map(({ image }) => {
+              return <Image key={image} className={styles.qrcode} src={image} />;
+            })}
+          </PreviewGroup>
+        );
       case 'error':
-        return <Alert type="error" message={data} showIcon />;
+        return <Alert type="error" message={value.data} showIcon />;
       default:
         return <Alert type="error" message="unknown error" showIcon />;
     }
@@ -56,10 +88,10 @@ export default memo(function Encode() {
 
   const lockRef = useRef(false);
   const [loading, setLoading] = useLazyState(false);
-  const [state, setState] = useState<EncodeResultMessage>();
+  const [state, setState] = useState<DecodeResultMessage>();
 
   useEffect(() => {
-    const onMessage = ({ data }: MessageEvent<EncodeResultMessage>) => {
+    const onMessage = ({ data }: MessageEvent<DecodeResultMessage>) => {
       setState(data);
       setLoading(false);
 

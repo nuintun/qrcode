@@ -1,8 +1,30 @@
 .result {
-  margin-top: 16px;
+  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 24px;
 
   .qrcode {
     max-height: 256px;
     border: 1px dashed #d9d9d9;
+  }
+}
+
+.tips {
+  gap: 16px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+
+  p,
+  pre {
+    margin: 0;
+  }
+
+  pre {
+    padding: 0 16px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
   }
 }

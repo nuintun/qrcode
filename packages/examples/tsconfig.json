@@ -17,6 +17,11 @@
     "noUnusedParameters": true,
     "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true,
+    "lib": [
+      "DOM",
+      "ESNext",
+      "WebWorker"
+    ],
     "paths": {
       "/js/*": [
         "src/js/*"
