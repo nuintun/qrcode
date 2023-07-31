@@ -22,7 +22,7 @@ interface ResultProps {
 const Result = memo(function Result({ value }: ResultProps) {
   const items = useMemo<CollapseProps['items']>(() => {
     if (value && value.type === 'ok') {
-      const { image, contents } = value.data;
+      const { image, contents } = value.payload;
 
       return contents.map((content, index) => {
         return {
@@ -37,7 +37,7 @@ const Result = memo(function Result({ value }: ResultProps) {
   if (value) {
     switch (value.type) {
       case 'ok':
-        const { image } = value.data;
+        const { image } = value.payload;
         const defaultActiveKey = `${image}-0`;
 
         return (
@@ -51,7 +51,7 @@ const Result = memo(function Result({ value }: ResultProps) {
           />
         );
       case 'error':
-        return <Alert type="error" message={value.data} showIcon />;
+        return <Alert type="error" message={value.message} showIcon />;
       default:
         return <Alert type="error" message="unknown error" showIcon />;
     }
@@ -70,9 +70,14 @@ export default memo(function Encode() {
   const lockRef = useRef(false);
   const [form] = useForm<FormValues>();
   const image = useWatch(['image'], form);
-  const [preview, setPreview] = useState(qrcode);
+  const [preview, setPreview] = useState(image);
   const [loading, setLoading] = useLazyState(false);
   const [state, setState] = useState<DecodeResultMessage>();
+
+  const onSwitchChange = useCallback(() => {
+    setPreview(image);
+    setState(undefined);
+  }, [image]);
 
   const initialValues = useMemo<FormValues>(() => {
     return {
@@ -80,11 +85,6 @@ export default memo(function Encode() {
       strict: false,
       invert: false
     };
-  }, []);
-
-  const onImagePackerChange = useCallback((value: string) => {
-    setPreview(value);
-    setState(undefined);
   }, []);
 
   const onFinish = useCallback((values: FormValues) => {
@@ -111,6 +111,11 @@ export default memo(function Encode() {
     }
   }, []);
 
+  const onImagePackerChange = useCallback((value: string) => {
+    setPreview(value);
+    setState(undefined);
+  }, []);
+
   const previewRender = useCallback(() => {
     return <Image title={preview} className={styles.preview} src={preview} alt="preview" />;
   }, [preview]);
@@ -118,7 +123,7 @@ export default memo(function Encode() {
   useEffect(() => {
     return () => {
       if (state && state.type === 'ok') {
-        URL.revokeObjectURL(state.data.image);
+        URL.revokeObjectURL(state.payload.image);
       }
     };
   }, [state]);
@@ -129,7 +134,7 @@ export default memo(function Encode() {
       setLoading(false);
 
       if (data.type === 'ok') {
-        setPreview(data.data.image);
+        setPreview(data.payload.image);
       }
 
       lockRef.current = false;
@@ -157,12 +162,12 @@ export default memo(function Encode() {
           </Col>
           <Col span={24}>
             <FormItem name="strict" label="严格模式" valuePropName="checked">
-              <Switch />
+              <Switch onChange={onSwitchChange} />
             </FormItem>
           </Col>
           <Col span={24}>
             <FormItem name="invert" label="图片反色" valuePropName="checked">
-              <Switch />
+              <Switch onChange={onSwitchChange} />
             </FormItem>
           </Col>
           <Col span={24}>

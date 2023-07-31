@@ -15,9 +15,11 @@ export interface DecodeMessage {
   image: ImageBitmap;
 }
 
-type Context2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+export type DecodeResultMessage =
+  | { type: 'error'; message: string }
+  | { type: 'ok'; payload: { image: string; contents: string[] } };
 
-export type DecodeResultMessage = { type: 'ok'; data: { image: string; contents: string[] } } | { type: 'error'; data: string };
+type Context2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
 function drawLine(
   context: Context2D,
@@ -125,7 +127,7 @@ self.addEventListener('message', async ({ data }: MessageEvent<DecodeMessage>) =
       blob => {
         const message: DecodeResultMessage = {
           type: 'ok',
-          data: {
+          payload: {
             contents,
             image: URL.createObjectURL(blob)
           }
@@ -136,7 +138,7 @@ self.addEventListener('message', async ({ data }: MessageEvent<DecodeMessage>) =
       () => {
         const message: DecodeResultMessage = {
           type: 'error',
-          data: '生成预览图失败'
+          message: '生成预览图失败'
         };
 
         self.postMessage(message);
@@ -145,7 +147,7 @@ self.addEventListener('message', async ({ data }: MessageEvent<DecodeMessage>) =
   } else {
     const message: DecodeResultMessage = {
       type: 'error',
-      data: '未发现二维码'
+      message: '未发现二维码'
     };
 
     self.postMessage(message);

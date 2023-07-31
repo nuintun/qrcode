@@ -18,12 +18,9 @@ export interface EncodeMessage {
   level: 'L' | 'M' | 'Q' | 'H';
 }
 
-export interface EncodeResultMessage {
-  data: string;
-  type: 'ok' | 'error';
-}
-
 type CharsetNames = keyof typeof Charset;
+
+export type EncodeResultMessage = { type: 'ok'; payload: string } | { type: 'error'; message: string };
 
 function hex2rgb(hex: string): [R: number, G: number, B: number] {
   const value = parseInt(`0x${hex.slice(1, 7)}`);
@@ -102,7 +99,7 @@ self.addEventListener('message', ({ data }: MessageEvent<EncodeMessage>) => {
     const { moduleSize, quietZone, background, foreground } = data;
     const message: EncodeResultMessage = {
       type: 'ok',
-      data: qrcode.toDataURL(moduleSize, {
+      payload: qrcode.toDataURL(moduleSize, {
         margin: quietZone,
         background: hex2rgb(background),
         foreground: hex2rgb(foreground)
@@ -113,7 +110,7 @@ self.addEventListener('message', ({ data }: MessageEvent<EncodeMessage>) => {
   } catch (error) {
     const message: EncodeResultMessage = {
       type: 'error',
-      data: (error as Error).message
+      message: (error as Error).message
     };
 
     self.postMessage(message);

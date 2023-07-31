@@ -29,13 +29,11 @@ interface ResultProps {
 
 const Result = memo(function Result({ value }: ResultProps) {
   if (value) {
-    const { data } = value;
-
     switch (value.type) {
       case 'ok':
-        return <Image className={styles.preview} src={data} alt="preview" />;
+        return <Image className={styles.preview} src={value.payload} alt="preview" />;
       case 'error':
-        return <Alert type="error" message={data} showIcon />;
+        return <Alert type="error" message={value.message} showIcon />;
       default:
         return <Alert type="error" message="发生未知错误" showIcon />;
     }
@@ -46,10 +44,27 @@ const Result = memo(function Result({ value }: ResultProps) {
 
 export default memo(function Encode() {
   const [form] = useForm<EncodeMessage>();
-
+  const lockRef = useRef(false);
   const fnc1 = useWatch(['fnc1'], form);
-
   const content = useWatch('content', form);
+  const [loading, setLoading] = useLazyState(false);
+  const [state, setState] = useState<EncodeResultMessage>();
+
+  const initialValues = useMemo<EncodeMessage>(() => {
+    return {
+      level: 'M',
+      fnc1: 'None',
+      mode: 'Auto',
+      moduleSize: 4,
+      quietZone: 16,
+      aimIndicator: 0,
+      version: 'auto',
+      charset: 'UTF_8',
+      background: '#ffffff',
+      foreground: '#000000',
+      content: 'https://github.com/nuintun/qrcode'
+    };
+  }, []);
 
   const versions = useMemo<React.ReactElement[]>(() => {
     const options = [
@@ -69,41 +84,6 @@ export default memo(function Encode() {
     return options;
   }, []);
 
-  const initialValues = useMemo<EncodeMessage>(() => {
-    return {
-      level: 'M',
-      fnc1: 'None',
-      mode: 'Auto',
-      moduleSize: 4,
-      quietZone: 16,
-      aimIndicator: 0,
-      version: 'auto',
-      charset: 'UTF_8',
-      background: '#ffffff',
-      foreground: '#000000',
-      content: 'https://github.com/nuintun/qrcode'
-    };
-  }, []);
-
-  const lockRef = useRef(false);
-  const [loading, setLoading] = useLazyState(false);
-  const [state, setState] = useState<EncodeResultMessage>();
-
-  useEffect(() => {
-    const onMessage = ({ data }: MessageEvent<EncodeResultMessage>) => {
-      setState(data);
-      setLoading(false);
-
-      lockRef.current = false;
-    };
-
-    worker.addEventListener('message', onMessage);
-
-    return () => {
-      worker.removeEventListener('message', onMessage);
-    };
-  }, []);
-
   const onFinish = useCallback((values: EncodeMessage) => {
     if (!lockRef.current) {
       setLoading(true);
@@ -120,9 +100,24 @@ export default memo(function Encode() {
     }
   }, []);
 
+  useEffect(() => {
+    const onMessage = ({ data }: MessageEvent<EncodeResultMessage>) => {
+      setState(data);
+      setLoading(false);
+
+      lockRef.current = false;
+    };
+
+    worker.addEventListener('message', onMessage);
+
+    return () => {
+      worker.removeEventListener('message', onMessage);
+    };
+  }, []);
+
   return (
     <div className="page">
-      <Form form={form} onFinish={onFinish} layout="vertical" initialValues={initialValues}>
+      <Form form={form} layout="vertical" onFinish={onFinish} initialValues={initialValues}>
         <Row gutter={24}>
           <Col span={24}>
             <FormItem name="content">
