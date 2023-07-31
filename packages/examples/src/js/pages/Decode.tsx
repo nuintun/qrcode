@@ -84,6 +84,7 @@ export default memo(function Encode() {
 
   const onImagePackerChange = useCallback((value: string) => {
     setPreview(value);
+    setState(undefined);
   }, []);
 
   const onFinish = useCallback((values: FormValues) => {
