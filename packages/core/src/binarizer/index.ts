@@ -52,17 +52,17 @@ function calculateBlackPoints(luminances: Uint8Array, width: number, height: num
 
       for (let y1 = 0, offset = offsetY * width + offsetX; y1 < BLOCK_SIZE; y1++, offset += width) {
         for (let x1 = 0; x1 < BLOCK_SIZE; x1++) {
-          const pixel = luminances[offset + x1];
+          const luminance = luminances[offset + x1];
 
-          sum += pixel;
+          sum += luminance;
 
           // still looking for good contrast
-          if (pixel < min) {
-            min = pixel;
+          if (luminance < min) {
+            min = luminance;
           }
 
-          if (pixel > max) {
-            max = pixel;
+          if (luminance > max) {
+            max = luminance;
           }
         }
 
@@ -151,8 +151,8 @@ function adaptiveThreshold(luminances: Uint8Array, width: number, height: number
   return matrix;
 }
 
-export function binarize({ data, width, height }: ImageData): BitMatrix {
-  // Convert image to luminances
+export function grayscale({ data, width, height }: ImageData): Uint8Array {
+  // Convert image to grayscale
   const luminances = new Uint8Array(width * height);
 
   for (let y = 0; y < height; y++) {
@@ -167,6 +167,14 @@ export function binarize({ data, width, height }: ImageData): BitMatrix {
 
       luminances[offset + x] = r * 0.299 + g * 0.587 + b * 0.114;
     }
+  }
+
+  return luminances;
+}
+
+export function binarize(luminances: Uint8Array, width: number, height: number): BitMatrix {
+  if (luminances.length !== width * height) {
+    throw new Error('luminances length must be equals to width * height');
   }
 
   if (width < MINIMUM_DIMENSION || height < MINIMUM_DIMENSION) {

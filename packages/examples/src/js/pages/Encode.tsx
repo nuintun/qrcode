@@ -33,7 +33,7 @@ const Result = memo(function Result({ value }: ResultProps) {
 
     switch (value.type) {
       case 'ok':
-        return <Image className={styles.qrcode} src={data} alt="qrcode" />;
+        return <Image className={styles.preview} src={data} alt="preview" />;
       case 'error':
         return <Alert type="error" message={data} showIcon />;
       default:

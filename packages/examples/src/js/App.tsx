@@ -75,7 +75,7 @@ const Page = memo(function Page() {
 
 export default memo(function App() {
   return (
-    <ConfigProvider locale={zh_CN}>
+    <ConfigProvider locale={zh_CN} theme={{ token: { borderRadius: 4 } }}>
       <Page />
     </ConfigProvider>
   );

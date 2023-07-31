@@ -2,16 +2,11 @@
  * @module decode
  */
 
-import { binarize, Decoder, Detector } from '@nuintun/qrcode';
+import { binarize, Decoder, Detector, grayscale } from '@nuintun/qrcode';
 
 interface Point {
   x: number;
   y: number;
-}
-
-export interface DecodeItem {
-  image: string;
-  content: string;
 }
 
 export interface DecodeMessage {
@@ -22,17 +17,7 @@ export interface DecodeMessage {
 
 type Context2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
-export type DecodeResultMessage = { type: 'ok'; data: DecodeItem[] } | { type: 'error'; data: string };
-
-function getImageData(image: ImageBitmap): ImageData {
-  const { width, height } = image;
-  const canvas = new OffscreenCanvas(width, height);
-  const context = canvas.getContext('2d')!;
-
-  context.drawImage(image, 0, 0);
-
-  return context.getImageData(0, 0, width, height);
-}
+export type DecodeResultMessage = { type: 'ok'; data: { image: string; contents: string[] } } | { type: 'error'; data: string };
 
 function drawLine(
   context: Context2D,
@@ -66,17 +51,22 @@ function markPoint(context: Context2D, { x, y }: Point, radius: number, fillStyl
 
 self.addEventListener('message', async ({ data }: MessageEvent<DecodeMessage>) => {
   const { image } = data;
-  const binarized = binarize(getImageData(image));
+  const { width, height } = image;
+  const canvas = new OffscreenCanvas(width, height);
+  const context = canvas.getContext('2d')!;
+
+  context.drawImage(image, 0, 0);
+
+  const luminances = grayscale(context.getImageData(0, 0, width, height));
+  const binarized = binarize(luminances, width, height);
 
   if (data.invert) {
     binarized.flip();
   }
 
-  const canvas = new OffscreenCanvas(image.width, image.height);
   const detector = new Detector({ strict: data.strict });
   const detected = detector.detect(binarized);
-  const context = canvas.getContext('2d')!;
-  const success: DecodeItem[] = [];
+  const contents: string[] = [];
   const decoder = new Decoder();
 
   let iterator = detected.next();
@@ -88,8 +78,6 @@ self.addEventListener('message', async ({ data }: MessageEvent<DecodeMessage>) =
 
     try {
       const decoded = decoder.decode(detect.matrix);
-
-      context.drawImage(image, 0, 0);
 
       const { size, finder, alignment } = detect;
       const topLeftCorner = detect.mapping(0, 0);
@@ -122,12 +110,7 @@ self.addEventListener('message', async ({ data }: MessageEvent<DecodeMessage>) =
         markPoint(context, alignment, alignment.moduleSize, '#ff00ff');
       }
 
-      await canvas.convertToBlob().then(blob => {
-        success.push({
-          content: decoded.content,
-          image: URL.createObjectURL(blob)
-        });
-      });
+      contents.push(decoded.content);
 
       succeed = true;
     } catch (error) {
@@ -137,9 +120,34 @@ self.addEventListener('message', async ({ data }: MessageEvent<DecodeMessage>) =
     iterator = detected.next(succeed);
   }
 
-  if (success.length) {
-    self.postMessage({ type: 'ok', data: success });
+  if (contents.length > 0) {
+    canvas.convertToBlob().then(
+      blob => {
+        const message: DecodeResultMessage = {
+          type: 'ok',
+          data: {
+            contents,
+            image: URL.createObjectURL(blob)
+          }
+        };
+
+        self.postMessage(message);
+      },
+      () => {
+        const message: DecodeResultMessage = {
+          type: 'error',
+          data: '生成预览图失败'
+        };
+
+        self.postMessage(message);
+      }
+    );
   } else {
-    self.postMessage({ type: 'error', data: '未发现二维码' });
+    const message: DecodeResultMessage = {
+      type: 'error',
+      data: '未发现二维码'
+    };
+
+    self.postMessage(message);
   }
 });
