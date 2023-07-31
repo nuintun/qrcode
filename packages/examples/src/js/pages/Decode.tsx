@@ -70,7 +70,6 @@ export default memo(function Encode() {
   const lockRef = useRef(false);
   const [form] = useForm<FormValues>();
   const image = useWatch(['image'], form);
-  const [preview, setPreview] = useState(image);
   const [loading, setLoading] = useLazyState(false);
   const [state, setState] = useState<DecodeResultMessage>();
 
@@ -110,6 +109,8 @@ export default memo(function Encode() {
       image.src = values.image;
     }
   }, []);
+
+  const [preview, setPreview] = useState(initialValues.image);
 
   const onImagePackerChange = useCallback((value: string) => {
     setPreview(value);
