@@ -1,5 +1,5 @@
 /**
- * @module QRCode
+ * @module Decoded
  */
 
 import { FNC1 } from '/common/interface';
@@ -8,7 +8,7 @@ import { FormatInfo } from './FormatInfo';
 import { Version } from '/common/Version';
 import { DecodeResult, Structured } from './utils/source';
 
-export class QRCode {
+export class Decoded {
   #mask: number;
   #level: ECLevel;
   #mirror: boolean;

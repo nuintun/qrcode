@@ -2,57 +2,65 @@
  * @module decode
  */
 
-import { binarize, Decoder, Detector, grayscale } from '@nuintun/qrcode';
+import { binarize, Decoder, Detector, grayscale, Pattern as IPattern, Point as IPoint } from '@nuintun/qrcode';
 
-interface Point {
+export interface Point {
   x: number;
   y: number;
 }
 
+export interface DecodedOk {
+  type: 'ok';
+  payload: {
+    uid: string;
+    image: ImageBitmap;
+    items: DecodedItem[];
+  };
+}
+
+export interface DecodedError {
+  type: 'error';
+  message: string;
+}
+
 export interface DecodeMessage {
+  uid: string;
   strict: boolean;
   invert: boolean;
   image: ImageBitmap;
 }
 
-export type DecodeResultMessage =
-  | { type: 'error'; message: string }
-  | { type: 'ok'; payload: { image: string; contents: string[] } };
-
-type Context2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
-
-function drawLine(
-  context: Context2D,
-  { x: x1, y: y1 }: Point,
-  { x: x2, y: y2 }: Point,
-  lineWidth: number,
-  strokeStyle: string
-): void {
-  context.save();
-
-  context.lineWidth = lineWidth;
-  context.strokeStyle = strokeStyle;
-
-  context.beginPath();
-  context.moveTo(x1, y1);
-  context.lineTo(x2, y2);
-  context.stroke();
-  context.restore();
+export interface Pattern extends Point {
+  moduleSize: number;
 }
 
-function markPoint(context: Context2D, { x, y }: Point, radius: number, fillStyle: string): void {
-  context.save();
+export type DecodeResultMessage = DecodedOk | DecodedError;
 
-  context.fillStyle = fillStyle;
+export interface DecodedItem {
+  content: string;
+  alignment: Pattern | null;
+  timing: [topLeft: Point, topRight: Point, bottomLeft: Point];
+  finder: [topLeft: Pattern, topRight: Pattern, bottomLeft: Pattern];
+  corners: [topLeft: Point, topRight: Point, bottomRight: Point, bottomLeft: Point];
+}
 
-  context.beginPath();
-  context.arc(x, y, radius * 0.6, 0, Math.PI * 2);
-  context.fill();
-  context.restore();
+function toPoint(point: IPoint): Point {
+  return {
+    x: point.x,
+    y: point.y
+  };
+}
+
+function toPattern(pattern: IPattern): Pattern {
+  return {
+    x: pattern.x,
+    y: pattern.y,
+    moduleSize: pattern.moduleSize
+  };
 }
 
 self.addEventListener('message', async ({ data }: MessageEvent<DecodeMessage>) => {
-  const { image } = data;
+  const { uid, image } = data;
   const { width, height } = image;
   const canvas = new OffscreenCanvas(width, height);
   const context = canvas.getContext('2d')!;
@@ -68,7 +76,7 @@ self.addEventListener('message', async ({ data }: MessageEvent<DecodeMessage>) =
 
   const detector = new Detector({ strict: data.strict });
   const detected = detector.detect(binarized);
-  const contents: string[] = [];
+  const success: DecodedItem[] = [];
   const decoder = new Decoder();
 
   let iterator = detected.next();
@@ -79,40 +87,27 @@ self.addEventListener('message', async ({ data }: MessageEvent<DecodeMessage>) =
     const detect = iterator.value;
 
     try {
-      const decoded = decoder.decode(detect.matrix);
-
       const { size, finder, alignment } = detect;
+      const decoded = decoder.decode(detect.matrix);
+      // Finder
+      const { topLeft, topRight, bottomLeft } = finder;
+      // Corners
       const topLeftCorner = detect.mapping(0, 0);
       const topRightCorner = detect.mapping(size, 0);
-      const bottomLeftCorner = detect.mapping(0, size);
       const bottomRightCorner = detect.mapping(size, size);
-
-      drawLine(context, topLeftCorner, topRightCorner, 1, '#00ff00');
-      drawLine(context, topRightCorner, bottomRightCorner, 1, '#00ff00');
-      drawLine(context, bottomRightCorner, bottomLeftCorner, 1, '#00ff00');
-      drawLine(context, bottomLeftCorner, topLeftCorner, 1, '#00ff00');
-
+      const bottomLeftCorner = detect.mapping(0, size);
+      // Timing
       const topLeftTiming = detect.mapping(6.5, 6.5);
       const topRightTiming = detect.mapping(size - 6.5, 6.5);
       const bottomLeftTiming = detect.mapping(6.5, size - 6.5);
 
-      drawLine(context, topLeftTiming, topRightTiming, 1, '#00ff00');
-      drawLine(context, topLeftTiming, bottomLeftTiming, 1, '#00ff00');
-
-      const { topLeft, topRight, bottomLeft } = finder;
-
-      drawLine(context, topLeft, topRight, 1, '#ff0000');
-      drawLine(context, topLeft, bottomLeft, 1, '#ff0000');
-
-      markPoint(context, topLeft, topLeft.moduleSize, '#ff0000');
-      markPoint(context, topRight, topRight.moduleSize, '#00ff00');
-      markPoint(context, bottomLeft, bottomLeft.moduleSize, '#0000ff');
-
-      if (alignment) {
-        markPoint(context, alignment, alignment.moduleSize, '#ff00ff');
-      }
-
-      contents.push(decoded.content);
+      success.push({
+        content: decoded.content,
+        alignment: alignment ? toPattern(alignment) : null,
+        finder: [toPattern(topLeft), toPattern(topRight), toPattern(bottomLeft)],
+        timing: [toPoint(topLeftTiming), toPoint(topRightTiming), toPoint(bottomLeftTiming)],
+        corners: [toPoint(topLeftCorner), toPoint(topRightCorner), toPoint(bottomRightCorner), toPoint(bottomLeftCorner)]
+      });
 
       succeed = true;
     } catch (error) {
@@ -122,30 +117,19 @@ self.addEventListener('message', async ({ data }: MessageEvent<DecodeMessage>) =
     iterator = detected.next(succeed);
   }
 
-  if (contents.length > 0) {
-    canvas.convertToBlob().then(
-      blob => {
-        const message: DecodeResultMessage = {
-          type: 'ok',
-          payload: {
-            contents,
-            image: URL.createObjectURL(blob)
-          }
-        };
-
-        self.postMessage(message);
-      },
-      () => {
-        const message: DecodeResultMessage = {
-          type: 'error',
-          message: '生成预览图失败'
-        };
-
-        self.postMessage(message);
+  if (success.length > 0) {
+    const message: DecodedOk = {
+      type: 'ok',
+      payload: {
+        uid,
+        image,
+        items: success
       }
-    );
+    };
+
+    self.postMessage(message, [image]);
   } else {
-    const message: DecodeResultMessage = {
+    const message: DecodedError = {
       type: 'error',
       message: '未发现二维码'
     };

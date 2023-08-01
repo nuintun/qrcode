@@ -2,7 +2,17 @@
  * @module encode
  */
 
-import { Alphanumeric, Byte, Charset, Encoder, Hanzi, Kanji, Numeric } from '@nuintun/qrcode';
+import { Alphanumeric, Byte, Charset, Encoder, EncoderOptions, Hanzi, Kanji, Numeric } from '@nuintun/qrcode';
+
+export interface EncodedOk {
+  type: 'ok';
+  payload: string;
+}
+
+export interface EncodedError {
+  type: 'error';
+  message: string;
+}
 
 export interface EncodeMessage {
   fnc1: string;
@@ -14,13 +24,13 @@ export interface EncodeMessage {
   foreground: string;
   moduleSize: number;
   aimIndicator: number;
-  version: 'auto' | number;
+  version: 'Auto' | number;
   level: 'L' | 'M' | 'Q' | 'H';
 }
 
-type CharsetNames = keyof typeof Charset;
+export type CharsetNames = keyof typeof Charset;
 
-export type EncodeResultMessage = { type: 'ok'; payload: string } | { type: 'error'; message: string };
+export type EncodeResultMessage = EncodedOk | EncodedError;
 
 function hex2rgb(hex: string): [R: number, G: number, B: number] {
   const value = parseInt(`0x${hex.slice(1, 7)}`);
@@ -28,12 +38,12 @@ function hex2rgb(hex: string): [R: number, G: number, B: number] {
   return [(value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff];
 }
 
-function getFNC1Hint({ fnc1, aimIndicator }: EncodeMessage): ['GS1'] | ['AIM', number] | undefined {
+function getHints({ fnc1, aimIndicator }: EncodeMessage): EncoderOptions['hints'] {
   switch (fnc1) {
     case 'GS1':
-      return ['GS1'];
+      return { fnc1: ['GS1'] };
     case 'AIM':
-      return ['AIM', +aimIndicator];
+      return { fnc1: ['AIM', +aimIndicator] };
   }
 }
 
@@ -89,15 +99,13 @@ self.addEventListener('message', ({ data }: MessageEvent<EncodeMessage>) => {
   const encoder = new Encoder({
     level,
     version,
-    hints: {
-      fnc1: getFNC1Hint(data)
-    }
+    hints: getHints(data)
   });
 
   try {
     const qrcode = encoder.encode(chooseBestMode(data));
     const { moduleSize, quietZone, background, foreground } = data;
-    const message: EncodeResultMessage = {
+    const message: EncodedOk = {
       type: 'ok',
       payload: qrcode.toDataURL(moduleSize, {
         margin: quietZone,
@@ -108,7 +116,7 @@ self.addEventListener('message', ({ data }: MessageEvent<EncodeMessage>) => {
 
     self.postMessage(message);
   } catch (error) {
-    const message: EncodeResultMessage = {
+    const message: EncodedError = {
       type: 'error',
       message: (error as Error).message
     };

@@ -58,7 +58,7 @@ export default memo(function Encode() {
       moduleSize: 4,
       quietZone: 16,
       aimIndicator: 0,
-      version: 'auto',
+      version: 'Auto',
       charset: 'UTF_8',
       background: '#ffffff',
       foreground: '#000000',
@@ -68,7 +68,7 @@ export default memo(function Encode() {
 
   const versions = useMemo<React.ReactElement[]>(() => {
     const options = [
-      <Option key="auto" value="auto">
+      <Option key="Auto" value="Auto">
         Auto
       </Option>
     ];
@@ -182,7 +182,7 @@ export default memo(function Encode() {
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
-            <FormItem name="quietZone" label="静区大小">
+            <FormItem name="quietZone" label="静区大小" tooltip="推荐 4 倍模块大小">
               <InputNumber min={0} max={200} style={{ width: '100%' }} />
             </FormItem>
           </Col>

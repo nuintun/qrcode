@@ -1,5 +1,5 @@
 /**
- * @module Detect
+ * @module Detected
  */
 
 import { Pattern } from './Pattern';
@@ -9,7 +9,7 @@ import { GridSampler } from '/common/GridSampler';
 import { FinderPatternGroup } from './FinderPatternGroup';
 import { PerspectiveTransform } from '/common/PerspectiveTransform';
 
-export class Detect {
+export class Detected {
   #matrix: BitMatrix;
   #alignment?: Pattern;
   #finder: FinderPatternGroup;

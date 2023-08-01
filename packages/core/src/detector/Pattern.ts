@@ -51,6 +51,38 @@ export class Pattern extends Point {
     return pattern.#rect;
   }
 
+  public static equals(pattern: Pattern, x: number, y: number, width: number, height: number): boolean {
+    const { modules } = pattern.#ratios;
+    const intersectRadius = pattern.#intersectRadius;
+
+    if (Math.abs(x - pattern.x) <= intersectRadius && Math.abs(y - pattern.y) <= intersectRadius) {
+      const moduleSizeThis = pattern.#moduleSize;
+      const moduleSize = (width + height) / modules / 2;
+      const moduleSizeDiff = Math.abs(moduleSize - moduleSizeThis);
+
+      if (moduleSizeDiff <= 1 || moduleSizeDiff <= moduleSizeThis) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  public static combine(pattern: Pattern, x: number, y: number, width: number, height: number, noise: number): Pattern {
+    const combined = pattern.#combined;
+    const combinedCombined = combined + 1;
+    const combinedX = (pattern.x * combined + x) / combinedCombined;
+    const combinedY = (pattern.y * combined + y) / combinedCombined;
+    const combinedNoise = (pattern.#noise * combined + noise) / combinedCombined;
+    const combinedWidth = (pattern.#width * combined + width) / combinedCombined;
+    const combinedHeight = (pattern.#height * combined + height) / combinedCombined;
+    const combinedPattern = new Pattern(pattern.#ratios, combinedX, combinedY, combinedWidth, combinedHeight, combinedNoise);
+
+    combinedPattern.#combined = combinedCombined;
+
+    return combinedPattern;
+  }
+
   constructor(ratios: PatternRatios, x: number, y: number, width: number, height: number, noise: number) {
     super(x, y);
 
@@ -80,37 +112,5 @@ export class Pattern extends Point {
 
   public get moduleSize(): number {
     return this.#moduleSize;
-  }
-
-  public equals(x: number, y: number, width: number, height: number): boolean {
-    const { modules } = this.#ratios;
-    const intersectRadius = this.#intersectRadius;
-
-    if (Math.abs(x - this.x) <= intersectRadius && Math.abs(y - this.y) <= intersectRadius) {
-      const moduleSizeThis = this.#moduleSize;
-      const moduleSize = (width + height) / modules / 2;
-      const moduleSizeDiff = Math.abs(moduleSize - moduleSizeThis);
-
-      if (moduleSizeDiff <= 1 || moduleSizeDiff <= moduleSizeThis) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  public combine(x: number, y: number, width: number, height: number, noise: number): Pattern {
-    const combined = this.#combined;
-    const nextCombined = combined + 1;
-    const combinedX = (this.x * combined + x) / nextCombined;
-    const combinedY = (this.y * combined + y) / nextCombined;
-    const combinedNoise = (this.#noise * combined + noise) / nextCombined;
-    const combinedWidth = (this.#width * combined + width) / nextCombined;
-    const combinedHeight = (this.#height * combined + height) / nextCombined;
-    const pattern = new Pattern(this.#ratios, combinedX, combinedY, combinedWidth, combinedHeight, combinedNoise);
-
-    pattern.#combined = nextCombined;
-
-    return pattern;
   }
 }

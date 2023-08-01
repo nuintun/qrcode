@@ -2,8 +2,8 @@
  * @module Detector
  */
 
-import { Detect } from './Detect';
 import { Pattern } from './Pattern';
+import { Detected } from './Detected';
 import { toInt32 } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
 import { createTransform } from './utils/transform';
@@ -60,7 +60,7 @@ export class Detector {
     this.#options = options;
   }
 
-  public *detect(matrix: BitMatrix): Generator<Detect, void, boolean> {
+  public *detect(matrix: BitMatrix): Generator<Detected, void, boolean> {
     const { strict } = this.#options;
     const { width, height } = matrix;
     const finderFinder = new FinderPatternFinder(matrix, strict);
@@ -93,7 +93,7 @@ export class Detector {
             // Top left to bottom left
             checkMappingTimingLine(matrix, transform, size, true)
           ) {
-            succeed = yield new Detect(matrix, transform, finderPatternGroup, alignmentPattern);
+            succeed = yield new Detected(matrix, transform, finderPatternGroup, alignmentPattern);
 
             // Succeed, skip next alignment pattern
             if (succeed) {
@@ -111,7 +111,7 @@ export class Detector {
           checkMappingTimingLine(matrix, transform, size, true)
         ) {
           // No alignment pattern version
-          succeed = yield new Detect(matrix, transform, finderPatternGroup);
+          succeed = yield new Detected(matrix, transform, finderPatternGroup);
         }
       }
 

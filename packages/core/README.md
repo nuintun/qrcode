@@ -124,7 +124,7 @@ declare class Numeric {
 declare interface Options {
   level?: Level;
   hints?: { fnc1?: FNC1 };
-  version?: number | 'auto';
+  version?: 'Auto' | number;
   encode?: (content: string, charset: Charset) => Uint8Array;
 }
 

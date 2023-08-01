@@ -1,5 +1,5 @@
 /**
- * @module QRCode
+ * @module Encoded
  */
 
 import { toInt32 } from '/common/utils';
@@ -8,7 +8,7 @@ import { Version } from '/common/Version';
 import { Colors, GIFImage } from '/common/gif';
 import { ByteMatrix } from '/common/ByteMatrix';
 
-export class QRCode {
+export class Encoded {
   #mask: number;
   #level: ECLevel;
   #version: Version;

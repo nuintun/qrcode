@@ -2,7 +2,7 @@
  * @module Decoder
  */
 
-import { QRCode } from './QRCode';
+import { Decoded } from './Decoded';
 import { decode } from './utils/source';
 import { FormatInfo } from './FormatInfo';
 import { Version } from '/common/Version';
@@ -49,7 +49,7 @@ export class Decoder {
     this.#decode = decode;
   }
 
-  decode(matrix: BitMatrix): QRCode {
+  decode(matrix: BitMatrix): Decoded {
     let corrected = 0;
     let mirror = false;
     let version: Version;
@@ -75,6 +75,6 @@ export class Decoder {
       [codewords, corrected] = parse(parser, version, formatInfo);
     }
 
-    return new QRCode(decode(codewords, version, formatInfo, this.#decode), version, formatInfo, corrected, mirror);
+    return new Decoded(decode(codewords, version, formatInfo, this.#decode), version, formatInfo, corrected, mirror);
   }
 }

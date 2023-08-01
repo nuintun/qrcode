@@ -60,9 +60,9 @@ export class PatternFinder {
             const pattern = patterns[i];
 
             // Look for about the same center and module size
-            if (pattern.equals(centerX, centerY, width, height)) {
+            if (Pattern.equals(pattern, centerX, centerY, width, height)) {
               combined = true;
-              patterns[i] = pattern.combine(centerX, centerY, width, height, noise);
+              patterns[i] = Pattern.combine(pattern, centerX, centerY, width, height, noise);
               break;
             }
           }

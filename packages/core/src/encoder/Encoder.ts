@@ -19,7 +19,7 @@ import {
   SegmentBlock,
   willFit
 } from './utils/encoder';
-import { QRCode } from './QRCode';
+import { Encoded } from './Encoded';
 import { Charset } from '/common/Charset';
 import { ECLevel } from '/common/ECLevel';
 import { BitArray } from '/common/BitArray';
@@ -32,7 +32,7 @@ import { assertHints, assertLevel, assertVersion } from './utils/asserts';
 export interface Options {
   hints?: Hints;
   encode?: TextEncode;
-  version?: number | 'auto';
+  version?: 'Auto' | number;
   level?: 'L' | 'M' | 'Q' | 'H';
 }
 
@@ -40,7 +40,7 @@ export class Encoder {
   #hints: Hints;
   #level: ECLevel;
   #encode: TextEncode;
-  #version: number | 'auto';
+  #version: 'Auto' | number;
 
   constructor({
     // Encode hints
@@ -48,7 +48,7 @@ export class Encoder {
     // Error correction level
     level = 'L',
     // Version number or auto
-    version = 'auto',
+    version = 'Auto',
     // Content encode function
     encode = contentEncode
   }: Options = {}) {
@@ -62,7 +62,7 @@ export class Encoder {
     this.#level = ECLevel[level];
   }
 
-  public encode(...segments: Segment[]): QRCode {
+  public encode(...segments: Segment[]): Encoded {
     const ecLevel = this.#level;
     const encode = this.#encode;
     const { fnc1 } = this.#hints;
@@ -106,7 +106,7 @@ export class Encoder {
 
     let version: Version;
 
-    if (versionNumber === 'auto') {
+    if (versionNumber === 'Auto') {
       version = recommendVersion(segmentBlocks, ecLevel);
     } else {
       version = VERSIONS[versionNumber - 1];
@@ -139,6 +139,6 @@ export class Encoder {
 
     buildMatrix(matrix, finalBits, version, ecLevel, mask);
 
-    return new QRCode(matrix, version, ecLevel, mask);
+    return new Encoded(matrix, version, ecLevel, mask);
   }
 }

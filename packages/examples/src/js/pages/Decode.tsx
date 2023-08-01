@@ -5,15 +5,46 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '@ant-design/icons';
 import useLazyState from '/js/hooks/useLazyState';
 import ImagePicker from '/js/components/ImagePicker';
-import { DecodeResultMessage } from '/js/workers/decode';
+import { DecodedItem, DecodeMessage, DecodeResultMessage } from '/js/workers/decode';
 import { Alert, Button, Col, Collapse, CollapseProps, Form, Image, Row, Switch } from 'antd';
 
 import qrcode from '/images/qrcode.jpg';
 import DncodeIcon from '/images/decode.svg';
+import LocateIcon from '/images/locate.svg';
 import UploadIcon from '/images/upload.svg';
 
 const { Item: FormItem, useForm, useWatch } = Form;
 const worker = new Worker(new URL('/js/workers/decode', import.meta.url));
+
+interface LocateProps {
+  item: DecodedItem;
+  image: ImageBitmap;
+}
+
+const Locate = memo(function Locate({ item, image }: LocateProps) {
+  const [visible, setVisible] = useState(false);
+
+  const onClick = useCallback(() => {
+    console.log(item, image);
+
+    setVisible(visible => !visible);
+  }, []);
+
+  const onVisibleChange = useCallback((visible: boolean) => {
+    setVisible(visible);
+  }, []);
+
+  const onStageClick = useCallback<React.MouseEventHandler>(e => {
+    e.stopPropagation();
+  }, []);
+
+  return (
+    <div onClick={onStageClick}>
+      <Icon title="查看位置" component={LocateIcon} onClick={onClick} />
+      <Image src={qrcode} style={{ display: 'none' }} preview={{ visible, onVisibleChange }} />
+    </div>
+  );
+});
 
 interface ResultProps {
   value?: DecodeResultMessage;
@@ -22,13 +53,14 @@ interface ResultProps {
 const Result = memo(function Result({ value }: ResultProps) {
   const items = useMemo<CollapseProps['items']>(() => {
     if (value && value.type === 'ok') {
-      const { image, contents } = value.payload;
+      const { uid, items } = value.payload;
 
-      return contents.map((content, index) => {
+      return items.map((item, index) => {
         return {
-          key: `${image}-${index}`,
+          key: `${uid}-${index}`,
           label: `解码结果【${index + 1}】`,
-          children: <pre>{content}</pre>
+          children: <pre>{item.content}</pre>,
+          extra: <Locate item={item} image={value.payload.image} />
         };
       });
     }
@@ -37,17 +69,13 @@ const Result = memo(function Result({ value }: ResultProps) {
   if (value) {
     switch (value.type) {
       case 'ok':
-        const { image } = value.payload;
-        const defaultActiveKey = `${image}-0`;
-
         return (
           <Collapse
-            bordered
-            key={image}
             size="small"
             items={items}
+            key={value.payload.uid}
             className={styles.contents}
-            defaultActiveKey={defaultActiveKey}
+            defaultActiveKey={`${value.payload.uid}-0`}
           />
         );
       case 'error':
@@ -73,11 +101,6 @@ export default memo(function Encode() {
   const [loading, setLoading] = useLazyState(false);
   const [state, setState] = useState<DecodeResultMessage>();
 
-  const onSwitchChange = useCallback(() => {
-    setPreview(image);
-    setState(undefined);
-  }, [image]);
-
   const initialValues = useMemo<FormValues>(() => {
     return {
       image: qrcode,
@@ -92,6 +115,7 @@ export default memo(function Encode() {
 
       lockRef.current = true;
 
+      const { image: src } = values;
       const image = new self.Image();
 
       image.crossOrigin = 'anonymous';
@@ -102,41 +126,28 @@ export default memo(function Encode() {
 
       image.onload = () => {
         createImageBitmap(image).then(image => {
-          worker.postMessage({ ...values, image }, [image]);
+          const message: DecodeMessage = { ...values, image, uid: src };
+
+          worker.postMessage(message, [image]);
         });
       };
 
-      image.src = values.image;
+      image.src = src;
     }
   }, []);
 
-  const [preview, setPreview] = useState(initialValues.image);
+  const previewRender = useCallback((value?: string) => {
+    if (value) {
+      return <Image className={styles.preview} src={value} alt="preview" />;
+    }
 
-  const onImagePackerChange = useCallback((value: string) => {
-    setPreview(value);
-    setState(undefined);
+    return null;
   }, []);
-
-  const previewRender = useCallback(() => {
-    return <Image title={preview} className={styles.preview} src={preview} alt="preview" />;
-  }, [preview]);
-
-  useEffect(() => {
-    return () => {
-      if (state && state.type === 'ok') {
-        URL.revokeObjectURL(state.payload.image);
-      }
-    };
-  }, [state]);
 
   useEffect(() => {
     const onMessage = ({ data }: MessageEvent<DecodeResultMessage>) => {
       setState(data);
       setLoading(false);
-
-      if (data.type === 'ok') {
-        setPreview(data.payload.image);
-      }
 
       lockRef.current = false;
     };
@@ -154,21 +165,19 @@ export default memo(function Encode() {
         <Row gutter={24}>
           <Col span={24}>
             <FormItem name="image">
-              <ImagePicker disabled={lockRef.current} preview={previewRender} onChange={onImagePackerChange}>
-                <Button disabled={loading} icon={<Icon component={UploadIcon} />}>
-                  选择图片
-                </Button>
+              <ImagePicker preview={previewRender}>
+                <Button icon={<Icon component={UploadIcon} />}>选择图片</Button>
               </ImagePicker>
             </FormItem>
           </Col>
           <Col span={24}>
-            <FormItem name="strict" label="严格模式" valuePropName="checked">
-              <Switch onChange={onSwitchChange} />
+            <FormItem name="strict" label="严格模式" valuePropName="checked" tooltip="可增加扫描速度，但会降低识别率">
+              <Switch checkedChildren="开" unCheckedChildren="关" />
             </FormItem>
           </Col>
           <Col span={24}>
             <FormItem name="invert" label="图片反色" valuePropName="checked">
-              <Switch onChange={onSwitchChange} />
+              <Switch checkedChildren="开" unCheckedChildren="关" />
             </FormItem>
           </Col>
           <Col span={24}>
