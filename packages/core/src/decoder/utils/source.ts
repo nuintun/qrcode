@@ -17,7 +17,7 @@ export interface Structured {
   readonly parity: number;
 }
 
-export interface DecodeResult {
+export interface DecodeSource {
   readonly content: string;
   readonly symbology: string;
   readonly fnc1: FNC1 | false;
@@ -237,7 +237,7 @@ function decodeNumericSegment(source: BitSource, count: number): string {
   return content;
 }
 
-export function decode(codewords: Uint8Array, version: Version, {}: FormatInfo, decode: TextDecode): DecodeResult {
+export function decode(codewords: Uint8Array, version: Version, {}: FormatInfo, decode: TextDecode): DecodeSource {
   let content = '';
   let indicator = -1;
   let modifier: number;
@@ -274,11 +274,11 @@ export function decode(codewords: Uint8Array, version: Version, {}: FormatInfo, 
           throw new Error('illegal structured append');
         }
 
-        structured = {
+        structured = Object.freeze<Structured>({
           index: source.read(4),
-          count: source.read(4) + 1,
-          parity: source.read(8)
-        };
+          parity: source.read(8),
+          count: source.read(4) + 1
+        });
         break;
       case Mode.ECI:
         currentECIValue = parseECIValue(source);
@@ -318,9 +318,9 @@ export function decode(codewords: Uint8Array, version: Version, {}: FormatInfo, 
   } while (mode !== Mode.TERMINATOR);
 
   if (hasFNC1First) {
-    fnc1 = ['GS1'];
+    fnc1 = Object.freeze<FNC1>(['GS1']);
   } else if (hasFNC1Second) {
-    fnc1 = ['AIM', indicator];
+    fnc1 = Object.freeze<FNC1>(['AIM', indicator]);
   }
 
   if (currentECIValue != null) {

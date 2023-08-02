@@ -32,7 +32,7 @@
     "dev": "nodemon tools/bin/webpack.config.dev.js"
   },
   "dependencies": {
-    "@ant-design/icons": "^5.2.2",
+    "@ant-design/icons": "^5.2.3",
     "@nuintun/qrcode": "workspace:*",
     "@swc/helpers": "^0.5.1",
     "antd": "^5.8.0",

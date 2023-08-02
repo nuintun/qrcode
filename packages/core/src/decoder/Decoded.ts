@@ -6,7 +6,7 @@ import { FNC1 } from '/common/interface';
 import { ECLevel } from '/common/ECLevel';
 import { FormatInfo } from './FormatInfo';
 import { Version } from '/common/Version';
-import { DecodeResult, Structured } from './utils/source';
+import { DecodeSource, Structured } from './utils/source';
 
 export class Decoded {
   #mask: number;
@@ -14,9 +14,9 @@ export class Decoded {
   #mirror: boolean;
   #version: Version;
   #corrected: number;
-  #metadata: DecodeResult;
+  #metadata: DecodeSource;
 
-  constructor(metadata: DecodeResult, version: Version, { mask, level }: FormatInfo, corrected: number, mirror: boolean) {
+  constructor(metadata: DecodeSource, version: Version, { mask, level }: FormatInfo, corrected: number, mirror: boolean) {
     this.#mask = mask;
     this.#level = level;
     this.#mirror = mirror;
