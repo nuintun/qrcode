@@ -13,7 +13,6 @@ import EncodeIcon from '/images/encode.svg';
 const { Option } = Select;
 const { TextArea } = Input;
 const { Item: FormItem, useForm, useWatch } = Form;
-const worker = new Worker(new URL('/js/workers/encode', import.meta.url));
 
 function convertColor(color: string | Color): string {
   if (typeof color === 'string') {
@@ -49,6 +48,7 @@ export default memo(function Encode() {
   const content = useWatch('content', form);
   const [loading, setLoading] = useLazyState(false);
   const [state, setState] = useState<EncodeResultMessage>();
+  const worker = useMemo(() => new Worker(new URL('/js/workers/encode', import.meta.url)), []);
 
   const initialValues = useMemo<EncodeMessage>(() => {
     return {
@@ -101,17 +101,15 @@ export default memo(function Encode() {
   }, []);
 
   useEffect(() => {
-    const onMessage = ({ data }: MessageEvent<EncodeResultMessage>) => {
+    worker.addEventListener('message', ({ data }: MessageEvent<EncodeResultMessage>) => {
       setState(data);
       setLoading(false);
 
       lockRef.current = false;
-    };
-
-    worker.addEventListener('message', onMessage);
+    });
 
     return () => {
-      worker.removeEventListener('message', onMessage);
+      worker.terminate();
     };
   }, []);
 

@@ -7,7 +7,7 @@ import ImagePicker from '/js/components/ImagePicker';
 import Icon, { LoadingOutlined } from '@ant-design/icons';
 import { LocateMessage, LocateResultMessage } from '/js/workers/locate';
 import { DecodedItem, DecodeMessage, DecodeResultMessage } from '/js/workers/decode';
-import { App, Alert, Button, Col, Collapse, CollapseProps, Form, Image, Row, Switch } from 'antd';
+import { Alert, App, Button, Col, Collapse, CollapseProps, Form, Image, Row, Switch } from 'antd';
 
 import qrcode from '/images/qrcode.jpg';
 import favicon from '/images/favicon.ico';
@@ -17,7 +17,6 @@ import UploadIcon from '/images/upload.svg';
 
 const { useApp } = App;
 const { Item: FormItem, useForm, useWatch } = Form;
-const worker = new Worker(new URL('/js/workers/decode', import.meta.url));
 
 interface LocateProps {
   item: DecodedItem;
@@ -157,6 +156,7 @@ export default memo(function Encode() {
   const image = useWatch(['image'], form);
   const [loading, setLoading] = useLazyState(false);
   const [state, setState] = useState<DecodeResultMessage>();
+  const worker = useMemo(() => new Worker(new URL('/js/workers/decode', import.meta.url)), []);
 
   const initialValues = useMemo<FormValues>(() => {
     return {
@@ -212,7 +212,7 @@ export default memo(function Encode() {
     worker.addEventListener('message', onMessage);
 
     return () => {
-      worker.removeEventListener('message', onMessage);
+      worker.terminate();
     };
   }, []);
 
