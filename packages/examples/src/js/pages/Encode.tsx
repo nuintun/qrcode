@@ -31,7 +31,7 @@ const Result = memo(function Result({ value }: ResultProps) {
   if (value) {
     switch (value.type) {
       case 'ok':
-        return <Image className={styles.preview} src={value.payload} alt="preview" />;
+        return <Image src={value.payload} alt="preview" className={styles.preview} />;
       case 'error':
         return <Alert type="error" message={value.message} showIcon />;
       default:
@@ -116,7 +116,7 @@ export default memo(function Encode() {
   }, []);
 
   return (
-    <div className="page">
+    <div className="ui-page">
       <Form form={form} layout="vertical" onFinish={onFinish} initialValues={initialValues}>
         <Row gutter={24}>
           <Col span={24}>

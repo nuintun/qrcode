@@ -8,7 +8,10 @@
   margin-top: 24px;
 
   .contents {
-    margin-top: 24px;
+    .locate {
+      margin: 0;
+      padding: 0;
+    }
 
     pre {
       margin: 0;

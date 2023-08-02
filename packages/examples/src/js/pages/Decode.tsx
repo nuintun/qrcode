@@ -2,17 +2,20 @@ import styles from '/css/Decode.module.scss';
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import Icon from '@ant-design/icons';
 import useLazyState from '/js/hooks/useLazyState';
 import ImagePicker from '/js/components/ImagePicker';
+import Icon, { LoadingOutlined } from '@ant-design/icons';
+import { LocateMessage, LocateResultMessage } from '/js/workers/locate';
 import { DecodedItem, DecodeMessage, DecodeResultMessage } from '/js/workers/decode';
-import { Alert, Button, Col, Collapse, CollapseProps, Form, Image, Row, Switch } from 'antd';
+import { App, Alert, Button, Col, Collapse, CollapseProps, Form, Image, Row, Switch } from 'antd';
 
 import qrcode from '/images/qrcode.jpg';
+import favicon from '/images/favicon.ico';
 import DncodeIcon from '/images/decode.svg';
 import LocateIcon from '/images/locate.svg';
 import UploadIcon from '/images/upload.svg';
 
+const { useApp } = App;
 const { Item: FormItem, useForm, useWatch } = Form;
 const worker = new Worker(new URL('/js/workers/decode', import.meta.url));
 
@@ -21,14 +24,62 @@ interface LocateProps {
   image: ImageBitmap;
 }
 
+function cloneImageBitmap(image: ImageBitmap): ImageBitmap {
+  const canvas = new OffscreenCanvas(image.width, image.height);
+  const context = canvas.getContext('2d')!;
+
+  context.drawImage(image, 0, 0);
+
+  return canvas.transferToImageBitmap();
+}
+
 const Locate = memo(function Locate({ item, image }: LocateProps) {
+  const lockRef = useRef(false);
+  const { message: info } = useApp();
+  const [src, setSrc] = useState<string>();
   const [visible, setVisible] = useState(false);
+  const [loading, setLoading] = useLazyState(false);
+  const worker = useMemo(() => new Worker(new URL('/js/workers/locate', import.meta.url)), []);
 
   const onClick = useCallback(() => {
-    console.log(item, image);
+    if (src == null) {
+      if (!lockRef.current) {
+        setLoading(true);
 
-    setVisible(visible => !visible);
-  }, []);
+        lockRef.current = true;
+
+        const newImage = cloneImageBitmap(image);
+
+        worker.addEventListener('message', ({ data }: MessageEvent<LocateResultMessage>) => {
+          setLoading(false);
+
+          switch (data.type) {
+            case 'ok':
+              setSrc(data.payload);
+              setVisible(visible => !visible);
+              break;
+            case 'error':
+              info.error(data.message);
+              break;
+            default:
+              info.error('发生未知错误');
+          }
+        });
+
+        const message: LocateMessage = {
+          image: newImage,
+          finder: item.finder,
+          timing: item.timing,
+          corners: item.corners,
+          alignment: item.alignment
+        };
+
+        worker.postMessage(message, [newImage]);
+      }
+    } else {
+      setVisible(visible => !visible);
+    }
+  }, [src]);
 
   const onVisibleChange = useCallback((visible: boolean) => {
     setVisible(visible);
@@ -38,10 +89,16 @@ const Locate = memo(function Locate({ item, image }: LocateProps) {
     e.stopPropagation();
   }, []);
 
+  useEffect(() => {
+    return () => {
+      worker.terminate();
+    };
+  }, []);
+
   return (
-    <div onClick={onStageClick}>
-      <Icon title="查看位置" component={LocateIcon} onClick={onClick} />
-      <Image src={qrcode} style={{ display: 'none' }} preview={{ visible, onVisibleChange }} />
+    <div className={styles.locate} onClick={onStageClick}>
+      <Image hidden src={favicon} preview={{ src, visible, onVisibleChange }} />
+      {loading ? <LoadingOutlined /> : <Icon title="查看位置" component={LocateIcon} onClick={onClick} />}
     </div>
   );
 });
@@ -138,7 +195,7 @@ export default memo(function Encode() {
 
   const previewRender = useCallback((value?: string) => {
     if (value) {
-      return <Image className={styles.preview} src={value} alt="preview" />;
+      return <Image src={value} alt="preview" className={styles.preview} />;
     }
 
     return null;
@@ -160,7 +217,7 @@ export default memo(function Encode() {
   }, []);
 
   return (
-    <div className="page">
+    <div className="ui-page">
       <Form form={form} onFinish={onFinish} layout="vertical" initialValues={initialValues}>
         <Row gutter={24}>
           <Col span={24}>
