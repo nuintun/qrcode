@@ -32,10 +32,10 @@
     "dev": "nodemon tools/bin/webpack.config.dev.js"
   },
   "dependencies": {
-    "@ant-design/icons": "^5.2.3",
+    "@ant-design/icons": "^5.2.4",
     "@nuintun/qrcode": "workspace:*",
     "@swc/helpers": "^0.5.1",
-    "antd": "^5.8.0",
+    "antd": "^5.8.1",
     "browser-fs-access": "^0.34.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@nuintun/svgo-loader": "^0.1.2",
-    "@swc/core": "^1.3.73",
+    "@swc/core": "^1.3.74",
     "@types/react": "^18.2.18",
     "@types/react-dom": "^18.2.7",
     "autoprefixer": "^10.4.14",
