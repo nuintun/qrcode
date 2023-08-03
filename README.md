@@ -96,7 +96,7 @@ console.log(qrcode.toDataURL());
 
   - Make qrcode matrix.
 
-- toDataURL(moduleSize?: number, margin?: number): string
+- toDataURL(moduleSize?: number, margin?: number, colors?: Colors): string
 
   - Output qrcode base64 gif image.
 

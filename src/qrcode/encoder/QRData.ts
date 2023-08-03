@@ -4,8 +4,8 @@
  * @author Kazuhiko Arase
  */
 
-import { Mode } from '../common/Mode';
 import { BitBuffer } from './BitBuffer';
+import { Mode } from '/qrcode/common/Mode';
 
 export abstract class QRData {
   public readonly mode: Mode;

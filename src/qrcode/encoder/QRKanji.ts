@@ -6,9 +6,9 @@
  */
 
 import { QRData } from './QRData';
-import { Mode } from '../common/Mode';
 import { BitBuffer } from './BitBuffer';
-import { encode } from '../../encoding/SJIS';
+import { encode } from '/encoding/SJIS';
+import { Mode } from '/qrcode/common/Mode';
 
 export class QRKanji extends QRData {
   /**
@@ -54,7 +54,7 @@ export class QRKanji extends QRData {
    * @method getLength
    * @returns {number}
    */
-  public getLength(): number {
+  public override getLength(): number {
     return Math.floor(this.bytes.length / 2);
   }
 }

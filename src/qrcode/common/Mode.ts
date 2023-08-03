@@ -9,13 +9,13 @@
  * @readonly
  */
 export enum Mode {
-  Terminator = 0x0,
-  Numeric = 0x1,
-  Alphanumeric = 0x2,
-  StructuredAppend = 0x3,
-  Byte = 0x4,
-  Kanji = 0x8,
-  ECI = 0x7
-  // FNC1FirstPosition = 0x5,
-  // FNC1SecondPosition = 0x9
+  Terminator = 0x00,
+  Numeric = 0x01,
+  Alphanumeric = 0x02,
+  StructuredAppend = 0x03,
+  Byte = 0x04,
+  Kanji = 0x08,
+  ECI = 0x07
+  // FNC1FirstPosition = 0x05,
+  // FNC1SecondPosition = 0x09
 }

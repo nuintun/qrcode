@@ -8,12 +8,12 @@ import { QRByte } from './QRByte';
 import { QRData } from './QRData';
 import * as QRUtil from './QRUtil';
 import { RSBlock } from './RSBlock';
-import { Mode } from '../common/Mode';
 import { BitBuffer } from './BitBuffer';
 import { Polynomial } from './Polynomial';
-import { GIFImage } from '../../image/GIFImage';
-import { getMaskFunc } from '../common/MaskPattern';
-import { ErrorCorrectionLevel } from '../common/ErrorCorrectionLevel';
+import { Mode } from '/qrcode/common/Mode';
+import { Colors, GIFImage } from '/image/GIFImage';
+import { getMaskFunc } from '/qrcode/common/MaskPattern';
+import { ErrorCorrectionLevel } from '/qrcode/common/ErrorCorrectionLevel';
 
 const PAD0 = 0xec;
 const PAD1 = 0x11;
@@ -583,7 +583,7 @@ export class Encoder {
    * @param {number} margin
    * @returns {string}
    */
-  public toDataURL(moduleSize: number = 2, margin: number = moduleSize * 4): string {
+  public toDataURL(moduleSize: number = 2, margin: number = moduleSize * 4, colors?: Colors): string {
     moduleSize = Math.max(1, moduleSize >> 0);
     margin = Math.max(0, margin >> 0);
 
@@ -592,7 +592,7 @@ export class Encoder {
 
     const min = margin;
     const max = size - margin;
-    const gif = new GIFImage(size, size);
+    const gif = new GIFImage(size, size, colors);
 
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < size; x++) {
@@ -600,9 +600,9 @@ export class Encoder {
           const row = ((y - min) / moduleSize) >> 0;
           const col = ((x - min) / moduleSize) >> 0;
 
-          gif.setPixel(x, y, this.isDark(row, col) ? 0 : 1);
+          gif.set(x, y, this.isDark(row, col) ? 1 : 0);
         } else {
-          gif.setPixel(x, y, 1);
+          gif.set(x, y, 0);
         }
       }
     }

@@ -1,6 +1,6 @@
 {
   "name": "@nuintun/qrcode",
-  "version": "3.3.5",
+  "version": "3.4.0",
   "description": "A pure JavaScript QRCode encode and decode library.",
   "type": "module",
   "sideEffects": false,
@@ -43,19 +43,20 @@
     "build:esm": "rollup -c tools/rollup.esm.js",
     "build:examples": "rollup -c tools/rollup.examples.js",
     "build:main": "npm run build:cjs && npm run build:esm && npm run build:types",
-    "build:types": "tsc --declaration --emitDeclarationOnly --declarationDir types",
-    "build": "npm run clean && npm run build:main && npm run build:examples && npm run format"
+    "build": "npm run clean && npm run build:main && npm run build:examples && npm run format",
+    "build:types": "tsc --declaration --emitDeclarationOnly --declarationDir types && node tools/fix-types.js"
   },
   "dependencies": {
-    "tslib": "^2.5.2"
+    "tslib": "^2.6.1"
   },
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "^15.0.2",
-    "@rollup/plugin-typescript": "^11.1.1",
-    "magic-string": "^0.30.0",
-    "prettier": "^2.8.8",
+    "@rollup/plugin-node-resolve": "^15.1.0",
+    "@rollup/plugin-typescript": "^11.1.2",
+    "magic-string": "^0.30.2",
+    "prettier": "^3.0.1",
     "rimraf": "^5.0.1",
-    "rollup": "^3.23.0",
-    "typescript": "^5.0.4"
+    "rollup": "^3.27.0",
+    "tsc-alias": "^1.8.7",
+    "typescript": "^5.1.6"
   }
 }

@@ -6,11 +6,11 @@
  */
 
 import { rsDecode } from './reedsolomon';
-import { BitMatrix } from '../BitMatrix';
 import { Version, VERSIONS } from './version';
 import { bytesDecode, DecodeResult } from './decode';
-import { getMaskFunc } from '../../common/MaskPattern';
-import { ErrorCorrectionLevel } from '../../common/ErrorCorrectionLevel';
+import { BitMatrix } from '/qrcode/decoder/BitMatrix';
+import { getMaskFunc } from '/qrcode/common/MaskPattern';
+import { ErrorCorrectionLevel } from '/qrcode/common/ErrorCorrectionLevel';
 
 export { DecodeResult };
 
@@ -159,6 +159,10 @@ function readCodewords(matrix: BitMatrix, version: Version, formatInfo: FormatIn
 function readVersion(matrix: BitMatrix): Version | null {
   const dimension = matrix.height;
   const provisionalVersion = Math.floor((dimension - 17) / 4);
+
+  if (provisionalVersion < 1) {
+    return null;
+  }
 
   if (provisionalVersion <= 6) {
     // 6 and under dont have version info in the QR code

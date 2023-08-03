@@ -5,10 +5,10 @@
  */
 
 import { QRData } from './QRData';
-import { Mode } from '../common/Mode';
 import { BitBuffer } from './BitBuffer';
-import { EncodingHint } from '../common/EncodingHint';
-import { encode as encodeUTF8 } from '../../encoding/UTF8';
+import { Mode } from '/qrcode/common/Mode';
+import { encode as encodeUTF8 } from '/encoding/UTF8';
+import { EncodingHint } from '/qrcode/common/EncodingHint';
 
 interface EncodeResult {
   bytes: number[];

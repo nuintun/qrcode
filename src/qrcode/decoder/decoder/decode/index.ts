@@ -6,11 +6,11 @@
  */
 
 import { BitStream } from './BitStream';
-import { Mode } from '../../../common/Mode';
-import { EncodingHint } from '../../../common/EncodingHint';
-import { decode as decodeUTF8 } from '../../../../encoding/UTF8';
-import { ErrorCorrectionLevel } from '../../../common/ErrorCorrectionLevel';
-import { decode as decodeSJIS, getTables } from '../../../../encoding/SJIS';
+import { Mode } from '/qrcode/common/Mode';
+import { decode as decodeUTF8 } from '/encoding/UTF8';
+import { EncodingHint } from '/qrcode/common/EncodingHint';
+import { decode as decodeSJIS, getTables } from '/encoding/SJIS';
+import { ErrorCorrectionLevel } from '/qrcode/common/ErrorCorrectionLevel';
 
 interface ByteChunk {
   mode: Mode.Numeric | Mode.Alphanumeric | Mode.Byte | Mode.Kanji;
