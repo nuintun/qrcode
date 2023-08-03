@@ -21,9 +21,10 @@ const { Item: FormItem, useForm, useWatch } = Form;
 interface LocateProps {
   uid: string;
   name: string;
-  item: DecodedItem;
   image: ImageBitmap;
+  items: DecodedItem[];
   currentRef: React.MutableRefObject<string | undefined>;
+  trigger: (loading: boolean, onClick: () => void) => React.ReactNode;
 }
 
 function cloneImageBitmap(image: ImageBitmap): ImageBitmap {
@@ -35,13 +36,14 @@ function cloneImageBitmap(image: ImageBitmap): ImageBitmap {
   return canvas.transferToImageBitmap();
 }
 
-const Locate = memo(function Locate({ uid, name, item, image, currentRef }: LocateProps) {
+const Locate = memo(function Locate({ uid, name, items, image, trigger, currentRef }: LocateProps) {
   const lockRef = useRef(false);
+  const workerRef = useRef<Worker>();
   const { message: info } = useApp();
+  const prevUidRef = useRef<string>();
   const [src, setSrc] = useState<string>();
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useLazyState(false);
-  const worker = useMemo(() => new Worker(new URL('/js/workers/locate', import.meta.url)), []);
 
   const preview = useMemo<ImageProps['preview']>(() => {
     return {
@@ -64,41 +66,27 @@ const Locate = memo(function Locate({ uid, name, item, image, currentRef }: Loca
   const onClick = useCallback(() => {
     currentRef.current = uid;
 
-    if (src == null) {
-      if (!lockRef.current) {
+    if (prevUidRef.current !== uid) {
+      const worker = workerRef.current;
+
+      if (worker && !lockRef.current) {
         setLoading(true);
 
         lockRef.current = true;
+        prevUidRef.current = uid;
 
         const newImage = cloneImageBitmap(image);
 
-        worker.addEventListener('message', ({ data }: MessageEvent<LocateResultMessage>) => {
-          setLoading(false);
-
-          switch (data.type) {
-            case 'ok':
-              setSrc(data.payload);
-
-              const { current } = currentRef;
-
-              if (current === uid) {
-                setVisible(visible => !visible);
-              }
-              break;
-            case 'error':
-              info.error(data.message);
-              break;
-            default:
-              info.error('发生未知错误');
-          }
-        });
-
         const message: LocateMessage = {
           image: newImage,
-          finder: item.finder,
-          timing: item.timing,
-          corners: item.corners,
-          alignment: item.alignment
+          items: items.map(item => {
+            return {
+              finder: item.finder,
+              timing: item.timing,
+              corners: item.corners,
+              alignment: item.alignment
+            };
+          })
         };
 
         worker.postMessage(message, [newImage]);
@@ -106,36 +94,99 @@ const Locate = memo(function Locate({ uid, name, item, image, currentRef }: Loca
     } else {
       setVisible(visible => !visible);
     }
-  }, [src]);
+  }, [uid, image, items]);
 
   const onStageClick = useCallback<React.MouseEventHandler>(e => {
     e.stopPropagation();
   }, []);
 
   useEffect(() => {
+    const worker = new Worker(new URL('/js/workers/locate', import.meta.url));
+
+    worker.addEventListener('message', ({ data }: MessageEvent<LocateResultMessage>) => {
+      setLoading(false);
+
+      lockRef.current = false;
+
+      switch (data.type) {
+        case 'ok':
+          setSrc(data.payload);
+
+          const { current } = currentRef;
+
+          if (current === uid) {
+            setVisible(visible => !visible);
+          }
+          break;
+        case 'error':
+          info.error(data.message);
+          break;
+        default:
+          info.error('发生未知错误');
+      }
+    });
+
+    workerRef.current = worker;
+
     return () => {
       worker.terminate();
     };
-  }, []);
+  }, [uid]);
 
   return (
     <div className={styles.locate} onClick={onStageClick}>
+      {trigger(loading, onClick)}
       <Image hidden src={favicon} preview={preview} />
-      {loading ? <LoadingOutlined /> : <Icon title="查看位置" component={LocateIcon} onClick={onClick} />}
     </div>
   );
 });
 
-interface ResultProps {
-  value?: DecodeResultMessage;
+interface OverviewLocateProps {
+  state?: DecodeResultMessage;
+  currentRef: React.MutableRefObject<string | undefined>;
 }
 
-const Result = memo(function Result({ value }: ResultProps) {
-  const currentRef = useRef<string>();
+const OverviewLocate = memo(function Overview({ state, currentRef }: OverviewLocateProps) {
+  if (state && state.type === 'ok') {
+    const { payload } = state;
+    const { uid, image, items } = payload;
 
+    return (
+      <Locate
+        key={uid}
+        uid={uid}
+        name="概览"
+        image={image}
+        items={items}
+        currentRef={currentRef}
+        trigger={(loading, onClick) => {
+          return (
+            <Button
+              loading={loading}
+              onClick={onClick}
+              className={styles.overviewLocate}
+              icon={<Icon component={LocateIcon} />}
+            >
+              概览
+            </Button>
+          );
+        }}
+      />
+    );
+  }
+
+  return null;
+});
+
+interface ResultProps {
+  state?: DecodeResultMessage;
+  currentRef: React.MutableRefObject<string | undefined>;
+}
+
+const Result = memo(function Result({ state, currentRef }: ResultProps) {
   const items = useMemo<CollapseProps['items']>(() => {
-    if (value && value.type === 'ok') {
-      const { uid, items } = value.payload;
+    if (state && state.type === 'ok') {
+      const { uid, items } = state.payload;
 
       return items.map((item, index) => {
         const key = `${uid}-${index}`;
@@ -145,28 +196,44 @@ const Result = memo(function Result({ value }: ResultProps) {
           key,
           label,
           children: <pre>{item.content}</pre>,
-          extra: <Locate uid={key} name={label} item={item} currentRef={currentRef} image={value.payload.image} />
+          extra: (
+            <Locate
+              key={key}
+              uid={key}
+              name={label}
+              items={[item]}
+              currentRef={currentRef}
+              image={state.payload.image}
+              trigger={(loading, onClick) => {
+                if (loading) {
+                  return <LoadingOutlined />;
+                }
+
+                return <Icon title="查看位置" component={LocateIcon} onClick={onClick} />;
+              }}
+            />
+          )
         };
       });
     }
-  }, [value]);
+  }, [state]);
 
-  if (value) {
-    switch (value.type) {
+  if (state) {
+    switch (state.type) {
       case 'ok':
         return (
           <Collapse
             size="small"
             items={items}
-            key={value.payload.uid}
+            key={state.payload.uid}
             className={styles.contents}
-            defaultActiveKey={`${value.payload.uid}-0`}
+            defaultActiveKey={`${state.payload.uid}-0`}
           />
         );
       case 'error':
-        return <Alert type="error" message={value.message} showIcon />;
+        return <Alert type="error" message={state.message} showIcon />;
       default:
-        return <Alert type="error" message="unknown error" showIcon />;
+        return <Alert type="error" message="发生未知错误" showIcon />;
     }
   }
 
@@ -181,11 +248,12 @@ interface FormValues {
 
 export default memo(function Encode() {
   const lockRef = useRef(false);
+  const workerRef = useRef<Worker>();
   const [form] = useForm<FormValues>();
   const image = useWatch(['image'], form);
+  const currentLocateRef = useRef<string>();
   const [loading, setLoading] = useLazyState(false);
   const [state, setState] = useState<DecodeResultMessage>();
-  const worker = useMemo(() => new Worker(new URL('/js/workers/decode', import.meta.url)), []);
 
   const initialValues = useMemo<FormValues>(() => {
     return {
@@ -196,7 +264,9 @@ export default memo(function Encode() {
   }, []);
 
   const onFinish = useCallback((values: FormValues) => {
-    if (!lockRef.current) {
+    const worker = workerRef.current;
+
+    if (worker && !lockRef.current) {
       setLoading(true);
 
       lockRef.current = true;
@@ -206,17 +276,17 @@ export default memo(function Encode() {
 
       image.crossOrigin = 'anonymous';
 
-      image.onerror = () => {
+      image.addEventListener('error', () => {
         setLoading(false);
-      };
+      });
 
-      image.onload = () => {
+      image.addEventListener('load', () => {
         createImageBitmap(image).then(image => {
           const message: DecodeMessage = { ...values, image, uid: src };
 
           worker.postMessage(message, [image]);
         });
-      };
+      });
 
       image.src = src;
     }
@@ -231,14 +301,16 @@ export default memo(function Encode() {
   }, []);
 
   useEffect(() => {
-    const onMessage = ({ data }: MessageEvent<DecodeResultMessage>) => {
+    const worker = new Worker(new URL('/js/workers/decode', import.meta.url));
+
+    worker.addEventListener('message', ({ data }: MessageEvent<DecodeResultMessage>) => {
       setState(data);
       setLoading(false);
 
       lockRef.current = false;
-    };
+    });
 
-    worker.addEventListener('message', onMessage);
+    workerRef.current = worker;
 
     return () => {
       worker.terminate();
@@ -270,11 +342,12 @@ export default memo(function Encode() {
             <Button type="primary" htmlType="submit" loading={loading} disabled={!image} icon={<Icon component={DncodeIcon} />}>
               解码
             </Button>
+            <OverviewLocate state={state} currentRef={currentLocateRef} />
           </Col>
         </Row>
       </Form>
       <div className={styles.result}>
-        <Result value={state} />
+        <Result state={state} currentRef={currentLocateRef} />
       </div>
     </div>
   );

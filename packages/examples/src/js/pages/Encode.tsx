@@ -10,6 +10,8 @@ import { Alert, Button, Col, ColorPicker, Form, Image, Input, InputNumber, Row, 
 
 import EncodeIcon from '/images/encode.svg';
 
+type FormValues = EncodeMessage;
+
 const { Option } = Select;
 const { TextArea } = Input;
 const { Item: FormItem, useForm, useWatch } = Form;
@@ -42,15 +44,15 @@ const Result = memo(function Result({ value }: ResultProps) {
 });
 
 export default memo(function Encode() {
-  const [form] = useForm<EncodeMessage>();
   const lockRef = useRef(false);
+  const workerRef = useRef<Worker>();
+  const [form] = useForm<FormValues>();
   const fnc1 = useWatch(['fnc1'], form);
   const content = useWatch('content', form);
   const [loading, setLoading] = useLazyState(false);
   const [state, setState] = useState<EncodeResultMessage>();
-  const worker = useMemo(() => new Worker(new URL('/js/workers/encode', import.meta.url)), []);
 
-  const initialValues = useMemo<EncodeMessage>(() => {
+  const initialValues = useMemo<FormValues>(() => {
     return {
       level: 'M',
       fnc1: 'None',
@@ -84,29 +86,35 @@ export default memo(function Encode() {
     return options;
   }, []);
 
-  const onFinish = useCallback((values: EncodeMessage) => {
-    if (!lockRef.current) {
+  const onFinish = useCallback((values: FormValues) => {
+    const worker = workerRef.current;
+
+    if (worker && !lockRef.current) {
       setLoading(true);
 
       lockRef.current = true;
 
-      const { background, foreground } = values;
-
-      worker.postMessage({
+      const message: EncodeMessage = {
         ...values,
-        background: convertColor(background),
-        foreground: convertColor(foreground)
-      });
+        background: convertColor(values.background),
+        foreground: convertColor(values.foreground)
+      };
+
+      worker.postMessage(message);
     }
   }, []);
 
   useEffect(() => {
+    const worker = new Worker(new URL('/js/workers/encode', import.meta.url));
+
     worker.addEventListener('message', ({ data }: MessageEvent<EncodeResultMessage>) => {
       setState(data);
       setLoading(false);
 
       lockRef.current = false;
     });
+
+    workerRef.current = worker;
 
     return () => {
       worker.terminate();

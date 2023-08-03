@@ -8,17 +8,18 @@
   margin-top: 24px;
 
   .contents {
-    .locate {
-      margin: 0;
-      padding: 0;
-    }
-
     pre {
       margin: 0;
       white-space: pre-wrap;
       word-wrap: break-word;
     }
   }
+}
+
+.locate {
+  margin: 0;
+  padding: 0;
+  display: inline-flex;
 }
 
 .locatedToolbar {
@@ -31,4 +32,8 @@
     margin: 0;
     padding: 0;
   }
+}
+
+.overviewLocate {
+  margin-left: 8px;
 }

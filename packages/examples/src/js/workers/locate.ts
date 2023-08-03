@@ -14,11 +14,14 @@ export interface LocateError {
   message: string;
 }
 
-export type LocateResultMessage = LocateOk | LocateError;
-
-export interface LocateMessage extends Omit<DecodedItem, 'content'> {
+export interface LocateMessage {
   image: ImageBitmap;
+  items: LocateItem[];
 }
+
+export type LocateItem = Omit<DecodedItem, 'content'>;
+
+export type LocateResultMessage = LocateOk | LocateError;
 
 export type Context2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
@@ -65,22 +68,24 @@ function drawLine(context: Context2D, points: Point[], strokeStyle: string, clos
 }
 
 self.addEventListener('message', ({ data }: MessageEvent<LocateMessage>) => {
-  const { image, timing, corners, finder, alignment } = data;
+  const { image, items } = data;
   const canvas = new OffscreenCanvas(image.width, image.height);
   const context = canvas.getContext('2d')!;
 
   context.drawImage(image, 0, 0);
 
-  drawLine(context, corners, '#00ff00', true);
-  drawLine(context, [finder[2], finder[0], finder[1]], '#ff0000');
-  drawLine(context, [timing[2], timing[0], timing[1]], '#00ff00');
+  for (const { timing, corners, finder, alignment } of items) {
+    drawLine(context, corners, '#00ff00', true);
+    drawLine(context, [finder[2], finder[0], finder[1]], '#ff0000');
+    drawLine(context, [timing[2], timing[0], timing[1]], '#00ff00');
 
-  markPattern(context, finder[0], '#ff0000');
-  markPattern(context, finder[1], '#00ff00');
-  markPattern(context, finder[2], '#0000ff');
+    markPattern(context, finder[0], '#ff0000');
+    markPattern(context, finder[1], '#00ff00');
+    markPattern(context, finder[2], '#0000ff');
 
-  if (alignment != null) {
-    markPattern(context, alignment, '#ff00ff');
+    if (alignment != null) {
+      markPattern(context, alignment, '#ff00ff');
+    }
   }
 
   canvas.convertToBlob().then(
@@ -95,7 +100,7 @@ self.addEventListener('message', ({ data }: MessageEvent<LocateMessage>) => {
     () => {
       const message: LocateError = {
         type: 'error',
-        message: '生成定位图失败'
+        message: '生成未知定位图失败'
       };
 
       self.postMessage(message);
