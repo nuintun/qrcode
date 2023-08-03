@@ -20,3 +20,15 @@
     }
   }
 }
+
+.locatedToolbar {
+  gap: 16px;
+  align-items: center;
+  display: inline-flex;
+  flex-direction: column;
+
+  > p {
+    margin: 0;
+    padding: 0;
+  }
+}

@@ -28,7 +28,7 @@ function markPattern(context: Context2D, { x, y, moduleSize }: Pattern, fillStyl
   context.fillStyle = fillStyle;
 
   context.beginPath();
-  context.arc(x, y, moduleSize * 0.6, 0, Math.PI * 2);
+  context.arc(x, y, moduleSize * 0.5, 0, Math.PI * 2);
   context.closePath();
   context.fill();
 

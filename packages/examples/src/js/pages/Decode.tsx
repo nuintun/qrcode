@@ -7,7 +7,7 @@ import ImagePicker from '/js/components/ImagePicker';
 import Icon, { LoadingOutlined } from '@ant-design/icons';
 import { LocateMessage, LocateResultMessage } from '/js/workers/locate';
 import { DecodedItem, DecodeMessage, DecodeResultMessage } from '/js/workers/decode';
-import { Alert, App, Button, Col, Collapse, CollapseProps, Form, Image, Row, Switch } from 'antd';
+import { Alert, App, Button, Col, Collapse, CollapseProps, Form, Image, ImageProps, Row, Switch } from 'antd';
 
 import qrcode from '/images/qrcode.jpg';
 import favicon from '/images/favicon.ico';
@@ -19,8 +19,11 @@ const { useApp } = App;
 const { Item: FormItem, useForm, useWatch } = Form;
 
 interface LocateProps {
+  uid: string;
+  name: string;
   item: DecodedItem;
   image: ImageBitmap;
+  currentRef: React.MutableRefObject<string | undefined>;
 }
 
 function cloneImageBitmap(image: ImageBitmap): ImageBitmap {
@@ -32,7 +35,7 @@ function cloneImageBitmap(image: ImageBitmap): ImageBitmap {
   return canvas.transferToImageBitmap();
 }
 
-const Locate = memo(function Locate({ item, image }: LocateProps) {
+const Locate = memo(function Locate({ uid, name, item, image, currentRef }: LocateProps) {
   const lockRef = useRef(false);
   const { message: info } = useApp();
   const [src, setSrc] = useState<string>();
@@ -40,7 +43,27 @@ const Locate = memo(function Locate({ item, image }: LocateProps) {
   const [loading, setLoading] = useLazyState(false);
   const worker = useMemo(() => new Worker(new URL('/js/workers/locate', import.meta.url)), []);
 
+  const preview = useMemo<ImageProps['preview']>(() => {
+    return {
+      src,
+      visible,
+      onVisibleChange(visible) {
+        setVisible(visible);
+      },
+      toolbarRender(node) {
+        return (
+          <div className={styles.locatedToolbar}>
+            <p>{name}</p>
+            {node}
+          </div>
+        );
+      }
+    };
+  }, [src, name, visible]);
+
   const onClick = useCallback(() => {
+    currentRef.current = uid;
+
     if (src == null) {
       if (!lockRef.current) {
         setLoading(true);
@@ -55,7 +78,12 @@ const Locate = memo(function Locate({ item, image }: LocateProps) {
           switch (data.type) {
             case 'ok':
               setSrc(data.payload);
-              setVisible(visible => !visible);
+
+              const { current } = currentRef;
+
+              if (current === uid) {
+                setVisible(visible => !visible);
+              }
               break;
             case 'error':
               info.error(data.message);
@@ -80,10 +108,6 @@ const Locate = memo(function Locate({ item, image }: LocateProps) {
     }
   }, [src]);
 
-  const onVisibleChange = useCallback((visible: boolean) => {
-    setVisible(visible);
-  }, []);
-
   const onStageClick = useCallback<React.MouseEventHandler>(e => {
     e.stopPropagation();
   }, []);
@@ -96,7 +120,7 @@ const Locate = memo(function Locate({ item, image }: LocateProps) {
 
   return (
     <div className={styles.locate} onClick={onStageClick}>
-      <Image hidden src={favicon} preview={{ src, visible, onVisibleChange }} />
+      <Image hidden src={favicon} preview={preview} />
       {loading ? <LoadingOutlined /> : <Icon title="查看位置" component={LocateIcon} onClick={onClick} />}
     </div>
   );
@@ -107,16 +131,21 @@ interface ResultProps {
 }
 
 const Result = memo(function Result({ value }: ResultProps) {
+  const currentRef = useRef<string>();
+
   const items = useMemo<CollapseProps['items']>(() => {
     if (value && value.type === 'ok') {
       const { uid, items } = value.payload;
 
       return items.map((item, index) => {
+        const key = `${uid}-${index}`;
+        const label = `解码结果【${index + 1}】`;
+
         return {
-          key: `${uid}-${index}`,
-          label: `解码结果【${index + 1}】`,
+          key,
+          label,
           children: <pre>{item.content}</pre>,
-          extra: <Locate item={item} image={value.payload.image} />
+          extra: <Locate uid={key} name={label} item={item} currentRef={currentRef} image={value.payload.image} />
         };
       });
     }
