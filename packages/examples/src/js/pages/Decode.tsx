@@ -2,6 +2,7 @@ import styles from '/css/Decode.module.scss';
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import Clipboard from '/js/components/Clipboard';
 import useLazyState from '/js/hooks/useLazyState';
 import ImagePicker from '/js/components/ImagePicker';
 import Icon, { LoadingOutlined } from '@ant-design/icons';
@@ -96,10 +97,6 @@ const Locate = memo(function Locate({ uid, name, items, image, trigger, currentR
     }
   }, [uid, image, items]);
 
-  const onStageClick = useCallback<React.MouseEventHandler>(e => {
-    e.stopPropagation();
-  }, []);
-
   useEffect(() => {
     const worker = new Worker(new URL('/js/workers/locate', import.meta.url));
 
@@ -134,7 +131,7 @@ const Locate = memo(function Locate({ uid, name, items, image, trigger, currentR
   }, [uid]);
 
   return (
-    <div className={styles.locate} onClick={onStageClick}>
+    <div className={styles.locate}>
       {trigger(loading, onClick)}
       <Image hidden src={favicon} preview={preview} />
     </div>
@@ -161,12 +158,7 @@ const OverviewLocate = memo(function Overview({ state, currentRef }: OverviewLoc
         currentRef={currentRef}
         trigger={(loading, onClick) => {
           return (
-            <Button
-              loading={loading}
-              onClick={onClick}
-              className={styles.overviewLocate}
-              icon={<Icon component={LocateIcon} />}
-            >
+            <Button loading={loading} onClick={onClick} icon={<Icon component={LocateIcon} />}>
               概览
             </Button>
           );
@@ -186,32 +178,41 @@ interface ResultProps {
 const Result = memo(function Result({ state, currentRef }: ResultProps) {
   const items = useMemo<CollapseProps['items']>(() => {
     if (state && state.type === 'ok') {
-      const { uid, items } = state.payload;
+      const { uid, image, items } = state.payload;
 
       return items.map((item, index) => {
+        const { content } = item;
         const key = `${uid}-${index}`;
         const label = `解码结果【${index + 1}】`;
 
         return {
           key,
           label,
-          children: <pre>{item.content}</pre>,
+          children: <pre>{content}</pre>,
           extra: (
-            <Locate
-              key={key}
-              uid={key}
-              name={label}
-              items={[item]}
-              currentRef={currentRef}
-              image={state.payload.image}
-              trigger={(loading, onClick) => {
-                if (loading) {
-                  return <LoadingOutlined />;
-                }
-
-                return <Icon title="查看位置" component={LocateIcon} onClick={onClick} />;
+            <div
+              onClick={e => {
+                e.stopPropagation();
               }}
-            />
+              className={styles.extra}
+            >
+              <Clipboard text={content} />
+              <Locate
+                key={key}
+                uid={key}
+                name={label}
+                image={image}
+                items={[item]}
+                currentRef={currentRef}
+                trigger={(loading, onClick) => {
+                  if (loading) {
+                    return <LoadingOutlined />;
+                  }
+
+                  return <Icon title="查看位置" component={LocateIcon} onClick={onClick} />;
+                }}
+              />
+            </div>
           )
         };
       });
@@ -338,7 +339,7 @@ export default memo(function Encode() {
               <Switch checkedChildren="开" unCheckedChildren="关" />
             </FormItem>
           </Col>
-          <Col span={24}>
+          <Col span={24} className={styles.actions}>
             <Button type="primary" htmlType="submit" loading={loading} disabled={!image} icon={<Icon component={DncodeIcon} />}>
               解码
             </Button>

@@ -4,10 +4,22 @@
   border: 1px dashed #d9d9d9;
 }
 
+.actions {
+  gap: 8px;
+  display: flex;
+  align-items: center;
+}
+
 .result {
   margin-top: 24px;
 
   .contents {
+    .extra {
+      gap: 8px;
+      align-items: center;
+      display: inline-flex;
+    }
+
     pre {
       margin: 0;
       white-space: pre-wrap;
@@ -19,7 +31,6 @@
 .locate {
   margin: 0;
   padding: 0;
-  display: inline-flex;
 }
 
 .locatedToolbar {
@@ -32,8 +43,4 @@
     margin: 0;
     padding: 0;
   }
-}
-
-.overviewLocate {
-  margin-left: 8px;
 }

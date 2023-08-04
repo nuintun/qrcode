@@ -65,11 +65,14 @@ importers:
         specifier: ^0.5.1
         version: 0.5.1
       antd:
-        specifier: ^5.8.1
-        version: 5.8.1(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^5.8.2
+        version: 5.8.2(react-dom@18.2.0)(react@18.2.0)
       browser-fs-access:
         specifier: ^0.34.1
         version: 0.34.1
+      copy-to-clipboard:
+        specifier: ^3.3.3
+        version: 3.3.3
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -1087,8 +1090,8 @@ packages:
     engines: {node: '>=12'}
     dev: true
 
-  /antd@5.8.1(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-6BEc6QDLzk01RrUjzIQ50oW2+mpscfBU1tusECi4OwEKgZmvmaW8ErvEDWtTHezIdr7dEMOEJlOZaOl8eXuaIw==}
+  /antd@5.8.2(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-kkC2BSBde1JzJxk2wNYj/NXgNZQZ2yu6avJoCKleSi32nsjiadi7FFu1AyGxIzoJ9CrxoLacjGvrwbKJQ6kCvw==}
     peerDependencies:
       react: '>=16.9.0'
       react-dom: '>=16.9.0'
