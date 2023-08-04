@@ -33,7 +33,7 @@ export class BitMatrixParser {
       throw new Error('');
     }
 
-    if (versionNumber >= 1 && versionNumber <= 6) {
+    if (versionNumber <= 6) {
       return VERSIONS[versionNumber - 1];
     }
 
