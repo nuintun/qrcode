@@ -27,9 +27,9 @@
   },
   "scripts": {
     "lint": "tsc --noEmit",
-    "format": "prettier --write .",
     "prod": "node tools/bin/webpack.config.prod.js",
-    "dev": "nodemon tools/bin/webpack.config.dev.js"
+    "dev": "nodemon tools/bin/webpack.config.dev.js",
+    "format": "prettier --write . --ignore-path .prettierignore"
   },
   "dependencies": {
     "@ant-design/icons": "^5.2.4",

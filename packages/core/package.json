@@ -38,10 +38,10 @@
     "lint": "tsc --noEmit",
     "test": "node tests/index.js",
     "clean": "node tools/clean.js",
-    "format": "prettier --write .",
     "prepublishOnly": "npm run build",
     "build:cjs": "rollup -c tools/rollup.cjs.js",
     "build:esm": "rollup -c tools/rollup.esm.js",
+    "format": "prettier --write . --ignore-path .prettierignore",
     "build": "npm run clean && npm run build:main && npm run format",
     "build:main": "npm run build:cjs && npm run build:esm && npm run build:types",
     "build:types": "tsc --declaration --emitDeclarationOnly --declarationDir types && node tools/fix-types.js"
