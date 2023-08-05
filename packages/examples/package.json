@@ -53,7 +53,7 @@
     "clean-webpack-plugin": "^4.0.0",
     "css-loader": "^6.8.1",
     "css-minimizer-webpack-plugin": "5.0.1",
-    "css-modules-types-loader": "^0.3.21",
+    "css-modules-types-loader": "^0.3.22",
     "find-free-ports": "^3.1.1",
     "html-webpack-plugin": "^5.5.3",
     "koa": "^2.14.2",
@@ -66,12 +66,12 @@
     "prettier": "^3.0.1",
     "sass": "^1.64.2",
     "sass-loader": "^13.3.2",
-    "svgc-loader": "^0.1.15",
+    "svgc-loader": "^0.1.16",
     "swc-loader": "^0.2.3",
     "terser-webpack-plugin": "^5.3.9",
     "typescript": "^5.1.6",
     "utf-8-validate": "^6.0.3",
     "webpack": "^5.88.2",
-    "webpack-dev-service": "^0.5.4"
+    "webpack-dev-service": "^0.5.5"
   }
 }
