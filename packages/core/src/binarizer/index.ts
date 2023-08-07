@@ -165,7 +165,10 @@ export function grayscale({ data, width, height }: ImageData): Uint8Array {
       const g = data[colorIndex + 1];
       const b = data[colorIndex + 2];
 
-      luminances[offset + x] = r * 0.299 + g * 0.587 + b * 0.114;
+      // 0.299R + 0.587G + 0.114B (YUV/YIQ for PAL and NTSC),
+      // (R * 306) >> 10 is approximately equal to R * 0.299, and so on.
+      // 0x200 >> 10 is 0.5, it implements rounding.
+      luminances[offset + x] = (r * 306 + g * 601 + b * 117 + 0x200) >> 10;
     }
   }
 
