@@ -15,7 +15,9 @@
 <!-- prettier-ignore -->
 > [QRCode guide](https://nuintun.github.io/qrcode/packages/core/spec/ISO-IEC-18004-2015.pdf)
 >
-> [QRCode example](https://nuintun.github.io/qrcode/packages/examples/static/index.html#/encode)
+> [QRCode encode example](https://nuintun.github.io/qrcode/packages/examples/static/index.html#/encode)
+>
+> [QRCode decode example](https://nuintun.github.io/qrcode/packages/examples/static/index.html#/decode)
 >
 > Modify from [kazuhikoarase/qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) and [cozmo/jsQR](https://github.com/cozmo/jsQR)
 
