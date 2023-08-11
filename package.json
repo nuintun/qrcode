@@ -21,8 +21,8 @@
   "homepage": "https://github.com/nuintun/qrcode#readme",
   "scripts": {
     "lint": "pnpm --filter ./packages/* lint",
-    "test": "pnpm --filter ./packages/* test",
     "clean": "pnpm --filter ./packages/* clean",
+    "test": "pnpm --filter ./packages/core test",
     "format": "pnpm --filter ./packages/* format",
     "build": "pnpm --filter ./packages/core build",
     "dev": "pnpm --filter ./packages/examples dev",
