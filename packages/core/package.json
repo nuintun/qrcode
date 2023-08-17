@@ -50,7 +50,6 @@
     "tslib": "^2.6.1"
   },
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "^15.1.0",
     "@rollup/plugin-typescript": "^11.1.2",
     "magic-string": "^0.30.2",
     "prettier": "^3.0.2",
