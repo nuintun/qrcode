@@ -1,8 +1,22 @@
 .tabs {
   height: 100%;
 
-  .logo {
+  .logo,
+  .source {
     margin: 0 8px;
+  }
+
+  .logo {
+    height: 32px;
+  }
+
+  .source {
+    cursor: pointer;
+    display: inline-flex;
+
+    .github {
+      font-size: 32px;
+    }
   }
 
   .tabBarItem {

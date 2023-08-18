@@ -17,6 +17,7 @@ import { App, AppProps, ConfigProvider, Tabs, TabsProps } from 'antd';
 import favicon from '/images/favicon.ico';
 import EncodeIcon from '/images/encode.svg';
 import DecodeIcon from '/images/decode.svg';
+import GithubIcon from '/images/github.svg';
 
 const Encode = lazy(() => import('/js/pages/Encode'));
 const Decode = lazy(() => import('/js/pages/Decode'));
@@ -79,7 +80,14 @@ const Page = memo(function Page() {
   );
 
   const tabBarExtraContent = useMemo<TabsProps['tabBarExtraContent']>(() => {
-    return { left: <img className={styles.logo} src={favicon} alt="logo" /> };
+    return {
+      left: <img title="QRCode" className={styles.logo} src={favicon} alt="logo" />,
+      right: (
+        <a title="GitHub" className={styles.source} href="https://github.com/nuintun/qrcode" target="_blank">
+          <Icon className={styles.github} component={GithubIcon} />
+        </a>
+      )
+    };
   }, []);
 
   return (
