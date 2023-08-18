@@ -18,6 +18,11 @@
       gap: 8px;
       align-items: center;
       display: inline-flex;
+
+      > *:hover {
+        color: #4096ff;
+        transition: color 0.3s;
+      }
     }
 
     pre {

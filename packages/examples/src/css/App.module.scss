@@ -12,8 +12,13 @@
   }
 
   .source {
+    color: inherit;
     cursor: pointer;
     display: inline-block;
+
+    &:hover {
+      color: #4096ff;
+    }
 
     .github {
       font-size: 32px;
