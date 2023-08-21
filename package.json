@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@swc/helpers": "^0.5.1",
-    "tslib": "^2.6.1"
+    "tslib": "^2.6.2"
   },
   "devDependencies": {
     "prettier": "^3.0.2",
