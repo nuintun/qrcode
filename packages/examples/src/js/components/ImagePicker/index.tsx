@@ -22,17 +22,22 @@ export default memo(function ImageUpload(props: ImageUploadProps) {
 
   const onClick = useCallback(() => {
     if (!disabled) {
-      fileOpen({ mimeTypes: [accept] }).then(file => {
-        setValue(() => {
-          if (urlRef.current) {
-            URL.revokeObjectURL(urlRef.current);
-          }
+      fileOpen({ mimeTypes: [accept] }).then(
+        file => {
+          setValue(() => {
+            if (urlRef.current) {
+              URL.revokeObjectURL(urlRef.current);
+            }
 
-          urlRef.current = URL.createObjectURL(file);
+            urlRef.current = URL.createObjectURL(file);
 
-          return urlRef.current;
-        });
-      });
+            return urlRef.current;
+          });
+        },
+        () => {
+          // User canceled
+        }
+      );
     }
   }, [accept, disabled]);
 
