@@ -1,6 +1,5 @@
 {
   "name": "webpack-antd-build",
-  "version": "1.0.0",
   "description": "A webpack antd build tools.",
   "private": true,
   "type": "module",

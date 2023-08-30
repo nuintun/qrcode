@@ -1,6 +1,6 @@
 {
   "name": "qrcode",
-  "version": "3.3.5",
+  "private": true,
   "description": "A pure JavaScript QRCode encode and decode library.",
   "repository": {
     "type": "git",
