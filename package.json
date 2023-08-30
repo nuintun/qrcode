@@ -1,7 +1,7 @@
 {
   "name": "qrcode",
-  "private": true,
   "description": "A pure JavaScript QRCode encode and decode library.",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nuintun/qrcode.git"
