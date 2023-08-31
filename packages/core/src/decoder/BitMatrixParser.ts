@@ -29,8 +29,7 @@ export class BitMatrixParser {
     const versionNumber = toInt32((size - 17) / 4);
 
     if (versionNumber < 1) {
-      // TODO 重写错误消息
-      throw new Error('');
+      throw new Error('illegal version');
     }
 
     if (versionNumber <= 6) {
@@ -60,7 +59,7 @@ export class BitMatrixParser {
 
     if (version.size > size) {
       // TODO 重写错误消息
-      throw new Error('');
+      throw new Error('matrix size too small for version');
     }
 
     return version;
@@ -154,7 +153,7 @@ export class BitMatrixParser {
 
     // TODO 重写错误消息
     if (byteOffset !== ecBlocks.numTotalCodewords) {
-      throw new Error('byteOffset !== ecBlocks.numTotalCodewords');
+      throw new Error('illegal codewords length');
     }
 
     return codewords;

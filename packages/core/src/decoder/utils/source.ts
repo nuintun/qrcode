@@ -32,12 +32,14 @@ function parseECIValue(source: BitSource): number {
     // just one byte
     return firstByte & 0x7f;
   }
+
   if ((firstByte & 0xc0) == 0x80) {
     // two bytes
     const secondByte = source.read(8);
 
     return ((firstByte & 0x3f) << 8) | secondByte;
   }
+
   if ((firstByte & 0xe0) == 0xc0) {
     // three bytes
     const secondThirdBytes = source.read(16);
