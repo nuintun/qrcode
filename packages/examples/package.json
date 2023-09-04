@@ -31,10 +31,10 @@
     "format": "prettier --write . --ignore-path .prettierignore"
   },
   "dependencies": {
-    "@ant-design/icons": "^5.2.5",
+    "@ant-design/icons": "^5.2.6",
     "@nuintun/qrcode": "workspace:*",
     "@swc/helpers": "^0.5.1",
-    "antd": "^5.8.5",
+    "antd": "^5.8.6",
     "browser-fs-access": "^0.34.1",
     "copy-to-clipboard": "^3.3.3",
     "react": "^18.2.0",
@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@nuintun/svgo-loader": "^0.1.3",
-    "@swc/core": "^1.3.81",
+    "@swc/core": "^1.3.82",
     "@types/react": "^18.2.21",
     "@types/react-dom": "^18.2.7",
     "autoprefixer": "^10.4.15",
