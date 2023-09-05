@@ -28,19 +28,19 @@ export interface DecodeSource {
 function parseECIValue(source: BitSource): number {
   const firstByte = source.read(8);
 
-  if ((firstByte & 0x80) == 0) {
+  if ((firstByte & 0x80) === 0) {
     // just one byte
     return firstByte & 0x7f;
   }
 
-  if ((firstByte & 0xc0) == 0x80) {
+  if ((firstByte & 0xc0) === 0x80) {
     // two bytes
     const secondByte = source.read(8);
 
     return ((firstByte & 0x3f) << 8) | secondByte;
   }
 
-  if ((firstByte & 0xe0) == 0xc0) {
+  if ((firstByte & 0xe0) === 0xc0) {
     // three bytes
     const secondThirdBytes = source.read(16);
 
@@ -80,7 +80,7 @@ function decodeAlphanumericSegment(source: BitSource, count: number, fnc1: boole
     count -= 2;
   }
 
-  if (count == 1) {
+  if (count === 1) {
     // special case: one character left
     if (source.available() < 6) {
       // TODO 重写错误消息
