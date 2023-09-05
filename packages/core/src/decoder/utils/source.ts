@@ -48,7 +48,7 @@ function parseECIValue(source: BitSource): number {
   }
 
   // TODO 重写错误消息
-  throw new Error('');
+  throw new Error('illegal eci value');
 }
 
 const GS = String.fromCharCode(0x1d);
@@ -69,7 +69,7 @@ function decodeAlphanumericSegment(source: BitSource, count: number, fnc1: boole
   while (count > 1) {
     if (source.available() < 11) {
       // TODO 重写错误消息
-      throw new Error('');
+      throw new Error('illegal bits length');
     }
 
     const nextTwoCharsBits = source.read(11);
@@ -84,7 +84,7 @@ function decodeAlphanumericSegment(source: BitSource, count: number, fnc1: boole
     // special case: one character left
     if (source.available() < 6) {
       // TODO 重写错误消息
-      throw new Error('');
+      throw new Error('illegal bits length');
     }
 
     content += ALPHANUMERIC_CHARACTERS.charAt(source.read(6));
@@ -97,7 +97,7 @@ function decodeByteSegment(source: BitSource, count: number, decode: TextDecode,
   // Don't crash trying to read more bits than we have available.
   if (source.available() < 8 * count) {
     // TODO 重写错误消息
-    throw new Error('');
+    throw new Error('illegal bits length');
   }
 
   const bytes = new Uint8Array(count);
@@ -115,7 +115,7 @@ function decodeByteSegment(source: BitSource, count: number, decode: TextDecode,
 function decodeHanziSegment(source: BitSource, count: number): string {
   if (source.available() < 13 * count) {
     // TODO 重写错误消息
-    throw new Error('');
+    throw new Error('illegal bits length');
   }
 
   let offset = 0;
@@ -148,7 +148,7 @@ function decodeHanziSegment(source: BitSource, count: number): string {
 function decodeKanjiSegment(source: BitSource, count: number): string {
   if (source.available() < 13 * count) {
     // TODO 重写错误消息
-    throw new Error('');
+    throw new Error('illegal bits length');
   }
 
   let offset = 0;
@@ -186,14 +186,14 @@ function decodeNumericSegment(source: BitSource, count: number): string {
     // Each 10 bits encodes three digits
     if (source.available() < 10) {
       // TODO 重写错误消息
-      throw new Error('');
+      throw new Error('illegal bits length');
     }
 
     const threeDigitsBits = source.read(10);
 
     if (threeDigitsBits >= 1000) {
       // TODO 重写错误消息
-      throw new Error('');
+      throw new Error('illegal numeric codeword');
     }
 
     content += NUMERIC_CHARACTERS.charAt(threeDigitsBits / 100);
@@ -207,7 +207,7 @@ function decodeNumericSegment(source: BitSource, count: number): string {
     // Two digits left over to read, encoded in 7 bits
     if (source.available() < 7) {
       // TODO 重写错误消息
-      throw new Error('illegal numeric');
+      throw new Error('illegal bits length');
     }
 
     const twoDigitsBits = source.read(7);
@@ -223,7 +223,7 @@ function decodeNumericSegment(source: BitSource, count: number): string {
     // One digit left over to read
     if (source.available() < 4) {
       // TODO 重写错误消息
-      throw new Error('illegal numeric');
+      throw new Error('illegal bits length');
     }
 
     const digitBits = source.read(4);
