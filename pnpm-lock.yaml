@@ -168,8 +168,8 @@ importers:
         specifier: ^5.88.2
         version: 5.88.2(@swc/core@1.3.82)
       webpack-dev-service:
-        specifier: ^0.5.8
-        version: 0.5.8(bufferutil@4.0.7)(utf-8-validate@6.0.3)(webpack@5.88.2)
+        specifier: ^0.5.9
+        version: 0.5.9(bufferutil@4.0.7)(utf-8-validate@6.0.3)(webpack@5.88.2)
 
 packages:
 
@@ -1228,7 +1228,7 @@ packages:
     hasBin: true
     dependencies:
       caniuse-lite: 1.0.30001527
-      electron-to-chromium: 1.4.508
+      electron-to-chromium: 1.4.509
       node-releases: 2.0.13
       update-browserslist-db: 1.0.11(browserslist@4.21.10)
     dev: true
@@ -1805,8 +1805,8 @@ packages:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
     dev: true
 
-  /electron-to-chromium@1.4.508:
-    resolution: {integrity: sha512-FFa8QKjQK/A5QuFr2167myhMesGrhlOBD+3cYNxO9/S4XzHEXesyTD/1/xF644gC8buFPz3ca6G1LOQD0tZrrg==}
+  /electron-to-chromium@1.4.509:
+    resolution: {integrity: sha512-G5KlSWY0zzhANtX15tkikHl4WB7zil2Y65oT52EZUL194abjUXBZym12Ht7Bhuwm/G3LJFEqMADyv2Cks56dmg==}
     dev: true
 
   /emoji-regex@8.0.0:
@@ -4300,8 +4300,8 @@ packages:
       webpack: 5.88.2(@swc/core@1.3.82)
     dev: true
 
-  /webpack-dev-service@0.5.8(bufferutil@4.0.7)(utf-8-validate@6.0.3)(webpack@5.88.2):
-    resolution: {integrity: sha512-LRiQlwr32uMercUzskNfb/V/Z8g5+VfXtqE4K7USyiWrDx2cyDM3ko7n+Whe9oY9jVEJn+y9tFgS6jhCfIZfkA==}
+  /webpack-dev-service@0.5.9(bufferutil@4.0.7)(utf-8-validate@6.0.3)(webpack@5.88.2):
+    resolution: {integrity: sha512-g893Q7B773UesHfrYiPTmxIWC/inX5K71xpV2WzRsAIhPpgnSnWt1qbQ9BJrj4GMMeg8H1bugcyQPpORqAMG1w==}
     peerDependencies:
       webpack: ^5.0.0
     dependencies:
@@ -4311,7 +4311,7 @@ packages:
       tslib: 2.6.2
       webpack: 5.88.2(@swc/core@1.3.82)
       webpack-dev-middleware: 6.1.1(webpack@5.88.2)
-      ws: 8.13.0(bufferutil@4.0.7)(utf-8-validate@6.0.3)
+      ws: 8.14.0(bufferutil@4.0.7)(utf-8-validate@6.0.3)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -4392,8 +4392,8 @@ packages:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
     dev: true
 
-  /ws@8.13.0(bufferutil@4.0.7)(utf-8-validate@6.0.3):
-    resolution: {integrity: sha512-x9vcZYTrFPC7aSIbj7sRCYo7L/Xb8Iy+pW0ng0wt2vCJv7M9HOMy0UoN3rr+IFC7hb7vXoqS+P9ktyLLLhO+LA==}
+  /ws@8.14.0(bufferutil@4.0.7)(utf-8-validate@6.0.3):
+    resolution: {integrity: sha512-WR0RJE9Ehsio6U4TuM+LmunEsjQ5ncHlw4sn9ihD6RoJKZrVyH9FWV3dmnwu8B2aNib1OvG2X6adUCyFpQyWcg==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       bufferutil: ^4.0.1
