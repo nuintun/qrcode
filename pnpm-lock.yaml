@@ -65,8 +65,8 @@ importers:
         specifier: ^5.9.0
         version: 5.9.0(react-dom@18.2.0)(react@18.2.0)
       browser-fs-access:
-        specifier: ^0.34.1
-        version: 0.34.1
+        specifier: ^0.35.0
+        version: 0.35.0
       copy-to-clipboard:
         specifier: ^3.3.3
         version: 3.3.3
@@ -237,8 +237,8 @@ packages:
       chalk: 2.4.2
     dev: true
 
-  /@babel/helper-validator-identifier@7.22.15:
-    resolution: {integrity: sha512-4E/F9IIEi8WR94324mbDUMo074YTheJmd7eZF5vITTeYchqAi6sYXRLHUVsmkdmY4QjfKTcB2jB7dVP3NaBElQ==}
+  /@babel/helper-validator-identifier@7.22.19:
+    resolution: {integrity: sha512-Tinq7ybnEPFFXhlYOYFiSjespWQk0dq2dRNAiMdRTOYQzEGqnnNyrTxPYHP5r6wGjlF1rFgABdDV0g8EwD6Qbg==}
     engines: {node: '>=6.9.0'}
     dev: true
 
@@ -246,7 +246,7 @@ packages:
     resolution: {integrity: sha512-C/BaXcnnvBCmHTpz/VGZ8jgtE2aYlW4hxDhseJAWZb7gqGM/qtCK6iZUb0TyKFf7BOUsBH7Q7fkRsDRhg1XklQ==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@babel/helper-validator-identifier': 7.22.15
+      '@babel/helper-validator-identifier': 7.22.19
       chalk: 2.4.2
       js-tokens: 4.0.0
     dev: true
@@ -485,7 +485,7 @@ packages:
         optional: true
     dependencies:
       '@rollup/pluginutils': 5.0.4(rollup@3.29.1)
-      resolve: 1.22.4
+      resolve: 1.22.5
       rollup: 3.29.1
       tslib: 2.6.2
       typescript: 5.2.2
@@ -667,7 +667,7 @@ packages:
     dependencies:
       '@types/connect': 3.4.36
       '@types/express': 4.17.17
-      '@types/keygrip': 1.0.2
+      '@types/keygrip': 1.0.3
       '@types/node': 20.6.0
     dev: true
 
@@ -754,26 +754,26 @@ packages:
     resolution: {integrity: sha512-Hr5Jfhc9eYOQNPYO5WLDq/n4jqijdHNlDXjuAQkkt+mWdQR+XJToOHrsD4cPaMXpn6KO7y2+wM8AZEs8VpBLVA==}
     dev: true
 
-  /@types/keygrip@1.0.2:
-    resolution: {integrity: sha512-GJhpTepz2udxGexqos8wgaBx4I/zWIDPh/KOGEwAqtuGDkOUJu5eFvwmdBX4AmB8Odsr+9pHCQqiAqDL/yKMKw==}
+  /@types/keygrip@1.0.3:
+    resolution: {integrity: sha512-tfzBBb7OV2PbUfKbG6zRE5UbmtdLVCKT/XT364Z9ny6pXNbd9GnIB6aFYpq2A5lZ6mq9bhXgK6h5MFGNwhMmuQ==}
     dev: true
 
-  /@types/koa-compose@3.2.5:
-    resolution: {integrity: sha512-B8nG/OoE1ORZqCkBVsup/AKcvjdgoHnfi4pZMn5UwAPCbhk/96xyv284eBYW8JlQbQ7zDmnpFr68I/40mFoIBQ==}
+  /@types/koa-compose@3.2.6:
+    resolution: {integrity: sha512-PHiciWxH3NRyAaxUdEDE1NIZNfvhgtPlsdkjRPazHC6weqt90Jr0uLhIQs+SDwC8HQ/jnA7UQP6xOqGFB7ugWw==}
     dependencies:
-      '@types/koa': 2.13.8
+      '@types/koa': 2.13.9
     dev: true
 
-  /@types/koa@2.13.8:
-    resolution: {integrity: sha512-Ugmxmgk/yPRW3ptBTh9VjOLwsKWJuGbymo1uGX0qdaqqL18uJiiG1ZoV0rxCOYSaDGhvEp5Ece02Amx0iwaxQQ==}
+  /@types/koa@2.13.9:
+    resolution: {integrity: sha512-tPX3cN1dGrMn+sjCDEiQqXH2AqlPoPd594S/8zxwUm/ZbPsQXKqHPUypr2gjCPhHUc+nDJLduhh5lXI/1olnGQ==}
     dependencies:
       '@types/accepts': 1.3.5
       '@types/content-disposition': 0.5.6
       '@types/cookies': 0.7.8
       '@types/http-assert': 1.5.3
       '@types/http-errors': 2.0.1
-      '@types/keygrip': 1.0.2
-      '@types/koa-compose': 3.2.5
+      '@types/keygrip': 1.0.3
+      '@types/koa-compose': 3.2.6
       '@types/node': 20.6.0
     dev: true
 
@@ -1230,8 +1230,8 @@ packages:
       fill-range: 7.0.1
     dev: true
 
-  /browser-fs-access@0.34.1:
-    resolution: {integrity: sha512-HPaRf2yimp8kWSuWJXc8Mi78dPbDzfduA+Gyq14H4jlMvd6XNfIRm36Y2yRLaa4x0gwcGuepj4zf14oiTlxrxQ==}
+  /browser-fs-access@0.35.0:
+    resolution: {integrity: sha512-sLoadumpRfsjprP8XzVjpQc0jK8yqHBx0PtUTGYj2fftT+P/t+uyDAQdMgGAPKD011in/O+YYGh7fIs0oG/viw==}
     dev: false
 
   /browserslist@4.21.10:
@@ -1240,7 +1240,7 @@ packages:
     hasBin: true
     dependencies:
       caniuse-lite: 1.0.30001534
-      electron-to-chromium: 1.4.520
+      electron-to-chromium: 1.4.521
       node-releases: 2.0.13
       update-browserslist-db: 1.0.11(browserslist@4.21.10)
     dev: true
@@ -1817,8 +1817,8 @@ packages:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
     dev: true
 
-  /electron-to-chromium@1.4.520:
-    resolution: {integrity: sha512-Frfus2VpYADsrh1lB3v/ft/WVFlVzOIm+Q0p7U7VqHI6qr7NWHYKe+Wif3W50n7JAFoBsWVsoU0+qDks6WQ60g==}
+  /electron-to-chromium@1.4.521:
+    resolution: {integrity: sha512-88W7FAsYzc3Vy2mGCFe/YTD6kvoJpqeLRBd5NFMRMdYNqsjHYzkn/mGxaOFJ8yYfLuQqC6vpDYbN6Ps5mtIM3w==}
     dev: true
 
   /emoji-regex@8.0.0:
@@ -3809,8 +3809,8 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
-  /resolve@1.22.4:
-    resolution: {integrity: sha512-PXNdCiPqDqeUou+w1C2eTQbNfxKSuMxqTCuvlmmMsk1NWHL5fRrhY6Pl0qEYYc6+QqGClco1Qj8XnjPego4wfg==}
+  /resolve@1.22.5:
+    resolution: {integrity: sha512-qWhv7PF1V95QPvRoUGHxOtnAlEvlXBylMZcjUR9pAumMmveFtcHJRXGIr+TkjfNJVQypqv2qcDiiars2y1PsSg==}
     hasBin: true
     dependencies:
       is-core-module: 2.13.0
@@ -4323,7 +4323,7 @@ packages:
     peerDependencies:
       webpack: ^5.0.0
     dependencies:
-      '@types/koa': 2.13.8
+      '@types/koa': 2.13.9
       '@types/ws': 8.5.5
       koa-compose: 4.1.0
       tslib: 2.6.2
