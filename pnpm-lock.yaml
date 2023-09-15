@@ -168,8 +168,8 @@ importers:
         specifier: ^5.88.2
         version: 5.88.2(@swc/core@1.3.84)
       webpack-dev-service:
-        specifier: ^0.5.10
-        version: 0.5.10(bufferutil@4.0.7)(utf-8-validate@6.0.3)(webpack@5.88.2)
+        specifier: ^0.5.11
+        version: 0.5.11(bufferutil@4.0.7)(utf-8-validate@6.0.3)(webpack@5.88.2)
 
 packages:
 
@@ -1240,7 +1240,7 @@ packages:
     hasBin: true
     dependencies:
       caniuse-lite: 1.0.30001534
-      electron-to-chromium: 1.4.521
+      electron-to-chromium: 1.4.522
       node-releases: 2.0.13
       update-browserslist-db: 1.0.11(browserslist@4.21.10)
     dev: true
@@ -1817,8 +1817,8 @@ packages:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
     dev: true
 
-  /electron-to-chromium@1.4.521:
-    resolution: {integrity: sha512-88W7FAsYzc3Vy2mGCFe/YTD6kvoJpqeLRBd5NFMRMdYNqsjHYzkn/mGxaOFJ8yYfLuQqC6vpDYbN6Ps5mtIM3w==}
+  /electron-to-chromium@1.4.522:
+    resolution: {integrity: sha512-KGKjcafTpOxda0kqwQ72M0tDmX6RsGhUJTy0Hr7slt0+CgHh9Oex8JdjY9Og68dUkTLUlBOJC0A5W5Mw3QSGCg==}
     dev: true
 
   /emoji-regex@8.0.0:
@@ -4318,8 +4318,8 @@ packages:
       webpack: 5.88.2(@swc/core@1.3.84)
     dev: true
 
-  /webpack-dev-service@0.5.10(bufferutil@4.0.7)(utf-8-validate@6.0.3)(webpack@5.88.2):
-    resolution: {integrity: sha512-MzcXHr1ZIPmohs1gB7YSJ1QiyCduj/NOkCdfJuvt802AvnQllFS3crScFCnHlx3rxOl7n6F2Sxt4955yKSLs+A==}
+  /webpack-dev-service@0.5.11(bufferutil@4.0.7)(utf-8-validate@6.0.3)(webpack@5.88.2):
+    resolution: {integrity: sha512-q+R5V/g4t/hGQ+k2t9u1Nl7jKGy3PpXVX4mJYBK1rk/CJNUrzuc6S7qYbadc/E4KJZPBijSfbwTne+/Bc+QQeA==}
     peerDependencies:
       webpack: ^5.0.0
     dependencies:
