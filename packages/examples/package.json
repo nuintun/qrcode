@@ -60,7 +60,7 @@
     "memfs": "^4.4.0",
     "mini-css-extract-plugin": "^2.7.6",
     "nodemon": "^3.0.1",
-    "postcss": "^8.4.30",
+    "postcss": "^8.4.31",
     "postcss-loader": "^7.3.3",
     "prettier": "^3.0.3",
     "sass": "^1.68.0",
