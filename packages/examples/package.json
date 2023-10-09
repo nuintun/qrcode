@@ -33,8 +33,8 @@
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
     "@nuintun/qrcode": "workspace:*",
-    "@swc/helpers": "^0.5.2",
-    "antd": "^5.9.2",
+    "@swc/helpers": "^0.5.3",
+    "antd": "^5.9.4",
     "browser-fs-access": "^0.35.0",
     "copy-to-clipboard": "^3.3.3",
     "react": "^18.2.0",
@@ -43,9 +43,9 @@
   },
   "devDependencies": {
     "@nuintun/svgo-loader": "^0.1.3",
-    "@swc/core": "^1.3.87",
-    "@types/react": "^18.2.22",
-    "@types/react-dom": "^18.2.7",
+    "@swc/core": "^1.3.92",
+    "@types/react": "^18.2.25",
+    "@types/react-dom": "^18.2.11",
     "autoprefixer": "^10.4.16",
     "bufferutil": "^4.0.7",
     "case-sensitive-paths-webpack-plugin": "^2.4.0",
@@ -57,13 +57,13 @@
     "html-webpack-plugin": "^5.5.3",
     "koa": "^2.14.2",
     "koa-compress": "^5.1.1",
-    "memfs": "^4.4.0",
+    "memfs": "^4.6.0",
     "mini-css-extract-plugin": "^2.7.6",
     "nodemon": "^3.0.1",
-    "postcss": "^8.4.30",
+    "postcss": "^8.4.31",
     "postcss-loader": "^7.3.3",
     "prettier": "^3.0.3",
-    "sass": "^1.68.0",
+    "sass": "^1.69.0",
     "sass-loader": "^13.3.2",
     "svgc-loader": "^0.1.18",
     "swc-loader": "^0.2.3",
@@ -71,6 +71,6 @@
     "typescript": "^5.2.2",
     "utf-8-validate": "^6.0.3",
     "webpack": "^5.88.2",
-    "webpack-dev-service": "^0.5.12"
+    "webpack-dev-service": "^0.5.13"
   }
 }
