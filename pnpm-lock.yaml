@@ -111,8 +111,8 @@ importers:
         specifier: 5.0.1
         version: 5.0.1(webpack@5.88.2)
       css-modules-types-loader:
-        specifier: ^0.3.24
-        version: 0.3.24(webpack@5.88.2)
+        specifier: ^0.3.25
+        version: 0.3.25(webpack@5.88.2)
       find-free-ports:
         specifier: ^3.1.1
         version: 3.1.1
@@ -1280,7 +1280,7 @@ packages:
       postcss: ^8.1.0
     dependencies:
       browserslist: 4.22.1
-      caniuse-lite: 1.0.30001546
+      caniuse-lite: 1.0.30001547
       fraction.js: 4.3.6
       normalize-range: 0.1.2
       picocolors: 1.0.0
@@ -1330,8 +1330,8 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001546
-      electron-to-chromium: 1.4.546
+      caniuse-lite: 1.0.30001547
+      electron-to-chromium: 1.4.548
       node-releases: 2.0.13
       update-browserslist-db: 1.0.13(browserslist@4.22.1)
     dev: true
@@ -1377,13 +1377,13 @@ packages:
     resolution: {integrity: sha512-bsTwuIg/BZZK/vreVTYYbSWoe2F+71P7K5QGEX+pT250DZbfU1MQ5prOKpPR+LL6uWKK3KMwMCAS74QB3Um1uw==}
     dependencies:
       browserslist: 4.22.1
-      caniuse-lite: 1.0.30001546
+      caniuse-lite: 1.0.30001547
       lodash.memoize: 4.1.2
       lodash.uniq: 4.5.0
     dev: true
 
-  /caniuse-lite@1.0.30001546:
-    resolution: {integrity: sha512-zvtSJwuQFpewSyRrI3AsftF6rM0X80mZkChIt1spBGEvRglCrjTniXvinc8JKRoqTwXAgvqTImaN9igfSMtUBw==}
+  /caniuse-lite@1.0.30001547:
+    resolution: {integrity: sha512-W7CrtIModMAxobGhz8iXmDfuJiiKg1WADMO/9x7/CLNin5cpSbuBjooyoIUVB5eyCc36QuTVlkVa1iB2S5+/eA==}
     dev: true
 
   /case-sensitive-paths-webpack-plugin@2.4.0:
@@ -1633,8 +1633,8 @@ packages:
       webpack: 5.88.2(@swc/core@1.3.92)
     dev: true
 
-  /css-modules-types-loader@0.3.24(webpack@5.88.2):
-    resolution: {integrity: sha512-FvdQJlVrEffBoEPkQJUAluTorVSGaekIsek+OQP4HUmE0eW4cNFiEBh7P6PEJyVrIAyX0+ciVGnn6eMThjIAMQ==}
+  /css-modules-types-loader@0.3.25(webpack@5.88.2):
+    resolution: {integrity: sha512-Rl3Vnp9UIkJsG6KbqbXJuvyDElFUdKXUC5D2Q9/5PqiuQOoQrEQJ5C8rVNf9SFHNUsV+vFEYtsZtpZZVc/2UTQ==}
     peerDependencies:
       webpack: ^5.0.0
     dependencies:
@@ -1908,8 +1908,8 @@ packages:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
     dev: true
 
-  /electron-to-chromium@1.4.546:
-    resolution: {integrity: sha512-cz9bBM26ZqoEmGHkdHXU3LP7OofVyEzRoMqfALQ9Au9WlB4rogAHzqj/NkNvw2JJjy4xuxS1me+pP2lbCD5Mfw==}
+  /electron-to-chromium@1.4.548:
+    resolution: {integrity: sha512-R77KD6mXv37DOyKLN/eW1rGS61N6yHOfapNSX9w+y9DdPG83l9Gkuv7qkCFZ4Ta4JPhrjgQfYbv4Y3TnM1Hi2Q==}
     dev: true
 
   /emoji-regex@8.0.0:
