@@ -168,8 +168,8 @@ importers:
         specifier: ^5.88.2
         version: 5.88.2(@swc/core@1.3.92)
       webpack-dev-service:
-        specifier: ^0.5.13
-        version: 0.5.13(bufferutil@4.0.7)(utf-8-validate@6.0.3)(webpack@5.88.2)
+        specifier: ^0.5.14
+        version: 0.5.14(bufferutil@4.0.7)(utf-8-validate@6.0.3)(webpack@5.88.2)
 
 packages:
 
@@ -4416,8 +4416,8 @@ packages:
       webpack: 5.88.2(@swc/core@1.3.92)
     dev: true
 
-  /webpack-dev-service@0.5.13(bufferutil@4.0.7)(utf-8-validate@6.0.3)(webpack@5.88.2):
-    resolution: {integrity: sha512-W/3kScQN9kl/xf2p3ImMe3C+NQme6wIX5I5WriYfppsL+DmwLz/kkSli80YpuBRABAQfnmd8Dd4AoAevGtVlzA==}
+  /webpack-dev-service@0.5.14(bufferutil@4.0.7)(utf-8-validate@6.0.3)(webpack@5.88.2):
+    resolution: {integrity: sha512-DPR0cD1WoCVbZ1EFTLvks7oz8GHZEdvYEW2BmdaFph1h01nm7wjpLz1Zqou2TDW4MVtjwrEQB2OsGiPgF3PaOA==}
     peerDependencies:
       webpack: ^5.0.0
     dependencies:
