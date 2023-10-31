@@ -143,7 +143,7 @@ const image = new Image();
 image.crossOrigin = 'anonymous';
 
 image.addEventListener('error', () => {
-  setLoading(false);
+  console.error('image load error');
 });
 
 image.addEventListener('load', () => {
