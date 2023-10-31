@@ -92,7 +92,7 @@ declare interface DataURLOptions {
   background?: RGB;
 }
 
-declare class QRCode {
+declare class Encoded {
   public level: Level;
   public mask: number;
   public matrix: Matrix;
@@ -129,52 +129,83 @@ declare interface Options {
 
 declare class Encoder {
   public constructor(options?: Options);
-  public encode(...segments: (Alphanumeric | Byte | Hanzi | Kanji | Numeric)[]): QRCode;
+  public encode(...segments: (Alphanumeric | Byte | Hanzi | Kanji | Numeric)[]): Encoded;
 }
 ```
 
 #### Decoder
 
 ```ts
-import { Decoder } from '@nuintun/qrcode';
+import { binarize, Decoder, Detector, grayscale } from '@nuintun/qrcode';
 
-const qrcode = new Decoder();
+const image = new Image();
 
-qrcode
-  .scan('https://nuintun.github.io/qrcode/examples/qrcode.jpg')
-  .then(result => {
-    console.log(result.data);
-  })
-  .catch(error => {
-    console.error(error);
-  });
+image.crossOrigin = 'anonymous';
+
+image.addEventListener('error', () => {
+  setLoading(false);
+});
+
+image.addEventListener('load', () => {
+  const { width, height } = image;
+  const canvas = new OffscreenCanvas(width, height);
+  const context = canvas.getContext('2d')!;
+
+  context.drawImage(image, 0, 0);
+
+  const luminances = grayscale(context.getImageData(0, 0, width, height));
+  const binarized = binarize(luminances, width, height);
+  const detector = new Detector();
+  const detected = detector.detect(binarized);
+  const decoder = new Decoder();
+
+  let iterator = detected.next();
+
+  while (!iterator.done) {
+    let succeed = false;
+
+    const detect = iterator.value;
+
+    try {
+      const { size, finder, alignment } = detect;
+      const decoded = decoder.decode(detect.matrix);
+      // Finder
+      const { topLeft, topRight, bottomLeft } = finder;
+      // Corners
+      const topLeftCorner = detect.mapping(0, 0);
+      const topRightCorner = detect.mapping(size, 0);
+      const bottomRightCorner = detect.mapping(size, size);
+      const bottomLeftCorner = detect.mapping(0, size);
+      // Timing
+      const topLeftTiming = detect.mapping(6.5, 6.5);
+      const topRightTiming = detect.mapping(size - 6.5, 6.5);
+      const bottomLeftTiming = detect.mapping(6.5, size - 6.5);
+
+      console.log({
+        content: decoded.content,
+        finder: [topLeft, topRight, bottomLeft],
+        alignment: alignment ? toPattern(alignment) : null,
+        timing: [topLeftTiming, topRightTiming, bottomLeftTiming],
+        corners: [topLeftCorner, topRightCorner, bottomRightCorner, bottomLeftCorner]
+      });
+
+      succeed = true;
+    } catch {
+      // 解码失败，跳过
+    }
+
+    iterator = detected.next(succeed);
+  }
+});
+
+image.src = 'https://nuintun.github.io/qrcode/packages/examples/src/images/qrcode.jpg';
 ```
 
-###### Constructor
+#### Interface
 
-- new Decoder(options?: Options): Decoder
-
-  - canOverwriteImage?: boolean
-  - inversionAttempts?: 'dontInvert' \| 'onlyInvert' \| 'attemptBoth' \| 'invertFirst'
-  - greyScaleWeights?: { red: number, green: number, blue: number, useIntegerApproximation?: boolean }
-
-###### Methods
-
-- setOptions(options: Options): Decoder
-
-  - Set decode options.
-    - canOverwriteImage?: boolean
-    - inversionAttempts?: 'dontInvert' \| 'onlyInvert' \| 'attemptBoth' \| 'invertFirst'
-    - greyScaleWeights?: { red: number, green: number, blue: number, useIntegerApproximation?: boolean }
-
-- scan(src: string): Promise\<DecoderResult>
-
-  - Decode a qrcode from image src.
-  - `Notice: support browser environment only.`
-
-- decode(data: Uint8ClampedArray, width: number, height: number): DecoderResult
-
-  - Decode a qrcode from image data.
+```ts
+// ...
+```
 
 [npm-image]: https://img.shields.io/npm/v/@nuintun/qrcode?style=flat-square
 [npm-url]: https://www.npmjs.org/package/@nuintun/qrcode

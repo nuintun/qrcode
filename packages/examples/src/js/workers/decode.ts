@@ -110,7 +110,7 @@ self.addEventListener('message', async ({ data }: MessageEvent<DecodeMessage>) =
       });
 
       succeed = true;
-    } catch (error) {
+    } catch {
       // 解码失败，跳过
     }
 
