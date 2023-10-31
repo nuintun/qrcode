@@ -184,7 +184,7 @@ image.addEventListener('load', () => {
       console.log({
         content: decoded.content,
         finder: [topLeft, topRight, bottomLeft],
-        alignment: alignment ? toPattern(alignment) : null,
+        alignment: alignment ? alignment : null,
         timing: [topLeftTiming, topRightTiming, bottomLeftTiming],
         corners: [topLeftCorner, topRightCorner, bottomRightCorner, bottomLeftCorner]
       });
