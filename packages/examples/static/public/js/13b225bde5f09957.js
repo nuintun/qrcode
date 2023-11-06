@@ -134,7 +134,7 @@
  * @author nuintun <nuintun@qq.com>
  * @description A pure JavaScript QRCode encode and decode library.
  * @see https://github.com/nuintun/qrcode#readme
- */class Q extends J{constructor(e,t){super(e,P,t)}filter(e,t){let n=this.patterns.filter(e=>2.5>=h.noise(e)&&q(e.moduleSize,t,.5));n.length>1&&n.sort((n,r)=>{let i=h.noise(n),s=h.noise(r),l=Math.abs(n.moduleSize-t),o=Math.abs(r.moduleSize-t),a=(w(n,e)+l)*i,u=(w(r,e)+o)*s;return a-u});let r=n.slice(0,2);return r.push(e),r}find(e,t,n,r){let{matrix:i}=this,s=e+n,l=t+r,o=(e,t,n,r,i,s)=>{U(n,r),U(i,s),0===i[0]&&1===i[1]&&0===i[2]&&G(n,B)&&this.match(e,t,n,n[1])};for(let n=t;n<l;n++){let t=e;for(;t<s&&!i.get(t,n);)t++;let r=0,l=i.get(t,n),w=[0,0,0],a=[-1,-1,-1];for(;t<s;){let e=i.get(t,n);e===l?r++:(o(t,n,w,r,a,l),r=1,l=e),t++}o(t,n,w,r,a,l)}}}class V{#K;constructor(e={}){this.#K=e}*detect(e){let{strict:t}=this.#K,{width:n,height:r}=e,i=new K(e,t);i.find(0,0,n,r);let s=i.groups(),l=s.next();for(;!l.done;){let n=!1,r=l.value,i=C.size(r);if(i>=25){let s=function(e,t,n){let r=C.size(t),i=Math.min(20,0|r/4),s=/**
+ */class Q extends J{constructor(e,t){super(e,P,t)}filter(e,t){let n=this.patterns.filter(e=>2.5>=h.noise(e)&&q(e.moduleSize,t,.5));n.length>1&&n.sort((n,r)=>{let i=h.noise(n),s=h.noise(r),l=Math.abs(n.moduleSize-t),o=Math.abs(r.moduleSize-t),a=(w(n,e)+l)*i,u=(w(r,e)+o)*s;return a-u});let r=n.slice(0,2);return r.push(e),r}find(e,t,n,r){let{matrix:i}=this,s=e+n,l=t+r,o=(e,t,n,r,i,s)=>{U(n,r),U(i,s),0===i[0]&&1===i[1]&&0===i[2]&&G(n,B)&&this.match(e,t,n,n[1])};for(let n=t;n<l;n++){let t=e;for(;t<s&&!i.get(t,n);)t++;let r=0,l=i.get(t,n),w=[0,0,0],a=[-1,-1,-1];for(;t<s;){let e=i.get(t,n);e===l?r++:(o(t,n,w,r,a,l),r=1,l=e),t++}o(t,n,w,r,a,l)}}}class V{#K;constructor(e={}){this.#K=e}*detect(e){let{strict:t}=this.#K,{width:n,height:r}=e,i=new K(e,t);i.find(0,0,n,r);let s=i.groups(),l=s.next();for(;!l.done;){let n=!1,r=l.value,i=C.size(r);if(i>=25){let s=function(e,t,n){let r=C.size(t),i=/**
  * @module QRCode
  * @package @nuintun/qrcode
  * @license MIT
@@ -142,7 +142,7 @@
  * @author nuintun <nuintun@qq.com>
  * @description A pure JavaScript QRCode encode and decode library.
  * @see https://github.com/nuintun/qrcode#readme
- */function(e){let{x:t,y:n}=e.topLeft,r=C.size(e),i=1-3/(r-7),s=C.bottomRight(e),[l,o]=C.moduleSizes(e),w=t+(s.x-t)*i,a=n+(s.y-n)*i;return new h(P,w,a,5*l,5*o,0)}(t),l=new Q(e,n),o=C.moduleSize(t),{x:w,y:a}=s,u=Math.ceil(o*i),f=0|Math.max(0,a-u),c=0|Math.max(0,w-u),d=0|Math.min(e.width-1,w+u),g=0|Math.min(e.height-1,a+u);return l.find(c,f,d-c,g-f),l.filter(s,o)}(e,r,t);for(let t of s){let s=v(r,t);if(_(e,s,i)&&_(e,s,i,!0)&&(n=yield new S(e,s,r,t)))break}}else{let t=v(r);_(e,t,i)&&_(e,t,i,!0)&&(n=yield new S(e,t,r))}l=s.next(n)}}}/**
+ */function(e){let{x:t,y:n}=e.topLeft,r=C.size(e),i=1-3/(r-7),s=C.bottomRight(e),[l,o]=C.moduleSizes(e),w=t+(s.x-t)*i,a=n+(s.y-n)*i;return new h(P,w,a,5*l,5*o,0)}(t),s=new Q(e,n),l=C.moduleSize(t),{x:o,y:w}=i,a=Math.ceil(l*Math.min(20,0|r/4)),u=0|Math.max(0,w-a),f=0|Math.max(0,o-a),c=0|Math.min(e.width-1,o+a),d=0|Math.min(e.height-1,w+a);return s.find(f,u,c-f,d-u),s.filter(i,l)}(e,r,t);for(let t of s){let s=v(r,t);if(_(e,s,i)&&_(e,s,i,!0)&&(n=yield new S(e,s,r,t)))break}}else{let t=v(r);_(e,t,i)&&_(e,t,i,!0)&&(n=yield new S(e,t,r))}l=s.next(n)}}}/**
  * @module QRCode
  * @package @nuintun/qrcode
  * @license MIT
