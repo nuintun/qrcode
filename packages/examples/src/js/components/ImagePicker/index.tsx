@@ -2,8 +2,11 @@ import styles from './scss/index.module.scss';
 
 import React, { memo, useCallback, useRef } from 'react';
 
+import { App } from 'antd';
 import { fileOpen } from 'browser-fs-access';
 import useControllableValue from '/js/hooks/useControllableValue';
+
+const { useApp } = App;
 
 export interface ImageUploadProps {
   value?: string;
@@ -16,6 +19,7 @@ export interface ImageUploadProps {
 }
 
 export default memo(function ImageUpload(props: ImageUploadProps) {
+  const { message } = useApp();
   const urlRef = useRef<string>();
   const [value, setValue] = useControllableValue<string>(props);
   const { children, disabled, preview, accept = 'image/*' } = props;
@@ -24,18 +28,22 @@ export default memo(function ImageUpload(props: ImageUploadProps) {
     if (!disabled) {
       fileOpen({ mimeTypes: [accept] }).then(
         file => {
-          setValue(() => {
-            if (urlRef.current) {
-              URL.revokeObjectURL(urlRef.current);
-            }
+          if (/^image\/.+$/i.test(file.type)) {
+            setValue(() => {
+              if (urlRef.current) {
+                URL.revokeObjectURL(urlRef.current);
+              }
 
-            urlRef.current = URL.createObjectURL(file);
+              urlRef.current = URL.createObjectURL(file);
 
-            return urlRef.current;
-          });
+              return urlRef.current;
+            });
+          } else {
+            message.error('请选择图片格式文件');
+          }
         },
         () => {
-          // User canceled
+          // 读出文件失败
         }
       );
     }
