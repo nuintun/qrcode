@@ -65,7 +65,7 @@
     "prettier": "^3.1.0",
     "sass": "^1.69.5",
     "sass-loader": "^13.3.2",
-    "svgc-loader": "^0.1.19",
+    "svgc-loader": "^0.2.0",
     "swc-loader": "^0.2.3",
     "terser-webpack-plugin": "^5.3.9",
     "typescript": "^5.3.2",
