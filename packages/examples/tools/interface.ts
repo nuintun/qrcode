@@ -6,6 +6,7 @@
 import { Configuration } from 'webpack';
 import { Options } from 'webpack-dev-service';
 import { Plugin, ProcessOptions } from 'postcss';
+import { Options as SvgoOptions } from '@nuintun/svgo-loader';
 
 /**
  * @description Env 配置
@@ -33,6 +34,13 @@ export { Options as SwcConfig } from '@swc/core';
 export interface PostcssConfig extends ProcessOptions {
   plugins?: Plugin[];
   sourceMap?: boolean;
+}
+
+/**
+ * @description Svgo 配置
+ */
+export interface SvgoConfig extends Omit<SvgoOptions, 'configFile'> {
+  path?: string;
 }
 
 /**
