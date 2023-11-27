@@ -34,7 +34,7 @@
     "@ant-design/icons": "^5.2.6",
     "@nuintun/qrcode": "workspace:*",
     "@swc/helpers": "^0.5.3",
-    "antd": "^5.11.3",
+    "antd": "^5.11.4",
     "browser-fs-access": "^0.35.0",
     "copy-to-clipboard": "^3.3.3",
     "react": "^18.2.0",
