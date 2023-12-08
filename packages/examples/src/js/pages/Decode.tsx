@@ -183,7 +183,7 @@ const Result = memo(function Result({ state, currentRef }: ResultProps) {
       return items.map((item, index) => {
         const { content } = item;
         const key = `${uid}-${index}`;
-        const label = `解码结果【${index + 1}】定位`;
+        const label = `解码结果【${index + 1}】`;
 
         return {
           key,
@@ -200,9 +200,9 @@ const Result = memo(function Result({ state, currentRef }: ResultProps) {
               <Locate
                 key={key}
                 uid={key}
-                name={label}
                 image={image}
                 items={[item]}
+                name={`${label}定位`}
                 currentRef={currentRef}
                 trigger={(loading, onClick) => {
                   if (loading) {
