@@ -183,7 +183,7 @@ const Result = memo(function Result({ state, currentRef }: ResultProps) {
       return items.map((item, index) => {
         const { content } = item;
         const key = `${uid}-${index}`;
-        const label = `解码结果【${index + 1}】`;
+        const label = `解码结果【${index + 1}】定位`;
 
         return {
           key,
@@ -209,7 +209,7 @@ const Result = memo(function Result({ state, currentRef }: ResultProps) {
                     return <LoadingOutlined />;
                   }
 
-                  return <Icon title="查看位置" component={LocateIcon} onClick={onClick} />;
+                  return <Icon title="定位" component={LocateIcon} onClick={onClick} />;
                 }}
               />
             </div>
