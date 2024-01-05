@@ -2,11 +2,11 @@ import styles from '/css/Encode.module.scss';
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import Icon from '@ant-design/icons';
 import { Color } from 'antd/es/color-picker';
 import useLazyState from '/js/hooks/useLazyState';
+import Icon, { ThunderboltOutlined } from '@ant-design/icons';
 import { EncodeMessage, EncodeResultMessage } from '/js/workers/encode';
-import { Alert, Button, Col, ColorPicker, Form, Image, Input, InputNumber, Row, Select } from 'antd';
+import { Alert, Button, Col, ColorPicker, Form, Image, Input, InputNumber, Row, Select, Tooltip } from 'antd';
 
 import EncodeIcon from '/images/encode.svg';
 
@@ -104,6 +104,12 @@ export default memo(function Encode() {
     }
   }, []);
 
+  const onAutofillQuietZoneClick = useCallback(() => {
+    const moduleSize: number = form.getFieldValue('moduleSize');
+
+    form.setFieldsValue({ quietZone: moduleSize * 4 });
+  }, []);
+
   useEffect(() => {
     const worker = new Worker(new URL('/js/workers/encode', import.meta.url));
 
@@ -141,7 +147,7 @@ export default memo(function Encode() {
           </Col>
           <Col md={6} sm={12} xs={24}>
             <FormItem name="aimIndicator" label="AIM 标识">
-              <InputNumber disabled={fnc1 !== 'AIM'} min={0} max={255} style={{ width: '100%' }} />
+              <InputNumber disabled={fnc1 !== 'AIM'} min={0} max={255} precision={0} style={{ width: '100%' }} />
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
@@ -184,12 +190,22 @@ export default memo(function Encode() {
           </Col>
           <Col md={6} sm={12} xs={24}>
             <FormItem name="moduleSize" label="模块大小">
-              <InputNumber min={1} max={50} style={{ width: '100%' }} />
+              <InputNumber min={1} max={50} precision={0} style={{ width: '100%' }} />
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
             <FormItem name="quietZone" label="静区大小" tooltip="推荐 4 倍模块大小">
-              <InputNumber min={0} max={200} style={{ width: '100%' }} />
+              <InputNumber
+                min={0}
+                max={200}
+                precision={0}
+                style={{ width: '100%' }}
+                addonAfter={
+                  <Tooltip title="自动计算">
+                    <ThunderboltOutlined onClick={onAutofillQuietZoneClick} />
+                  </Tooltip>
+                }
+              />
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
