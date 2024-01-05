@@ -4,8 +4,9 @@
 
 import { memo, useCallback, useState } from 'react';
 
-import { theme } from 'antd';
 import copy from 'copy-to-clipboard';
+import { theme, Tooltip } from 'antd';
+
 import { CheckOutlined, CloseOutlined, CopyOutlined } from '@ant-design/icons';
 
 const { useToken } = theme;
@@ -41,10 +42,22 @@ export default memo(function Clipboard({ text, debug, format, message }: Clipboa
 
   switch (state) {
     case State.success:
-      return <CheckOutlined style={{ color: token.colorSuccessActive }} title="复制成功" />;
+      return (
+        <Tooltip title="复制成功">
+          <CheckOutlined style={{ color: token.colorSuccessActive }} />
+        </Tooltip>
+      );
     case State.failure:
-      return <CloseOutlined style={{ color: token.colorErrorActive }} title="复制失败" />;
+      return (
+        <Tooltip title="复制失败">
+          <CloseOutlined style={{ color: token.colorErrorActive }} />
+        </Tooltip>
+      );
     default:
-      return <CopyOutlined title="复制" onClick={onClick} />;
+      return (
+        <Tooltip title="复制">
+          <CopyOutlined onClick={onClick} />
+        </Tooltip>
+      );
   }
 });
