@@ -82,11 +82,6 @@ declare class Charset {
   public constructor(label: string, ...values: number[]);
 }
 
-declare class Matrix {
-  public size: number;
-  public get(x: number, y: number): number;
-}
-
 declare interface DataURLOptions {
   margin?: number;
   foreground?: RGB;
@@ -94,10 +89,11 @@ declare interface DataURLOptions {
 }
 
 declare class Encoded {
-  public level: Level;
+  public size: number;
   public mask: number;
-  public matrix: Matrix;
+  public level: Level;
   public version: number;
+  public get(x: number, y: number): number;
   public toDataURL(moduleSize: number, options?: DataURLOptions): string;
 }
 
