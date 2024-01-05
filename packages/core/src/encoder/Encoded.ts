@@ -22,6 +22,14 @@ export class Encoded {
   }
 
   /**
+   * @property matrix
+   * @description Get the size of qrcode
+   */
+  public get size(): number {
+    return this.#matrix.size;
+  }
+
+  /**
    * @property mask
    * @description Get the mask of qrcode
    */
@@ -46,11 +54,17 @@ export class Encoded {
   }
 
   /**
-   * @property matrix
-   * @description Get the matrix of qrcode
+   * @method get
+   * @description Get the bit value of the specified coordinate of qrcode
    */
-  public get matrix(): ByteMatrix {
-    return this.#matrix;
+  public get(x: number, y: number): number {
+    const { size } = this.#matrix;
+
+    if (x >= size || y >= size) {
+      throw new Error(`illegal coordinate: [${x}, ${y}]`);
+    }
+
+    return this.#matrix.get(x, y);
   }
 
   /**

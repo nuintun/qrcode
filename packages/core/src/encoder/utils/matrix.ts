@@ -3,11 +3,11 @@
  */
 
 import { ECLevel } from '/common/ECLevel';
-import { Version, VERSIONS } from '/common/Version';
 import { isApplyMask } from '/common/mask';
 import { BitArray } from '/common/BitArray';
 import { ByteMatrix } from '/common/ByteMatrix';
 import { calculateBCHCode } from '/common/utils';
+import { Version, VERSIONS } from '/common/Version';
 
 // Format information poly: 101 0011 0111
 const FORMAT_INFO_POLY = 0x537;

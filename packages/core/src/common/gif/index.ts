@@ -55,7 +55,7 @@ export class GIFImage {
 
     // Global background color palette
     stream.writeBytes([background[0], background[1], background[2]]);
-    // Global background color palette
+    // Global foreground color palette
     stream.writeBytes([foreground[0], foreground[1], foreground[2]]);
 
     // Image descriptor
