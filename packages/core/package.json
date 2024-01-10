@@ -50,7 +50,7 @@
     "tslib": "^2.6.2"
   },
   "devDependencies": {
-    "@rollup/plugin-typescript": "^11.1.5",
+    "@rollup/plugin-typescript": "^11.1.6",
     "magic-string": "^0.30.5",
     "prettier": "^3.1.1",
     "rimraf": "^5.0.5",
