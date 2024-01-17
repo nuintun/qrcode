@@ -34,7 +34,7 @@
     "tslib": "^2.6.2"
   },
   "devDependencies": {
-    "prettier": "^3.2.2",
+    "prettier": "^3.2.3",
     "typescript": "^5.3.3"
   }
 }
