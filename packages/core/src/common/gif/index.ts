@@ -66,6 +66,7 @@ export class GIFImage {
     stream.writeInt16(height);
     stream.writeByte(0);
 
+    // Compress pixels to stream
     compress(this.#pixels, 2, stream);
 
     // GIF terminator
