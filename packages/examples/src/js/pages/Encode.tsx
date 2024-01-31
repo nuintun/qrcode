@@ -54,7 +54,7 @@ export default memo(function Encode() {
 
   const initialValues = useMemo<FormValues>(() => {
     return {
-      level: 'M',
+      level: 'L',
       fnc1: 'None',
       mode: 'Auto',
       moduleSize: 4,
@@ -64,7 +64,7 @@ export default memo(function Encode() {
       charset: 'UTF_8',
       background: '#ffffff',
       foreground: '#000000',
-      content: 'https://github.com/nuintun/qrcode'
+      content: 'WIFI:S:Gadget Hacks;T:WPA;P:1234567890;;'
     };
   }, []);
 
