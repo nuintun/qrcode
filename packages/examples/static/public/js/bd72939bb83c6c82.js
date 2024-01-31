@@ -166,7 +166,7 @@
  * @author nuintun <nuintun@qq.com>
  * @description A pure JavaScript QRCode encode and decode library.
  * @see https://github.com/nuintun/qrcode#readme
- */class ew{#H;#G;#p;#K;constructor(e,t,n,r){this.#H=r,this.#G=n,this.#K=e,this.#p=t}get size(){return this.#K.size}get mask(){return this.#H}get level(){return this.#G.name}get version(){return this.#p.version}get(e,t){let{size:n}=this.#K;if(e>=n||t>=n)throw Error(`illegal coordinate: [${e}, ${t}]`);return this.#K.get(e,t)}toDataURL(e=2,{margin:t=4*e,...n}={}){e=Math.max(1,e>>0),t=Math.max(0,t>>0);let r=this.#K,w=r.size,i=e*w+2*t,s=new er(i,i,n),o=i-t;for(let n=0;n<i;n++)for(let w=0;w<i;w++)if(w>=t&&w<o&&n>=t&&n<o){let i=0|(w-t)/e,o=0|(n-t)/e;s.set(w,n,r.get(i,o))}else s.set(w,n,0);return s.toDataURL()}}/**
+ */class ew{#H;#G;#p;#K;constructor(e,t,n,r){this.#H=r,this.#G=n,this.#K=e,this.#p=t}get size(){return this.#K.size}get mask(){return this.#H}get level(){return this.#G.name}get version(){return this.#p.version}get(e,t){let{size:n}=this.#K;if(e<0||t<0||e>=n||t>=n)throw Error(`illegal coordinate: [${e}, ${t}]`);return this.#K.get(e,t)}toDataURL(e=2,{margin:t=4*e,...n}={}){e=Math.max(1,e>>0),t=Math.max(0,t>>0);let r=this.#K,w=r.size,i=e*w+2*t,s=new er(i,i,n),o=i-t;for(let n=0;n<i;n++)for(let w=0;w<i;w++)if(w>=t&&w<o&&n>=t&&n<o){let i=0|(w-t)/e,o=0|(n-t)/e;s.set(w,n,r.get(i,o))}else s.set(w,n,0);return s.toDataURL()}}/**
  * @module QRCode
  * @package @nuintun/qrcode
  * @license MIT
