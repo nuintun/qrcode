@@ -60,7 +60,7 @@ export class Encoded {
   public get(x: number, y: number): number {
     const { size } = this.#matrix;
 
-    if (x >= size || y >= size) {
+    if (x < 0 || y < 0 || x >= size || y >= size) {
       throw new Error(`illegal coordinate: [${x}, ${y}]`);
     }
 
