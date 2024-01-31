@@ -1,4 +1,4 @@
-# 兼容最后两个版本
-last 2 versions
-# 两年内有官方支持
-not dead
+# 默认规则
+defaults
+# 忽略 IE 浏览器
+not IE >= 0
