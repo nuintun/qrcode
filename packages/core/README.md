@@ -82,21 +82,6 @@ declare class Charset {
   public constructor(label: string, ...values: number[]);
 }
 
-declare interface DataURLOptions {
-  margin?: number;
-  foreground?: RGB;
-  background?: RGB;
-}
-
-declare class Encoded {
-  public size: number;
-  public mask: number;
-  public level: Level;
-  public version: number;
-  public get(x: number, y: number): number;
-  public toDataURL(moduleSize: number, options?: DataURLOptions): string;
-}
-
 declare class Alphanumeric {
   public constructor(content: string);
 }
@@ -122,6 +107,21 @@ declare interface Options {
   hints?: { fnc1?: FNC1 };
   version?: 'Auto' | number;
   encode?: (content: string, charset: Charset) => Uint8Array;
+}
+
+declare interface DataURLOptions {
+  margin?: number;
+  foreground?: RGB;
+  background?: RGB;
+}
+
+declare class Encoded {
+  public size: number;
+  public mask: number;
+  public level: Level;
+  public version: number;
+  public get(x: number, y: number): number;
+  public toDataURL(moduleSize: number, options?: DataURLOptions): string;
 }
 
 declare class Encoder {
