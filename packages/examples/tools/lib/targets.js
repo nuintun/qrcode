@@ -22,8 +22,8 @@ export default (path = defaultConfig) => {
       } else {
         resolve(
           code
-            .replace(/#[^\n]*/g, '')
-            .split(/\s*[\r\n,]\s*/)
+            .replace(/#[^\r\n]*/g, '')
+            .split(/\s*[\r\n,]+\s*/)
             .filter(query => query)
         );
       }
