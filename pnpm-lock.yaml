@@ -126,8 +126,8 @@ importers:
         specifier: ^5.1.1
         version: 5.1.1
       memfs:
-        specifier: ^4.7.1
-        version: 4.7.1(quill-delta@5.1.0)(rxjs@7.8.1)(tslib@2.6.2)
+        specifier: ^4.7.6
+        version: 4.7.6
       mini-css-extract-plugin:
         specifier: ^2.8.0
         version: 2.8.0(webpack@5.90.2)
@@ -169,7 +169,7 @@ importers:
         version: 5.90.2(@swc/core@1.4.1)
       webpack-dev-service:
         specifier: ^0.6.1
-        version: 0.6.1(bufferutil@4.0.8)(quill-delta@5.1.0)(rxjs@7.8.1)(utf-8-validate@6.0.3)(webpack@5.90.2)
+        version: 0.6.1(bufferutil@4.0.8)(utf-8-validate@6.0.3)(webpack@5.90.2)
 
 packages:
 
@@ -1252,10 +1252,6 @@ packages:
       picomatch: 2.3.1
     dev: true
 
-  /arg@5.0.2:
-    resolution: {integrity: sha512-PYjyFOLKQ9y57JvQ6QLo8dAgNqswh8M1RMJYdQduT6xbWSgK36P/Z/v+p888pM69jMMfS8Xd8F6I1kQ/I9HUGg==}
-    dev: true
-
   /argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
     dev: true
@@ -1293,7 +1289,7 @@ packages:
       postcss: ^8.1.0
     dependencies:
       browserslist: 4.23.0
-      caniuse-lite: 1.0.30001587
+      caniuse-lite: 1.0.30001588
       fraction.js: 4.3.7
       normalize-range: 0.1.2
       picocolors: 1.0.0
@@ -1343,7 +1339,7 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001587
+      caniuse-lite: 1.0.30001588
       electron-to-chromium: 1.4.673
       node-releases: 2.0.14
       update-browserslist-db: 1.0.13(browserslist@4.23.0)
@@ -1390,13 +1386,13 @@ packages:
     resolution: {integrity: sha512-bsTwuIg/BZZK/vreVTYYbSWoe2F+71P7K5QGEX+pT250DZbfU1MQ5prOKpPR+LL6uWKK3KMwMCAS74QB3Um1uw==}
     dependencies:
       browserslist: 4.23.0
-      caniuse-lite: 1.0.30001587
+      caniuse-lite: 1.0.30001588
       lodash.memoize: 4.1.2
       lodash.uniq: 4.5.0
     dev: true
 
-  /caniuse-lite@1.0.30001587:
-    resolution: {integrity: sha512-HMFNotUmLXn71BQxg8cijvqxnIAofforZOwGsxyXJ0qugTdspUF4sPSJ2vhgprHCB996tIDzEq1ubumPDV8ULA==}
+  /caniuse-lite@1.0.30001588:
+    resolution: {integrity: sha512-+hVY9jE44uKLkH0SrUTqxjxqNTOWHsbnQDIKjwkZ3lNTzUUVdBLBGXtj/q5Mp5u98r3droaZAewQuEDzjQdZlQ==}
     dev: true
 
   /case-sensitive-paths-webpack-plugin@2.4.0:
@@ -2020,10 +2016,6 @@ packages:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
     dev: true
 
-  /fast-diff@1.3.0:
-    resolution: {integrity: sha512-VxPP4NqbUjj6MaAOafWeUn2cXWLcCtljklUtZf0Ind4XQ+QPtmA0b18zZy0jIQx+ExRVCR/ZQpBmik5lXshNsw==}
-    dev: true
-
   /fast-glob@3.3.2:
     resolution: {integrity: sha512-oX2ruAFQwf/Orj8m737Y5adxDQO0LAB7/S5MnxCdTNDd4p6BsyIVsv9JQsATbTSq8KHRpLwIHbVlUNatxd+1Ow==}
     engines: {node: '>=8.6.0'}
@@ -2246,11 +2238,6 @@ packages:
       toidentifier: 1.0.1
     dev: true
 
-  /hyperdyperid@1.2.0:
-    resolution: {integrity: sha512-Y93lCzHYgGWdrJ66yIktxiaGULYc6oGiABxhcO5AufBeOyoIdZF7bIfLaOrbM0iGIOXQQgxxRrFEnb+Y6w1n4A==}
-    engines: {node: '>=10.18'}
-    dev: true
-
   /icss-utils@5.1.0(postcss@8.4.35):
     resolution: {integrity: sha512-soFhflCVWLfRNOPU3iv5Z9VUdT44xFRbzjLsEzSr5AQmgqPMTHdU3PMT1Cf1ssx8fLNJDA1juftYl+PUcv3MqA==}
     engines: {node: ^10 || ^12 || >= 14}
@@ -2421,23 +2408,6 @@ packages:
       argparse: 2.0.1
     dev: true
 
-  /json-joy@11.28.0(quill-delta@5.1.0)(rxjs@7.8.1)(tslib@2.6.2):
-    resolution: {integrity: sha512-WTq2tYD2r+0rUFId4gtUjwejV20pArh4q2WRJKxJdwLlPFHyW94HwwB2vUr5lUJTVkehhhWEVLwOUI0MSacNIw==}
-    engines: {node: '>=10.0'}
-    hasBin: true
-    peerDependencies:
-      quill-delta: ^5
-      rxjs: '7'
-      tslib: '2'
-    dependencies:
-      arg: 5.0.2
-      hyperdyperid: 1.2.0
-      quill-delta: 5.1.0
-      rxjs: 7.8.1
-      thingies: 1.16.0(tslib@2.6.2)
-      tslib: 2.6.2
-    dev: true
-
   /json-parse-even-better-errors@2.3.1:
     resolution: {integrity: sha512-xyFwyhro/JEof6Ghe2iz2NcXoj2sloNsWr/XsERDK/oiPCfaNhl5ONfp+jQdAZRQQ0IJWNzH9zIZF7li91kh2w==}
     dev: true
@@ -2534,14 +2504,6 @@ packages:
     engines: {node: '>=6.11.5'}
     dev: true
 
-  /lodash.clonedeep@4.5.0:
-    resolution: {integrity: sha512-H5ZhCF25riFd9uB5UCkVKo61m3S/xZk1x4wA6yp/L3RFP6Z/eHH1ymQcGLo7J3GMPfm0V/7m1tryHuGVxpqEBQ==}
-    dev: true
-
-  /lodash.isequal@4.5.0:
-    resolution: {integrity: sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==}
-    dev: true
-
   /lodash.memoize@4.1.2:
     resolution: {integrity: sha512-t7j+NzmgnQzTAYXcsHYLgimltOV1MXHtlOWf6GjL9Kj8GK5FInw5JotxvbOs+IvV1/Dzo04/fCGfLVs7aXb4Ag==}
     dev: true
@@ -2598,18 +2560,11 @@ packages:
     engines: {node: '>= 0.6'}
     dev: true
 
-  /memfs@4.7.1(quill-delta@5.1.0)(rxjs@7.8.1)(tslib@2.6.2):
-    resolution: {integrity: sha512-29/L94MxlTPkJOCvLwWG4OIAfBPoB921eOLU4wr6RR4yQ40y/et8mroRE5t4rIQrLtmOACtLhZvGVKJgPGPDxQ==}
+  /memfs@4.7.6:
+    resolution: {integrity: sha512-PMxcVnZYdSFYZIzsbhd8XLvxrHaIarhyyfDQHThUwhAYAPDfDTvKhEjWbzPyGFr9CPvJJl+VUetfcnVVF9Wckg==}
     engines: {node: '>= 4.0.0'}
-    peerDependencies:
-      tslib: '2'
     dependencies:
-      json-joy: 11.28.0(quill-delta@5.1.0)(rxjs@7.8.1)(tslib@2.6.2)
-      thingies: 1.16.0(tslib@2.6.2)
       tslib: 2.6.2
-    transitivePeerDependencies:
-      - quill-delta
-      - rxjs
     dev: true
 
   /merge-stream@2.0.0:
@@ -3291,15 +3246,6 @@ packages:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
     dev: true
 
-  /quill-delta@5.1.0:
-    resolution: {integrity: sha512-X74oCeRI4/p0ucjb5Ma8adTXd9Scumz367kkMK5V/IatcX6A0vlgLgKbzXWy5nZmCGeNJm2oQX0d2Eqj+ZIlCA==}
-    engines: {node: '>= 12.0.0'}
-    dependencies:
-      fast-diff: 1.3.0
-      lodash.clonedeep: 4.5.0
-      lodash.isequal: 4.5.0
-    dev: true
-
   /randombytes@2.1.0:
     resolution: {integrity: sha512-vYl3iOX+4CKUWuxGi9Ukhie6fsqXqS9FE2Zaic4tNFD2N2QQaXOMFbuKK4QmDHC0JO6B1Zp41J0LpT0oR68amQ==}
     dependencies:
@@ -3950,12 +3896,6 @@ packages:
       queue-microtask: 1.2.3
     dev: true
 
-  /rxjs@7.8.1:
-    resolution: {integrity: sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==}
-    dependencies:
-      tslib: 2.6.2
-    dev: true
-
   /safe-buffer@5.2.1:
     resolution: {integrity: sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==}
     dev: true
@@ -4261,15 +4201,6 @@ packages:
       source-map-support: 0.5.21
     dev: true
 
-  /thingies@1.16.0(tslib@2.6.2):
-    resolution: {integrity: sha512-J23AVs11hSQxuJxvfQyMIaS9z1QpDxOCvMkL3ZxZl8/jmkgmnNGWrlyNxVz6Jbh0U6DuGmHqq6f7zUROfg/ncg==}
-    engines: {node: '>=10.18'}
-    peerDependencies:
-      tslib: ^2
-    dependencies:
-      tslib: 2.6.2
-    dev: true
-
   /threads@1.7.0:
     resolution: {integrity: sha512-Mx5NBSHX3sQYR6iI9VYbgHKBLisyB+xROCBGjjWm1O9wb9vfLxdaGtmT/KCjUqMsSNW6nERzCW3T6H43LqjDZQ==}
     dependencies:
@@ -4407,7 +4338,7 @@ packages:
       graceful-fs: 4.2.11
     dev: true
 
-  /webpack-dev-middleware@7.0.0(quill-delta@5.1.0)(rxjs@7.8.1)(tslib@2.6.2)(webpack@5.90.2):
+  /webpack-dev-middleware@7.0.0(webpack@5.90.2):
     resolution: {integrity: sha512-tZ5hqsWwww/8DislmrzXE3x+4f+v10H1z57mA2dWFrILb4i3xX+dPhTkcdR0DLyQztrhF2AUmO5nN085UYjd/Q==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
@@ -4417,18 +4348,14 @@ packages:
         optional: true
     dependencies:
       colorette: 2.0.20
-      memfs: 4.7.1(quill-delta@5.1.0)(rxjs@7.8.1)(tslib@2.6.2)
+      memfs: 4.7.6
       mime-types: 2.1.35
       range-parser: 1.2.1
       schema-utils: 4.2.0
       webpack: 5.90.2(@swc/core@1.4.1)
-    transitivePeerDependencies:
-      - quill-delta
-      - rxjs
-      - tslib
     dev: true
 
-  /webpack-dev-service@0.6.1(bufferutil@4.0.8)(quill-delta@5.1.0)(rxjs@7.8.1)(utf-8-validate@6.0.3)(webpack@5.90.2):
+  /webpack-dev-service@0.6.1(bufferutil@4.0.8)(utf-8-validate@6.0.3)(webpack@5.90.2):
     resolution: {integrity: sha512-7mu8VGS6Zcg98qcsdjAjcewDk29/thSocCf9HJ3m9oeRkM07v7AxUONzB6mkcTNNuFy/pEdr10zXosuNOA0kwQ==}
     peerDependencies:
       webpack: ^5.0.0
@@ -4439,12 +4366,10 @@ packages:
       koa-compose: 4.1.0
       tslib: 2.6.2
       webpack: 5.90.2(@swc/core@1.4.1)
-      webpack-dev-middleware: 7.0.0(quill-delta@5.1.0)(rxjs@7.8.1)(tslib@2.6.2)(webpack@5.90.2)
+      webpack-dev-middleware: 7.0.0(webpack@5.90.2)
       ws: 8.16.0(bufferutil@4.0.8)(utf-8-validate@6.0.3)
     transitivePeerDependencies:
       - bufferutil
-      - quill-delta
-      - rxjs
       - utf-8-validate
     dev: true
 
