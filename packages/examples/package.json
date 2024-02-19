@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@nuintun/svgo-loader": "^0.2.5",
-    "@swc/core": "^1.4.1",
+    "@swc/core": "^1.4.2",
     "@types/react": "^18.2.56",
     "@types/react-dom": "^18.2.19",
     "autoprefixer": "^10.4.17",
