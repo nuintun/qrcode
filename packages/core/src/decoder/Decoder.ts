@@ -49,7 +49,7 @@ export class Decoder {
     this.#decode = decode;
   }
 
-  decode(matrix: BitMatrix): Decoded {
+  public decode(matrix: BitMatrix): Decoded {
     let corrected = 0;
     let mirror = false;
     let version: Version;
