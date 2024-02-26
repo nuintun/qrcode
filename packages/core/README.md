@@ -250,7 +250,7 @@ image.addEventListener('load', () => {
 
       succeed = true;
     } catch {
-      // 解码失败，跳过
+      // Decode failed, skipping...
     }
 
     iterator = detected.next(succeed);
