@@ -173,6 +173,10 @@ declare class Detected {
   public mapping(x: number, y: number): Point;
 }
 
+declare function grayscale(imageData: ImageData): Uint8Array;
+
+declare function binarize(luminances: Uint8Array, width: number, height: number): BitMatrix;
+
 declare interface DetectorOptions {
   strict?: boolean;
 }
