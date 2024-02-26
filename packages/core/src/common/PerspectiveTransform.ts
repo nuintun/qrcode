@@ -35,7 +35,7 @@ export class PerspectiveTransform {
     this.#a33 = a33;
   }
 
-  public buildAdjoint() {
+  public buildAdjoint(): PerspectiveTransform {
     // Adjoint is the transpose of the cofactor matrix:
     const a11 = this.#a11;
     const a12 = this.#a12;

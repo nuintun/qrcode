@@ -21,36 +21,9 @@
 
 ### Usage
 
-#### Encoder
+#### Common Interface
 
 ```ts
-import { Byte, Encoder, Hanzi, Kanji } from '@nuintun/qrcode';
-
-const encoder = new Encoder({
-  level: 'H'
-});
-
-const qrcode = encoder.encode(
-  // Hanzi
-  new Hanzi('你好世界'),
-  // Byte
-  new Byte('\nhello world\n'),
-  // Kanji
-  new Kanji('こんにちは世界')
-);
-
-console.log(qrcode.toDataURL());
-```
-
-#### Interface
-
-```ts
-declare type Level = 'L' | 'M' | 'Q' | 'H';
-
-declare type RGB = [R: number, G: number, B: number];
-
-declare type FNC1 = [mode: 'GS1'] | [mode: 'AIM', indicator: number];
-
 declare class Charset {
   public static readonly CP437: Charset;
   public static readonly ISO_8859_1: Charset;
@@ -81,6 +54,16 @@ declare class Charset {
   public static readonly EUC_KR: Charset;
   public constructor(label: string, ...values: number[]);
 }
+```
+
+#### Encoder Interface
+
+```ts
+declare type Level = 'L' | 'M' | 'Q' | 'H';
+
+declare type RGB = [R: number, G: number, B: number];
+
+declare type FNC1 = [mode: 'GS1'] | [mode: 'AIM', indicator: number];
 
 declare class Alphanumeric {
   public constructor(content: string);
@@ -102,7 +85,7 @@ declare class Numeric {
   public constructor(content: string);
 }
 
-declare interface Options {
+declare interface EncoderOptions {
   level?: Level;
   hints?: { fnc1?: FNC1 };
   version?: 'Auto' | number;
@@ -125,12 +108,91 @@ declare class Encoded {
 }
 
 declare class Encoder {
-  public constructor(options?: Options);
+  public constructor(options?: EncoderOptions);
   public encode(...segments: (Alphanumeric | Byte | Hanzi | Kanji | Numeric)[]): Encoded;
 }
 ```
 
-#### Decoder
+#### Encoder Example
+
+```ts
+import { Byte, Encoder, Hanzi, Kanji } from '@nuintun/qrcode';
+
+const encoder = new Encoder({
+  level: 'H'
+});
+
+const qrcode = encoder.encode(
+  // Hanzi
+  new Hanzi('你好世界'),
+  // Byte
+  new Byte('\nhello world\n'),
+  // Kanji
+  new Kanji('こんにちは世界')
+);
+
+console.log(qrcode.toDataURL());
+```
+
+#### Decoder Interface
+
+```ts
+declare class BitMatrix {
+  public get width(): number;
+  public get height(): number;
+  public set(x: number, y: number): void;
+  public get(x: number, y: number): number;
+  public flip(): void;
+  public flip(x: number, y: number): void;
+  public flip(x?: number, y?: number): void;
+  public clone(): BitMatrix;
+  public setRegion(left: number, top: number, width: number, height: number): void;
+}
+
+declare class Point {
+  public get x(): number;
+  public get y(): number;
+}
+
+declare class Pattern extends Point {
+  public get moduleSize(): number;
+}
+
+declare class FinderPatternGroup {
+  public get topLeft(): Pattern;
+  public get topRight(): Pattern;
+  public get bottomLeft(): Pattern;
+}
+
+declare class Detected {
+  public get matrix(): BitMatrix;
+  public get finder(): FinderPatternGroup;
+  public get alignment(): Pattern | undefined;
+  public get size(): number;
+  public get moduleSize(): number;
+  public mapping(x: number, y: number): Point;
+}
+
+declare interface DetectorOptions {
+  strict?: boolean;
+}
+
+declare class Detector {
+  constructor(options?: DetectorOptions);
+  public detect(binarized: BitMatrix): Generator<Detected, void, boolean>;
+}
+
+declare interface DecoderOptions {
+  decode?: (bytes: Uint8Array, charset: Charset) => string;
+}
+
+declare class Decoder {
+  constructor(options?: DecoderOptions);
+  public decode(matrix: BitMatrix): Decoded;
+}
+```
+
+#### Decoder Example
 
 ```ts
 import { binarize, Decoder, Detector, grayscale } from '@nuintun/qrcode';
@@ -196,12 +258,6 @@ image.addEventListener('load', () => {
 });
 
 image.src = 'https://nuintun.github.io/qrcode/packages/examples/src/images/qrcode.jpg';
-```
-
-#### Interface
-
-```ts
-// ...
 ```
 
 [npm-image]: https://img.shields.io/npm/v/@nuintun/qrcode?style=flat-square
