@@ -10,7 +10,7 @@
 > [![Side Effect][side-effect-image]][bundle-phobia-url]
 > [![License][license-image]][license-url]
 
-### QRCode guide and demo
+### QRCode guide and example
 
 <!-- prettier-ignore -->
 > [QRCode guide](https://nuintun.github.io/qrcode/packages/core/spec/ISO-IEC-18004-2015.pdf)
