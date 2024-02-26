@@ -78,9 +78,8 @@ export class Encoder {
     for (const segment of segments) {
       const { mode } = segment;
       const head = new BitArray();
-      const isByte = isByteMode(segment);
-      const data = isByte ? segment.encode(encode) : segment.encode();
-      const length = isByte ? data.byteLength : segment.content.length;
+      const data = segment.encode(encode);
+      const length = isByteMode(segment) ? data.byteLength : segment.content.length;
 
       // Append ECI segment if applicable.
       currentECIValue = appendECI(head, segment, currentECIValue);
