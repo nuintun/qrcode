@@ -54,7 +54,7 @@
  * @author nuintun <nuintun@qq.com>
  * @description A pure JavaScript QRCode encode and decode library.
  * @see https://github.com/nuintun/qrcode#readme
- */let A=g("gb2312",[41377,41470],[41649,41698],[41701,41710],[41713,41724],[41889,41982],[42145,42227],[42401,42486],[42657,42680],[42689,42712],[42913,42945],[42961,42993],[43169,43194],[43205,43241],[43428,43503],...d(45217,55038,[0,93]),[55201,55289],...d(55457,63486,[0,93]));class _{#s;constructor(e){l(e),this.#s=e}get mode(){return t.HANZI}get content(){return this.#s}encode(){let e=new i;for(let t of this.#s){let n=function(e){let t=A.get(e);return null!=t?t:-1}(t);if(n>=41377&&n<=43774)n-=41377;else if(n>=45217&&n<=64254)n-=42657;else throw Error(`illegal hanzi character: ${t}`);n=(n>>8)*96+(255&n),e.append(n,13)}return e}}/**
+ */let A=g("gb2312",[41377,41470],[41649,41698],[41701,41710],[41713,41724],[41889,41982],[42145,42227],[42401,42486],[42657,42680],[42689,42712],[42913,42945],[42961,42993],[43169,43194],[43205,43241],[43428,43503],...d(45217,55038,[0,93]),[55201,55289],...d(55457,63486,[0,93]));class _{#s;constructor(e){l(e),this.#s=e}get mode(){return t.HANZI}get content(){return this.#s}encode(){let e=new i;for(let t of this.#s){let n=function(e){let t=A.get(e);return null!=t?t:NaN}(t);if(n>=41377&&n<=43774)n-=41377;else if(n>=45217&&n<=64254)n-=42657;else throw Error(`illegal hanzi character: ${t}`);n=(n>>8)*96+(255&n),e.append(n,13)}return e}}/**
  * @module QRCode
  * @package @nuintun/qrcode
  * @license MIT
@@ -62,7 +62,7 @@
  * @author nuintun <nuintun@qq.com>
  * @description A pure JavaScript QRCode encode and decode library.
  * @see https://github.com/nuintun/qrcode#readme
- */let E=g("shift-jis",[33088,33150],[33152,33196],[33208,33215],[33224,33230],[33242,33256],[33264,33271],[33276,33276],[33359,33368],[33376,33401],[33409,33434],[33439,33521],[33600,33662],[33664,33686],[33695,33718],[33727,33750],[33856,33888],[33904,33918],[33920,33937],[33951,33982],[34975,35068],...d(35136,38908,[0,62,64,188]),[38976,39026],[39071,39164],...d(39232,40956,[0,62,64,188]),...d(57408,59900,[0,62,64,188]),[59968,60030],[60032,60068]);class B{#s;constructor(e){l(e),this.#s=e}get mode(){return t.KANJI}get content(){return this.#s}encode(){let e=new i;for(let t of this.#s){let n=function(e){let t=E.get(e);return null!=t?t:-1}(t);if(n>=33088&&n<=40956)n-=33088;else if(n>=57408&&n<=60351)n-=49472;else throw Error(`illegal kanji character: ${t}`);n=(n>>8)*192+(255&n),e.append(n,13)}return e}}/**
+ */let E=g("shift-jis",[33088,33150],[33152,33196],[33208,33215],[33224,33230],[33242,33256],[33264,33271],[33276,33276],[33359,33368],[33376,33401],[33409,33434],[33439,33521],[33600,33662],[33664,33686],[33695,33718],[33727,33750],[33856,33888],[33904,33918],[33920,33937],[33951,33982],[34975,35068],...d(35136,38908,[0,62,64,188]),[38976,39026],[39071,39164],...d(39232,40956,[0,62,64,188]),...d(57408,59900,[0,62,64,188]),[59968,60030],[60032,60068]);class B{#s;constructor(e){l(e),this.#s=e}get mode(){return t.KANJI}get content(){return this.#s}encode(){let e=new i;for(let t of this.#s){let n=function(e){let t=E.get(e);return null!=t?t:NaN}(t);if(n>=33088&&n<=40956)n-=33088;else if(n>=57408&&n<=60351)n-=49472;else throw Error(`illegal kanji character: ${t}`);n=(n>>8)*192+(255&n),e.append(n,13)}return e}}/**
  * @module QRCode
  * @package @nuintun/qrcode
  * @license MIT
