@@ -31,7 +31,7 @@ const GB2312_MAPPING = getEncodingMapping(
 function getHanziCode(character: string): number {
   const code = GB2312_MAPPING.get(character);
 
-  return code != null ? code : -1;
+  return code != null ? code : NaN;
 }
 
 export class Hanzi {

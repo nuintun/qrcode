@@ -41,7 +41,7 @@ const SHIFT_JIS_MAPPING = getEncodingMapping(
 function getKanjiCode(character: string): number {
   const code = SHIFT_JIS_MAPPING.get(character);
 
-  return code != null ? code : -1;
+  return code != null ? code : NaN;
 }
 
 export class Kanji {
