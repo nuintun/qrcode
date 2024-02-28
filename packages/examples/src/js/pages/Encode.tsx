@@ -47,8 +47,6 @@ export default memo(function Encode() {
   const lockRef = useRef(false);
   const workerRef = useRef<Worker>();
   const [form] = useForm<FormValues>();
-  const fnc1 = useWatch(['fnc1'], form);
-  const content = useWatch('content', form);
   const [loading, setLoading] = useLazyState(false);
   const [state, setState] = useState<EncodeResultMessage>();
 
@@ -109,6 +107,10 @@ export default memo(function Encode() {
 
     form.setFieldsValue({ quietZone: moduleSize * 4 });
   }, []);
+
+  const mode = useWatch('mode', form) ?? initialValues.mode;
+  const fnc1 = useWatch(['fnc1'], form) ?? initialValues.fnc1;
+  const content = useWatch('content', form) ?? initialValues.content;
 
   useEffect(() => {
     const worker = new Worker(new URL('/js/workers/encode', import.meta.url));
@@ -181,7 +183,7 @@ export default memo(function Encode() {
           </Col>
           <Col md={6} sm={12} xs={24}>
             <FormItem name="charset" label="字符编码">
-              <Select>
+              <Select disabled={mode !== 'Auto'}>
                 <Option value="ASCII">ASCII</Option>
                 <Option value="UTF_8">UTF-8</Option>
                 <Option value="ISO_8859_1">ISO-8859-1</Option>
