@@ -75,6 +75,6 @@ export class Decoder {
       [codewords, corrected] = parse(parser, version, formatInfo);
     }
 
-    return new Decoded(decode(codewords, version, formatInfo, this.#decode), version, formatInfo, corrected, mirror);
+    return new Decoded(decode(codewords, version, this.#decode), version, formatInfo, corrected, mirror);
   }
 }

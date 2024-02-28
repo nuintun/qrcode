@@ -6,7 +6,6 @@ import { FNC1 } from '/common/interface';
 import { Version } from '/common/Version';
 import { BitSource } from '/common/BitSource';
 import { TextDecode } from '/common/encoding';
-import { FormatInfo } from '/decoder/FormatInfo';
 import { fromModeBits, Mode } from '/common/Mode';
 import { Charset, fromCharsetValue } from '/common/Charset';
 import { ALPHANUMERIC_CHARACTERS, NUMERIC_CHARACTERS } from '/common/encoding';
@@ -239,7 +238,7 @@ function decodeNumericSegment(source: BitSource, count: number): string {
   return content;
 }
 
-export function decode(codewords: Uint8Array, version: Version, {}: FormatInfo, decode: TextDecode): DecodeSource {
+export function decode(codewords: Uint8Array, version: Version, decode: TextDecode): DecodeSource {
   let content = '';
   let indicator = -1;
   let modifier: number;
