@@ -49,7 +49,7 @@ export class Dict {
     return this.#depth;
   }
 
-  public reset() {
+  public reset(): void {
     const bits = this.#depth + 1;
 
     this.#bits = bits;

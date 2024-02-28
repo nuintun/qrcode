@@ -95,15 +95,15 @@ export function injectECCodewords(bits: BitArray, { ecBlocks, numECCodewordsPerB
   return codewords;
 }
 
-export function appendTerminateBits(bits: BitArray, numDataCodewords: number): void {
+export function appendTerminator(bits: BitArray, numDataCodewords: number): void {
   const capacity = numDataCodewords * 8;
 
-  // Append Mode.TERMINATE if there is enough space (value is 0000).
+  // Append terminator if there is enough space (value is 0000).
   for (let i = 0; i < 4 && bits.length < capacity; i++) {
     bits.append(0);
   }
 
-  // Append termination bits. See 8.4.8 of JISX0510:2004 (p.24) for details.
+  // Append terminator. See 7.4.9 of ISO/IEC 18004:2015(E)(p.32) for details.
   // If the last byte isn't 8-bit aligned, we'll add padding bits.
   const numBitsInLastByte = bits.length & 0x07;
 
@@ -222,7 +222,7 @@ export function recommendVersion(segmentBlocks: SegmentBlock[], ecLevel: ECLevel
   return chooseVersion(bitsNeeded, ecLevel);
 }
 
-export function chooseMask(matrix: ByteMatrix, bits: BitArray, version: Version, ecLevel: ECLevel): number {
+export function chooseBestMask(matrix: ByteMatrix, bits: BitArray, version: Version, ecLevel: ECLevel): number {
   let bestMask = -1;
   // Lower penalty is better.
   let minPenalty = Number.MAX_VALUE;

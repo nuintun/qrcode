@@ -5,7 +5,7 @@
 import { toInt32 } from './utils';
 import { ByteMatrix } from './ByteMatrix';
 
-// Penalty weights from section 6.8.2.1
+// Penalty weights
 const N1 = 3;
 const N2 = 3;
 const N3 = 40;
@@ -165,7 +165,7 @@ function applyMaskPenaltyRule4(matrix: ByteMatrix): number {
   return fivePercentVariances * N4;
 }
 
-// The mask penalty calculation is complicated.  See Table 21 of JISX0510:2004 (p.45) for details.
+// The mask penalty calculation is complicated. See Table 11 of ISO/IEC 18004:2015(E)(p.54) for details.
 // Basically it applies four rules and summate all penalties.
 export function calculateMaskPenalty(matrix: ByteMatrix): number {
   return (
@@ -176,7 +176,7 @@ export function calculateMaskPenalty(matrix: ByteMatrix): number {
   );
 }
 
-// Return is apply mask at "x" and "y". See 8.8 of JISX0510:2004 for mask pattern conditions.
+// Return is apply mask at "x" and "y". See 7.8 of ISO/IEC 18004:2015(E)(p.50) for mask pattern conditions.
 export function isApplyMask(mask: number, x: number, y: number): boolean {
   let temporary: number;
   let intermediate: number;

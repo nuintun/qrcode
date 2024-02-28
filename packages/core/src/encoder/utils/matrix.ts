@@ -18,6 +18,26 @@ const FORMAT_INFO_MASK = 0x5412;
 // Version information poly: 1 1111 0010 0101
 const VERSION_INFO_POLY = 0x1f25;
 
+// Shape finder pattern
+const SHAPE_FINDER_PATTERN = [
+  [1, 1, 1, 1, 1, 1, 1],
+  [1, 0, 0, 0, 0, 0, 1],
+  [1, 0, 1, 1, 1, 0, 1],
+  [1, 0, 1, 1, 1, 0, 1],
+  [1, 0, 1, 1, 1, 0, 1],
+  [1, 0, 0, 0, 0, 0, 1],
+  [1, 1, 1, 1, 1, 1, 1]
+];
+
+// Shape alignment pattern
+const SHAPE_ALIGNMENT_PATTERN = [
+  [1, 1, 1, 1, 1],
+  [1, 0, 0, 0, 1],
+  [1, 0, 1, 0, 1],
+  [1, 0, 0, 0, 1],
+  [1, 1, 1, 1, 1]
+];
+
 // Format information coordinates
 const FORMAT_INFO_COORDINATES = [
   [8, 0],
@@ -37,34 +57,14 @@ const FORMAT_INFO_COORDINATES = [
   [0, 8]
 ];
 
-// Position detection pattern
-const POSITION_DETECTION_PATTERN = [
-  [1, 1, 1, 1, 1, 1, 1],
-  [1, 0, 0, 0, 0, 0, 1],
-  [1, 0, 1, 1, 1, 0, 1],
-  [1, 0, 1, 1, 1, 0, 1],
-  [1, 0, 1, 1, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 1],
-  [1, 1, 1, 1, 1, 1, 1]
-];
-
-// Position adjustment pattern
-const POSITION_ADJUSTMENT_PATTERN = [
-  [1, 1, 1, 1, 1],
-  [1, 0, 0, 0, 1],
-  [1, 0, 1, 0, 1],
-  [1, 0, 0, 0, 1],
-  [1, 1, 1, 1, 1]
-];
-
 // Is empty point.
 function isEmpty(matrix: ByteMatrix, x: number, y: number): boolean {
   return matrix.get(x, y) === -1;
 }
 
-function embedPositionDetectionPattern(matrix: ByteMatrix, x: number, y: number): void {
+function embedFinderPattern(matrix: ByteMatrix, x: number, y: number): void {
   for (let i = 0; i < 7; i++) {
-    const pattern = POSITION_DETECTION_PATTERN[i];
+    const pattern = SHAPE_FINDER_PATTERN[i];
 
     for (let j = 0; j < 7; j++) {
       matrix.set(x + j, y + i, pattern[j]);
@@ -72,35 +72,20 @@ function embedPositionDetectionPattern(matrix: ByteMatrix, x: number, y: number)
   }
 }
 
-function embedHorizontalSeparationPattern(matrix: ByteMatrix, x: number, y: number): void {
+function embedHorizontalSeparator(matrix: ByteMatrix, x: number, y: number): void {
   for (let j = 0; j < 8; j++) {
     matrix.set(x + j, y, 0);
   }
 }
 
-function embedVerticalSeparationPattern(matrix: ByteMatrix, x: number, y: number): void {
+function embedVerticalSeparator(matrix: ByteMatrix, x: number, y: number): void {
   for (let i = 0; i < 7; i++) {
     matrix.set(x, y + i, 0);
   }
 }
 
-function embedPositionAdjustmentPattern(matrix: ByteMatrix, x: number, y: number): void {
-  for (let i = 0; i < 5; i++) {
-    const pattern = POSITION_ADJUSTMENT_PATTERN[i];
-
-    for (let j = 0; j < 5; j++) {
-      matrix.set(x + j, y + i, pattern[j]);
-    }
-  }
-}
-
-// Embed the lonely dark dot at left bottom corner. JISX0510:2004 (p.46)
-function embedDarkDotAtLeftBottomCorner(matrix: ByteMatrix): void {
-  matrix.set(8, matrix.size - 8, 1);
-}
-
-// Embed position detection patterns and surrounding vertical/horizontal separators.
-function embedPositionDetectionPatternsAndSeparators(matrix: ByteMatrix): void {
+// Embed finder patterns and surrounding vertical/horizontal separators.
+function embedFinderPatternsAndSeparators(matrix: ByteMatrix): void {
   // Embed three big squares at corners.
   const pdpWidth = 7;
   // Embed horizontal separation patterns around the squares.
@@ -111,25 +96,25 @@ function embedPositionDetectionPatternsAndSeparators(matrix: ByteMatrix): void {
   const { size } = matrix;
 
   // Left top corner.
-  embedPositionDetectionPattern(matrix, 0, 0);
+  embedFinderPattern(matrix, 0, 0);
   // Right top corner.
-  embedPositionDetectionPattern(matrix, size - pdpWidth, 0);
+  embedFinderPattern(matrix, size - pdpWidth, 0);
   // Left bottom corner.
-  embedPositionDetectionPattern(matrix, 0, size - pdpWidth);
+  embedFinderPattern(matrix, 0, size - pdpWidth);
 
   // Left top corner.
-  embedHorizontalSeparationPattern(matrix, 0, hspWidth - 1);
+  embedHorizontalSeparator(matrix, 0, hspWidth - 1);
   // Right top corner.
-  embedHorizontalSeparationPattern(matrix, size - hspWidth, hspWidth - 1);
+  embedHorizontalSeparator(matrix, size - hspWidth, hspWidth - 1);
   // Left bottom corner.
-  embedHorizontalSeparationPattern(matrix, 0, size - hspWidth);
+  embedHorizontalSeparator(matrix, 0, size - hspWidth);
 
   // Left top corner.
-  embedVerticalSeparationPattern(matrix, vspHeight, 0);
+  embedVerticalSeparator(matrix, vspHeight, 0);
   // Right top corner.
-  embedVerticalSeparationPattern(matrix, size - vspHeight - 1, 0);
+  embedVerticalSeparator(matrix, size - vspHeight - 1, 0);
   // Left bottom corner.
-  embedVerticalSeparationPattern(matrix, vspHeight, size - vspHeight);
+  embedVerticalSeparator(matrix, vspHeight, size - vspHeight);
 }
 
 function embedTimingPatterns(matrix: ByteMatrix): void {
@@ -158,8 +143,18 @@ function embedTimingPatterns(matrix: ByteMatrix): void {
   }
 }
 
-// Embed position adjustment patterns if need be.
-function embedPositionAdjustmentPatterns(matrix: ByteMatrix, { version }: Version): void {
+function embedAlignmentPattern(matrix: ByteMatrix, x: number, y: number): void {
+  for (let i = 0; i < 5; i++) {
+    const pattern = SHAPE_ALIGNMENT_PATTERN[i];
+
+    for (let j = 0; j < 5; j++) {
+      matrix.set(x + j, y + i, pattern[j]);
+    }
+  }
+}
+
+// Embed position alignment patterns if need be.
+function embedAlignmentPatterns(matrix: ByteMatrix, { version }: Version): void {
   if (version >= 2) {
     const { alignmentPatterns } = VERSIONS[version - 1];
     const { length } = alignmentPatterns;
@@ -171,36 +166,24 @@ function embedPositionAdjustmentPatterns(matrix: ByteMatrix, { version }: Versio
         const x = alignmentPatterns[j];
 
         if (isEmpty(matrix, x, y)) {
-          // If the cell is unset, we embed the position adjustment pattern here.
+          // If the cell is unset, we embed the position alignment pattern here.
           // -2 is necessary since the x/y coordinates point to the center of the pattern, not the
           // left top corner.
-          embedPositionAdjustmentPattern(matrix, x - 2, y - 2);
+          embedAlignmentPattern(matrix, x - 2, y - 2);
         }
       }
     }
   }
 }
 
-// Embed basic patterns. On success, modify the matrix.
-// The basic patterns are:
-// - Position detection patterns
-// - Timing patterns
-// - Dark dot at the left bottom corner
-// - Position adjustment patterns, if need be
-function embedBasicPatterns(matrix: ByteMatrix, version: Version): void {
-  // Let's get started with embedding big squares at corners.
-  embedPositionDetectionPatternsAndSeparators(matrix);
-  // Then, embed the dark dot at the left bottom corner.
-  embedDarkDotAtLeftBottomCorner(matrix);
-  // Position adjustment patterns appear if version >= 2.
-  embedPositionAdjustmentPatterns(matrix, version);
-  // Timing patterns should be embedded after position adj. patterns.
-  embedTimingPatterns(matrix);
+// Embed the lonely dark dot at left bottom corner. ISO/IEC 18004:2015(E)(p.56)
+function embedDarkModule(matrix: ByteMatrix): void {
+  matrix.set(8, matrix.size - 8, 1);
 }
 
 // Make bit vector of format information. On success, store the result in "bits".
 // Encode error correction level and mask pattern. See 8.9 of
-// JISX0510:2004 (p.45) for details.
+// ISO/IEC 18004:2015(E)(p.55) for details.
 function makeFormatInfoBits(bits: BitArray, ecLevel: ECLevel, mask: number): void {
   const formatInfo = (ecLevel.bits << 3) | mask;
 
@@ -227,7 +210,7 @@ function embedFormatInfo(matrix: ByteMatrix, ecLevel: ECLevel, mask: number): vo
   const { length } = formatInfoBits;
 
   for (let i = 0; i < length; i++) {
-    // Type info bits at the left top corner. See 8.9 of JISX0510:2004 (p.46).
+    // Type info bits at the left top corner.
     const [x, y] = FORMAT_INFO_COORDINATES[i];
     // Place bits in LSB to MSB order. LSB (least significant bit) is the last value in formatInfoBits.
     const bit = formatInfoBits.get(length - 1 - i);
@@ -242,10 +225,13 @@ function embedFormatInfo(matrix: ByteMatrix, ecLevel: ECLevel, mask: number): vo
       matrix.set(8, size - 7 + (i - 8), bit);
     }
   }
+
+  // Then, embed the dark dot at the left bottom corner.
+  embedDarkModule(matrix);
 }
 
 // Make bit vector of version information. On success, store the result in "bits".
-// See 8.10 of JISX0510:2004 (p.45) for details.
+// See 7.10 of ISO/IEC 18004:2015(E)(p.58) for details.
 function makeVersionInfoBits(bits: BitArray, version: number): void {
   bits.append(version, 6);
 
@@ -255,7 +241,7 @@ function makeVersionInfoBits(bits: BitArray, version: number): void {
 }
 
 // Embed version information if need be. On success, modify the matrix.
-// See 8.10 of JISX0510:2004 (p.47) for how to embed version information.
+// See 7.10 of ISO/IEC 18004:2015(E)(p.58) for how to embed version information.
 function embedVersionInfo(matrix: ByteMatrix, { version }: Version): void {
   if (version >= 7) {
     const versionInfoBits = new BitArray();
@@ -281,13 +267,13 @@ function embedVersionInfo(matrix: ByteMatrix, { version }: Version): void {
   }
 }
 
-// Embed "dataBits" using "getMaskPattern". On success, modify the matrix.
-// See 8.7 of JISX0510:2004 (p.38) for how to embed data bits.
-function embedDataBits(matrix: ByteMatrix, dataBits: BitArray, mask: number): void {
+// Embed "codewords". On success, modify the matrix.
+// See 7.7.3 of ISO/IEC 18004:2015(E)(p.46) for how to embed codewords.
+function embedCodewords(matrix: ByteMatrix, codewords: BitArray, mask: number): void {
   let bitIndex = 0;
 
   const { size } = matrix;
-  const { length } = dataBits;
+  const { length } = codewords;
 
   // Start from the right bottom cell.
   for (let x = size - 1; x >= 1; x -= 2) {
@@ -304,12 +290,11 @@ function embedDataBits(matrix: ByteMatrix, dataBits: BitArray, mask: number): vo
 
         // Skip the cell if it's not empty.
         if (isEmpty(matrix, offsetX, offsetY)) {
-          // Padding bit. If there is no bit left, we'll fill the left cells with 0,
-          // as described in 8.4.9 of JISX0510:2004 (p. 24).
+          // Padding bit. If there is no bit left, we'll fill the left cells with 0.
           let bit = 0;
 
           if (bitIndex < length) {
-            bit = dataBits.get(bitIndex++);
+            bit = codewords.get(bitIndex++);
           }
 
           // Is apply mask.
@@ -324,18 +309,42 @@ function embedDataBits(matrix: ByteMatrix, dataBits: BitArray, mask: number): vo
   }
 }
 
-// Build 2D matrix of QR Code from "dataBits" with "ecLevel", "version" and "getMaskPattern". On
-// success, store the result in "matrix".
-export function buildMatrix(matrix: ByteMatrix, dataBits: BitArray, version: Version, ecLevel: ECLevel, mask: number): void {
-  // Clear matrix
-  matrix.clear(-1);
+// Embed function patterns. On success, modify the matrix.
+// The function patterns are:
+// - Finder patterns and separators
+// - Alignment patterns, if version >= 2
+// - Timing patterns
+function embedFunctionPatterns(matrix: ByteMatrix, version: Version): void {
+  // Let's get started with embedding big squares at corners.
+  embedFinderPatternsAndSeparators(matrix);
+  // Alignment patterns appear if version >= 2.
+  embedAlignmentPatterns(matrix, version);
+  // Timing patterns should be embedded after position adj. patterns.
+  embedTimingPatterns(matrix);
+}
 
-  // Embed basic patterns
-  embedBasicPatterns(matrix, version);
+// Embed encoding region. On success, modify the matrix.
+// The encoding region are:
+// - Format Info
+// - Version Info, if version >= 7
+// - Data with correction
+function embedEncodingRegion(matrix: ByteMatrix, codewords: BitArray, version: Version, ecLevel: ECLevel, mask: number): void {
   // Type information appear with any version.
   embedFormatInfo(matrix, ecLevel, mask);
   // Version info appear if version >= 7.
   embedVersionInfo(matrix, version);
   // Data should be embedded at end.
-  embedDataBits(matrix, dataBits, mask);
+  embedCodewords(matrix, codewords, mask);
+}
+
+// Build 2D matrix of QR Code from "codewords" with "ecLevel", "version" and "getMaskPattern". On
+// success, store the result in "matrix".
+export function buildMatrix(matrix: ByteMatrix, codewords: BitArray, version: Version, ecLevel: ECLevel, mask: number): void {
+  // Clear matrix
+  matrix.clear(-1);
+
+  // Embed function patterns
+  embedFunctionPatterns(matrix, version);
+  // Embed encoding region
+  embedEncodingRegion(matrix, codewords, version, ecLevel, mask);
 }

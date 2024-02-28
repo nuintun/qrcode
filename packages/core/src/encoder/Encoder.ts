@@ -7,9 +7,9 @@ import {
   appendFNC1Info,
   appendLengthInfo,
   appendModeInfo,
-  appendTerminateBits,
+  appendTerminator,
   calculateBitsNeeded,
-  chooseMask,
+  chooseBestMask,
   Hints,
   injectECCodewords,
   isByteMode,
@@ -129,14 +129,13 @@ export class Encoder {
 
     const ecBlocks = version.getECBlocks(ecLevel);
 
-    // Append terminate the bits properly.
-    appendTerminateBits(headAndDataBits, ecBlocks.numTotalDataCodewords);
+    appendTerminator(headAndDataBits, ecBlocks.numTotalDataCodewords);
 
     const matrix = new ByteMatrix(version.size);
-    const finalBits = injectECCodewords(headAndDataBits, ecBlocks);
-    const mask = chooseMask(matrix, finalBits, version, ecLevel);
+    const codewords = injectECCodewords(headAndDataBits, ecBlocks);
+    const mask = chooseBestMask(matrix, codewords, version, ecLevel);
 
-    buildMatrix(matrix, finalBits, version, ecLevel, mask);
+    buildMatrix(matrix, codewords, version, ecLevel, mask);
 
     return new Encoded(matrix, version, ecLevel, mask);
   }
