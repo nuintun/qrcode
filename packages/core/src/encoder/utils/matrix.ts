@@ -18,8 +18,8 @@ const FORMAT_INFO_MASK = 0x5412;
 // Version information poly: 1 1111 0010 0101
 const VERSION_INFO_POLY = 0x1f25;
 
-// Shape finder pattern
-const SHAPE_FINDER_PATTERN = [
+// Finder pattern shape
+const FINDER_PATTERN_SHAPE = [
   [1, 1, 1, 1, 1, 1, 1],
   [1, 0, 0, 0, 0, 0, 1],
   [1, 0, 1, 1, 1, 0, 1],
@@ -29,8 +29,8 @@ const SHAPE_FINDER_PATTERN = [
   [1, 1, 1, 1, 1, 1, 1]
 ];
 
-// Shape alignment pattern
-const SHAPE_ALIGNMENT_PATTERN = [
+// Alignment pattern shape
+const ALIGNMENT_PATTERN_SHAPE = [
   [1, 1, 1, 1, 1],
   [1, 0, 0, 0, 1],
   [1, 0, 1, 0, 1],
@@ -64,7 +64,7 @@ function isEmpty(matrix: ByteMatrix, x: number, y: number): boolean {
 
 function embedFinderPattern(matrix: ByteMatrix, x: number, y: number): void {
   for (let i = 0; i < 7; i++) {
-    const pattern = SHAPE_FINDER_PATTERN[i];
+    const pattern = FINDER_PATTERN_SHAPE[i];
 
     for (let j = 0; j < 7; j++) {
       matrix.set(x + j, y + i, pattern[j]);
@@ -145,7 +145,7 @@ function embedTimingPatterns(matrix: ByteMatrix): void {
 
 function embedAlignmentPattern(matrix: ByteMatrix, x: number, y: number): void {
   for (let i = 0; i < 5; i++) {
-    const pattern = SHAPE_ALIGNMENT_PATTERN[i];
+    const pattern = ALIGNMENT_PATTERN_SHAPE[i];
 
     for (let j = 0; j < 5; j++) {
       matrix.set(x + j, y + i, pattern[j]);
