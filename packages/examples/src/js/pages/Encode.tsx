@@ -139,35 +139,6 @@ export default memo(function Encode() {
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
-            <FormItem name="fnc1" label="支持 FNC1">
-              <Select>
-                <Option value="None">否</Option>
-                <Option value="AIM">AIM</Option>
-                <Option value="GS1">GS1</Option>
-              </Select>
-            </FormItem>
-          </Col>
-          <Col md={6} sm={12} xs={24}>
-            <FormItem name="aimIndicator" label="AIM 标识">
-              <InputNumber disabled={fnc1 !== 'AIM'} min={0} max={255} precision={0} style={{ width: '100%' }} />
-            </FormItem>
-          </Col>
-          <Col md={6} sm={12} xs={24}>
-            <FormItem name="version" label="版本大小">
-              <Select>{versions}</Select>
-            </FormItem>
-          </Col>
-          <Col md={6} sm={12} xs={24}>
-            <FormItem name="level" label="纠错等级">
-              <Select>
-                <Option value="L">Level L (7%)</Option>
-                <Option value="M">Level M (15%)</Option>
-                <Option value="Q">Level Q (25%)</Option>
-                <Option value="H">Level H (30%)</Option>
-              </Select>
-            </FormItem>
-          </Col>
-          <Col md={6} sm={12} xs={24}>
             <FormItem name="mode" label="编码模式">
               <Select>
                 <Option value="Auto" selected>
@@ -188,6 +159,35 @@ export default memo(function Encode() {
                 <Option value="UTF_8">UTF-8</Option>
                 <Option value="ISO_8859_1">ISO-8859-1</Option>
               </Select>
+            </FormItem>
+          </Col>
+          <Col md={6} sm={12} xs={24}>
+            <FormItem name="version" label="版本大小">
+              <Select>{versions}</Select>
+            </FormItem>
+          </Col>
+          <Col md={6} sm={12} xs={24}>
+            <FormItem name="level" label="纠错等级">
+              <Select>
+                <Option value="L">Level L (7%)</Option>
+                <Option value="M">Level M (15%)</Option>
+                <Option value="Q">Level Q (25%)</Option>
+                <Option value="H">Level H (30%)</Option>
+              </Select>
+            </FormItem>
+          </Col>
+          <Col md={6} sm={12} xs={24}>
+            <FormItem name="fnc1" label="支持 FNC1">
+              <Select>
+                <Option value="None">否</Option>
+                <Option value="AIM">AIM</Option>
+                <Option value="GS1">GS1</Option>
+              </Select>
+            </FormItem>
+          </Col>
+          <Col md={6} sm={12} xs={24}>
+            <FormItem name="aimIndicator" label="AIM 标识">
+              <InputNumber disabled={fnc1 !== 'AIM'} min={0} max={255} precision={0} style={{ width: '100%' }} />
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
