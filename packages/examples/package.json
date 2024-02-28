@@ -45,7 +45,7 @@
   "devDependencies": {
     "@nuintun/svgo-loader": "^0.2.5",
     "@swc/core": "^1.4.2",
-    "@types/react": "^18.2.59",
+    "@types/react": "^18.2.60",
     "@types/react-dom": "^18.2.19",
     "autoprefixer": "^10.4.17",
     "bufferutil": "^4.0.8",
@@ -59,7 +59,7 @@
     "koa": "^2.15.0",
     "koa-compress": "^5.1.1",
     "memfs": "^4.7.7",
-    "mini-css-extract-plugin": "^2.8.0",
+    "mini-css-extract-plugin": "^2.8.1",
     "nodemon": "^3.1.0",
     "postcss": "^8.4.35",
     "postcss-loader": "^8.1.0",
