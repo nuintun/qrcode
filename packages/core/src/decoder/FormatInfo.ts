@@ -59,13 +59,13 @@ export class FormatInfo {
 }
 
 export function decodeFormatInfo(formatInfo1: number, formatInfo2: number): FormatInfo {
-  // Find the int in FORMAT_INFO_DECODE_TABLE with fewest bits differing
+  // Find the int in FORMAT_INFO_DECODE_TABLE with fewest bits differing.
   let bestDiff = 32;
   let bestFormatInfo = 0;
 
   for (const [maskedFormatInfo, formatInfo] of FORMAT_INFO_DECODE_TABLE) {
     if (formatInfo1 === maskedFormatInfo || formatInfo2 === maskedFormatInfo) {
-      // Found an exact match
+      // Found an exact match.
       return new FormatInfo(formatInfo);
     }
 
@@ -77,7 +77,7 @@ export function decodeFormatInfo(formatInfo1: number, formatInfo2: number): Form
     }
 
     if (formatInfo1 !== formatInfo2) {
-      // Also try the other option
+      // Also try the other option.
       bitsDiff = hammingWeight(formatInfo2 ^ maskedFormatInfo);
 
       if (bitsDiff < bestDiff) {
@@ -87,7 +87,7 @@ export function decodeFormatInfo(formatInfo1: number, formatInfo2: number): Form
     }
   }
 
-  // Hamming distance of the 32 masked codes is 7, by construction, so <= 3 bits differing means we found a match
+  // Hamming distance of the 32 masked codes is 7, by construction, so <= 3 bits differing means we found a match.
   if (bestDiff <= 3) {
     return new FormatInfo(bestFormatInfo);
   }

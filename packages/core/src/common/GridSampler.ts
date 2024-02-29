@@ -29,7 +29,7 @@ export class GridSampler {
         const offsetY = toInt32(mappingY);
 
         if (
-          // Assert axis
+          // Assert axis.
           offsetX >= 0 &&
           offsetY >= 0 &&
           offsetX < matrixWidth &&

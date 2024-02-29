@@ -10,11 +10,11 @@ import { calculateModuleSizeOneWay, ModuleSizeGroup } from './utils/module';
 import { calculateTriangleArea, distance, Point, squaredDistance } from '/common/Point';
 
 type OrderedPatterns = [
-  // Top left finder
+  // Top left finder.
   topLeft: Pattern,
-  // Top right finder
+  // Top right finder.
   topRight: Pattern,
-  // Bottom left finder
+  // Bottom left finder.
   bottomLeft: Pattern
 ];
 
@@ -42,14 +42,14 @@ function orderFinderPatterns(patterns: Pattern[]): OrderedPatterns {
   let topRight: Pattern;
   let bottomLeft: Pattern;
 
-  // Find distances between pattern centers
+  // Find distances between pattern centers.
   const [pattern1, pattern2, pattern3] = patterns;
   // @see https://github.com/zxing-cpp/zxing-cpp/blob/master/core/src/qrcode/QRDetector.cpp
   const oneTwoDistance = squaredDistance(pattern1, pattern2) * calculateDistanceRatio(pattern1, pattern2);
   const oneThreeDistance = squaredDistance(pattern1, pattern3) * calculateDistanceRatio(pattern1, pattern3);
   const twoThreeDistance = squaredDistance(pattern2, pattern3) * calculateDistanceRatio(pattern2, pattern3);
 
-  // Assume one closest to other two is B; A and C will just be guesses at first
+  // Assume one closest to other two is B; A and C will just be guesses at first.
   if (twoThreeDistance >= oneTwoDistance && twoThreeDistance >= oneThreeDistance) {
     [topLeft, bottomLeft, topRight] = patterns;
   } else if (oneThreeDistance >= twoThreeDistance && oneThreeDistance >= oneTwoDistance) {

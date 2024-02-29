@@ -5,7 +5,7 @@
 import { Point } from './Point';
 import { toInt32 } from './utils';
 
-// Mild variant of Bresenham's algorithm
+// Mild variant of Bresenham's algorithm.
 // see https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 export class PlotLine {
   #to: Point;
@@ -23,7 +23,7 @@ export class PlotLine {
 
     const steep = Math.abs(toY - fromY) > Math.abs(toX - fromX);
 
-    // Steep line
+    // Steep line.
     if (steep) {
       [fromX, fromY, toX, toY] = [fromY, fromX, toY, toX];
     }
@@ -48,7 +48,7 @@ export class PlotLine {
 
     let error = toInt32(-deltaX / 2);
 
-    // Loop up until x === toX, but not beyond
+    // Loop up until x === toX, but not beyond.
     for (let x = fromX, y = fromY; x !== limit; x += stepX) {
       yield [steep ? y : x, steep ? x : y];
 

@@ -23,7 +23,7 @@ export function createTransform(finderPatternGroup: FinderPatternGroup, alignmen
     sourceBottomRightX = sizeMinusThree - 3;
     sourceBottomRightY = sourceBottomRightX;
   } else {
-    // Don't have an alignment pattern, just make up the bottom-right point
+    // Don't have an alignment pattern, just make up the bottom-right point.
     bottomRightX = topRightX + bottomLeftX - topLeftX;
     bottomRightY = topRightY + bottomLeftY - topLeftY;
     sourceBottomRightX = sizeMinusThree;

@@ -40,7 +40,7 @@ export class PatternFinder {
     if (centerY >= 0) {
       let horizontal: number[];
 
-      // Re-horizontal check
+      // Re-horizontal check.
       [centerX, horizontal] = alignCrossPattern(matrix, centerX, centerY, overscan, ratios);
 
       if (centerX >= 0) {
@@ -59,7 +59,7 @@ export class PatternFinder {
           for (let i = 0; i < length; i++) {
             const pattern = patterns[i];
 
-            // Look for about the same center and module size
+            // Look for about the same center and module size.
             if (Pattern.equals(pattern, centerX, centerY, width, height)) {
               combined = true;
               patterns[i] = Pattern.combine(pattern, centerX, centerY, width, height, noise);
@@ -67,7 +67,7 @@ export class PatternFinder {
             }
           }
 
-          // Hadn't found this before; save it
+          // Hadn't found this before; save it.
           if (!combined) {
             patterns.push(new Pattern(ratios, centerX, centerY, width, height, noise));
           }

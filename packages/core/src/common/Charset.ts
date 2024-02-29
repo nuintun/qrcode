@@ -46,6 +46,11 @@ export class Charset {
   public static readonly GB18030 = new Charset('gb18030', 29);
   public static readonly EUC_KR = new Charset('euc-kr', 30);
 
+  /**
+   * @constructor
+   * @param label The label of charset.
+   * @param values The values of charset.
+   */
   constructor(label: string, ...values: number[]) {
     this.#label = label;
     this.#values = values;
@@ -55,10 +60,18 @@ export class Charset {
     }
   }
 
+  /**
+   * @property label
+   * @description Get the label of charset.
+   */
   public get label(): string {
     return this.#label;
   }
 
+  /**
+   * @property values
+   * @description Get the values of charset.
+   */
   public get values(): number[] {
     return this.#values;
   }

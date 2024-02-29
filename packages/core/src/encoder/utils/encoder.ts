@@ -223,17 +223,17 @@ export function chooseRecommendVersion(segmentBlocks: SegmentBlock[], ecLevel: E
 }
 
 export function chooseBestMaskAndMatrix(
-  bits: BitArray,
+  codewords: BitArray,
   version: Version,
   ecLevel: ECLevel
 ): [mask: number, matrix: ByteMatrix] {
   let bestMask = 0;
-  let bestMatrix = buildMatrix(bits, version, ecLevel, bestMask);
+  let bestMatrix = buildMatrix(codewords, version, ecLevel, bestMask);
   let minPenalty = calculateMaskPenalty(bestMatrix);
 
   // We try all rest mask patterns to choose the best one.
   for (let mask = 1; mask < 8; mask++) {
-    const matrix = buildMatrix(bits, version, ecLevel, mask);
+    const matrix = buildMatrix(codewords, version, ecLevel, mask);
     const penalty = calculateMaskPenalty(matrix);
 
     // Lower penalty is better.

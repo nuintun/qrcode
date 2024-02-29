@@ -24,13 +24,29 @@ import { Charset } from '/common/Charset';
 import { ECLevel } from '/common/ECLevel';
 import { BitArray } from '/common/BitArray';
 import { Version, VERSIONS } from '/common/Version';
-import { encode as contentEncode, TextEncode } from '/common/encoding';
+import { encode as textEncode, TextEncode } from '/common/encoding';
 import { assertHints, assertLevel, assertVersion } from './utils/asserts';
 
 export interface Options {
+  /**
+   * @property hints
+   * @description Encode hints.
+   */
   hints?: Hints;
+  /**
+   * @property encode
+   * @description Text encode function.
+   */
   encode?: TextEncode;
+  /**
+   * @property level
+   * @description Error correction level.
+   */
   version?: 'Auto' | number;
+  /**
+   * @property level
+   * @description Error correction level.
+   */
   level?: 'L' | 'M' | 'Q' | 'H';
 }
 
@@ -40,16 +56,11 @@ export class Encoder {
   #encode: TextEncode;
   #version: 'Auto' | number;
 
-  constructor({
-    // Encode hints
-    hints = {},
-    // Error correction level
-    level = 'L',
-    // Version number or auto
-    version = 'Auto',
-    // Content encode function
-    encode = contentEncode
-  }: Options = {}) {
+  /**
+   * @constructor
+   * @param options The options of encoder.
+   */
+  constructor({ hints = {}, level = 'L', version = 'Auto', encode = textEncode }: Options = {}) {
     assertHints(hints);
     assertLevel(level);
     assertVersion(version);
@@ -60,6 +71,11 @@ export class Encoder {
     this.#level = ECLevel[level];
   }
 
+  /**
+   * @method encode
+   * @description Encode the segments.
+   * @param segments The segments.
+   */
   public encode(...segments: Segment[]): Encoded {
     const ecLevel = this.#level;
     const encode = this.#encode;

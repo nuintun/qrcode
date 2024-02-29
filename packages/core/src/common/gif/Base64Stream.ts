@@ -11,19 +11,19 @@ function encode(byte: number): number {
 
   if (byte >= 0) {
     if (byte < 26) {
-      // A
+      // A.
       return 0x41 + byte;
     } else if (byte < 52) {
-      // a
+      // a.
       return 0x61 + (byte - 26);
     } else if (byte < 62) {
-      // 0
+      // 0.
       return 0x30 + (byte - 52);
     } else if (byte === 62) {
-      // +
+      // +.
       return 0x2b;
     } else if (byte === 63) {
-      // /
+      // /.
       return 0x2f;
     }
   }
@@ -72,11 +72,11 @@ export class Base64Stream {
     const length = this.#length;
 
     if (length % 3 != 0) {
-      // Padding
+      // Padding.
       const pad = 3 - (length % 3);
 
       for (let i = 0; i < pad; i++) {
-        // =
+        // =.
         stream.writeByte(0x3d);
       }
     }

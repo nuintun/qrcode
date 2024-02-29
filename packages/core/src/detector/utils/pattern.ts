@@ -48,7 +48,7 @@ export function isMatchPattern(scanline: number[], { ratios, modules }: PatternR
     const moduleSize = scanlineTotal / modules;
     const threshold = moduleSize * DIFF_PATTERN_RATIO + DIFF_PATTERN_ALLOWANCE;
 
-    // Allow less than DIFF_PATTERN_RATIO variance from 1-1-3-1-1 or 1-1-1-1-1 proportions
+    // Allow less than DIFF_PATTERN_RATIO variance from 1-1-3-1-1 or 1-1-1-1-1 proportions.
     for (let i = 0; i < length; i++) {
       const ratio = ratios[i];
       const count = scanline[i];
@@ -72,7 +72,7 @@ export function calculatePatternNoise(ratios: PatternRatios, ...scanlines: numbe
   const { length } = scanlines;
   const averages: number[] = [];
 
-  // scanline length must be equals ratios length
+  // scanline length must be equals ratios length.
   for (const scanline of scanlines) {
     const [noise, average] = calculateScanlineNoise(scanline, ratios);
 

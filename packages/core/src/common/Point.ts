@@ -11,10 +11,18 @@ export class Point {
     this.#y = y;
   }
 
+  /**
+   * @property x
+   * @description Get the x of point.
+   */
   public get x(): number {
     return this.#x;
   }
 
+  /**
+   * @property y
+   * @description Get the y of point.
+   */
   public get y(): number {
     return this.#y;
   }

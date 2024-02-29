@@ -18,7 +18,7 @@ export class Polynomial {
     this.#field = field;
 
     if (length > 1 && coefficients[0] === 0) {
-      // Leading term must be non-zero for anything except the constant polynomial "0"
+      // Leading term must be non-zero for anything except the constant polynomial "0".
       let firstNonZero = 1;
 
       while (firstNonZero < length && coefficients[firstNonZero] === 0) {
@@ -59,7 +59,7 @@ export class Polynomial {
 
   public evaluate(a: number): number {
     if (a === 0) {
-      // Just return the x^0 coefficient
+      // Just return the x^0 coefficient.
       return this.getCoefficient(0);
     }
 
@@ -68,7 +68,7 @@ export class Polynomial {
     const coefficients = this.#coefficients;
 
     if (a === 1) {
-      // Just the sum of the coefficients
+      // Just the sum of the coefficients.
       result = 0;
 
       for (const coefficient of coefficients) {
@@ -171,11 +171,11 @@ export class Polynomial {
       [largerCoefficients, smallerCoefficients] = [smallerCoefficients, largerCoefficients];
     }
 
-    // Diff index offset
+    // Diff index offset.
     const offset = largerLength - smallerLength;
     const coefficients = new Int32Array(largerLength);
 
-    // Copy high-order terms only found in higher-degree polynomial's coefficients
+    // Copy high-order terms only found in higher-degree polynomial's coefficients.
     coefficients.set(largerCoefficients.subarray(0, offset));
 
     for (let i = offset; i < largerLength; i++) {

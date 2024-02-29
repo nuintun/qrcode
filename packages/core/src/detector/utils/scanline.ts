@@ -16,7 +16,7 @@ export function calculateScanlineNoise(
   const total = accumulate(scanline);
   const average = total / modules;
 
-  // scanline length must be equals ratios length
+  // scanline length must be equals ratios length.
   for (let i = 0; i < length; i++) {
     noise += Math.abs(scanline[i] - ratios[i] * average);
   }
@@ -127,21 +127,21 @@ export function getDiagonalScanline(
     return matrix.get(offsetX, offsetY);
   };
 
-  // Start counting left from center finding black center mass
+  // Start counting left from center finding black center mass.
   while (offsetX >= 0 && offsetY >= 0 && offsetY < height && isBlackPixel()) {
     updateAxis();
 
     scanline[2]++;
   }
 
-  // Start counting left from center finding black center mass
+  // Start counting left from center finding black center mass.
   while (offsetX >= 0 && offsetY >= 0 && offsetY < height && !isBlackPixel()) {
     updateAxis();
 
     scanline[1]++;
   }
 
-  // Start counting left from center finding black center mass
+  // Start counting left from center finding black center mass.
   while (offsetX >= 0 && offsetY >= 0 && offsetY < height && scanline[0] < overscan && isBlackPixel()) {
     updateAxis();
 
@@ -152,21 +152,21 @@ export function getDiagonalScanline(
   offsetX = x + step;
   offsetY = y - step * slope;
 
-  // Start counting right from center finding black center mass
+  // Start counting right from center finding black center mass.
   while (offsetX < width && offsetY >= 0 && offsetY < height && isBlackPixel()) {
     updateAxis();
 
     scanline[2]++;
   }
 
-  // Start counting right from center finding black center mass
+  // Start counting right from center finding black center mass.
   while (offsetX < width && offsetY >= 0 && offsetY < height && !isBlackPixel()) {
     updateAxis();
 
     scanline[3]++;
   }
 
-  // Start counting right from center finding black center mass
+  // Start counting right from center finding black center mass.
   while (offsetX < width && offsetY >= 0 && offsetY < height && scanline[4] < overscan && isBlackPixel()) {
     updateAxis();
 

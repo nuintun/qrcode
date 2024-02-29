@@ -36,7 +36,7 @@ export class BitMatrixParser {
       return VERSIONS[versionNumber - 1];
     }
 
-    // Hmm, failed. Try bottom left: 6 wide by 3 tall
+    // Hmm, failed. Try bottom left: 6 wide by 3 tall.
     let version1 = 0;
     let version2 = 0;
 
@@ -72,17 +72,17 @@ export class BitMatrixParser {
     const size = this.#size;
     const max = size - 7;
 
-    // Read top-left format info bits
+    // Read top-left format info bits.
     for (let x = 0; x <= 8; x++) {
       if (x !== 6) {
-        // Skip timing pattern bit
+        // Skip timing pattern bit.
         formatInfo1 = copyBit(matrix, x, 8, formatInfo1);
       }
     }
 
     for (let y = 7; y >= 0; y--) {
       if (y !== 6) {
-        // Skip timing pattern bit
+        // Skip timing pattern bit.
         formatInfo1 = copyBit(matrix, 8, y, formatInfo1);
       }
     }
@@ -110,22 +110,22 @@ export class BitMatrixParser {
     const functionPattern = buildFunctionPattern(version);
     const codewords = new Uint8Array(ecBlocks.numTotalCodewords);
 
-    // Read columns in pairs, from right to left
+    // Read columns in pairs, from right to left.
     for (let x = size - 1; x > 0; x -= 2) {
       if (x === 6) {
         // Skip whole column with vertical alignment pattern
-        // saves time and makes the other code proceed more cleanly
+        // saves time and makes the other code proceed more cleanly.
         x--;
       }
 
-      // Read alternatingly from bottom to top then top to bottom
+      // Read alternatingly from bottom to top then top to bottom.
       for (let count = 0; count < size; count++) {
         const y = readingUp ? size - 1 - count : count;
 
         for (let col = 0; col < 2; col++) {
           const offsetX = x - col;
 
-          // Ignore bits covered by the function pattern
+          // Ignore bits covered by the function pattern.
           if (!functionPattern.get(offsetX, y)) {
             // Read a bit
             bitsRead++;
@@ -135,7 +135,7 @@ export class BitMatrixParser {
               currentByte |= 1;
             }
 
-            // If we've made a whole byte, save it off
+            // If we've made a whole byte, save it off.
             if (bitsRead === 8) {
               codewords[byteOffset++] = currentByte;
 
@@ -146,7 +146,7 @@ export class BitMatrixParser {
         }
       }
 
-      // Switch directions
+      // Switch directions.
       readingUp = !readingUp;
     }
 

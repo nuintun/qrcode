@@ -56,7 +56,7 @@ function calculateBlackPoints(luminances: Uint8Array, width: number, height: num
 
           sum += luminance;
 
-          // still looking for good contrast
+          // still looking for good contrast.
           if (luminance < min) {
             min = luminance;
           }
@@ -66,9 +66,9 @@ function calculateBlackPoints(luminances: Uint8Array, width: number, height: num
           }
         }
 
-        // short-circuit min/max tests once dynamic range is met
+        // short-circuit min/max tests once dynamic range is met.
         if (max - min > MIN_DYNAMIC_RANGE) {
-          // finish the rest of the rows quickly
+          // finish the rest of the rows quickly.
           for (y1++, offset += width; y1 < BLOCK_SIZE; y1++, offset += width) {
             for (let x1 = 0; x1 < BLOCK_SIZE; x1++) {
               sum += luminances[offset + x1];
@@ -151,8 +151,13 @@ function adaptiveThreshold(luminances: Uint8Array, width: number, height: number
   return matrix;
 }
 
+/**
+ * @function grayscale
+ * @description Convert an image to grayscale.
+ * @param image The image data to convert.
+ */
 export function grayscale({ data, width, height }: ImageData): Uint8Array {
-  // Convert image to grayscale
+  // Convert image to grayscale.
   const luminances = new Uint8Array(width * height);
 
   for (let y = 0; y < height; y++) {
@@ -175,6 +180,13 @@ export function grayscale({ data, width, height }: ImageData): Uint8Array {
   return luminances;
 }
 
+/**
+ * @function binarize
+ * @description Convert the image to a binary matrix.
+ * @param luminances The luminances of the image.
+ * @param width The width of the image.
+ * @param height The height of the image.
+ */
 export function binarize(luminances: Uint8Array, width: number, height: number): BitMatrix {
   if (luminances.length !== width * height) {
     throw new Error('luminances length must be equals to width * height');

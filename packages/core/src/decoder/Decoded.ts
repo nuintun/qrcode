@@ -27,7 +27,7 @@ export class Decoded {
 
   /**
    * @property mask
-   * @description Get the mask of qrcode
+   * @description Get the mask of qrcode.
    */
   public get mask(): number {
     return this.#mask;
@@ -35,7 +35,7 @@ export class Decoded {
 
   /**
    * @property level
-   * @description Get the error correction level of qrcode
+   * @description Get the error correction level of qrcode.
    */
   public get level(): string {
     return this.#level.name;
@@ -43,7 +43,7 @@ export class Decoded {
 
   /**
    * @property version
-   * @description Get the version of qrcode
+   * @description Get the version of qrcode.
    */
   public get version(): number {
     return this.#version.version;
@@ -51,7 +51,7 @@ export class Decoded {
 
   /**
    * @property mirror
-   * @description Get the mirror of qrcode
+   * @description Get the mirror of qrcode.
    */
   public get mirror(): boolean {
     return this.#mirror;
@@ -59,7 +59,7 @@ export class Decoded {
 
   /**
    * @property content
-   * @description Get the content of qrcode
+   * @description Get the content of qrcode.
    */
   public get content(): string {
     return this.#metadata.content;
@@ -67,7 +67,7 @@ export class Decoded {
 
   /**
    * @property corrected
-   * @description Get the corrected of qrcode
+   * @description Get the corrected of qrcode.
    */
   public get corrected(): number {
     return this.#corrected;
@@ -75,7 +75,7 @@ export class Decoded {
 
   /**
    * @property symbology
-   * @description Get the symbology of qrcode
+   * @description Get the symbology of qrcode.
    */
   public get symbology(): string {
     return this.#metadata.symbology;
@@ -83,7 +83,7 @@ export class Decoded {
 
   /**
    * @property fnc1
-   * @description Get the fnc1 of qrcode
+   * @description Get the fnc1 of qrcode.
    */
   public get fnc1(): FNC1 | false {
     return this.#metadata.fnc1;
@@ -91,7 +91,7 @@ export class Decoded {
 
   /**
    * @property codewords
-   * @description Get the codewords of qrcode
+   * @description Get the codewords of qrcode.
    */
   public get codewords(): Uint8Array {
     return this.#metadata.codewords;
@@ -99,7 +99,7 @@ export class Decoded {
 
   /**
    * @property structured
-   * @description Get the structured of qrcode
+   * @description Get the structured of qrcode.
    */
   public get structured(): Structured | false {
     return this.#metadata.structured;

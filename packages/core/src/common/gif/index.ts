@@ -7,11 +7,11 @@ import { ByteStream } from './ByteStream';
 import { Base64Stream, fromCharCode } from './Base64Stream';
 
 export type RGB = [
-  // Red
+  // Red.
   R: number,
-  // Green
+  // Green.
   G: number,
-  // Blue
+  // Blue.
   B: number
 ];
 
@@ -45,20 +45,20 @@ export class GIFImage {
     const background = this.#background;
     const foreground = this.#foreground;
 
-    // GIF signature: GIF89a
+    // GIF signature: GIF89a.
     stream.writeBytes([0x47, 0x49, 0x46, 0x38, 0x39, 0x61]);
 
-    // Logical screen descriptor
+    // Logical screen descriptor.
     stream.writeInt16(width);
     stream.writeInt16(height);
     stream.writeBytes([0x80, 0, 0]);
 
-    // Global background color palette
+    // Global background color palette.
     stream.writeBytes([background[0], background[1], background[2]]);
-    // Global foreground color palette
+    // Global foreground color palette.
     stream.writeBytes([foreground[0], foreground[1], foreground[2]]);
 
-    // Image descriptor
+    // Image descriptor.
     stream.writeByte(0x2c);
     stream.writeInt16(0);
     stream.writeInt16(0);
@@ -66,10 +66,10 @@ export class GIFImage {
     stream.writeInt16(height);
     stream.writeByte(0);
 
-    // Compress pixels to stream
+    // Compress pixels to stream.
     compress(this.#pixels, 2, stream);
 
-    // GIF terminator
+    // GIF terminator.
     stream.writeByte(0x3b);
 
     return stream.bytes;

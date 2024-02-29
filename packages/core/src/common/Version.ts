@@ -13,23 +13,23 @@ export const MIN_VERSION_SIZE = 21;
 export const MAX_VERSION_SIZE = 177;
 
 const VERSION_DECODE_TABLE = [
-  // Version 7 - 11
+  // Version 7 - 11.
   0x07c94, 0x085bc, 0x09a99, 0x0a4d3, 0x0bbf6,
-  // Version 12 - 16
+  // Version 12 - 16.
   0x0c762, 0x0d847, 0x0e60d, 0x0f928, 0x10b78,
-  // Version 17 - 21
+  // Version 17 - 21.
   0x1145d, 0x12a17, 0x13532, 0x149a6, 0x15683,
-  // Version 22 - 26
+  // Version 22 - 26.
   0x168c9, 0x177ec, 0x18ec4, 0x191e1, 0x1afab,
-  // Version 27 - 31
+  // Version 27 - 31.
   0x1b08e, 0x1cc1a, 0x1d33f, 0x1ed75, 0x1f250,
-  // Version 32 - 36
+  // Version 32 - 36.
   0x209d5, 0x216f0, 0x228ba, 0x2379f, 0x24b0b,
-  // Version 37 - 40
+  // Version 37 - 40.
   0x2542e, 0x26a64, 0x27541, 0x28c69
 ];
 
-// Version > 2 has alignment patterns
+// Version > 2 has alignment patterns.
 export const MIN_VERSION_SIZE_WITH_ALIGNMENTS = 25;
 
 export class Version {
@@ -394,12 +394,12 @@ export function decodeVersion(version1: number, version2: number): Version {
   for (let i = 0; i < length; i++) {
     const maskedVersion = VERSION_DECODE_TABLE[i];
 
-    // Do the version info bits match exactly done ?
+    // Do the version info bits match exactly done?
     if (version1 === maskedVersion || version2 === maskedVersion) {
       return VERSIONS[i + 6];
     }
 
-    // Otherwise see if this is the closest to a real version info bit string we have seen so far
+    // Otherwise see if this is the closest to a real version info bit string we have seen so far.
     let bitsDiff = hammingWeight(version1 ^ maskedVersion);
 
     if (bitsDiff < bestDiff) {
@@ -408,7 +408,7 @@ export function decodeVersion(version1: number, version2: number): Version {
     }
 
     if (version1 !== version2) {
-      // Also try the other option
+      // Also try the other option.
       bitsDiff = hammingWeight(version2 ^ maskedVersion);
 
       if (bitsDiff < bestDiff) {
@@ -418,12 +418,12 @@ export function decodeVersion(version1: number, version2: number): Version {
     }
   }
 
-  // We can tolerate up to 3 bits of error since no two version info codewords will differ in less than 8 bits
+  // We can tolerate up to 3 bits of error since no two version info codewords will differ in less than 8 bits.
   if (bestDiff <= 3 && bestVersion >= 7) {
     return VERSIONS[bestVersion - 1];
   }
 
-  // If we didn't find a close enough match, fail
+  // If we didn't find a close enough match, fail.
   throw new Error('unable to decode version');
 }
 
@@ -434,11 +434,11 @@ export function buildFunctionPattern({ size, version, alignmentPatterns }: Versi
   const matrix = new BitMatrix(size, size);
   const max = length - 1;
 
-  // Top left finder pattern + separator + format
+  // Top left finder pattern + separator + format.
   matrix.setRegion(0, 0, 9, 9);
-  // Top right finder pattern + separator + format
+  // Top right finder pattern + separator + format.
   matrix.setRegion(size - 8, 0, 8, 9);
-  // Bottom left finder pattern + separator + format
+  // Bottom left finder pattern + separator + format.
   matrix.setRegion(0, size - 8, 9, 8);
 
   for (let x = 0; x < length; x++) {
@@ -448,19 +448,19 @@ export function buildFunctionPattern({ size, version, alignmentPatterns }: Versi
       if ((x !== 0 || (y !== 0 && y !== max)) && (x !== max || y !== 0)) {
         matrix.setRegion(alignmentPatterns[y] - 2, top, 5, 5);
       }
-      // Else no o alignment patterns near the three finder patterns
+      // Else no o alignment patterns near the three finder patterns.
     }
   }
 
-  // Vertical timing pattern
+  // Vertical timing pattern.
   matrix.setRegion(6, 9, 1, size - 17);
-  // Horizontal timing pattern
+  // Horizontal timing pattern.
   matrix.setRegion(9, 6, size - 17, 1);
 
   if (version > 6) {
-    // Version info, top right
+    // Version info, top right.
     matrix.setRegion(size - 11, 0, 3, 6);
-    // Version info, bottom left
+    // Version info, bottom left.
     matrix.setRegion(0, size - 11, 6, 3);
   }
 

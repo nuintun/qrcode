@@ -34,10 +34,10 @@ export class AlignmentPatternFinder extends PatternFinder {
       });
     }
 
-    // Only use the first two patterns
+    // Only use the first two patterns.
     const alignmentPatterns = patterns.slice(0, 2);
 
-    // Add expect alignment for fallback
+    // Add expect alignment for fallback.
     alignmentPatterns.push(expectAlignment);
 
     return alignmentPatterns;
@@ -51,7 +51,7 @@ export class AlignmentPatternFinder extends PatternFinder {
       scanlineUpdate(scanline, count);
       scanlineUpdate(scanlineBits, lastBit);
 
-      // Match pattern when white-black-white
+      // Match pattern when white-black-white.
       if (
         scanlineBits[0] === 0 &&
         scanlineBits[1] === 1 &&
@@ -67,7 +67,7 @@ export class AlignmentPatternFinder extends PatternFinder {
 
       // Burn off leading white pixels before anything else; if we start in the middle of
       // a white run, it doesn't make sense to count its length, since we don't know if the
-      // white run continued to the left of the start point
+      // white run continued to the left of the start point.
       while (x < right && !matrix.get(x, y)) {
         x++;
       }

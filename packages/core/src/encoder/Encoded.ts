@@ -23,7 +23,7 @@ export class Encoded {
 
   /**
    * @property matrix
-   * @description Get the size of qrcode
+   * @description Get the size of qrcode.
    */
   public get size(): number {
     return this.#matrix.size;
@@ -31,7 +31,7 @@ export class Encoded {
 
   /**
    * @property mask
-   * @description Get the mask of qrcode
+   * @description Get the mask of qrcode.
    */
   public get mask(): number {
     return this.#mask;
@@ -39,7 +39,7 @@ export class Encoded {
 
   /**
    * @property level
-   * @description Get the error correction level of qrcode
+   * @description Get the error correction level of qrcode.
    */
   public get level(): string {
     return this.#level.name;
@@ -47,7 +47,7 @@ export class Encoded {
 
   /**
    * @property version
-   * @description Get the version of qrcode
+   * @description Get the version of qrcode.
    */
   public get version(): number {
     return this.#version.version;
@@ -55,7 +55,7 @@ export class Encoded {
 
   /**
    * @method get
-   * @description Get the bit value of the specified coordinate of qrcode
+   * @description Get the bit value of the specified coordinate of qrcode.
    */
   public get(x: number, y: number): number {
     const { size } = this.#matrix;
@@ -70,7 +70,7 @@ export class Encoded {
   /**
    * @method toDataURL
    * @param moduleSize The size of one qrcode module
-   * @param options Set rest options of gif, like margin, foreground and background
+   * @param options Set rest options of gif, like margin, foreground and background.
    */
   public toDataURL(moduleSize: number = 2, { margin = moduleSize * 4, ...colors }: Colors & { margin?: number } = {}): string {
     moduleSize = Math.max(1, moduleSize >> 0);
@@ -90,7 +90,7 @@ export class Encoded {
 
           gif.set(x, y, matrix.get(offsetX, offsetY));
         } else {
-          // Margin pixels
+          // Margin pixels.
           gif.set(x, y, 0);
         }
       }

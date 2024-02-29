@@ -28,19 +28,19 @@ function parseECIValue(source: BitSource): number {
   const firstByte = source.read(8);
 
   if ((firstByte & 0x80) === 0) {
-    // just one byte
+    // Just one byte.
     return firstByte & 0x7f;
   }
 
   if ((firstByte & 0xc0) === 0x80) {
-    // two bytes
+    // Two bytes.
     const secondByte = source.read(8);
 
     return ((firstByte & 0x3f) << 8) | secondByte;
   }
 
   if ((firstByte & 0xe0) === 0xc0) {
-    // three bytes
+    // Three bytes.
     const secondThirdBytes = source.read(16);
 
     return ((firstByte & 0x1f) << 16) | secondThirdBytes;
@@ -78,7 +78,7 @@ function decodeAlphanumericSegment(source: BitSource, count: number, fnc1: boole
   }
 
   if (count === 1) {
-    // special case: one character left
+    // Special case: one character left.
     if (source.available() < 6) {
       throw new Error('illegal bits length');
     }
@@ -122,10 +122,10 @@ function decodeHanziSegment(source: BitSource, count: number): string {
     let assembledTwoBytes = ((twoBytes / 0x060) << 8) | twoBytes % 0x060;
 
     if (assembledTwoBytes < 0x00a00) {
-      // In the 0xA1A1 to 0xAAFE range
+      // In the 0xA1A1 to 0xAAFE range.
       assembledTwoBytes += 0x0a1a1;
     } else {
-      // In the 0xB0A1 to 0xFAFE range
+      // In the 0xB0A1 to 0xFAFE range.
       assembledTwoBytes += 0x0a6a1;
     }
 
@@ -154,10 +154,10 @@ function decodeKanjiSegment(source: BitSource, count: number): string {
     let assembledTwoBytes = ((twoBytes / 0x0c0) << 8) | twoBytes % 0x0c0;
 
     if (assembledTwoBytes < 0x01f00) {
-      // In the 0x8140 to 0x9FFC range
+      // In the 0x8140 to 0x9FFC range.
       assembledTwoBytes += 0x08140;
     } else {
-      // In the 0xE040 to 0xEBBF range
+      // In the 0xE040 to 0xEBBF range.
       assembledTwoBytes += 0x0c140;
     }
 
@@ -174,9 +174,9 @@ function decodeKanjiSegment(source: BitSource, count: number): string {
 function decodeNumericSegment(source: BitSource, count: number): string {
   let content = '';
 
-  // Read three digits at a time
+  // Read three digits at a time.
   while (count >= 3) {
-    // Each 10 bits encodes three digits
+    // Each 10 bits encodes three digits.
     if (source.available() < 10) {
       throw new Error('illegal bits length');
     }
@@ -195,7 +195,7 @@ function decodeNumericSegment(source: BitSource, count: number): string {
   }
 
   if (count === 2) {
-    // Two digits left over to read, encoded in 7 bits
+    // Two digits left over to read, encoded in 7 bits.
     if (source.available() < 7) {
       throw new Error('illegal bits length');
     }
@@ -209,7 +209,7 @@ function decodeNumericSegment(source: BitSource, count: number): string {
     content += NUMERIC_CHARACTERS.charAt(twoDigitsBits / 10);
     content += NUMERIC_CHARACTERS.charAt(twoDigitsBits % 10);
   } else if (count === 1) {
-    // One digit left over to read
+    // One digit left over to read.
     if (source.available() < 4) {
       throw new Error('illegal bits length');
     }
@@ -242,7 +242,7 @@ export function decode(codewords: Uint8Array, version: Version, decode: TextDeco
   do {
     // While still another segment to read...
     if (source.available() < 4) {
-      // OK, assume we're done. Really, a TERMINATOR mode should have been recorded here
+      // OK, assume we're done. Really, a TERMINATOR mode should have been recorded here.
       mode = Mode.TERMINATOR;
     } else {
       mode = fromModeBits(source.read(4));

@@ -28,7 +28,7 @@ export class BitSource {
 
     const bytes = this.#bytes;
 
-    // First, read remainder from current byte
+    // First, read remainder from current byte.
     if (bitOffset > 0) {
       const bitsLeft = 8 - bitOffset;
       const toRead = Math.min(length, bitsLeft);
@@ -45,14 +45,14 @@ export class BitSource {
       }
     }
 
-    // Next read whole bytes
+    // Next read whole bytes.
     if (length > 0) {
       while (length >= 8) {
         length -= 8;
         result = (result << 8) | (bytes[byteOffset++] & 0xff);
       }
 
-      // Finally read a partial byte
+      // Finally read a partial byte.
       if (length > 0) {
         const bitsToNotRead = 8 - length;
         const mask = (0xff >> bitsToNotRead) << bitsToNotRead;

@@ -7,13 +7,13 @@ import { toInt32 } from '/common/utils';
 import { PatternRatios } from './PatternRatios';
 
 type PatternRect = readonly [
-  // Left border center x
+  // Left border center x.
   left: number,
-  // Top border center y
+  // Top border center y.
   top: number,
-  // Right border center x
+  // Right border center x.
   right: number,
-  // Bottom border center y
+  // Bottom border center y.
   bottom: number
 ];
 

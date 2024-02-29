@@ -17,12 +17,12 @@ function sizeOfBlackWhiteBlackRun(matrix: BitMatrix, from: Point, to: Point): nu
   const { width, height } = matrix;
   const centerX = (from.x + to.x) / 2;
   const centerY = (from.y + to.y) / 2;
-  // Center point is already enough
+  // Center point is already enough.
   const center = new Point(centerX, centerY);
   const points = new PlotLine(from, center).points();
 
   for (const [x, y] of points) {
-    // Now count other way -- don't run off image though of course
+    // Now count other way -- don't run off image though of course.
     if (x < 0 || y < 0 || x >= width || y >= height) {
       if (state === 2) {
         return distance(from, new Point(x, y));
@@ -33,7 +33,7 @@ function sizeOfBlackWhiteBlackRun(matrix: BitMatrix, from: Point, to: Point): nu
 
     // Does current pixel mean we have moved white to black or vice versa?
     // Scanning black in state 0,2 and white in state 1, so if we find the wrong
-    // color, advance to next state or end if we are in state 2 already
+    // color, advance to next state or end if we are in state 2 already.
     if ((state === 1) === (matrix.get(x, y) === 1)) {
       if (state === 2) {
         return distance(from, new Point(x, y));
@@ -63,7 +63,7 @@ function sizeOfBlackWhiteBlackRunBothWays(matrix: BitMatrix, from: Point, to: Po
     return NaN;
   }
 
-  // Middle pixel is double-counted this way; subtract 1
+  // Middle pixel is double-counted this way; subtract 1.
   return size1 + size2 - 1;
 }
 

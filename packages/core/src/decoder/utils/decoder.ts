@@ -28,7 +28,7 @@ export function getDataBlocks(codewords: Uint8Array, version: Version, ecLevel: 
 
   const blocks: DataBlock[] = [];
 
-  // Now establish DataBlocks of the appropriate size and number of data codewords
+  // Now establish DataBlocks of the appropriate size and number of data codewords.
   for (const { count, numDataCodewords } of ecBlocks) {
     for (let i = 0; i < count; i++) {
       const numBlockCodewords = numECCodewordsPerBlock + numDataCodewords;
@@ -58,7 +58,7 @@ export function getDataBlocks(codewords: Uint8Array, version: Version, ecLevel: 
   longerBlocksStartAt++;
 
   // The last elements of result may be 1 element longer;
-  // first fill out as many elements as all of them have
+  // first fill out as many elements as all of them have.
   let codewordsOffset = 0;
 
   const shorterBlocksNumDataCodewords = shorterBlocksTotalCodewords - numECCodewordsPerBlock;
@@ -69,12 +69,12 @@ export function getDataBlocks(codewords: Uint8Array, version: Version, ecLevel: 
     }
   }
 
-  // Fill out the last data block in the longer ones
+  // Fill out the last data block in the longer ones.
   for (let j = longerBlocksStartAt; j < length; j++) {
     blocks[j].codewords[shorterBlocksNumDataCodewords] = codewords[codewordsOffset++];
   }
 
-  // Now add in error correction blocks
+  // Now add in error correction blocks.
   const max = blocks[0].codewords.length;
 
   for (let i = shorterBlocksNumDataCodewords; i < max; i++) {

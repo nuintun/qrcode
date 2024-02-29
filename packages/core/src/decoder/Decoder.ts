@@ -12,6 +12,10 @@ import { correctErrors, getDataBlocks } from './utils/decoder';
 import { decode as textDecode, TextDecode } from '/common/encoding';
 
 export interface Options {
+  /**
+   * @property decode
+   * @description Text decode function.
+   */
   decode?: TextDecode;
 }
 
@@ -45,10 +49,19 @@ function parse(
 export class Decoder {
   #decode: TextDecode;
 
+  /**
+   * @constructor
+   * @param options The options of decoder.
+   */
   constructor({ decode = textDecode }: Options = {}) {
     this.#decode = decode;
   }
 
+  /**
+   * @method decode
+   * @description Decode the qrcode matrix.
+   * @param matrix The qrcode matrix.
+   */
   public decode(matrix: BitMatrix): Decoded {
     let corrected = 0;
     let mirror = false;

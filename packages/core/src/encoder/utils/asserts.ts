@@ -20,7 +20,7 @@ export function assertCharset(charset: Charset): asserts charset {
 export function assertHints(hints: Hints): asserts hints {
   const { fnc1 } = hints;
 
-  // FNC1
+  // FNC1.
   if (fnc1 != null) {
     const [mode] = fnc1;
 

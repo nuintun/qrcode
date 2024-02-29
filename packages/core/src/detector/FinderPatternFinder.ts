@@ -74,7 +74,7 @@ export class FinderPatternFinder extends PatternFinder {
         const pattern1 = patterns[i1];
         const moduleSize1 = pattern1.moduleSize;
 
-        // Pattern 1 used
+        // Pattern 1 used.
         if (used.has(pattern1)) {
           continue;
         }
@@ -83,15 +83,15 @@ export class FinderPatternFinder extends PatternFinder {
           const pattern2 = patterns[i2];
           const moduleSize2 = pattern2.moduleSize;
 
-          // Pattern 1 used
+          // Pattern 1 used.
           if (used.has(pattern1)) {
             break;
           }
 
           if (
-            // Pattern 2 used
+            // Pattern 2 used.
             used.has(pattern2) ||
-            // Non equals module size
+            // Non equals module size.
             !isEqualsSize(moduleSize1, moduleSize2, DIFF_MODULE_SIZE_RATIO)
           ) {
             continue;
@@ -102,18 +102,18 @@ export class FinderPatternFinder extends PatternFinder {
             const moduleSize3 = pattern3.moduleSize;
 
             if (
-              // Pattern 1 used
+              // Pattern 1 used.
               used.has(pattern1) ||
-              // Pattern 2 used
+              // Pattern 2 used.
               used.has(pattern2)
             ) {
               break;
             }
 
             if (
-              // Non equals module size
+              // Non equals module size.
               !isEqualsSize(moduleSize1, moduleSize3, DIFF_MODULE_SIZE_RATIO) ||
-              // Non equals module size
+              // Non equals module size.
               !isEqualsSize(moduleSize2, moduleSize3, DIFF_MODULE_SIZE_RATIO)
             ) {
               continue;
@@ -169,7 +169,7 @@ export class FinderPatternFinder extends PatternFinder {
       scanlineUpdate(scanline, count);
       scanlineUpdate(scanlineBits, lastBit);
 
-      // Match pattern black-white-black-white-black
+      // Match pattern black-white-black-white-black.
       if (
         scanlineBits[0] === 1 &&
         scanlineBits[1] === 0 &&
@@ -187,7 +187,7 @@ export class FinderPatternFinder extends PatternFinder {
 
       // Burn off leading white pixels before anything else; if we start in the middle of
       // a white run, it doesn't make sense to count its length, since we don't know if the
-      // white run continued to the left of the start point
+      // white run continued to the left of the start point.
       while (x < right && !matrix.get(x, y)) {
         x++;
       }

@@ -5,7 +5,7 @@
 import { toInt32 } from './utils';
 import { ByteMatrix } from './ByteMatrix';
 
-// Penalty weights
+// Penalty weights.
 const N1 = 3;
 const N2 = 3;
 const N3 = 40;
@@ -37,9 +37,9 @@ function applyMaskPenaltyRule1Internal(matrix: ByteMatrix, isVertical?: boolean)
           penalty += N1 + (numSameBitCells - 5);
         }
 
-        // set prev bit
+        // set prev bit.
         prevBit = bit;
-        // include the cell itself
+        // include the cell itself.
         numSameBitCells = 1;
       }
     }
@@ -71,7 +71,7 @@ function applyMaskPenaltyRule2(matrix: ByteMatrix): number {
       const bit = matrix.get(x, y);
 
       if (
-        // Find 2x2 blocks with the same color
+        // Find 2x2 blocks with the same color.
         bit === matrix.get(x + 1, y) &&
         bit === matrix.get(x, y + 1) &&
         bit === matrix.get(x + 1, y + 1)
@@ -110,7 +110,7 @@ function applyMaskPenaltyRule3(matrix: ByteMatrix): number {
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       if (
-        // Find consecutive runs of 1:1:3:1:1:4 or 4:1:1:3:1:1, patterns like 000010111010000
+        // Find consecutive runs of 1:1:3:1:1:4 or 4:1:1:3:1:1, patterns like 000010111010000.
         x + 6 < size &&
         isDark(matrix, x, y) &&
         !isDark(matrix, x + 1, y) &&
@@ -125,7 +125,7 @@ function applyMaskPenaltyRule3(matrix: ByteMatrix): number {
       }
 
       if (
-        // Find consecutive runs of 1:1:3:1:1:4 or 4:1:1:3:1:1, patterns like 000010111010000
+        // Find consecutive runs of 1:1:3:1:1:4 or 4:1:1:3:1:1, patterns like 000010111010000.
         y + 6 < size &&
         isDark(matrix, x, y) &&
         !isDark(matrix, x, y + 1) &&

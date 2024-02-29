@@ -47,20 +47,36 @@ function getKanjiCode(character: string): number {
 export class Kanji {
   #content: string;
 
+  /**
+   * @constructor
+   * @param content The content to encode.
+   */
   constructor(content: string) {
     assertContent(content);
 
     this.#content = content;
   }
 
+  /**
+   * @property mode
+   * @description The mode of the segment.
+   */
   public get mode(): Mode {
     return Mode.KANJI;
   }
 
+  /**
+   * @property content
+   * @description The content of the segment.
+   */
   public get content(): string {
     return this.#content;
   }
 
+  /**
+   * @method encode
+   * @description Encode the segment.
+   */
   public encode(): BitArray {
     const bits = new BitArray();
     const content = this.#content;

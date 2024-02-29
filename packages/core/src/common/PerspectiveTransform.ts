@@ -36,7 +36,7 @@ export class PerspectiveTransform {
   }
 
   public buildAdjoint(): PerspectiveTransform {
-    // Adjoint is the transpose of the cofactor matrix:
+    // Adjoint is the transpose of the cofactor matrix.
     const a11 = this.#a11;
     const a12 = this.#a12;
     const a13 = this.#a13;
@@ -157,7 +157,7 @@ function quadrilateralToSquare(
   x3: number,
   y3: number
 ): PerspectiveTransform {
-  // Here, the adjoint serves as the inverse:
+  // Here, the adjoint serves as the inverse.
   return squareToQuadrilateral(x0, y0, x1, y1, x2, y2, x3, y3).buildAdjoint();
 }
 

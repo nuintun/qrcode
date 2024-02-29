@@ -9,16 +9,16 @@ import { ByteMatrix } from '/common/ByteMatrix';
 import { calculateBCHCode } from '/common/utils';
 import { Version, VERSIONS } from '/common/Version';
 
-// Format information poly: 101 0011 0111
+// Format information poly: 101 0011 0111.
 const FORMAT_INFO_POLY = 0x537;
 
-// Format information mask
+// Format information mask.
 const FORMAT_INFO_MASK = 0x5412;
 
-// Version information poly: 1 1111 0010 0101
+// Version information poly: 1 1111 0010 0101.
 const VERSION_INFO_POLY = 0x1f25;
 
-// Finder pattern shape
+// Finder pattern shape.
 const FINDER_PATTERN_SHAPE = [
   [1, 1, 1, 1, 1, 1, 1],
   [1, 0, 0, 0, 0, 0, 1],
@@ -29,7 +29,7 @@ const FINDER_PATTERN_SHAPE = [
   [1, 1, 1, 1, 1, 1, 1]
 ];
 
-// Alignment pattern shape
+// Alignment pattern shape.
 const ALIGNMENT_PATTERN_SHAPE = [
   [1, 1, 1, 1, 1],
   [1, 0, 0, 0, 1],
@@ -38,7 +38,7 @@ const ALIGNMENT_PATTERN_SHAPE = [
   [1, 1, 1, 1, 1]
 ];
 
-// Format information coordinates
+// Format information coordinates.
 const FORMAT_INFO_COORDINATES = [
   [8, 0],
   [8, 1],
@@ -342,12 +342,12 @@ function embedEncodingRegion(matrix: ByteMatrix, codewords: BitArray, version: V
 export function buildMatrix(codewords: BitArray, version: Version, ecLevel: ECLevel, mask: number): ByteMatrix {
   const matrix = new ByteMatrix(version.size);
 
-  // Clear matrix
+  // Clear matrix.
   matrix.clear(-1);
 
-  // Embed function patterns
+  // Embed function patterns.
   embedFunctionPatterns(matrix, version);
-  // Embed encoding region
+  // Embed encoding region.
   embedEncodingRegion(matrix, codewords, version, ecLevel, mask);
 
   return matrix;

@@ -10,9 +10,9 @@ export function round(value: number): number {
   return toInt32(value + (value < 0 ? -0.5 : 0.5));
 }
 
-// Get hamming weight of int32
+// Get hamming weight of int32.
 export function hammingWeight(value: number): number {
-  // HD, Figure 5-2
+  // HD, Figure 5-2.
   value = value - ((value >> 1) & 0x55555555);
   value = (value & 0x33333333) + ((value >> 2) & 0x33333333);
 
@@ -65,7 +65,7 @@ export function calculateBCHCode(value: number, poly: number): number {
     value ^= poly << (findMSBSet(value) - msbSetInPoly);
   }
 
-  // Now the "value" is the remainder (i.e. the BCH code)
+  // Now the "value" is the remainder (i.e. the BCH code).
   return value;
 }
 

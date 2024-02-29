@@ -15,6 +15,10 @@ import { AlignmentPatternFinder } from './AlignmentPatternFinder';
 import { MIN_VERSION_SIZE_WITH_ALIGNMENTS } from '/common/Version';
 
 export interface Options {
+  /**
+   * @property strict
+   * @description Enable strict mode.
+   */
   strict?: boolean;
 }
 
@@ -56,10 +60,18 @@ function findAlignmentInRegion(matrix: BitMatrix, finderPatternGroup: FinderPatt
 export class Detector {
   #options: Options;
 
+  /**
+   * @constructor
+   * @param options The options of detector.
+   */
   constructor(options: Options = {}) {
     this.#options = options;
   }
 
+  /**
+   * @method detect Detect the binarized image matrix.
+   * @param matrix The binarized image matrix.
+   */
   public *detect(matrix: BitMatrix): Generator<Detected, void, boolean> {
     const { strict } = this.#options;
     const { width, height } = matrix;
@@ -77,25 +89,25 @@ export class Detector {
       const finderPatternGroup = iterator.value;
       const size = FinderPatternGroup.size(finderPatternGroup);
 
-      // Find alignment
+      // Find alignment.
       if (size >= MIN_VERSION_SIZE_WITH_ALIGNMENTS) {
         // Kind of arbitrary -- expand search radius before giving up
-        // If we didn't find alignment pattern... well try anyway without it
+        // If we didn't find alignment pattern... well try anyway without it.
         const alignmentPatterns = findAlignmentInRegion(matrix, finderPatternGroup, strict);
 
-        // Founded alignment
+        // Founded alignment.
         for (const alignmentPattern of alignmentPatterns) {
           const transform = createTransform(finderPatternGroup, alignmentPattern);
 
           if (
-            // Top left to top right
+            // Top left to top right.
             checkMappingTimingLine(matrix, transform, size) &&
-            // Top left to bottom left
+            // Top left to bottom left.
             checkMappingTimingLine(matrix, transform, size, true)
           ) {
             succeed = yield new Detected(matrix, transform, finderPatternGroup, alignmentPattern);
 
-            // Succeed, skip next alignment pattern
+            // Succeed, skip next alignment pattern.
             if (succeed) {
               break;
             }
@@ -105,12 +117,12 @@ export class Detector {
         const transform = createTransform(finderPatternGroup);
 
         if (
-          // Top left to top right
+          // Top left to top right.
           checkMappingTimingLine(matrix, transform, size) &&
-          // Top left to bottom left
+          // Top left to bottom left.
           checkMappingTimingLine(matrix, transform, size, true)
         ) {
-          // No alignment pattern version
+          // No alignment pattern version.
           succeed = yield new Detected(matrix, transform, finderPatternGroup);
         }
       }

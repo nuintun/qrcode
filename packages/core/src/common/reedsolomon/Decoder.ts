@@ -11,7 +11,7 @@ function runEuclideanAlgorithm(
   b: Polynomial,
   ecLength: number
 ): [sigma: Polynomial, omega: Polynomial] {
-  // Assume a's degree is >= b's
+  // Assume a's degree is >= b's.
   if (a.getDegree() < b.getDegree()) {
     [a, b] = [b, a];
   }
@@ -21,7 +21,7 @@ function runEuclideanAlgorithm(
   let remainderLast = a;
   let termLast = field.zero;
 
-  // Run Euclidean algorithm until r's degree is less than ecLength/2
+  // Run Euclidean algorithm until r's degree is less than ecLength/2.
   while (2 * remainder.getDegree() >= ecLength) {
     let termLastLast = termLast;
     let remainderLastLast = remainderLast;
@@ -29,9 +29,9 @@ function runEuclideanAlgorithm(
     termLast = term;
     remainderLast = remainder;
 
-    // Divide remainder last last by remainder last, with quotient in quotient and remainder in remainder
+    // Divide remainder last last by remainder last, with quotient in quotient and remainder in remainder.
     if (remainderLast.isZero()) {
-      // Oops, euclidean algorithm already terminated ?
+      // Oops, euclidean algorithm already terminated?
       throw new Error('remainder last was zero');
     }
 
@@ -74,7 +74,7 @@ function runEuclideanAlgorithm(
 }
 
 function findErrorLocations(field: GaloisField, errorLocator: Polynomial): Int32Array {
-  // This is a direct application of Chien's search
+  // This is a direct application of Chien's search.
   const numErrors = errorLocator.getDegree();
 
   if (numErrors === 1) {
@@ -101,7 +101,7 @@ function findErrorLocations(field: GaloisField, errorLocator: Polynomial): Int32
 }
 
 function findErrorMagnitudes(field: GaloisField, errorEvaluator: Polynomial, errorLocations: Int32Array): Int32Array {
-  // This is directly applying Forney's Formula
+  // This is directly applying Forney's Formula.
   const { length } = errorLocations;
   const result = new Int32Array(length);
 
@@ -117,7 +117,7 @@ function findErrorMagnitudes(field: GaloisField, errorEvaluator: Polynomial, err
         //   1 ^ field.multiply(errorLocations[j], invert)
         // )
         // Above should work but fails on some Apple and Linux JDKs due to a Hotspot bug.
-        // Below is a funny-looking workaround from Steven Parkes
+        // Below is a funny-looking workaround from Steven Parkes.
         const term = field.multiply(errorLocations[j], invert);
         const termPlus1 = (term & 0x01) === 0 ? term | 1 : term & ~1;
 

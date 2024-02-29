@@ -19,7 +19,7 @@ export class GaloisField {
 
     for (let i = 0; i < size; i++) {
       expTable[i] = x;
-      // We're assuming the generator alpha is 2
+      // We're assuming the generator alpha is 2.
       x *= 2;
 
       if (x >= size) {
