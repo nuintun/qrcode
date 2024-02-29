@@ -58,7 +58,6 @@ export class BitMatrixParser {
     const version = decodeVersion(version1, version2);
 
     if (version.size > size) {
-      // TODO 重写错误消息
       throw new Error('matrix size too small for version');
     }
 
@@ -151,7 +150,6 @@ export class BitMatrixParser {
       readingUp = !readingUp;
     }
 
-    // TODO 重写错误消息
     if (byteOffset !== ecBlocks.numTotalCodewords) {
       throw new Error('illegal codewords length');
     }
