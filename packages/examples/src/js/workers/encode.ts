@@ -15,9 +15,6 @@ export interface EncodedError {
 }
 
 export interface EncodeMessage {
-  fnc1: string;
-  mode: string;
-  charset: string;
   content: string;
   quietZone: number;
   background: string;
@@ -25,10 +22,11 @@ export interface EncodeMessage {
   moduleSize: number;
   aimIndicator: number;
   version: 'Auto' | number;
+  fnc1: 'None' | 'GS1' | 'AIM';
   level: 'L' | 'M' | 'Q' | 'H';
+  charset: keyof typeof Charset;
+  mode: 'Auto' | 'Numeric' | 'Alphanumeric' | 'Byte' | 'Kanji' | 'Hanzi';
 }
-
-export type CharsetNames = keyof typeof Charset;
 
 export type EncodeResultMessage = EncodedOk | EncodedError;
 
@@ -79,7 +77,7 @@ function chooseBestMode({ mode, content, charset }: EncodeMessage): Byte | Hanzi
         // 跳过错误
       }
 
-      return new Byte(content, Charset[charset as CharsetNames]);
+      return new Byte(content, Charset[charset]);
     case 'Hanzi':
       return new Hanzi(content);
     case 'Kanji':
@@ -89,7 +87,7 @@ function chooseBestMode({ mode, content, charset }: EncodeMessage): Byte | Hanzi
     case 'Alphanumeric':
       return new Alphanumeric(content);
     default:
-      return new Byte(content, Charset[charset as CharsetNames]);
+      return new Byte(content, Charset[charset]);
   }
 }
 

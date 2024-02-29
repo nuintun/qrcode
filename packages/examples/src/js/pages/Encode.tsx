@@ -154,7 +154,7 @@ export default memo(function Encode() {
           </Col>
           <Col md={6} sm={12} xs={24}>
             <FormItem name="charset" label="字符编码">
-              <Select disabled={mode !== 'Auto'}>
+              <Select disabled={mode !== 'Auto' && mode !== 'Byte'}>
                 <Option value="ASCII">ASCII</Option>
                 <Option value="UTF_8">UTF-8</Option>
                 <Option value="ISO_8859_1">ISO-8859-1</Option>
