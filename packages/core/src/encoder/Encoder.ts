@@ -9,12 +9,12 @@ import {
   appendModeInfo,
   appendTerminator,
   calculateBitsNeeded,
-  chooseBestMask,
+  chooseBestMaskAndMatrix,
+  chooseRecommendVersion,
   Hints,
   injectECCodewords,
   isByteMode,
   isHanziMode,
-  recommendVersion,
   Segment,
   SegmentBlock,
   willFit
@@ -23,8 +23,6 @@ import { Encoded } from './Encoded';
 import { Charset } from '/common/Charset';
 import { ECLevel } from '/common/ECLevel';
 import { BitArray } from '/common/BitArray';
-import { buildMatrix } from './utils/matrix';
-import { ByteMatrix } from '/common/ByteMatrix';
 import { Version, VERSIONS } from '/common/Version';
 import { encode as contentEncode, TextEncode } from '/common/encoding';
 import { assertHints, assertLevel, assertVersion } from './utils/asserts';
@@ -106,7 +104,7 @@ export class Encoder {
     let version: Version;
 
     if (versionNumber === 'Auto') {
-      version = recommendVersion(segmentBlocks, ecLevel);
+      version = chooseRecommendVersion(segmentBlocks, ecLevel);
     } else {
       version = VERSIONS[versionNumber - 1];
 
@@ -131,11 +129,8 @@ export class Encoder {
 
     appendTerminator(headAndDataBits, ecBlocks.numTotalDataCodewords);
 
-    const matrix = new ByteMatrix(version.size);
     const codewords = injectECCodewords(headAndDataBits, ecBlocks);
-    const mask = chooseBestMask(matrix, codewords, version, ecLevel);
-
-    buildMatrix(matrix, codewords, version, ecLevel, mask);
+    const [mask, matrix] = chooseBestMaskAndMatrix(codewords, version, ecLevel);
 
     return new Encoded(matrix, version, ecLevel, mask);
   }

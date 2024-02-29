@@ -339,7 +339,9 @@ function embedEncodingRegion(matrix: ByteMatrix, codewords: BitArray, version: V
 
 // Build 2D matrix of QR Code from "codewords" with "ecLevel", "version" and "getMaskPattern". On
 // success, store the result in "matrix".
-export function buildMatrix(matrix: ByteMatrix, codewords: BitArray, version: Version, ecLevel: ECLevel, mask: number): void {
+export function buildMatrix(codewords: BitArray, version: Version, ecLevel: ECLevel, mask: number): ByteMatrix {
+  const matrix = new ByteMatrix(version.size);
+
   // Clear matrix
   matrix.clear(-1);
 
@@ -347,4 +349,6 @@ export function buildMatrix(matrix: ByteMatrix, codewords: BitArray, version: Ve
   embedFunctionPatterns(matrix, version);
   // Embed encoding region
   embedEncodingRegion(matrix, codewords, version, ecLevel, mask);
+
+  return matrix;
 }

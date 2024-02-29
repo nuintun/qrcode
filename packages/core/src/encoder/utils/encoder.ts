@@ -210,7 +210,7 @@ export function calculateBitsNeeded(segmentBlocks: SegmentBlock[], version: Vers
   return bitsNeeded;
 }
 
-export function recommendVersion(segmentBlocks: SegmentBlock[], ecLevel: ECLevel): Version {
+export function chooseRecommendVersion(segmentBlocks: SegmentBlock[], ecLevel: ECLevel): Version {
   // Hard part: need to know version to know how many bits length takes. But need to know how many
   // bits it takes to know version. First we take a guess at version by assuming version will be
   // the minimum, 1:
@@ -222,22 +222,27 @@ export function recommendVersion(segmentBlocks: SegmentBlock[], ecLevel: ECLevel
   return chooseVersion(bitsNeeded, ecLevel);
 }
 
-export function chooseBestMask(matrix: ByteMatrix, bits: BitArray, version: Version, ecLevel: ECLevel): number {
-  let bestMask = -1;
-  // Lower penalty is better.
-  let minPenalty = Number.MAX_VALUE;
+export function chooseBestMaskAndMatrix(
+  bits: BitArray,
+  version: Version,
+  ecLevel: ECLevel
+): [mask: number, matrix: ByteMatrix] {
+  let bestMask = 0;
+  let bestMatrix = buildMatrix(bits, version, ecLevel, bestMask);
+  let minPenalty = calculateMaskPenalty(bestMatrix);
 
-  // We try all mask patterns to choose the best one.
-  for (let mask = 0; mask < 8; mask++) {
-    buildMatrix(matrix, bits, version, ecLevel, mask);
-
+  // We try all rest mask patterns to choose the best one.
+  for (let mask = 1; mask < 8; mask++) {
+    const matrix = buildMatrix(bits, version, ecLevel, mask);
     const penalty = calculateMaskPenalty(matrix);
 
+    // Lower penalty is better.
     if (penalty < minPenalty) {
       bestMask = mask;
+      bestMatrix = matrix;
       minPenalty = penalty;
     }
   }
 
-  return bestMask;
+  return [bestMask, bestMatrix];
 }
