@@ -256,7 +256,6 @@ export default memo(function Encode() {
   const lockRef = useRef(false);
   const workerRef = useRef<Worker>();
   const [form] = useForm<FormValues>();
-  const image = useWatch(['image'], form);
   const currentLocateRef = useRef<string>();
   const [loading, setLoading] = useLazyState(false);
   const [state, setState] = useState<DecodeResultMessage>();
@@ -268,6 +267,8 @@ export default memo(function Encode() {
       invert: false
     };
   }, []);
+
+  const image = useWatch(['image'], form) ?? initialValues.image;
 
   const onFinish = useCallback((values: FormValues) => {
     const worker = workerRef.current;
