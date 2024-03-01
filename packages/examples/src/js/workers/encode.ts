@@ -31,7 +31,7 @@ export interface EncodeMessage {
 export type EncodeResultMessage = EncodedOk | EncodedError;
 
 function hex2rgb(hex: string): [R: number, G: number, B: number] {
-  const value = parseInt(`0x${hex.slice(1, 7)}`);
+  const value = parseInt(hex.slice(1, 7), 16);
 
   return [(value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff];
 }
