@@ -253,6 +253,8 @@ image.addEventListener('load', () => {
       // Decode failed, skipping...
     }
 
+    // Notice: pass succeed to next() is very important,
+    // This can significantly reduce the number of detections.
     iterator = detected.next(succeed);
   }
 });
