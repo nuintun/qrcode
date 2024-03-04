@@ -182,7 +182,7 @@ declare interface DetectorOptions {
 }
 
 declare class Detector {
-  constructor(options?: DetectorOptions);
+  public constructor(options?: DetectorOptions);
   public detect(binarized: BitMatrix): Generator<Detected, void, boolean>;
 }
 
@@ -191,7 +191,7 @@ declare interface DecoderOptions {
 }
 
 declare class Decoder {
-  constructor(options?: DecoderOptions);
+  public constructor(options?: DecoderOptions);
   public decode(matrix: BitMatrix): Decoded;
 }
 ```
