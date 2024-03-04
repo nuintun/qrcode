@@ -24,7 +24,7 @@
 #### Common Interface
 
 ```ts
-declare class Charset {
+export class Charset {
   public static readonly CP437: Charset;
   public static readonly ISO_8859_1: Charset;
   public static readonly ISO_8859_2: Charset;
@@ -61,27 +61,27 @@ declare type FNC1 = [mode: 'GS1'] | [mode: 'AIM', indicator: number];
 #### Encoder Interface
 
 ```ts
-declare class Alphanumeric {
+export class Alphanumeric {
   public constructor(content: string);
 }
 
-declare class Byte {
+export class Byte {
   public constructor(content: string, charset?: Charset);
 }
 
-declare class Hanzi {
+export class Hanzi {
   public constructor(content: string);
 }
 
-declare class Kanji {
+export class Kanji {
   public constructor(content: string);
 }
 
-declare class Numeric {
+export class Numeric {
   public constructor(content: string);
 }
 
-declare interface EncoderOptions {
+export interface EncoderOptions {
   hints?: { fnc1?: FNC1 };
   version?: 'Auto' | number;
   level?: 'L' | 'M' | 'Q' | 'H';
@@ -94,7 +94,7 @@ declare interface DataURLOptions {
   background?: [R: number, G: number, B: number];
 }
 
-declare class Encoded {
+export class Encoded {
   public size: number;
   public mask: number;
   public level: string;
@@ -103,7 +103,7 @@ declare class Encoded {
   public toDataURL(moduleSize: number, options?: DataURLOptions): string;
 }
 
-declare class Encoder {
+export class Encoder {
   public constructor(options?: EncoderOptions);
   public encode(...segments: (Alphanumeric | Byte | Hanzi | Kanji | Numeric)[]): Encoded;
 }
@@ -133,13 +133,7 @@ console.log(qrcode.toDataURL());
 #### Decoder Interface
 
 ```ts
-declare interface Structured {
-  readonly index: number;
-  readonly count: number;
-  readonly parity: number;
-}
-
-declare class BitMatrix {
+export class BitMatrix {
   public constructor(width: number, height: number, bits?: Int32Array);
   public get width(): number;
   public get height(): number;
@@ -151,12 +145,12 @@ declare class BitMatrix {
   public setRegion(left: number, top: number, width: number, height: number): void;
 }
 
-declare class Point {
+export class Point {
   public get x(): number;
   public get y(): number;
 }
 
-declare class Pattern extends Point {
+export class Pattern extends Point {
   public get moduleSize(): number;
 }
 
@@ -166,7 +160,7 @@ declare class FinderPatternGroup {
   public get bottomLeft(): Pattern;
 }
 
-declare class Detected {
+export class Detected {
   public get matrix(): BitMatrix;
   public get finder(): FinderPatternGroup;
   public get alignment(): Pattern | undefined;
@@ -175,7 +169,13 @@ declare class Detected {
   public mapping(x: number, y: number): Point;
 }
 
-declare class Decoded {
+declare interface Structured {
+  readonly index: number;
+  readonly count: number;
+  readonly parity: number;
+}
+
+export class Decoded {
   public get mask(): number;
   public get level(): string;
   public get version(): number;
@@ -188,24 +188,24 @@ declare class Decoded {
   public get structured(): Structured | false;
 }
 
-declare function grayscale(imageData: ImageData): Uint8Array;
+export function grayscale(imageData: ImageData): Uint8Array;
 
-declare function binarize(luminances: Uint8Array, width: number, height: number): BitMatrix;
+export function binarize(luminances: Uint8Array, width: number, height: number): BitMatrix;
 
-declare interface DetectorOptions {
+export interface DetectorOptions {
   strict?: boolean;
 }
 
-declare class Detector {
+export class Detector {
   public constructor(options?: DetectorOptions);
   public detect(binarized: BitMatrix): Generator<Detected, void, boolean>;
 }
 
-declare interface DecoderOptions {
+export interface DecoderOptions {
   decode?: (bytes: Uint8Array, charset: Charset) => string;
 }
 
-declare class Decoder {
+export class Decoder {
   public constructor(options?: DecoderOptions);
   public decode(matrix: BitMatrix): Decoded;
 }
