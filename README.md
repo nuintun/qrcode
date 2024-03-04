@@ -138,6 +138,7 @@ console.log(qrcode.toDataURL());
 
 ```ts
 declare class BitMatrix {
+  public constructor(width: number, height: number, bits?: Int32Array);
   public get width(): number;
   public get height(): number;
   public set(x: number, y: number): void;
