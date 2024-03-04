@@ -54,17 +54,13 @@ declare class Charset {
   public static readonly EUC_KR: Charset;
   public constructor(label: string, ...values: number[]);
 }
+
+declare type FNC1 = [mode: 'GS1'] | [mode: 'AIM', indicator: number];
 ```
 
 #### Encoder Interface
 
 ```ts
-declare type Level = 'L' | 'M' | 'Q' | 'H';
-
-declare type RGB = [R: number, G: number, B: number];
-
-declare type FNC1 = [mode: 'GS1'] | [mode: 'AIM', indicator: number];
-
 declare class Alphanumeric {
   public constructor(content: string);
 }
@@ -86,22 +82,22 @@ declare class Numeric {
 }
 
 declare interface EncoderOptions {
-  level?: Level;
   hints?: { fnc1?: FNC1 };
   version?: 'Auto' | number;
+  level?: 'L' | 'M' | 'Q' | 'H';
   encode?: (content: string, charset: Charset) => Uint8Array;
 }
 
 declare interface DataURLOptions {
   margin?: number;
-  foreground?: RGB;
-  background?: RGB;
+  foreground?: [R: number, G: number, B: number];
+  background?: [R: number, G: number, B: number];
 }
 
 declare class Encoded {
   public size: number;
   public mask: number;
-  public level: Level;
+  public level: string;
   public version: number;
   public get(x: number, y: number): number;
   public toDataURL(moduleSize: number, options?: DataURLOptions): string;
@@ -137,6 +133,12 @@ console.log(qrcode.toDataURL());
 #### Decoder Interface
 
 ```ts
+declare interface Structured {
+  readonly index: number;
+  readonly count: number;
+  readonly parity: number;
+}
+
 declare class BitMatrix {
   public constructor(width: number, height: number, bits?: Int32Array);
   public get width(): number;
@@ -171,6 +173,19 @@ declare class Detected {
   public get size(): number;
   public get moduleSize(): number;
   public mapping(x: number, y: number): Point;
+}
+
+declare class Decoded {
+  public get mask(): number;
+  public get level(): string;
+  public get version(): number;
+  public get mirror(): boolean;
+  public get content(): string;
+  public get corrected(): number;
+  public get symbology(): string;
+  public get fnc1(): FNC1 | false;
+  public get codewords(): Uint8Array;
+  public get structured(): Structured | false;
 }
 
 declare function grayscale(imageData: ImageData): Uint8Array;
