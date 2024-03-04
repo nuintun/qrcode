@@ -143,6 +143,9 @@ declare class BitMatrix {
   public set(x: number, y: number): void;
   public get(x: number, y: number): number;
   public flip(): void;
+  public flip(x: number, y: number): void;
+  public clone(): BitMatrix;
+  public setRegion(left: number, top: number, width: number, height: number): void;
 }
 
 declare class Point {
