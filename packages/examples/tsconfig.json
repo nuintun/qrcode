@@ -8,7 +8,6 @@
     "jsx": "preserve",
     "module": "ESNext",
     "target": "ESNext",
-    "incremental": true,
     "skipLibCheck": true,
     "noUnusedLocals": true,
     "esModuleInterop": true,
