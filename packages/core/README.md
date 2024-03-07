@@ -21,7 +21,7 @@
 
 ### Usage
 
-#### Common Interface
+##### Common Interface
 
 ```ts
 export class Charset {
@@ -58,7 +58,7 @@ export class Charset {
 declare type FNC1 = [mode: 'GS1'] | [mode: 'AIM', indicator: number];
 ```
 
-#### Encoder Interface
+##### Encoder Interface
 
 ```ts
 export class Alphanumeric {
@@ -109,7 +109,7 @@ export class Encoder {
 }
 ```
 
-#### Encoder Example
+##### Encoder Example
 
 ```ts
 import { Byte, Encoder, Hanzi, Kanji } from '@nuintun/qrcode';
@@ -130,7 +130,7 @@ const qrcode = encoder.encode(
 console.log(qrcode.toDataURL());
 ```
 
-#### Decoder Interface
+##### Decoder Interface
 
 ```ts
 export class BitMatrix {
@@ -211,7 +211,7 @@ export class Decoder {
 }
 ```
 
-#### Decoder Example
+##### Decoder Example
 
 ```ts
 import { binarize, Decoder, Detector, grayscale } from '@nuintun/qrcode';
