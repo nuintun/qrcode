@@ -290,4 +290,4 @@ image.src = 'https://nuintun.github.io/qrcode/packages/examples/src/images/qrcod
 [side-effect-image]: https://img.shields.io/badge/side--effect-free-brightgreen?style=flat-square
 [bundle-phobia-url]: https://bundlephobia.com/result?p=@nuintun/qrcode
 [license-image]: https://img.shields.io/github/license/nuintun/qrcode?style=flat-square
-[license-url]: https://github.com/nuintun/qrcode/blob/master/LICENSE
+[license-url]: https://github.com/nuintun/qrcode/blob/main/packages/core/LICENSE
