@@ -6,6 +6,7 @@ import Icon from '@ant-design/icons';
 import Clipboard from '/js/components/Clipboard';
 import useLazyState from '/js/hooks/useLazyState';
 import ImagePicker from '/js/components/ImagePicker';
+import { createMarkup, syntaxHighlight } from '/js/utils/utils';
 import { LocateMessage, LocateResultMessage } from '/js/workers/locate';
 import { DecodedItem, DecodeMessage, DecodeResultMessage } from '/js/workers/decode';
 import { Alert, App, Button, Col, Collapse, CollapseProps, Form, Image, ImageProps, Modal, Row, Switch, Tooltip } from 'antd';
@@ -189,8 +190,15 @@ const Details = memo(function Details({ name, item }: DetailsProps) {
 
   const details = useMemo(() => {
     const { content, ...details } = item;
+    const json = JSON.stringify(details, null, 2);
 
-    return JSON.stringify(details, null, 2);
+    return syntaxHighlight(json, {
+      key: styles.key,
+      null: styles.null,
+      number: styles.number,
+      string: styles.string,
+      boolean: styles.boolean
+    });
   }, [item]);
 
   return (
@@ -208,7 +216,7 @@ const Details = memo(function Details({ name, item }: DetailsProps) {
           </Button>
         )}
       >
-        <pre className={styles.details}>{details}</pre>
+        <code className={styles.details} dangerouslySetInnerHTML={createMarkup(details)} />
       </Modal>
     </>
   );

@@ -54,9 +54,31 @@
 .details {
   margin: 0;
   padding: 8px;
+  display: block;
+  overflow: auto;
   max-height: 386px;
   white-space: pre-wrap;
   word-wrap: break-word;
   border: 1px solid #d9d9d9;
   background-color: rgba(0, 0, 0, 0.02);
+
+  .key {
+    color: red;
+  }
+
+  .null {
+    color: magenta;
+  }
+
+  .number {
+    color: darkorange;
+  }
+
+  .string {
+    color: green;
+  }
+
+  .boolean {
+    color: blue;
+  }
 }
