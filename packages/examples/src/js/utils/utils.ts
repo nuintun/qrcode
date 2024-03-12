@@ -2,8 +2,6 @@
  * @module utils
  */
 
-import { DOMAttributes } from 'react';
-
 /**
  * @function isFunction
  * @description 是否为函数
