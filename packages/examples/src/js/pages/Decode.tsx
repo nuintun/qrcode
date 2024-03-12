@@ -207,6 +207,7 @@ const Details = memo(function Details({ name, item }: DetailsProps) {
         <InfoCircleOutlined onClick={onClick} />
       </Tooltip>
       <Modal
+        centered
         title={name}
         open={isModalOpen}
         onCancel={onCancel}
