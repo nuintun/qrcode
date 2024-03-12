@@ -209,6 +209,7 @@ const Details = memo(function Details({ name, item }: DetailsProps) {
       <Modal
         centered
         title={name}
+        destroyOnClose
         open={isModalOpen}
         onCancel={onCancel}
         footer={() => (
