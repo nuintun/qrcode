@@ -2,7 +2,7 @@
  * @module decode
  */
 
-import { binarize, Decoder, Detector, grayscale, Pattern as IPattern, Point as IPoint } from '@nuintun/qrcode';
+import { binarize, Decoded, Decoder, Detector, grayscale, Pattern as IPattern, Point as IPoint } from '@nuintun/qrcode';
 
 export interface Point {
   x: number;
@@ -36,8 +36,7 @@ export interface Pattern extends Point {
 
 export type DecodeResultMessage = DecodedOk | DecodedError;
 
-export interface DecodedItem {
-  content: string;
+export interface DecodedItem extends Omit<Decoded, 'codewords'> {
   alignment: Pattern | null;
   timing: [topLeft: Point, topRight: Point, bottomLeft: Point];
   finder: [topLeft: Pattern, topRight: Pattern, bottomLeft: Pattern];
@@ -102,7 +101,15 @@ self.addEventListener('message', async ({ data }: MessageEvent<DecodeMessage>) =
       const bottomLeftTiming = detect.mapping(6.5, size - 6.5);
 
       success.push({
+        fnc1: decoded.fnc1,
+        mask: decoded.mask,
+        level: decoded.level,
+        mirror: decoded.mirror,
         content: decoded.content,
+        version: decoded.version,
+        corrected: decoded.corrected,
+        symbology: decoded.symbology,
+        structured: decoded.structured,
         alignment: alignment ? toPattern(alignment) : null,
         finder: [toPattern(topLeft), toPattern(topRight), toPattern(bottomLeft)],
         timing: [toPoint(topLeftTiming), toPoint(topRightTiming), toPoint(bottomLeftTiming)],

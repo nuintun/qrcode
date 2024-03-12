@@ -19,11 +19,11 @@ export interface LocateMessage {
   items: LocateItem[];
 }
 
-export type LocateItem = Omit<DecodedItem, 'content'>;
-
 export type LocateResultMessage = LocateOk | LocateError;
 
 export type Context2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+
+export type LocateItem = Pick<DecodedItem, 'timing' | 'finder' | 'corners' | 'alignment'>;
 
 function markPattern(context: Context2D, { x, y, moduleSize }: Pattern, fillStyle: string): void {
   context.save();

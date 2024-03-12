@@ -8,17 +8,49 @@ import useLazyState from '/js/hooks/useLazyState';
 import ImagePicker from '/js/components/ImagePicker';
 import { LocateMessage, LocateResultMessage } from '/js/workers/locate';
 import { DecodedItem, DecodeMessage, DecodeResultMessage } from '/js/workers/decode';
-import { Alert, App, Button, Col, Collapse, CollapseProps, Form, Image, ImageProps, Row, Switch, Tooltip } from 'antd';
+import { Alert, App, Button, Col, Collapse, CollapseProps, Form, Image, ImageProps, Modal, Row, Switch, Tooltip } from 'antd';
 
 import qrcode from '/images/qrcode.jpg';
 import favicon from '/images/favicon.ico';
 import DncodeIcon from '/images/decode.svg';
 import LocateIcon from '/images/locate.svg';
 import UploadIcon from '/images/upload.svg';
-import { LoadingOutlined } from '@ant-design/icons';
+import { InfoCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 
 const { useApp } = App;
 const { Item: FormItem, useForm, useWatch } = Form;
+
+interface OverviewLocateProps {
+  state?: DecodeResultMessage;
+  currentRef: React.MutableRefObject<string | undefined>;
+}
+
+const OverviewLocate = memo(function OverviewLocate({ state, currentRef }: OverviewLocateProps) {
+  if (state && state.type === 'ok') {
+    const { payload } = state;
+    const { uid, image, items } = payload;
+
+    return (
+      <Locate
+        key={uid}
+        uid={uid}
+        name="概览"
+        image={image}
+        items={items}
+        currentRef={currentRef}
+        trigger={(loading, onClick) => {
+          return (
+            <Button loading={loading} onClick={onClick} icon={<Icon component={LocateIcon} />}>
+              概览
+            </Button>
+          );
+        }}
+      />
+    );
+  }
+
+  return null;
+});
 
 interface LocateProps {
   uid: string;
@@ -139,36 +171,47 @@ const Locate = memo(function Locate({ uid, name, items, image, trigger, currentR
   );
 });
 
-interface OverviewLocateProps {
-  state?: DecodeResultMessage;
-  currentRef: React.MutableRefObject<string | undefined>;
+interface DetailsProps {
+  name: string;
+  item: DecodedItem;
 }
 
-const OverviewLocate = memo(function Overview({ state, currentRef }: OverviewLocateProps) {
-  if (state && state.type === 'ok') {
-    const { payload } = state;
-    const { uid, image, items } = payload;
+const Details = memo(function Details({ name, item }: DetailsProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-    return (
-      <Locate
-        key={uid}
-        uid={uid}
-        name="概览"
-        image={image}
-        items={items}
-        currentRef={currentRef}
-        trigger={(loading, onClick) => {
-          return (
-            <Button loading={loading} onClick={onClick} icon={<Icon component={LocateIcon} />}>
-              概览
-            </Button>
-          );
-        }}
-      />
-    );
-  }
+  const onClick = useCallback(() => {
+    setIsModalOpen(true);
+  }, []);
 
-  return null;
+  const onCancel = useCallback(() => {
+    setIsModalOpen(false);
+  }, []);
+
+  const details = useMemo(() => {
+    const { content, ...details } = item;
+
+    return JSON.stringify(details, null, 2);
+  }, [item]);
+
+  return (
+    <>
+      <Tooltip title="详情">
+        <InfoCircleOutlined onClick={onClick} />
+      </Tooltip>
+      <Modal
+        title={name}
+        open={isModalOpen}
+        onCancel={onCancel}
+        footer={() => (
+          <Button type="primary" onClick={onCancel}>
+            确定
+          </Button>
+        )}
+      >
+        <pre className={styles.details}>{details}</pre>
+      </Modal>
+    </>
+  );
 });
 
 interface ResultProps {
@@ -217,6 +260,7 @@ const Result = memo(function Result({ state, currentRef }: ResultProps) {
                   );
                 }}
               />
+              <Details name={`${label}详情`} item={item} />
             </div>
           )
         };
