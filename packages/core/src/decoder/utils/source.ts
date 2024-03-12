@@ -265,8 +265,8 @@ export function decode(codewords: Uint8Array, version: Version, decode: TextDeco
 
         structured = Object.freeze<Structured>({
           index: source.read(4),
-          parity: source.read(8),
-          count: source.read(4) + 1
+          count: source.read(4) + 1,
+          parity: source.read(8)
         });
         break;
       case Mode.ECI:
