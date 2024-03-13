@@ -15,7 +15,6 @@
     "moduleResolution": "Node",
     "noImplicitOverride": true,
     "noUnusedParameters": true,
-    "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true,
     "lib": [
       "DOM",
