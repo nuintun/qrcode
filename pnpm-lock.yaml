@@ -53,8 +53,8 @@ importers:
   packages/examples:
     dependencies:
       '@ant-design/icons':
-        specifier: ^5.3.2
-        version: 5.3.2(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^5.3.3
+        version: 5.3.3(react-dom@18.2.0)(react@18.2.0)
       '@nuintun/qrcode':
         specifier: workspace:*
         version: link:../core
@@ -200,8 +200,8 @@ packages:
     resolution: {integrity: sha512-vHbT+zJEVzllwP+CM+ul7reTEfBR0vgxFe7+lREAsAA7YGsYpboiq2sQNeQeRvh09GfQgs/GyFEvZpJ9cLXpXA==}
     dev: false
 
-  /@ant-design/icons@5.3.2(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-+07UzOrzMJGl62K1nMiS2IpJu7uRIlO05fHVZidhkiE10szJofKrBymAEYhDMsKaRKfpbgbGgpAnb3T4uFzwVw==}
+  /@ant-design/icons@5.3.3(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-Zfci1s4f4+vfpVD6ksmmPuBv00SB/slpUAQlsBlMeRJdSleVVkgTUdlBM4j/vGzqYfMh2hF8/Poa1VSh542w0Q==}
     engines: {node: '>=8'}
     peerDependencies:
       react: '>=16.0.0'
@@ -1191,7 +1191,7 @@ packages:
     dependencies:
       '@ant-design/colors': 7.0.2
       '@ant-design/cssinjs': 1.18.4(react-dom@18.2.0)(react@18.2.0)
-      '@ant-design/icons': 5.3.2(react-dom@18.2.0)(react@18.2.0)
+      '@ant-design/icons': 5.3.3(react-dom@18.2.0)(react@18.2.0)
       '@ant-design/react-slick': 1.0.2(react@18.2.0)
       '@babel/runtime': 7.24.0
       '@ctrl/tinycolor': 3.6.1
