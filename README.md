@@ -25,14 +25,14 @@
 
 ```ts
 export class Charset {
-  public static readonly CP437: Charset;
-  public static readonly ISO_8859_1: Charset;
-  public static readonly ISO_8859_2: Charset;
-  public static readonly ISO_8859_3: Charset;
-  public static readonly ISO_8859_4: Charset;
-  public static readonly ISO_8859_5: Charset;
-  public static readonly ISO_8859_6: Charset;
-  public static readonly ISO_8859_7: Charset;
+  static readonly CP437: Charset;
+  static readonly ISO_8859_1: Charset;
+  static readonly ISO_8859_2: Charset;
+  static readonly ISO_8859_3: Charset;
+  static readonly ISO_8859_4: Charset;
+  static readonly ISO_8859_5: Charset;
+  static readonly ISO_8859_6: Charset;
+  static readonly ISO_8859_7: Charset;
   public static readonly ISO_8859_8: Charset;
   public static readonly ISO_8859_9: Charset;
   public static readonly ISO_8859_10: Charset;
@@ -41,7 +41,7 @@ export class Charset {
   public static readonly ISO_8859_14: Charset;
   public static readonly ISO_8859_15: Charset;
   public static readonly ISO_8859_16: Charset;
-  public static readonly SJIS: Charset;
+  public static readonly SHIFT_JIS: Charset;
   public static readonly CP1250: Charset;
   public static readonly CP1251: Charset;
   public static readonly CP1252: Charset;
@@ -50,8 +50,14 @@ export class Charset {
   public static readonly UTF_8: Charset;
   public static readonly ASCII: Charset;
   public static readonly BIG5: Charset;
-  public static readonly GB18030: Charset;
+  public static readonly GB2312: Charset;
   public static readonly EUC_KR: Charset;
+  public static readonly GB18030: Charset;
+  public static readonly UTF_16LE: Charset;
+  public static readonly UTF_32BE: Charset;
+  public static readonly UTF_32LE: Charset;
+  public static readonly ISO_646_INV: Charset;
+  public static readonly BINARY: Charset;
   public constructor(label: string, ...values: number[]);
 }
 
