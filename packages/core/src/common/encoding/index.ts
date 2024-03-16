@@ -17,15 +17,19 @@ function getGB2312Codes(content: string): Uint8Array {
   const bytes: number[] = [];
 
   for (const character of content) {
-    const code = GB2312_MAPPING.get(character);
+    let code = GB2312_MAPPING.get(character);
 
-    bytes.push(code != null ? code : 63);
+    // If not found, push "？".
+    code = code != null ? code : 41919;
+
+    // Push two bytes.
+    bytes.push((code >> 8) & 0xff, code & 0xff);
   }
 
   return new Uint8Array(bytes);
 }
 
-function getUnicodeCodes(content: string, maxCode: number): Uint8Array {
+function getASCIICodes(content: string, maxCode: number): Uint8Array {
   const bytes: number[] = [];
 
   for (const character of content) {
@@ -44,9 +48,9 @@ export function encode(content: string, charset: Charset): Uint8Array {
       return getGB2312Codes(content);
     case Charset.ASCII:
     case Charset.ISO_646_INV:
-      return getUnicodeCodes(content, 0x7f);
+      return getASCIICodes(content, 0x7f);
     case Charset.ISO_8859_1:
-      return getUnicodeCodes(content, 0xff);
+      return getASCIICodes(content, 0xff);
     case Charset.UTF_8:
       return new TextEncoder().encode(content);
     default:
