@@ -198,7 +198,7 @@
  * @author nuintun <nuintun@qq.com>
  * @description A pure JavaScript QRCode encode and decode library.
  * @see https://github.com/nuintun/qrcode#readme
- */function(e){let t=[];for(let n of e){let e=u.get(n);t.push(null!=e?e:63)}return new Uint8Array(t)}(e));case o.ASCII:case o.ISO_646_INV:return es(e,127);case o.ISO_8859_1:return es(e,255);case o.UTF_8:return new TextEncoder().encode(e);default:throw Error(`built-in encode not support charset: ${t.label}`)}}/**
+ */function(e){let t=[];for(let n of e){let e=u.get(n);e=null!=e?e:41919,t.push(e>>8&255,255&e)}return new Uint8Array(t)}(e));case o.ASCII:case o.ISO_646_INV:return es(e,127);case o.ISO_8859_1:return es(e,255);case o.UTF_8:return new TextEncoder().encode(e);default:throw Error(`built-in encode not support charset: ${t.label}`)}}/**
  * @module QRCode
  * @package @nuintun/qrcode
  * @license MIT
