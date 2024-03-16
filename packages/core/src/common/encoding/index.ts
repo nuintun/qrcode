@@ -22,7 +22,7 @@ function getGB2312Codes(content: string): Uint8Array {
     // If not found, push "？".
     code = code != null ? code : 41919;
 
-    // Push two bytes.
+    // Write with big endian.
     bytes.push((code >> 8) & 0xff, code & 0xff);
   }
 
