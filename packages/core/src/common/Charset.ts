@@ -16,9 +16,9 @@ export function fromCharsetValue(value: number): Charset {
 
 export class Charset {
   #label: string;
-  #values: number[];
+  #values: readonly number[];
 
-  public static readonly CP437 = new Charset('cp437', 0, 2);
+  public static readonly CP437 = new Charset('cp437', 2, 0);
   public static readonly ISO_8859_1 = new Charset('iso-8859-1', 3, 1);
   public static readonly ISO_8859_2 = new Charset('iso-8859-2', 4);
   public static readonly ISO_8859_3 = new Charset('iso-8859-3', 5);
@@ -59,7 +59,7 @@ export class Charset {
    */
   constructor(label: string, ...values: number[]) {
     this.#label = label;
-    this.#values = values;
+    this.#values = Object.freeze(values);
 
     for (const value of values) {
       VALUES_TO_CHARSET.set(value, this);
@@ -78,7 +78,7 @@ export class Charset {
    * @property values
    * @description Get the values of charset.
    */
-  public get values(): number[] {
+  public get values(): readonly number[] {
     return this.#values;
   }
 }
