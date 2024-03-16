@@ -1,10 +1,10 @@
 /**
- * @module BookStream
+ * @module DictStream
  * @see https://github.com/google/dart-gif-encoder
  */
 
 import { Dict } from './Dict';
-import { ByteStream } from '/common/gif/ByteStream';
+import { ByteStream } from '/common/image/utils/ByteStream';
 
 export class DictStream {
   #bits = 0;

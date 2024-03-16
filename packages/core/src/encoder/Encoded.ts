@@ -5,8 +5,8 @@
 import { toInt32 } from '/common/utils';
 import { ECLevel } from '/common/ECLevel';
 import { Version } from '/common/Version';
-import { Colors, GIFImage } from '/common/gif';
 import { ByteMatrix } from '/common/ByteMatrix';
+import { Colors, GIFImage } from '/common/image/GIFImage';
 
 export class Encoded {
   #mask: number;

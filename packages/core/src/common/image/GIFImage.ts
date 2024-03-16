@@ -1,10 +1,10 @@
 /**
- * @module index
+ * @module GIFImage
  */
 
-import { compress } from './lzw';
-import { ByteStream } from './ByteStream';
-import { Base64Stream, fromCharCode } from './Base64Stream';
+import { compress } from './utils/lzw';
+import { ByteStream } from './utils/ByteStream';
+import { Base64Stream, fromCharCode } from './utils/Base64Stream';
 
 export type RGB = [
   // Red.

@@ -5,7 +5,7 @@
 
 import { Dict } from './Dict';
 import { DictStream } from './DictStream';
-import { ByteStream } from '/common/gif/ByteStream';
+import { ByteStream } from '/common/image/utils/ByteStream';
 
 export function compress(pixels: number[], depth: number, stream: ByteStream): void {
   const dict = new Dict(depth);
