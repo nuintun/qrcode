@@ -4,39 +4,8 @@
 
 import { Mode } from '/common/Mode';
 import { BitArray } from '/common/BitArray';
+import { SHIFT_JIS_MAPPING } from '/common/encoding';
 import { assertContent } from '/encoder/utils/asserts';
-import { getEncodingMapping, getSerialRanges } from '/common/encoding';
-
-const SHIFT_JIS_MAPPING = getEncodingMapping(
-  'shift-jis',
-  [0x8140, 0x817e],
-  [0x8180, 0x81ac],
-  [0x81b8, 0x81bf],
-  [0x81c8, 0x81ce],
-  [0x81da, 0x81e8],
-  [0x81f0, 0x81f7],
-  [0x81fc, 0x81fc],
-  [0x824f, 0x8258],
-  [0x8260, 0x8279],
-  [0x8281, 0x829a],
-  [0x829f, 0x82f1],
-  [0x8340, 0x837e],
-  [0x8380, 0x8396],
-  [0x839f, 0x83b6],
-  [0x83bf, 0x83d6],
-  [0x8440, 0x8460],
-  [0x8470, 0x847e],
-  [0x8480, 0x8491],
-  [0x849f, 0x84be],
-  [0x889f, 0x88fc],
-  ...getSerialRanges(0x8940, 0x97fc, [0, 62, 64, 188]),
-  [0x9840, 0x9872],
-  [0x989f, 0x98fc],
-  ...getSerialRanges(0x9940, 0x9ffc, [0, 62, 64, 188]),
-  ...getSerialRanges(0xe040, 0xe9fc, [0, 62, 64, 188]),
-  [0xea40, 0xea7e],
-  [0xea80, 0xeaa4]
-);
 
 function getKanjiCode(character: string): number {
   const code = SHIFT_JIS_MAPPING.get(character);

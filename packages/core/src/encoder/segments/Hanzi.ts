@@ -4,29 +4,8 @@
 
 import { Mode } from '/common/Mode';
 import { BitArray } from '/common/BitArray';
+import { GB2312_MAPPING } from '/common/encoding';
 import { assertContent } from '/encoder/utils/asserts';
-import { getEncodingMapping, getSerialRanges } from '/common/encoding';
-
-const GB2312_MAPPING = getEncodingMapping(
-  'gb2312',
-  [0xa1a1, 0xa1fe],
-  [0xa2b1, 0xa2e2],
-  [0xa2e5, 0xa2ee],
-  [0xa2f1, 0xa2fc],
-  [0xa3a1, 0xa3fe],
-  [0xa4a1, 0xa4f3],
-  [0xa5a1, 0xa5f6],
-  [0xa6a1, 0xa6b8],
-  [0xa6c1, 0xa6d8],
-  [0xa7a1, 0xa7c1],
-  [0xa7d1, 0xa7f1],
-  [0xa8a1, 0xa8ba],
-  [0xa8c5, 0xa8e9],
-  [0xa9a4, 0xa9ef],
-  ...getSerialRanges(0xb0a1, 0xd6fe, [0, 93]),
-  [0xd7a1, 0xd7f9],
-  ...getSerialRanges(0xd8a1, 0xf7fe, [0, 93])
-);
 
 function getHanziCode(character: string): number {
   const code = GB2312_MAPPING.get(character);
