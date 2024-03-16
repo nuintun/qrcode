@@ -140,14 +140,13 @@ export function appendECI(bits: BitArray, segment: Segment, currentECIValue: num
     if (value !== currentECIValue) {
       bits.append(Mode.ECI.bits, 4);
 
+      // See 7.4.2.2 of ISO/IEC 18004:2015(E)(p.24) for details.
       if (value < 1 << 7) {
         bits.append(value, 8);
       } else if (value < 1 << 14) {
-        bits.append(2, 2);
-        bits.append(value, 14);
+        bits.append(0x8000 | value, 16);
       } else {
-        bits.append(6, 3);
-        bits.append(value, 21);
+        bits.append(0xc00000 | value, 24);
       }
 
       return value;

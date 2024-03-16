@@ -36,12 +36,19 @@ export function encode(content: string, charset: Charset): Uint8Array {
     case Charset.UTF_8:
       return new TextEncoder().encode(content);
     default:
-      throw Error('built-in encode only support ascii, utf-8 and iso-8859-1 charset');
+      throw Error(`built-in encode not support charset: ${charset.label}`);
   }
 }
 
 export function decode(bytes: Uint8Array, charset: Charset): string {
-  return new TextDecoder(charset.label).decode(bytes);
+  switch (charset) {
+    case Charset.BINARY:
+    case Charset.UTF_32BE:
+    case Charset.UTF_32LE:
+      throw Error(`built-in decode not support charset: ${charset.label}`);
+    default:
+      return new TextDecoder(charset.label).decode(bytes);
+  }
 }
 
 export const NUMERIC_CHARACTERS = '0123456789';
