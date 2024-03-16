@@ -4,8 +4,8 @@
 
 import { Mode } from '/common/Mode';
 import { BitArray } from '/common/BitArray';
-import { SHIFT_JIS_MAPPING } from '/common/encoding';
 import { assertContent } from '/encoder/utils/asserts';
+import { SHIFT_JIS_MAPPING } from '/common/encoding/mapping';
 
 function getKanjiCode(character: string): number {
   const code = SHIFT_JIS_MAPPING.get(character);

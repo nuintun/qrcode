@@ -5,9 +5,7 @@
 import { Mode } from '/common/Mode';
 import { BitArray } from '/common/BitArray';
 import { assertContent } from '/encoder/utils/asserts';
-import { ALPHANUMERIC_CHARACTERS, getCharactersMapping } from '/common/encoding';
-
-const ALPHANUMERIC_MAPPING = getCharactersMapping(ALPHANUMERIC_CHARACTERS);
+import { ALPHANUMERIC_MAPPING } from '/common/encoding/mapping';
 
 function getAlphanumericCode(character: string): number {
   const code = ALPHANUMERIC_MAPPING.get(character);

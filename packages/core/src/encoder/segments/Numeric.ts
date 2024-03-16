@@ -5,9 +5,7 @@
 import { Mode } from '/common/Mode';
 import { BitArray } from '/common/BitArray';
 import { assertContent } from '/encoder/utils/asserts';
-import { getCharactersMapping, NUMERIC_CHARACTERS } from '/common/encoding';
-
-const NUMERIC_MAPPING = getCharactersMapping(NUMERIC_CHARACTERS);
+import { NUMERIC_MAPPING } from '/common/encoding/mapping';
 
 function getNumericCode(character: string): number {
   const code = NUMERIC_MAPPING.get(character);

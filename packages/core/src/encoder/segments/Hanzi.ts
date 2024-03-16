@@ -4,8 +4,8 @@
 
 import { Mode } from '/common/Mode';
 import { BitArray } from '/common/BitArray';
-import { GB2312_MAPPING } from '/common/encoding';
 import { assertContent } from '/encoder/utils/asserts';
+import { GB2312_MAPPING } from '/common/encoding/mapping';
 
 function getHanziCode(character: string): number {
   const code = GB2312_MAPPING.get(character);
