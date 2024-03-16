@@ -103,7 +103,7 @@ export class FinderPatternGroup {
   #patterns: OrderedPatterns;
   #moduleSizes?: ModuleSizeGroup;
 
-  private static area(finderPatternGroup: FinderPatternGroup): number {
+  static #calculateArea(finderPatternGroup: FinderPatternGroup): number {
     const [topLeft, topRight, bottomLeft] = finderPatternGroup.#patterns;
     const bottomRight = FinderPatternGroup.bottomRight(finderPatternGroup);
 
@@ -150,7 +150,7 @@ export class FinderPatternGroup {
   }
 
   public static contains(finderPatternGroup: FinderPatternGroup, pattern: Pattern): boolean {
-    const area = FinderPatternGroup.area(finderPatternGroup);
+    const area = FinderPatternGroup.#calculateArea(finderPatternGroup);
     const [topLeft, topRight, bottomLeft] = finderPatternGroup.#patterns;
     const bottomRight = FinderPatternGroup.bottomRight(finderPatternGroup);
     const s1 = calculateTriangleArea(topLeft, topRight, pattern);
