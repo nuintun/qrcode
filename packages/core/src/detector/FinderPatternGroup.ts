@@ -103,20 +103,6 @@ export class FinderPatternGroup {
   #patterns: OrderedPatterns;
   #moduleSizes?: ModuleSizeGroup;
 
-  static #calculateArea(finderPatternGroup: FinderPatternGroup): number {
-    const [topLeft, topRight, bottomLeft] = finderPatternGroup.#patterns;
-    const bottomRight = FinderPatternGroup.bottomRight(finderPatternGroup);
-
-    if (finderPatternGroup.#area == null) {
-      const s1 = calculateTriangleArea(topLeft, topRight, bottomRight);
-      const s2 = calculateTriangleArea(bottomRight, bottomLeft, topLeft);
-
-      finderPatternGroup.#area = s1 + s2;
-    }
-
-    return finderPatternGroup.#area;
-  }
-
   public static moduleSizes(finderPatternGroup: FinderPatternGroup): ModuleSizeGroup {
     if (finderPatternGroup.#moduleSizes == null) {
       const matrix = finderPatternGroup.#matrix;
@@ -150,7 +136,7 @@ export class FinderPatternGroup {
   }
 
   public static contains(finderPatternGroup: FinderPatternGroup, pattern: Pattern): boolean {
-    const area = FinderPatternGroup.#calculateArea(finderPatternGroup);
+    const area = finderPatternGroup.#calculateArea();
     const [topLeft, topRight, bottomLeft] = finderPatternGroup.#patterns;
     const bottomRight = FinderPatternGroup.bottomRight(finderPatternGroup);
     const s1 = calculateTriangleArea(topLeft, topRight, pattern);
@@ -185,6 +171,20 @@ export class FinderPatternGroup {
 
   public get bottomLeft(): Pattern {
     return this.#patterns[2];
+  }
+
+  #calculateArea(): number {
+    const [topLeft, topRight, bottomLeft] = this.#patterns;
+    const bottomRight = FinderPatternGroup.bottomRight(this);
+
+    if (this.#area == null) {
+      const s1 = calculateTriangleArea(topLeft, topRight, bottomRight);
+      const s2 = calculateTriangleArea(bottomRight, bottomLeft, topLeft);
+
+      this.#area = s1 + s2;
+    }
+
+    return this.#area;
   }
 }
 
