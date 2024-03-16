@@ -25,14 +25,14 @@
 
 ```ts
 export class Charset {
-  static readonly CP437: Charset;
-  static readonly ISO_8859_1: Charset;
-  static readonly ISO_8859_2: Charset;
-  static readonly ISO_8859_3: Charset;
-  static readonly ISO_8859_4: Charset;
-  static readonly ISO_8859_5: Charset;
-  static readonly ISO_8859_6: Charset;
-  static readonly ISO_8859_7: Charset;
+  public static readonly CP437: Charset;
+  public static readonly ISO_8859_1: Charset;
+  public static readonly ISO_8859_2: Charset;
+  public static readonly ISO_8859_3: Charset;
+  public static readonly ISO_8859_4: Charset;
+  public static readonly ISO_8859_5: Charset;
+  public static readonly ISO_8859_6: Charset;
+  public static readonly ISO_8859_7: Charset;
   public static readonly ISO_8859_8: Charset;
   public static readonly ISO_8859_9: Charset;
   public static readonly ISO_8859_10: Charset;
