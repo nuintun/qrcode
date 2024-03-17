@@ -67,6 +67,9 @@ importers:
       browser-fs-access:
         specifier: ^0.35.0
         version: 0.35.0
+      chardet:
+        specifier: ^2.0.0
+        version: 2.0.0
       copy-to-clipboard:
         specifier: ^3.3.3
         version: 3.3.3
@@ -1417,6 +1420,10 @@ packages:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
     dev: true
+
+  /chardet@2.0.0:
+    resolution: {integrity: sha512-xVgPpulCooDjY6zH4m9YW3jbkaBe3FKIAvF5sj5t7aBNsVl2ljIE+xwJ4iNgiDZHFQvNIpjdKdVOQvvk5ZfxbQ==}
+    dev: false
 
   /chokidar@3.6.0:
     resolution: {integrity: sha512-7VT13fmjotKpGipCW9JEQAusEPE+Ei8nl6/g4FBAmIm0GOOLMua9NDDo/DWp0ZAxCr3cPq5ZpBqmPAQgDda2Pw==}
