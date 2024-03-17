@@ -157,7 +157,6 @@ export default memo(function Encode() {
               <Select disabled={mode !== 'Auto' && mode !== 'Byte'}>
                 <Option value="ASCII">ASCII</Option>
                 <Option value="UTF_8">UTF-8</Option>
-                <Option value="GB2312">GB2312</Option>
                 <Option value="ISO_8859_1">ISO-8859-1</Option>
               </Select>
             </FormItem>
