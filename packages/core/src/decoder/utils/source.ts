@@ -5,8 +5,8 @@
 import { charAt } from '/common/utils';
 import { FNC1 } from '/common/interface';
 import { Version } from '/common/Version';
-import { TextDecode } from '/common/encoding';
 import { BitSource } from '/common/BitSource';
+import { TextDecode } from '/common/encoding';
 import { fromModeBits, Mode } from '/common/Mode';
 import { Charset, fromCharsetValue } from '/common/Charset';
 import { ALPHANUMERIC_CHARACTERS, NUMERIC_CHARACTERS } from '/common/encoding/mapping';
