@@ -2,7 +2,17 @@
  * @module decode
  */
 
-import { binarize, Decoded, Decoder, Detector, grayscale, Pattern as IPattern, Point as IPoint } from '@nuintun/qrcode';
+import {
+  binarize,
+  Charset,
+  Decoded,
+  Decoder,
+  Detector,
+  grayscale,
+  Pattern as IPattern,
+  Point as IPoint
+} from '@nuintun/qrcode';
+import chardet from 'chardet';
 
 export interface Point {
   x: number;
@@ -58,6 +68,29 @@ function toPattern(pattern: IPattern): Pattern {
   };
 }
 
+function decode(bytes: Uint8Array, charset: Charset): string {
+  let label: string | null = null;
+
+  // 无 ECI 时默认编码为 ISO-8859-1，此时才进行编码检查。
+  if (charset === Charset.ISO_8859_1) {
+    label = chardet.detect(bytes);
+
+    console.log(label);
+  }
+
+  // 编码检查失败，使用默认编码。
+  if (label == null) {
+    label = charset.label;
+  }
+
+  // 用获得的编码进行解码，如果出错则使用 UTF-8 解码。
+  try {
+    return new TextDecoder(label).decode(bytes);
+  } catch (error) {
+    return new TextDecoder('utf-8').decode(bytes);
+  }
+}
+
 self.addEventListener('message', async ({ data }: MessageEvent<DecodeMessage>) => {
   const { uid, image } = data;
   const { width, height } = image;
@@ -76,7 +109,7 @@ self.addEventListener('message', async ({ data }: MessageEvent<DecodeMessage>) =
   const detector = new Detector({ strict: data.strict });
   const detected = detector.detect(binarized);
   const success: DecodedItem[] = [];
-  const decoder = new Decoder();
+  const decoder = new Decoder({ decode });
 
   let iterator = detected.next();
 
