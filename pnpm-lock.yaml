@@ -62,8 +62,8 @@ importers:
         specifier: ^0.5.6
         version: 0.5.6
       antd:
-        specifier: ^5.15.2
-        version: 5.15.2(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^5.15.3
+        version: 5.15.3(react-dom@18.2.0)(react@18.2.0)
       browser-fs-access:
         specifier: ^0.35.0
         version: 0.35.0
@@ -1183,8 +1183,8 @@ packages:
     engines: {node: '>=12'}
     dev: true
 
-  /antd@5.15.2(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-EByEiCQknPKJVYfD+zneXwEvjdFzvMw8CZrsxw9nq19ftC4uMcMkZ2irasW7RQQGg9i7XsAZpAwYz3anuFX+EA==}
+  /antd@5.15.3(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-53dpdGbfwipHVbqITmppp8N16i+BscMzz8NUNwaJgxwSvO9VQh/NfC/90lqGq3I2oBmxQ8TzRIxzFVKD/9OhlQ==}
     peerDependencies:
       react: '>=16.9.0'
       react-dom: '>=16.9.0'
