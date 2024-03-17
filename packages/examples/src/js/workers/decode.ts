@@ -74,8 +74,6 @@ function decode(bytes: Uint8Array, charset: Charset): string {
   // 无 ECI 时默认编码为 ISO-8859-1，此时才进行编码检查。
   if (charset === Charset.ISO_8859_1) {
     label = chardet.detect(bytes);
-
-    console.log(label);
   }
 
   // 编码检查失败，使用默认编码。
