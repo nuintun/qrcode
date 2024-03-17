@@ -62,7 +62,11 @@ export class Charset {
     this.#values = Object.freeze(values);
 
     for (const value of values) {
-      VALUES_TO_CHARSET.set(value, this);
+      if (value >= 0 && value <= 999999) {
+        VALUES_TO_CHARSET.set(value, this);
+      } else {
+        throw new Error('illegal extended channel interpretation value');
+      }
     }
   }
 
