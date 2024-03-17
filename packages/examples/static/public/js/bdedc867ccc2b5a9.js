@@ -30,7 +30,7 @@
  * @author nuintun <nuintun@qq.com>
  * @description A pure JavaScript QRCode encode and decode library.
  * @see https://github.com/nuintun/qrcode#readme
- */function a(e){let t=0,n=new Map;for(let r of e)n.set(r,t++);return n}function c(e){for(var t=arguments.length,n=Array(t>1?t-1:0),r=1;r<t;r++)n[r-1]=arguments[r];let w=[],i=[],s=new Map,o=new TextDecoder(e,{fatal:!0});for(let[e,t]of n)for(let n=e;n<=t;n++)w.push(n>>8,255&n),i.push(n);let{length:l}=i,a=o.decode(new Uint8Array(w));for(let e=0;e<l;e++){let t=function(e,t){let n=e.at(t);return null!=n?n:""}(a,e);s.has(t)||s.set(t,i[e])}return s}function h(e,t,n){let r=arguments.length>3&&void 0!==arguments[3]?arguments[3]:256,w=n.length-1,i=[];for(let s=e;s<t;){for(let e=0;e<w;e+=2)i.push([s+n[e],s+n[e+1]]);s+=r}return i}/**
+ */function a(e){let t=0,n=new Map;for(let r of e)n.set(r,t++);return n}function c(e){for(var t=arguments.length,n=Array(t>1?t-1:0),r=1;r<t;r++)n[r-1]=arguments[r];let w=[],i=[],s=new Map,o=new TextDecoder(e,{fatal:!0});for(let[e,t]of n)for(let n=e;n<=t;n++)w.push(n>>8&255,255&n),i.push(n);let{length:l}=i,a=o.decode(new Uint8Array(w));for(let e=0;e<l;e++){let t=function(e,t){let n=e.at(t);return null!=n?n:""}(a,e);s.has(t)||s.set(t,i[e])}return s}function h(e,t,n){let r=arguments.length>3&&void 0!==arguments[3]?arguments[3]:256,w=n.length-1,i=[];for(let s=e;s<t;){for(let e=0;e<w;e+=2)i.push([s+n[e],s+n[e+1]]);s+=r}return i}/**
  * @module QRCode
  * @package @nuintun/qrcode
  * @license MIT
