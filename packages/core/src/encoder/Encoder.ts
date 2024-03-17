@@ -11,9 +11,9 @@ import {
   calculateBitsNeeded,
   chooseBestMaskAndMatrix,
   chooseRecommendVersion,
+  getSegmentLength,
   Hints,
   injectECCodewords,
-  isByteMode,
   isHanziMode,
   Segment,
   SegmentBlock,
@@ -92,8 +92,8 @@ export class Encoder {
     for (const segment of segments) {
       const { mode } = segment;
       const head = new BitArray();
-      const data = segment.encode(encode);
-      const length = isByteMode(segment) ? data.byteLength : segment.content.length;
+      const body = segment.encode(encode);
+      const length = getSegmentLength(segment, body);
 
       // Append ECI segment if applicable.
       currentECIValue = appendECI(head, segment, currentECIValue);
@@ -114,7 +114,7 @@ export class Encoder {
       }
 
       // Push segment block.
-      segmentBlocks.push({ mode, head, data, length });
+      segmentBlocks.push({ mode, head, body, length });
     }
 
     let version: Version;
@@ -131,21 +131,21 @@ export class Encoder {
       }
     }
 
-    const headAndDataBits = new BitArray();
+    const buffer = new BitArray();
 
-    for (const { mode, head, data, length } of segmentBlocks) {
-      headAndDataBits.append(head);
+    for (const { mode, head, body, length } of segmentBlocks) {
+      buffer.append(head);
 
-      appendLengthInfo(headAndDataBits, mode, version, length);
+      appendLengthInfo(buffer, mode, version, length);
 
-      headAndDataBits.append(data);
+      buffer.append(body);
     }
 
     const ecBlocks = version.getECBlocks(ecLevel);
 
-    appendTerminator(headAndDataBits, ecBlocks.numTotalDataCodewords);
+    appendTerminator(buffer, ecBlocks.numTotalDataCodewords);
 
-    const codewords = injectECCodewords(headAndDataBits, ecBlocks);
+    const codewords = injectECCodewords(buffer, ecBlocks);
     const [mask, matrix] = chooseBestMaskAndMatrix(codewords, version, ecLevel);
 
     return new Encoded(matrix, version, ecLevel, mask);

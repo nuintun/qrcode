@@ -10,6 +10,12 @@ export function round(value: number): number {
   return toInt32(value + (value < 0 ? -0.5 : 0.5));
 }
 
+export function charAt(value: string, index: number): string {
+  const character = value.at(index);
+
+  return character != null ? character : '';
+}
+
 // Get hamming weight of int32.
 export function hammingWeight(value: number): number {
   // HD, Figure 5-2.

@@ -52,14 +52,14 @@ export class Alphanumeric {
    */
   public encode(): BitArray {
     const bits = new BitArray();
-    const content = this.#content;
+    const content = Array.from(this.#content);
     const { length } = content;
 
     for (let i = 0; i < length; ) {
-      const code1 = getAlphanumericCode(content.charAt(i));
+      const code1 = getAlphanumericCode(content[i]);
 
       if (i + 1 < length) {
-        const code2 = getAlphanumericCode(content.charAt(i + 1));
+        const code2 = getAlphanumericCode(content[i + 1]);
 
         // Encode two alphanumeric letters in 11 bits.
         bits.append(code1 * 45 + code2, 11);

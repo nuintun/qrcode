@@ -52,23 +52,23 @@ export class Numeric {
    */
   public encode(): BitArray {
     const bits = new BitArray();
-    const content = this.#content;
+    const content = Array.from(this.#content);
     const { length } = content;
 
     for (let i = 0; i < length; ) {
-      const code1 = getNumericCode(content.charAt(i));
+      const code1 = getNumericCode(content[i]);
 
       if (i + 2 < length) {
         // Encode three numeric letters in ten bits.
-        const code2 = getNumericCode(content.charAt(i + 1));
-        const code3 = getNumericCode(content.charAt(i + 2));
+        const code2 = getNumericCode(content[i + 1]);
+        const code3 = getNumericCode(content[i + 2]);
 
         bits.append(code1 * 100 + code2 * 10 + code3, 10);
 
         i += 3;
       } else if (i + 1 < length) {
         // Encode two numeric letters in seven bits.
-        const code2 = getNumericCode(content.charAt(i + 1));
+        const code2 = getNumericCode(content[i + 1]);
 
         bits.append(code1 * 10 + code2, 7);
 

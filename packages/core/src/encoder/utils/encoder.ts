@@ -26,7 +26,7 @@ export interface Hints {
 export interface SegmentBlock {
   mode: Mode;
   head: BitArray;
-  data: BitArray;
+  body: BitArray;
   length: number;
 }
 
@@ -177,6 +177,17 @@ export function appendFNC1Info(bits: BitArray, fnc1: FNC1): void {
   }
 }
 
+export function getSegmentLength(segment: Segment, bits: BitArray): number {
+  // Byte segment use byte Length.
+  if (isByteMode(segment)) {
+    return bits.byteLength;
+  }
+
+  // Other segments use the real length of characters.
+  // All rest segments content codePointAt at 0x0000 to 0xffff, so use length directly.
+  return segment.content.length;
+}
+
 export function appendLengthInfo(bits: BitArray, mode: Mode, version: Version, numLetters: number): void {
   bits.append(numLetters, mode.getCharacterCountBits(version));
 }
@@ -202,8 +213,8 @@ function chooseVersion(numInputBits: number, ecLevel: ECLevel): Version {
 export function calculateBitsNeeded(segmentBlocks: SegmentBlock[], version: Version): number {
   let bitsNeeded = 0;
 
-  for (const { mode, head, data } of segmentBlocks) {
-    bitsNeeded += head.length + mode.getCharacterCountBits(version) + data.length;
+  for (const { mode, head, body } of segmentBlocks) {
+    bitsNeeded += head.length + mode.getCharacterCountBits(version) + body.length;
   }
 
   return bitsNeeded;

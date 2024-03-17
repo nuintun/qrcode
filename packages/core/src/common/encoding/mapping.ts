@@ -2,9 +2,9 @@
  * @module mapping
  */
 
-import { getCharactersMapping, getEncodingMapping, getSerialRanges } from './utils';
+import { getMappingFromCharacters, getMappingFromEncodingRanges, getSerialEncodinRanges } from './utils';
 
-export const GB2312_MAPPING = getEncodingMapping(
+export const GB2312_MAPPING = getMappingFromEncodingRanges(
   'gb2312',
   [0xa1a1, 0xa1fe],
   [0xa2b1, 0xa2e2],
@@ -20,12 +20,12 @@ export const GB2312_MAPPING = getEncodingMapping(
   [0xa8a1, 0xa8ba],
   [0xa8c5, 0xa8e9],
   [0xa9a4, 0xa9ef],
-  ...getSerialRanges(0xb0a1, 0xd6fe, [0, 93]),
+  ...getSerialEncodinRanges(0xb0a1, 0xd6fe, [0, 93]),
   [0xd7a1, 0xd7f9],
-  ...getSerialRanges(0xd8a1, 0xf7fe, [0, 93])
+  ...getSerialEncodinRanges(0xd8a1, 0xf7fe, [0, 93])
 );
 
-export const SHIFT_JIS_MAPPING = getEncodingMapping(
+export const SHIFT_JIS_MAPPING = getMappingFromEncodingRanges(
   'shift-jis',
   [0x8140, 0x817e],
   [0x8180, 0x81ac],
@@ -47,19 +47,19 @@ export const SHIFT_JIS_MAPPING = getEncodingMapping(
   [0x8480, 0x8491],
   [0x849f, 0x84be],
   [0x889f, 0x88fc],
-  ...getSerialRanges(0x8940, 0x97fc, [0, 62, 64, 188]),
+  ...getSerialEncodinRanges(0x8940, 0x97fc, [0, 62, 64, 188]),
   [0x9840, 0x9872],
   [0x989f, 0x98fc],
-  ...getSerialRanges(0x9940, 0x9ffc, [0, 62, 64, 188]),
-  ...getSerialRanges(0xe040, 0xe9fc, [0, 62, 64, 188]),
+  ...getSerialEncodinRanges(0x9940, 0x9ffc, [0, 62, 64, 188]),
+  ...getSerialEncodinRanges(0xe040, 0xe9fc, [0, 62, 64, 188]),
   [0xea40, 0xea7e],
   [0xea80, 0xeaa4]
 );
 
 export const NUMERIC_CHARACTERS = '0123456789';
 
-export const NUMERIC_MAPPING = getCharactersMapping(NUMERIC_CHARACTERS);
+export const NUMERIC_MAPPING = getMappingFromCharacters(NUMERIC_CHARACTERS);
 
 export const ALPHANUMERIC_CHARACTERS = `${NUMERIC_CHARACTERS}ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:`;
 
-export const ALPHANUMERIC_MAPPING = getCharactersMapping(ALPHANUMERIC_CHARACTERS);
+export const ALPHANUMERIC_MAPPING = getMappingFromCharacters(ALPHANUMERIC_CHARACTERS);
