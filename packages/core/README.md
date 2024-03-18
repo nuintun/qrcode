@@ -52,6 +52,7 @@ export class Charset {
   public static readonly BIG5: Charset;
   public static readonly GB2312: Charset;
   public static readonly EUC_KR: Charset;
+  public static readonly GBK: Charset;
   public static readonly GB18030: Charset;
   public static readonly UTF_16LE: Charset;
   public static readonly UTF_32BE: Charset;
