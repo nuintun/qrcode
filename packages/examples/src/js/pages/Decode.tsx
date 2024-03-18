@@ -242,7 +242,7 @@ const Result = memo(function Result({ state, currentRef }: ResultProps) {
         return {
           key,
           label,
-          children: <pre>{content}</pre>,
+          children: <pre>{content.replace(/\r(?!\n)|\r\n/g, '\n')}</pre>,
           extra: (
             <div
               onClick={e => {
