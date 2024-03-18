@@ -32,9 +32,9 @@
     "format": "prettier --write . --ignore-path .prettierignore"
   },
   "dependencies": {
-    "@ant-design/icons": "^5.3.3",
+    "@ant-design/icons": "^4.8.2",
     "@nuintun/qrcode": "workspace:*",
-    "@swc/helpers": "^0.5.6",
+    "@swc/helpers": "^0.5.7",
     "antd": "^5.15.3",
     "browser-fs-access": "^0.35.0",
     "chardet": "^2.0.0",
