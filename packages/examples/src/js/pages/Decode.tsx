@@ -6,8 +6,8 @@ import Icon from '@ant-design/icons';
 import Clipboard from '/js/components/Clipboard';
 import useLazyState from '/js/hooks/useLazyState';
 import ImagePicker from '/js/components/ImagePicker';
-import { createMarkup, syntaxHighlight } from '/js/utils/utils';
 import { LocateMessage, LocateResultMessage } from '/js/workers/locate';
+import { createMarkup, normalizeLinefeed, syntaxHighlight } from '/js/utils/utils';
 import { DecodedItem, DecodeMessage, DecodeResultMessage } from '/js/workers/decode';
 import { Alert, App, Button, Col, Collapse, CollapseProps, Form, Image, ImageProps, Modal, Row, Switch, Tooltip } from 'antd';
 
@@ -242,7 +242,7 @@ const Result = memo(function Result({ state, currentRef }: ResultProps) {
         return {
           key,
           label,
-          children: <pre>{content.replace(/\r(?!\n)|\r\n/g, '\n')}</pre>,
+          children: <pre>{normalizeLinefeed(content)}</pre>,
           extra: (
             <div
               onClick={e => {

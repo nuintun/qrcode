@@ -33,6 +33,15 @@ export interface ClassNamesHighlight {
 }
 
 /**
+ * @function normalizeLinefeed
+ * @description 格式化换行
+ * @param value 需要格式化的字符串
+ */
+export function normalizeLinefeed(value: string): string {
+  return value.replace(/\r(?!\n)|\r\n/g, '\n');
+}
+
+/**
  * @function syntaxHighlight
  * @description JSON 语法高亮
  * @param json JSON 字符串
