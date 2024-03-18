@@ -18,6 +18,7 @@ export class Charset {
   #label: string;
   #values: readonly number[];
 
+  // See: https://en.wikipedia.org/wiki/Extended_Channel_Interpretation
   public static readonly CP437 = new Charset('cp437', 2, 0);
   public static readonly ISO_8859_1 = new Charset('iso-8859-1', 3, 1);
   public static readonly ISO_8859_2 = new Charset('iso-8859-2', 4);
@@ -45,6 +46,7 @@ export class Charset {
   public static readonly BIG5 = new Charset('big5', 28);
   public static readonly GB2312 = new Charset('gb2312', 29);
   public static readonly EUC_KR = new Charset('euc-kr', 30);
+  public static readonly GBK = new Charset('gbk', 31);
   public static readonly GB18030 = new Charset('gb18030', 32);
   public static readonly UTF_16LE = new Charset('utf-16le', 33);
   public static readonly UTF_32BE = new Charset('utf-32be', 34);

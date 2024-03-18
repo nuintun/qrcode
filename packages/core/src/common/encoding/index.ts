@@ -39,12 +39,9 @@ export function encode(content: string, charset: Charset): Uint8Array {
 }
 
 export function decode(bytes: Uint8Array, charset: Charset): string {
-  switch (charset) {
-    case Charset.BINARY:
-    case Charset.UTF_32BE:
-    case Charset.UTF_32LE:
-      throw Error(`built-in decode not support charset: ${charset.label}`);
-    default:
-      return new TextDecoder(charset.label).decode(bytes);
+  try {
+    return new TextDecoder(charset.label).decode(bytes);
+  } catch {
+    throw Error(`built-in decode not support charset: ${charset.label}`);
   }
 }
