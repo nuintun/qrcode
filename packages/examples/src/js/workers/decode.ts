@@ -109,12 +109,12 @@ self.addEventListener('message', async ({ data }: MessageEvent<DecodeMessage>) =
   const success: DecodedItem[] = [];
   const decoder = new Decoder({ decode });
 
-  let iterator = detected.next();
+  let current = detected.next();
 
-  while (!iterator.done) {
+  while (!current.done) {
     let succeed = false;
 
-    const detect = iterator.value;
+    const detect = current.value;
 
     try {
       const { size, finder, alignment } = detect;
@@ -152,7 +152,7 @@ self.addEventListener('message', async ({ data }: MessageEvent<DecodeMessage>) =
       // 解码失败，跳过
     }
 
-    iterator = detected.next(succeed);
+    current = detected.next(succeed);
   }
 
   if (success.length > 0) {
