@@ -81,12 +81,12 @@ export class Detector {
 
     const finderPatternGroups = finderFinder.groups();
 
-    let iterator = finderPatternGroups.next();
+    let current = finderPatternGroups.next();
 
-    while (!iterator.done) {
+    while (!current.done) {
       let succeed = false;
 
-      const finderPatternGroup = iterator.value;
+      const finderPatternGroup = current.value;
       const size = FinderPatternGroup.size(finderPatternGroup);
 
       // Find alignment.
@@ -127,7 +127,7 @@ export class Detector {
         }
       }
 
-      iterator = finderPatternGroups.next(succeed);
+      current = finderPatternGroups.next(succeed);
     }
   }
 }
