@@ -244,12 +244,12 @@ image.addEventListener('load', () => {
   const detected = detector.detect(binarized);
   const decoder = new Decoder();
 
-  let iterator = detected.next();
+  let current = detected.next();
 
-  while (!iterator.done) {
+  while (!current.done) {
     let succeed = false;
 
-    const detect = iterator.value;
+    const detect = current.value;
 
     try {
       const { size, finder, alignment } = detect;
@@ -281,7 +281,7 @@ image.addEventListener('load', () => {
 
     // Notice: pass succeed to next() is very important,
     // This can significantly reduce the number of detections.
-    iterator = detected.next(succeed);
+    current = detected.next(succeed);
   }
 });
 
