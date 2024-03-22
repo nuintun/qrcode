@@ -15,11 +15,11 @@ import Koa from 'koa';
 import path from 'path';
 import memfs from 'memfs';
 import webpack from 'webpack';
+import compress from 'koa-compress';
 import resolveIp from '../lib/ip.js';
-import koaCompress from 'koa-compress';
+import dev from 'webpack-dev-service';
 import { URL, URLSearchParams } from 'url';
 import appConfig from '../../app.config.js';
-import devMiddleware from 'webpack-dev-service';
 import { findFreePorts } from 'find-free-ports';
 import resolveConfigure from './webpack.config.base.js';
 
@@ -34,8 +34,6 @@ function createMemfs() {
   const volume = new memfs.Volume();
   const fs = memfs.createFsFromVolume(volume);
 
-  fs.join = path.join.bind(path);
-
   return fs;
 }
 
@@ -45,6 +43,10 @@ function createMemfs() {
  * @returns {number}
  */
 async function resolvePort(ports = [8000, 9000]) {
+  if (!Array.isArray(ports)) {
+    ports = [ports, ports + 1];
+  }
+
   const [startPort, endPort = startPort + 1] = ports;
   const [port] = await findFreePorts(1, { startPort, endPort });
 
@@ -144,27 +146,21 @@ async function resolveEntry(entry, options) {
   const app = new Koa();
   const compiler = webpack(configure);
 
-  app.use(async (ctx, next) => {
-    ctx.set({
+  const devService = dev(compiler, {
+    outputFileSystem: fs,
+    headers: {
       'Cache-Control': 'no-store',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': '*',
       'Access-Control-Allow-Headers': '*',
       'X-Content-Type-Options': 'nosniff',
       'Access-Control-Allow-Credentials': 'true'
-    });
-
-    await next();
+    }
   });
 
-  app.use(koaCompress({ br: false }));
+  app.use(compress({ br: false }));
 
-  const devServer = devMiddleware(compiler, {
-    index: false,
-    outputFileSystem: fs
-  });
-
-  app.use(devServer);
+  app.use(devService);
 
   app.use(async ctx => {
     ctx.type = 'text/html; charset=utf-8';
@@ -176,10 +172,8 @@ async function resolveEntry(entry, options) {
   });
 
   app.listen(port, () => {
-    devServer.waitUntilValid(() => {
-      const { logger } = devServer.context;
-
-      logger.info(`server run at: \u001B[36m${devServerHost}\u001B[0m`);
+    devService.ready(() => {
+      devService.logger.info(`server run at: \u001B[36m${devServerHost}\u001B[0m`);
     });
   });
 })();

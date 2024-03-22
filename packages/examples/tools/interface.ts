@@ -61,6 +61,6 @@ export interface AppConfig extends Pick<Configuration, 'context' | 'plugins' | '
   env?: Env | EnvFunction;
   meta?: Record<string, string>;
   entry: Prop<Configuration, 'entry'>;
-  ports: [start: number, end?: number];
+  ports: [start: number, end?: number] | number;
   alias?: Prop<Prop<Configuration, 'resolve'>, 'alias'>;
 }
