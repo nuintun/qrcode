@@ -13,6 +13,7 @@ const images = path.resolve('src/images');
  * @type {import('./tools/interface').AppConfig}
  */
 export default {
+  ports: 8000,
   name: '二维码',
   lang: 'zh-CN',
   context: path.resolve('src'),
