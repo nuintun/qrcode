@@ -20,8 +20,8 @@ if (__DEV__) {
       // webpackMode: 'eager'
       'webpack-dev-service/events'
     ).then(({ on }) => {
-      on('ok', ({ builtAt }) => {
-        console.log(`[HMR] App is up to date at ${new Date(builtAt).toLocaleString()}`);
+      on('ok', ({ timestamp }) => {
+        console.log(`[HMR] App is up to date at ${new Date(timestamp).toLocaleString()}`);
       });
     });
   }

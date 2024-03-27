@@ -134,12 +134,10 @@ export default async mode => {
       splitChunks: {
         chunks: 'all'
       },
+      runtimeChunk: 'single',
       removeEmptyChunks: true,
       mergeDuplicateChunks: true,
-      removeAvailableModules: true,
-      runtimeChunk: {
-        name: entrypoint => `runtime-${entrypoint.name}`
-      }
+      removeAvailableModules: true
     }
   };
 };
