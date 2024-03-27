@@ -25,7 +25,7 @@ const { ports } = appConfig;
 
 /**
  * @function createMemfs
- * @return {import('../interface').OutputFileSystem}
+ * @return {import('../interface').FileSystem}
  */
 function createMemfs() {
   const volume = new memfs.Volume();

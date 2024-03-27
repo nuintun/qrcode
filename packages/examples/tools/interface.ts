@@ -29,6 +29,11 @@ type EnvFunction = (isDevelopment: boolean, env: Env) => Env | Promise<Env>;
 export { Options as SwcConfig } from '@swc/core';
 
 /**
+ * @description Webpack 文件系统
+ */
+export type FileSystem = NonNullable<Options['fs']>;
+
+/**
  * @description Postcss 配置
  */
 export interface PostcssConfig extends ProcessOptions {
@@ -42,11 +47,6 @@ export interface PostcssConfig extends ProcessOptions {
 export interface SvgoConfig extends Omit<SvgoOptions, 'configFile'> {
   path?: string;
 }
-
-/**
- * @description Webpack 文件系统
- */
-export type OutputFileSystem = NonNullable<Options['outputFileSystem']>;
 
 /**
  * @description App 配置
