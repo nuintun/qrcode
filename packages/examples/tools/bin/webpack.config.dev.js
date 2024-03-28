@@ -70,6 +70,14 @@ function httpError(error) {
   configure.devtool = 'eval-cheap-module-source-map';
   configure.watchOptions = { aggregateTimeout: 256 };
 
+  // 禁用 React DevTools 下载提示
+  // See: https://github.com/facebook/react/pull/11448
+  configure.plugins.push(
+    new webpack.DefinePlugin({
+      __REACT_DEVTOOLS_GLOBAL_HOOK__: '({ isDisabled: true })'
+    })
+  );
+
   const app = new Koa();
   const compiler = webpack(configure);
 
