@@ -1,4 +1,4 @@
 # Ignore files
 *.min.*
-static/**/*
+app/**/*
 pnpm-lock.yaml
