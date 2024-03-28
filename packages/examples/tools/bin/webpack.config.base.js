@@ -4,13 +4,45 @@
  */
 
 import webpack from 'webpack';
-import { resolve } from 'path';
+import { join, resolve } from 'path';
 import resolveRules from '../lib/rules.js';
 import appConfig from '../../app.config.js';
+import { readdir, stat } from 'fs/promises';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import CaseSensitivePathsPlugin from 'case-sensitive-paths-webpack-plugin';
+
+/**
+ * @param {string} path
+ * @returns {Promise<string[]>}
+ */
+async function getFilesAsync(path) {
+  // 文件结果列表
+  const result = [];
+  // 获取目录内容
+  const files = await readdir(path);
+
+  // 遍历目录内容
+  for (const file of files) {
+    const filePath = join(path, file);
+    const stats = await stat(filePath);
+
+    // 如果文件是目录，则递归调用
+    if (stats.isDirectory()) {
+      const subFiles = await getFilesAsync(filePath);
+
+      // 将子目录的文件合并到结果中
+      result.push(...subFiles);
+    } else {
+      // 如果文件不是目录，则添加到结果中
+      result.push(filePath);
+    }
+  }
+
+  // 返回结果
+  return result;
+}
 
 /**
  * @function resolveEnvironment
@@ -98,7 +130,8 @@ export default async mode => {
           resolve('.postcssrc.js'),
           resolve('app.config.js'),
           resolve('.browserslistrc')
-        ]
+        ],
+        tools: await getFilesAsync(resolve('tools'))
       }
     },
     stats: {
