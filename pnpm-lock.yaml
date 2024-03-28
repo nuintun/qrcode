@@ -171,8 +171,8 @@ importers:
         specifier: ^5.91.0
         version: 5.91.0(@swc/core@1.4.11)
       webpack-dev-service:
-        specifier: ^0.10.2
-        version: 0.10.2(bufferutil@4.0.8)(utf-8-validate@6.0.3)(webpack@5.91.0)
+        specifier: ^0.11.0
+        version: 0.11.0(bufferutil@4.0.8)(utf-8-validate@6.0.3)(webpack@5.91.0)
 
 packages:
 
@@ -4360,8 +4360,8 @@ packages:
       graceful-fs: 4.2.11
     dev: true
 
-  /webpack-dev-service@0.10.2(bufferutil@4.0.8)(utf-8-validate@6.0.3)(webpack@5.91.0):
-    resolution: {integrity: sha512-D2kthtmnYB+VUmZSjIoLyPwoTdmZusS2DrPttVDGjaSWDwD/vAh18iDRdayTNDflbXLeth/BxrBh+H2YLbPdSw==}
+  /webpack-dev-service@0.11.0(bufferutil@4.0.8)(utf-8-validate@6.0.3)(webpack@5.91.0):
+    resolution: {integrity: sha512-HA/PitiJCTdBhLdjLeIztofaV8M7L2xrjNQS0F6Xenx/mB6jw+APeFNI3CpNB9CoDE/9YqhT3buc/c0tsNC8uA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       webpack: '>=5.20.0'
