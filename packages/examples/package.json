@@ -45,9 +45,10 @@
   },
   "devDependencies": {
     "@nuintun/svgo-loader": "^0.2.5",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.11",
     "@swc/core": "^1.4.11",
     "@types/react": "^18.2.73",
-    "@types/react-dom": "^18.2.22",
+    "@types/react-dom": "^18.2.23",
     "autoprefixer": "^10.4.19",
     "bufferutil": "^4.0.8",
     "case-sensitive-paths-webpack-plugin": "^2.4.0",

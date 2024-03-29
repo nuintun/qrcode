@@ -20,6 +20,7 @@ import dev from 'webpack-dev-service';
 import appConfig from '../../app.config.js';
 import { findFreePorts } from 'find-free-ports';
 import resolveConfigure from './webpack.config.base.js';
+import ReactRefreshPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 
 const { ports } = appConfig;
 
@@ -69,6 +70,8 @@ function httpError(error) {
   configure.cache.name = 'dev';
   configure.devtool = 'eval-cheap-module-source-map';
   configure.watchOptions = { aggregateTimeout: 256 };
+
+  configure.plugins.push(new ReactRefreshPlugin({ overlay: false }));
 
   const app = new Koa();
   const compiler = webpack(configure);

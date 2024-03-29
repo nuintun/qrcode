@@ -12,10 +12,6 @@ root.render(<App />);
 
 if (__DEV__) {
   if (import.meta.webpackHot) {
-    import.meta.webpackHot.accept('./App.tsx', () => {
-      root.render(<App />);
-    });
-
     import(
       // webpackMode: 'eager'
       'webpack-dev-service/client'
