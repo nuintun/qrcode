@@ -15,6 +15,7 @@
     "moduleResolution": "Node",
     "noImplicitOverride": true,
     "noUnusedParameters": true,
+    "useDefineForClassFields": true,
     "forceConsistentCasingInFileNames": true,
     "lib": [
       "DOM",
