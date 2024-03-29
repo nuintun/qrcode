@@ -9,7 +9,7 @@
     "strict": true,
     "newLine": "lf",
     "module": "ESNext",
-    "target": "ES2022",
+    "target": "ESNext",
     "skipLibCheck": true,
     "importHelpers": true,
     "noUnusedLocals": true,
