@@ -24,7 +24,8 @@ import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
   configure.optimization.minimizer = [
     new CssMinimizerPlugin(),
     new TerserPlugin({
-      minify: TerserPlugin.swcMinify
+      minify: TerserPlugin.swcMinify,
+      terserOptions: { format: { comments: false } }
     })
   ];
 
