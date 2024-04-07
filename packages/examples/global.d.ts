@@ -41,24 +41,8 @@ declare module '*.jpeg' {
   export default content;
 }
 
-declare module '*.module.css' {
-  const content: {
-    readonly [name: string]: string;
-  };
-
-  export default content;
-}
-
 declare module '*.css' {
   const content: string;
-
-  export default content;
-}
-
-declare module '*.module.scss' {
-  const content: {
-    readonly [name: string]: string;
-  };
 
   export default content;
 }

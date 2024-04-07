@@ -1,4 +1,4 @@
-import styles from '/css/Decode.module.scss';
+import * as styles from '/css/Decode.module.scss';
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 

@@ -1,4 +1,4 @@
-import styles from '/css/Encode.module.scss';
+import * as styles from '/css/Encode.module.scss';
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 

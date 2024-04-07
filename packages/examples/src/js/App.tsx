@@ -3,7 +3,7 @@
  */
 
 import '/css/global.scss';
-import styles from '/css/App.module.scss';
+import * as styles from '/css/App.module.scss';
 
 import React, { lazy, memo, Suspense, useCallback, useMemo } from 'react';
 
