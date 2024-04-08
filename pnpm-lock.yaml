@@ -117,8 +117,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0(webpack@5.91.0)
       css-modules-types-loader:
-        specifier: ^0.4.1
-        version: 0.4.1(webpack@5.91.0)
+        specifier: ^0.5.0
+        version: 0.5.0(webpack@5.91.0)
       find-free-ports:
         specifier: ^3.1.1
         version: 3.1.1
@@ -1351,7 +1351,7 @@ packages:
       postcss: ^8.1.0
     dependencies:
       browserslist: 4.23.0
-      caniuse-lite: 1.0.30001606
+      caniuse-lite: 1.0.30001607
       fraction.js: 4.3.7
       normalize-range: 0.1.2
       picocolors: 1.0.0
@@ -1405,7 +1405,7 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001606
+      caniuse-lite: 1.0.30001607
       electron-to-chromium: 1.4.729
       node-releases: 2.0.14
       update-browserslist-db: 1.0.13(browserslist@4.23.0)
@@ -1452,13 +1452,13 @@ packages:
     resolution: {integrity: sha512-bsTwuIg/BZZK/vreVTYYbSWoe2F+71P7K5QGEX+pT250DZbfU1MQ5prOKpPR+LL6uWKK3KMwMCAS74QB3Um1uw==}
     dependencies:
       browserslist: 4.23.0
-      caniuse-lite: 1.0.30001606
+      caniuse-lite: 1.0.30001607
       lodash.memoize: 4.1.2
       lodash.uniq: 4.5.0
     dev: true
 
-  /caniuse-lite@1.0.30001606:
-    resolution: {integrity: sha512-LPbwnW4vfpJId225pwjZJOgX1m9sGfbw/RKJvw/t0QhYOOaTXHvkjVGFGPpvwEzufrjvTlsULnVTxdy4/6cqkg==}
+  /caniuse-lite@1.0.30001607:
+    resolution: {integrity: sha512-WcvhVRjXLKFB/kmOFVwELtMxyhq3iM/MvmXcyCe2PNf166c39mptscOc/45TTS96n2gpNV2z7+NakArTWZCQ3w==}
     dev: true
 
   /case-sensitive-paths-webpack-plugin@2.4.0:
@@ -1723,8 +1723,8 @@ packages:
       webpack: 5.91.0(@swc/core@1.4.12)
     dev: true
 
-  /css-modules-types-loader@0.4.1(webpack@5.91.0):
-    resolution: {integrity: sha512-FSQUW6pkv3B0x3760YtnfoRsl87TJnJ3Wuz4ws3w9ps+4Jcg5rUU7mxfYoduCMhmFjJo+EM0e5vekRZ0Fo/DbQ==}
+  /css-modules-types-loader@0.5.0(webpack@5.91.0):
+    resolution: {integrity: sha512-atGHTP5bDqIEB91Pb4i0sCCg4R6xABsQCHRvNY0CoMpRM2b2Yu/AtZf7l+0sLCx9QsWJe+WpMttx1CS1Bc9qHA==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       webpack: ^5.0.0

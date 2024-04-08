@@ -15,9 +15,9 @@ import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 export default async mode => {
   const isDevelopment = mode !== 'production';
   const swcOptions = { ...(await swcrc()), swcrc: false };
-  const cssIdentName = isDevelopment ? '[local]-[hash:8]' : '[hash:8]';
+  const localIdentName = isDevelopment ? '[local]-[hash:8]' : '[hash:8]';
   const postcssOptions = { postcssOptions: { ...(await postcssrc(mode)), config: false } };
-  const cssModulesOptions = { auto: true, localIdentName: cssIdentName, exportLocalsConvention: 'camelCaseOnly' };
+  const cssModulesOptions = { auto: true, namedExport: true, localIdentName, exportLocalsConvention: 'camelCaseOnly' };
 
   return [
     {

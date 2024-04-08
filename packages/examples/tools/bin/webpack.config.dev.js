@@ -38,7 +38,7 @@ function createMemfs() {
 /**
  * @function resolvePort
  * @param {import('../interface').AppConfig['ports']} ports
- * @returns {number}
+ * @return {number}
  */
 async function resolvePort(ports = [8000, 9000]) {
   if (!Array.isArray(ports)) {

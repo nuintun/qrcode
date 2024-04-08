@@ -1,4 +1,4 @@
-import styles from './scss/index.module.scss';
+import * as styles from './scss/index.module.scss';
 
 import React, { memo, useCallback, useRef } from 'react';
 
