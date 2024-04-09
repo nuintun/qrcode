@@ -17,7 +17,7 @@ export default async mode => {
   const swcOptions = { ...(await swcrc()), swcrc: false };
   const localIdentName = isDevelopment ? '[local]-[hash:8]' : '[hash:8]';
   const postcssOptions = { postcssOptions: { ...(await postcssrc(mode)), config: false } };
-  const cssModulesOptions = { auto: true, namedExport: true, localIdentName, exportLocalsConvention: 'camelCaseOnly' };
+  const cssModulesOptions = { auto: true, localIdentName, exportLocalsConvention: 'camel-case-only' };
 
   return [
     {
