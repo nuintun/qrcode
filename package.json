@@ -30,11 +30,11 @@
     "reset": "pnpm -s dlx rimraf -g **/node_modules **/pnpm-lock.yaml"
   },
   "dependencies": {
-    "@swc/helpers": "^0.5.8",
+    "@swc/helpers": "^0.5.9",
     "tslib": "^2.6.2"
   },
   "devDependencies": {
     "prettier": "^3.2.5",
-    "typescript": "^5.4.4"
+    "typescript": "^5.4.5"
   }
 }
