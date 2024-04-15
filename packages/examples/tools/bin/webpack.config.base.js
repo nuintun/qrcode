@@ -75,19 +75,19 @@ async function arrayFromAsync(iterator) {
 
 /**
  * @function resolveEnvironment
+ * @param {string} mode
  * @param {object} env
- * @param {boolean} isDevelopment
  * @return {Promise<object>}
  */
-async function resolveEnvironment(env, isDevelopment) {
+async function resolveEnvironment(mode, env) {
   if (typeof env === 'function') {
-    env = await env(isDevelopment, process.env);
+    env = await env(mode, process.env);
   }
 
   env = {
     ...env,
-    __DEV__: isDevelopment,
-    __APP_NAME__: appConfig.name
+    __APP_NAME__: appConfig.name,
+    __DEV__: mode !== 'production'
   };
 
   const output = {};
@@ -123,7 +123,7 @@ export default async mode => {
     templateParameters: { lang: appConfig.lang }
   };
 
-  const env = await resolveEnvironment(appConfig.env, isDevelopment);
+  const env = await resolveEnvironment(mode, appConfig.env);
 
   const css = {
     ignoreOrder: true,
