@@ -21,7 +21,7 @@
   "dependencies": {
     "@ant-design/icons": "^5.3.6",
     "@nuintun/qrcode": "workspace:*",
-    "@swc/helpers": "^0.5.9",
+    "@swc/helpers": "^0.5.10",
     "antd": "^5.16.2",
     "browser-fs-access": "^0.35.0",
     "chardet": "^2.0.0",
@@ -34,7 +34,7 @@
     "@nuintun/svgo-loader": "^0.2.5",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.11",
     "@swc/core": "^1.4.14",
-    "@types/react": "^18.2.78",
+    "@types/react": "^18.2.79",
     "@types/react-dom": "^18.2.25",
     "autoprefixer": "^10.4.19",
     "bufferutil": "^4.0.8",
