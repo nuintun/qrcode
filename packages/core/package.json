@@ -51,10 +51,10 @@
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.6",
-    "magic-string": "^0.30.9",
+    "magic-string": "^0.30.10",
     "prettier": "^3.2.5",
     "rimraf": "^5.0.5",
-    "rollup": "^4.14.3",
+    "rollup": "^4.16.1",
     "tsc-alias": "^1.8.8",
     "typescript": "^5.4.5"
   }
