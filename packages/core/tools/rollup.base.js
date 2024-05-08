@@ -2,11 +2,18 @@
  * @module rollup.base
  */
 
-import { createRequire } from 'module';
 import treeShake from './plugins/tree-shake.js';
+import { createRequire, isBuiltin } from 'module';
 import typescript from '@rollup/plugin-typescript';
 
 const pkg = createRequire(import.meta.url)('../package.json');
+
+const externals = [
+  // Dependencies
+  ...Object.keys(pkg.dependencies || {}),
+  // Peer dependencies
+  ...Object.keys(pkg.peerDependencies || {})
+];
 
 const banner = `/**
  * @module QRCode
@@ -38,12 +45,24 @@ export default function rollup(esnext) {
       entryFileNames: `[name].${esnext ? 'js' : 'cjs'}`,
       chunkFileNames: `[name].${esnext ? 'js' : 'cjs'}`
     },
-    external: ['tslib'],
     plugins: [typescript(), treeShake()],
     onwarn(error, warn) {
       if (error.code !== 'CIRCULAR_DEPENDENCY') {
         warn(error);
       }
+    },
+    external(source) {
+      if (isBuiltin(source)) {
+        return true;
+      }
+
+      for (const external of externals) {
+        if (source === external || source.startsWith(`${external}/`)) {
+          return true;
+        }
+      }
+
+      return false;
     }
   };
 }
