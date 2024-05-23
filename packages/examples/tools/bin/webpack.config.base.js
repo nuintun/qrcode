@@ -9,7 +9,6 @@ import { readdir } from 'fs/promises';
 import resolveRules from '../lib/rules.js';
 import appConfig from '../../app.config.js';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
-import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import CaseSensitivePathsPlugin from 'case-sensitive-paths-webpack-plugin';
 
@@ -131,16 +130,13 @@ export default async mode => {
     chunkFilename: `css/[${isDevelopment ? 'name' : 'contenthash'}].css`
   };
 
-  const clean = {
-    cleanOnceBeforeBuildPatterns: [appConfig.entryHTML, appConfig.outputPath]
-  };
-
   return {
     mode,
     name: appConfig.name,
     entry: appConfig.entry,
     context: appConfig.context,
     output: {
+      clean: true,
       hashFunction: 'xxhash64',
       path: appConfig.outputPath,
       publicPath: appConfig.publicPath,
@@ -186,7 +182,6 @@ export default async mode => {
     plugins: [
       new webpack.ProgressPlugin(progress),
       new CaseSensitivePathsPlugin(),
-      new CleanWebpackPlugin(clean),
       new webpack.DefinePlugin(env),
       new MiniCssExtractPlugin(css),
       new HtmlWebpackPlugin(html),
