@@ -3,8 +3,8 @@
  * @description 解析 browserslist 配置
  */
 
-import { readFile } from 'fs';
 import { resolve } from 'path';
+import { readFile } from 'fs/promises';
 
 // 默认配置
 const defaultConfig = resolve('.browserslistrc');
@@ -12,21 +12,14 @@ const defaultConfig = resolve('.browserslistrc');
 /**
  * @function parse
  * @param {string} path
- * @return {Array}
+ * @return {Promise<Array>}
  */
-export default (path = defaultConfig) => {
-  return new Promise((resolve, reject) => {
-    readFile(path, { encoding: 'utf-8' }, async (error, code) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(
-          code
-            .replace(/#[^\r\n]*/g, '')
-            .split(/\s*[\r\n,]+\s*/)
-            .filter(query => query)
-        );
-      }
-    });
-  });
+export default async (path = defaultConfig) => {
+  const code = await readFile(path);
+
+  return code
+    .toString()
+    .replace(/#[^\r\n]*/g, '')
+    .split(/\s*[\r\n,]+\s*/)
+    .filter(query => query);
 };
