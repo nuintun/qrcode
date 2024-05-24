@@ -34,7 +34,7 @@
     "@nuintun/svgo-loader": "^0.2.7",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.13",
     "@swc/core": "^1.5.7",
-    "@types/react": "^18.3.2",
+    "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.19",
     "bufferutil": "^4.0.8",
