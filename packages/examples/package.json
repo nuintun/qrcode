@@ -48,7 +48,7 @@
     "koa-compress": "^5.1.1",
     "memfs": "^4.9.2",
     "mini-css-extract-plugin": "^2.9.0",
-    "nodemon": "^3.1.0",
+    "nodemon": "^3.1.1",
     "postcss": "^8.4.38",
     "postcss-loader": "^8.1.1",
     "prettier": "^3.2.5",
