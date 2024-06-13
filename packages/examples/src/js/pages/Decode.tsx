@@ -1,12 +1,12 @@
 import * as styles from '/css/Decode.module.scss';
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-
 import Icon from '@ant-design/icons';
 import Clipboard from '/js/components/Clipboard';
 import useLazyState from '/js/hooks/useLazyState';
 import ImagePicker from '/js/components/ImagePicker';
+import { InfoCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 import { LocateMessage, LocateResultMessage } from '/js/workers/locate';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createMarkup, normalizeLinefeed, syntaxHighlight } from '/js/utils/utils';
 import { DecodedItem, DecodeMessage, DecodeResultMessage } from '/js/workers/decode';
 import { Alert, App, Button, Col, Collapse, CollapseProps, Form, Image, ImageProps, Modal, Row, Switch, Tooltip } from 'antd';
@@ -16,7 +16,6 @@ import favicon from '/images/favicon.ico';
 import DncodeIcon from '/images/decode.svg';
 import LocateIcon from '/images/locate.svg';
 import UploadIcon from '/images/upload.svg';
-import { InfoCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 
 const { useApp } = App;
 const { Item: FormItem, useForm, useWatch } = Form;

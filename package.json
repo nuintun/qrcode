@@ -31,10 +31,10 @@
   },
   "dependencies": {
     "@swc/helpers": "^0.5.11",
-    "tslib": "^2.6.2"
+    "tslib": "^2.6.3"
   },
   "devDependencies": {
-    "prettier": "^3.2.5",
+    "prettier": "^3.3.2",
     "typescript": "^5.4.5"
   }
 }

@@ -2,11 +2,9 @@
  * @module Clipboard
  */
 
-import { memo, useCallback, useState } from 'react';
-
 import copy from 'copy-to-clipboard';
 import { theme, Tooltip } from 'antd';
-
+import { memo, useCallback, useState } from 'react';
 import { CheckOutlined, CloseOutlined, CopyOutlined } from '@ant-design/icons';
 
 const { useToken } = theme;

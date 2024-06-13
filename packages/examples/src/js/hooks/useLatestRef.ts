@@ -15,6 +15,11 @@ export default function useLatestRef<T = undefined>(): React.MutableRefObject<T 
  * @param value 引用值
  */
 export default function useLatestRef<T>(value: T): React.MutableRefObject<T>;
+/**
+ * @function useLatestRef
+ * @description 生成自更新 useRef 对象
+ * @param value 引用值
+ */
 export default function useLatestRef<T = undefined>(value?: T): React.MutableRefObject<T | undefined> {
   const valueRef = useRef(value);
 

@@ -5,14 +5,13 @@
 import '/css/global.scss';
 import * as styles from '/css/App.module.scss';
 
-import React, { lazy, memo, Suspense, useCallback, useMemo } from 'react';
-
 import Icon from '@ant-design/icons';
 import zh_CN from 'antd/locale/zh_CN';
 import { ErrorBoundary } from 'react-error-boundary';
-import ErrorFallback from '/js/components/ErrorFallback';
-import SuspenseFallback from '/js/components/SuspenseFallback';
+import ErrorFallback from '/js/components/FallBack/Error';
+import SuspenseFallback from '/js/components/FallBack/Loading';
 import { App, AppProps, ConfigProvider, Tabs, TabsProps } from 'antd';
+import React, { lazy, memo, Suspense, useCallback, useMemo } from 'react';
 
 import favicon from '/images/favicon.ico';
 import EncodeIcon from '/images/encode.svg';
