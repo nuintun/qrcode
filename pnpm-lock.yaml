@@ -114,8 +114,8 @@ importers:
         specifier: 7.0.0
         version: 7.0.0(webpack@5.92.1(@swc/core@1.6.5(@swc/helpers@0.5.11)))
       css-modules-types-loader:
-        specifier: ^0.5.7
-        version: 0.5.7(webpack@5.92.1(@swc/core@1.6.5(@swc/helpers@0.5.11)))
+        specifier: ^0.5.8
+        version: 0.5.8(webpack@5.92.1(@swc/core@1.6.5(@swc/helpers@0.5.11)))
       find-free-ports:
         specifier: ^3.1.1
         version: 3.1.1
@@ -1015,8 +1015,8 @@ packages:
       lightningcss:
         optional: true
 
-  css-modules-types-loader@0.5.7:
-    resolution: {integrity: sha512-sBYWc/oFBcXdQATEI5XzLYq49TuwGvh4FTPnRl4gdclao7OcH7Y6ocsUUZ24mLGKtnQIU9MFSP12lJFNMO9Lrg==}
+  css-modules-types-loader@0.5.8:
+    resolution: {integrity: sha512-IG5xQdQ4EI/lV/k0wNX4mOOEzngck9YBk/5HBnYZ0kL0RZ+I8sjR7yS4y+5ZSKzrdoi6HxwSOVblv91oxopr2g==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       webpack: ^5.0.0
@@ -1193,10 +1193,6 @@ packages:
   eslint-scope@5.1.1:
     resolution: {integrity: sha512-2NxwbF/hZ0KpepYN0cNbo+FN6XoK7GaHlQhgx/hIZl6Va0bF45RQOOwhLIy8lQDbuCiadSLCBnH2CFYquit5bw==}
     engines: {node: '>=8.0.0'}
-
-  esm@3.2.25:
-    resolution: {integrity: sha512-U1suiZ2oDVWv4zPO56S0NcR5QriEahGtdN2OR6FiOG4WJvcjBVFB0qI4+eKoWFH483PKGuLuu6V8Z4T5g63UVA==}
-    engines: {node: '>=6'}
 
   esrecurse@4.3.0:
     resolution: {integrity: sha512-KmfKL3b6G+RXvP8N1vr3Tq1kL/oCFgn2NYXEtqP8/L3pKapUA4G8cFVaoF3SU323CD4XypR/ffioHmkti6/Tag==}
@@ -1392,10 +1388,6 @@ packages:
     resolution: {integrity: sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==}
     engines: {node: '>=0.12.0'}
 
-  is-observable@2.1.0:
-    resolution: {integrity: sha512-DailKdLb0WU+xX8K5w7VsJhapwHLZ9jjmazqCJq4X12CTgqq73TKnbRcnSLuXYPOoLQgV5IrD7ePiX/h1vnkBw==}
-    engines: {node: '>=8'}
-
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
 
@@ -1572,8 +1564,15 @@ packages:
   neo-async@2.6.2:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
 
+  nice-napi@1.0.2:
+    resolution: {integrity: sha512-px/KnJAJZf5RuBGcfD+Sp2pAKq0ytz8j+1NehvgIGFkvtvFrDM3T8E4x/JJODXK9WZow8RRGrbA9QQ3hs+pDhA==}
+    os: ['!win32']
+
   no-case@3.0.4:
     resolution: {integrity: sha512-fgAN3jGAh+RoxUGZHTSOLJIqUc2wmoBwGR4tbpNAKmmovFoWq0OdRkb0VkldReO2a2iBT/OEulG9XSUc10r3zg==}
+
+  node-addon-api@3.2.1:
+    resolution: {integrity: sha512-mmcei9JghVNDYydghQmeDX8KoAm0FAiYyIcUt/N4nhyAipB17pllZQDOJD2fotxABnt4Mdz+dKTO7eftLg4d0A==}
 
   node-gyp-build@4.8.1:
     resolution: {integrity: sha512-OSs33Z9yWr148JZcbZd5WiAXhh/n9z8TxQcdMhIOlpN9AhWpLfvVFO73+m77bBABQMaY9XSvIa+qk0jlI7Gcaw==}
@@ -1597,9 +1596,6 @@ packages:
 
   nth-check@2.1.1:
     resolution: {integrity: sha512-lqjrjmaOoAnWfMmBPL+XNnynZh2+swxiX3WUE0s4yEHI6m+AwrK2UZOimIRl3X/4QctVqS8AiZjFqyOGrMXb/w==}
-
-  observable-fns@0.6.1:
-    resolution: {integrity: sha512-9gRK4+sRWzeN6AOewNBTLXir7Zl/i3GB6Yl26gK4flxz8BXVpD3kt8amREmWNb0mxYOGDotvE5a4N+PtGGKdkg==}
 
   on-finished@2.4.1:
     resolution: {integrity: sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg==}
@@ -1650,6 +1646,9 @@ packages:
   picomatch@2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
+
+  piscina@4.6.0:
+    resolution: {integrity: sha512-VofazM7TCa/2cYhbtZQFyxJJIKe1JYZ5JBTxGMOo770CYupdVpHNvMrX+fuL+mACQ10ISWbzXFBmYjZvzELG5w==}
 
   plimit-lit@1.6.1:
     resolution: {integrity: sha512-B7+VDyb8Tl6oMJT9oSO2CW8XC/T4UcJGrwOVoNGwOQsQYhlpfajmrMj5xeejqaASq3V/EqThyOeATEOMuSEXiA==}
@@ -2395,15 +2394,9 @@ packages:
     peerDependencies:
       tslib: ^2
 
-  threads@1.7.0:
-    resolution: {integrity: sha512-Mx5NBSHX3sQYR6iI9VYbgHKBLisyB+xROCBGjjWm1O9wb9vfLxdaGtmT/KCjUqMsSNW6nERzCW3T6H43LqjDZQ==}
-
   throttle-debounce@5.0.0:
     resolution: {integrity: sha512-2iQTSgkkc1Zyk0MeVrt/3BvuOXYPl/R8Z0U2xxo9rjwNciaHDG3R+Lm6dh4EeUci49DanvBnuqI6jshoQQRGEg==}
     engines: {node: '>=12.22'}
-
-  tiny-worker@2.3.0:
-    resolution: {integrity: sha512-pJ70wq5EAqTAEl9IkGzA+fN0836rycEuz2Cn6yeZ6FRzlVS5IDOkFHpIoEsksPRQV34GDqXm65+OlnZqUSyK2g==}
 
   to-regex-range@5.0.1:
     resolution: {integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==}
@@ -3404,15 +3397,13 @@ snapshots:
       serialize-javascript: 6.0.2
       webpack: 5.92.1(@swc/core@1.6.5(@swc/helpers@0.5.11))
 
-  css-modules-types-loader@0.5.7(webpack@5.92.1(@swc/core@1.6.5(@swc/helpers@0.5.11))):
+  css-modules-types-loader@0.5.8(webpack@5.92.1(@swc/core@1.6.5(@swc/helpers@0.5.11))):
     dependencies:
       acorn: 8.12.0
       acorn-walk: 8.3.3
-      threads: 1.7.0
+      piscina: 4.6.0
       tslib: 2.6.3
       webpack: 5.92.1(@swc/core@1.6.5(@swc/helpers@0.5.11))
-    transitivePeerDependencies:
-      - supports-color
 
   css-select@4.3.0:
     dependencies:
@@ -3605,9 +3596,6 @@ snapshots:
       esrecurse: 4.3.0
       estraverse: 4.3.0
 
-  esm@3.2.25:
-    optional: true
-
   esrecurse@4.3.0:
     dependencies:
       estraverse: 5.3.0
@@ -3784,8 +3772,6 @@ snapshots:
       is-extglob: 2.1.1
 
   is-number@7.0.0: {}
-
-  is-observable@2.1.0: {}
 
   isexe@2.0.0: {}
 
@@ -3971,10 +3957,19 @@ snapshots:
 
   neo-async@2.6.2: {}
 
+  nice-napi@1.0.2:
+    dependencies:
+      node-addon-api: 3.2.1
+      node-gyp-build: 4.8.1
+    optional: true
+
   no-case@3.0.4:
     dependencies:
       lower-case: 2.0.2
       tslib: 2.6.3
+
+  node-addon-api@3.2.1:
+    optional: true
 
   node-gyp-build@4.8.1: {}
 
@@ -4000,8 +3995,6 @@ snapshots:
   nth-check@2.1.1:
     dependencies:
       boolbase: 1.0.0
-
-  observable-fns@0.6.1: {}
 
   on-finished@2.4.1:
     dependencies:
@@ -4048,6 +4041,10 @@ snapshots:
   picocolors@1.0.1: {}
 
   picomatch@2.3.1: {}
+
+  piscina@4.6.0:
+    optionalDependencies:
+      nice-napi: 1.0.2
 
   plimit-lit@1.6.1:
     dependencies:
@@ -4838,23 +4835,7 @@ snapshots:
     dependencies:
       tslib: 2.6.3
 
-  threads@1.7.0:
-    dependencies:
-      callsites: 3.1.0
-      debug: 4.3.5(supports-color@5.5.0)
-      is-observable: 2.1.0
-      observable-fns: 0.6.1
-    optionalDependencies:
-      tiny-worker: 2.3.0
-    transitivePeerDependencies:
-      - supports-color
-
   throttle-debounce@5.0.0: {}
-
-  tiny-worker@2.3.0:
-    dependencies:
-      esm: 3.2.25
-    optional: true
 
   to-regex-range@5.0.1:
     dependencies:

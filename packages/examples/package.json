@@ -41,7 +41,7 @@
     "case-sensitive-paths-webpack-plugin": "^2.4.0",
     "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "7.0.0",
-    "css-modules-types-loader": "^0.5.7",
+    "css-modules-types-loader": "^0.5.8",
     "find-free-ports": "^3.1.1",
     "html-webpack-plugin": "^5.6.0",
     "koa": "^2.15.3",
