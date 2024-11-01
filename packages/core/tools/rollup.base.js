@@ -3,8 +3,8 @@
  */
 
 import treeShake from './plugins/tree-shake.js';
-import { createRequire, isBuiltin } from 'module';
 import typescript from '@rollup/plugin-typescript';
+import { createRequire, isBuiltin } from 'node:module';
 
 const pkg = createRequire(import.meta.url)('../package.json');
 

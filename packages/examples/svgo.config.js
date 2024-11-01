@@ -3,7 +3,7 @@
  * @description Svgo 配置
  */
 
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
 
 /**
  * @type {import('./tools/interface').SvgoConfig}

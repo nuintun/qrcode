@@ -4,9 +4,9 @@
  */
 
 import webpack from 'webpack';
-import { join, resolve } from 'path';
-import { readdir } from 'fs/promises';
+import { join, resolve } from 'node:path';
 import resolveRules from '../lib/rules.js';
+import { readdir } from 'node:fs/promises';
 import appConfig from '../../app.config.js';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';

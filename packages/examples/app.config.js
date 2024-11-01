@@ -3,7 +3,7 @@
  * @description 应用配置
  */
 
-import path from 'path';
+import path from 'node:path';
 
 const js = path.resolve('src/js');
 const css = path.resolve('src/css');

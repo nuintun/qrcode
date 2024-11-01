@@ -3,8 +3,8 @@
  * @description 解析 browserslist 配置
  */
 
-import { resolve } from 'path';
-import { readFile } from 'fs/promises';
+import { resolve } from 'node:path';
+import { readFile } from 'node:fs/promises';
 
 // 默认配置
 const defaultConfig = resolve('.browserslistrc');

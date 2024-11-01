@@ -3,7 +3,7 @@
  * @description 获取本机 IP 地址
  */
 
-import os from 'os';
+import os from 'node:os';
 
 /**
  * @function isLinkLocal
