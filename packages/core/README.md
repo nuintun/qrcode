@@ -288,6 +288,13 @@ image.addEventListener('load', () => {
 image.src = 'https://nuintun.github.io/qrcode/packages/examples/src/images/qrcode.jpg';
 ```
 
+### Links
+
+<!-- prettier-ignore -->
+> [zxing/zxing](https://github.com/zxing/zxing)
+>
+> [zxing-cpp/zxing-cpp](https://github.com/zxing-cpp/zxing-cpp)
+
 [npm-image]: https://img.shields.io/npm/v/@nuintun/qrcode?style=flat-square
 [npm-url]: https://www.npmjs.org/package/@nuintun/qrcode
 [download-image]: https://img.shields.io/npm/dm/@nuintun/qrcode?style=flat-square
