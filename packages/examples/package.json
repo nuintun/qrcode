@@ -54,7 +54,7 @@
     "postcss": "^8.4.49",
     "postcss-loader": "^8.1.1",
     "prettier": "^3.3.3",
-    "sass": "^1.80.7",
+    "sass": "^1.81.0",
     "sass-loader": "^16.0.3",
     "svgc-loader": "^0.2.16",
     "swc-loader": "^0.2.6",
