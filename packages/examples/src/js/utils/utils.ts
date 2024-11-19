@@ -57,7 +57,7 @@ export function syntaxHighlight(
     boolean: booleanClassName = 'boolean'
   }: ClassNamesHighlight = {}
 ): string {
-  const PARSE_RE = /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g;
+  const PARSE_RE = /"(?:\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(?:\s*:)?|\b(?:true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g;
 
   return json
     .replace(/[&<>]/gm, match => {
