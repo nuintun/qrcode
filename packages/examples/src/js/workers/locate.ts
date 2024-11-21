@@ -100,7 +100,7 @@ self.addEventListener('message', ({ data }: MessageEvent<LocateMessage>) => {
     () => {
       const message: LocateError = {
         type: 'error',
-        message: '生成未知定位图失败'
+        message: '生成位置定位图失败'
       };
 
       self.postMessage(message);
