@@ -62,8 +62,8 @@ importers:
         specifier: ^0.5.15
         version: 0.5.15
       antd:
-        specifier: ^5.22.1
-        version: 5.22.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^5.22.2
+        version: 5.22.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       browser-fs-access:
         specifier: ^0.35.0
         version: 0.35.0
@@ -975,8 +975,8 @@ packages:
     resolution: {integrity: sha512-bN798gFfQX+viw3R7yrGWRqnrN2oRkEkUjjl4JNn4E8GxxbjtG3FbrEIIY3l8/hrwUwIeCZvi4QuOTP4MErVug==}
     engines: {node: '>=12'}
 
-  antd@5.22.1:
-    resolution: {integrity: sha512-itq8AZwe3IfawZH6SMM5XdbTz1xXGTTqA7sNN0qpEdxcoTpD5nRsCBAMIy+PhwcWFobgFc6ZlF8d7f8eicn0SQ==}
+  antd@5.22.2:
+    resolution: {integrity: sha512-vihhiJbm9VG3d6boUeD1q2MXMax+qBrXhgqCEC+45v8iGUF6m4Ct+lFiCW4oWaN3EABOsbVA6Svy3Rj/QkQFKw==}
     peerDependencies:
       react: '>=16.9.0'
       react-dom: '>=16.9.0'
@@ -3538,7 +3538,7 @@ snapshots:
 
   ansi-styles@6.2.1: {}
 
-  antd@5.22.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  antd@5.22.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@ant-design/colors': 7.1.0
       '@ant-design/cssinjs': 1.21.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
