@@ -16,7 +16,7 @@ export default function treeShake() {
       const files = Object.entries(bundle);
 
       for (const [, file] of files) {
-        if (!file.isAsset) {
+        if (file.type !== 'asset') {
           const code = new MagicString(file.code);
 
           this.parse(file.code, {

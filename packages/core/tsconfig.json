@@ -1,9 +1,5 @@
 {
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
     "baseUrl": ".",
     "pretty": true,
     "strict": true,
@@ -15,11 +11,15 @@
     "noUnusedLocals": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
     "noImplicitOverride": true,
     "noUnusedParameters": true,
+    "moduleResolution": "bundler",
     "useDefineForClassFields": true,
     "forceConsistentCasingInFileNames": true,
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
     "paths": {
       "/*": [
         "src/*"

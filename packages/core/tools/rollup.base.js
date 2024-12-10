@@ -45,7 +45,13 @@ export default function rollup(esnext) {
       entryFileNames: `[name].${esnext ? 'js' : 'cjs'}`,
       chunkFileNames: `[name].${esnext ? 'js' : 'cjs'}`
     },
-    plugins: [typescript(), treeShake()],
+    plugins: [
+      typescript({
+        declaration: true,
+        declarationDir: esnext ? 'esm' : 'cjs'
+      }),
+      treeShake()
+    ],
     onwarn(error, warn) {
       if (error.code !== 'CIRCULAR_DEPENDENCY') {
         warn(error);
