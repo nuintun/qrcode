@@ -16,7 +16,8 @@ const configFile = resolve('tsconfig.json');
  * @returns {Promise<void>}
  */
 async function renameDts(dir, ext) {
-  const stack = [dir]; // Stack to manage directories
+  // Stack to manage directories
+  const stack = [dir];
 
   while (stack.length > 0) {
     const currentDir = stack.pop();
