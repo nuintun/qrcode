@@ -2,9 +2,9 @@
  * @module fix-types
  */
 
-import { join, resolve } from 'path';
-import { readdir, rename } from 'fs/promises';
+import { join, resolve } from 'node:path';
 import { replaceTscAliasPaths } from 'tsc-alias';
+import { readdir, rename } from 'node:fs/promises';
 
 const configFile = resolve('tsconfig.json');
 
