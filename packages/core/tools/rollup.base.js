@@ -37,8 +37,6 @@ export default function rollup(esnext) {
     output: {
       banner,
       interop: 'auto',
-      exports: 'auto',
-      esModule: false,
       preserveModules: true,
       dir: esnext ? 'esm' : 'cjs',
       format: esnext ? 'esm' : 'cjs',
