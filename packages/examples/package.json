@@ -62,6 +62,6 @@
     "typescript": "^5.7.2",
     "utf-8-validate": "^6.0.5",
     "webpack": "^5.97.1",
-    "webpack-dev-service": "^0.13.3"
+    "webpack-dev-service": "^0.14.1"
   }
 }
