@@ -1,6 +1,6 @@
 /**
  * @module targets
- * @description 解析 browserslist 配置
+ * @description 解析 browserslist 配置.
  */
 
 import { resolve } from 'node:path';

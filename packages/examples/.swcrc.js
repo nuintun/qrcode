@@ -1,6 +1,6 @@
 /**
  * @module .swcrc
- * @description SWC 配置
+ * @description SWC 配置.
  */
 
 import targets from './tools/lib/targets.js';

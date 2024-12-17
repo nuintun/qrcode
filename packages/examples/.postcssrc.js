@@ -1,6 +1,6 @@
 /**
  * @module .postcssrc
- * @description PostCSS 配置
+ * @description PostCSS 配置.
  */
 
 import targets from './tools/lib/targets.js';

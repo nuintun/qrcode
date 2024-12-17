@@ -1,6 +1,6 @@
 /**
  * @module webpack.config.dev
- * @description 开发环境 Webpack 配置
+ * @description 开发环境 Webpack 配置.
  * @see https://github.com/facebook/create-react-app
  */
 
@@ -16,9 +16,9 @@ import memfs from 'memfs';
 import webpack from 'webpack';
 import compress from 'koa-compress';
 import resolveIp from '../lib/ip.js';
-import dev from 'webpack-dev-service';
 import appConfig from '../../app.config.js';
 import { findFreePorts } from 'find-free-ports';
+import { server as dev } from 'webpack-dev-service';
 import resolveConfigure from './webpack.config.base.js';
 import ReactRefreshPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 
@@ -61,8 +61,8 @@ function httpError(error) {
 }
 
 (async () => {
+  const ip = resolveIp();
   const fs = createMemfs();
-  const ip = await resolveIp();
   const port = await resolvePort(ports);
   const devServerHost = `http://${ip}:${port}`;
   const configure = await resolveConfigure(mode);
@@ -84,7 +84,11 @@ function httpError(error) {
     }
   });
 
-  app.use(compress({ br: false }));
+  app.use(
+    compress({
+      br: false
+    })
+  );
 
   app.use(devService);
 

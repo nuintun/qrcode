@@ -1,6 +1,6 @@
 /**
  * @module rules
- * @description 配置 Webpack 规则
+ * @description 配置 Webpack 规则.
  */
 
 import swcrc from '../../.swcrc.js';
@@ -22,7 +22,7 @@ export default async mode => {
   return [
     {
       oneOf: [
-        // The loader for js
+        // The loader for js.
         {
           test: /\.[jt]sx?$/i,
           exclude: /[\\/]node_modules[\\/]/,
@@ -33,7 +33,7 @@ export default async mode => {
             }
           ]
         },
-        // The loader for css
+        // The loader for css.
         {
           test: /\.css$/i,
           use: [
@@ -57,7 +57,7 @@ export default async mode => {
             }
           ]
         },
-        // The loader for scss or sass
+        // The loader for scss or sass.
         {
           test: /\.s[ac]ss$/i,
           use: [
@@ -84,7 +84,7 @@ export default async mode => {
             }
           ]
         },
-        // The loader for assets
+        // The loader for assets.
         {
           type: 'asset/resource',
           test: /\.(mp3|ogg|wav|mp4|flv|webm)$/i

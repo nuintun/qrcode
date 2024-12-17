@@ -1,6 +1,6 @@
 /**
  * @module webpack.config.prod
- * @description 生产环境 Webpack 配置
+ * @description 生产环境 Webpack 配置.
  * @see https://github.com/facebook/create-react-app
  */
 
@@ -16,6 +16,7 @@ import TerserPlugin from 'terser-webpack-plugin';
 import { browserslistToTargets } from 'lightningcss';
 import resolveConfigure from './webpack.config.base.js';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
+import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 
 async function getLightningTargets() {
   return browserslistToTargets(browserslist(await targets()));
@@ -27,7 +28,7 @@ async function getLightningTargets() {
   configure.devtool = false;
   configure.cache.name = 'prod';
 
-  // 使用自定义 minimizer 工具
+  // 使用自定义 minimizer 工具.
   configure.optimization.minimizer = [
     new CssMinimizerPlugin({
       minimizerOptions: {
