@@ -32,8 +32,8 @@ importers:
         specifier: ^12.1.2
         version: 12.1.2(rollup@4.28.1)(tslib@2.8.1)(typescript@5.7.2)
       dts-paths:
-        specifier: ^0.3.0
-        version: 0.3.0(typescript@5.7.2)
+        specifier: ^1.0.0
+        version: 1.0.0(typescript@5.7.2)
       magic-string:
         specifier: ^0.30.17
         version: 0.30.17
@@ -1319,8 +1319,8 @@ packages:
   dot-case@3.0.4:
     resolution: {integrity: sha512-Kv5nKlh6yRrdrGvxeJ2e5y2eRUpkUosIW4A2AS38zwSz27zu7ufDwQPi5Jhs3XAlGNetl3bmnGhQsMtkKJnj3w==}
 
-  dts-paths@0.3.0:
-    resolution: {integrity: sha512-b/sArlr+x3ML05W4bQT7sQw7T6cApTSQCuWxtmsLp9cfgO5Y+UyyzBg5NKIP3xvNPXel+txgd4VcZEnmu+GvUQ==}
+  dts-paths@1.0.0:
+    resolution: {integrity: sha512-7FPgoJf1NiBijViaAdzFnSsmbuVyslcL4Hgzri4Ehhk2gsHeF5SPtbfRToZzXC/pQsAhtpUSxOVKAypzIqOMOA==}
     peerDependencies:
       typescript: ^5.0.0
 
@@ -3914,7 +3914,7 @@ snapshots:
       no-case: 3.0.4
       tslib: 2.8.1
 
-  dts-paths@0.3.0(typescript@5.7.2):
+  dts-paths@1.0.0(typescript@5.7.2):
     dependencies:
       ts-morph: 24.0.0
       tslib: 2.8.1

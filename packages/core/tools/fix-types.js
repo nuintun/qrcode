@@ -3,7 +3,7 @@
  */
 
 import { join } from 'node:path';
-import resolvePaths from 'dts-paths';
+import { resolvePaths } from 'dts-paths';
 import { readdir, rename } from 'node:fs/promises';
 
 /**
