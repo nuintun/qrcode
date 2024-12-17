@@ -40,20 +40,21 @@
     "prepublishOnly": "npm run build",
     "build:cjs": "rollup -c tools/rollup.cjs.js",
     "build:esm": "rollup -c tools/rollup.esm.js",
+    "build:fix-types": "node tools/fix-types.js",
     "format": "prettier --write . --ignore-path .prettierignore",
     "build": "npm run clean && npm run build:main && npm run format",
-    "build:main": "npm run build:cjs && npm run build:esm && node tools/fix-types.js"
+    "build:main": "npm run build:cjs && npm run build:esm && npm run build:fix-types"
   },
   "dependencies": {
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@rollup/plugin-typescript": "^12.1.1",
-    "magic-string": "^0.30.15",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "dts-paths": "^0.3.0",
+    "magic-string": "^0.30.17",
     "prettier": "^3.4.2",
     "rimraf": "^6.0.1",
     "rollup": "^4.28.1",
-    "tsc-alias": "^1.8.10",
     "typescript": "^5.7.2"
   }
 }

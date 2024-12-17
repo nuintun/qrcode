@@ -2,11 +2,9 @@
  * @module fix-types
  */
 
-import { join, resolve } from 'node:path';
-import { replaceTscAliasPaths } from 'tsc-alias';
+import { join } from 'node:path';
+import resolvePaths from 'dts-paths';
 import { readdir, rename } from 'node:fs/promises';
-
-const configFile = resolve('tsconfig.json');
 
 /**
  * @function renameDts
@@ -52,22 +50,30 @@ async function renameDts(dir, ext) {
 renameDts('cjs', '.d.cts')
   .then(async () => {
     return Promise.all([
-      replaceTscAliasPaths({
-        configFile,
-        outDir: 'esm',
-        verbose: true,
-        resolveFullPaths: true,
-        resolveFullExtension: '.d.ts'
+      resolvePaths('cjs', {
+        compilerOptions: {
+          paths: {
+            '/*': ['cjs/*']
+          }
+        },
+        extensions: ['.d.cts']
       }),
-      replaceTscAliasPaths({
-        configFile,
-        outDir: 'cjs',
-        verbose: true,
-        resolveFullPaths: true,
-        resolveFullExtension: '.d.cts'
+      resolvePaths('esm', {
+        compilerOptions: {
+          paths: {
+            '/*': ['esm/*']
+          }
+        },
+        extensions: ['.d.ts']
       })
     ]);
   })
-  .catch(error => {
-    console.error(error);
-  });
+  .then(
+    ([cjs, esm]) => {
+      console.log(`fix cjs types: ${cjs.size} files`);
+      console.log(`fix esm types: ${esm.size} files`);
+    },
+    error => {
+      console.error(error);
+    }
+  );
