@@ -16,7 +16,6 @@ import TerserPlugin from 'terser-webpack-plugin';
 import { browserslistToTargets } from 'lightningcss';
 import resolveConfigure from './webpack.config.base.js';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
-import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 
 async function getLightningTargets() {
   return browserslistToTargets(browserslist(await targets()));
