@@ -1,3 +1,7 @@
+/**
+ * @module index
+ */
+
 import { Byte, Encoder, Hanzi, Kanji } from '@nuintun/qrcode';
 
 const encoder = new Encoder({
@@ -5,11 +9,11 @@ const encoder = new Encoder({
 });
 
 const qrcode = encoder.encode(
-  // Hanzi
+  // Hanzi.
   new Hanzi('你好世界'),
-  // Byte
+  // Byte.
   new Byte('\nhello world\n'),
-  // Kanji
+  // Kanji.
   new Kanji('こんにちは世界')
 );
 
