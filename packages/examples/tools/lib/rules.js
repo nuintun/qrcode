@@ -1,6 +1,6 @@
 /**
  * @module rules
- * @description 配置 Webpack 规则.
+ * @description 配置 Webpack 规则
  */
 
 import swcrc from '../../.swcrc.js';

@@ -1,6 +1,6 @@
 /**
  * @module webpack.config.base
- * @description 基础 Webpack 配置.
+ * @description 基础 Webpack 配置
  */
 
 import webpack from 'webpack';
