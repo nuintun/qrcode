@@ -1,6 +1,6 @@
 /**
  * @module svgo.config
- * @description Svgo 配置.
+ * @description Svgo 配置
  */
 
 import { createHash } from 'node:crypto';

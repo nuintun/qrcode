@@ -84,8 +84,8 @@ importers:
         version: 4.1.2(react@18.3.1)
     devDependencies:
       '@nuintun/svgo-loader':
-        specifier: ^0.2.16
-        version: 0.2.16(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15)))
+        specifier: ^0.3.0
+        version: 0.3.0(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15)))
       '@pmmmwh/react-refresh-webpack-plugin':
         specifier: ^0.5.15
         version: 0.5.15(react-refresh@0.16.0)(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15)))
@@ -93,10 +93,10 @@ importers:
         specifier: ^1.10.1
         version: 1.10.1(@swc/helpers@0.5.15)
       '@types/react':
-        specifier: ^18.3.12
+        specifier: ^18.3.17
         version: 18.3.17
       '@types/react-dom':
-        specifier: ^18.3.1
+        specifier: ^18.3.5
         version: 18.3.5(@types/react@18.3.17)
       autoprefixer:
         specifier: ^10.4.20
@@ -117,8 +117,8 @@ importers:
         specifier: 7.0.0
         version: 7.0.0(lightningcss@1.28.2)(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15)))
       css-modules-types-loader:
-        specifier: ^0.5.19
-        version: 0.5.19(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15)))
+        specifier: ^0.6.0
+        version: 0.6.0(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15)))
       find-free-ports:
         specifier: ^3.1.1
         version: 3.1.1
@@ -159,8 +159,8 @@ importers:
         specifier: ^16.0.4
         version: 16.0.4(sass@1.83.0)(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15)))
       svgc-loader:
-        specifier: ^0.2.16
-        version: 0.2.16(react@18.3.1)(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15)))
+        specifier: ^0.3.0
+        version: 0.3.0(react@18.3.1)(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15)))
       swc-loader:
         specifier: ^0.2.6
         version: 0.2.6(@swc/core@1.10.1(@swc/helpers@0.5.15))(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15)))
@@ -177,8 +177,8 @@ importers:
         specifier: ^5.97.1
         version: 5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15))
       webpack-dev-service:
-        specifier: ^0.14.1
-        version: 0.14.1(bufferutil@4.0.8)(koa@2.15.3)(utf-8-validate@6.0.5)(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15)))
+        specifier: ^0.14.2
+        version: 0.14.2(bufferutil@4.0.8)(koa@2.15.3)(utf-8-validate@6.0.5)(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15)))
 
 packages:
 
@@ -389,14 +389,20 @@ packages:
     resolution: {integrity: sha512-zM0mVWSXE0a0h9aKACLwKmD6nHcRiKrPpCfvaKqG1CqDEyjEawId0ocXxVzPMCAm6kkWr2P025msfxXEnt8UGQ==}
     engines: {node: '>= 10'}
 
-  '@nuintun/ansi@0.1.1':
-    resolution: {integrity: sha512-RagnWdqgdcIhkeMX4jFwxeG9vUuSXZiM6V5BEumo+wVZz7sjAdBdvxn5PXKzk/PRWUHlQadDtL8Ct7KQQNxFFw==}
+  '@nuintun/ansi@0.2.0':
+    resolution: {integrity: sha512-GXZnD2bo8Kx6mH+TzTjcaStEvryq27zPTaHzPdTJaFrnKhSsmIEfjQ92wVc1WiMmIQETv5oA0pwYjpi2CQUKYA==}
 
-  '@nuintun/svgo-loader@0.2.16':
-    resolution: {integrity: sha512-tRR+NHp+Z4UDu3w6MPScTiJaY0nRE7jusmESz81O1j7MuKPkrakzEkZPZwOhkzR1jXt/EpGSjTd46esMF8Eqvw==}
+  '@nuintun/svgo-loader@0.3.0':
+    resolution: {integrity: sha512-zK/5U/ewnttxICQDnE+6byFxFSC2RHL+ln48uvYyQUh6Y65J68ruZz0yiGg4y1DuyiQBqleJyNVhT59aZByhUQ==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
+      '@rspack/core': ^1.0.0
       webpack: ^5.0.0
+    peerDependenciesMeta:
+      '@rspack/core':
+        optional: true
+      webpack:
+        optional: true
 
   '@parcel/watcher-android-arm64@2.5.0':
     resolution: {integrity: sha512-qlX4eS28bUcQCdribHkg/herLe+0A9RyYC+mm2PXpncit8z5b3nSqGVzMNR3CmtAOgRutiZ02eIJJgP/b1iEFQ==}
@@ -1198,10 +1204,16 @@ packages:
       lightningcss:
         optional: true
 
-  css-modules-types-loader@0.5.19:
-    resolution: {integrity: sha512-jwhLWaoKssW7COGXe3TohBgAZBUEbmX3WFtsK8vxjffkEunBbes8UF9ScyJJLt16edSnBt+0fw9CZ7cb2Yx2bA==}
+  css-modules-types-loader@0.6.0:
+    resolution: {integrity: sha512-NXpMqhVIoF30ho24bFuE1P9VeDJL8iE+75jdKJiCrUZY3QI4FN+uHEvXEXzfD+jNm6CqaJWOveldsUh1tcawVQ==}
     peerDependencies:
+      '@rspack/core': ^1.0.0
       webpack: ^5.0.0
+    peerDependenciesMeta:
+      '@rspack/core':
+        optional: true
+      webpack:
+        optional: true
 
   css-select@4.3.0:
     resolution: {integrity: sha512-wPpOYtnsVontu2mODhA19JrqWxNsfdatRKd64kmpRbQgh1KtItko5sTnEpPdpSaJszTOhEMlF/RPz28qj4HqhQ==}
@@ -2568,20 +2580,25 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  svgc-loader@0.2.16:
-    resolution: {integrity: sha512-LDcDDpYgdbrhKgwJVieSCbEcv9zQRPhdYwVgIey0NzrCn2WHkM/vba7lTbtTq2Y32imVjDgdqTtbtpREeEUrBQ==}
+  svgc-loader@0.3.0:
+    resolution: {integrity: sha512-LF3qD31RMj+g3iXUb2PseGE1c8FCZz4dXJL9ciXMRqbTMz9/8hiXZcM8L/hCdBlGDGa2fzeF2DJ1w5L6t81MCA==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
+      '@rspack/core': ^1.0.0
       preact: '*'
       react: '*'
       react-native-svg: '*'
       webpack: ^5.0.0
     peerDependenciesMeta:
+      '@rspack/core':
+        optional: true
       preact:
         optional: true
       react:
         optional: true
       react-native-svg:
+        optional: true
+      webpack:
         optional: true
 
   svgo@3.3.2:
@@ -2711,8 +2728,8 @@ packages:
     resolution: {integrity: sha512-TnbFSbcOCcDgjZ4piURLCbJ3nJhznVh9kw6F6iokjiFPl8ONxe9A6nMDVXDiNbrSfLILs6vB07F7wLBrwPYzJw==}
     engines: {node: '>=10.13.0'}
 
-  webpack-dev-service@0.14.1:
-    resolution: {integrity: sha512-ezHE6mYwFy6EghNeROz7LOZS9VifA1niFLNzTsLm98qo1JkvC2LHpF0IDWWI7IQuCS7Nrs1sBeEkbY4NA+en+A==}
+  webpack-dev-service@0.14.2:
+    resolution: {integrity: sha512-0e7lgoV1LksFq5cs/7NlvvxHvqqN97yIXdYi3L5zXnDxp4gME5Gj5/ESnHyHfaG/LXF6dnsA+SJN6h7cjdr1Lw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       koa: '>=2.0.0'
@@ -2958,14 +2975,15 @@ snapshots:
       '@napi-rs/nice-win32-x64-msvc': 1.0.1
     optional: true
 
-  '@nuintun/ansi@0.1.1':
+  '@nuintun/ansi@0.2.0':
     dependencies:
       tslib: 2.8.1
 
-  '@nuintun/svgo-loader@0.2.16(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15)))':
+  '@nuintun/svgo-loader@0.3.0(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15)))':
     dependencies:
       svgo: 3.3.2
       tslib: 2.8.1
+    optionalDependencies:
       webpack: 5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15))
 
   '@parcel/watcher-android-arm64@2.5.0':
@@ -3762,12 +3780,13 @@ snapshots:
     optionalDependencies:
       lightningcss: 1.28.2
 
-  css-modules-types-loader@0.5.19(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15))):
+  css-modules-types-loader@0.6.0(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15))):
     dependencies:
       acorn: 8.14.0
       acorn-walk: 8.3.4
       piscina: 4.8.0
       tslib: 2.8.1
+    optionalDependencies:
       webpack: 5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15))
 
   css-select@4.3.0:
@@ -5177,14 +5196,14 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  svgc-loader@0.2.16(react@18.3.1)(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15))):
+  svgc-loader@0.3.0(react@18.3.1)(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15))):
     dependencies:
       css-tree: 3.1.0
       svgo: 3.3.2
       tslib: 2.8.1
-      webpack: 5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15))
     optionalDependencies:
       react: 18.3.1
+      webpack: 5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15))
 
   svgo@3.3.2:
     dependencies:
@@ -5294,9 +5313,9 @@ snapshots:
       glob-to-regexp: 0.4.1
       graceful-fs: 4.2.11
 
-  webpack-dev-service@0.14.1(bufferutil@4.0.8)(koa@2.15.3)(utf-8-validate@6.0.5)(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15))):
+  webpack-dev-service@0.14.2(bufferutil@4.0.8)(koa@2.15.3)(utf-8-validate@6.0.5)(webpack@5.97.1(@swc/core@1.10.1(@swc/helpers@0.5.15))):
     dependencies:
-      '@nuintun/ansi': 0.1.1
+      '@nuintun/ansi': 0.2.0
       '@types/koa': 2.15.0
       '@types/ws': 8.5.13
       etag: 1.8.1

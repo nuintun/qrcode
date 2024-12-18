@@ -1,6 +1,6 @@
 /**
  * @module app.config
- * @description 应用配置.
+ * @description 应用配置
  */
 
 import path from 'node:path';
