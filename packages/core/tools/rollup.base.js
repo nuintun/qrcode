@@ -40,6 +40,7 @@ export default function rollup(esnext) {
       preserveModules: true,
       dir: esnext ? 'esm' : 'cjs',
       format: esnext ? 'esm' : 'cjs',
+      generatedCode: { constBindings: true },
       entryFileNames: `[name].${esnext ? 'js' : 'cjs'}`,
       chunkFileNames: `[name].${esnext ? 'js' : 'cjs'}`
     },
