@@ -34,8 +34,7 @@
     }
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
+    "src/**/*",
     "global.d.ts"
   ],
   "exclude": [
