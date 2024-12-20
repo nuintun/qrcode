@@ -28,7 +28,10 @@ jobs:
       - name: Install dependencies 📦️
         run: pnpm install --frozen-lockfile
 
+      - name: Change directory 📂
+        run: cd packages/core
+
       - name: Publish package 🚀
-        run: pnpm -r publish --provenance --access public
+        run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
