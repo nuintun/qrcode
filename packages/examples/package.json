@@ -31,7 +31,7 @@
     "react-error-boundary": "^4.1.2"
   },
   "devDependencies": {
-    "@nuintun/svgo-loader": "^0.3.0",
+    "@nuintun/svgo-loader": "^0.3.3",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",
     "@swc/core": "^1.10.1",
     "@types/react": "^18.3.17",
@@ -42,7 +42,7 @@
     "case-sensitive-paths-webpack-plugin": "^2.4.0",
     "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "7.0.0",
-    "css-modules-types-loader": "^0.6.0",
+    "css-modules-types-loader": "^0.6.2",
     "find-free-ports": "^3.1.1",
     "html-webpack-plugin": "^5.6.3",
     "koa": "^2.15.3",
@@ -56,12 +56,12 @@
     "prettier": "^3.4.2",
     "sass": "^1.83.0",
     "sass-loader": "^16.0.4",
-    "svgc-loader": "^0.3.0",
+    "svgc-loader": "^0.3.3",
     "swc-loader": "^0.2.6",
     "terser-webpack-plugin": "^5.3.11",
     "typescript": "^5.7.2",
     "utf-8-validate": "^6.0.5",
     "webpack": "^5.97.1",
-    "webpack-dev-service": "^0.14.2"
+    "webpack-dev-service": "^0.14.5"
   }
 }

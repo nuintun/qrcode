@@ -1,6 +1,6 @@
 {
   "name": "@nuintun/qrcode",
-  "version": "4.1.10",
+  "version": "4.1.11",
   "description": "A pure JavaScript QRCode encode and decode library.",
   "type": "module",
   "sideEffects": false,
@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^12.1.2",
-    "dts-paths": "^1.0.1",
+    "dts-paths": "^1.0.3",
     "magic-string": "^0.30.17",
     "prettier": "^3.4.2",
     "rimraf": "^6.0.1",
