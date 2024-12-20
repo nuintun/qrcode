@@ -29,6 +29,6 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Publish package 🚀
-        run: pnpm publish --provenance --access public
+        run: pnpm -r publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
