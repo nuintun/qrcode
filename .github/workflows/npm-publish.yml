@@ -1,0 +1,34 @@
+name: Release to NPM
+
+on:
+  workflow_dispatch:
+    # Manually trigger.
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Use Node LTS ✨
+        uses: actions/setup-node@v4
+        with:
+          cache: pnpm
+          node-version: lts/*
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies 📦️
+        run: pnpm install --frozen-lockfile
+
+      - name: Publish package 🚀
+        run: pnpm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
