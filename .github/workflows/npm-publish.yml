@@ -14,7 +14,8 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - name: Use pnpm latest 🛠️
+        uses: pnpm/action-setup@v4
         with:
           version: latest
 
