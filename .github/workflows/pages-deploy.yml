@@ -11,6 +11,7 @@ jobs:
     permissions:
       pages: write
       contents: read
+      id-token: write
     steps:
       # 检出代码
       - name: Checkout code
