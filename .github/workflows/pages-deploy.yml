@@ -42,7 +42,7 @@ jobs:
       - name: Upload GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./packages/wwwroot
+          path: ./packages/examples/wwwroot
 
       # 部署到 GitHub Pages
       - name: Deploy GitHub Pages
