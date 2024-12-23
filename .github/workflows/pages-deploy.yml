@@ -46,9 +46,6 @@ jobs:
   # 部署任务
   deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     needs: build
     steps:
       # 部署到 GitHub Pages
