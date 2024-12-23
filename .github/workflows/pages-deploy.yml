@@ -5,13 +5,19 @@ on:
     branches:
       - main
 
+permissions:
+  pages: write
+  contents: read
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
 jobs:
-  deploy:
+  # 构建任务
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      contents: read
-      id-token: write
     steps:
       # 检出代码
       - name: Checkout code
@@ -44,7 +50,14 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./packages/examples/wwwroot
-
+  # 部署任务
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    steps:
       # 部署到 GitHub Pages
       - name: Deploy GitHub Pages
         uses: actions/deploy-pages@v4
