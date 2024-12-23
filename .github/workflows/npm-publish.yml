@@ -1,9 +1,7 @@
 name: Publish To NPM
-
 on:
+  # 手动触发
   workflow_dispatch:
-    # 手动触发
-
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -14,13 +12,11 @@ jobs:
       # 检出代码
       - name: Checkout code
         uses: actions/checkout@v4
-
       # 设置 pnpm
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: latest
-
       # 设置 node
       - name: Setup node
         uses: actions/setup-node@v4
@@ -28,11 +24,9 @@ jobs:
           cache: pnpm
           node-version: lts/*
           registry-url: https://registry.npmjs.org
-
       # 安装依赖
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
       # 发布到 NPM
       - name: Publish to NPM
         working-directory: ./packages/core

@@ -1,19 +1,15 @@
 name: Deploy GitHub Pages
-
 on:
   push:
     branches:
       - main
-
 permissions:
   pages: write
   contents: read
   id-token: write
-
 concurrency:
   group: 'pages'
   cancel-in-progress: false
-
 jobs:
   # 构建任务
   build:
@@ -22,13 +18,11 @@ jobs:
       # 检出代码
       - name: Checkout code
         uses: actions/checkout@v4
-
       # 设置 pnpm
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: latest
-
       # 设置 node
       - name: Setup node
         uses: actions/setup-node@v4
@@ -36,15 +30,12 @@ jobs:
           cache: pnpm
           node-version: lts/*
           registry-url: https://registry.npmjs.org
-
       # 安装依赖
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
       # 构建项目
       - name: Build GitHub Pages
         run: pnpm build && pnpm prod
-
       # 上传构建产物
       - name: Upload GitHub Pages
         uses: actions/upload-pages-artifact@v3
