@@ -5,9 +5,9 @@
 
 import path from 'node:path';
 
-const js = path.resolve('src/js');
-const css = path.resolve('src/css');
-const images = path.resolve('src/images');
+const js = path.resolve('app/js');
+const css = path.resolve('app/css');
+const images = path.resolve('app/images');
 
 /**
  * @type {import('./tools/interface').AppConfig}
@@ -16,12 +16,12 @@ export default {
   ports: 8000,
   name: '二维码',
   lang: 'zh-CN',
-  context: path.resolve('src'),
-  outputPath: path.resolve('app/public'),
-  entry: path.resolve('src/js/index.tsx'),
-  entryHTML: path.resolve('app/index.html'),
-  favicon: path.resolve('src/images/favicon.ico'),
-  publicPath: '/qrcode/packages/examples/app/public/',
+  publicPath: '/public/',
+  context: path.resolve('app'),
+  outputPath: path.resolve('wwwroot/public'),
+  entry: path.resolve('app/js/pages/index.tsx'),
+  entryHTML: path.resolve('wwwroot/index.html'),
+  favicon: path.resolve('app/images/favicon.ico'),
   alias: { '/js': js, '/css': css, '/images': images },
   meta: { viewport: 'width=device-width,initial-scale=1.0' }
 };

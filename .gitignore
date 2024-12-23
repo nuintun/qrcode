@@ -132,4 +132,5 @@ dist
 # Build dist
 cjs/
 esm/
+wwwroot/
 *.module.scss.d.ts

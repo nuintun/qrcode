@@ -2,13 +2,14 @@
   "compilerOptions": {
     "baseUrl": ".",
     "noEmit": true,
+    "pretty": true,
     "strict": true,
-    "allowJs": true,
     "newLine": "lf",
     "jsx": "preserve",
     "module": "ESNext",
     "target": "ESNext",
     "skipLibCheck": true,
+    "importHelpers": true,
     "noUnusedLocals": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
@@ -16,25 +17,20 @@
     "noUnusedParameters": true,
     "moduleResolution": "bundler",
     "forceConsistentCasingInFileNames": true,
-    "lib": [
-      "DOM",
-      "ESNext",
-      "WebWorker"
-    ],
     "paths": {
       "/js/*": [
-        "src/js/*"
+        "app/js/*"
       ],
       "/css/*": [
-        "src/css/*"
+        "app/css/*"
       ],
       "/images/*": [
-        "src/images/*"
+        "app/images/*"
       ]
     }
   },
   "include": [
-    "src/**/*",
+    "app/**/*",
     "global.d.ts"
   ],
   "exclude": [
