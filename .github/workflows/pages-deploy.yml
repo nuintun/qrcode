@@ -1,15 +1,16 @@
-name: Publish To NPM
+name: Deploy GitHub Pages
 
 on:
-  workflow_dispatch:
-    # 手动触发
+  push:
+    branches:
+      - main
 
 jobs:
-  publish:
+  deploy:
     runs-on: ubuntu-latest
     permissions:
+      pages: write
       contents: read
-      id-token: write
     steps:
       # 检出代码
       - name: Checkout code
@@ -33,9 +34,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # 发布到 NPM
-      - name: Publish to NPM
-        working-directory: ./packages/core
-        run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+      # 构建项目
+      - name: Build GitHub Pages
+        run: pnpm build && pnpm prod
+
+      # 上传构建产物
+      - name: Upload GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./packages/wwwroot
+
+      # 部署到 GitHub Pages
+      - name: Deploy GitHub Pages
+        uses: actions/deploy-pages@v4
