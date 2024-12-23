@@ -15,9 +15,9 @@
 <!-- prettier-ignore -->
 > [QRCode guide](https://nuintun.github.io/qrcode/packages/core/spec/ISO-IEC-18004-2015.pdf)
 >
-> [QRCode encode example](https://nuintun.github.io/qrcode/packages/examples/app/index.html#/encode)
+> [QRCode encode example](https://nuintun.github.io/qrcode/#/encode)
 >
-> [QRCode decode example](https://nuintun.github.io/qrcode/packages/examples/app/index.html#/decode)
+> [QRCode decode example](https://nuintun.github.io/qrcode/#/decode)
 
 ### Usage
 
