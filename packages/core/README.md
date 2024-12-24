@@ -13,7 +13,7 @@
 ### QRCode guide and example
 
 <!-- prettier-ignore -->
-> [QRCode guide](https://nuintun.github.io/qrcode/packages/core/spec/ISO-IEC-18004-2015.pdf)
+> [QRCode guide](https://nuintun.github.io/qrcode/spec/ISO-IEC-18004-2015.pdf)
 >
 > [QRCode encode example](https://nuintun.github.io/qrcode/#/encode)
 >
