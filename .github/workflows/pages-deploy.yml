@@ -38,6 +38,9 @@ jobs:
       # 构建项目
       - name: Build GitHub Pages
         run: pnpm build && pnpm prod
+      # 复制 spec
+      - name: Copy spec files
+        run: cp -r ./packages/core/spec ./packages/examples/wwwroot
       # 上传构建产物
       - name: Upload GitHub Pages
         uses: actions/upload-pages-artifact@v3
