@@ -25,5 +25,14 @@ export default {
   favicon: path.resolve('app/images/favicon.ico'),
   alias: { '/js': js, '/css': css, '/images': images },
   meta: { viewport: 'width=device-width,initial-scale=1.0' },
-  plugins: [new CopyWebpackPlugin({ patterns: [{ from: 'images/qrcode.jpg', to: 'images/qrcode.jpg' }] })]
+  plugins: [
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: 'images/qrcode.jpg',
+          to: 'images/qrcode.jpg'
+        }
+      ]
+    })
+  ]
 };
