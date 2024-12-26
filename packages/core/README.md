@@ -285,7 +285,7 @@ image.addEventListener('load', () => {
   }
 });
 
-image.src = 'https://nuintun.github.io/qrcode/packages/examples/src/images/qrcode.jpg';
+image.src = 'https://nuintun.github.io/qrcode/public/images/qrcode.jpg';
 ```
 
 ### Links
