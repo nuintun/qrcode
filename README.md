@@ -241,6 +241,8 @@ image.addEventListener('load', () => {
   const luminances = grayscale(context.getImageData(0, 0, width, height));
   const binarized = binarize(luminances, width, height);
   const detector = new Detector();
+  // Notice: the detect result are possible combinations of QR Code regions,
+  // which may not necessarily be successfully decoded.
   const detected = detector.detect(binarized);
   const decoder = new Decoder();
 
@@ -280,7 +282,7 @@ image.addEventListener('load', () => {
     }
 
     // Notice: pass succeed to next() is very important,
-    // This can significantly reduce the number of detections.
+    // this can significantly reduce the number of detections.
     current = detected.next(succeed);
   }
 });
