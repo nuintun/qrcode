@@ -33,7 +33,7 @@
   "devDependencies": {
     "@nuintun/svgo-loader": "^0.3.3",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",
-    "@swc/core": "^1.10.3",
+    "@swc/core": "^1.10.4",
     "@types/react": "^18.3.17",
     "@types/react-dom": "^18.3.5",
     "autoprefixer": "^10.4.20",
