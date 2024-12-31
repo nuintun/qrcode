@@ -1,4 +1,4 @@
-name: Publish To NPM
+name: Publish to npm
 on:
   # 手动触发
   workflow_dispatch:
@@ -27,8 +27,8 @@ jobs:
       # 安装依赖
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      # 发布到 NPM
-      - name: Publish to NPM
+      # 发布到 npm
+      - name: Publish to npm
         working-directory: ./packages/core
         run: npm publish --provenance --access public
         env:
