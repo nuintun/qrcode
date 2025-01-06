@@ -22,7 +22,7 @@
     "@ant-design/icons": "^5.5.2",
     "@nuintun/qrcode": "workspace:*",
     "@swc/helpers": "^0.5.15",
-    "antd": "^5.22.7",
+    "antd": "^5.23.0",
     "browser-fs-access": "^0.35.0",
     "chardet": "^2.0.0",
     "copy-to-clipboard": "^3.3.3",
@@ -63,6 +63,6 @@
     "typescript": "^5.7.2",
     "utf-8-validate": "^6.0.5",
     "webpack": "^5.97.1",
-    "webpack-dev-service": "^0.14.7"
+    "webpack-dev-service": "^0.14.8"
   }
 }
