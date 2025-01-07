@@ -59,10 +59,10 @@ export interface AppConfig extends Pick<Configuration, 'context' | 'plugins' | '
   favicon: string;
   entryHTML: string;
   outputPath: string;
-  publicPath?: string;
   env?: Env | EnvFunction;
   meta?: Record<string, string>;
   entry: Prop<Configuration, 'entry'>;
   ports: [start: number, end?: number] | number;
   alias?: Prop<Prop<Configuration, 'resolve'>, 'alias'>;
+  publicPath?: Prop<Prop<Configuration, 'output'>, 'publicPath'>;
 }
