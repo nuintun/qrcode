@@ -58,11 +58,11 @@ export interface AppConfig extends Pick<Configuration, 'context' | 'plugins' | '
   name: string;
   favicon: string;
   entryHTML: string;
-  outputPath: string;
   env?: Env | EnvFunction;
   meta?: Record<string, string>;
   entry: Prop<Configuration, 'entry'>;
   ports: [start: number, end?: number] | number;
   alias?: Prop<Prop<Configuration, 'resolve'>, 'alias'>;
+  outputPath: Prop<Prop<Configuration, 'output'>, 'path'>;
   publicPath?: Prop<Prop<Configuration, 'output'>, 'publicPath'>;
 }
