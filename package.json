@@ -35,6 +35,14 @@
   },
   "devDependencies": {
     "prettier": "^3.4.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@swc/core",
+      "bufferutil",
+      "core-js-pure",
+      "utf-8-validate"
+    ]
   }
 }
