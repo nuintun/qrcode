@@ -48,8 +48,8 @@
     "html-webpack-plugin": "^5.6.3",
     "koa": "^2.15.3",
     "koa-compress": "^5.1.1",
-    "lightningcss": "^1.29.0",
-    "memfs": "^4.15.3",
+    "lightningcss": "^1.29.1",
+    "memfs": "^4.17.0",
     "mini-css-extract-plugin": "^2.9.2",
     "nodemon": "^3.1.9",
     "postcss": "^8.4.49",
@@ -63,6 +63,6 @@
     "typescript": "^5.7.3",
     "utf-8-validate": "^6.0.5",
     "webpack": "^5.97.1",
-    "webpack-dev-service": "^0.14.8"
+    "webpack-dev-service": "^0.14.9"
   }
 }
