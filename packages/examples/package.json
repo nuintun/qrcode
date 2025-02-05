@@ -19,10 +19,10 @@
     "format": "prettier --write . --ignore-path .prettierignore"
   },
   "dependencies": {
-    "@ant-design/icons": "^5.5.2",
+    "@ant-design/icons": "^5.6.0",
     "@nuintun/qrcode": "workspace:*",
     "@swc/helpers": "^0.5.15",
-    "antd": "^5.23.2",
+    "antd": "^5.23.3",
     "browser-fs-access": "^0.35.0",
     "chardet": "^2.0.0",
     "copy-to-clipboard": "^3.3.3",
@@ -33,7 +33,7 @@
   "devDependencies": {
     "@nuintun/svgo-loader": "^0.3.3",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",
-    "@swc/core": "^1.10.8",
+    "@swc/core": "^1.10.14",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "autoprefixer": "^10.4.20",
@@ -63,6 +63,6 @@
     "typescript": "^5.7.3",
     "utf-8-validate": "^6.0.5",
     "webpack": "^5.97.1",
-    "webpack-dev-service": "^0.14.9"
+    "webpack-dev-service": "^0.14.10"
   }
 }
