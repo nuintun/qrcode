@@ -10,7 +10,7 @@ permissions:
   contents: read
   id-token: write
 concurrency:
-  group: 'pages'
+  group: github-pages
   cancel-in-progress: false
 jobs:
   # 构建任务
