@@ -12,7 +12,7 @@ const defaultConfig = resolve('.browserslistrc');
 /**
  * @function parse
  * @param {string} path
- * @return {Promise<Array>}
+ * @return {Promise<string[]>}
  */
 export default async (path = defaultConfig) => {
   const code = await readFile(path);

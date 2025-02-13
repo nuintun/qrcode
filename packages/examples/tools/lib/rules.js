@@ -1,23 +1,41 @@
 /**
  * @module rules
- * @description 配置 Webpack 规则
+ * @description 配置 Rspack 规则
  */
 
+import rspack from '@rspack/core';
 import swcrc from '../../.swcrc.js';
-import postcssrc from '../../.postcssrc.js';
-import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import svgorc from '../../.svgorc.js';
+import lightningcssrc from '../../.lightningcssrc.js';
 
 /**
  * @function resolveRules
  * @param {string} mode
- * @return {Promise<NonNullable<import('webpack').Configuration['module']>['rules']>}
+ * @return {Promise<NonNullable<import('@rspack/core').Configuration['module']>['rules']>}
  */
 export default async mode => {
+  const swcOptions = await swcrc(mode);
   const isDevelopment = mode !== 'production';
-  const swcOptions = { ...(await swcrc()), swcrc: false };
-  const localIdentName = isDevelopment ? '[local]-[hash:8]' : '[hash:8]';
-  const postcssOptions = { postcssOptions: { ...(await postcssrc(mode)), config: false } };
-  const cssModulesOptions = { auto: true, localIdentName, exportLocalsConvention: 'camel-case-only' };
+  const lightningcssOptions = await lightningcssrc(mode);
+  const svgoOptions = { ...(await svgorc(mode)), configFile: false };
+
+  /**
+   * @function getCssLoaderOptions
+   * @param {number} importLoaders
+   * @return {object}
+   */
+  const getCssLoaderOptions = importLoaders => {
+    return {
+      importLoaders,
+      esModule: true,
+      sourceMap: isDevelopment,
+      modules: {
+        auto: true,
+        exportLocalsConvention: 'camel-case-only',
+        localIdentName: isDevelopment ? '[local]-[hash:8]' : '[hash:8]'
+      }
+    };
+  };
 
   return [
     {
@@ -28,7 +46,7 @@ export default async mode => {
           exclude: /[\\/]node_modules[\\/]/,
           use: [
             {
-              loader: 'swc-loader',
+              loader: 'builtin:swc-loader',
               options: swcOptions
             }
           ]
@@ -38,22 +56,18 @@ export default async mode => {
           test: /\.css$/i,
           use: [
             {
-              loader: MiniCssExtractPlugin.loader
+              loader: rspack.CssExtractRspackPlugin.loader
             },
             {
               loader: 'css-modules-types-loader'
             },
             {
               loader: 'css-loader',
-              options: {
-                esModule: true,
-                importLoaders: 1,
-                modules: cssModulesOptions
-              }
+              options: getCssLoaderOptions(1)
             },
             {
-              loader: 'postcss-loader',
-              options: postcssOptions
+              loader: 'builtin:lightningcss-loader',
+              options: lightningcssOptions
             }
           ]
         },
@@ -62,25 +76,24 @@ export default async mode => {
           test: /\.s[ac]ss$/i,
           use: [
             {
-              loader: MiniCssExtractPlugin.loader
+              loader: rspack.CssExtractRspackPlugin.loader
             },
             {
               loader: 'css-modules-types-loader'
             },
             {
               loader: 'css-loader',
+              options: getCssLoaderOptions(2)
+            },
+            {
+              loader: 'builtin:lightningcss-loader',
+              options: lightningcssOptions
+            },
+            {
+              loader: 'sass-loader',
               options: {
-                esModule: true,
-                importLoaders: 2,
-                modules: cssModulesOptions
+                sourceMap: isDevelopment
               }
-            },
-            {
-              loader: 'postcss-loader',
-              options: postcssOptions
-            },
-            {
-              loader: 'sass-loader'
             }
           ]
         },
@@ -98,7 +111,8 @@ export default async mode => {
               resourceQuery: /^\?url$/,
               use: [
                 {
-                  loader: '@nuintun/svgo-loader'
+                  loader: '@nuintun/svgo-loader',
+                  options: svgoOptions
                 }
               ]
             },
@@ -106,11 +120,12 @@ export default async mode => {
               issuer: /\.[jt]sx?$/i,
               use: [
                 {
-                  loader: 'swc-loader',
+                  loader: 'builtin:swc-loader',
                   options: swcOptions
                 },
                 {
-                  loader: 'svgc-loader'
+                  loader: 'svgc-loader',
+                  options: svgoOptions
                 }
               ]
             },
@@ -118,7 +133,8 @@ export default async mode => {
               type: 'asset/resource',
               use: [
                 {
-                  loader: '@nuintun/svgo-loader'
+                  loader: '@nuintun/svgo-loader',
+                  options: svgoOptions
                 }
               ]
             }

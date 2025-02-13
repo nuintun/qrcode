@@ -4,7 +4,7 @@
  */
 
 import path from 'node:path';
-import CopyWebpackPlugin from 'copy-webpack-plugin';
+import rspack from '@rspack/core';
 
 const js = path.resolve('app/js');
 const css = path.resolve('app/css');
@@ -26,7 +26,7 @@ export default {
   alias: { '/js': js, '/css': css, '/images': images },
   meta: { viewport: 'width=device-width,initial-scale=1.0' },
   plugins: [
-    new CopyWebpackPlugin({
+    new rspack.CopyRspackPlugin({
       patterns: [
         {
           from: 'images/qrcode.jpg',

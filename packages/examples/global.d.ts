@@ -3,66 +3,87 @@
  */
 
 /// <reference types="react" />
-/// <reference types="webpack/module" />
+/// <reference types="@rspack/core/module" />
 
 declare module '*.png' {
   const content: string;
 
-  export default content;
+  export = content;
 }
 
 declare module '*.gif' {
   const content: string;
 
-  export default content;
+  export = content;
 }
 
 declare module '*.bmp' {
   const content: string;
 
-  export default content;
+  export = content;
 }
 
 declare module '*.ico' {
   const content: string;
 
-  export default content;
+  export = content;
 }
 
 declare module '*.jpg' {
   const content: string;
 
-  export default content;
+  export = content;
 }
 
 declare module '*.jpeg' {
   const content: string;
 
-  export default content;
+  export = content;
+}
+declare module '*.webp' {
+  const content: string;
+
+  export = content;
+}
+
+declare module '*.module.css' {
+  const content: {
+    readonly [name: string]: string;
+  };
+
+  export = content;
 }
 
 declare module '*.css' {
   const content: string;
 
-  export default content;
+  export = content;
+}
+
+declare module '*.module.scss' {
+  const content: {
+    readonly [name: string]: string;
+  };
+
+  export = content;
 }
 
 declare module '*.scss' {
   const content: string;
 
-  export default content;
+  export = content;
 }
 
 declare module '*.svg?url' {
   const content: string;
 
-  export default content;
+  export = content;
 }
 
 declare module '*.svg' {
   const content: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
 
-  export default content;
+  export = content;
 }
 
 declare const __DEV__: boolean;

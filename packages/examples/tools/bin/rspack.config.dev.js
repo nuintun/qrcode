@@ -1,6 +1,6 @@
 /**
- * @module webpack.config.dev
- * @description 开发环境 Webpack 配置
+ * @module rspack.config.dev
+ * @description 开发环境 Rspack 配置
  * @see https://github.com/facebook/create-react-app
  */
 
@@ -11,14 +11,14 @@ process.env.BABEL_ENV = mode;
 
 import Koa from 'koa';
 import memfs from 'memfs';
-import webpack from 'webpack';
+import rspack from '@rspack/core';
 import compress from 'koa-compress';
 import resolveIp from '../lib/ip.js';
 import appConfig from '../../app.config.js';
 import { findFreePorts } from 'find-free-ports';
-import { server as dev } from 'webpack-dev-service';
-import resolveConfigure from './webpack.config.base.js';
-import ReactRefreshPlugin from '@pmmmwh/react-refresh-webpack-plugin';
+import { server as dev } from 'rspack-dev-middleware';
+import resolveConfigure from './rspack.config.base.js';
+import ReactRefreshPlugin from '@rspack/plugin-react-refresh';
 
 const { ports } = appConfig;
 
@@ -65,14 +65,14 @@ function httpError(error) {
   const devServerHost = `http://${ip}:${port}`;
   const configure = await resolveConfigure(mode);
 
-  configure.cache.name = 'dev';
+  configure.experiments.cache.version = 'dev';
   configure.devtool = 'eval-cheap-module-source-map';
   configure.watchOptions = { aggregateTimeout: 256 };
 
   configure.plugins.push(new ReactRefreshPlugin({ overlay: false }));
 
   const app = new Koa();
-  const compiler = webpack(configure);
+  const compiler = rspack(configure);
 
   const devService = dev(compiler, {
     fs,
