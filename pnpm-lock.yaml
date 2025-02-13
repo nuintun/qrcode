@@ -16,8 +16,8 @@ importers:
         version: 2.8.1
     devDependencies:
       prettier:
-        specifier: ^3.5.0
-        version: 3.5.0
+        specifier: ^3.5.1
+        version: 3.5.1
       typescript:
         specifier: ^5.7.3
         version: 5.7.3
@@ -38,8 +38,8 @@ importers:
         specifier: ^0.30.17
         version: 0.30.17
       prettier:
-        specifier: ^3.5.0
-        version: 3.5.0
+        specifier: ^3.5.1
+        version: 3.5.1
       rimraf:
         specifier: ^6.0.1
         version: 6.0.1
@@ -126,8 +126,8 @@ importers:
         specifier: ^3.1.9
         version: 3.1.9
       prettier:
-        specifier: ^3.5.0
-        version: 3.5.0
+        specifier: ^3.5.1
+        version: 3.5.1
       rspack-dev-middleware:
         specifier: ^0.1.5
         version: 0.1.5(@rspack/core@1.2.3(@swc/helpers@0.5.15))(bufferutil@4.0.9)(koa@2.15.4)(utf-8-validate@6.0.5)
@@ -1366,8 +1366,8 @@ packages:
     resolution: {integrity: sha512-MjOadfU3Ys9KYoX0AdkBlFEF1Vx37uCCeN4ZHnmwm9FfpbsGWMZeBLMmmpY+6Ocqod7mkdZ0DT31OlbsFrLlkA==}
     engines: {node: ^10 || ^12 || >=14}
 
-  prettier@3.5.0:
-    resolution: {integrity: sha512-quyMrVt6svPS7CjQ9gKb3GLEX/rl3BCL2oa/QkNcXv4YNVBC9olt3s+H7ukto06q7B1Qz46PbrKLO34PR6vXcA==}
+  prettier@3.5.1:
+    resolution: {integrity: sha512-hPpFQvHwL3Qv5AdRvBFMhnKo4tYxp0ReXiPn2bxkiohEX6mBeBwEpBSQTkD458RaaDKQMYSp4hX4UtfUTA5wDw==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -3251,7 +3251,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  prettier@3.5.0: {}
+  prettier@3.5.1: {}
 
   pstree.remy@1.1.8: {}
 
