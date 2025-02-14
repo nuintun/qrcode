@@ -3,10 +3,10 @@
   "delay": "128ms",
   "watch": [
     ".swcrc.js",
+    ".svgorc.js",
     "tools/**/*",
     ".postcssrc.js",
     "app.config.js",
-    "svgo.config.js",
     ".browserslistrc"
   ]
 }
