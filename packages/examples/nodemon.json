@@ -5,8 +5,8 @@
     ".swcrc.js",
     ".svgorc.js",
     "tools/**/*",
-    ".postcssrc.js",
     "app.config.js",
-    ".browserslistrc"
+    ".browserslistrc",
+    ".lightningcssrc.js"
   ]
 }
