@@ -151,7 +151,8 @@ export default async mode => {
     ],
     optimization: {
       splitChunks: {
-        chunks: 'all'
+        chunks: 'all',
+        maxSize: 512 * 1024
       },
       runtimeChunk: 'single',
       removeEmptyChunks: true,
