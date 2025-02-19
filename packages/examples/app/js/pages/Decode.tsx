@@ -6,9 +6,9 @@ import useLazyState from '/js/hooks/useLazyState';
 import ImagePicker from '/js/components/ImagePicker';
 import { InfoCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 import { LocateMessage, LocateResultMessage } from '/js/workers/locate';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createMarkup, normalizeLinefeed, syntaxHighlight } from '/js/utils/utils';
 import { DecodedItem, DecodeMessage, DecodeResultMessage } from '/js/workers/decode';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, App, Button, Col, Collapse, CollapseProps, Form, Image, ImageProps, Modal, Row, Switch, Tooltip } from 'antd';
 
 import qrcode from '/images/qrcode.jpg';

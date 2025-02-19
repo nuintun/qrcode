@@ -4,7 +4,7 @@ import { Color } from 'antd/es/color-picker';
 import useLazyState from '/js/hooks/useLazyState';
 import Icon, { ThunderboltOutlined } from '@ant-design/icons';
 import { EncodeMessage, EncodeResultMessage } from '/js/workers/encode';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Button, Col, ColorPicker, Form, Image, Input, InputNumber, Row, Select, Tooltip } from 'antd';
 
 import EncodeIcon from '/images/encode.svg';
