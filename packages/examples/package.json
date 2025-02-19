@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@nuintun/svgo-loader": "^0.4.0",
-    "@rspack/core": "^1.2.3",
+    "@rspack/core": "^1.2.5",
     "@rspack/plugin-react-refresh": "^1.0.3",
     "@types/react": "^18.3.17",
     "@types/react-dom": "^18.3.5",
@@ -46,7 +46,7 @@
     "memfs": "^4.17.0",
     "nodemon": "^3.1.9",
     "prettier": "^3.5.1",
-    "rspack-dev-middleware": "^0.1.6",
+    "rspack-dev-middleware": "^0.1.7",
     "sass-embedded": "^1.85.0",
     "sass-loader": "^16.0.5",
     "svgc-loader": "^0.4.0",
