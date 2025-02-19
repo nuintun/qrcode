@@ -129,8 +129,8 @@ importers:
         specifier: ^3.5.1
         version: 3.5.1
       rspack-dev-middleware:
-        specifier: ^0.1.5
-        version: 0.1.5(@rspack/core@1.2.3(@swc/helpers@0.5.15))(bufferutil@4.0.9)(koa@2.15.4)(utf-8-validate@6.0.5)
+        specifier: ^0.1.6
+        version: 0.1.6(@rspack/core@1.2.3(@swc/helpers@0.5.15))(bufferutil@4.0.9)(koa@2.15.4)(utf-8-validate@6.0.5)
       sass-embedded:
         specifier: ^1.85.0
         version: 1.85.0
@@ -1448,8 +1448,8 @@ packages:
       react: '>=16.9.0'
       react-dom: '>=16.9.0'
 
-  rc-menu@9.16.0:
-    resolution: {integrity: sha512-vAL0yqPkmXWk3+YKRkmIR8TYj3RVdEt3ptG2jCJXWNAvQbT0VJJdRyHZ7kG/l1JsZlB+VJq/VcYOo69VR4oD+w==}
+  rc-menu@9.16.1:
+    resolution: {integrity: sha512-ghHx6/6Dvp+fw8CJhDUHFHDJ84hJE3BXNCzSgLdmNiFErWSOaZNsihDAsKq9ByTALo/xkNIwtDFGIl6r+RPXBg==}
     peerDependencies:
       react: '>=16.9.0'
       react-dom: '>=16.9.0'
@@ -1663,8 +1663,8 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
-  rspack-dev-middleware@0.1.5:
-    resolution: {integrity: sha512-HMwEGV5aWzhKry/GkwRT/f4uWGEN1+MXIDUrCxZ8jpMVrUaEKTm93VywhRtTVFeN+0Ihc7Cmd7VSVg5XwueG0Q==}
+  rspack-dev-middleware@0.1.6:
+    resolution: {integrity: sha512-cBH4JuBVshycZ5LAkf671xYiTiQB0Yn1iCopXEufic3/ZY7NUpGA3NipdYDkea8WEL9W2NrYSHjrL2lKY6PYPw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       '@rspack/core': '>=1.0.7'
@@ -2624,7 +2624,7 @@ snapshots:
       rc-input: 1.7.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       rc-input-number: 9.4.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       rc-mentions: 2.19.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      rc-menu: 9.16.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      rc-menu: 9.16.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       rc-motion: 2.9.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       rc-notification: 5.6.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       rc-pagination: 5.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -3358,13 +3358,13 @@ snapshots:
       '@rc-component/trigger': 2.2.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       classnames: 2.5.1
       rc-input: 1.7.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      rc-menu: 9.16.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      rc-menu: 9.16.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       rc-textarea: 1.9.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  rc-menu@9.16.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  rc-menu@9.16.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@babel/runtime': 7.26.9
       '@rc-component/trigger': 2.2.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -3508,7 +3508,7 @@ snapshots:
       '@babel/runtime': 7.26.9
       classnames: 2.5.1
       rc-dropdown: 4.2.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      rc-menu: 9.16.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      rc-menu: 9.16.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       rc-motion: 2.9.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       rc-resize-observer: 1.4.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -3645,7 +3645,7 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.34.8
       fsevents: 2.3.3
 
-  rspack-dev-middleware@0.1.5(@rspack/core@1.2.3(@swc/helpers@0.5.15))(bufferutil@4.0.9)(koa@2.15.4)(utf-8-validate@6.0.5):
+  rspack-dev-middleware@0.1.6(@rspack/core@1.2.3(@swc/helpers@0.5.15))(bufferutil@4.0.9)(koa@2.15.4)(utf-8-validate@6.0.5):
     dependencies:
       '@nuintun/ansi': 0.3.0
       '@rspack/core': 1.2.3(@swc/helpers@0.5.15)
