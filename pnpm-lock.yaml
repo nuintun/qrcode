@@ -129,8 +129,8 @@ importers:
         specifier: ^3.5.1
         version: 3.5.1
       rspack-dev-middleware:
-        specifier: ^0.1.7
-        version: 0.1.7(@rspack/core@1.2.5(@swc/helpers@0.5.15))(bufferutil@4.0.9)(koa@2.15.4)(utf-8-validate@6.0.5)
+        specifier: ^0.1.8
+        version: 0.1.8(@rspack/core@1.2.5(@swc/helpers@0.5.15))(bufferutil@4.0.9)(koa@2.15.4)(utf-8-validate@6.0.5)
       sass-embedded:
         specifier: ^1.85.0
         version: 1.85.0
@@ -1362,8 +1362,8 @@ packages:
   postcss-value-parser@4.2.0:
     resolution: {integrity: sha512-1NNCs6uurfkVbeXG4S8JFT9t19m45ICnif8zWLd5oPSZ50QnwMfK+H3jv408d4jw/7Bttv5axS5IiHoLaVNHeQ==}
 
-  postcss@8.5.2:
-    resolution: {integrity: sha512-MjOadfU3Ys9KYoX0AdkBlFEF1Vx37uCCeN4ZHnmwm9FfpbsGWMZeBLMmmpY+6Ocqod7mkdZ0DT31OlbsFrLlkA==}
+  postcss@8.5.3:
+    resolution: {integrity: sha512-dle9A3yYxlBSrt8Fu+IpjGT8SY8hN0mlaA6GY8t0P5PjIOZemULz/E2Bnm/2dcUOena75OTNkHI76uZBNUUq3A==}
     engines: {node: ^10 || ^12 || >=14}
 
   prettier@3.5.1:
@@ -1663,8 +1663,8 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
-  rspack-dev-middleware@0.1.7:
-    resolution: {integrity: sha512-rm3AXtbUbLxnMwVYxahpUPxodnDfPbnZF3JzQAJ4v5MeaAvfcXhnCuQtOxik17OJdXbgQNVrweYewa0dlh/rbQ==}
+  rspack-dev-middleware@0.1.8:
+    resolution: {integrity: sha512-n7qprFzaeGCQwbcUkrSOZ+ENmjHgICi/4+5DfEYwBBqzYZ5nc4gwdq8mvblOObmdlmYHy9qkVrckNMLtKp3BXA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       '@rspack/core': '>=1.0.7'
@@ -2009,8 +2009,8 @@ packages:
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
 
-  uuid@11.0.5:
-    resolution: {integrity: sha512-508e6IcKLrhxKdBbcA2b4KQZlLVp2+J5UwQ6F7Drckkc5N9ZJwFa4TgWtsww9UG8fGHbm6gbV19TdM5pQ4GaIA==}
+  uuid@11.1.0:
+    resolution: {integrity: sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==}
     hasBin: true
 
   varint@6.0.0:
@@ -2766,12 +2766,12 @@ snapshots:
 
   css-loader@7.1.2(@rspack/core@1.2.5(@swc/helpers@0.5.15)):
     dependencies:
-      icss-utils: 5.1.0(postcss@8.5.2)
-      postcss: 8.5.2
-      postcss-modules-extract-imports: 3.1.0(postcss@8.5.2)
-      postcss-modules-local-by-default: 4.2.0(postcss@8.5.2)
-      postcss-modules-scope: 3.2.1(postcss@8.5.2)
-      postcss-modules-values: 4.0.0(postcss@8.5.2)
+      icss-utils: 5.1.0(postcss@8.5.3)
+      postcss: 8.5.3
+      postcss-modules-extract-imports: 3.1.0(postcss@8.5.3)
+      postcss-modules-local-by-default: 4.2.0(postcss@8.5.3)
+      postcss-modules-scope: 3.2.1(postcss@8.5.3)
+      postcss-modules-values: 4.0.0(postcss@8.5.3)
       postcss-value-parser: 4.2.0
       semver: 7.7.1
     optionalDependencies:
@@ -2995,9 +2995,9 @@ snapshots:
 
   hyperdyperid@1.2.0: {}
 
-  icss-utils@5.1.0(postcss@8.5.2):
+  icss-utils@5.1.0(postcss@8.5.3):
     dependencies:
-      postcss: 8.5.2
+      postcss: 8.5.3
 
   ignore-by-default@1.0.1: {}
 
@@ -3217,26 +3217,26 @@ snapshots:
     optionalDependencies:
       '@napi-rs/nice': 1.0.1
 
-  postcss-modules-extract-imports@3.1.0(postcss@8.5.2):
+  postcss-modules-extract-imports@3.1.0(postcss@8.5.3):
     dependencies:
-      postcss: 8.5.2
+      postcss: 8.5.3
 
-  postcss-modules-local-by-default@4.2.0(postcss@8.5.2):
+  postcss-modules-local-by-default@4.2.0(postcss@8.5.3):
     dependencies:
-      icss-utils: 5.1.0(postcss@8.5.2)
-      postcss: 8.5.2
+      icss-utils: 5.1.0(postcss@8.5.3)
+      postcss: 8.5.3
       postcss-selector-parser: 7.1.0
       postcss-value-parser: 4.2.0
 
-  postcss-modules-scope@3.2.1(postcss@8.5.2):
+  postcss-modules-scope@3.2.1(postcss@8.5.3):
     dependencies:
-      postcss: 8.5.2
+      postcss: 8.5.3
       postcss-selector-parser: 7.1.0
 
-  postcss-modules-values@4.0.0(postcss@8.5.2):
+  postcss-modules-values@4.0.0(postcss@8.5.3):
     dependencies:
-      icss-utils: 5.1.0(postcss@8.5.2)
-      postcss: 8.5.2
+      icss-utils: 5.1.0(postcss@8.5.3)
+      postcss: 8.5.3
 
   postcss-selector-parser@7.1.0:
     dependencies:
@@ -3245,7 +3245,7 @@ snapshots:
 
   postcss-value-parser@4.2.0: {}
 
-  postcss@8.5.2:
+  postcss@8.5.3:
     dependencies:
       nanoid: 3.3.8
       picocolors: 1.1.1
@@ -3645,7 +3645,7 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.34.8
       fsevents: 2.3.3
 
-  rspack-dev-middleware@0.1.7(@rspack/core@1.2.5(@swc/helpers@0.5.15))(bufferutil@4.0.9)(koa@2.15.4)(utf-8-validate@6.0.5):
+  rspack-dev-middleware@0.1.8(@rspack/core@1.2.5(@swc/helpers@0.5.15))(bufferutil@4.0.9)(koa@2.15.4)(utf-8-validate@6.0.5):
     dependencies:
       '@nuintun/ansi': 0.3.0
       '@rspack/core': 1.2.5(@swc/helpers@0.5.15)
@@ -3658,7 +3658,7 @@ snapshots:
       schema-utils: 4.3.0
       supports-color: 10.0.0
       tslib: 2.8.1
-      uuid: 11.0.5
+      uuid: 11.1.0
       ws: 8.18.0(bufferutil@4.0.9)(utf-8-validate@6.0.5)
     transitivePeerDependencies:
       - bufferutil
@@ -3923,7 +3923,7 @@ snapshots:
 
   util-deprecate@1.0.2: {}
 
-  uuid@11.0.5: {}
+  uuid@11.1.0: {}
 
   varint@6.0.0: {}
 
