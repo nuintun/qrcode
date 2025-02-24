@@ -101,7 +101,7 @@ function httpError(error) {
 
   app.listen(port, () => {
     devService.ready(() => {
-      devService.logger.info(`server run at: \u001B[36m${devServerHost}\u001B[0m`);
+      devService.logger.info(`server run at: \x1b[36m${devServerHost}\x1b[0m`);
     });
   });
 })();
