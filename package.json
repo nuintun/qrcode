@@ -34,8 +34,8 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "prettier": "^3.5.2",
-    "typescript": "^5.7.3"
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
