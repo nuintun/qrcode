@@ -95,7 +95,7 @@ export class BitArray {
     }
   }
 
-  public toUint8Array(bitOffset: number, array: Uint8Array, offset: number, byteLength: number): void {
+  public writeToUint8Array(bitOffset: number, target: Uint8Array, byteOffset: number, byteLength: number): void {
     for (let i = 0; i < byteLength; i++) {
       let byte = 0;
 
@@ -105,7 +105,7 @@ export class BitArray {
         }
       }
 
-      array[offset + i] = byte;
+      target[byteOffset + i] = byte;
     }
   }
 
