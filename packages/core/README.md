@@ -144,12 +144,12 @@ export class BitMatrix {
   public constructor(width: number, height: number, bits?: Int32Array);
   public get width(): number;
   public get height(): number;
-  public set(x: number, y: number): void;
-  public get(x: number, y: number): number;
+  public set(x: number, y: number, bit?: 0 | 1): void;
+  public get(x: number, y: number): 0 | 1;
   public flip(): void;
   public flip(x: number, y: number): void;
   public clone(): BitMatrix;
-  public setRegion(left: number, top: number, width: number, height: number): void;
+  public setRegion(left: number, top: number, width: number, height: number, bit?: 0 | 1): void;
 }
 
 export class Point {

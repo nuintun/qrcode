@@ -2,6 +2,10 @@
  * @module utils
  */
 
+export function toBit(value: number): 0 | 1 {
+  return (value & 0x01) as 0 | 1;
+}
+
 export function toInt32(value: number): number {
   return value | 0;
 }

@@ -2,7 +2,7 @@
  * @module BitArray
  */
 
-import { toInt32 } from './utils';
+import { toBit, toInt32 } from './utils';
 
 const LOAD_FACTOR = 0.75;
 
@@ -45,12 +45,19 @@ export class BitArray {
     return Math.ceil(this.#length / 8);
   }
 
-  public set(index: number): void {
-    this.#bits[offset(index)] |= 1 << (index & 0x1f);
+  public set(index: number, bit: 0 | 1 = 1): void {
+    const bitOffset = offset(index);
+    const bitMask = 1 << (index & 0x1f);
+
+    if (bit) {
+      this.#bits[bitOffset] |= bitMask;
+    } else {
+      this.#bits[bitOffset] &= ~bitMask;
+    }
   }
 
-  public get(index: number): number {
-    return (this.#bits[offset(index)] >>> (index & 0x1f)) & 0x01;
+  public get(index: number): 0 | 1 {
+    return toBit(this.#bits[offset(index)] >>> (index & 0x1f));
   }
 
   public xor(mask: BitArray): void {

@@ -2,7 +2,7 @@
  * @module BitMatrix
  */
 
-import { toInt32 } from './utils';
+import { toBit, toInt32 } from './utils';
 
 export class BitMatrix {
   #width: number;
@@ -60,11 +60,17 @@ export class BitMatrix {
    * @description Set the bit value of the specified coordinate.
    * @param x The x coordinate.
    * @param y The y coordinate.
+   * @param bit The bit value to set, default is 1.
    */
-  public set(x: number, y: number): void {
-    const offset = this.#offset(x, y);
+  public set(x: number, y: number, bit: 0 | 1 = 1): void {
+    const bitMask = 1 << (x & 0x1f);
+    const bitOffset = this.#offset(x, y);
 
-    this.#bits[offset] |= 1 << (x & 0x1f);
+    if (bit) {
+      this.#bits[bitOffset] |= bitMask;
+    } else {
+      this.#bits[bitOffset] &= ~bitMask;
+    }
   }
 
   /**
@@ -73,10 +79,8 @@ export class BitMatrix {
    * @param x The x coordinate.
    * @param y The y coordinate.
    */
-  public get(x: number, y: number): number {
-    const offset = this.#offset(x, y);
-
-    return (this.#bits[offset] >>> (x & 0x1f)) & 0x01;
+  public get(x: number, y: number): 0 | 1 {
+    return toBit(this.#bits[this.#offset(x, y)] >>> (x & 0x1f));
   }
 
   /**
@@ -121,8 +125,9 @@ export class BitMatrix {
    * @param top The top coordinate.
    * @param width The width to set.
    * @param height The height to set.
+   * @param bit The bit value to set, default is 1.
    */
-  public setRegion(left: number, top: number, width: number, height: number): void {
+  public setRegion(left: number, top: number, width: number, height: number, bit: 0 | 1 = 1): void {
     const bits = this.#bits;
     const right = left + width;
     const bottom = top + height;
@@ -132,7 +137,14 @@ export class BitMatrix {
       const offset = y * rowSize;
 
       for (let x = left; x < right; x++) {
-        bits[offset + toInt32(x / 32)] |= 1 << (x & 0x1f);
+        const bitMask = 1 << (x & 0x1f);
+        const bitOffset = offset + toInt32(x / 32);
+
+        if (bit) {
+          bits[bitOffset] |= bitMask;
+        } else {
+          bits[bitOffset] &= ~bitMask;
+        }
       }
     }
   }
