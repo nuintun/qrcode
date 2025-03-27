@@ -49,7 +49,7 @@ export class BitArray {
     const bitOffset = offset(index);
     const bitMask = 1 << (index & 0x1f);
 
-    if (bit) {
+    if (bit !== 0) {
       this.#bits[bitOffset] |= bitMask;
     } else {
       this.#bits[bitOffset] &= ~bitMask;

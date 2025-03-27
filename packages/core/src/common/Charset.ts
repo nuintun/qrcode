@@ -7,7 +7,7 @@ const VALUES_TO_CHARSET = new Map<number, Charset>();
 export function fromCharsetValue(value: number): Charset {
   const charset = VALUES_TO_CHARSET.get(value);
 
-  if (charset) {
+  if (charset != null) {
     return charset;
   }
 

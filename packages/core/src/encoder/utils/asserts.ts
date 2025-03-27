@@ -6,7 +6,7 @@ import { Hints } from './encoder';
 import { Charset } from '/common/Charset';
 
 export function assertContent(content: string): asserts content {
-  if (!content) {
+  if (content === '') {
     throw new Error('segment content should be at least 1 character');
   }
 }

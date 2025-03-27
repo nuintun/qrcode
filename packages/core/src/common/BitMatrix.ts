@@ -66,7 +66,7 @@ export class BitMatrix {
     const bitMask = 1 << (x & 0x1f);
     const bitOffset = this.#offset(x, y);
 
-    if (bit) {
+    if (bit !== 0) {
       this.#bits[bitOffset] |= bitMask;
     } else {
       this.#bits[bitOffset] &= ~bitMask;
@@ -140,7 +140,7 @@ export class BitMatrix {
         const bitMask = 1 << (x & 0x1f);
         const bitOffset = offset + toInt32(x / 32);
 
-        if (bit) {
+        if (bit !== 0) {
           bits[bitOffset] |= bitMask;
         } else {
           bits[bitOffset] &= ~bitMask;
