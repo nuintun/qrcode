@@ -12,27 +12,23 @@ export class BitMatrix {
 
   /**
    * @constructor
+   * @param size The size of the square matrix.
+   */
+  constructor(size: number);
+  /**
+   * @constructor
    * @param width The width of the matrix.
    * @param height The height of the matrix.
-   * @param bits The initial bits of the matrix.
    */
-  constructor(width: number, height: number, bits?: Int32Array) {
+  constructor(width: number, height: number);
+  constructor(width: number, height: number = width) {
     const rowSize = Math.ceil(width / 32);
     const bitsCapacity = rowSize * height;
 
     this.#width = width;
     this.#height = height;
     this.#rowSize = rowSize;
-
-    if (bits instanceof Int32Array) {
-      if (bits.length !== bitsCapacity) {
-        throw new Error(`matrix bits capacity mismatch: ${bitsCapacity}`);
-      }
-
-      this.#bits = bits;
-    } else {
-      this.#bits = new Int32Array(bitsCapacity);
-    }
+    this.#bits = new Int32Array(bitsCapacity);
   }
 
   #offset(x: number, y: number): number {

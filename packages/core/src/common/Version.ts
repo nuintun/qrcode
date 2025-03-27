@@ -431,7 +431,7 @@ export function decodeVersion(version1: number, version2: number): Version {
 export function buildFunctionPattern({ size, version, alignmentPatterns }: Version): BitMatrix {
   // Alignment patterns
   const { length } = alignmentPatterns;
-  const matrix = new BitMatrix(size, size);
+  const matrix = new BitMatrix(size);
   const max = length - 1;
 
   // Top left finder pattern + separator + format.
