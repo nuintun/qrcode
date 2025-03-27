@@ -83,7 +83,7 @@ export class BitArray {
       this.#alloc(index + length);
 
       for (let i = 0; i < length; i++) {
-        if (value.get(i)) {
+        if (value.get(i) !== 0) {
           this.set(index);
         }
 
@@ -93,7 +93,7 @@ export class BitArray {
       this.#alloc(index + length);
 
       for (let i = length - 1; i >= 0; i--) {
-        if ((value >>> i) & 0x01) {
+        if (toBit(value >>> i) !== 0) {
           this.set(index);
         }
 
@@ -107,7 +107,7 @@ export class BitArray {
       let byte = 0;
 
       for (let j = 0; j < 8; j++) {
-        if (this.get(bitOffset++)) {
+        if (this.get(bitOffset++) !== 0) {
           byte |= 1 << (7 - j);
         }
       }
