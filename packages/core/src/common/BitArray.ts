@@ -45,15 +45,8 @@ export class BitArray {
     return Math.ceil(this.#length / 8);
   }
 
-  public set(index: number, bit: 0 | 1 = 1): void {
-    const bitOffset = offset(index);
-    const bitMask = 1 << (index & 0x1f);
-
-    if (bit !== 0) {
-      this.#bits[bitOffset] |= bitMask;
-    } else {
-      this.#bits[bitOffset] &= ~bitMask;
-    }
+  public set(index: number): void {
+    this.#bits[offset(index)] |= 1 << (index & 0x1f);
   }
 
   public get(index: number): 0 | 1 {

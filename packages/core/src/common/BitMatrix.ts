@@ -60,17 +60,9 @@ export class BitMatrix {
    * @description Set the bit value of the specified coordinate.
    * @param x The x coordinate.
    * @param y The y coordinate.
-   * @param bit The bit value to set, default is 1.
    */
-  public set(x: number, y: number, bit: 0 | 1 = 1): void {
-    const bitMask = 1 << (x & 0x1f);
-    const bitOffset = this.#offset(x, y);
-
-    if (bit !== 0) {
-      this.#bits[bitOffset] |= bitMask;
-    } else {
-      this.#bits[bitOffset] &= ~bitMask;
-    }
+  public set(x: number, y: number): void {
+    this.#bits[this.#offset(x, y)] |= 1 << (x & 0x1f);
   }
 
   /**
@@ -125,9 +117,8 @@ export class BitMatrix {
    * @param top The top coordinate.
    * @param width The width to set.
    * @param height The height to set.
-   * @param bit The bit value to set, default is 1.
    */
-  public setRegion(left: number, top: number, width: number, height: number, bit: 0 | 1 = 1): void {
+  public setRegion(left: number, top: number, width: number, height: number): void {
     const bits = this.#bits;
     const right = left + width;
     const bottom = top + height;
@@ -137,14 +128,7 @@ export class BitMatrix {
       const offset = y * rowSize;
 
       for (let x = left; x < right; x++) {
-        const bitMask = 1 << (x & 0x1f);
-        const bitOffset = offset + toInt32(x / 32);
-
-        if (bit !== 0) {
-          bits[bitOffset] |= bitMask;
-        } else {
-          bits[bitOffset] &= ~bitMask;
-        }
+        bits[offset + toInt32(x / 32)] |= 1 << (x & 0x1f);
       }
     }
   }
