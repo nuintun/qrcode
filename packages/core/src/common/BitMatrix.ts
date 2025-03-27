@@ -107,7 +107,11 @@ export class BitMatrix {
    * @description Clone the bit matrix.
    */
   public clone(): BitMatrix {
-    return new BitMatrix(this.#width, this.#height, new Int32Array(this.#bits));
+    const matrix = new BitMatrix(this.#width, this.#height);
+
+    matrix.#bits.set(this.#bits);
+
+    return matrix;
   }
 
   /**
