@@ -2,7 +2,7 @@
  * @module BitMatrix
  */
 
-import { toBit, toInt32 } from './utils';
+import { getBitMask, getBitOffset, toBit, toInt32 } from './utils';
 
 export class BitMatrix {
   #width: number;
@@ -58,7 +58,7 @@ export class BitMatrix {
    * @param y The y coordinate.
    */
   public set(x: number, y: number): void {
-    this.#bits[this.#offset(x, y)] |= 1 << (x & 0x1f);
+    this.#bits[this.#offset(x, y)] |= getBitMask(x);
   }
 
   /**
@@ -68,7 +68,7 @@ export class BitMatrix {
    * @param y The y coordinate.
    */
   public get(x: number, y: number): 0 | 1 {
-    return toBit(this.#bits[this.#offset(x, y)] >>> (x & 0x1f));
+    return toBit(this.#bits[this.#offset(x, y)] >>> getBitOffset(x));
   }
 
   /**
@@ -85,9 +85,7 @@ export class BitMatrix {
   public flip(x: number, y: number): void;
   public flip(x?: number, y?: number): void {
     if (x != null && y != null) {
-      const offset = this.#offset(x, y);
-
-      this.#bits[offset] ^= 1 << (x & 0x1f);
+      this.#bits[this.#offset(x, y)] ^= getBitMask(x);
     } else {
       const bits = this.#bits;
       const { length } = bits;
@@ -128,7 +126,7 @@ export class BitMatrix {
       const offset = y * rowSize;
 
       for (let x = left; x < right; x++) {
-        bits[offset + toInt32(x / 32)] |= 1 << (x & 0x1f);
+        bits[offset + toInt32(x / 32)] |= getBitMask(x);
       }
     }
   }

@@ -14,6 +14,14 @@ export function round(value: number): number {
   return toInt32(value + (value < 0 ? -0.5 : 0.5));
 }
 
+export function getBitMask(value: number): number {
+  return 1 << getBitOffset(value);
+}
+
+export function getBitOffset(value: number): number {
+  return value & 0x1f;
+}
+
 export function charAt(value: string, index: number): string {
   const character = value.at(index);
 
