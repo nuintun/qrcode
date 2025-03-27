@@ -57,7 +57,7 @@ export class BitMatrix {
 
   /**
    * @method set
-   * @description Set the bit value of the specified coordinate.
+   * @description Set the bit value to 1 of the specified coordinate.
    * @param x The x coordinate.
    * @param y The y coordinate.
    */
@@ -112,7 +112,7 @@ export class BitMatrix {
 
   /**
    * @method setRegion
-   * @description Set the bit value of the specified region.
+   * @description Set the bit value to 1 of the specified region.
    * @param left The left coordinate.
    * @param top The top coordinate.
    * @param width The width to set.
