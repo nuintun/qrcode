@@ -32,8 +32,8 @@ importers:
         specifier: ^12.1.2
         version: 12.1.2(rollup@4.37.0)(tslib@2.8.1)(typescript@5.8.2)
       dts-paths:
-        specifier: ^1.1.4
-        version: 1.1.4(typescript@5.8.2)
+        specifier: ^1.1.5
+        version: 1.1.5(typescript@5.8.2)
       magic-string:
         specifier: ^0.30.17
         version: 0.30.17
@@ -84,8 +84,8 @@ importers:
         version: 5.0.0(react@18.3.1)
     devDependencies:
       '@nuintun/svgo-loader':
-        specifier: ^0.4.1
-        version: 0.4.1(@rspack/core@1.2.8(@swc/helpers@0.5.15))
+        specifier: ^0.4.3
+        version: 0.4.3(@rspack/core@1.2.8(@swc/helpers@0.5.15))
       '@rspack/core':
         specifier: ^1.2.8
         version: 1.2.8(@swc/helpers@0.5.15)
@@ -108,8 +108,8 @@ importers:
         specifier: ^7.1.2
         version: 7.1.2(@rspack/core@1.2.8(@swc/helpers@0.5.15))
       css-modules-types-loader:
-        specifier: ^0.6.4
-        version: 0.6.4(@rspack/core@1.2.8(@swc/helpers@0.5.15))
+        specifier: ^0.6.5
+        version: 0.6.5(@rspack/core@1.2.8(@swc/helpers@0.5.15))
       find-free-ports:
         specifier: ^3.1.1
         version: 3.1.1
@@ -129,8 +129,8 @@ importers:
         specifier: ^3.5.3
         version: 3.5.3
       rspack-dev-middleware:
-        specifier: ^0.1.11
-        version: 0.1.11(@rspack/core@1.2.8(@swc/helpers@0.5.15))(bufferutil@4.0.9)(koa@2.16.0)(utf-8-validate@6.0.5)
+        specifier: ^0.1.12
+        version: 0.1.12(@rspack/core@1.2.8(@swc/helpers@0.5.15))(bufferutil@4.0.9)(koa@2.16.0)(utf-8-validate@6.0.5)
       sass-embedded:
         specifier: ^1.86.0
         version: 1.86.0
@@ -138,8 +138,8 @@ importers:
         specifier: ^16.0.5
         version: 16.0.5(@rspack/core@1.2.8(@swc/helpers@0.5.15))(sass-embedded@1.86.0)
       svgc-loader:
-        specifier: ^0.4.1
-        version: 0.4.1(@rspack/core@1.2.8(@swc/helpers@0.5.15))(react@18.3.1)
+        specifier: ^0.4.3
+        version: 0.4.3(@rspack/core@1.2.8(@swc/helpers@0.5.15))(react@18.3.1)
       typescript:
         specifier: ^5.8.2
         version: 5.8.2
@@ -362,11 +362,11 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@nuintun/ansi@0.3.1':
-    resolution: {integrity: sha512-VmBrGc9YF8pQW7Cep0EryivtDooXFCfVGs6uMsmdabpMW9G3+jm0jN2U6hm8bXgLQQ94OmB+dhi1eTPWJiRZuA==}
+  '@nuintun/ansi@0.3.2':
+    resolution: {integrity: sha512-B38Wi7Wqb2Hn2ulCkcqC4cWHhzBj2vvoN+FaT462vCaRe8Un5JqQs6dlDXYP83hOtSB1SNKsDkqO4sTllod/Ig==}
 
-  '@nuintun/svgo-loader@0.4.1':
-    resolution: {integrity: sha512-ATcHqQvZZcv86AJJHlw+zTJn5ErUVPpvdCia4cilJWNoDTa+ZXmG3JwI2iicZsHrbD6ayIA+1dAQdWXOCkM5nw==}
+  '@nuintun/svgo-loader@0.4.3':
+    resolution: {integrity: sha512-V6QyuE29DPDkA2P7oE0HRHN4JqYJ5Le2JsLA4uFhxJs7U64A0uLrHad2JiiOkwmcwtx79uYd/wBgmmKuHco0nQ==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       '@rspack/core': ^1.0.0
@@ -899,8 +899,8 @@ packages:
       webpack:
         optional: true
 
-  css-modules-types-loader@0.6.4:
-    resolution: {integrity: sha512-OOlw9mEZfcIxfNx22WxOWWgq5XFPzMGiBTPSb3nQ9hhMy96EyZKouMfM7eMSwuhcqQXlnZCDDEcIvicq5+YPKg==}
+  css-modules-types-loader@0.6.5:
+    resolution: {integrity: sha512-0lCuz1Htcgea3P+aktoyGcqCRSL8B/wvrKUWWyrXuwxmsesv5CUIowsBFPPolcZB8IwwrjlBRLjYMHVS4VRqag==}
     peerDependencies:
       '@rspack/core': ^1.0.0
       webpack: ^5.0.0
@@ -984,8 +984,8 @@ packages:
   domutils@3.2.2:
     resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
 
-  dts-paths@1.1.4:
-    resolution: {integrity: sha512-e+r5LTEO9u9z0TBiqBdh6Dy0Gvi6JFYg77EMdNfUerlUTeZ6zgk+2rhitC9YFl2W4KgyT6KHHqvlXHmSgsZvDw==}
+  dts-paths@1.1.5:
+    resolution: {integrity: sha512-gHjXhX/fysWp9CgCIRsJF7WttX9647Nku4y6kwDtEDSPDn+vXGFN8dnhtSQoElmxErqwlcaTbEP1lvur5JqNBA==}
     peerDependencies:
       typescript: ^5.0.0
 
@@ -1691,8 +1691,8 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
-  rspack-dev-middleware@0.1.11:
-    resolution: {integrity: sha512-BlmK/FduUH9vFSWHNdbcHYC34WAt53tjjOrjX6rWgW1GoGSN7SFW2wsTEEVQgokZdEpZEoSQVWlEhZM3maljyg==}
+  rspack-dev-middleware@0.1.12:
+    resolution: {integrity: sha512-iN1LhI9FgJHx5azdS820tZsBN+laYxXvnaie0E3kQzgjNgOaGiZJPEuVBCoxp8fciAjpCcfl8wM0k5+KlKTY4A==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       '@rspack/core': '>=1.0.7'
@@ -1940,8 +1940,8 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  svgc-loader@0.4.1:
-    resolution: {integrity: sha512-FDB+jRnUzwlUTmfGngvHf+ndaWIgRvxSyMNmaEp4n0lTjzwLmdczYyl5L7/HApZ9Wz+cWp6CvQtuv7H8x7cLGg==}
+  svgc-loader@0.4.3:
+    resolution: {integrity: sha512-KUDWDXYTLEMhJru5KVXhKwWd9+BLFpy43rE7DMgO+vtEJEgX4UWDzvFEk7xmD1QHn/rlEsh3S2qh9UH/IhxX/Q==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       '@rspack/core': ^1.0.0
@@ -2281,11 +2281,11 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.19.1
 
-  '@nuintun/ansi@0.3.1':
+  '@nuintun/ansi@0.3.2':
     dependencies:
       tslib: 2.8.1
 
-  '@nuintun/svgo-loader@0.4.1(@rspack/core@1.2.8(@swc/helpers@0.5.15))':
+  '@nuintun/svgo-loader@0.4.3(@rspack/core@1.2.8(@swc/helpers@0.5.15))':
     dependencies:
       svgo: 3.3.2
       tslib: 2.8.1
@@ -2830,7 +2830,7 @@ snapshots:
     optionalDependencies:
       '@rspack/core': 1.2.8(@swc/helpers@0.5.15)
 
-  css-modules-types-loader@0.6.4(@rspack/core@1.2.8(@swc/helpers@0.5.15)):
+  css-modules-types-loader@0.6.5(@rspack/core@1.2.8(@swc/helpers@0.5.15)):
     dependencies:
       acorn: 8.14.1
       acorn-walk: 8.3.4
@@ -2908,7 +2908,7 @@ snapshots:
       domelementtype: 2.3.0
       domhandler: 5.0.3
 
-  dts-paths@1.1.4(typescript@5.8.2):
+  dts-paths@1.1.5(typescript@5.8.2):
     dependencies:
       ts-morph: 25.0.1
       tslib: 2.8.1
@@ -3699,9 +3699,9 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.37.0
       fsevents: 2.3.3
 
-  rspack-dev-middleware@0.1.11(@rspack/core@1.2.8(@swc/helpers@0.5.15))(bufferutil@4.0.9)(koa@2.16.0)(utf-8-validate@6.0.5):
+  rspack-dev-middleware@0.1.12(@rspack/core@1.2.8(@swc/helpers@0.5.15))(bufferutil@4.0.9)(koa@2.16.0)(utf-8-validate@6.0.5):
     dependencies:
-      '@nuintun/ansi': 0.3.1
+      '@nuintun/ansi': 0.3.2
       '@rspack/core': 1.2.8(@swc/helpers@0.5.15)
       '@types/koa': 2.15.0
       '@types/ws': 8.18.0
@@ -3906,7 +3906,7 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  svgc-loader@0.4.1(@rspack/core@1.2.8(@swc/helpers@0.5.15))(react@18.3.1):
+  svgc-loader@0.4.3(@rspack/core@1.2.8(@swc/helpers@0.5.15))(react@18.3.1):
     dependencies:
       css-tree: 3.1.0
       svgo: 3.3.2
