@@ -75,29 +75,29 @@ function runEuclideanAlgorithm(
 
 function findErrorLocations(field: GaloisField, errorLocator: Polynomial): Int32Array {
   // This is a direct application of Chien's search.
-  const numErrors = errorLocator.getDegree();
+  const expectedErrors = errorLocator.getDegree();
 
-  if (numErrors === 1) {
+  if (expectedErrors === 1) {
     // Shortcut
     return new Int32Array([errorLocator.getCoefficient(1)]);
   }
 
-  let e = 0;
+  let errors = 0;
 
   const { size } = field;
-  const result = new Int32Array(numErrors);
+  const locations = new Int32Array(expectedErrors);
 
-  for (let i = 1; i < size && e < numErrors; i++) {
+  for (let i = 1; i < size && errors < expectedErrors; i++) {
     if (errorLocator.evaluate(i) === 0) {
-      result[e++] = field.invert(i);
+      locations[errors++] = field.invert(i);
     }
   }
 
-  if (e !== numErrors) {
+  if (errors !== expectedErrors) {
     throw new Error('error locator degree does not match number of roots');
   }
 
-  return result;
+  return locations;
 }
 
 function findErrorMagnitudes(field: GaloisField, errorEvaluator: Polynomial, errorLocations: Int32Array): Int32Array {
