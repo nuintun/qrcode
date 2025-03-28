@@ -85,11 +85,11 @@ function findErrorLocations(field: GaloisField, errorLocator: Polynomial): Int32
   let errors = 0;
 
   const { size } = field;
-  const result = new Int32Array(expectedErrors);
+  const locations = new Int32Array(expectedErrors);
 
   for (let i = 1; i < size && errors < expectedErrors; i++) {
     if (errorLocator.evaluate(i) === 0) {
-      result[errors++] = field.invert(i);
+      locations[errors++] = field.invert(i);
     }
   }
 
@@ -97,7 +97,7 @@ function findErrorLocations(field: GaloisField, errorLocator: Polynomial): Int32
     throw new Error('error locator degree does not match number of roots');
   }
 
-  return result;
+  return locations;
 }
 
 function findErrorMagnitudes(field: GaloisField, errorEvaluator: Polynomial, errorLocations: Int32Array): Int32Array {
