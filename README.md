@@ -6,8 +6,10 @@
 > [![NPM Version][npm-image]][npm-url]
 > [![Download Status][download-image]][npm-url]
 > [![Languages Status][languages-image]][github-url]
+>
 > [![Tree Shakeable][tree-shakeable-image]][bundle-phobia-url]
 > [![Side Effect][side-effect-image]][bundle-phobia-url]
+> [![Minzip][bundle-phobia-minzip]][bundle-phobia-url]
 > [![License][license-image]][license-url]
 
 ### QRCode guide and example
@@ -305,5 +307,6 @@ image.src = 'https://nuintun.github.io/qrcode/public/images/qrcode.jpg';
 [tree-shakeable-image]: https://img.shields.io/badge/tree--shakeable-true-brightgreen?style=flat-square
 [side-effect-image]: https://img.shields.io/badge/side--effect-free-brightgreen?style=flat-square
 [bundle-phobia-url]: https://bundlephobia.com/result?p=@nuintun/qrcode
+[bundle-phobia-minzip]: https://img.shields.io/bundlephobia/minzip/%40nuintun/qrcode/latest?style=flat-square
 [license-image]: https://img.shields.io/github/license/nuintun/qrcode?style=flat-square
 [license-url]: https://github.com/nuintun/qrcode/blob/main/packages/core/LICENSE
