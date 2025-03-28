@@ -31,7 +31,7 @@
     "react-error-boundary": "^5.0.0"
   },
   "devDependencies": {
-    "@nuintun/svgo-loader": "^0.4.1",
+    "@nuintun/svgo-loader": "^0.4.3",
     "@rspack/core": "^1.2.8",
     "@rspack/plugin-react-refresh": "^1.0.3",
     "@types/react": "^18.3.17",
@@ -39,17 +39,17 @@
     "@types/throttle-debounce": "^5.0.2",
     "bufferutil": "^4.0.9",
     "css-loader": "^7.1.2",
-    "css-modules-types-loader": "^0.6.4",
+    "css-modules-types-loader": "^0.6.5",
     "find-free-ports": "^3.1.1",
     "koa": "^2.16.0",
     "koa-compress": "^5.1.1",
     "memfs": "^4.17.0",
     "nodemon": "^3.1.9",
     "prettier": "^3.5.3",
-    "rspack-dev-middleware": "^0.1.11",
+    "rspack-dev-middleware": "^0.1.12",
     "sass-embedded": "^1.86.0",
     "sass-loader": "^16.0.5",
-    "svgc-loader": "^0.4.1",
+    "svgc-loader": "^0.4.3",
     "typescript": "^5.8.2",
     "utf-8-validate": "^6.0.5"
   }
