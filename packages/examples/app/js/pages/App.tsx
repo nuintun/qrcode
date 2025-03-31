@@ -8,8 +8,8 @@ import * as styles from '/css/App.module.scss';
 import Icon from '@ant-design/icons';
 import zh_CN from 'antd/locale/zh_CN';
 import { ErrorBoundary } from 'react-error-boundary';
-import ErrorFallback from '/js/components/FallBack/Error';
-import SuspenseFallback from '/js/components/FallBack/Loading';
+import ErrorFallback from '/js/components/Fallback/Error';
+import SuspenseFallback from '/js/components/Fallback/Loading';
 import { App, AppProps, ConfigProvider, Tabs, TabsProps } from 'antd';
 import React, { lazy, memo, Suspense, useCallback, useMemo } from 'react';
 
