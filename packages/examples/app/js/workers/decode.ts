@@ -84,7 +84,7 @@ function decode(bytes: Uint8Array, charset: Charset): string {
   // 用获得的编码进行解码，如果出错则使用 UTF-8 解码。
   try {
     return new TextDecoder(label).decode(bytes);
-  } catch (error) {
+  } catch {
     return new TextDecoder('utf-8').decode(bytes);
   }
 }
