@@ -53,7 +53,9 @@ function chooseBestMode({ mode, content, charset }: EncodeMessage): Byte | Hanzi
 
       if (NUMERIC_RE.test(content)) {
         return new Numeric(content);
-      } else if (ALPHANUMERIC_RE.test(content)) {
+      }
+
+      if (ALPHANUMERIC_RE.test(content)) {
         return new Alphanumeric(content);
       }
 
