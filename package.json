@@ -29,10 +29,6 @@
     "prod": "pnpm --filter ./packages/examples prod",
     "reset": "pnpm -s dlx rimraf -g **/node_modules **/pnpm-lock.yaml"
   },
-  "dependencies": {
-    "@swc/helpers": "^0.5.15",
-    "tslib": "^2.8.1"
-  },
   "devDependencies": {
     "prettier": "^3.5.3",
     "typescript": "^5.8.3"
