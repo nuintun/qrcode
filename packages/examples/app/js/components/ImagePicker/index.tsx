@@ -11,7 +11,6 @@ export interface ImageUploadProps {
   value?: string;
   disabled?: boolean;
   defaultValue?: string;
-  accept?: `image/${string}`;
   children?: React.ReactNode;
   onChange?: (value: string) => void;
   preview?: (value?: string) => React.ReactNode;
@@ -20,12 +19,12 @@ export interface ImageUploadProps {
 export default memo(function ImageUpload(props: ImageUploadProps) {
   const { message } = useApp();
   const urlRef = useRef<string>();
+  const { children, disabled, preview } = props;
   const [value, setValue] = useControllableValue<string>(props);
-  const { children, disabled, preview, accept = 'image/*' } = props;
 
   const onClick = useCallback(() => {
     if (!disabled) {
-      fileOpen({ mimeTypes: [accept] }).then(
+      fileOpen({ mimeTypes: ['image/*'] }).then(
         file => {
           if (/^image\/.+$/i.test(file.type)) {
             setValue(() => {
@@ -46,7 +45,7 @@ export default memo(function ImageUpload(props: ImageUploadProps) {
         }
       );
     }
-  }, [accept, disabled]);
+  }, [disabled]);
 
   return (
     <div className={styles.upload}>
