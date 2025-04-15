@@ -25,6 +25,7 @@
     "antd": "^5.24.7",
     "browser-fs-access": "^0.35.0",
     "chardet": "^2.1.0",
+    "classnames": "^2.5.1",
     "copy-to-clipboard": "^3.3.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

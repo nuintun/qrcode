@@ -1,6 +1,14 @@
 .upload {
   gap: 8px;
+  padding: 8px;
   display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
+  border-radius: var(--ant-border-radius);
+  border: 1px dashed var(--ant-color-border);
+  transition: border-color var(--ant-motion-duration-slow);
+
+  &.dragging {
+    border: 1px dashed var(--ant-color-primary-hover);
+  }
 }

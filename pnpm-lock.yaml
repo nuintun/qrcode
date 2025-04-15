@@ -63,6 +63,9 @@ importers:
       chardet:
         specifier: ^2.1.0
         version: 2.1.0
+      classnames:
+        specifier: ^2.5.1
+        version: 2.5.1
       copy-to-clipboard:
         specifier: ^3.3.3
         version: 3.3.3
