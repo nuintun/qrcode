@@ -72,14 +72,15 @@ function calculateBlackPoint(buckets: Int32Array): number {
 }
 
 export function histogram(luminances: Uint8Array, width: number, height: number): BitMatrix {
+  const leftX = toInt32(width / 5);
+  const rightX = toInt32((width * 4) / 5);
   const matrix = new BitMatrix(width, height);
   const buckets = new Int32Array(LUMINANCE_BUCKETS);
 
   for (let y = 1; y < 5; y++) {
-    const right = toInt32((width * 4) / 5);
     const offset = toInt32((height * y) / 5) * width;
 
-    for (let x = toInt32(width / 5); x < right; x++) {
+    for (let x = leftX; x < rightX; x++) {
       const pixel = luminances[offset + x];
 
       buckets[pixel >> LUMINANCE_SHIFT]++;
@@ -92,17 +93,17 @@ export function histogram(luminances: Uint8Array, width: number, height: number)
   // Although we end up reading four rows twice, it is consistent with our motto of
   // "fail quickly" which is necessary for continuous scanning.
   if (blackPoint > 0) {
+    let offset = 0;
+
     for (let y = 0; y < height; y++) {
-      const offset = y * width;
-
       for (let x = 0; x < width; x++) {
-        const pixel = luminances[offset + x];
-
-        if (pixel < blackPoint) {
+        if (luminances[offset + x] < blackPoint) {
           matrix.set(x, y);
         }
       }
     }
+
+    offset += width;
   }
 
   return matrix;

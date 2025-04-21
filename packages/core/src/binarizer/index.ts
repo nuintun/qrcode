@@ -157,24 +157,19 @@ function adaptiveThreshold(luminances: Uint8Array, width: number, height: number
  * @param image The image data to convert.
  */
 export function grayscale({ data, width, height }: ImageData): Uint8Array {
-  // Convert image to grayscale.
+  const pixels = width * height;
   const luminances = new Uint8Array(width * height);
 
-  for (let y = 0; y < height; y++) {
-    const offset = y * width;
+  for (let i = 0; i < pixels; i++) {
+    const colorIndex = i * 4;
+    const r = data[colorIndex];
+    const g = data[colorIndex + 1];
+    const b = data[colorIndex + 2];
 
-    for (let x = 0; x < width; x++) {
-      const index = offset + x;
-      const colorIndex = index * 4;
-      const r = data[colorIndex];
-      const g = data[colorIndex + 1];
-      const b = data[colorIndex + 2];
-
-      // 0.299R + 0.587G + 0.114B (YUV/YIQ for PAL and NTSC),
-      // (R * 306) >> 10 is approximately equal to R * 0.299, and so on.
-      // 0x200 >> 10 is 0.5, it implements rounding.
-      luminances[offset + x] = (r * 306 + g * 601 + b * 117 + 0x200) >> 10;
-    }
+    // 0.299R + 0.587G + 0.114B (YUV/YIQ for PAL and NTSC),
+    // (R * 306) >> 10 is approximately equal to R * 0.299, and so on.
+    // 0x200 >> 10 is 0.5, it implements rounding.
+    luminances[i] = (r * 306 + g * 601 + b * 117 + 0x200) >> 10;
   }
 
   return luminances;
