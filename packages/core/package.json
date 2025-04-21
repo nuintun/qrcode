@@ -1,6 +1,6 @@
 {
   "name": "@nuintun/qrcode",
-  "version": "5.0.2",
+  "version": "5.0.3",
   "description": "A pure JavaScript QRCode encode and decode library.",
   "type": "module",
   "sideEffects": false,
