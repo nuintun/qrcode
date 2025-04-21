@@ -101,9 +101,9 @@ export function histogram(luminances: Uint8Array, width: number, height: number)
           matrix.set(x, y);
         }
       }
-    }
 
-    offset += width;
+      offset += width;
+    }
   }
 
   return matrix;
