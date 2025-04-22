@@ -26,6 +26,8 @@
 ##### Common Interface
 
 ```ts
+declare type Level = 'L' | 'M' | 'Q' | 'H';
+
 export class Charset {
   public static readonly CP437: Charset;
   public static readonly ISO_8859_1: Charset;
@@ -91,9 +93,9 @@ export class Numeric {
 }
 
 export interface EncoderOptions {
+  level?: Level;
   hints?: { fnc1?: FNC1 };
   version?: 'Auto' | number;
-  level?: 'L' | 'M' | 'Q' | 'H';
   encode?: (content: string, charset: Charset) => Uint8Array;
 }
 
@@ -106,7 +108,7 @@ declare interface DataURLOptions {
 export class Encoded {
   public size: number;
   public mask: number;
-  public level: string;
+  public level: Level;
   public version: number;
   public get(x: number, y: number): 0 | 1;
   public toDataURL(moduleSize: number, options?: DataURLOptions): string;
@@ -186,7 +188,7 @@ declare interface Structured {
 
 export class Decoded {
   public get mask(): number;
-  public get level(): string;
+  public get level(): Level;
   public get version(): number;
   public get mirror(): boolean;
   public get content(): string;

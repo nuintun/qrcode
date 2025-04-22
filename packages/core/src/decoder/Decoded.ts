@@ -3,9 +3,9 @@
  */
 
 import { FNC1 } from '/common/interface';
-import { ECLevel } from '/common/ECLevel';
 import { FormatInfo } from './FormatInfo';
 import { Version } from '/common/Version';
+import { ECLevel, Level } from '/common/ECLevel';
 import { DecodeSource, Structured } from './utils/source';
 
 export class Decoded {
@@ -37,7 +37,7 @@ export class Decoded {
    * @property level
    * @description Get the error correction level of qrcode.
    */
-  public get level(): string {
+  public get level(): `${Level}` {
     return this.#level.name;
   }
 
