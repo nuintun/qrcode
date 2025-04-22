@@ -3,9 +3,9 @@
  */
 
 import { toInt32 } from '/common/utils';
-import { ECLevel } from '/common/ECLevel';
 import { Version } from '/common/Version';
 import { ByteMatrix } from '/common/ByteMatrix';
+import { ECLevel, Level } from '/common/ECLevel';
 import { Colors, GIFImage } from '/common/image/GIFImage';
 
 export class Encoded {
@@ -41,7 +41,7 @@ export class Encoded {
    * @property level
    * @description Get the error correction level of qrcode.
    */
-  public get level(): string {
+  public get level(): `${Level}` {
     return this.#level.name;
   }
 

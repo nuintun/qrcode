@@ -21,8 +21,8 @@ import {
 } from './utils/encoder';
 import { Encoded } from './Encoded';
 import { Charset } from '/common/Charset';
-import { ECLevel } from '/common/ECLevel';
 import { BitArray } from '/common/BitArray';
+import { ECLevel, Level } from '/common/ECLevel';
 import { Version, VERSIONS } from '/common/Version';
 import { encode as textEncode, TextEncode } from '/common/encoding';
 import { assertHints, assertLevel, assertVersion } from './utils/asserts';
@@ -34,6 +34,11 @@ export interface Options {
    */
   hints?: Hints;
   /**
+   * @property level
+   * @description Error correction level.
+   */
+  level?: `${Level}`;
+  /**
    * @property encode
    * @description Text encode function.
    */
@@ -43,11 +48,6 @@ export interface Options {
    * @description Error correction level.
    */
   version?: 'Auto' | number;
-  /**
-   * @property level
-   * @description Error correction level.
-   */
-  level?: 'L' | 'M' | 'Q' | 'H';
 }
 
 export class Encoder {
@@ -60,7 +60,7 @@ export class Encoder {
    * @constructor
    * @param options The options of encoder.
    */
-  constructor({ hints = {}, level = 'L', version = 'Auto', encode = textEncode }: Options = {}) {
+  constructor({ hints = {}, level = Level.L, version = 'Auto', encode = textEncode }: Options = {}) {
     assertHints(hints);
     assertLevel(level);
     assertVersion(version);
