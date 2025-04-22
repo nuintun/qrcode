@@ -24,7 +24,7 @@ export interface EncodeMessage {
   version: 'Auto' | number;
   fnc1: 'None' | 'GS1' | 'AIM';
   level: 'L' | 'M' | 'Q' | 'H';
-  charset: keyof typeof Charset;
+  charset: Exclude<keyof typeof Charset, 'prototype'>;
   mode: 'Auto' | 'Numeric' | 'Alphanumeric' | 'Byte' | 'Kanji' | 'Hanzi';
 }
 
