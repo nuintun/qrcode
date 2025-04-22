@@ -57,14 +57,14 @@ export class Encoded {
    * @method get
    * @description Get the bit value of the specified coordinate of qrcode.
    */
-  public get(x: number, y: number): number {
+  public get(x: number, y: number): 0 | 1 {
     const { size } = this.#matrix;
 
     if (x < 0 || y < 0 || x >= size || y >= size) {
       throw new Error(`illegal coordinate: [${x}, ${y}]`);
     }
 
-    return this.#matrix.get(x, y);
+    return this.#matrix.get(x, y) as 0 | 1;
   }
 
   /**
