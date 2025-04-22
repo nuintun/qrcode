@@ -2,14 +2,14 @@
  * @module ECLevel
  */
 
-const VALUES_TO_ECLEVEL = new Map<number, ECLevel>();
-
 export const enum Level {
   L = 'L',
   M = 'M',
   Q = 'Q',
   H = 'H'
 }
+
+const VALUES_TO_ECLEVEL = new Map<number, ECLevel>();
 
 export function fromECLevelBits(bits: number): ECLevel {
   const ecLevel = VALUES_TO_ECLEVEL.get(bits);
