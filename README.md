@@ -108,7 +108,7 @@ export class Encoded {
   public mask: number;
   public level: string;
   public version: number;
-  public get(x: number, y: number): number;
+  public get(x: number, y: number): 0 | 1;
   public toDataURL(moduleSize: number, options?: DataURLOptions): string;
 }
 
