@@ -42,9 +42,11 @@ export default memo(function ImageUpload(props: ImageUploadProps) {
           message.error('请选择图片格式文件');
         }
       },
-      () => {
-        // 读取文件失败
-        message.error('读取文件失败');
+      (error: Error) => {
+        if (error.name !== 'AbortError') {
+          // 读取文件失败
+          message.error('读取文件失败');
+        }
       }
     );
   }, []);
