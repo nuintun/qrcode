@@ -29,7 +29,7 @@ jobs:
       # 发布到 npm
       - name: Publish to npm
         working-directory: ./packages/core
-        run: npm publish --access public
+        run: pnpm publish --access public
         env:
           NPM_CONFIG_PROVENANCE: true
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
