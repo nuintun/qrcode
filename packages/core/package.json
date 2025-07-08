@@ -50,12 +50,12 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@rollup/plugin-typescript": "^12.1.2",
-    "dts-paths": "^1.1.8",
+    "@rollup/plugin-typescript": "^12.1.4",
+    "dts-paths": "^1.1.9",
     "magic-string": "^0.30.17",
-    "prettier": "^3.5.3",
+    "prettier": "^3.6.2",
     "rimraf": "^6.0.1",
-    "rollup": "^4.43.0",
+    "rollup": "^4.44.2",
     "typescript": "^5.8.3"
   }
 }
