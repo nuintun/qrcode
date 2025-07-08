@@ -15,6 +15,7 @@ export default async mode => {
     multipass: mode === 'production',
     plugins: [
       'preset-default',
+      'removeTitle',
       {
         name: 'prefixIds',
         params: {
