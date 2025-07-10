@@ -20,7 +20,9 @@
     "lib": [
       "DOM",
       "ESNext",
-      "WebWorker"
+      "WebWorker",
+      "DOM.Iterable",
+      "Webworker.Iterable"
     ],
     "paths": {
       "/js/*": [
