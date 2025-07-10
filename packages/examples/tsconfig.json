@@ -22,7 +22,9 @@
       "ESNext",
       "WebWorker",
       "DOM.Iterable",
-      "Webworker.Iterable"
+      "DOM.AsyncIterable",
+      "Webworker.Iterable",
+      "WebWorker.AsyncIterable"
     ],
     "paths": {
       "/js/*": [
