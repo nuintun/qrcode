@@ -34,7 +34,7 @@ export function encode(content: string, charset: Charset): Uint8Array {
     case Charset.UTF_8:
       return new TextEncoder().encode(content);
     default:
-      throw Error(`built-in encode not support charset: ${charset.label}`);
+      throw new Error(`built-in encode not support charset: ${charset.label}`);
   }
 }
 
@@ -42,6 +42,6 @@ export function decode(bytes: Uint8Array, charset: Charset): string {
   try {
     return new TextDecoder(charset.label).decode(bytes);
   } catch {
-    throw Error(`built-in decode not support charset: ${charset.label}`);
+    throw new Error(`built-in decode not support charset: ${charset.label}`);
   }
 }
