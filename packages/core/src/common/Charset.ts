@@ -11,7 +11,7 @@ export function fromCharsetValue(value: number): Charset {
     return charset;
   }
 
-  throw Error('illegal charset value');
+  throw new Error('illegal charset value');
 }
 
 export class Charset {
