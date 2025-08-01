@@ -16,7 +16,6 @@
     "noImplicitOverride": true,
     "noUnusedParameters": true,
     "moduleResolution": "bundler",
-    "forceConsistentCasingInFileNames": true,
     "lib": [
       "DOM",
       "ESNext",

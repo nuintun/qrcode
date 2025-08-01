@@ -51,11 +51,11 @@
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^12.1.4",
-    "dts-paths": "^1.1.10",
+    "dts-paths": "^1.1.11",
     "magic-string": "^0.30.17",
     "prettier": "^3.6.2",
     "rimraf": "^6.0.1",
-    "rollup": "^4.45.1",
-    "typescript": "^5.8.3"
+    "rollup": "^4.46.2",
+    "typescript": "^5.9.2"
   }
 }
