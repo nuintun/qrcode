@@ -14,7 +14,6 @@
     "noImplicitOverride": true,
     "noUnusedParameters": true,
     "moduleResolution": "bundler",
-    "useDefineForClassFields": true,
     "lib": [
       "DOM",
       "ESNext"
