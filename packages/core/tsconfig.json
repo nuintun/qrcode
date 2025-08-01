@@ -15,7 +15,6 @@
     "noUnusedParameters": true,
     "moduleResolution": "bundler",
     "useDefineForClassFields": true,
-    "forceConsistentCasingInFileNames": true,
     "lib": [
       "DOM",
       "ESNext"
