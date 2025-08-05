@@ -2,7 +2,6 @@
  * @module BitMatrixParser
  */
 
-import { toUint32 } from '/common/utils';
 import { ECLevel } from '/common/ECLevel';
 import { isApplyMask } from '/common/mask';
 import { BitMatrix } from '/common/BitMatrix';
