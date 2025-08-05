@@ -60,7 +60,7 @@ export function injectECCodewords(bits: BitArray, { ecBlocks, numECCodewordsPerB
     for (let i = 0; i < count; i++) {
       const dataCodewords = new Uint8Array(numDataCodewords);
 
-      bits.writeToUint8Array(dataCodewordsOffset * 8, dataCodewords, 0, numDataCodewords);
+      bits.copyTo(dataCodewordsOffset * 8, dataCodewords, 0, numDataCodewords);
 
       const ecCodewords = generateECCodewords(dataCodewords, numECCodewordsPerBlock);
 

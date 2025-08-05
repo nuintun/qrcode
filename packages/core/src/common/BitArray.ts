@@ -95,7 +95,7 @@ export class BitArray {
     }
   }
 
-  public writeToUint8Array(bitOffset: number, target: Uint8Array, byteOffset: number, byteLength: number): void {
+  public copyTo(bitOffset: number, target: Uint8Array, byteOffset: number, byteLength: number): void {
     for (let i = 0; i < byteLength; i++) {
       let byte = 0;
 
