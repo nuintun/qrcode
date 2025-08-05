@@ -2,7 +2,7 @@
  * @module BitMatrixParser
  */
 
-import { toInt32 } from '/common/utils';
+import { toUint32 } from '/common/utils';
 import { ECLevel } from '/common/ECLevel';
 import { isApplyMask } from '/common/mask';
 import { BitMatrix } from '/common/BitMatrix';
@@ -26,7 +26,7 @@ export class BitMatrixParser {
 
   public readVersion(): Version {
     const size = this.#size;
-    const versionNumber = toInt32((size - 17) / 4);
+    const versionNumber = toUint32((size - 17) / 4);
 
     if (versionNumber < 1) {
       throw new Error('illegal version');

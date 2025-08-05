@@ -2,12 +2,12 @@
  * @module BitArray
  */
 
-import { getBitMask, getBitOffset, toBit, toInt32 } from './utils';
+import { getBitMask, getBitOffset, toBit, toUint32 } from './utils';
 
 const LOAD_FACTOR = 0.75;
 
 function offset(index: number): number {
-  return toInt32(index / 32);
+  return toUint32(index / 32);
 }
 
 function makeArray(length: number): Int32Array {

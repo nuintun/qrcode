@@ -2,7 +2,7 @@
  * @module BitMatrix
  */
 
-import { getBitMask, getBitOffset, toBit, toInt32 } from './utils';
+import { getBitMask, getBitOffset, toBit, toUint32 } from './utils';
 
 export class BitMatrix {
   #width: number;
@@ -36,7 +36,7 @@ export class BitMatrix {
   }
 
   #offset(x: number, y: number): number {
-    return y * this.#rowSize + toInt32(x / 32);
+    return y * this.#rowSize + toUint32(x / 32);
   }
 
   /**
@@ -130,7 +130,7 @@ export class BitMatrix {
       const offset = y * rowSize;
 
       for (let x = left; x < right; x++) {
-        bits[offset + toInt32(x / 32)] |= getBitMask(x);
+        bits[offset + toUint32(x / 32)] |= getBitMask(x);
       }
     }
   }
