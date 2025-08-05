@@ -6,8 +6,8 @@ export function toBit(value: number): 0 | 1 {
   return (value & 0x01) as 0 | 1;
 }
 
-export function toUint32(value: number): number {
-  return value >>> 0;
+export function toInt32(value: number): number {
+  return value | 0;
 }
 
 export function round(value: number): number {

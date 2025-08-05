@@ -2,7 +2,7 @@
  * @module module
  */
 
-import { toUint32 } from '/common/utils';
+import { toInt32 } from '/common/utils';
 import { Pattern } from '/detector/Pattern';
 import { PlotLine } from '/common/PlotLine';
 import { BitMatrix } from '/common/BitMatrix';
@@ -68,8 +68,8 @@ function sizeOfBlackWhiteBlackRunBothWays(matrix: BitMatrix, from: Point, to: Po
 }
 
 export function calculateModuleSizeOneWay(matrix: BitMatrix, pattern1: Pattern, pattern2: Pattern): number {
-  const point1 = new Point(toUint32(pattern1.x), toUint32(pattern1.y));
-  const point2 = new Point(toUint32(pattern2.x), toUint32(pattern2.y));
+  const point1 = new Point(toInt32(pattern1.x), toInt32(pattern1.y));
+  const point2 = new Point(toInt32(pattern2.x), toInt32(pattern2.y));
   const moduleSize1 = sizeOfBlackWhiteBlackRunBothWays(matrix, point1, point2);
   const moduleSize2 = sizeOfBlackWhiteBlackRunBothWays(matrix, point2, point1);
 

@@ -4,7 +4,7 @@
 
 import { Pattern } from './Pattern';
 import { Detected } from './Detected';
-import { toUint32 } from '/common/utils';
+import { toInt32 } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
 import { createTransform } from './utils/transform';
 import { checkMappingTimingLine } from './utils/timing';
@@ -41,10 +41,10 @@ function findAlignmentInRegion(matrix: BitMatrix, finderPatternGroup: FinderPatt
   const moduleSize = FinderPatternGroup.moduleSize(finderPatternGroup);
   const { x: expectAlignmentX, y: expectAlignmentY } = expectAlignment;
   const alignmentAreaAllowanceSize = Math.ceil(moduleSize * Math.min(20, size >>> 2));
-  const alignmentAreaTop = toUint32(Math.max(0, expectAlignmentY - alignmentAreaAllowanceSize));
-  const alignmentAreaLeft = toUint32(Math.max(0, expectAlignmentX - alignmentAreaAllowanceSize));
-  const alignmentAreaRight = toUint32(Math.min(matrix.width - 1, expectAlignmentX + alignmentAreaAllowanceSize));
-  const alignmentAreaBottom = toUint32(Math.min(matrix.height - 1, expectAlignmentY + alignmentAreaAllowanceSize));
+  const alignmentAreaTop = toInt32(Math.max(0, expectAlignmentY - alignmentAreaAllowanceSize));
+  const alignmentAreaLeft = toInt32(Math.max(0, expectAlignmentX - alignmentAreaAllowanceSize));
+  const alignmentAreaRight = toInt32(Math.min(matrix.width - 1, expectAlignmentX + alignmentAreaAllowanceSize));
+  const alignmentAreaBottom = toInt32(Math.min(matrix.height - 1, expectAlignmentY + alignmentAreaAllowanceSize));
 
   alignmentFinder.find(
     alignmentAreaLeft,

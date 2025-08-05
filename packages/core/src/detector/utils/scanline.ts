@@ -3,7 +3,7 @@
  */
 
 import { BitMatrix } from '/common/BitMatrix';
-import { accumulate, toUint32 } from '/common/utils';
+import { accumulate, toInt32 } from '/common/utils';
 import { PatternRatios } from '/detector/PatternRatios';
 
 export function calculateScanlineNoise(
@@ -56,8 +56,8 @@ export function getCrossScanline(
   overscan: number,
   isVertical?: boolean
 ): [scanline: number[], end: number] {
-  x = toUint32(x);
-  y = toUint32(y);
+  x = toInt32(x);
+  y = toInt32(y);
 
   let offset = isVertical ? y : x;
 
@@ -109,8 +109,8 @@ export function getDiagonalScanline(
   overscan: number,
   isBackslash?: boolean
 ): number[] {
-  x = toUint32(x);
-  y = toUint32(y);
+  x = toInt32(x);
+  y = toInt32(y);
 
   let step = -1;
   let offsetX = x;
@@ -179,7 +179,7 @@ export function getDiagonalScanline(
 // @see https://github.com/zxing-cpp/zxing-cpp/blob/master/core/src/ConcentricFinder.h
 export function centerFromScanlineEnd(scanline: number[], end: number): number {
   const centers: number[] = [];
-  const middleIndex = toUint32(scanline.length / 2);
+  const middleIndex = toInt32(scanline.length / 2);
 
   for (let i = 0; i <= middleIndex; i++) {
     const splitIndex = middleIndex + i + 1;

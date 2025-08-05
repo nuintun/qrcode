@@ -2,7 +2,7 @@
  * @module histogram
  */
 
-import { toUint32 } from '/common/utils';
+import { toInt32 } from '/common/utils';
 import { BitMatrix } from '/common/BitMatrix';
 
 const LUMINANCE_BITS = 5;
@@ -72,13 +72,13 @@ function calculateBlackPoint(buckets: Int32Array): number {
 }
 
 export function histogram(luminances: Uint8Array, width: number, height: number): BitMatrix {
-  const leftX = toUint32(width / 5);
-  const rightX = toUint32((width * 4) / 5);
+  const leftX = toInt32(width / 5);
+  const rightX = toInt32((width * 4) / 5);
   const matrix = new BitMatrix(width, height);
   const buckets = new Int32Array(LUMINANCE_BUCKETS);
 
   for (let y = 1; y < 5; y++) {
-    const offset = toUint32((height * y) / 5) * width;
+    const offset = toInt32((height * y) / 5) * width;
 
     for (let x = leftX; x < rightX; x++) {
       const pixel = luminances[offset + x];

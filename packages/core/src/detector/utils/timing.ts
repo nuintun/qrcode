@@ -3,7 +3,7 @@
  */
 
 import { Point } from '/common/Point';
-import { toUint32 } from '/common/utils';
+import { toInt32 } from '/common/utils';
 import { Pattern } from '/detector/Pattern';
 import { PlotLine } from '/common/PlotLine';
 import { BitMatrix } from '/common/BitMatrix';
@@ -58,7 +58,7 @@ function isValidTimingLine(matrix: BitMatrix, start: Point, end: Point, size: nu
   const points = new PlotLine(start, end).points();
 
   let modules = 1;
-  let lastBit = matrix.get(toUint32(start.x), toUint32(start.y));
+  let lastBit = matrix.get(toInt32(start.x), toInt32(start.y));
 
   for (const [x, y] of points) {
     const bit = matrix.get(x, y);
