@@ -73,7 +73,7 @@ function isValidTimingLine(matrix: BitMatrix, start: Point, end: Point, size: nu
     }
   }
 
-  return modules >= size - 14 - Math.max(2, toUint32((size - 17) >> 2));
+  return modules >= size - 14 - Math.max(2, (size - 17) >>> 2);
 }
 
 export function checkEstimateTimingLine(
