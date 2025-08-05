@@ -2,7 +2,7 @@
  * @module GridSampler
  */
 
-import { toInt32 } from './utils';
+import { toUint32 } from './utils';
 import { BitMatrix } from './BitMatrix';
 import { PerspectiveTransform } from './PerspectiveTransform';
 
@@ -25,8 +25,8 @@ export class GridSampler {
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const [mappingX, mappingY] = transform.mapping(x + 0.5, y + 0.5);
-        const offsetX = toInt32(mappingX);
-        const offsetY = toInt32(mappingY);
+        const offsetX = toUint32(mappingX);
+        const offsetY = toUint32(mappingY);
 
         if (
           // Assert axis.

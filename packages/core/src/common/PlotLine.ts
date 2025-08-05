@@ -3,7 +3,7 @@
  */
 
 import { Point } from './Point';
-import { toInt32 } from './utils';
+import { toUint32 } from './utils';
 
 // Mild variant of Bresenham's algorithm.
 // see https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
@@ -16,10 +16,10 @@ export class PlotLine {
   #delta: [x: number, y: number];
 
   constructor(from: Point, to: Point) {
-    let toX = toInt32(to.x);
-    let toY = toInt32(to.y);
-    let fromX = toInt32(from.x);
-    let fromY = toInt32(from.y);
+    let toX = toUint32(to.x);
+    let toY = toUint32(to.y);
+    let fromX = toUint32(from.x);
+    let fromY = toUint32(from.y);
 
     const steep = Math.abs(toY - fromY) > Math.abs(toX - fromX);
 
@@ -46,7 +46,7 @@ export class PlotLine {
     const [deltaX, deltaY] = this.#delta;
     const { x: fromX, y: fromY } = this.#from;
 
-    let error = toInt32(-deltaX / 2);
+    let error = (-deltaX / 2) | 0;
 
     // Loop up until x === toX, but not beyond.
     for (let x = fromX, y = fromY; x !== limit; x += stepX) {

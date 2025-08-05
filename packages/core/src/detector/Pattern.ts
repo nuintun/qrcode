@@ -3,7 +3,7 @@
  */
 
 import { Point } from '/common/Point';
-import { toInt32 } from '/common/utils';
+import { toUint32 } from '/common/utils';
 import { PatternRatios } from './PatternRatios';
 
 type PatternRect = readonly [
@@ -18,7 +18,7 @@ type PatternRect = readonly [
 ];
 
 function calculateIntersectRatio({ ratios }: PatternRatios): number {
-  return ratios[toInt32(ratios.length / 2)] / 2;
+  return ratios[toUint32(ratios.length / 2)] / 2;
 }
 
 export class Pattern extends Point {
