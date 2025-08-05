@@ -195,7 +195,7 @@ export function appendLengthInfo(bits: BitArray, mode: Mode, version: Version, n
 export function willFit(numInputBits: number, version: Version, ecLevel: ECLevel): boolean {
   // In the following comments, we use numbers of Version 7-H.
   const ecBlocks = version.getECBlocks(ecLevel);
-  const numInputCodewords = Math.ceil(numInputBits / 8);
+  const numInputCodewords = (numInputBits + 0x07) >>> 3;
 
   return ecBlocks.numTotalDataCodewords >= numInputCodewords;
 }

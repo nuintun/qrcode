@@ -2,16 +2,16 @@
  * @module BitArray
  */
 
-import { getBitMask, getBitOffset, toBit, toUint32 } from './utils';
+import { getBitMask, getBitOffset, toBit } from './utils';
 
 const LOAD_FACTOR = 0.75;
 
 function offset(index: number): number {
-  return toUint32(index / 32);
+  return index >>> 5;
 }
 
 function makeArray(length: number): Int32Array {
-  return new Int32Array(Math.ceil(length / 32));
+  return new Int32Array((length + 0x1f) >>> 5);
 }
 
 export class BitArray {
@@ -42,7 +42,7 @@ export class BitArray {
   }
 
   public get byteLength(): number {
-    return Math.ceil(this.#length / 8);
+    return (this.#length + 0x07) >>> 3;
   }
 
   public set(index: number): void {
