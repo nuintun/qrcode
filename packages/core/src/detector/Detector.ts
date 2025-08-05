@@ -36,7 +36,7 @@ function getExpectAlignment(finderPatternGroup: FinderPatternGroup): Pattern {
 
 function findAlignmentInRegion(matrix: BitMatrix, finderPatternGroup: FinderPatternGroup, strict?: boolean): Pattern[] {
   const size = FinderPatternGroup.size(finderPatternGroup);
-  const scanAllowanceRatio = Math.min(20, toUint32(size / 4));
+  const scanAllowanceRatio = Math.min(20, toUint32(size >> 2));
   const expectAlignment = getExpectAlignment(finderPatternGroup);
   const alignmentFinder = new AlignmentPatternFinder(matrix, strict);
   const moduleSize = FinderPatternGroup.moduleSize(finderPatternGroup);
