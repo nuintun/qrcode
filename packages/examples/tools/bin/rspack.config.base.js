@@ -112,8 +112,8 @@ export default async mode => {
 
   const process = {
     progressChars: '█▒',
-    prefix: `[${appConfig.name}]`,
-    template: '{prefix:.bold} {bar:25.green/white.dim} ({percent}%) {wide_msg:.dim}'
+    prefix: appConfig.name,
+    template: '<i> {prefix:.cyan.bold} {bar:25.green/white.dim} ({percent}%) {wide_msg:.dim}'
   };
 
   return {
