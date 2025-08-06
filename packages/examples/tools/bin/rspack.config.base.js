@@ -110,7 +110,7 @@ export default async mode => {
     chunkFilename: `css/[${isDevelopment ? 'name' : 'contenthash'}].css`
   };
 
-  const process = {
+  const progress = {
     progressChars: '█▒',
     prefix: appConfig.name,
     template: '<i> {prefix:.cyan.bold} {bar:25.green/white.dim} ({percent}%) {wide_msg:.dim}'
@@ -142,7 +142,7 @@ export default async mode => {
       extensions: ['.ts', '.tsx', '.js', '.jsx']
     },
     plugins: [
-      new rspack.ProgressPlugin(process),
+      new rspack.ProgressPlugin(progress),
       new rspack.WarnCaseSensitiveModulesPlugin(),
       new rspack.DefinePlugin(env),
       new rspack.CssExtractRspackPlugin(css),
