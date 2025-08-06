@@ -48,7 +48,7 @@
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2",
     "rspack-dev-middleware": "^0.1.28",
-    "sass-embedded": "^1.89.2",
+    "sass-embedded": "^1.90.0",
     "sass-loader": "^16.0.5",
     "svgc-loader": "^0.5.2",
     "typescript": "^5.9.2",
