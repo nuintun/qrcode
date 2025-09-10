@@ -11,7 +11,7 @@ jobs:
     steps:
       # 检出代码
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       # 设置 pnpm
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -19,7 +19,7 @@ jobs:
           version: latest
       # 设置 node
       - name: Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: latest
           registry-url: https://registry.npmjs.org
