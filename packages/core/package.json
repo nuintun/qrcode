@@ -54,7 +54,7 @@
     "dts-paths": "^1.1.12",
     "prettier": "^3.6.2",
     "rimraf": "^6.0.1",
-    "rollup": "^4.52.0",
+    "rollup": "^4.52.2",
     "typescript": "^5.9.2"
   }
 }

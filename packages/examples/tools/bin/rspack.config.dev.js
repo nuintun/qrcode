@@ -10,12 +10,12 @@ process.env.NODE_ENV = mode;
 process.env.BABEL_ENV = mode;
 
 import Koa from 'koa';
-import memfs from 'memfs';
 import rspack from '@rspack/core';
 import compress from 'koa-compress';
 import resolveIp from '../lib/ip.js';
 import appConfig from '../../app.config.js';
 import { findFreePorts } from 'find-free-ports';
+import { createFsFromVolume, Volume } from 'memfs';
 import { server as dev } from 'rspack-dev-middleware';
 import resolveConfigure from './rspack.config.base.js';
 import ReactRefreshPlugin from '@rspack/plugin-react-refresh';
@@ -27,10 +27,9 @@ const { ports } = appConfig;
  * @return {import('../interface').FileSystem}
  */
 function createMemfs() {
-  const volume = new memfs.Volume();
-  const fs = memfs.createFsFromVolume(volume);
+  const volume = new Volume();
 
-  return fs;
+  return createFsFromVolume(volume);
 }
 
 /**
@@ -74,7 +73,7 @@ function httpError(error) {
   const app = new Koa();
   const compiler = rspack(configure);
 
-  const devService = dev(compiler, {
+  const devService = await dev(compiler, {
     fs,
     headers: {
       'Cache-Control': 'no-cache',
@@ -100,8 +99,6 @@ function httpError(error) {
   });
 
   app.listen(port, () => {
-    devService.ready(() => {
-      devService.logger.info(`server run at: \x1b[36m${devServerHost}\x1b[0m`);
-    });
+    devService.logger.info(`server run at: \x1b[36m${devServerHost}\x1b[0m`);
   });
 })();
