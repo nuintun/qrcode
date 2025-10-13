@@ -19,7 +19,7 @@
     "format": "prettier --write . --ignore-path .prettierignore"
   },
   "dependencies": {
-    "@ant-design/icons": "^6.0.2",
+    "@ant-design/icons": "^6.1.0",
     "@nuintun/qrcode": "workspace:*",
     "@swc/helpers": "^0.5.17",
     "antd": "^5.27.4",
@@ -32,26 +32,26 @@
     "react-error-boundary": "^6.0.0"
   },
   "devDependencies": {
-    "@nuintun/svgo-loader": "^0.5.5",
-    "@rspack/core": "^1.5.7",
+    "@nuintun/svgo-loader": "^0.5.6",
+    "@rspack/core": "^1.5.8",
     "@rspack/plugin-react-refresh": "^1.5.1",
-    "@types/react": "^18.3.24",
+    "@types/react": "^18.3.26",
     "@types/react-dom": "^18.3.7",
     "@types/throttle-debounce": "^5.0.2",
     "bufferutil": "^4.0.9",
     "css-loader": "^7.1.2",
-    "css-modules-types-loader": "^0.6.12",
+    "css-modules-types-loader": "^0.6.13",
     "find-free-ports": "^3.1.1",
     "koa": "^3.0.1",
     "koa-compress": "^5.1.1",
-    "memfs": "^4.46.1",
+    "memfs": "^4.49.0",
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2",
-    "rspack-dev-middleware": "^0.2.0",
+    "rspack-dev-middleware": "^0.2.1",
     "sass-embedded": "^1.93.2",
     "sass-loader": "^16.0.5",
-    "svgc-loader": "^0.5.5",
-    "typescript": "^5.9.2",
+    "svgc-loader": "^0.5.6",
+    "typescript": "^5.9.3",
     "utf-8-validate": "^6.0.5"
   }
 }
