@@ -14,10 +14,6 @@
     "noImplicitOverride": true,
     "noUnusedParameters": true,
     "moduleResolution": "bundler",
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
     "paths": {
       "/*": [
         "src/*"
