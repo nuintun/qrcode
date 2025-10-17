@@ -22,7 +22,7 @@
     "@ant-design/icons": "^6.1.0",
     "@nuintun/qrcode": "workspace:*",
     "@swc/helpers": "^0.5.17",
-    "antd": "^5.27.4",
+    "antd": "^5.27.5",
     "browser-fs-access": "^0.38.0",
     "chardet": "^2.1.0",
     "classnames": "^2.5.1",
