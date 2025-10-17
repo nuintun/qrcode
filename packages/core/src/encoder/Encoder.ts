@@ -44,8 +44,8 @@ export interface Options {
    */
   encode?: TextEncode;
   /**
-   * @property level
-   * @description Error correction level.
+   * @property version
+   * @description QR code version.
    */
   version?: 'Auto' | number;
 }
