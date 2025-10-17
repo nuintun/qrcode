@@ -25,14 +25,14 @@ export function assertHints(hints: Hints): asserts hints {
     const [mode] = fnc1;
 
     if (mode !== 'GS1' && mode !== 'AIM') {
-      throw new Error('illegal fn1 hint');
+      throw new Error('illegal fnc1 hint');
     }
 
     if (mode === 'AIM') {
       const [, indicator] = fnc1;
 
       if (indicator < 0 || indicator > 0xff || !Number.isInteger(indicator)) {
-        throw new Error('illegal fn1 application indicator');
+        throw new Error('illegal fnc1 application indicator');
       }
     }
   }
