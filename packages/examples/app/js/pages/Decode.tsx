@@ -22,7 +22,7 @@ const { Item: FormItem, useForm, useWatch } = Form;
 
 interface OverviewLocateProps {
   state?: DecodeResultMessage;
-  currentRef: React.MutableRefObject<string | undefined>;
+  currentRef: React.RefObject<string | null>;
 }
 
 const OverviewLocate = memo(function OverviewLocate({ state, currentRef }: OverviewLocateProps) {
@@ -57,7 +57,7 @@ interface LocateProps {
   name: string;
   image: ImageBitmap;
   items: DecodedItem[];
-  currentRef: React.MutableRefObject<string | undefined>;
+  currentRef: React.RefObject<string | null>;
   trigger: (loading: boolean, onClick: () => void) => React.ReactNode;
 }
 
@@ -72,9 +72,9 @@ function cloneImageBitmap(image: ImageBitmap): ImageBitmap {
 
 const Locate = memo(function Locate({ uid, name, items, image, trigger, currentRef }: LocateProps) {
   const lockRef = useRef(false);
-  const workerRef = useRef<Worker>();
   const { message: info } = useApp();
-  const prevUidRef = useRef<string>();
+  const workerRef = useRef<Worker>(null);
+  const prevUidRef = useRef<string>(null);
   const [src, setSrc] = useState<string>();
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useLazyState(false);
@@ -225,7 +225,7 @@ const Details = memo(function Details({ name, item }: DetailsProps) {
 
 interface ResultProps {
   state?: DecodeResultMessage;
-  currentRef: React.MutableRefObject<string | undefined>;
+  currentRef: React.RefObject<string | null>;
 }
 
 const Result = memo(function Result({ state, currentRef }: ResultProps) {
@@ -307,9 +307,9 @@ interface FormValues {
 
 export default memo(function Encode() {
   const lockRef = useRef(false);
-  const workerRef = useRef<Worker>();
   const [form] = useForm<FormValues>();
-  const currentLocateRef = useRef<string>();
+  const workerRef = useRef<Worker>(null);
+  const currentLocateRef = useRef<string>(null);
   const [loading, setLoading] = useLazyState(false);
   const [state, setState] = useState<DecodeResultMessage>();
 
