@@ -3,9 +3,10 @@
  */
 
 import useIsMounted from './useIsMounted';
-import useLatestRef from './useLatestRef';
+import { shallowEqual } from 'fast-equals';
 import { isFunction } from '/js/utils/utils';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import useLatestCallback from './useLatestCallback';
 
 export interface Props {
   [prop: string]: any;
@@ -54,22 +55,22 @@ function isControlled<V>(props: Props, options: Options<V>): boolean {
 }
 
 /**
- * @function getValue
+ * @function getState
  * @param props 组件 Props
  * @param options 配置选项
  */
-function getValue<V>(props: Props, options: Options<V>): V {
+function getState<V>(props: Props, options: Options<V>): V {
   const valuePropName = getValuePropName(options);
 
   return props[valuePropName];
 }
 
 /**
- * @function getDefaultValue
+ * @function getDefaultState
  * @param props 组件 Props
  * @param options 配置选项
  */
-function getDefaultValue<V>(props: Props, options: Options<V>): V {
+function getDefaultState<V>(props: Props, options: Options<V>): V {
   const defaultValuePropName = getDefaultValuePropName(options);
 
   return props[defaultValuePropName];
@@ -106,49 +107,43 @@ export default function useControllableValue<V = undefined>(
   options: Options<V> = {}
 ): [value: V | undefined, setValue: SetValueAction<V | undefined>] {
   const isMounted = useIsMounted();
-  const propsRef = useLatestRef(props);
-  const optionsRef = useLatestRef(options);
 
-  const [value = options.defaultValue, setState] = useState<V | undefined>(() => {
+  const [currentState = options.defaultValue, setState] = useState<V | undefined>(() => {
     if (isControlled(props, options)) {
-      return getValue(props, options);
+      return getState(props, options);
     }
 
-    return getDefaultValue(props, options);
+    return getDefaultState(props, options);
   });
 
-  const valueRef = useLatestRef(value);
-
-  const setValue = useCallback((value: React.SetStateAction<V | undefined>, ...args: any[]): void => {
+  const setValue = useLatestCallback((value: React.SetStateAction<V | undefined>, ...args: unknown[]): void => {
     if (isMounted()) {
-      const { current: prevState } = valueRef;
-      const state = isFunction(value) ? value(prevState) : value;
+      const state = currentState ?? options.defaultValue;
+      const nextState = isFunction(value) ? value(state) : value;
 
-      if (state !== prevState) {
-        const { current: props } = propsRef;
+      if (!shallowEqual(nextState, state)) {
         const { trigger = 'onChange' } = props;
-        const { current: options } = optionsRef;
 
         if (!isControlled(props, options)) {
-          setState(state);
+          setState(nextState);
         }
 
         if (isFunction(props[trigger])) {
-          props[trigger](state, ...args);
+          props[trigger](nextState, ...args);
         }
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isControlled(props, options)) {
-      const nextValue = getValue(props, options);
-
-      if (nextValue !== value) {
-        setState(nextValue);
       }
     }
   });
 
-  return [value, setValue];
+  useEffect(() => {
+    if (isControlled(props, options)) {
+      const nextState = getState(props, options);
+
+      if (!shallowEqual(nextState, currentState)) {
+        setState(nextState);
+      }
+    }
+  });
+
+  return [currentState, setValue];
 }
