@@ -44,8 +44,8 @@ const Result = memo(function Result({ value }: ResultProps) {
 
 export default memo(function Encode() {
   const lockRef = useRef(false);
-  const workerRef = useRef<Worker>();
   const [form] = useForm<FormValues>();
+  const workerRef = useRef<Worker>(null);
   const [loading, setLoading] = useLazyState(false);
   const [state, setState] = useState<EncodeResultMessage>();
 

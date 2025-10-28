@@ -20,7 +20,7 @@ export interface ImageUploadProps {
 
 export default memo(function ImageUpload(props: ImageUploadProps) {
   const { message } = useApp();
-  const urlRef = useRef<string>();
+  const urlRef = useRef<string>(null);
   const { children, preview } = props;
   const [dragging, setDragging] = useState(false);
   const [value, setValue] = useControllableValue<string>(props);

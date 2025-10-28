@@ -18,7 +18,7 @@ type UseLazyState<S> = [state: S, setLazyState: Dispatch<S>];
  * @description 清理延时器
  * @param timerRef 延时器引用
  */
-function clearTimerRef(timerRef: React.MutableRefObject<Timeout | null>): void {
+function clearTimerRef(timerRef: React.RefObject<Timeout | null>): void {
   const { current: timer } = timerRef;
 
   if (timer != null) {
