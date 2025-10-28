@@ -6,18 +6,18 @@ import React, { useMemo, useRef } from 'react';
 
 /**
  * @function useLatestRef
- * @description 生成自更新 useRef 对象
+ * @description [hook] 生成自更新 useRef 对象
  */
 export default function useLatestRef<T = undefined>(): React.RefObject<T | undefined>;
 /**
  * @function useLatestRef
- * @description 生成自更新 useRef 对象
+ * @description [hook] 生成自更新 useRef 对象
  * @param value 引用值
  */
 export default function useLatestRef<T>(value: T): React.RefObject<T>;
 /**
  * @function useLatestRef
- * @description 生成自更新 useRef 对象
+ * @description [hook] 生成自更新 useRef 对象
  * @param value 引用值
  */
 export default function useLatestRef<T = undefined>(value?: T): React.RefObject<T | undefined> {
