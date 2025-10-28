@@ -22,6 +22,16 @@ import ReactRefreshPlugin from '@rspack/plugin-react-refresh';
 
 const { ports } = appConfig;
 
+// HTTP client error codes.
+const HTTP_CLIENT_ERROR_CODES = new Set([
+  'EOF', // End of file - client closed connection.
+  'EPIPE', // Broken pipe - client disconnected.
+  'ECANCELED', // Operation canceled.
+  'ECONNRESET', // Connection reset by peer.
+  'ECONNABORTED', // Connection aborted.
+  'ERR_STREAM_PREMATURE_CLOSE' // Stream closed before finishing.
+]);
+
 /**
  * @function createMemfs
  * @return {import('../interface').FileSystem}
@@ -46,15 +56,6 @@ async function resolvePort(ports = [8000, 9000]) {
   const [port] = await findFreePorts(1, { startPort, endPort });
 
   return port;
-}
-
-/**
- * @function httpError
- * @param {Error & { code: string }} error
- * @return {boolean}
- */
-function httpError(error) {
-  return /^(EOF|EPIPE|ECANCELED|ECONNRESET|ECONNABORTED)$/i.test(error.code);
 }
 
 (async () => {
@@ -95,7 +96,9 @@ function httpError(error) {
   });
 
   app.on('error', error => {
-    !httpError(error) && console.error(error);
+    if (!HTTP_CLIENT_ERROR_CODES.has(error.code)) {
+      console.error(error);
+    }
   });
 
   app.listen(port, () => {
