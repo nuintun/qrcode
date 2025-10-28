@@ -58,15 +58,6 @@ async function resolvePort(ports = [8000, 9000]) {
   return port;
 }
 
-/**
- * @function httpError
- * @param {Error & { code: string }} error
- * @return {boolean}
- */
-function httpError(error) {
-  return /^(EOF|EPIPE|ECANCELED|ECONNRESET|ECONNABORTED)$/i.test(error.code);
-}
-
 (async () => {
   const ip = resolveIp();
   const fs = createMemfs();
