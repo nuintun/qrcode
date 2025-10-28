@@ -19,7 +19,7 @@ jobs:
           version: latest
       # 设置 node
       - name: Setup node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: latest
           registry-url: https://registry.npmjs.org
