@@ -46,7 +46,7 @@
     "find-free-ports": "^3.1.1",
     "koa": "^3.1.1",
     "koa-compress": "^5.1.1",
-    "memfs": "^4.49.0",
+    "memfs": "^4.50.0",
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2",
     "rspack-dev-middleware": "^0.2.1",
