@@ -19,7 +19,7 @@ jobs:
     steps:
       # 检出代码
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       # 设置 pnpm
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
