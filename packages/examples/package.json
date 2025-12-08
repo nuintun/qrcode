@@ -28,8 +28,8 @@
     "classnames": "^2.5.1",
     "copy-to-clipboard": "^3.3.3",
     "fast-equals": "^5.3.3",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
     "react-error-boundary": "^6.0.0"
   },
   "devDependencies": {
@@ -47,7 +47,7 @@
     "koa-compress": "^5.1.1",
     "memfs": "^4.51.1",
     "nodemon": "^3.1.11",
-    "prettier": "^3.7.3",
+    "prettier": "^3.7.4",
     "rspack-dev-middleware": "^0.2.2",
     "sass-embedded": "^1.93.3",
     "sass-loader": "^16.0.6",
