@@ -22,24 +22,24 @@
     "@ant-design/icons": "^6.1.0",
     "@nuintun/qrcode": "workspace:*",
     "@swc/helpers": "^0.5.17",
-    "antd": "^6.0.1",
+    "antd": "^6.1.2",
     "browser-fs-access": "^0.38.0",
     "chardet": "^2.1.1",
     "classnames": "^2.5.1",
     "copy-to-clipboard": "^3.3.3",
-    "fast-equals": "^5.3.3",
-    "react": "^19.2.1",
-    "react-dom": "^19.2.1",
+    "fast-equals": "^6.0.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "react-error-boundary": "^6.0.0"
   },
   "devDependencies": {
     "@nuintun/svgo-loader": "^0.5.7",
-    "@rspack/core": "^1.6.6",
+    "@rspack/core": "^1.6.8",
     "@rspack/plugin-react-refresh": "^1.5.3",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@types/throttle-debounce": "^5.0.2",
-    "bufferutil": "^4.0.9",
+    "bufferutil": "^4.1.0",
     "css-loader": "^7.1.2",
     "css-modules-types-loader": "^0.6.15",
     "find-free-ports": "^3.1.1",
@@ -49,10 +49,10 @@
     "nodemon": "^3.1.11",
     "prettier": "^3.7.4",
     "rspack-dev-middleware": "^0.2.2",
-    "sass-embedded": "^1.93.3",
+    "sass-embedded": "^1.97.1",
     "sass-loader": "^16.0.6",
     "svgc-loader": "^0.5.7",
     "typescript": "^5.9.3",
-    "utf-8-validate": "^6.0.5"
+    "utf-8-validate": "^6.0.6"
   }
 }
