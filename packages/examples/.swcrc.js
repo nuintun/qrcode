@@ -27,6 +27,10 @@ export default async mode => {
     },
     env: {
       targets: await targets()
+    },
+    collectTypeScriptInfo: {
+      typeExports: true,
+      exportedEnums: true
     }
   };
 };

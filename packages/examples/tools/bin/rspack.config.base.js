@@ -143,7 +143,7 @@ export default async mode => {
     },
     plugins: [
       new rspack.ProgressPlugin(progress),
-      new rspack.WarnCaseSensitiveModulesPlugin(),
+      new rspack.CaseSensitivePlugin(),
       new rspack.DefinePlugin(env),
       new rspack.CssExtractRspackPlugin(css),
       new rspack.HtmlRspackPlugin(html),
@@ -174,7 +174,6 @@ export default async mode => {
     externals: appConfig.externals,
     externalsType: appConfig.externalsType,
     experiments: {
-      parallelCodeSplitting: true,
       cache: {
         type: 'persistent',
         buildDependencies: [
