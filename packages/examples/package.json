@@ -21,8 +21,8 @@
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
     "@nuintun/qrcode": "workspace:*",
-    "@swc/helpers": "^0.5.17",
-    "antd": "^6.1.2",
+    "@swc/helpers": "^0.5.18",
+    "antd": "^6.1.3",
     "browser-fs-access": "^0.38.0",
     "chardet": "^2.1.1",
     "classnames": "^2.5.1",
@@ -30,11 +30,11 @@
     "fast-equals": "^6.0.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "react-error-boundary": "^6.0.0"
+    "react-error-boundary": "^6.0.2"
   },
   "devDependencies": {
     "@nuintun/svgo-loader": "^0.5.7",
-    "@rspack/core": "^1.6.8",
+    "@rspack/core": "^1.7.0",
     "@rspack/plugin-react-refresh": "^1.5.3",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
