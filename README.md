@@ -6,7 +6,7 @@
 > [![NPM Version][npm-image]][npm-url]
 > [![Download Status][download-image]][npm-url]
 > [![Languages Status][languages-image]][github-url]
-> [![ZRead][zread-image]][zread-url]
+> [![Zread][zread-image]][zread-url]
 >
 > [![Tree Shakeable][tree-shakeable-image]][bundle-phobia-url]
 > [![Side Effect][side-effect-image]][bundle-phobia-url]
