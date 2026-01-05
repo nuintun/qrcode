@@ -35,7 +35,7 @@ function isIPv6(family) {
 /**
  * @function resolveIp
  * @param {boolean} ipv6
- * @return {Promise<string>}
+ * @return {string}
  */
 export default (ipv6 = false) => {
   const isMatchFamily = ipv6 ? isIPv6 : isIPv4;

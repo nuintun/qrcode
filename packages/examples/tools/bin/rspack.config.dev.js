@@ -20,8 +20,6 @@ import { server as dev } from 'rspack-dev-middleware';
 import resolveConfigure from './rspack.config.base.js';
 import ReactRefreshPlugin from '@rspack/plugin-react-refresh';
 
-const { ports } = appConfig;
-
 // HTTP client error codes.
 const HTTP_CLIENT_ERROR_CODES = new Set([
   'EOF', // End of file - client closed connection.
@@ -61,6 +59,7 @@ async function resolvePort(ports = [8000, 9000]) {
 (async () => {
   const ip = resolveIp();
   const fs = createMemfs();
+  const { ports } = appConfig;
   const port = await resolvePort(ports);
   const devServerHost = `http://${ip}:${port}`;
   const configure = await resolveConfigure(mode);
