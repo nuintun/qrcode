@@ -2,7 +2,6 @@
  * @module source
  */
 
-import { charAt } from '/common/utils';
 import { FNC1 } from '/common/interface';
 import { Version } from '/common/Version';
 import { BitSource } from '/common/BitSource';
@@ -72,8 +71,8 @@ function decodeAlphanumericSegment(source: BitSource, count: number, fnc1: boole
 
     const nextTwoCharsBits = source.read(11);
 
-    content += charAt(ALPHANUMERIC_CHARACTERS, nextTwoCharsBits / 45);
-    content += charAt(ALPHANUMERIC_CHARACTERS, nextTwoCharsBits % 45);
+    content += ALPHANUMERIC_CHARACTERS.charAt(nextTwoCharsBits / 45);
+    content += ALPHANUMERIC_CHARACTERS.charAt(nextTwoCharsBits % 45);
 
     count -= 2;
   }
@@ -84,7 +83,7 @@ function decodeAlphanumericSegment(source: BitSource, count: number, fnc1: boole
       throw new Error('illegal bits length');
     }
 
-    content += charAt(ALPHANUMERIC_CHARACTERS, source.read(6));
+    content += ALPHANUMERIC_CHARACTERS.charAt(source.read(6));
   }
 
   return fnc1 ? processGSCharacter(content) : content;
@@ -120,7 +119,7 @@ function decodeHanziSegment(source: BitSource, count: number): string {
   while (count > 0) {
     const twoBytes = source.read(13);
 
-    let assembledTwoBytes = ((twoBytes / 0x060) << 8) | twoBytes % 0x060;
+    let assembledTwoBytes = ((twoBytes / 0x060) << 8) | (twoBytes % 0x060);
 
     if (assembledTwoBytes < 0x00a00) {
       // In the 0xA1A1 to 0xAAFE range.
@@ -152,7 +151,7 @@ function decodeKanjiSegment(source: BitSource, count: number): string {
   while (count > 0) {
     const twoBytes = source.read(13);
 
-    let assembledTwoBytes = ((twoBytes / 0x0c0) << 8) | twoBytes % 0x0c0;
+    let assembledTwoBytes = ((twoBytes / 0x0c0) << 8) | (twoBytes % 0x0c0);
 
     if (assembledTwoBytes < 0x01f00) {
       // In the 0x8140 to 0x9FFC range.
@@ -188,9 +187,9 @@ function decodeNumericSegment(source: BitSource, count: number): string {
       throw new Error('illegal numeric codeword');
     }
 
-    content += charAt(NUMERIC_CHARACTERS, threeDigitsBits / 100);
-    content += charAt(NUMERIC_CHARACTERS, (threeDigitsBits / 10) % 10);
-    content += charAt(NUMERIC_CHARACTERS, threeDigitsBits % 10);
+    content += NUMERIC_CHARACTERS.charAt(threeDigitsBits / 100);
+    content += NUMERIC_CHARACTERS.charAt((threeDigitsBits / 10) % 10);
+    content += NUMERIC_CHARACTERS.charAt(threeDigitsBits % 10);
 
     count -= 3;
   }
@@ -207,8 +206,8 @@ function decodeNumericSegment(source: BitSource, count: number): string {
       throw new Error('illegal numeric codeword');
     }
 
-    content += charAt(NUMERIC_CHARACTERS, twoDigitsBits / 10);
-    content += charAt(NUMERIC_CHARACTERS, twoDigitsBits % 10);
+    content += NUMERIC_CHARACTERS.charAt(twoDigitsBits / 10);
+    content += NUMERIC_CHARACTERS.charAt(twoDigitsBits % 10);
   } else if (count === 1) {
     // One digit left over to read.
     if (source.available() < 4) {
@@ -221,7 +220,7 @@ function decodeNumericSegment(source: BitSource, count: number): string {
       throw new Error('illegal numeric codeword');
     }
 
-    content += charAt(NUMERIC_CHARACTERS, digitBits);
+    content += NUMERIC_CHARACTERS.charAt(digitBits);
   }
 
   return content;
