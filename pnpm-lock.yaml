@@ -89,11 +89,11 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0(react-refresh@0.18.0)
       '@types/react':
-        specifier: ^19.2.11
-        version: 19.2.11
+        specifier: ^19.2.13
+        version: 19.2.13
       '@types/react-dom':
         specifier: ^19.2.3
-        version: 19.2.3(@types/react@19.2.11)
+        version: 19.2.3(@types/react@19.2.13)
       '@types/throttle-debounce':
         specifier: ^5.0.2
         version: 5.0.2
@@ -125,8 +125,8 @@ importers:
         specifier: ^3.8.1
         version: 3.8.1
       rspack-dev-middleware:
-        specifier: ^0.2.3
-        version: 0.2.3(@rspack/core@1.7.5(@swc/helpers@0.5.18))(bufferutil@4.1.0)(koa@3.1.1)(utf-8-validate@6.0.6)
+        specifier: ^0.2.4
+        version: 0.2.4(@rspack/core@1.7.5(@swc/helpers@0.5.18))(bufferutil@4.1.0)(koa@3.1.1)(utf-8-validate@6.0.6)
       sass-embedded:
         specifier: ^1.97.3
         version: 1.97.3
@@ -1122,8 +1122,8 @@ packages:
     peerDependencies:
       '@types/react': ^19.2.0
 
-  '@types/react@19.2.11':
-    resolution: {integrity: sha512-tORuanb01iEzWvMGVGv2ZDhYZVeRMrw453DCSAIn/5yvcSVnMoUMTyf33nQJLahYEnv9xqrTNbgz4qY5EfSh0g==}
+  '@types/react@19.2.13':
+    resolution: {integrity: sha512-KkiJeU6VbYbUOp5ITMIc7kBfqlYkKA5KhEHVrGMmUUMt7NeaZg65ojdPk+FtNrBAOXNVM5QM72jnADjM+XVRAQ==}
 
   '@types/send@1.2.1':
     resolution: {integrity: sha512-arsCikDvlU99zl1g69TcAB3mzZPpxgw0UQnaHeC1Nwb015xp8bknZv5rIfri9xTOcMuaVgvabfIRA7PSZVuZIQ==}
@@ -1739,8 +1739,8 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
-  rspack-dev-middleware@0.2.3:
-    resolution: {integrity: sha512-uNZ8FdFUY/jnVNdm+ttDPlc7O/HB7G+cjcWYOhI6f9YK8Jt0nGYAF2DA0E5kEGCcvadTVEzHT5nAcg6Mj//eBg==}
+  rspack-dev-middleware@0.2.4:
+    resolution: {integrity: sha512-652+fgGi7NXBPL7bGo4fE4a4zU0DfnOKQ/GJUh7IQ+Hj9WeYAvz8vGnlT774LzGYIkUQuGj8862++mIg/1xXAQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       '@rspack/core': '>=1.0.7'
@@ -3037,11 +3037,11 @@ snapshots:
 
   '@types/range-parser@1.2.7': {}
 
-  '@types/react-dom@19.2.3(@types/react@19.2.11)':
+  '@types/react-dom@19.2.3(@types/react@19.2.13)':
     dependencies:
-      '@types/react': 19.2.11
+      '@types/react': 19.2.13
 
-  '@types/react@19.2.11':
+  '@types/react@19.2.13':
     dependencies:
       csstype: 3.2.3
 
@@ -3687,7 +3687,7 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.57.1
       fsevents: 2.3.3
 
-  rspack-dev-middleware@0.2.3(@rspack/core@1.7.5(@swc/helpers@0.5.18))(bufferutil@4.1.0)(koa@3.1.1)(utf-8-validate@6.0.6):
+  rspack-dev-middleware@0.2.4(@rspack/core@1.7.5(@swc/helpers@0.5.18))(bufferutil@4.1.0)(koa@3.1.1)(utf-8-validate@6.0.6):
     dependencies:
       '@nuintun/ansi': 0.3.9
       '@rspack/core': 1.7.5(@swc/helpers@0.5.18)
