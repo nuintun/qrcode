@@ -2,11 +2,27 @@
  * @module Error
  */
 
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { Button, Result } from 'antd';
-import { FallbackProps } from 'react-error-boundary';
+import { FallbackProps as ErrorFallbackProps } from 'react-error-boundary';
 
-export default memo(function ErrorFallback({ error, resetErrorBoundary }: FallbackProps): React.ReactElement {
+export type { ErrorFallbackProps };
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    const { stack, message } = error;
+
+    if (stack != null) {
+      return stack?.replace(/(\r?\n)\s{2,}/gm, '$1  ');
+    }
+
+    return message;
+  }
+
+  return `${error}`;
+}
+
+export default memo(function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
   if (__DEV__) {
     return (
       <Result
@@ -28,7 +44,7 @@ export default memo(function ErrorFallback({ error, resetErrorBoundary }: Fallba
                 fontFamily: 'Consolas, "Lucida Console", monospace'
               }}
             >
-              {error.stack?.replace(/(\r?\n)\s{2,}/gm, '$1  ') || error.message}
+              {getErrorMessage(error)}
             </pre>
           </div>
         }
