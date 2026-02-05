@@ -74,19 +74,19 @@ const Locate = memo(function Locate({ uid, name, items, image, trigger, currentR
   const lockRef = useRef(false);
   const { message: info } = useApp();
   const workerRef = useRef<Worker>(null);
+  const [open, setOpen] = useState(false);
   const prevUidRef = useRef<string>(null);
   const [src, setSrc] = useState<string>();
-  const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useLazyState(false);
 
   const preview = useMemo<ImageProps['preview']>(() => {
     return {
       src,
-      visible,
-      onVisibleChange(visible) {
-        setVisible(visible);
+      open,
+      onOpenChange(open) {
+        setOpen(open);
       },
-      toolbarRender(node) {
+      actionsRender(node) {
         return (
           <div className={styles.locatedToolbar}>
             <p>{name}</p>
@@ -95,7 +95,7 @@ const Locate = memo(function Locate({ uid, name, items, image, trigger, currentR
         );
       }
     };
-  }, [src, name, visible]);
+  }, [src, name, open]);
 
   const onClick = useCallback(() => {
     currentRef.current = uid;
@@ -126,7 +126,7 @@ const Locate = memo(function Locate({ uid, name, items, image, trigger, currentR
         worker.postMessage(message, [newImage]);
       }
     } else {
-      setVisible(visible => !visible);
+      setOpen(open => !open);
     }
   }, [uid, image, items]);
 
@@ -145,7 +145,7 @@ const Locate = memo(function Locate({ uid, name, items, image, trigger, currentR
           const { current } = currentRef;
 
           if (current === uid) {
-            setVisible(visible => !visible);
+            setOpen(open => !open);
           }
           break;
         case 'error':
