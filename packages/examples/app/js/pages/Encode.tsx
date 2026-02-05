@@ -5,13 +5,18 @@ import useLazyState from '/js/hooks/useLazyState';
 import Icon, { ThunderboltOutlined } from '@ant-design/icons';
 import { EncodeMessage, EncodeResultMessage } from '/js/workers/encode';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Button, Col, ColorPicker, Form, Image, Input, InputNumber, Row, Select, Tooltip } from 'antd';
+import { Alert, Button, Col, ColorPicker, Form, Image, Input, InputNumber, Row, Select, Space, Tooltip } from 'antd';
 
 import EncodeIcon from '/images/encode.svg';
 
+interface Option {
+  label: string;
+  value: unknown;
+}
+
 type FormValues = EncodeMessage;
 
-const { Option } = Select;
+const { Compact } = Space;
 const { TextArea } = Input;
 const { Item: FormItem, useForm, useWatch } = Form;
 
@@ -65,19 +70,19 @@ export default memo(function Encode() {
     };
   }, []);
 
-  const versions = useMemo<React.ReactElement[]>(() => {
-    const options = [
-      <Option key="Auto" value="Auto">
-        Auto
-      </Option>
+  const versions = useMemo<Option[]>(() => {
+    const options: Option[] = [
+      {
+        label: 'Auto',
+        value: 'Auto'
+      }
     ];
 
     for (let version = 1; version <= 40; version++) {
-      options.push(
-        <Option key={version} value={version}>
-          {version}
-        </Option>
-      );
+      options.push({
+        label: `${version}`,
+        value: version
+      });
     }
 
     return options;
@@ -139,49 +144,104 @@ export default memo(function Encode() {
           </Col>
           <Col md={6} sm={12} xs={24}>
             <FormItem name="mode" label="编码模式">
-              <Select>
-                <Option value="Auto" selected>
-                  Auto
-                </Option>
-                <Option value="Alphanumeric">Alphanumeric</Option>
-                <Option value="Byte">Byte</Option>
-                <Option value="Hanzi">Hanzi</Option>
-                <Option value="Kanji">Kanji</Option>
-                <Option value="Numeric">Numeric</Option>
-              </Select>
+              <Select
+                options={[
+                  {
+                    label: 'Auto',
+                    value: 'Auto'
+                  },
+                  {
+                    label: 'Alphanumeric',
+                    value: 'Alphanumeric'
+                  },
+                  {
+                    label: 'Byte',
+                    value: 'Byte'
+                  },
+                  {
+                    label: 'Hanzi',
+                    value: 'Hanzi'
+                  },
+                  {
+                    label: 'Kanji',
+                    value: 'Kanji'
+                  },
+                  {
+                    label: 'Numeric',
+                    value: 'Numeric'
+                  }
+                ]}
+              />
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
             <FormItem name="charset" label="字符编码">
-              <Select disabled={mode !== 'Auto' && mode !== 'Byte'}>
-                <Option value="ASCII">ASCII</Option>
-                <Option value="UTF_8">UTF-8</Option>
-                <Option value="ISO_8859_1">ISO-8859-1</Option>
-              </Select>
+              <Select
+                options={[
+                  {
+                    label: 'ASCII',
+                    value: 'ASCII'
+                  },
+                  {
+                    label: 'UTF-8',
+                    value: 'UTF_8'
+                  },
+                  {
+                    label: 'ISO-8859-1',
+                    value: 'ISO_8859_1'
+                  }
+                ]}
+                disabled={mode !== 'Auto' && mode !== 'Byte'}
+              />
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
             <FormItem name="version" label="版本大小">
-              <Select>{versions}</Select>
+              <Select options={versions} />
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
             <FormItem name="level" label="纠错等级">
-              <Select>
-                <Option value="L">Level L (7%)</Option>
-                <Option value="M">Level M (15%)</Option>
-                <Option value="Q">Level Q (25%)</Option>
-                <Option value="H">Level H (30%)</Option>
-              </Select>
+              <Select
+                options={[
+                  {
+                    label: 'Level L (7%)',
+                    value: 'L'
+                  },
+                  {
+                    label: 'Level M (15%)',
+                    value: 'M'
+                  },
+                  {
+                    label: 'Level Q (25%)',
+                    value: 'Q'
+                  },
+                  {
+                    label: 'Level H (30%)',
+                    value: 'H'
+                  }
+                ]}
+              />
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
             <FormItem name="fnc1" label="支持 FNC1">
-              <Select>
-                <Option value="None">否</Option>
-                <Option value="AIM">AIM</Option>
-                <Option value="GS1">GS1</Option>
-              </Select>
+              <Select
+                options={[
+                  {
+                    label: '否',
+                    value: 'None'
+                  },
+                  {
+                    label: 'AIM',
+                    value: 'AIM'
+                  },
+                  {
+                    label: 'GS1',
+                    value: 'GS1'
+                  }
+                ]}
+              />
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
@@ -195,18 +255,15 @@ export default memo(function Encode() {
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
-            <FormItem name="quietZone" label="静区大小" tooltip="推荐 4 倍模块大小">
-              <InputNumber
-                min={0}
-                max={200}
-                precision={0}
-                style={{ width: '100%' }}
-                addonAfter={
-                  <Tooltip title="自动计算">
-                    <ThunderboltOutlined onClick={onAutofillQuietZoneClick} />
-                  </Tooltip>
-                }
-              />
+            <FormItem label="静区大小" tooltip="推荐 4 倍模块大小">
+              <Compact block>
+                <FormItem noStyle name="quietZone">
+                  <InputNumber min={0} max={200} precision={0} style={{ width: '100%' }} />
+                </FormItem>
+                <Tooltip title="自动计算">
+                  <Button icon={<ThunderboltOutlined />} onClick={onAutofillQuietZoneClick} />
+                </Tooltip>
+              </Compact>
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>

@@ -86,7 +86,7 @@ const Locate = memo(function Locate({ uid, name, items, image, trigger, currentR
       onOpenChange(open) {
         setOpen(open);
       },
-      toolbarRender(node) {
+      actionsRender(node) {
         return (
           <div className={styles.locatedToolbar}>
             <p>{name}</p>
