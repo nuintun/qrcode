@@ -2,8 +2,6 @@
  * @module utils
  */
 
-import { charAt } from '/common/utils';
-
 export type EncodingRange = [start: number, end: number];
 
 export function getMappingFromCharacters(characters: string): Map<string, number> {
@@ -37,7 +35,7 @@ export function getMappingFromEncodingRanges(label: string, ...ranges: EncodingR
   const characters = decoder.decode(new Uint8Array(bytes));
 
   for (let i = 0; i < length; i++) {
-    const character = charAt(characters, i);
+    const character = characters.charAt(i);
 
     if (!mapping.has(character)) {
       mapping.set(character, codes[i]);

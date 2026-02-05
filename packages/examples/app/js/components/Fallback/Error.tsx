@@ -2,11 +2,13 @@
  * @module Error
  */
 
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { Button, Result } from 'antd';
-import { FallbackProps } from 'react-error-boundary';
+import { FallbackProps as ErrorFallbackProps } from 'react-error-boundary';
 
-export default memo(function ErrorFallback({ error, resetErrorBoundary }: FallbackProps): React.ReactElement {
+export type { ErrorFallbackProps };
+
+export default memo(function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
   if (__DEV__) {
     return (
       <Result

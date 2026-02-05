@@ -22,12 +22,6 @@ export function getBitOffset(value: number): number {
   return value & 0x1f;
 }
 
-export function charAt(value: string, index: number): string {
-  const character = value.at(index);
-
-  return character != null ? character : '';
-}
-
 // Get hamming weight of int32.
 export function hammingWeight(value: number): number {
   // HD, Figure 5-2.

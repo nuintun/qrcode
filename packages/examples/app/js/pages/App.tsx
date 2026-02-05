@@ -108,7 +108,15 @@ const Page = memo(function Page() {
 
 export default memo(function App() {
   return (
-    <ConfigProvider locale={zh_CN} theme={{ cssVar: true, hashed: false, token: { borderRadius: 4 } }}>
+    <ConfigProvider
+      locale={zh_CN}
+      theme={{
+        hashed: false,
+        token: {
+          borderRadius: 4
+        }
+      }}
+    >
       <Page />
     </ConfigProvider>
   );
