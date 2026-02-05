@@ -8,6 +8,20 @@ import { FallbackProps as ErrorFallbackProps } from 'react-error-boundary';
 
 export type { ErrorFallbackProps };
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    const { stack, message } = error;
+
+    if (stack != null) {
+      return stack?.replace(/(\r?\n)\s{2,}/gm, '$1  ');
+    }
+
+    return message;
+  }
+
+  return `${error}`;
+}
+
 export default memo(function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
   if (__DEV__) {
     return (
@@ -30,7 +44,7 @@ export default memo(function ErrorFallback({ error, resetErrorBoundary }: ErrorF
                 fontFamily: 'Consolas, "Lucida Console", monospace'
               }}
             >
-              {error.stack?.replace(/(\r?\n)\s{2,}/gm, '$1  ') || error.message}
+              {getErrorMessage(error)}
             </pre>
           </div>
         }
