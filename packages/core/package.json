@@ -51,7 +51,7 @@
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^12.3.0",
-    "dts-paths": "^1.1.15",
+    "dts-paths": "^1.1.16",
     "prettier": "^3.8.1",
     "rimraf": "^6.1.2",
     "rollup": "^4.57.1",
