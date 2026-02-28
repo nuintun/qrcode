@@ -52,32 +52,13 @@
 
 .details {
   margin: 0;
-  padding: 8px;
-  display: block;
+  color: #000;
+  padding: 16px;
   overflow: auto;
-  max-height: 386px;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  border: 1px solid #d9d9d9;
-  background-color: rgba(0, 0, 0, 0.02);
-
-  .key {
-    color: red;
-  }
-
-  .null {
-    color: magenta;
-  }
-
-  .number {
-    color: darkorange;
-  }
-
-  .string {
-    color: green;
-  }
-
-  .boolean {
-    color: blue;
-  }
+  font-size: 14px;
+  line-height: 1.5;
+  max-height: 400px;
+  font-family: monospace;
+  background-color: #fff;
+  border: 1px solid #eee;
 }
