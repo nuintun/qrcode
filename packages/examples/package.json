@@ -43,7 +43,7 @@
     "css-loader": "^7.1.4",
     "css-modules-types-loader": "^0.6.16",
     "find-free-ports": "^3.1.1",
-    "koa": "^3.1.1",
+    "koa": "^3.1.2",
     "koa-compress": "^5.2.0",
     "memfs": "^4.56.10",
     "nodemon": "^3.1.14",
