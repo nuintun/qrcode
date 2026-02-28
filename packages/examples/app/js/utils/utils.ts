@@ -21,72 +21,10 @@ export function createMarkup(html: string): { __html: string } {
 }
 
 /**
- * @interface ClassNamesHighlight
- * @description 高亮类名配置
- */
-export interface ClassNamesHighlight {
-  key?: string;
-  null?: string;
-  number?: string;
-  string?: string;
-  boolean?: string;
-}
-
-/**
  * @function normalizeLinefeed
  * @description 格式化换行
  * @param value 需要格式化的字符串
  */
 export function normalizeLinefeed(value: string): string {
   return value.replace(/\r(?!\n)|\r\n/g, '\n');
-}
-
-/**
- * @function syntaxHighlight
- * @description JSON 语法高亮
- * @param json JSON 字符串
- * @param classNames 高亮类名配置
- */
-export function syntaxHighlight(
-  json: string,
-  {
-    key: keyClassName = 'key',
-    null: nullClassName = 'null',
-    number: numberClassName = 'number',
-    string: stringClassName = 'string',
-    boolean: booleanClassName = 'boolean'
-  }: ClassNamesHighlight = {}
-): string {
-  const PARSE_RE = /"(?:\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(?:\s*:)?|\b(?:true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g;
-
-  return json
-    .replace(/[&<>]/gm, match => {
-      switch (match) {
-        case '&':
-          return '&amp;';
-        case '<':
-          return '&lt;';
-        case '>':
-          return '&gt;';
-        default:
-          return match;
-      }
-    })
-    .replace(PARSE_RE, match => {
-      let className = numberClassName;
-
-      if (/^"/.test(match)) {
-        if (/:$/.test(match)) {
-          className = keyClassName;
-        } else {
-          className = stringClassName;
-        }
-      } else if (/null/.test(match)) {
-        className = nullClassName;
-      } else if (/true|false/.test(match)) {
-        className = booleanClassName;
-      }
-
-      return `<span class="${className}">${match}</span>`;
-    });
 }

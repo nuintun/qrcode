@@ -3,10 +3,11 @@ import * as styles from '/css/Decode.module.scss';
 import Icon from '@ant-design/icons';
 import Clipboard from '/js/components/Clipboard';
 import useLazyState from '/js/hooks/useLazyState';
+import JSONViewer from '/js/components/JSONViewer';
+import { normalizeLinefeed } from '/js/utils/utils';
 import ImagePicker from '/js/components/ImagePicker';
 import { InfoCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 import { LocateMessage, LocateResultMessage } from '/js/workers/locate';
-import { createMarkup, normalizeLinefeed, syntaxHighlight } from '/js/utils/utils';
 import { DecodedItem, DecodeMessage, DecodeResultMessage } from '/js/workers/decode';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, App, Button, Col, Collapse, CollapseProps, Form, Image, ImageProps, Modal, Row, Switch, Tooltip } from 'antd';
@@ -189,15 +190,8 @@ const Details = memo(function Details({ name, item }: DetailsProps) {
 
   const details = useMemo(() => {
     const { content, ...details } = item;
-    const json = JSON.stringify(details, null, 2);
 
-    return syntaxHighlight(json, {
-      key: styles.key,
-      null: styles.null,
-      number: styles.number,
-      string: styles.string,
-      boolean: styles.boolean
-    });
+    return details;
   }, [item]);
 
   return (
@@ -217,7 +211,7 @@ const Details = memo(function Details({ name, item }: DetailsProps) {
           </Button>
         )}
       >
-        <code className={styles.details} dangerouslySetInnerHTML={createMarkup(details)} />
+        <JSONViewer data={details} className={styles.details} />
       </Modal>
     </>
   );
