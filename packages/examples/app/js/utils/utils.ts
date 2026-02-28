@@ -21,18 +21,6 @@ export function createMarkup(html: string): { __html: string } {
 }
 
 /**
- * @interface ClassNamesHighlight
- * @description 高亮类名配置
- */
-export interface ClassNamesHighlight {
-  key?: string;
-  null?: string;
-  number?: string;
-  string?: string;
-  boolean?: string;
-}
-
-/**
  * @function normalizeLinefeed
  * @description 格式化换行
  * @param value 需要格式化的字符串
