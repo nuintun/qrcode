@@ -1,4 +1,4 @@
 # Ignore files
 *.min.*
-wwwroot/**/*
+/wwwroot/
 pnpm-lock.yaml

@@ -36,12 +36,13 @@
   "homepage": "https://github.com/nuintun/qrcode#readme",
   "scripts": {
     "lint": "tsc --noEmit",
-    "test": "node tests/index.js",
-    "clean": "node tools/clean.js",
+    "pretest": "pnpm build",
+    "clean": "node tools/clean.ts",
     "prepublishOnly": "pnpm build",
-    "build:cjs": "rollup -c tools/rollup.cjs.js",
-    "build:esm": "rollup -c tools/rollup.esm.js",
-    "build:fix-types": "node tools/fix-types.js",
+    "test": "node --test tests/index.ts",
+    "build:cjs": "rollup -c tools/rollup.cjs.ts",
+    "build:esm": "rollup -c tools/rollup.esm.ts",
+    "build:fix-types": "node tools/fix-types.ts",
     "build": "pnpm clean && pnpm build:main && pnpm format",
     "format": "prettier --write . --ignore-path .prettierignore",
     "build:main": "pnpm build:cjs && pnpm build:esm && pnpm build:fix-types"
@@ -51,10 +52,11 @@
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^12.3.0",
-    "dts-paths": "^1.1.16",
-    "prettier": "^3.8.1",
+    "@types/node": "^25.6.0",
+    "dts-paths": "^2.2.1",
+    "prettier": "^3.8.2",
     "rimraf": "^6.1.3",
-    "rollup": "^4.59.0",
-    "typescript": "^5.9.3"
+    "rollup": "^4.60.1",
+    "typescript": "^6.0.2"
   }
 }

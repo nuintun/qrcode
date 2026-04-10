@@ -10,15 +10,17 @@ process.env.NODE_ENV = mode;
 process.env.BABEL_ENV = mode;
 
 import rspack from '@rspack/core';
-import targets from '../lib/targets.js';
-import resolveConfigure from './rspack.config.base.js';
+import targets from '../lib/targets.ts';
+import resolveConfigure from './rspack.config.base.ts';
 
 (async () => {
   const configure = await resolveConfigure(mode);
 
   configure.devtool = false;
+  // @ts-expect-error
   configure.experiments.cache.version = 'dev';
 
+  // @ts-expect-error
   // 使用自定义 minimizer 工具
   configure.optimization.minimizer = [
     new rspack.SwcJsMinimizerRspackPlugin({
@@ -43,7 +45,7 @@ import resolveConfigure from './rspack.config.base.js';
       if (error) {
         console.error(error);
       } else {
-        console.log(stats.toString(compiler.options.stats));
+        console.log(stats?.toString(compiler.options.stats));
       }
     });
   });

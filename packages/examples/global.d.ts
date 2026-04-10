@@ -104,4 +104,4 @@ declare type NonEmptyArray<T> = [T, ...T[]];
 /**
  * @description 定时器标识类型
  */
-declare type Timeout = number | NodeJS.Timeout;
+declare type Timeout = ReturnType<typeof setTimeout>;

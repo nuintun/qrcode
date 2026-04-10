@@ -165,6 +165,7 @@ self.addEventListener('message', async ({ data }: MessageEvent<DecodeMessage>) =
       }
     };
 
+    // @ts-expect-error
     self.postMessage(message, [image]);
   } else {
     const message: DecodedError = {

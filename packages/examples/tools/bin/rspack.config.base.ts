@@ -4,92 +4,19 @@
  */
 
 import rspack from '@rspack/core';
-import { join, resolve } from 'node:path';
-import resolveRules from '../lib/rules.js';
-import { readdir } from 'node:fs/promises';
-import appConfig from '../../app.config.js';
-
-/**
- * @function read
- * @param {string} path
- * @return {Promise<import('fs').Dirent[]>}
- */
-async function read(path) {
-  const entries = await readdir(path, {
-    withFileTypes: true
-  });
-
-  return entries.values();
-}
-
-/**
- * @function getFiles
- * @param {string} root
- * @return {Promise<string[]>}
- */
-export async function getFilesInDirectory(root) {
-  const files = [];
-  const waiting = [];
-
-  root = resolve(root);
-
-  let current = [root, await read(root)];
-
-  while (current) {
-    const [, iterator] = current;
-    const item = iterator.next();
-
-    if (item.done) {
-      current = waiting.pop();
-    } else {
-      const [dirname] = current;
-      const { value: stat } = item;
-      const path = join(dirname, stat.name);
-
-      if (stat.isFile()) {
-        files.push(path);
-      } else if (stat.isDirectory()) {
-        waiting.push([path, await read(path)]);
-      }
-    }
-  }
-
-  return files;
-}
-
-/**
- * @function resolveEnvironment
- * @param {string} mode
- * @param {object} env
- * @return {Promise<Record<string, string>>}
- */
-async function resolveEnvironment(mode, env) {
-  if (typeof env === 'function') {
-    env = await env(mode, process.env);
-  }
-
-  env = {
-    ...env,
-    __APP_NAME__: appConfig.name,
-    __DEV__: mode !== 'production'
-  };
-
-  const output = {};
-  const entries = Object.entries(env);
-
-  for (const [key, value] of entries) {
-    output[key] = JSON.stringify(value);
-  }
-
-  return output;
-}
+import { resolve } from 'node:path';
+import { scanFiles } from '../lib/fs.ts';
+import resolveRules from '../lib/rules.ts';
+import appConfig from '../../app.config.ts';
+import { resolveEnvironment } from '../lib/env.ts';
+import type { Configuration, Mode } from '@rspack/core';
 
 /**
  * @function rspackrc
- * @param {string} mode
- * @return {Promise<import('@rspack/core').Configuration>}
+ * @description 生成 Rspack 配置
+ * @param mode 打包模式
  */
-export default async mode => {
+export default async function (mode: Mode): Promise<Configuration> {
   const isDevelopment = mode !== 'production';
 
   const html = {
@@ -147,7 +74,7 @@ export default async mode => {
       new rspack.DefinePlugin(env),
       new rspack.CssExtractRspackPlugin(css),
       new rspack.HtmlRspackPlugin(html),
-      ...(appConfig.plugins || [])
+      ...(appConfig.plugins ?? [])
     ],
     optimization: {
       splitChunks: {
@@ -177,13 +104,13 @@ export default async mode => {
       cache: {
         type: 'persistent',
         buildDependencies: [
-          resolve('.swcrc.js'),
-          resolve('.svgorc.js'),
+          resolve('.swcrc.ts'),
+          resolve('.svgorc.ts'),
           resolve('package.json'),
-          resolve('app.config.js'),
+          resolve('app.config.ts'),
           resolve('.browserslistrc'),
-          resolve('.lightningcssrc.js'),
-          ...(await getFilesInDirectory('tools'))
+          resolve('.lightningcssrc.ts'),
+          ...(await scanFiles('tools'))
         ],
         storage: {
           type: 'filesystem',
@@ -192,4 +119,4 @@ export default async mode => {
       }
     }
   };
-};
+}

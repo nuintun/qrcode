@@ -2,16 +2,18 @@
  * @module rollup.base
  */
 
+import { isBuiltin } from 'node:module';
+import type { RollupOptions } from 'rollup';
 import typescript from '@rollup/plugin-typescript';
-import { createRequire, isBuiltin } from 'node:module';
-
-const pkg = createRequire(import.meta.url)('../package.json');
+import pkg from '../package.json' with { type: 'json' };
 
 const externals = [
-  // Dependencies.
-  ...Object.keys(pkg.dependencies || {}),
-  // Peer dependencies.
-  ...Object.keys(pkg.peerDependencies || {})
+  // @ts-ignore
+  // dependencies
+  ...Object.keys(pkg.dependencies ?? {}),
+  // @ts-ignore
+  // peer dependencies
+  ...Object.keys(pkg.peerDependencies ?? {})
 ];
 
 const banner = `/**
@@ -27,15 +29,17 @@ const banner = `/**
 
 /**
  * @function rollup
- * @param {boolean} [esnext] Is esnext.
- * @return {import('rollup').RollupOptions}
+ * @description rollup configuration
+ * @param {boolean} [esnext] is esnext
  */
-export default function rollup(esnext) {
+export default function rollup(esnext = false): RollupOptions {
   return {
     input: 'src/index.ts',
     output: {
       banner,
+      esModule: false,
       interop: 'auto',
+      exports: 'named',
       preserveModules: true,
       dir: esnext ? 'esm' : 'cjs',
       format: esnext ? 'esm' : 'cjs',
@@ -45,6 +49,7 @@ export default function rollup(esnext) {
     },
     plugins: [
       typescript({
+        rootDir: 'src',
         declaration: true,
         declarationDir: esnext ? 'esm' : 'cjs'
       })

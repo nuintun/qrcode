@@ -10,15 +10,22 @@ process.env.NODE_ENV = mode;
 process.env.BABEL_ENV = mode;
 
 import Koa from 'koa';
+import type { IFs } from 'memfs';
 import rspack from '@rspack/core';
 import compress from 'koa-compress';
-import resolveIp from '../lib/ip.js';
-import appConfig from '../../app.config.js';
+import resolveIp from '../lib/ip.ts';
+import appConfig from '../../app.config.ts';
+import type { AppConfig } from '../index.ts';
 import { findFreePorts } from 'find-free-ports';
 import { createFsFromVolume, Volume } from 'memfs';
+import type { Options } from 'rspack-dev-middleware';
 import { server as dev } from 'rspack-dev-middleware';
-import resolveConfigure from './rspack.config.base.js';
-import ReactRefreshPlugin from '@rspack/plugin-react-refresh';
+import resolveConfigure from './rspack.config.base.ts';
+import { ReactRefreshRspackPlugin } from '@rspack/plugin-react-refresh';
+
+type FileSystem = Options['fs'] & {
+  createReadStream: IFs['createReadStream'];
+};
 
 // HTTP client error codes.
 const HTTP_CLIENT_ERROR_CODES = new Set([
@@ -32,20 +39,20 @@ const HTTP_CLIENT_ERROR_CODES = new Set([
 
 /**
  * @function createMemfs
- * @return {import('../interface').FileSystem}
+ * @description 创建内存文件系统
  */
-function createMemfs() {
+function createMemfs(): FileSystem {
   const volume = new Volume();
 
-  return createFsFromVolume(volume);
+  return createFsFromVolume(volume) as FileSystem;
 }
 
 /**
  * @function resolvePort
- * @param {import('../interface').AppConfig['ports']} ports
- * @return {number}
+ * @description 获取空闲端口
+ * @param ports 端口范围
  */
-async function resolvePort(ports = [8000, 9000]) {
+async function resolvePort(ports: AppConfig['ports'] = [8000, 9000]) {
   if (!Array.isArray(ports)) {
     ports = [ports, ports + 1];
   }
@@ -64,11 +71,13 @@ async function resolvePort(ports = [8000, 9000]) {
   const devServerHost = `http://${ip}:${port}`;
   const configure = await resolveConfigure(mode);
 
+  // @ts-expect-error
   configure.experiments.cache.version = 'dev';
   configure.devtool = 'eval-cheap-module-source-map';
   configure.watchOptions = { aggregateTimeout: 256 };
 
-  configure.plugins.push(new ReactRefreshPlugin({ overlay: false }));
+  // @ts-expect-error
+  configure.plugins.push(new ReactRefreshRspackPlugin());
 
   const app = new Koa();
   const compiler = rspack(configure);
