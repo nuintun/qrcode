@@ -9,7 +9,7 @@ import { defineConfig } from './tools/index.ts';
 const js = resolve('app/js');
 const css = resolve('app/css');
 const images = resolve('app/images');
-const html = resolve('wwwroot/app.html');
+const html = resolve('wwwroot/index.html');
 
 // 生成配置文件
 export default defineConfig({
