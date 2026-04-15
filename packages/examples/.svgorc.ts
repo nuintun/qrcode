@@ -4,8 +4,8 @@
  */
 
 import type { Config } from 'svgo';
-import type { Mode } from '@rspack/core';
 import { createHash } from 'node:crypto';
+import type { Mode } from './tools/index.ts';
 
 /**
  * @function svgorc

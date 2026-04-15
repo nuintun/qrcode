@@ -6,7 +6,7 @@
 import rspack from '@rspack/core';
 import swcrc from '../../.swcrc.ts';
 import svgorc from '../../.svgorc.ts';
-import type { GetProp } from '../index.ts';
+import type { GetProp } from './types.ts';
 import lightningcssrc from '../../.lightningcssrc.ts';
 import type { Configuration, Mode } from '@rspack/core';
 
@@ -48,7 +48,7 @@ export default async function (mode: Mode): Promise<Rules> {
   return [
     {
       oneOf: [
-        // The loader for js.
+        // JavaScript/TypeScript 文件的加载器配置
         {
           test: /\.[jt]sx?$/i,
           exclude: /[\\/]node_modules[\\/]/,
@@ -59,7 +59,7 @@ export default async function (mode: Mode): Promise<Rules> {
             }
           ]
         },
-        // The loader for css.
+        // CSS 文件的加载器配置
         {
           test: /\.css$/i,
           use: [
@@ -79,7 +79,7 @@ export default async function (mode: Mode): Promise<Rules> {
             }
           ]
         },
-        // The loader for scss or sass.
+        // SCSS/Sass 文件的加载器配置
         {
           test: /\.s[ac]ss$/i,
           use: [
@@ -105,7 +105,7 @@ export default async function (mode: Mode): Promise<Rules> {
             }
           ]
         },
-        // The loader for assets.
+        // 静态资源文件的加载器配置
         {
           type: 'asset/resource',
           test: /\.(mp3|ogg|wav|mp4|flv|webm)$/i

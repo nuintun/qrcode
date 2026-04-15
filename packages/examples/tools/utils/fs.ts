@@ -3,9 +3,30 @@
  * @description 文件系统工具模块，提供文件扫描和遍历功能
  */
 
+import type { IFs } from 'memfs';
 import { Dirent, Stats } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { createFsFromVolume, Volume } from 'memfs';
+import type { Options } from 'rspack-dev-middleware';
 import { lstat, readdir, realpath } from 'node:fs/promises';
+
+/**
+ * @typedef FileSystem
+ * @description 文件系统类型，扩展自 rspack-dev-middleware 的 Options.fs，并添加 createReadStream 方法
+ */
+export type FileSystem = Options['fs'] & {
+  createReadStream: IFs['createReadStream'];
+};
+
+/**
+ * @function createMemfs
+ * @description 创建内存文件系统
+ */
+export function createMemfs(): FileSystem {
+  const volume = new Volume();
+
+  return createFsFromVolume(volume) as FileSystem;
+}
 
 /**
  * @interface Filter
