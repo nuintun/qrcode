@@ -56,7 +56,7 @@ export class BitArray {
   public xor(mask: BitArray): void {
     const bits = this.#bits;
     const maskBits = mask.#bits;
-    const length = Math.min(this.#length, mask.#length);
+    const length = Math.min(bits.length, maskBits.length);
 
     for (let i = 0; i < length; i++) {
       // The last int could be incomplete (i.e. not have 32 bits in

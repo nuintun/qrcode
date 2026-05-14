@@ -192,6 +192,11 @@ export class FinderPatternFinder extends PatternFinder {
         x++;
       }
 
+      // If the entire row is white, skip it.
+      if (x >= right) {
+        continue;
+      }
+
       let count = 0;
       let lastBit = matrix.get(x, y);
 

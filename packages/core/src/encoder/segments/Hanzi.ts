@@ -10,7 +10,11 @@ import { GB2312_MAPPING } from '/common/encoding/mapping';
 function getHanziCode(character: string): number {
   const code = GB2312_MAPPING.get(character);
 
-  return code != null ? code : NaN;
+  if (code == null) {
+    throw new Error(`illegal hanzi character: ${character}`);
+  }
+
+  return code;
 }
 
 export class Hanzi {

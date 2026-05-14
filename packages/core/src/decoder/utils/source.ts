@@ -71,6 +71,10 @@ function decodeAlphanumericSegment(source: BitSource, count: number, fnc1: boole
 
     const nextTwoCharsBits = source.read(11);
 
+    if (nextTwoCharsBits >= 45 * 45) {
+      throw new Error('illegal alphanumeric codeword');
+    }
+
     content += ALPHANUMERIC_CHARACTERS.charAt(nextTwoCharsBits / 45);
     content += ALPHANUMERIC_CHARACTERS.charAt(nextTwoCharsBits % 45);
 

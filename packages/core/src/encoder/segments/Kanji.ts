@@ -10,7 +10,11 @@ import { SHIFT_JIS_MAPPING } from '/common/encoding/mapping';
 function getKanjiCode(character: string): number {
   const code = SHIFT_JIS_MAPPING.get(character);
 
-  return code != null ? code : NaN;
+  if (code == null) {
+    throw new Error(`illegal kanji character: ${character}`);
+  }
+
+  return code;
 }
 
 export class Kanji {

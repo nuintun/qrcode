@@ -39,6 +39,10 @@ export function getDataBlocks(codewords: Uint8Array, version: Version, ecLevel: 
 
   const { length } = blocks;
 
+  if (length === 0) {
+    throw new Error('failed to get data blocks');
+  }
+
   // All blocks have the same amount of data, except that the last n
   // (where n may be 0) have 1 more byte. Figure out where these start.
   let longerBlocksStartAt = length - 1;
