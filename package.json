@@ -30,7 +30,8 @@
     "reset": "pnpm -s dlx rimraf -g **/node_modules **/pnpm-lock.yaml"
   },
   "devDependencies": {
-    "prettier": "^3.8.1",
-    "typescript": "^5.9.3"
+    "@types/node": "^25.7.0",
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.3"
   }
 }

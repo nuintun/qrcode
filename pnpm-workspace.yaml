@@ -1,5 +1,5 @@
 packages:
   - packages/*
-onlyBuiltDependencies:
-  - bufferutil
-  - utf-8-validate
+allowBuilds:
+  bufferutil: true
+  utf-8-validate: true

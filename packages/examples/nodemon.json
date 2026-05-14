@@ -2,11 +2,11 @@
   "quiet": true,
   "delay": "128ms",
   "watch": [
-    ".swcrc.js",
-    ".svgorc.js",
+    ".swcrc.ts",
+    ".svgorc.ts",
     "tools/**/*",
-    "app.config.js",
+    "app.config.ts",
     ".browserslistrc",
-    ".lightningcssrc.js"
+    ".lightningcssrc.ts"
   ]
 }
