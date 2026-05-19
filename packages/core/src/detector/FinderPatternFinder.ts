@@ -15,6 +15,75 @@ import { MAX_VERSION_SIZE, MIN_VERSION_SIZE } from '/common/Version';
 import { calculateTopLeftAngle, FinderPatternGroup } from './FinderPatternGroup';
 import { DIFF_MODULE_SIZE_RATIO, MAX_TOP_LEFT_ANGLE, MIN_TOP_LEFT_ANGLE } from './utils/constants';
 
+type PatternPair = readonly [Pattern, Pattern];
+
+function keyOfGrid(gridX: number, gridY: number): string {
+  return `${gridX}:${gridY}`;
+}
+
+function buildNeighborPairs(patterns: Pattern[]): PatternPair[] {
+  const pairs: PatternPair[] = [];
+
+  if (patterns.length < 2) {
+    return pairs;
+  }
+
+  const moduleSize = patterns.reduce((sum, pattern) => sum + pattern.moduleSize, 0) / patterns.length;
+  // 以 module size 估算 finder 间距，构建粗粒度空间分桶，借鉴 zxing-cpp 的邻域组合思路。
+  const cellSize = Math.max(moduleSize * 12, 8);
+  const buckets = new Map<string, Pattern[]>();
+
+  for (const pattern of patterns) {
+    const gridX = Math.floor(pattern.x / cellSize);
+    const gridY = Math.floor(pattern.y / cellSize);
+    const key = keyOfGrid(gridX, gridY);
+    const bucket = buckets.get(key);
+
+    if (bucket == null) {
+      buckets.set(key, [pattern]);
+    } else {
+      bucket.push(pattern);
+    }
+  }
+
+  const queued = new Set<string>();
+
+  for (const pattern of patterns) {
+    const baseX = Math.floor(pattern.x / cellSize);
+    const baseY = Math.floor(pattern.y / cellSize);
+
+    for (let dy = -2; dy <= 2; dy++) {
+      for (let dx = -2; dx <= 2; dx++) {
+        const bucket = buckets.get(keyOfGrid(baseX + dx, baseY + dy));
+
+        if (bucket == null) {
+          continue;
+        }
+
+        for (const candidate of bucket) {
+          if (candidate === pattern || !isEqualsSize(pattern.moduleSize, candidate.moduleSize, DIFF_MODULE_SIZE_RATIO)) {
+            continue;
+          }
+
+          const pairKey =
+            pattern === candidate
+              ? ''
+              : pattern.x < candidate.x
+                ? `${pattern.x},${pattern.y}|${candidate.x},${candidate.y}`
+                : `${candidate.x},${candidate.y}|${pattern.x},${pattern.y}`;
+
+          if (!queued.has(pairKey)) {
+            queued.add(pairKey);
+            pairs.push([pattern, candidate]);
+          }
+        }
+      }
+    }
+  }
+
+  return pairs;
+}
+
 function isGroupNested(finderPatternGroup: FinderPatternGroup, patterns: Pattern[], used: Map<Pattern, boolean>): boolean {
   let count = 0;
 
@@ -66,90 +135,56 @@ export class FinderPatternFinder extends PatternFinder {
         yield finderPatternGroup;
       }
     } else if (length > 3) {
-      const maxI1 = length - 2;
-      const maxI2 = length - 1;
       const used = new Map<Pattern, boolean>();
+      const pairs = buildNeighborPairs(patterns);
 
-      for (let i1 = 0; i1 < maxI1; i1++) {
-        const pattern1 = patterns[i1];
-        const moduleSize1 = pattern1.moduleSize;
-
-        // Pattern 1 used.
-        if (used.has(pattern1)) {
+      for (const [pattern1, pattern2] of pairs) {
+        if (used.has(pattern1) || used.has(pattern2)) {
           continue;
         }
 
-        for (let i2 = i1 + 1; i2 < maxI2; i2++) {
-          const pattern2 = patterns[i2];
-          const moduleSize2 = pattern2.moduleSize;
-
-          // Pattern 1 used.
-          if (used.has(pattern1)) {
-            break;
-          }
-
+        for (const pattern3 of patterns) {
           if (
-            // Pattern 2 used.
+            pattern3 === pattern1 ||
+            pattern3 === pattern2 ||
+            used.has(pattern1) ||
             used.has(pattern2) ||
-            // Non equals module size.
-            !isEqualsSize(moduleSize1, moduleSize2, DIFF_MODULE_SIZE_RATIO)
+            !isEqualsSize(pattern1.moduleSize, pattern3.moduleSize, DIFF_MODULE_SIZE_RATIO) ||
+            !isEqualsSize(pattern2.moduleSize, pattern3.moduleSize, DIFF_MODULE_SIZE_RATIO)
           ) {
             continue;
           }
 
-          for (let i3 = i2 + 1; i3 < length; i3++) {
-            const pattern3 = patterns[i3];
-            const moduleSize3 = pattern3.moduleSize;
+          const { matrix } = this;
+          const finderPatternGroup = new FinderPatternGroup(matrix, [pattern1, pattern2, pattern3]);
+          const angle = calculateTopLeftAngle(finderPatternGroup);
 
-            if (
-              // Pattern 1 used.
-              used.has(pattern1) ||
-              // Pattern 2 used.
-              used.has(pattern2)
-            ) {
-              break;
-            }
+          if (angle >= MIN_TOP_LEFT_ANGLE && angle <= MAX_TOP_LEFT_ANGLE) {
+            const [xModuleSize, yModuleSize] = FinderPatternGroup.moduleSizes(finderPatternGroup);
 
-            if (
-              // Non equals module size.
-              !isEqualsSize(moduleSize1, moduleSize3, DIFF_MODULE_SIZE_RATIO) ||
-              // Non equals module size.
-              !isEqualsSize(moduleSize2, moduleSize3, DIFF_MODULE_SIZE_RATIO)
-            ) {
-              continue;
-            }
+            if (xModuleSize >= 1 && yModuleSize >= 1) {
+              const { topLeft, topRight, bottomLeft } = finderPatternGroup;
+              const edge1 = distance(topLeft, topRight);
+              const edge2 = distance(topLeft, bottomLeft);
+              const edge1Modules = round(edge1 / xModuleSize);
+              const edge2Modules = round(edge2 / yModuleSize);
 
-            const { matrix } = this;
-            const finderPatternGroup = new FinderPatternGroup(matrix, [pattern1, pattern2, pattern3]);
-            const angle = calculateTopLeftAngle(finderPatternGroup);
+              if (Math.abs(edge1Modules - edge2Modules) <= 4) {
+                const size = FinderPatternGroup.size(finderPatternGroup);
 
-            if (angle >= MIN_TOP_LEFT_ANGLE && angle <= MAX_TOP_LEFT_ANGLE) {
-              const [xModuleSize, yModuleSize] = FinderPatternGroup.moduleSizes(finderPatternGroup);
-
-              if (xModuleSize >= 1 && yModuleSize >= 1) {
-                const { topLeft, topRight, bottomLeft } = finderPatternGroup;
-                const edge1 = distance(topLeft, topRight);
-                const edge2 = distance(topLeft, bottomLeft);
-                const edge1Modules = round(edge1 / xModuleSize);
-                const edge2Modules = round(edge2 / yModuleSize);
-
-                if (Math.abs(edge1Modules - edge2Modules) <= 4) {
-                  const size = FinderPatternGroup.size(finderPatternGroup);
-
+                if (
+                  size >= MIN_VERSION_SIZE &&
+                  size <= MAX_VERSION_SIZE &&
+                  !isGroupNested(finderPatternGroup, patterns, used)
+                ) {
                   if (
-                    size >= MIN_VERSION_SIZE &&
-                    size <= MAX_VERSION_SIZE &&
-                    !isGroupNested(finderPatternGroup, patterns, used)
+                    checkEstimateTimingLine(matrix, finderPatternGroup) ||
+                    checkEstimateTimingLine(matrix, finderPatternGroup, true)
                   ) {
-                    if (
-                      checkEstimateTimingLine(matrix, finderPatternGroup) ||
-                      checkEstimateTimingLine(matrix, finderPatternGroup, true)
-                    ) {
-                      if (yield finderPatternGroup) {
-                        used.set(pattern1, true);
-                        used.set(pattern2, true);
-                        used.set(pattern3, true);
-                      }
+                    if (yield finderPatternGroup) {
+                      used.set(pattern1, true);
+                      used.set(pattern2, true);
+                      used.set(pattern3, true);
                     }
                   }
                 }
