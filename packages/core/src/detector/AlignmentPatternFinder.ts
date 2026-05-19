@@ -17,25 +17,20 @@ export class AlignmentPatternFinder extends PatternFinder {
   }
 
   public filter(expectAlignment: Pattern, moduleSize: number): Pattern[] {
-    const patterns = this.patterns.filter(pattern => {
-      return Pattern.noise(pattern) <= 2.5 && isEqualsSize(pattern.moduleSize, moduleSize, DIFF_MODULE_SIZE_RATIO);
-    });
+    const patterns = this.patterns
+      .map(pattern => {
+        const noise = Pattern.noise(pattern);
+        const moduleSizeDiff = Math.abs(pattern.moduleSize - moduleSize);
+        const moduleSizePenalty = isEqualsSize(pattern.moduleSize, moduleSize, DIFF_MODULE_SIZE_RATIO) ? 0 : moduleSizeDiff * 8;
+        const score = distance(pattern, expectAlignment) + noise * moduleSize * 6 + moduleSizeDiff * 2 + moduleSizePenalty;
 
-    if (patterns.length > 1) {
-      patterns.sort((pattern1, pattern2) => {
-        const noise1 = Pattern.noise(pattern1);
-        const noise2 = Pattern.noise(pattern2);
-        const moduleSizeDiff1 = Math.abs(pattern1.moduleSize - moduleSize);
-        const moduleSizeDiff2 = Math.abs(pattern2.moduleSize - moduleSize);
-        const score1 = (distance(pattern1, expectAlignment) + moduleSizeDiff1) * noise1;
-        const score2 = (distance(pattern2, expectAlignment) + moduleSizeDiff2) * noise2;
+        return [pattern, score] as const;
+      })
+      .sort(([, score1], [, score2]) => score1 - score2)
+      .map(([pattern]) => pattern);
 
-        return score1 - score2;
-      });
-    }
-
-    // Only use the first two patterns.
-    const alignmentPatterns = patterns.slice(0, 2);
+    // Keep several candidates to improve robustness in hard camera captures.
+    const alignmentPatterns = patterns.slice(0, 4);
 
     // Add expect alignment for fallback.
     alignmentPatterns.push(expectAlignment);

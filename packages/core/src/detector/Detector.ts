@@ -126,6 +126,15 @@ function findAlignmentInRegion(matrix: BitMatrix, finderPatternGroup: FinderPatt
   return alignmentPatterns;
 }
 
+function calculateTimingScore(matrix: BitMatrix, finderPatternGroup: FinderPatternGroup, pattern: Pattern): number {
+  const size = FinderPatternGroup.size(finderPatternGroup);
+  const transform = createTransform(finderPatternGroup, pattern);
+  const horizontal = Number(checkMappingTimingLine(matrix, transform, size));
+  const vertical = Number(checkMappingTimingLine(matrix, transform, size, true));
+
+  return horizontal + vertical;
+}
+
 export class Detector {
   #options: Options;
 
@@ -167,12 +176,11 @@ export class Detector {
         // Founded alignment.
         for (const alignmentPattern of alignmentPatterns) {
           const transform = createTransform(finderPatternGroup, alignmentPattern);
+          const timingScore = calculateTimingScore(matrix, finderPatternGroup, alignmentPattern);
 
           if (
-            // Top left to top right.
-            checkMappingTimingLine(matrix, transform, size) &&
-            // Top left to bottom left.
-            checkMappingTimingLine(matrix, transform, size, true)
+            // Prefer full timing pass, but allow one-side pass for real alignment candidates.
+            timingScore >= (alignmentPattern === alignmentPatterns[alignmentPatterns.length - 1] ? 2 : 1)
           ) {
             succeed = yield new Detected(matrix, transform, finderPatternGroup, alignmentPattern);
 
