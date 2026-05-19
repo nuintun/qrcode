@@ -34,13 +34,18 @@ function getExpectAlignment(finderPatternGroup: FinderPatternGroup): Pattern {
   return new Pattern(ALIGNMENT_PATTERN_RATIOS, expectAlignmentX, expectAlignmentY, xModuleSize * 5, yModuleSize * 5, 0);
 }
 
-function findAlignmentInRegion(matrix: BitMatrix, finderPatternGroup: FinderPatternGroup, strict?: boolean): Pattern[] {
+function findAlignmentInRegion(
+  matrix: BitMatrix,
+  finderPatternGroup: FinderPatternGroup,
+  allowanceFactor: number,
+  strict?: boolean
+): Pattern[] {
   const size = FinderPatternGroup.size(finderPatternGroup);
   const expectAlignment = getExpectAlignment(finderPatternGroup);
   const alignmentFinder = new AlignmentPatternFinder(matrix, strict);
   const moduleSize = FinderPatternGroup.moduleSize(finderPatternGroup);
   const { x: expectAlignmentX, y: expectAlignmentY } = expectAlignment;
-  const alignmentAreaAllowanceSize = Math.ceil(moduleSize * Math.min(20, size >>> 2));
+  const alignmentAreaAllowanceSize = Math.ceil(moduleSize * Math.min(20, (size >>> 2) * allowanceFactor));
   const alignmentAreaTop = toInt32(Math.max(0, expectAlignmentY - alignmentAreaAllowanceSize));
   const alignmentAreaLeft = toInt32(Math.max(0, expectAlignmentX - alignmentAreaAllowanceSize));
   const alignmentAreaRight = toInt32(Math.min(matrix.width - 1, expectAlignmentX + alignmentAreaAllowanceSize));
@@ -54,6 +59,20 @@ function findAlignmentInRegion(matrix: BitMatrix, finderPatternGroup: FinderPatt
   );
 
   return alignmentFinder.filter(expectAlignment, moduleSize);
+}
+
+function findAlignmentCandidates(matrix: BitMatrix, finderPatternGroup: FinderPatternGroup, strict?: boolean): Pattern[] {
+  // Match ZXing's strategy: expand the search region progressively before falling back.
+  for (const allowanceFactor of [4, 8, 16]) {
+    const candidates = findAlignmentInRegion(matrix, finderPatternGroup, allowanceFactor, strict);
+
+    // Besides fallback expected position, a detected candidate will carry reliable count information.
+    if (candidates.length > 1) {
+      return candidates;
+    }
+  }
+
+  return findAlignmentInRegion(matrix, finderPatternGroup, 16, strict);
 }
 
 export class Detector {
@@ -92,7 +111,7 @@ export class Detector {
       if (size >= MIN_VERSION_SIZE_WITH_ALIGNMENTS) {
         // Kind of arbitrary -- expand search radius before giving up
         // If we didn't find alignment pattern... well try anyway without it.
-        const alignmentPatterns = findAlignmentInRegion(matrix, finderPatternGroup, strict);
+        const alignmentPatterns = findAlignmentCandidates(matrix, finderPatternGroup, strict);
 
         // Founded alignment.
         for (const alignmentPattern of alignmentPatterns) {
