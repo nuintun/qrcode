@@ -55,7 +55,7 @@ export class Alphanumeric {
     const content = Array.from(this.#content);
     const { length } = content;
 
-    for (let i = 0; i < length; ) {
+    for (let i = 0; i < length;) {
       const code1 = getAlphanumericCode(content[i]);
 
       if (i + 1 < length) {

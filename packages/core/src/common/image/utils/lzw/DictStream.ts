@@ -48,7 +48,7 @@ export class DictStream {
     // Divide it up into blocks with a size in front of each block.
     const { length } = bytes;
 
-    for (let i = 0; i < length; ) {
+    for (let i = 0; i < length;) {
       const remain = length - i;
 
       if (remain >= 255) {
