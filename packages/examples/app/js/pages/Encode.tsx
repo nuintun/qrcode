@@ -38,9 +38,9 @@ const Result = memo(function Result({ value }: ResultProps) {
       case 'ok':
         return <Image src={value.payload} alt="preview" className={styles.preview} />;
       case 'error':
-        return <Alert type="error" message={value.message} showIcon />;
+        return <Alert type="error" title={value.message} showIcon />;
       default:
-        return <Alert type="error" message="发生未知错误" showIcon />;
+        return <Alert type="error" title="发生未知错误" showIcon />;
     }
   }
 

@@ -284,9 +284,9 @@ const Result = memo(function Result({ state, currentRef }: ResultProps) {
           />
         );
       case 'error':
-        return <Alert type="error" message={state.message} showIcon />;
+        return <Alert type="error" title={state.message} showIcon />;
       default:
-        return <Alert type="error" message="发生未知错误" showIcon />;
+        return <Alert type="error" title="发生未知错误" showIcon />;
     }
   }
 
