@@ -52,7 +52,7 @@
     "prettier": "^3.9.10",
     "rspack-dev-middleware": "^0.4.2",
     "sass-embedded": "^1.106.1",
-    "sass-loader": "^17.0.1",
+    "sass-loader": "^17.1.0",
     "svgc-loader": "^0.6.2",
     "svgo": "^4.1.0",
     "typescript": "^6.0.3",

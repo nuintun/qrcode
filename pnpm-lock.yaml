@@ -146,8 +146,8 @@ importers:
         specifier: ^1.106.1
         version: 1.106.1
       sass-loader:
-        specifier: ^17.0.1
-        version: 17.0.1(@rspack/core@2.2.9(@swc/helpers@0.5.23))(sass-embedded@1.106.1)(sass@1.106.1)
+        specifier: ^17.1.0
+        version: 17.1.0(@rspack/core@2.2.9(@swc/helpers@0.5.23))(sass-embedded@1.106.1)(sass@1.106.1)
       svgc-loader:
         specifier: ^0.6.2
         version: 0.6.2(@rspack/core@2.2.9(@swc/helpers@0.5.23))(react@19.3.1)(svgo@4.1.0)
@@ -1909,8 +1909,8 @@ packages:
     engines: {node: '>=20.19.0'}
     hasBin: true
 
-  sass-loader@17.0.1:
-    resolution: {integrity: sha512-pgJMwCuLjVTSIWsv/2luVRXKlCeaViUGcgSe8dx95zMG4hUwqIMFmjbhq29ypFLflJU0GyiJZeLM9iI1n3KYAA==}
+  sass-loader@17.1.0:
+    resolution: {integrity: sha512-EZ/u/bLkAErTKvIq/f81Bz6tgL/5Brt8hWOABdTsVdO+nX0PWx2rQhR6fyxVME+MhnQrrwecMDlm2G1y07hhpQ==}
     engines: {node: '>= 22.11.0'}
     peerDependencies:
       '@rspack/core': 0.x || ^1.0.0 || ^2.0.0-0
@@ -3811,7 +3811,7 @@ snapshots:
       sass-embedded-win32-arm64: 1.106.1
       sass-embedded-win32-x64: 1.106.1
 
-  sass-loader@17.0.1(@rspack/core@2.2.9(@swc/helpers@0.5.23))(sass-embedded@1.106.1)(sass@1.106.1):
+  sass-loader@17.1.0(@rspack/core@2.2.9(@swc/helpers@0.5.23))(sass-embedded@1.106.1)(sass@1.106.1):
     optionalDependencies:
       '@rspack/core': 2.2.9(@swc/helpers@0.5.23)
       sass: 1.106.1
