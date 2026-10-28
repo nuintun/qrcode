@@ -2,6 +2,7 @@ import * as styles from './scss/index.module.scss';
 
 import { App } from 'antd';
 import classNames from 'classnames';
+import { useI18n } from '/js/hooks/useI18n';
 import { fileOpen } from 'browser-fs-access';
 import useControllableValue from '/js/hooks/useControllableValue';
 import React, { memo, useCallback, useRef, useState } from 'react';
@@ -20,6 +21,7 @@ export interface ImageUploadProps {
 
 export default memo(function ImageUpload(props: ImageUploadProps) {
   const { message } = useApp();
+  const { translate } = useI18n();
   const urlRef = useRef<string>(null);
   const { children, preview } = props;
   const [dragging, setDragging] = useState(false);
@@ -39,17 +41,17 @@ export default memo(function ImageUpload(props: ImageUploadProps) {
             return urlRef.current;
           });
         } else {
-          message.error('请选择图片格式文件');
+          message.error(translate('imagePicker.invalidType'));
         }
       },
       (error: Error) => {
         if (error.name !== 'AbortError') {
           // 读取文件失败
-          message.error('读取文件失败');
+          message.error(translate('imagePicker.readFailed'));
         }
       }
     );
-  }, []);
+  }, [message, translate]);
 
   const onDragOver = useCallback((event: DivDragEvent) => {
     event.preventDefault();
@@ -57,40 +59,43 @@ export default memo(function ImageUpload(props: ImageUploadProps) {
     setDragging(true);
   }, []);
 
-  const onDrop = useCallback((event: DivDragEvent) => {
-    event.preventDefault();
+  const onDrop = useCallback(
+    (event: DivDragEvent) => {
+      event.preventDefault();
 
-    const { files } = event.dataTransfer;
-    const { length } = files;
+      const { files } = event.dataTransfer;
+      const { length } = files;
 
-    let passed = false;
+      let passed = false;
 
-    for (let i = 0; i < length; i++) {
-      const file = files[i];
+      for (let i = 0; i < length; i++) {
+        const file = files[i];
 
-      if (/^image\/.+$/i.test(file.type)) {
-        setValue(() => {
-          if (urlRef.current) {
-            URL.revokeObjectURL(urlRef.current);
-          }
+        if (/^image\/.+$/i.test(file.type)) {
+          setValue(() => {
+            if (urlRef.current) {
+              URL.revokeObjectURL(urlRef.current);
+            }
 
-          urlRef.current = URL.createObjectURL(file);
+            urlRef.current = URL.createObjectURL(file);
 
-          return urlRef.current;
-        });
+            return urlRef.current;
+          });
 
-        passed = true;
+          passed = true;
 
-        break;
+          break;
+        }
       }
-    }
 
-    setDragging(false);
+      setDragging(false);
 
-    if (!passed) {
-      message.error('请选择图片格式文件');
-    }
-  }, []);
+      if (!passed) {
+        message.error(translate('imagePicker.invalidType'));
+      }
+    },
+    [message, setValue, translate]
+  );
 
   const onDragLeave = useCallback((event: DivDragEvent) => {
     event.preventDefault();

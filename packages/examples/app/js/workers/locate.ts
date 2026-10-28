@@ -11,7 +11,7 @@ export interface LocateOk {
 
 export interface LocateError {
   type: 'error';
-  message: string;
+  code: 'locateFailed';
 }
 
 export interface LocateMessage {
@@ -100,7 +100,7 @@ self.addEventListener('message', ({ data }: MessageEvent<LocateMessage>) => {
     () => {
       const message: LocateError = {
         type: 'error',
-        message: '生成位置定位图失败'
+        code: 'locateFailed'
       };
 
       self.postMessage(message);

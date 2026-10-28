@@ -1,5 +1,6 @@
 import * as styles from '/css/Encode.module.scss';
 
+import { useI18n } from '/js/hooks/useI18n';
 import { Color } from 'antd/es/color-picker';
 import useLazyState from '/js/hooks/useLazyState';
 import Icon, { ThunderboltOutlined } from '@ant-design/icons';
@@ -33,6 +34,8 @@ interface ResultProps {
 }
 
 const Result = memo(function Result({ value }: ResultProps) {
+  const { translate } = useI18n();
+
   if (value) {
     switch (value.type) {
       case 'ok':
@@ -40,7 +43,7 @@ const Result = memo(function Result({ value }: ResultProps) {
       case 'error':
         return <Alert type="error" title={value.message} showIcon />;
       default:
-        return <Alert type="error" title="发生未知错误" showIcon />;
+        return <Alert type="error" title={translate('common.unknownError')} showIcon />;
     }
   }
 
@@ -53,6 +56,7 @@ export default memo(function Encode() {
   const workerRef = useRef<Worker>(null);
   const [loading, setLoading] = useLazyState(false);
   const [state, setState] = useState<EncodeResultMessage>();
+  const { translate } = useI18n();
 
   const initialValues = useMemo<FormValues>(() => {
     return {
@@ -143,7 +147,7 @@ export default memo(function Encode() {
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
-            <FormItem name="mode" label="编码模式">
+            <FormItem name="mode" label={translate('encode.mode')}>
               <Select
                 options={[
                   {
@@ -175,7 +179,7 @@ export default memo(function Encode() {
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
-            <FormItem name="charset" label="字符编码">
+            <FormItem name="charset" label={translate('encode.charset')}>
               <Select
                 options={[
                   {
@@ -196,12 +200,12 @@ export default memo(function Encode() {
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
-            <FormItem name="version" label="版本大小">
+            <FormItem name="version" label={translate('encode.version')}>
               <Select options={versions} />
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
-            <FormItem name="level" label="纠错等级">
+            <FormItem name="level" label={translate('encode.level')}>
               <Select
                 options={[
                   {
@@ -225,11 +229,11 @@ export default memo(function Encode() {
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
-            <FormItem name="fnc1" label="支持 FNC1">
+            <FormItem name="fnc1" label={translate('encode.fnc1')}>
               <Select
                 options={[
                   {
-                    label: '否',
+                    label: translate('encode.fnc1None'),
                     value: 'None'
                   },
                   {
@@ -245,34 +249,34 @@ export default memo(function Encode() {
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
-            <FormItem name="aimIndicator" label="AIM 标识">
+            <FormItem name="aimIndicator" label={translate('encode.aimIndicator')}>
               <InputNumber disabled={fnc1 !== 'AIM'} min={0} max={255} precision={0} style={{ width: '100%' }} />
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
-            <FormItem name="moduleSize" label="模块大小">
+            <FormItem name="moduleSize" label={translate('encode.moduleSize')}>
               <InputNumber min={1} max={50} precision={0} style={{ width: '100%' }} />
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
-            <FormItem label="静区大小" tooltip="推荐 4 倍模块大小">
+            <FormItem label={translate('encode.quietZone')} tooltip={translate('encode.quietZoneTip')}>
               <Compact block>
                 <FormItem noStyle name="quietZone">
                   <InputNumber min={0} max={200} precision={0} style={{ width: '100%' }} />
                 </FormItem>
-                <Tooltip title="自动计算">
+                <Tooltip title={translate('encode.autoCalculate')}>
                   <Button icon={<ThunderboltOutlined />} onClick={onAutofillQuietZoneClick} />
                 </Tooltip>
               </Compact>
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
-            <FormItem name="foreground" label="前景颜色">
+            <FormItem name="foreground" label={translate('encode.foreground')}>
               <ColorPicker showText disabledAlpha />
             </FormItem>
           </Col>
           <Col md={6} sm={12} xs={24}>
-            <FormItem name="background" label="背景颜色">
+            <FormItem name="background" label={translate('encode.background')}>
               <ColorPicker showText disabledAlpha />
             </FormItem>
           </Col>
@@ -284,7 +288,7 @@ export default memo(function Encode() {
               disabled={!content}
               icon={<Icon component={EncodeIcon} />}
             >
-              编码
+              {translate('encode.submit')}
             </Button>
           </Col>
         </Row>

@@ -1,6 +1,7 @@
 import * as styles from '/css/Decode.module.scss';
 
 import Icon from '@ant-design/icons';
+import { useI18n } from '/js/hooks/useI18n';
 import Clipboard from '/js/components/Clipboard';
 import useLazyState from '/js/hooks/useLazyState';
 import JSONViewer from '/js/components/JSONViewer';
@@ -27,6 +28,8 @@ interface OverviewLocateProps {
 }
 
 const OverviewLocate = memo(function OverviewLocate({ state, currentRef }: OverviewLocateProps) {
+  const { translate } = useI18n();
+
   if (state && state.type === 'ok') {
     const { payload } = state;
     const { uid, image, items } = payload;
@@ -35,14 +38,14 @@ const OverviewLocate = memo(function OverviewLocate({ state, currentRef }: Overv
       <Locate
         key={uid}
         uid={uid}
-        name="概览"
+        name={translate('decode.overview')}
         image={image}
         items={items}
         currentRef={currentRef}
         trigger={(loading, onClick) => {
           return (
             <Button loading={loading} onClick={onClick} icon={<Icon component={LocateIcon} />}>
-              概览
+              {translate('decode.overview')}
             </Button>
           );
         }}
@@ -72,6 +75,7 @@ function cloneImageBitmap(image: ImageBitmap): ImageBitmap {
 }
 
 const Locate = memo(function Locate({ uid, name, items, image, trigger, currentRef }: LocateProps) {
+  const { translate } = useI18n();
   const lockRef = useRef(false);
   const { message: info } = useApp();
   const workerRef = useRef<Worker>(null);
@@ -150,10 +154,10 @@ const Locate = memo(function Locate({ uid, name, items, image, trigger, currentR
           }
           break;
         case 'error':
-          info.error(data.message);
+          info.error(translate(`worker.${data.code}`));
           break;
         default:
-          info.error('发生未知错误');
+          info.error(translate('common.unknownError'));
       }
     });
 
@@ -162,7 +166,7 @@ const Locate = memo(function Locate({ uid, name, items, image, trigger, currentR
     return () => {
       worker.terminate();
     };
-  }, [uid]);
+  }, [uid, translate]);
 
   return (
     <div className={styles.locate}>
@@ -178,6 +182,7 @@ interface DetailsProps {
 }
 
 const Details = memo(function Details({ name, item }: DetailsProps) {
+  const { translate } = useI18n();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const onClick = useCallback(() => {
@@ -196,7 +201,7 @@ const Details = memo(function Details({ name, item }: DetailsProps) {
 
   return (
     <>
-      <Tooltip title="详情">
+      <Tooltip title={translate('decode.details')}>
         <InfoCircleOutlined onClick={onClick} />
       </Tooltip>
       <Modal
@@ -207,7 +212,7 @@ const Details = memo(function Details({ name, item }: DetailsProps) {
         onCancel={onCancel}
         footer={() => (
           <Button type="primary" onClick={onCancel}>
-            确定
+            {translate('common.confirm')}
           </Button>
         )}
       >
@@ -223,6 +228,7 @@ interface ResultProps {
 }
 
 const Result = memo(function Result({ state, currentRef }: ResultProps) {
+  const { lang, translate } = useI18n();
   const items = useMemo<CollapseProps['items']>(() => {
     if (state && state.type === 'ok') {
       const { uid, image, items } = state.payload;
@@ -230,7 +236,7 @@ const Result = memo(function Result({ state, currentRef }: ResultProps) {
       return items.map((item, index) => {
         const { content } = item;
         const key = `${uid}-${index}`;
-        const label = `解码结果【${index + 1}】`;
+        const label = translate('decode.result', { n: index + 1 });
 
         return {
           key,
@@ -249,7 +255,7 @@ const Result = memo(function Result({ state, currentRef }: ResultProps) {
                 uid={key}
                 image={image}
                 items={[item]}
-                name={`${label}定位`}
+                name={translate('decode.locateTitle', { n: index + 1 })}
                 currentRef={currentRef}
                 trigger={(loading, onClick) => {
                   if (loading) {
@@ -257,19 +263,19 @@ const Result = memo(function Result({ state, currentRef }: ResultProps) {
                   }
 
                   return (
-                    <Tooltip title="定位">
+                    <Tooltip title={translate('decode.locate')}>
                       <Icon component={LocateIcon} onClick={onClick} />
                     </Tooltip>
                   );
                 }}
               />
-              <Details name={`${label}详情`} item={item} />
+              <Details name={translate('decode.detailsTitle', { n: index + 1 })} item={item} />
             </div>
           )
         };
       });
     }
-  }, [state]);
+  }, [state, lang]);
 
   if (state) {
     switch (state.type) {
@@ -284,9 +290,9 @@ const Result = memo(function Result({ state, currentRef }: ResultProps) {
           />
         );
       case 'error':
-        return <Alert type="error" title={state.message} showIcon />;
+        return <Alert type="error" title={translate(`worker.${state.code}`)} showIcon />;
       default:
-        return <Alert type="error" title="发生未知错误" showIcon />;
+        return <Alert type="error" title={translate('common.unknownError')} showIcon />;
     }
   }
 
@@ -306,6 +312,7 @@ export default memo(function Encode() {
   const currentLocateRef = useRef<string>(null);
   const [loading, setLoading] = useLazyState(false);
   const [state, setState] = useState<DecodeResultMessage>();
+  const { translate } = useI18n();
 
   const initialValues = useMemo<FormValues>(() => {
     return {
@@ -378,23 +385,28 @@ export default memo(function Encode() {
           <Col span={24}>
             <FormItem name="image">
               <ImagePicker preview={previewRender}>
-                <Button icon={<Icon component={UploadIcon} />}>选择图片</Button>
+                <Button icon={<Icon component={UploadIcon} />}>{translate('decode.selectImage')}</Button>
               </ImagePicker>
             </FormItem>
           </Col>
           <Col span={24}>
-            <FormItem name="strict" label="严格模式" valuePropName="checked" tooltip="可增加扫描速度，但会降低识别率">
-              <Switch checkedChildren="开" unCheckedChildren="关" />
+            <FormItem
+              name="strict"
+              label={translate('decode.strict')}
+              valuePropName="checked"
+              tooltip={translate('decode.strictTip')}
+            >
+              <Switch checkedChildren={translate('common.on')} unCheckedChildren={translate('common.off')} />
             </FormItem>
           </Col>
           <Col span={24}>
-            <FormItem name="invert" label="图片反色" valuePropName="checked">
-              <Switch checkedChildren="开" unCheckedChildren="关" />
+            <FormItem name="invert" label={translate('decode.invert')} valuePropName="checked">
+              <Switch checkedChildren={translate('common.on')} unCheckedChildren={translate('common.off')} />
             </FormItem>
           </Col>
           <Col span={24} className={styles.actions}>
             <Button type="primary" htmlType="submit" loading={loading} disabled={!image} icon={<Icon component={DncodeIcon} />}>
-              解码
+              {translate('decode.submit')}
             </Button>
             <OverviewLocate state={state} currentRef={currentLocateRef} />
           </Col>

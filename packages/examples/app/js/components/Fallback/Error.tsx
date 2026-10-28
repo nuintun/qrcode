@@ -4,6 +4,7 @@
 
 import { memo } from 'react';
 import { Button, Result } from 'antd';
+import { useI18n } from '/js/hooks/useI18n';
 import { FallbackProps as ErrorFallbackProps } from 'react-error-boundary';
 
 export type { ErrorFallbackProps };
@@ -23,14 +24,16 @@ function getErrorMessage(error: unknown): string {
 }
 
 export default memo(function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
+  const { translate } = useI18n();
+
   if (__DEV__) {
     return (
       <Result
         status="error"
-        title="页面错误"
+        title={translate('error.title')}
         extra={
           <Button type="primary" onClick={resetErrorBoundary}>
-            重试页面
+            {translate('error.retry')}
           </Button>
         }
         subTitle={
@@ -55,13 +58,13 @@ export default memo(function ErrorFallback({ error, resetErrorBoundary }: ErrorF
   return (
     <Result
       status="error"
-      title="页面错误"
+      title={translate('error.title')}
       extra={
         <Button type="primary" onClick={resetErrorBoundary}>
-          重试页面
+          {translate('error.retry')}
         </Button>
       }
-      subTitle="抱歉，发生错误，无法渲染页面，请联系系统管理员或者重试页面！"
+      subTitle={translate('error.description')}
     />
   );
 });

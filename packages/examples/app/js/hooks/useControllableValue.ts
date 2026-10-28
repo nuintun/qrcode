@@ -4,7 +4,7 @@
 
 import useIsMounted from './useIsMounted';
 import { shallowEqual } from 'fast-equals';
-import { isFunction } from '/js/utils/utils';
+import { isFunction } from '/js/utils/typeof';
 import React, { useEffect, useState } from 'react';
 import useLatestCallback from './useLatestCallback';
 

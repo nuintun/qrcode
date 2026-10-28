@@ -6,12 +6,12 @@ import '/css/global.scss';
 import * as styles from '/css/App.module.scss';
 
 import Icon from '@ant-design/icons';
-import zh_CN from 'antd/locale/zh_CN';
+import { useI18n } from '/js/hooks/useI18n';
 import { ErrorBoundary } from 'react-error-boundary';
 import ErrorFallback from '/js/components/Fallback/Error';
 import SuspenseFallback from '/js/components/Fallback/Loading';
-import { App, AppProps, ConfigProvider, Tabs, TabsProps } from 'antd';
-import React, { lazy, memo, Suspense, useCallback, useMemo } from 'react';
+import { App, AppProps, ConfigProvider, Select, Tabs, TabsProps } from 'antd';
+import React, { lazy, memo, Suspense, useCallback, useEffect, useMemo } from 'react';
 
 import favicon from '/images/favicon.ico';
 import EncodeIcon from '/images/encode.svg';
@@ -20,6 +20,32 @@ import GithubIcon from '/images/github.svg';
 
 const Encode = lazy(() => import('/js/pages/Encode'));
 const Decode = lazy(() => import('/js/pages/Decode'));
+
+// Language names are shown in their own language, so they are not translated.
+const LanguageSelect = memo(function LanguageSelect() {
+  const { lang, setLang } = useI18n();
+
+  return (
+    <Select
+      size="small"
+      value={lang}
+      options={[
+        {
+          label: '中文',
+          value: 'zh-CN'
+        },
+        {
+          label: 'English',
+          value: 'en-US'
+        }
+      ]}
+      onChange={value => {
+        setLang(value);
+      }}
+      className={styles.language}
+    />
+  );
+});
 
 const Page = memo(function Page() {
   const defaultActiveKey = useMemo(() => {
@@ -31,6 +57,8 @@ const Page = memo(function Page() {
 
     return 'encode';
   }, []);
+
+  const { lang, translate } = useI18n();
 
   const onChange = useCallback((key: string) => {
     location.hash = `#/${key}`;
@@ -51,7 +79,7 @@ const Page = memo(function Page() {
         label: (
           <div className={styles.tabBarItem}>
             <Icon className={styles.icon} component={EncodeIcon} />
-            <span>二维码编码</span>
+            <span>{translate('tabs.encode')}</span>
           </div>
         ),
         children: (
@@ -65,7 +93,7 @@ const Page = memo(function Page() {
         label: (
           <div className={styles.tabBarItem}>
             <Icon className={styles.icon} component={DecodeIcon} />
-            <span>二维码解码</span>
+            <span>{translate('tabs.decode')}</span>
           </div>
         ),
         children: (
@@ -75,16 +103,19 @@ const Page = memo(function Page() {
         )
       }
     ],
-    []
+    [lang]
   );
 
   const tabBarExtraContent = useMemo<TabsProps['tabBarExtraContent']>(() => {
     return {
       left: <img title="QRCode" className={styles.logo} src={favicon} alt="logo" />,
       right: (
-        <a title="GitHub" className={styles.source} href="https://github.com/nuintun/qrcode" target="_blank">
-          <Icon className={styles.github} component={GithubIcon} />
-        </a>
+        <div className={styles.actions}>
+          <LanguageSelect />
+          <a title="GitHub" className={styles.source} href="https://github.com/nuintun/qrcode" target="_blank">
+            <Icon className={styles.github} component={GithubIcon} />
+          </a>
+        </div>
       )
     };
   }, []);
@@ -107,9 +138,16 @@ const Page = memo(function Page() {
 });
 
 export default memo(function App() {
+  const { antdLocale, lang, translate } = useI18n();
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.title = translate('app.title');
+  }, [lang, translate]);
+
   return (
     <ConfigProvider
-      locale={zh_CN}
+      locale={antdLocale}
       theme={{
         hashed: false,
         token: {

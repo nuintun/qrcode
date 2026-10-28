@@ -3,15 +3,6 @@
  */
 
 /**
- * @function isFunction
- * @description 是否为函数
- * @param value 需要验证的值
- */
-export function isFunction(value: unknown): value is Function {
-  return typeof value === 'function';
-}
-
-/**
  * @function createMarkup
  * @description 生成 React HTML 字符串
  * @param html HTML 字符串

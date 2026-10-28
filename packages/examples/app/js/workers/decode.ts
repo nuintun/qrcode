@@ -30,7 +30,7 @@ export interface DecodedOk {
 
 export interface DecodedError {
   type: 'error';
-  message: string;
+  code: 'notFound';
 }
 
 export interface DecodeMessage {
@@ -170,7 +170,7 @@ self.addEventListener('message', async ({ data }: MessageEvent<DecodeMessage>) =
   } else {
     const message: DecodedError = {
       type: 'error',
-      message: '未发现二维码'
+      code: 'notFound'
     };
 
     self.postMessage(message);

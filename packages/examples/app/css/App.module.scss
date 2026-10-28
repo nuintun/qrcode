@@ -25,6 +25,17 @@
     }
   }
 
+  .actions {
+    gap: 12px;
+    display: flex;
+    align-items: center;
+
+    .language {
+      flex: none;
+      width: 80px;
+    }
+  }
+
   .tabBarItem {
     gap: 4px;
     align-items: center;
