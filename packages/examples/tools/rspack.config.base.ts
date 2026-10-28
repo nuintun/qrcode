@@ -40,7 +40,6 @@ export default async function (mode: Mode): Promise<[AppConfig, Configuration]> 
     appConfig,
     {
       mode,
-      cache: true,
       performance: false,
       name: appConfig.name,
       entry: appConfig.entry,
@@ -57,6 +56,11 @@ export default async function (mode: Mode): Promise<[AppConfig, Configuration]> 
         assetModuleFilename: `[path][${isDevelopment ? 'name' : 'contenthash'}][ext]`
       },
       module: {
+        parser: {
+          javascript: {
+            importMetaResolve: true
+          }
+        },
         rules: await resolveRules(mode)
       },
       resolve: {
@@ -77,10 +81,7 @@ export default async function (mode: Mode): Promise<[AppConfig, Configuration]> 
           chunks: 'all',
           maxSize: 512 * 1024
         },
-        runtimeChunk: 'single',
-        removeEmptyChunks: true,
-        mergeDuplicateChunks: true,
-        removeAvailableModules: true
+        runtimeChunk: 'single'
       },
       stats: {
         all: false,
@@ -96,22 +97,21 @@ export default async function (mode: Mode): Promise<[AppConfig, Configuration]> 
       },
       externals: appConfig.externals,
       externalsType: appConfig.externalsType,
-      experiments: {
-        cache: {
-          type: 'persistent',
-          buildDependencies: [
-            resolve('.swcrc.ts'),
-            resolve('.svgorc.ts'),
-            resolve('package.json'),
-            resolve('app.config.ts'),
-            resolve('.browserslistrc'),
-            resolve('.lightningcssrc.ts'),
-            ...(await scanFiles('tools'))
-          ],
-          storage: {
-            type: 'filesystem',
-            directory: resolve('node_modules/.cache/rspack')
-          }
+      cache: {
+        portable: true,
+        type: 'persistent',
+        buildDependencies: [
+          resolve('.swcrc.ts'),
+          resolve('.svgorc.ts'),
+          resolve('package.json'),
+          resolve('app.config.ts'),
+          resolve('.browserslistrc'),
+          resolve('.lightningcssrc.ts'),
+          ...(await scanFiles('tools'))
+        ],
+        storage: {
+          type: 'filesystem',
+          directory: resolve('node_modules/.cache/rspack')
         }
       }
     }
