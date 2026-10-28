@@ -76,6 +76,9 @@ export default async function (mode: Mode): Promise<[AppConfig, Configuration]> 
         ...resolveHtmlPlugins(mode, appConfig),
         ...(appConfig.plugins ?? [])
       ],
+      experiments: {
+        newCache: true
+      },
       optimization: {
         splitChunks: {
           chunks: 'all',
@@ -98,21 +101,19 @@ export default async function (mode: Mode): Promise<[AppConfig, Configuration]> 
       externals: appConfig.externals,
       externalsType: appConfig.externalsType,
       cache: {
-        portable: true,
-        type: 'persistent',
-        buildDependencies: [
-          resolve('.swcrc.ts'),
-          resolve('.svgorc.ts'),
-          resolve('package.json'),
-          resolve('app.config.ts'),
-          resolve('.browserslistrc'),
-          resolve('.lightningcssrc.ts'),
-          ...(await scanFiles('tools'))
-        ],
-        storage: {
-          type: 'filesystem',
-          directory: resolve('node_modules/.cache/rspack')
-        }
+        type: 'filesystem',
+        buildDependencies: {
+          tools: await scanFiles('tools'),
+          configure: [
+            resolve('.swcrc.ts'),
+            resolve('.svgorc.ts'),
+            resolve('package.json'),
+            resolve('app.config.ts'),
+            resolve('.browserslistrc'),
+            resolve('.lightningcssrc.ts')
+          ]
+        },
+        cacheDirectory: resolve('node_modules/.cache/rspack')
       }
     }
   ];
