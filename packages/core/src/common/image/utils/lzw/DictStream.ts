@@ -6,11 +6,18 @@
 import { Dict } from './Dict';
 import { ByteStream } from '/common/image/utils/ByteStream';
 
+/**
+ * Packs LZW codes of `dict.bits` width into bytes (little endian bit order),
+ * then pipes them out as GIF data sub-blocks.
+ */
 export class DictStream {
   #bits = 0;
-  #dict: Dict;
   #buffer = 0;
-  #bytes: number[] = [];
+  #length = 0;
+  #dict: Dict;
+  // Self-managed buffer instead of a ByteStream accumulator: routing every LZW
+  // byte through ByteStream.writeByte() was measured ~16% slower on hot paths.
+  #bytes = new Uint8Array(1024);
 
   constructor(dict: Dict) {
     this.#dict = dict;
@@ -22,10 +29,8 @@ export class DictStream {
 
     bits += this.#dict.bits;
 
-    const bytes = this.#bytes;
-
     while (bits >= 8) {
-      bytes.push(buffer & 0xff);
+      this.#push(buffer & 0xff);
 
       buffer >>= 8;
       bits -= 8;
@@ -36,34 +41,38 @@ export class DictStream {
   }
 
   public pipe(stream: ByteStream): void {
-    const bytes = this.#bytes;
-
     // Add the remaining bits. (Unused bits are set to zero.)
     if (this.#bits > 0) {
-      bytes.push(this.#buffer);
+      this.#push(this.#buffer);
     }
 
     stream.writeByte(this.#dict.depth);
 
+    const bytes = this.#bytes;
+    const length = this.#length;
+
     // Divide it up into blocks with a size in front of each block.
-    const { length } = bytes;
-
     for (let i = 0; i < length;) {
-      const remain = length - i;
+      const remain = Math.min(255, length - i);
 
-      if (remain >= 255) {
-        stream.writeByte(0xff);
-        stream.writeBytes(bytes, i, 255);
+      stream.writeByte(remain);
+      stream.writeBytes(bytes, i, remain);
 
-        i += 255;
-      } else {
-        stream.writeByte(remain);
-        stream.writeBytes(bytes, i, remain);
-
-        i = length;
-      }
+      i += remain;
     }
 
     stream.writeByte(0);
+  }
+
+  #push(value: number): void {
+    if (this.#length === this.#bytes.length) {
+      const grown = new Uint8Array(this.#bytes.length * 2);
+
+      grown.set(this.#bytes);
+
+      this.#bytes = grown;
+    }
+
+    this.#bytes[this.#length++] = value;
   }
 }

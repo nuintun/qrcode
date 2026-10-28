@@ -8,27 +8,25 @@ const MAX_CODE = (1 << 12) - 1;
 
 /**
  * A dict contains codes defined during LZW compression. It's a mapping from a string
- * of pixels to the code that represents it. The codes are stored in a trie which is
- * represented as a map. Codes may be up to 12 bits. The size of the codebook is always
- * the minimum power of 2 needed to represent all the codes and automatically increases
- * as new codes are defined.
+ * of pixels to the code that represents it. The codes are stored in a flat table
+ * indexed by `(code << depth) | index`. Codes may be up to 12 bits. The size of the
+ * codebook is always the minimum power of 2 needed to represent all the codes and
+ * automatically increases as new codes are defined. A table value of 0 means the
+ * entry is unused (stored codes are always >= eof + 1).
  */
 export class Dict {
   #bof: number;
   #eof: number;
   #bits!: number;
   #depth: number;
-  #size!: number;
   #unused!: number;
-  #codes!: Map<number, number>;
+  #table: Int32Array;
 
   constructor(depth: number) {
-    const bof = 1 << depth;
-    const eof = bof + 1;
-
-    this.#bof = bof;
-    this.#eof = eof;
     this.#depth = depth;
+    this.#bof = 1 << depth;
+    this.#eof = this.#bof + 1;
+    this.#table = new Int32Array((MAX_CODE + 1) << depth);
 
     this.reset();
   }
@@ -50,38 +48,30 @@ export class Dict {
   }
 
   public reset(): void {
-    const bits = this.#depth + 1;
-
-    this.#bits = bits;
-    this.#size = 1 << bits;
-    this.#codes = new Map();
+    this.#bits = this.#depth + 1;
     this.#unused = this.#eof + 1;
+
+    this.#table.fill(0);
   }
 
   public add(code: number, index: number): boolean {
-    let unused = this.#unused;
+    const unused = this.#unused;
 
     if (unused > MAX_CODE) {
       return false;
     }
 
-    this.#codes.set((code << 8) | index, unused++);
+    this.#unused = unused + 1;
+    this.#table[(code << this.#depth) | index] = unused;
 
-    let bits = this.#bits;
-    let size = this.#size;
-
-    if (unused > size) {
-      size = 1 << ++bits;
+    if (this.#unused > 1 << this.#bits) {
+      this.#bits++;
     }
-
-    this.#bits = bits;
-    this.#size = size;
-    this.#unused = unused;
 
     return true;
   }
 
-  public get(code: number, index: number): number | undefined {
-    return this.#codes.get((code << 8) | index);
+  public get(code: number, index: number): number {
+    return this.#table[(code << this.#depth) | index];
   }
 }

@@ -2,7 +2,6 @@
  * @module Encoded
  */
 
-import { toInt32 } from '/common/utils';
 import { Version } from '/common/Version';
 import { ByteMatrix } from '/common/ByteMatrix';
 import { ECLevel, Level } from '/common/ECLevel';
@@ -80,18 +79,16 @@ export class Encoded {
     const matrixSize = matrix.size;
     const size = moduleSize * matrixSize + margin * 2;
     const gif = new GIFImage(size, size, colors);
-    const max = size - margin;
 
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
-        if (x >= margin && x < max && y >= margin && y < max) {
-          const offsetX = toInt32((x - margin) / moduleSize);
-          const offsetY = toInt32((y - margin) / moduleSize);
+    // Rasterize module by module; margin and background pixels default to 0.
+    for (let moduleY = 0; moduleY < matrixSize; moduleY++) {
+      const pixelY = margin + moduleY * moduleSize;
 
-          gif.set(x, y, matrix.get(offsetX, offsetY));
-        } else {
-          // Margin pixels.
-          gif.set(x, y, 0);
+      for (let moduleX = 0; moduleX < matrixSize; moduleX++) {
+        const color = matrix.get(moduleX, moduleY);
+
+        if (color !== 0) {
+          gif.fillRect(margin + moduleX * moduleSize, pixelY, moduleSize, moduleSize, color);
         }
       }
     }
