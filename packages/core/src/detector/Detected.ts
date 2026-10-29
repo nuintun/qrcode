@@ -24,7 +24,6 @@ export class Detected {
     const sampler = new GridSampler(matrix, transform);
     const size = FinderPatternGroup.size(finderPatternGroup);
 
-    this.#matrix = matrix;
     this.#transform = transform;
     this.#finder = finderPatternGroup;
     this.#alignment = alignmentPattern;
