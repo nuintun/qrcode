@@ -4,7 +4,7 @@
 
 export class GifWriter {
   #length = 0;
-  #bytes = new Uint8Array(1024);
+  #bytes = new Uint8Array(4096);
 
   #ensure(size: number): void {
     const bytes = this.#bytes;

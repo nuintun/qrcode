@@ -15,7 +15,7 @@ export { GifWriter };
  */
 export function compress(pixels: Uint8Array, depth: number, stream: GifWriter): void {
   const dict = new Dict(depth);
-  const lzw = new LzwWriter(dict);
+  const lzw = new LzwWriter(dict, stream);
 
   lzw.write(dict.bof);
 
@@ -48,5 +48,5 @@ export function compress(pixels: Uint8Array, depth: number, stream: GifWriter): 
 
   lzw.write(dict.eof);
 
-  lzw.pipe(stream);
+  lzw.finish();
 }

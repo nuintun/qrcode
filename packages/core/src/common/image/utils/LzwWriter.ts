@@ -6,34 +6,42 @@
 import { Dict } from './Dict';
 import { GifWriter } from './GifWriter';
 
+// GIF data sub-blocks carry at most 255 bytes; the length byte precedes the
+// data, so up to 255 bytes must be gathered before the block can be written.
+const BLOCK_SIZE = 255;
+
 /**
  * Packs LZW codes of `dict.bits` width into bytes (little endian bit order),
- * then pipes them out as GIF data sub-blocks.
+ * then writes them out as GIF data sub-blocks on `stream`.
  */
 export class LzwWriter {
   #bits = 0;
+  #size = 0;
   #buffer = 0;
-  #length = 0;
   #dict: Dict;
-  #bytes = new Uint8Array(1024);
+  #stream: GifWriter;
+  #block = new Uint8Array(BLOCK_SIZE);
 
-  constructor(dict: Dict) {
+  constructor(dict: Dict, stream: GifWriter) {
     this.#dict = dict;
+    this.#stream = stream;
+
+    stream.writeByte(dict.depth);
   }
 
   #push(value: number): void {
-    const bytes = this.#bytes;
-    const byteLength = bytes.length;
+    this.#block[this.#size++] = value;
 
-    if (this.#length >= byteLength) {
-      const next = new Uint8Array(byteLength * 2);
-
-      next.set(bytes);
-
-      this.#bytes = next;
+    if (this.#size >= BLOCK_SIZE) {
+      this.#flush();
     }
+  }
 
-    this.#bytes[this.#length++] = value;
+  #flush(): void {
+    this.#stream.writeByte(this.#size);
+    this.#stream.writeBytes(this.#block, 0, this.#size);
+
+    this.#size = 0;
   }
 
   public write(code: number): void {
@@ -53,27 +61,17 @@ export class LzwWriter {
     this.#buffer = buffer;
   }
 
-  public pipe(stream: GifWriter): void {
+  public finish(): void {
     // Add the remaining bits. (Unused bits are set to zero.)
     if (this.#bits > 0) {
       this.#push(this.#buffer);
     }
 
-    const bytes = this.#bytes;
-    const length = this.#length;
-
-    stream.writeByte(this.#dict.depth);
-
-    // Divide it up into blocks with a size in front of each block.
-    for (let offset = 0; offset < length;) {
-      const size = Math.min(255, length - offset);
-
-      stream.writeByte(size);
-      stream.writeBytes(bytes, offset, size);
-
-      offset += size;
+    if (this.#size > 0) {
+      this.#flush();
     }
 
-    stream.writeByte(0);
+    // Block terminator.
+    this.#stream.writeByte(0);
   }
 }
