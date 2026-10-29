@@ -20,7 +20,7 @@ export class Dict {
   #bits: number;
   #depth: number;
   #unused: number;
-  #table: Int32Array;
+  #table: Uint16Array;
 
   constructor(depth: number) {
     this.#depth = depth;
@@ -28,7 +28,7 @@ export class Dict {
     this.#bof = 1 << depth;
     this.#eof = this.#bof + 1;
     this.#unused = this.#eof + 1;
-    this.#table = new Int32Array((MAX_CODE + 1) << depth);
+    this.#table = new Uint16Array((MAX_CODE + 1) << depth);
   }
 
   public get bof(): number {

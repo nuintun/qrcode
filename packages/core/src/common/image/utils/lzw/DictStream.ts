@@ -43,7 +43,7 @@ export class DictStream {
     bits += this.#dict.bits;
 
     while (bits >= 8) {
-      this.#push(buffer & 0xff);
+      this.#push(buffer);
 
       buffer >>= 8;
       bits -= 8;
