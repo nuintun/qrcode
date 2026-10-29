@@ -34,7 +34,7 @@ export class GridSampler {
           offsetY >= 0 &&
           offsetX < matrixWidth &&
           offsetY < matrixHeight &&
-          matrix.get(offsetX, offsetY)
+          matrix.get(offsetX, offsetY) === 1
         ) {
           bits.set(x, y);
         }

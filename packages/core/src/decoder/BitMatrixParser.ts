@@ -9,7 +9,7 @@ import { decodeFormatInfo, FormatInfo } from './FormatInfo';
 import { decodeVersion, Version, VERSIONS } from '/common/Version';
 
 function copyBit(matrix: BitMatrix, x: number, y: number, bits: number): number {
-  return matrix.get(x, y) ? (bits << 1) | 0x01 : bits << 1;
+  return matrix.get(x, y) === 1 ? (bits << 1) | 0x01 : bits << 1;
 }
 
 export class BitMatrixParser {
@@ -125,12 +125,12 @@ export class BitMatrixParser {
           const offsetX = x - col;
 
           // Ignore bits covered by the function pattern and version Information.
-          if (!functionMatrix.get(offsetX, y)) {
+          if (functionMatrix.get(offsetX, y) === 0) {
             // Read a bit
             bitsRead++;
             currentByte <<= 1;
 
-            if (matrix.get(offsetX, y)) {
+            if (matrix.get(offsetX, y) === 1) {
               currentByte |= 1;
             }
 

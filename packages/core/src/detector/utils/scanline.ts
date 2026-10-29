@@ -63,8 +63,8 @@ export function getCrossScanline(
 
   const scanline = [0, 0, 0, 0, 0];
   const size = isVertical ? matrix.height : matrix.width;
-  const isBlackPixel = (): number => {
-    return isVertical ? matrix.get(x, offset) : matrix.get(offset, y);
+  const isBlackPixel = (): boolean => {
+    return (isVertical ? matrix.get(x, offset) : matrix.get(offset, y)) === 1;
   };
 
   while (offset >= 0 && isBlackPixel()) {
@@ -123,8 +123,8 @@ export function getDiagonalScanline(
     offsetX += step;
     offsetY -= step * slope;
   };
-  const isBlackPixel = (): number => {
-    return matrix.get(offsetX, offsetY);
+  const isBlackPixel = (): boolean => {
+    return matrix.get(offsetX, offsetY) === 1;
   };
 
   // Start counting left from center finding black center mass.
