@@ -77,8 +77,8 @@ export class Encoded {
 
     const matrix = this.#matrix;
     const matrixSize = matrix.size;
-    const size = moduleSize * matrixSize + margin * 2;
     const last = margin + matrixSize * moduleSize;
+    const size = moduleSize * matrixSize + margin * 2;
 
     // Rasterize rows on demand; margin and background pixels stay 0.
     const readRow: ReadRow = (row, buffer) => {
