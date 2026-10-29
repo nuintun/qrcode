@@ -15,12 +15,25 @@ export class DictStream {
   #buffer = 0;
   #length = 0;
   #dict: Dict;
-  // Self-managed buffer instead of a ByteStream accumulator: routing every LZW
-  // byte through ByteStream.writeByte() was measured ~16% slower on hot paths.
   #bytes = new Uint8Array(1024);
 
   constructor(dict: Dict) {
     this.#dict = dict;
+  }
+
+  #push(value: number): void {
+    const bytes = this.#bytes;
+    const byteLength = bytes.length;
+
+    if (this.#length >= byteLength) {
+      const next = new Uint8Array(byteLength * 2);
+
+      next.set(bytes);
+
+      this.#bytes = next;
+    }
+
+    this.#bytes[this.#length++] = value;
   }
 
   public write(code: number): void {
@@ -62,17 +75,5 @@ export class DictStream {
     }
 
     stream.writeByte(0);
-  }
-
-  #push(value: number): void {
-    if (this.#length === this.#bytes.length) {
-      const grown = new Uint8Array(this.#bytes.length * 2);
-
-      grown.set(this.#bytes);
-
-      this.#bytes = grown;
-    }
-
-    this.#bytes[this.#length++] = value;
   }
 }

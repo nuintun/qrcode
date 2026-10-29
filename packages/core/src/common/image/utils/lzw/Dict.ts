@@ -55,16 +55,16 @@ export class Dict {
   }
 
   public add(code: number, index: number): boolean {
-    const unused = this.#unused;
+    let unused = this.#unused;
 
     if (unused > MAX_CODE) {
       return false;
     }
 
     this.#table[(code << this.#depth) | index] = unused;
-    this.#unused = unused + 1;
+    this.#unused = ++unused;
 
-    if (this.#unused > 1 << this.#bits) {
+    if (unused > 1 << this.#bits) {
       this.#bits++;
     }
 

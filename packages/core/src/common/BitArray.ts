@@ -27,11 +27,11 @@ export class BitArray {
     const bits = this.#bits;
 
     if (length > bits.length * 32) {
-      const array = makeArray(Math.ceil(length / LOAD_FACTOR));
+      const next = makeArray(Math.ceil(length / LOAD_FACTOR));
 
-      array.set(bits);
+      next.set(bits);
 
-      this.#bits = array;
+      this.#bits = next;
     }
 
     this.#length = length;
