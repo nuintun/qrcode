@@ -36,7 +36,7 @@ export class Version {
   #size: number;
   #version: number;
   #ecBlocks: ECBlocks[];
-  #functionPattern: BitMatrix;
+  #functionMatrix?: BitMatrix;
   #alignmentPatterns: number[];
 
   constructor(version: number, alignmentPatterns: number[], ...ecBlocks: ECBlocks[]) {
@@ -46,7 +46,6 @@ export class Version {
     this.#version = version;
     this.#ecBlocks = ecBlocks;
     this.#alignmentPatterns = alignmentPatterns;
-    this.#functionPattern = buildFunctionPattern(size, version, alignmentPatterns);
   }
 
   public get size(): number {
@@ -57,12 +56,27 @@ export class Version {
     return this.#version;
   }
 
-  public get functionPattern(): BitMatrix {
-    return this.#functionPattern;
-  }
-
   public get alignmentPatterns(): number[] {
     return this.#alignmentPatterns;
+  }
+
+  public get functionMatrix(): BitMatrix {
+    let functionMatrix = this.#functionMatrix;
+
+    if (functionMatrix == null) {
+      functionMatrix = buildFunctionMatrix(
+        // Size.
+        this.#size,
+        // Version.
+        this.#version,
+        // Alignment patterns.
+        this.#alignmentPatterns
+      );
+
+      this.#functionMatrix = functionMatrix;
+    }
+
+    return functionMatrix;
   }
 
   public getECBlocks({ level }: ECLevel): ECBlocks {
@@ -402,12 +416,12 @@ export function decodeVersion(version1: number, version2: number): Version {
   for (let i = 0; i < length; i++) {
     const maskedVersion = VERSION_DECODE_TABLE[i];
 
-    // Do the version info bits match exactly done?
+    // Do the version info bits match exactly?
     if (version1 === maskedVersion || version2 === maskedVersion) {
       return VERSIONS[i + 6];
     }
 
-    // Otherwise see if this is the closest to a real version info bit string we have seen so far.
+    // Otherwise, find the closest matching version information.
     let bitsDiff = hammingWeight(version1 ^ maskedVersion);
 
     if (bitsDiff < bestDiff) {
@@ -436,8 +450,8 @@ export function decodeVersion(version1: number, version2: number): Version {
 }
 
 // See ISO 18004:2006 Annex E
-function buildFunctionPattern(size: number, version: number, alignmentPatterns: number[]): BitMatrix {
-  // Alignment patterns
+function buildFunctionMatrix(size: number, version: number, alignmentPatterns: number[]): BitMatrix {
+  // Alignment patterns.
   const { length } = alignmentPatterns;
   const matrix = new BitMatrix(size);
   const max = length - 1;
@@ -456,7 +470,7 @@ function buildFunctionPattern(size: number, version: number, alignmentPatterns: 
       if ((x !== 0 || (y !== 0 && y !== max)) && (x !== max || y !== 0)) {
         matrix.setRegion(alignmentPatterns[y] - 2, top, 5, 5);
       }
-      // Else no o alignment patterns near the three finder patterns.
+      // No alignment patterns near the three finder patterns.
     }
   }
 

@@ -105,7 +105,7 @@ export class BitMatrixParser {
 
     const size = this.#size;
     const matrix = this.#matrix;
-    const { functionPattern } = version;
+    const { functionMatrix } = version;
     const ecBlocks = version.getECBlocks(ecLevel);
     const codewords = new Uint8Array(ecBlocks.numTotalCodewords);
 
@@ -124,8 +124,8 @@ export class BitMatrixParser {
         for (let col = 0; col < 2; col++) {
           const offsetX = x - col;
 
-          // Ignore bits covered by the function pattern.
-          if (!functionPattern.get(offsetX, y)) {
+          // Ignore bits covered by the function pattern and version Information.
+          if (!functionMatrix.get(offsetX, y)) {
             // Read a bit
             bitsRead++;
             currentByte <<= 1;
