@@ -2,7 +2,7 @@
  * @module GifImage
  */
 
-import { compress, GifWriter } from './utils';
+import { compress, GifWriter, ReadRow } from './utils';
 
 export type RGB = [
   // Red.
@@ -12,6 +12,8 @@ export type RGB = [
   // Blue.
   B: number
 ];
+
+export type { ReadRow };
 
 export interface Colors {
   foreground?: RGB;
@@ -86,26 +88,29 @@ function toBase64(bytes: Uint8Array): string {
 }
 
 /**
- * A single-frame GIF89a image with a fixed two-color palette: index 0 for the
- * background and index 1 for the foreground. Encoded as a data URL on demand.
+ * A single-frame GIF89a encoder with a fixed two-color palette: index 0 for
+ * the background and index 1 for the foreground. Pixel rows are pulled from
+ * `readRow` while encoding, so no full pixel image is materialized in memory.
+ * Encoded as a data URL on demand.
  */
 export class GifImage {
   #width: number;
   #height: number;
   #background: RGB;
   #foreground: RGB;
-  #pixels: Uint8Array;
+  #readRow: ReadRow;
 
   constructor(
     width: number,
     height: number,
+    readRow: ReadRow,
     { foreground = [0x00, 0x00, 0x00], background = [0xff, 0xff, 0xff] }: Colors = {}
   ) {
     this.#width = width;
     this.#height = height;
+    this.#readRow = readRow;
     this.#foreground = foreground;
     this.#background = background;
-    this.#pixels = new Uint8Array(width * height);
   }
 
   #encode(): Uint8Array {
@@ -134,7 +139,7 @@ export class GifImage {
     stream.writeByte(0);
 
     // Compress pixel indices using GIF LZW.
-    compress(this.#pixels, 2, stream);
+    compress(width, height, 2, stream, this.#readRow);
 
     // GIF trailer: marks the end of the file.
     stream.writeByte(0x3b);
@@ -144,14 +149,5 @@ export class GifImage {
 
   public toDataURL(): string {
     return 'data:image/gif;base64,' + toBase64(this.#encode());
-  }
-
-  public fillRect(x: number, y: number, width: number, height: number, color: number): void {
-    const stride = this.#width;
-    const pixels = this.#pixels;
-
-    for (let row = 0, base = y * stride + x; row < height; row++, base += stride) {
-      pixels.fill(color, base, base + width);
-    }
   }
 }

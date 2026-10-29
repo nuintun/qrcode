@@ -5,7 +5,7 @@
 import { Version } from '/common/Version';
 import { ByteMatrix } from '/common/ByteMatrix';
 import { ECLevel, Level } from '/common/ECLevel';
-import { Colors, GifImage } from '/common/image/GifImage';
+import { Colors, GifImage, ReadRow } from '/common/image/GifImage';
 
 export class Encoded {
   #mask: number;
@@ -78,21 +78,23 @@ export class Encoded {
     const matrix = this.#matrix;
     const matrixSize = matrix.size;
     const size = moduleSize * matrixSize + margin * 2;
-    const gif = new GifImage(size, size, colors);
+    const last = margin + matrixSize * moduleSize;
 
-    // Rasterize module by module; margin and background pixels default to 0.
-    for (let moduleY = 0; moduleY < matrixSize; moduleY++) {
-      const pixelY = margin + moduleY * moduleSize;
+    // Rasterize rows on demand; margin and background pixels stay 0.
+    const readRow: ReadRow = (row, buffer) => {
+      if (row >= margin && row < last) {
+        const moduleY = ((row - margin) / moduleSize) | 0;
 
-      for (let moduleX = 0; moduleX < matrixSize; moduleX++) {
-        const color = matrix.get(moduleX, moduleY);
+        for (let moduleX = 0; moduleX < matrixSize; moduleX++) {
+          if (matrix.get(moduleX, moduleY) !== 0) {
+            const start = margin + moduleX * moduleSize;
 
-        if (color !== 0) {
-          gif.fillRect(margin + moduleX * moduleSize, pixelY, moduleSize, moduleSize, color);
+            buffer.fill(1, start, start + moduleSize);
+          }
         }
       }
-    }
+    };
 
-    return gif.toDataURL();
+    return new GifImage(size, size, readRow, colors).toDataURL();
   }
 }

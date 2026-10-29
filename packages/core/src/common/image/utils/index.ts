@@ -8,25 +8,43 @@ import { LzwWriter } from './LzwWriter';
 
 export { GifWriter };
 
+/** Populates `buffer` with the pixel values (< 2 ^ depth) of row `row`. */
+export interface ReadRow {
+  (row: number, buffer: Uint8Array): void;
+}
+
 /**
- * LZW-compresses `pixels` (values < 2 ^ depth) into GIF minimum-code-size data
- * sub-blocks on `stream`. The dictionary starts at `depth + 1` bits, grows up
- * to 12 bits and emits a clear code when full.
+ * LZW-compresses a `width × height` image into GIF minimum-code-size data
+ * sub-blocks on `stream`. Rows are pulled one by one from `readRow` (pixel
+ * values < 2 ^ depth) into a reusable row buffer, so no full pixel buffer is
+ * materialized. The dictionary starts at `depth + 1` bits, grows up to 12
+ * bits and emits a clear code when full.
  */
-export function compress(pixels: Uint8Array, depth: number, stream: GifWriter): void {
+export function compress(width: number, height: number, depth: number, stream: GifWriter, readRow: ReadRow): void {
+  // -1 means no pixel has been read yet.
+  let code = -1;
+
   const dict = new Dict(depth);
+  const buffer = new Uint8Array(width);
   const lzw = new LzwWriter(dict, stream);
 
   lzw.write(dict.bof);
 
-  if (pixels.length > 0) {
-    let code = pixels[0];
+  for (let row = 0; row < height; row++) {
+    buffer.fill(0);
 
-    const { length } = pixels;
+    readRow(row, buffer);
 
-    for (let i = 1; i < length; i++) {
-      const pixelIndex = pixels[i];
-      const nextCode = dict.get(code, pixelIndex);
+    for (let col = 0; col < width; col++) {
+      const index = buffer[col];
+
+      if (code < 0) {
+        code = index;
+
+        continue;
+      }
+
+      const nextCode = dict.get(code, index);
 
       if (nextCode !== 0) {
         code = nextCode;
@@ -34,19 +52,20 @@ export function compress(pixels: Uint8Array, depth: number, stream: GifWriter): 
         lzw.write(code);
 
         // Reset dict when full.
-        if (!dict.add(code, pixelIndex)) {
+        if (!dict.add(code, index)) {
           lzw.write(dict.bof);
           dict.reset();
         }
 
-        code = pixelIndex;
+        code = index;
       }
     }
+  }
 
+  if (code >= 0) {
     lzw.write(code);
   }
 
   lzw.write(dict.eof);
-
   lzw.finish();
 }
