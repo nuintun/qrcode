@@ -22,11 +22,11 @@ export class ByteStream {
         capacity *= 2;
       }
 
-      const grown = new Uint8Array(capacity);
+      const next = new Uint8Array(capacity);
 
-      grown.set(bytes.subarray(0, length));
+      next.set(bytes.subarray(0, length));
 
-      this.#bytes = grown;
+      this.#bytes = next;
     }
   }
 
