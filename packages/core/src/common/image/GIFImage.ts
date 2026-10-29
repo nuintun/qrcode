@@ -1,9 +1,8 @@
 /**
- * @module GIFImage
+ * @module GifImage
  */
 
-import { compress } from './utils/lzw';
-import { ByteStream } from './utils/ByteStream';
+import { compress, GifWriter } from './utils';
 
 export type RGB = [
   // Red.
@@ -90,7 +89,7 @@ function toBase64(bytes: Uint8Array): string {
  * A single-frame GIF89a image with a fixed two-color palette: index 0 for the
  * background and index 1 for the foreground. Encoded as a data URL on demand.
  */
-export class GIFImage {
+export class GifImage {
   #width: number;
   #height: number;
   #background: RGB;
@@ -112,7 +111,7 @@ export class GIFImage {
   #encode(): Uint8Array {
     const width = this.#width;
     const height = this.#height;
-    const stream = new ByteStream();
+    const stream = new GifWriter();
     const background = this.#background;
     const foreground = this.#foreground;
 

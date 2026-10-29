@@ -5,7 +5,7 @@
 import { Version } from '/common/Version';
 import { ByteMatrix } from '/common/ByteMatrix';
 import { ECLevel, Level } from '/common/ECLevel';
-import { Colors, GIFImage } from '/common/image/GIFImage';
+import { Colors, GifImage } from '/common/image/GifImage';
 
 export class Encoded {
   #mask: number;
@@ -78,7 +78,7 @@ export class Encoded {
     const matrix = this.#matrix;
     const matrixSize = matrix.size;
     const size = moduleSize * matrixSize + margin * 2;
-    const gif = new GIFImage(size, size, colors);
+    const gif = new GifImage(size, size, colors);
 
     // Rasterize module by module; margin and background pixels default to 0.
     for (let moduleY = 0; moduleY < matrixSize; moduleY++) {

@@ -1,12 +1,8 @@
 /**
- * @module ByteStream
+ * @module GifWriter
  */
 
-/**
- * A growable byte sink that writes into a `Uint8Array`, doubling capacity on
- * demand. Bulk writes use `TypedArray.set()` (memcpy).
- */
-export class ByteStream {
+export class GifWriter {
   #length = 0;
   #bytes = new Uint8Array(1024);
 

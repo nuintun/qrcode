@@ -1,16 +1,16 @@
 /**
- * @module DictStream
+ * @module LzwWriter
  * @see https://github.com/google/dart-gif-encoder
  */
 
 import { Dict } from './Dict';
-import { ByteStream } from '/common/image/utils/ByteStream';
+import { GifWriter } from './GifWriter';
 
 /**
  * Packs LZW codes of `dict.bits` width into bytes (little endian bit order),
  * then pipes them out as GIF data sub-blocks.
  */
-export class DictStream {
+export class LzwWriter {
   #bits = 0;
   #buffer = 0;
   #length = 0;
@@ -53,7 +53,7 @@ export class DictStream {
     this.#buffer = buffer;
   }
 
-  public pipe(stream: ByteStream): void {
+  public pipe(stream: GifWriter): void {
     // Add the remaining bits. (Unused bits are set to zero.)
     if (this.#bits > 0) {
       this.#push(this.#buffer);

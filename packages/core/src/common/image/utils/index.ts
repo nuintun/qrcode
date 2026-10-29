@@ -1,22 +1,23 @@
 /**
  * @module index
- * @see https://github.com/google/dart-gif-encoder
  */
 
 import { Dict } from './Dict';
-import { DictStream } from './DictStream';
-import { ByteStream } from '/common/image/utils/ByteStream';
+import { GifWriter } from './GifWriter';
+import { LzwWriter } from './LzwWriter';
+
+export { GifWriter };
 
 /**
  * LZW-compresses `pixels` (values < 2 ^ depth) into GIF minimum-code-size data
  * sub-blocks on `stream`. The dictionary starts at `depth + 1` bits, grows up
  * to 12 bits and emits a clear code when full.
  */
-export function compress(pixels: Uint8Array, depth: number, stream: ByteStream): void {
+export function compress(pixels: Uint8Array, depth: number, stream: GifWriter): void {
   const dict = new Dict(depth);
-  const buffer = new DictStream(dict);
+  const lzw = new LzwWriter(dict);
 
-  buffer.write(dict.bof);
+  lzw.write(dict.bof);
 
   if (pixels.length > 0) {
     let code = pixels[0];
@@ -30,11 +31,11 @@ export function compress(pixels: Uint8Array, depth: number, stream: ByteStream):
       if (nextCode !== 0) {
         code = nextCode;
       } else {
-        buffer.write(code);
+        lzw.write(code);
 
         // Reset dict when full.
         if (!dict.add(code, pixelIndex)) {
-          buffer.write(dict.bof);
+          lzw.write(dict.bof);
           dict.reset();
         }
 
@@ -42,10 +43,10 @@ export function compress(pixels: Uint8Array, depth: number, stream: ByteStream):
       }
     }
 
-    buffer.write(code);
+    lzw.write(code);
   }
 
-  buffer.write(dict.eof);
+  lzw.write(dict.eof);
 
-  buffer.pipe(stream);
+  lzw.pipe(stream);
 }
