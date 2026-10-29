@@ -50,6 +50,8 @@ function parseECIValue(source: BitSource): number {
 }
 
 const GS = String.fromCharCode(0x1d);
+const GB2312_DECODER = new TextDecoder('gb2312');
+const SHIFT_JIS_DECODER = new TextDecoder('shift-jis');
 
 function processGSCharacter(content: string): string {
   return content.replace(/%+/g, match => {
@@ -136,7 +138,7 @@ function decodeHanziSegment(source: BitSource, count: number): string {
     offset += 2;
   }
 
-  return new TextDecoder('gb2312').decode(bytes);
+  return GB2312_DECODER.decode(bytes);
 }
 
 function decodeKanjiSegment(source: BitSource, count: number): string {
@@ -168,7 +170,7 @@ function decodeKanjiSegment(source: BitSource, count: number): string {
     offset += 2;
   }
 
-  return new TextDecoder('shift-jis').decode(bytes);
+  return SHIFT_JIS_DECODER.decode(bytes);
 }
 
 function decodeNumericSegment(source: BitSource, count: number): string {

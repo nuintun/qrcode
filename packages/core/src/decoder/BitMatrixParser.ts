@@ -6,7 +6,7 @@ import { ECLevel } from '/common/ECLevel';
 import { isApplyMask } from '/common/mask';
 import { BitMatrix } from '/common/BitMatrix';
 import { decodeFormatInfo, FormatInfo } from './FormatInfo';
-import { buildFunctionPattern, decodeVersion, Version, VERSIONS } from '/common/Version';
+import { decodeVersion, Version, VERSIONS } from '/common/Version';
 
 function copyBit(matrix: BitMatrix, x: number, y: number, bits: number): number {
   return matrix.get(x, y) ? (bits << 1) | 0x01 : bits << 1;
@@ -105,8 +105,8 @@ export class BitMatrixParser {
 
     const size = this.#size;
     const matrix = this.#matrix;
+    const { functionPattern } = version;
     const ecBlocks = version.getECBlocks(ecLevel);
-    const functionPattern = buildFunctionPattern(version);
     const codewords = new Uint8Array(ecBlocks.numTotalCodewords);
 
     // Read columns in pairs, from right to left.

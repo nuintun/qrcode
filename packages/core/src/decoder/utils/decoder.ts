@@ -7,6 +7,9 @@ import { Version } from '/common/Version';
 import { DataBlock } from '/decoder/DataBlock';
 import { Decoder as ReedSolomonDecoder } from '/common/reedsolomon/Decoder';
 
+// Stateless, reuse across blocks and decodes.
+const REED_SOLOMON = new ReedSolomonDecoder();
+
 export function correctErrors(
   codewords: Uint8Array,
   numDataCodewords: number
@@ -14,7 +17,7 @@ export function correctErrors(
   const buffer = new Int32Array(codewords);
   const numECCodewords = codewords.length - numDataCodewords;
   // Reed solomon encode.
-  const errorsCorrected = new ReedSolomonDecoder().decode(buffer, numECCodewords);
+  const errorsCorrected = REED_SOLOMON.decode(buffer, numECCodewords);
 
   return [buffer, errorsCorrected];
 }

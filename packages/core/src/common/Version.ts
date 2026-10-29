@@ -36,13 +36,17 @@ export class Version {
   #size: number;
   #version: number;
   #ecBlocks: ECBlocks[];
+  #functionPattern: BitMatrix;
   #alignmentPatterns: number[];
 
   constructor(version: number, alignmentPatterns: number[], ...ecBlocks: ECBlocks[]) {
+    const size = 17 + 4 * version;
+
+    this.#size = size;
     this.#version = version;
     this.#ecBlocks = ecBlocks;
-    this.#size = 17 + 4 * version;
     this.#alignmentPatterns = alignmentPatterns;
+    this.#functionPattern = buildFunctionPattern(size, version, alignmentPatterns);
   }
 
   public get size(): number {
@@ -51,6 +55,10 @@ export class Version {
 
   public get version(): number {
     return this.#version;
+  }
+
+  public get functionPattern(): BitMatrix {
+    return this.#functionPattern;
   }
 
   public get alignmentPatterns(): number[] {
@@ -428,7 +436,7 @@ export function decodeVersion(version1: number, version2: number): Version {
 }
 
 // See ISO 18004:2006 Annex E
-export function buildFunctionPattern({ size, version, alignmentPatterns }: Version): BitMatrix {
+function buildFunctionPattern(size: number, version: number, alignmentPatterns: number[]): BitMatrix {
   // Alignment patterns
   const { length } = alignmentPatterns;
   const matrix = new BitMatrix(size);

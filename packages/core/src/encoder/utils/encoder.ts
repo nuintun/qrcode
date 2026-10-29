@@ -19,6 +19,9 @@ import { calculateMaskPenalty } from '/common/mask';
 import { Alphanumeric } from '/encoder/segments/Alphanumeric';
 import { Encoder as ReedSolomonEncoder } from '/common/reedsolomon/Encoder';
 
+// Stateless, reuse across blocks and encodes.
+const REED_SOLOMON = new ReedSolomonEncoder();
+
 export interface Hints {
   fnc1?: FNC1;
 }
@@ -40,7 +43,7 @@ function generateECCodewords(codewords: Uint8Array, numECCodewords: number): Uin
   buffer.set(codewords);
 
   // Reed solomon encode.
-  new ReedSolomonEncoder().encode(buffer, numECCodewords);
+  REED_SOLOMON.encode(buffer, numECCodewords);
 
   // Get ec codewords.
   return new Uint8Array(buffer.subarray(numDataCodewords));
