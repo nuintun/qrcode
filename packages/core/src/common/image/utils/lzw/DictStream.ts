@@ -46,19 +46,19 @@ export class DictStream {
       this.#push(this.#buffer);
     }
 
-    stream.writeByte(this.#dict.depth);
-
     const bytes = this.#bytes;
     const length = this.#length;
 
+    stream.writeByte(this.#dict.depth);
+
     // Divide it up into blocks with a size in front of each block.
-    for (let i = 0; i < length;) {
-      const remain = Math.min(255, length - i);
+    for (let offset = 0; offset < length;) {
+      const size = Math.min(255, length - offset);
 
-      stream.writeByte(remain);
-      stream.writeBytes(bytes, i, remain);
+      stream.writeByte(size);
+      stream.writeBytes(bytes, offset, size);
 
-      i += remain;
+      offset += size;
     }
 
     stream.writeByte(0);

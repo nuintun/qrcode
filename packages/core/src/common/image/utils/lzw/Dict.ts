@@ -17,18 +17,18 @@ const MAX_CODE = (1 << 12) - 1;
 export class Dict {
   #bof: number;
   #eof: number;
-  #bits!: number;
+  #bits: number;
   #depth: number;
-  #unused!: number;
+  #unused: number;
   #table: Int32Array;
 
   constructor(depth: number) {
     this.#depth = depth;
+    this.#bits = depth + 1;
     this.#bof = 1 << depth;
     this.#eof = this.#bof + 1;
+    this.#unused = this.#eof + 1;
     this.#table = new Int32Array((MAX_CODE + 1) << depth);
-
-    this.reset();
   }
 
   public get bof(): number {
@@ -61,8 +61,8 @@ export class Dict {
       return false;
     }
 
-    this.#unused = unused + 1;
     this.#table[(code << this.#depth) | index] = unused;
+    this.#unused = unused + 1;
 
     if (this.#unused > 1 << this.#bits) {
       this.#bits++;
