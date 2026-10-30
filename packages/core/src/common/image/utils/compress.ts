@@ -6,8 +6,6 @@ import { Dict } from './Dict';
 import { GifWriter } from './GifWriter';
 import { LzwWriter } from './LzwWriter';
 
-export { GifWriter };
-
 /**
  * LZW-compresses a scaled image with an optional unscaled margin.
  */
