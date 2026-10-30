@@ -48,10 +48,10 @@ export function compress(
   };
 
   const writeMargin = (width: number, height: number): void => {
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        writePixel(0);
-      }
+    const length = width * height;
+
+    for (let i = 0; i < length; i++) {
+      writePixel(0);
     }
   };
 
