@@ -2,7 +2,7 @@
  * @module GifImage
  */
 
-import { compress, GifWriter, ReadRow } from './utils';
+import { compress, GifWriter } from './utils';
 
 export type RGB = [
   // Red.
@@ -13,11 +13,11 @@ export type RGB = [
   B: number
 ];
 
-export type { ReadRow };
-
-export interface Colors {
-  foreground?: RGB;
+export interface Options {
+  scale?: number;
+  margin?: number;
   background?: RGB;
+  foreground?: RGB;
 }
 
 // Maximum chunk size for String.fromCharCode.apply(), kept below the argument limit.
@@ -25,6 +25,12 @@ const CHUNK_SIZE = 0x2000;
 
 // Cache String.fromCharCode for Base64 encoding.
 const { fromCharCode } = String;
+
+// Default background color.
+const DEFAULT_BACKGROUND: RGB = [0xff, 0xff, 0xff];
+
+// Default foreground color.
+const DEFAULT_FOREGROUND: RGB = [0x00, 0x00, 0x00];
 
 // Logical screen descriptor fields:
 // [global color table flag, background color index, pixel aspect ratio].
@@ -34,13 +40,9 @@ const LOGICAL_SCREEN_PREFIX = Uint8Array.of(0x80, 0, 0);
 const GIF_SIGNATURE = Uint8Array.of(0x47, 0x49, 0x46, 0x38, 0x39, 0x61);
 
 // Base64 alphabet: A-Z, a-z, 0-9, +, /.
-const BASE64_CODES = Uint8Array.from(
-  // Alphabet
-  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
-  char => {
-    return char.charCodeAt(0);
-  }
-);
+const BASE64_CODES = Uint8Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/', char => {
+  return char.charCodeAt(0);
+});
 
 /**
  * Encodes bytes as a standard Base64 string with '=' padding. Uses the native
@@ -89,42 +91,58 @@ function toBase64(bytes: Uint8Array): string {
 
 /**
  * A single-frame GIF89a encoder with a fixed two-color palette: index 0 for
- * the background and index 1 for the foreground. Pixel rows are pulled from
- * `readRow` while encoding, so no full pixel image is materialized in memory.
- * Encoded as a data URL on demand.
+ * the background and index 1 for the foreground. Pixel data is stored at the
+ * original image size and expanded during LZW compression.
  */
 export class GifImage {
+  #scale: number;
   #width: number;
   #height: number;
+  #margin: number;
   #background: RGB;
   #foreground: RGB;
-  #readRow: ReadRow;
+  #pixels: Uint8Array;
 
   constructor(
     width: number,
     height: number,
-    readRow: ReadRow,
-    { foreground = [0x00, 0x00, 0x00], background = [0xff, 0xff, 0xff] }: Colors = {}
+    {
+      // Scale.
+      scale = 1,
+      // Margin.
+      margin = 0,
+      // Background color.
+      background = DEFAULT_BACKGROUND,
+      // Foreground color.
+      foreground = DEFAULT_FOREGROUND
+    }: Options = {}
   ) {
+    this.#scale = scale;
     this.#width = width;
     this.#height = height;
-    this.#readRow = readRow;
-    this.#foreground = foreground;
+    this.#margin = margin;
     this.#background = background;
+    this.#foreground = foreground;
+    this.#pixels = new Uint8Array(width * height);
   }
 
   #encode(): Uint8Array {
+    const scale = this.#scale;
     const width = this.#width;
     const height = this.#height;
+    const margin = this.#margin;
     const stream = new GifWriter();
     const background = this.#background;
     const foreground = this.#foreground;
+    const outputWidth = width * scale + margin * 2;
+    const outputHeight = height * scale + margin * 2;
 
+    // GIF signature: GIF89a.
     stream.writeBytes(GIF_SIGNATURE);
 
     // Logical screen descriptor.
-    stream.writeInt16(width);
-    stream.writeInt16(height);
+    stream.writeInt16(outputWidth);
+    stream.writeInt16(outputHeight);
     stream.writeBytes(LOGICAL_SCREEN_PREFIX);
 
     // Global color table: background color followed by foreground color.
@@ -134,17 +152,21 @@ export class GifImage {
     stream.writeByte(0x2c);
     stream.writeInt16(0);
     stream.writeInt16(0);
-    stream.writeInt16(width);
-    stream.writeInt16(height);
+    stream.writeInt16(outputWidth);
+    stream.writeInt16(outputHeight);
     stream.writeByte(0);
 
     // Compress pixel indices using GIF LZW.
-    compress(width, height, 2, stream, this.#readRow);
+    compress(this.#pixels, width, height, scale, margin, stream);
 
     // GIF trailer: marks the end of the file.
     stream.writeByte(0x3b);
 
     return stream.bytes;
+  }
+
+  public setPixel(x: number, y: number, index: 0 | 1): void {
+    this.#pixels[y * this.#width + x] = index;
   }
 
   public toDataURL(): string {

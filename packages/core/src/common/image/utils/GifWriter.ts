@@ -33,7 +33,7 @@ export class GifWriter {
   public writeByte(value: number): void {
     this.#ensure(1);
 
-    this.#bytes[this.#length++] = value & 0xff;
+    this.#bytes[this.#length++] = value;
   }
 
   public writeInt16(value: number): void {
@@ -41,8 +41,8 @@ export class GifWriter {
 
     const bytes = this.#bytes;
 
-    bytes[this.#length++] = value & 0xff;
-    bytes[this.#length++] = (value >> 8) & 0xff;
+    bytes[this.#length++] = value;
+    bytes[this.#length++] = value >> 8;
   }
 
   public writeBytes(source: Uint8Array, offset = 0, length = source.length - offset): void {

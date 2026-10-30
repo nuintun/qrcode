@@ -5,7 +5,7 @@
 import { Version } from '/common/Version';
 import { ByteMatrix } from '/common/ByteMatrix';
 import { ECLevel, Level } from '/common/ECLevel';
-import { Colors, GifImage, ReadRow } from '/common/image/GifImage';
+import { GifImage, Options } from '/common/image/GifImage';
 
 export class Encoded {
   #mask: number;
@@ -66,35 +66,37 @@ export class Encoded {
     return this.#matrix.get(x, y) as 0 | 1;
   }
 
-  /**
-   * @method toDataURL
-   * @param moduleSize The size of one qrcode module
-   * @param options Set rest options of gif, like margin, foreground and background.
-   */
-  public toDataURL(moduleSize: number = 2, { margin = moduleSize * 4, ...colors }: Colors & { margin?: number } = {}): string {
-    moduleSize = Math.max(1, moduleSize >> 0);
+  public toDataURL(
+    moduleSize: number = 2,
+    {
+      // Background color.
+      background,
+      // Foreground color.
+      foreground,
+      // Margin.
+      margin = moduleSize * 4
+    }: Omit<Options, 'scale'> = {}
+  ): string {
     margin = Math.max(0, margin >> 0);
+    moduleSize = Math.max(1, moduleSize >> 0);
 
     const matrix = this.#matrix;
     const matrixSize = matrix.size;
-    const last = margin + matrixSize * moduleSize;
-    const size = moduleSize * matrixSize + margin * 2;
+    const image = new GifImage(matrixSize, matrixSize, {
+      margin,
+      background,
+      foreground,
+      scale: moduleSize
+    });
 
-    // Rasterize rows on demand; margin and background pixels stay 0.
-    const readRow: ReadRow = (row, buffer) => {
-      if (row >= margin && row < last) {
-        const moduleY = ((row - margin) / moduleSize) | 0;
-
-        for (let moduleX = 0; moduleX < matrixSize; moduleX++) {
-          if (matrix.get(moduleX, moduleY) !== 0) {
-            const start = margin + moduleX * moduleSize;
-
-            buffer.fill(1, start, start + moduleSize);
-          }
+    for (let y = 0; y < matrixSize; y++) {
+      for (let x = 0; x < matrixSize; x++) {
+        if (matrix.get(x, y) !== 0) {
+          image.setPixel(x, y, 1);
         }
       }
-    };
+    }
 
-    return new GifImage(size, size, readRow, colors).toDataURL();
+    return image.toDataURL();
   }
 }

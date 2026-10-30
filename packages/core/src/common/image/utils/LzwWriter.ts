@@ -6,8 +6,7 @@
 import { Dict } from './Dict';
 import { GifWriter } from './GifWriter';
 
-// GIF data sub-blocks carry at most 255 bytes; the length byte precedes the
-// data, so up to 255 bytes must be gathered before the block can be written.
+// GIF data sub-blocks carry at most 255 bytes.
 const BLOCK_SIZE = 255;
 
 /**
@@ -30,7 +29,7 @@ export class LzwWriter {
   }
 
   #push(value: number): void {
-    this.#block[this.#size++] = value;
+    this.#block[this.#size++] = value & 0xff;
 
     if (this.#size >= BLOCK_SIZE) {
       this.#flush();
@@ -53,7 +52,7 @@ export class LzwWriter {
     while (bits >= 8) {
       this.#push(buffer);
 
-      buffer >>= 8;
+      buffer >>>= 8;
       bits -= 8;
     }
 
