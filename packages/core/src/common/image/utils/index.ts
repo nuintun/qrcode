@@ -15,13 +15,14 @@ export function compress(
   pixels: Uint8Array,
   width: number,
   height: number,
+  depth: number,
   scale: number,
   margin: number,
   stream: GifWriter
 ): void {
   let code = -1;
 
-  const dict = new Dict(2);
+  const dict = new Dict(depth);
   const lzw = new LzwWriter(dict, stream);
   const outputWidth = width * scale + margin * 2;
 

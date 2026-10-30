@@ -157,7 +157,7 @@ export class GifImage {
     stream.writeByte(0);
 
     // Compress pixel indices using GIF LZW.
-    compress(this.#pixels, width, height, scale, margin, stream);
+    compress(this.#pixels, width, height, 2, scale, margin, stream);
 
     // GIF trailer: marks the end of the file.
     stream.writeByte(0x3b);
