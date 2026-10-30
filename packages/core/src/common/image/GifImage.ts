@@ -110,10 +110,6 @@ export class GifImage {
   }
 
   public toDataURL(): string {
-    console.time('gif');
-    const bytes = this.#encode();
-    console.timeEnd('gif');
-
-    return 'data:image/gif;base64,' + toBase64(bytes);
+    return 'data:image/gif;base64,' + toBase64(this.#encode());
   }
 }
