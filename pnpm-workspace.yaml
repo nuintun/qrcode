@@ -1,5 +1,7 @@
 packages:
   - packages/*
+minimumReleaseAge: 0
 allowBuilds:
+  '@parcel/watcher': true
   bufferutil: true
   utf-8-validate: true
