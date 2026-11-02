@@ -15,20 +15,20 @@ function isLinkLocal(address: string) {
 }
 
 /**
- * @function isIPv4
+ * @function isIpv4
  * @description 判断协议族是否为 IPv4
  * @param family IP 地址的协议族，可以是字符串（'IPv4'）或数字（4）
  */
-function isIPv4(family: string | number) {
+function isIpv4(family: string | number) {
   return family === 'IPv4' || family === 4;
 }
 
 /**
- * @function isIPv6
+ * @function isIpv6
  * @description 判断协议族是否为 IPv6
  * @param family IP 地址的协议族，可以是字符串（'IPv6'）或数字（6）
  */
-function isIPv6(family: string | number) {
+function isIpv6(family: string | number) {
   return family === 'IPv6' || family === 6;
 }
 
@@ -39,7 +39,7 @@ function isIPv6(family: string | number) {
  */
 export default function (ipv6 = false): string {
   // 根据参数选择协议族匹配函数
-  const isMatchFamily = ipv6 ? isIPv6 : isIPv4;
+  const isMatchFamily = ipv6 ? isIpv6 : isIpv4;
 
   // 获取所有网络接口信息
   const networkInterfaces = os.networkInterfaces();

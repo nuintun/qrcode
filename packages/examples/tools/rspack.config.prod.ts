@@ -16,8 +16,15 @@ import resolveConfigs from './rspack.config.base.ts';
 const [, configure] = await resolveConfigs(mode);
 
 configure.devtool = false;
+
 // @ts-expect-error
-configure.cache.version = 'dev';
+configure.cache.version = 'prod';
+
+// @ts-expect-error
+configure.optimization.chunkIds = 'compat-hashed';
+
+// @ts-expect-error
+configure.optimization.moduleIds = 'compat-hashed';
 
 // @ts-expect-error
 // 使用自定义 minimizer 工具
