@@ -49,7 +49,7 @@ export function getSerialEncodinRanges(start: number, end: number, offsets: numb
   const count = offsets.length - 1;
   const ranges: EncodingRange[] = [];
 
-  for (let i = start; i < end; ) {
+  for (let i = start; i < end;) {
     for (let j = 0; j < count; j += 2) {
       ranges.push([i + offsets[j], i + offsets[j + 1]]);
     }

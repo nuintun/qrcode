@@ -201,23 +201,23 @@ export function willFit(numInputBits: number, version: Version, ecLevel: ECLevel
 }
 
 function chooseVersion(numInputBits: number, ecLevel: ECLevel): Version {
-  let low = 0;
-  let high = VERSIONS.length - 1;
+  const { length } = VERSIONS;
 
-  while (low < high) {
-    const middle = (low + high) >>> 1;
+  let left = 0;
+  let right = length;
+
+  while (left < right) {
+    const middle = (left + right) >>> 1;
 
     if (willFit(numInputBits, VERSIONS[middle], ecLevel)) {
-      high = middle;
+      right = middle;
     } else {
-      low = middle + 1;
+      left = middle + 1;
     }
   }
 
-  const version = VERSIONS[low];
-
-  if (willFit(numInputBits, version, ecLevel)) {
-    return version;
+  if (left < length) {
+    return VERSIONS[left];
   }
 
   throw new Error('data too big for all versions');

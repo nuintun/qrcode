@@ -55,7 +55,7 @@ export class Numeric {
     const content = Array.from(this.#content);
     const { length } = content;
 
-    for (let i = 0; i < length; ) {
+    for (let i = 0; i < length;) {
       const code1 = getNumericCode(content[i]);
 
       if (i + 2 < length) {

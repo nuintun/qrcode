@@ -2,11 +2,10 @@
  * @module Encoded
  */
 
-import { toInt32 } from '/common/utils';
 import { Version } from '/common/Version';
 import { ByteMatrix } from '/common/ByteMatrix';
 import { ECLevel, Level } from '/common/ECLevel';
-import { Colors, GIFImage } from '/common/image/GIFImage';
+import { GifImage, Options } from '/common/image/GifImage';
 
 export class Encoded {
   #mask: number;
@@ -72,30 +71,30 @@ export class Encoded {
    * @param moduleSize The size of one qrcode module
    * @param options Set rest options of gif, like margin, foreground and background.
    */
-  public toDataURL(moduleSize: number = 2, { margin = moduleSize * 4, ...colors }: Colors & { margin?: number } = {}): string {
-    moduleSize = Math.max(1, moduleSize >> 0);
+  public toDataURL(
+    moduleSize: number = 2,
+    { background, foreground, margin = moduleSize * 4 }: Omit<Options, 'scale'> = {}
+  ): string {
     margin = Math.max(0, margin >> 0);
+    moduleSize = Math.max(1, moduleSize >> 0);
 
     const matrix = this.#matrix;
     const matrixSize = matrix.size;
-    const size = moduleSize * matrixSize + margin * 2;
-    const gif = new GIFImage(size, size, colors);
-    const max = size - margin;
+    const image = new GifImage(matrixSize, matrixSize, {
+      margin,
+      background,
+      foreground,
+      scale: moduleSize
+    });
 
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
-        if (x >= margin && x < max && y >= margin && y < max) {
-          const offsetX = toInt32((x - margin) / moduleSize);
-          const offsetY = toInt32((y - margin) / moduleSize);
-
-          gif.set(x, y, matrix.get(offsetX, offsetY));
-        } else {
-          // Margin pixels.
-          gif.set(x, y, 0);
+    for (let y = 0; y < matrixSize; y++) {
+      for (let x = 0; x < matrixSize; x++) {
+        if (matrix.get(x, y) !== 0) {
+          image.setPixel(x, y, 1);
         }
       }
     }
 
-    return gif.toDataURL();
+    return image.toDataURL();
   }
 }
