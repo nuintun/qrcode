@@ -45,16 +45,14 @@ export function getMappingFromEncodingRanges(label: string, ...ranges: EncodingR
   return mapping;
 }
 
-export function getSerialEncodinRanges(start: number, end: number, offsets: number[], delta: number = 256): EncodingRange[] {
-  const count = offsets.length - 1;
+export function getSerialEncodingRanges(start: number, end: number, offsets: number[], delta: number = 256): EncodingRange[] {
+  const { length } = offsets;
   const ranges: EncodingRange[] = [];
 
-  for (let i = start; i < end;) {
-    for (let j = 0; j < count; j += 2) {
-      ranges.push([i + offsets[j], i + offsets[j + 1]]);
+  for (let code = start; code <= end; code += delta) {
+    for (let i = 0; i < length; i += 2) {
+      ranges.push([code + offsets[i], code + offsets[i + 1]]);
     }
-
-    i += delta;
   }
 
   return ranges;
