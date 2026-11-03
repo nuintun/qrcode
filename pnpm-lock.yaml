@@ -125,8 +125,8 @@ importers:
         specifier: ^3.1.1
         version: 3.1.1
       koa:
-        specifier: ^3.2.1
-        version: 3.2.1
+        specifier: ^3.3.0
+        version: 3.3.0
       koa-compress:
         specifier: ^5.2.2
         version: 5.2.2
@@ -141,7 +141,7 @@ importers:
         version: 3.9.10
       rspack-dev-middleware:
         specifier: ^0.4.2
-        version: 0.4.2(@rspack/core@2.3.0(@swc/helpers@0.5.23))(bufferutil@4.1.0)(koa@3.2.1)(utf-8-validate@6.0.6)
+        version: 0.4.2(@rspack/core@2.3.0(@swc/helpers@0.5.23))(bufferutil@4.1.0)(koa@3.3.0)(utf-8-validate@6.0.6)
       sass-embedded:
         specifier: ^1.107.1
         version: 1.107.1
@@ -1568,8 +1568,8 @@ packages:
   koa-is-json@1.0.0:
     resolution: {integrity: sha512-+97CtHAlWDx0ndt0J8y3P12EWLwTLMXIfMnYDev3wOTwH/RpBGMlfn4bDXlMEg1u73K6XRE9BbUp+5ZAYoRYWw==}
 
-  koa@3.2.1:
-    resolution: {integrity: sha512-e7IpWJrnanNUroVK2taAgMxoEZvHLXdQiNjeExSu/DEIWm83jaKGBgb7tLmu2rMYpA027qFB3iLR/k3AVpFRnA==}
+  koa@3.3.0:
+    resolution: {integrity: sha512-NdsWJYxVzUuYt718DtEQRhUXqqsAPA4VlaUGrlidjh/T2TP/4OQXqQg4ouUHfHD9f+tgmwLZWPm+JQLgqM9YbA==}
     engines: {node: '>= 18'}
 
   lru-cache@11.5.3:
@@ -3469,7 +3469,7 @@ snapshots:
 
   koa-is-json@1.0.0: {}
 
-  koa@3.2.1:
+  koa@3.3.0:
     dependencies:
       accepts: 1.3.8
       content-disposition: 1.0.1
@@ -3711,13 +3711,13 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.67.4
       fsevents: 2.3.3
 
-  rspack-dev-middleware@0.4.2(@rspack/core@2.3.0(@swc/helpers@0.5.23))(bufferutil@4.1.0)(koa@3.2.1)(utf-8-validate@6.0.6):
+  rspack-dev-middleware@0.4.2(@rspack/core@2.3.0(@swc/helpers@0.5.23))(bufferutil@4.1.0)(koa@3.3.0)(utf-8-validate@6.0.6):
     dependencies:
       '@nuintun/ansi': 0.3.13
       '@rspack/core': 2.3.0(@swc/helpers@0.5.23)
       '@types/koa': 3.0.3
       '@types/ws': 8.18.2
-      koa: 3.2.1
+      koa: 3.3.0
       memfs: 4.80.0
       range-parser: 1.3.0
       schema-utils: 4.8.2
