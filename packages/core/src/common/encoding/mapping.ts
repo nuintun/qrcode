@@ -2,7 +2,7 @@
  * @module mapping
  */
 
-import { getMappingFromCharacters, getMappingFromEncodingRanges, getSerialEncodinRanges } from './utils';
+import { getMappingFromCharacters, getMappingFromEncodingRanges, getSerialEncodingRanges } from './utils';
 
 export const GB2312_MAPPING = getMappingFromEncodingRanges(
   'gb2312',
@@ -20,9 +20,9 @@ export const GB2312_MAPPING = getMappingFromEncodingRanges(
   [0xa8a1, 0xa8ba],
   [0xa8c5, 0xa8e9],
   [0xa9a4, 0xa9ef],
-  ...getSerialEncodinRanges(0xb0a1, 0xd6fe, [0, 93]),
+  ...getSerialEncodingRanges(0xb0a1, 0xd6fe, [0, 93]),
   [0xd7a1, 0xd7f9],
-  ...getSerialEncodinRanges(0xd8a1, 0xf7fe, [0, 93])
+  ...getSerialEncodingRanges(0xd8a1, 0xf7fe, [0, 93])
 );
 
 export const SHIFT_JIS_MAPPING = getMappingFromEncodingRanges(
@@ -47,11 +47,11 @@ export const SHIFT_JIS_MAPPING = getMappingFromEncodingRanges(
   [0x8480, 0x8491],
   [0x849f, 0x84be],
   [0x889f, 0x88fc],
-  ...getSerialEncodinRanges(0x8940, 0x97fc, [0, 62, 64, 188]),
+  ...getSerialEncodingRanges(0x8940, 0x97fc, [0, 62, 64, 188]),
   [0x9840, 0x9872],
   [0x989f, 0x98fc],
-  ...getSerialEncodinRanges(0x9940, 0x9ffc, [0, 62, 64, 188]),
-  ...getSerialEncodinRanges(0xe040, 0xe9fc, [0, 62, 64, 188]),
+  ...getSerialEncodingRanges(0x9940, 0x9ffc, [0, 62, 64, 188]),
+  ...getSerialEncodingRanges(0xe040, 0xe9fc, [0, 62, 64, 188]),
   [0xea40, 0xea7e],
   [0xea80, 0xeaa4]
 );
