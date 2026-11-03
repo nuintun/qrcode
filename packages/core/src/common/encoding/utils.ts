@@ -24,7 +24,7 @@ export function getMappingFromEncodingRanges(label: string, ...ranges: EncodingR
 
   for (const [start, end] of ranges) {
     for (let code = start; code <= end; code++) {
-      // Now only support two bytes characters.
+      // Only two-byte characters are supported.
       bytes.push((code >> 8) & 0xff, code & 0xff);
       // Cache the codes.
       codes.push(code);

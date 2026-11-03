@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@nuintun/svgo-loader": "^0.6.2",
-    "@rspack/core": "^2.3.0",
+    "@rspack/core": "^2.3.1",
     "@rspack/plugin-react-refresh": "^2.0.2",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",

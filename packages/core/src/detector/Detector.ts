@@ -94,7 +94,7 @@ export class Detector {
         // If we didn't find alignment pattern... well try anyway without it.
         const alignmentPatterns = findAlignmentInRegion(matrix, finderPatternGroup, strict);
 
-        // Founded alignment.
+        // Found alignment.
         for (const alignmentPattern of alignmentPatterns) {
           const transform = createTransform(finderPatternGroup, alignmentPattern);
 
