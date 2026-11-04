@@ -275,15 +275,15 @@ loop back to the detector until it is exhausted:
 flowchart LR
   subgraph Preprocess ["Step 1 - 2: Preprocess"]
     direction LR
-    A([Image]) -->|"grayscale()"| B["Luminance<br><small>Uint8Array</small>"]
-    B -->|"binarize()"| C["BitMatrix<br><small>black / white</small>"]
+    A([Image]) -->|"grayscale()"| B["Luminance<br/>Uint8Array"]
+    B -->|"binarize()"| C["BitMatrix<br/>black / white"]
   end
 
   subgraph Scan ["Step 3 - 4: Scan and Decode"]
     direction LR
-    D["Detected<br><small>candidate region</small>"]
+    D["Detected<br/>candidate region"]
     E{"decoded?"}
-    F["Decoded<br><small>content</small>"]
+    F["Decoded<br/>content"]
   end
 
   C ==>|"Detector#detect"| D

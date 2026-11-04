@@ -265,15 +265,15 @@ qrcode.toDataURL(4, { margin: 16, foreground: [0, 102, 204], background: [255, 2
 flowchart LR
   subgraph Preprocess ["步骤 1 - 2：预处理"]
     direction LR
-    A([图片]) -->|"grayscale()"| B["亮度值<br><small>Uint8Array</small>"]
-    B -->|"binarize()"| C["BitMatrix<br><small>黑白矩阵</small>"]
+    A([图片]) -->|"grayscale()"| B["亮度值<br/>Uint8Array"]
+    B -->|"binarize()"| C["BitMatrix<br/>黑白矩阵"]
   end
 
   subgraph Scan ["步骤 3 - 4：扫描解码"]
     direction LR
-    D["Detected<br><small>候选区域</small>"]
+    D["Detected<br/>候选区域"]
     E{"解码成功？"}
-    F["Decoded<br><small>文本内容</small>"]
+    F["Decoded<br/>文本内容"]
   end
 
   C ==>|"Detector#detect"| D
