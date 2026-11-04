@@ -22,8 +22,8 @@
   "dependencies": {
     "@ant-design/icons": "^6.3.4",
     "@nuintun/qrcode": "workspace:*",
-    "@swc/helpers": "^0.5.23",
-    "antd": "^6.6.8",
+    "@swc/helpers": "^0.5.24",
+    "antd": "^6.7.0",
     "browser-fs-access": "^0.38.0",
     "chardet": "^2.2.0",
     "classnames": "^2.5.1",
