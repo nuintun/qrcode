@@ -19,18 +19,18 @@ jobs:
     steps:
       # 检出代码
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       # 设置 pnpm
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: latest
-      # 设置 node
+      # 设置 Node.js
       - name: Setup node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: latest
-          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
       # 安装依赖
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -42,7 +42,7 @@ jobs:
         run: cp -r ./packages/core/spec ./packages/examples/wwwroot
       # 上传构建产物
       - name: Upload GitHub Pages
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ./packages/examples/wwwroot
   # 部署任务
@@ -55,4 +55,4 @@ jobs:
     steps:
       # 部署到 GitHub Pages
       - name: Deploy GitHub Pages
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
