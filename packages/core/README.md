@@ -23,24 +23,25 @@ A pure JavaScript QRCode encode and decode library.
 
 ## Table of Contents
 
-- [QRCode](#qrcode)
-  - [Table of Contents](#table-of-contents)
-  - [Features](#features)
-  - [Installation](#installation)
-  - [Quick Start](#quick-start)
-  - [Encoding Guide](#encoding-guide)
-    - [Error Correction Level](#error-correction-level)
-    - [Segments and Modes](#segments-and-modes)
-    - [Version](#version)
-    - [Charsets and ECI](#charsets-and-eci)
-    - [FNC1](#fnc1)
-    - [Output](#output)
-  - [Decoding Guide](#decoding-guide)
-    - [Pipeline](#pipeline)
-    - [Detection](#detection)
-    - [Decoding](#decoding)
-  - [API Reference](#api-reference) - [Common Interface](#common-interface) - [Encoder Interface](#encoder-interface) - [Decoder Interface](#decoder-interface)
-  - [Links](#links)
+- [Features](#features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Encoding Guide](#encoding-guide)
+  - [Error Correction Level](#error-correction-level)
+  - [Segments and Modes](#segments-and-modes)
+  - [Version](#version)
+  - [Charsets and ECI](#charsets-and-eci)
+  - [FNC1](#fnc1)
+  - [Output](#output)
+- [Decoding Guide](#decoding-guide)
+  - [Pipeline](#pipeline)
+  - [Detection](#detection)
+  - [Decoding](#decoding)
+- [API Reference](#api-reference)
+  - [Common Interface](#common-interface)
+  - [Encoder Interface](#encoder-interface)
+  - [Decoder Interface](#decoder-interface)
+- [Links](#links)
 
 ## Features
 
@@ -69,7 +70,7 @@ const { Encoder } = require('@nuintun/qrcode');
 
 ## Quick Start
 
-Encode a QR code and get a GIF data URL in three lines:
+Encode a QR code to a GIF data URL in three lines of code:
 
 ```ts
 import { Encoder } from '@nuintun/qrcode';
@@ -116,12 +117,12 @@ mask, and appending Reed-Solomon error correction codewords.
 Error correction allows a damaged QR code to be read. Higher level means more
 redundancy, but also a larger symbol for the same data. Choose by scenario:
 
-| Level | Recoverable Codewords | Recommended Scenario                                              |
-| ----- | --------------------- | ----------------------------------------------------------------- |
-| `L`   | ~7%                   | Clean environments, maximum data capacity                         |
-| `M`   | ~15%                  | Common default, good balance                                      |
-| `Q`   | ~25%                  | Outdoor, industrial, slightly dirty environments                  |
-| `H`   | ~30%                  | Heavy damage or logo overlay, required for WeChat style centering |
+| Level | Recoverable Codewords | Recommended Scenario                                       |
+| ----- | --------------------- | ---------------------------------------------------------- |
+| `L`   | ~7%                   | Clean environments, maximum data capacity                  |
+| `M`   | ~15%                  | Common default, good balance                               |
+| `Q`   | ~25%                  | Outdoor, industrial, slightly dirty environments           |
+| `H`   | ~30%                  | Heavy damage, or overlaying a centered logo (WeChat style) |
 
 ```ts
 const encoder = new Encoder({ level: 'H' });
@@ -140,7 +141,7 @@ how many bits per character they cost:
 | `Kanji`        | Kanji        | 13                 | Shift-JIS double byte characters (Japanese)             |
 | `Hanzi`        | Hanzi        | 13                 | GB2312 double byte characters (Chinese)                 |
 
-Segments are joined in a single `encode` call and the decoder restores them in order:
+Segments are combined in a single `encode` call and the decoder restores them in order:
 
 ```ts
 import { Byte, Encoder, Hanzi, Kanji } from '@nuintun/qrcode';
@@ -162,7 +163,7 @@ than `new Byte('1234567890')`.
 
 ### Version
 
-A version is the symbol size, from 1 (21 x 21 modules) to 40 (177 x 177 modules).
+A version determines the symbol size, from 1 (21 x 21 modules) to 40 (177 x 177 modules).
 By default the encoder picks the smallest version that fits your data:
 
 ```ts
@@ -199,7 +200,7 @@ const qrcode = encoder.encode(new Byte('你好世界', Charset.GBK));
 ```
 
 On the decode side, the built-in decode function uses the `TextDecoder` API, which covers
-most browser supported labels. For charsets the platform does not support, pass a custom
+most labels the platform supports. For charsets the platform does not support, pass a custom
 `decode` function:
 
 ```ts
@@ -299,13 +300,13 @@ flowchart LR
   class E gate
 ```
 
-Steps 1 and 2 are pure functions exported from the package, they accept any
+Steps 1 and 2 are pure functions exported from the package. They accept any
 `ImageData`-like object (in Node.js, any object with `data`, `width` and `height`).
 
 ### Detection
 
 `Detector#detect` is a generator that yields every QR code region it finds as a
-`Detected` object. A region is only a candidate, it may fail to decode, so the
+`Detected` object. A region is only a candidate and may fail to decode, so the
 generator asks you to report success back through `next(succeed)`:
 
 ```ts
@@ -382,7 +383,7 @@ const bottomLeftTiming = detect.mapping(6.5, size - 6.5);
 ```
 
 The `Detector` accepts one option, `strict`, which tightens finder pattern ratio
-checking. Leave it off for tolerant scanning, enable it to reject marginal candidates:
+checking. Leave it off for tolerant scanning; enable it to reject marginal candidates:
 
 ```ts
 const detector = new Detector({ strict: true });
@@ -390,9 +391,9 @@ const detector = new Detector({ strict: true });
 
 ### Decoding
 
-`Decoder#decode` takes a `Detected` matrix (or any `BitMatrix` you built yourself) and
-returns a `Decoded` object. It retries automatically in mirror mode when the symbol
-does not parse, and reports that through `mirror`:
+`Decoder#decode` takes the sampled matrix of a `Detected` object (or any `BitMatrix`
+you built yourself) and returns a `Decoded` object. When parsing fails, it retries
+automatically in mirror mode and reports that through `mirror`:
 
 | Property     | Description                                                         |
 | ------------ | ------------------------------------------------------------------- |
@@ -408,7 +409,7 @@ does not parse, and reports that through `mirror`:
 | `codewords`  | Raw data codewords, for advanced processing                         |
 
 Structured append spreads one logical message across several symbols. Collect
-`structured` results across images and join them by `index` and `count`:
+`structured` results across scans and join them by `index` and `count`:
 
 ```ts
 if (decoded.structured) {
