@@ -268,14 +268,35 @@ For full control (SVG, canvas, styled modules), iterate the matrix yourself with
 ### Pipeline
 
 Decoding is a four step pipeline. The first two steps prepare the image, the third
-finds candidate QR code regions, and the fourth extracts content:
+finds candidate QR code regions, and the fourth extracts content. Failed candidates
+loop back to the detector until it is exhausted:
 
 ```mermaid
 flowchart LR
-  A[Image] -->|grayscale| B[Luminance]
-  B -->|binarize| C[BitMatrix]
-  C -->|Detector#detect| D[Detected]
-  D -->|Decoder#decode| E[Decoded]
+  subgraph Preprocess ["Step 1 - 2: Preprocess"]
+    direction LR
+    A([Image]) -->|"grayscale()"| B["Luminance<br><small>Uint8Array</small>"]
+    B -->|"binarize()"| C["BitMatrix<br><small>black / white</small>"]
+  end
+
+  subgraph Scan ["Step 3 - 4: Scan and Decode"]
+    direction LR
+    D["Detected<br><small>candidate region</small>"]
+    E{"decoded?"}
+    F["Decoded<br><small>content</small>"]
+  end
+
+  C ==>|"Detector#detect"| D
+  D -->|"Decoder#decode"| E
+  E -->|"yes"| F
+  E -->|"no, next(false)"| D
+
+  classDef data fill:#e8f1fb,stroke:#4a7fc1,color:#1a1a1a
+  classDef step fill:#eef7ec,stroke:#6aa96d,color:#1a1a1a
+  classDef gate fill:#fdf3e3,stroke:#c9963f,color:#1a1a1a
+  class A,B,C,F data
+  class D step
+  class E gate
 ```
 
 Steps 1 and 2 are pure functions exported from the package, they accept any

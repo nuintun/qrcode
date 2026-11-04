@@ -258,14 +258,35 @@ qrcode.toDataURL(4, { margin: 16, foreground: [0, 102, 204], background: [255, 2
 
 ### 处理流程
 
-解码是四步流水线：前两步预处理图像，第三步找出候选二维码区域，第四步提取内容：
+解码是四步流水线：前两步预处理图像，第三步找出候选二维码区域，第四步提取内容。
+解码失败的候选会回到检测器继续尝试，直到候选耗尽：
 
 ```mermaid
 flowchart LR
-  A[图片] -->|grayscale| B[亮度值]
-  B -->|binarize| C[BitMatrix]
-  C -->|Detector#detect| D[Detected]
-  D -->|Decoder#decode| E[Decoded]
+  subgraph Preprocess ["步骤 1 - 2：预处理"]
+    direction LR
+    A([图片]) -->|"grayscale()"| B["亮度值<br><small>Uint8Array</small>"]
+    B -->|"binarize()"| C["BitMatrix<br><small>黑白矩阵</small>"]
+  end
+
+  subgraph Scan ["步骤 3 - 4：扫描解码"]
+    direction LR
+    D["Detected<br><small>候选区域</small>"]
+    E{"解码成功？"}
+    F["Decoded<br><small>文本内容</small>"]
+  end
+
+  C ==>|"Detector#detect"| D
+  D -->|"Decoder#decode"| E
+  E -->|"是"| F
+  E -->|"否，next(false)"| D
+
+  classDef data fill:#e8f1fb,stroke:#4a7fc1,color:#1a1a1a
+  classDef step fill:#eef7ec,stroke:#6aa96d,color:#1a1a1a
+  classDef gate fill:#fdf3e3,stroke:#c9963f,color:#1a1a1a
+  class A,B,C,F data
+  class D step
+  class E gate
 ```
 
 前两步都是包内导出的纯函数，接受任何 `ImageData` 风格的对象
