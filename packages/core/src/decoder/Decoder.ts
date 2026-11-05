@@ -64,7 +64,7 @@ export class Decoder {
    */
   public decode(matrix: BitMatrix): Decoded {
     let corrected = 0;
-    let mirror = false;
+    let mirrored = false;
     let version: Version;
     let codewords: Uint8Array;
     let formatInfo: FormatInfo | undefined;
@@ -82,12 +82,12 @@ export class Decoder {
 
       parser.mirror();
 
-      mirror = true;
+      mirrored = true;
       version = parser.readVersion();
       formatInfo = parser.readFormatInfo();
       [codewords, corrected] = parse(parser, version, formatInfo);
     }
 
-    return new Decoded(decode(codewords, version, this.#decode), version, formatInfo, corrected, mirror);
+    return new Decoded(decode(codewords, version, this.#decode), version, formatInfo, corrected, mirrored);
   }
 }

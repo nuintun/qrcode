@@ -393,7 +393,7 @@ const detector = new Detector({ strict: true });
 
 `Decoder#decode` takes the sampled matrix of a `Detected` object (or any `BitMatrix`
 you built yourself) and returns a `Decoded` object. When parsing fails, it retries
-automatically in mirror mode and reports that through `mirror`:
+automatically in mirror mode and reports that through `mirrored`:
 
 | Property     | Description                                                         |
 | ------------ | ------------------------------------------------------------------- |
@@ -401,7 +401,7 @@ automatically in mirror mode and reports that through `mirror`:
 | `version`    | Version number (1 - 40)                                             |
 | `level`      | Error correction level (`L` / `M` / `Q` / `H`)                      |
 | `mask`       | Mask pattern index (0 - 7)                                          |
-| `mirror`     | Whether the symbol was decoded mirrored                             |
+| `mirrored`   | Whether the symbol was decoded mirrored                             |
 | `corrected`  | Number of error corrected codewords, a hint of image quality        |
 | `symbology`  | AIM symbology identifier, `]Q` + modifier                           |
 | `fnc1`       | `['GS1']` or `['AIM', indicator]` if present, otherwise `false`     |
@@ -569,7 +569,7 @@ export class Decoded {
   public get mask(): number;
   public get level(): Level;
   public get version(): number;
-  public get mirror(): boolean;
+  public get mirrored(): boolean;
   public get content(): string;
   public get corrected(): number;
   public get symbology(): string;

@@ -11,17 +11,17 @@ import { DecodeSource, Structured } from './utils/source';
 export class Decoded {
   #mask: number;
   #level: ECLevel;
-  #mirror: boolean;
   #version: Version;
   #corrected: number;
+  #mirrored: boolean;
   #metadata: DecodeSource;
 
-  constructor(metadata: DecodeSource, version: Version, { mask, level }: FormatInfo, corrected: number, mirror: boolean) {
+  constructor(metadata: DecodeSource, version: Version, { mask, level }: FormatInfo, corrected: number, mirrored: boolean) {
     this.#mask = mask;
     this.#level = level;
-    this.#mirror = mirror;
     this.#version = version;
     this.#metadata = metadata;
+    this.#mirrored = mirrored;
     this.#corrected = corrected;
   }
 
@@ -50,11 +50,11 @@ export class Decoded {
   }
 
   /**
-   * @property mirror
-   * @description Get the mirror of qrcode.
+   * @property mirrored
+   * @description Whether the symbol was decoded mirrored.
    */
-  public get mirror(): boolean {
-    return this.#mirror;
+  public get mirrored(): boolean {
+    return this.#mirrored;
   }
 
   /**

@@ -380,7 +380,7 @@ const detector = new Detector({ strict: true });
 ### 内容解码
 
 `Decoder#decode` 接收 `Detected` 采样后的矩阵（或任何自建的 `BitMatrix`），返回
-`Decoded` 对象。解析失败时会自动以镜像模式重试，并通过 `mirror` 报告：
+`Decoded` 对象。解析失败时会自动以镜像模式重试，并通过 `mirrored` 报告：
 
 | 属性         | 说明                                                     |
 | ------------ | -------------------------------------------------------- |
@@ -388,7 +388,7 @@ const detector = new Detector({ strict: true });
 | `version`    | 版本号（1 - 40）                                         |
 | `level`      | 纠错等级（`L` / `M` / `Q` / `H`）                        |
 | `mask`       | 掩模图案索引（0 - 7）                                    |
-| `mirror`     | 符号是否以镜像方式解码                                   |
+| `mirrored`   | 符号是否以镜像方式解码                                   |
 | `corrected`  | 纠错修复的码字数量，可作为图像质量的参考                 |
 | `symbology`  | AIM 符号标识符，`]Q` + 修饰符                            |
 | `fnc1`       | 存在时为 `['GS1']` 或 `['AIM', indicator]`，否则 `false` |
@@ -556,7 +556,7 @@ export class Decoded {
   public get mask(): number;
   public get level(): Level;
   public get version(): number;
-  public get mirror(): boolean;
+  public get mirrored(): boolean;
   public get content(): string;
   public get corrected(): number;
   public get symbology(): string;
