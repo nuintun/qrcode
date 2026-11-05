@@ -29,4 +29,4 @@ jobs:
       # 发布到 npm
       - name: Publish to npm
         working-directory: packages/core
-        run: npm publish --access public
+        run: npm publish --access public --tag v5-latest
