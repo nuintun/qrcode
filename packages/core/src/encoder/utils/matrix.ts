@@ -342,8 +342,8 @@ function embedEncodingRegion(matrix: ByteMatrix, codewords: BitArray, version: V
 export function buildMatrix(codewords: BitArray, version: Version, ecLevel: ECLevel, mask: number): ByteMatrix {
   const matrix = new ByteMatrix(version.size);
 
-  // Clear matrix.
-  matrix.clear(-1);
+  // Fill matrix with sentinel value -1.
+  matrix.fill(-1);
 
   // Embed function patterns.
   embedFunctionPatterns(matrix, version);

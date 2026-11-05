@@ -453,7 +453,7 @@ export class Charset {
   public get values(): readonly number[];
 }
 
-declare type FNC1 = readonly [mode: 'GS1'] | readonly [mode: 'AIM', indicator: number];
+export type FNC1 = readonly [mode: 'GS1'] | readonly [mode: 'AIM', indicator: number];
 ```
 
 ##### 编码器接口
@@ -531,7 +531,7 @@ export class Pattern extends Point {
   public get moduleSize(): number;
 }
 
-declare class FinderPatternGroup {
+export class FinderPatternGroup {
   public get topLeft(): Pattern;
   public get topRight(): Pattern;
   public get bottomLeft(): Pattern;
@@ -546,7 +546,7 @@ export class Detected {
   public mapping(x: number, y: number): Point;
 }
 
-declare interface Structured {
+export interface Structured {
   readonly index: number;
   readonly count: number;
   readonly parity: number;

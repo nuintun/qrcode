@@ -23,7 +23,7 @@ export class ByteMatrix {
     return this.#bytes[y * this.#size + x];
   }
 
-  public clear(value: number): void {
+  public fill(value: number): void {
     this.#bytes.fill(value);
   }
 }
