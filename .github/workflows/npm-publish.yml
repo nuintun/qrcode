@@ -28,4 +28,5 @@ jobs:
         run: pnpm install --frozen-lockfile
       # 发布到 npm
       - name: Publish to npm
+        working-directory: packages/core
         run: npm publish --access public
