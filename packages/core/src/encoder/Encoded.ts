@@ -21,7 +21,7 @@ export class Encoded {
   }
 
   /**
-   * @property matrix
+   * @property size
    * @description Get the size of qrcode.
    */
   public get size(): number {
