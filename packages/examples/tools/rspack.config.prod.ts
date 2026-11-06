@@ -18,7 +18,7 @@ const [, configure] = await resolveConfigs(mode);
 configure.devtool = false;
 
 // @ts-expect-error
-configure.cache.version = 'prod';
+configure.cache.name = 'prod';
 
 // @ts-expect-error
 configure.optimization.chunkIds = 'compat-hashed';
