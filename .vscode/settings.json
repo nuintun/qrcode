@@ -38,48 +38,6 @@
   "[markdown]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "todo-tree.filtering.excludeGlobs": [
-    "**/*.map",
-    "**/*.min.*",
-    "**/dist/**",
-    "**/build/**",
-    "**/vendor/**",
-    "**/.vscode/**",
-    "**/.github/**",
-    "**/_output/**",
-    "**/node_modules/**",
-    "**/bower_components/**"
-  ],
-  "todo-tree.general.statusBar": "total",
-  "todo-tree.general.tags": [
-    "BUG",
-    "HACK",
-    "FIXME",
-    "TODO"
-  ],
-  "todo-tree.highlights.customHighlight": {
-    "BUG": {
-      "borderRadius": "0",
-      "fontStyle": "italic",
-      "type": "text-and-comment"
-    },
-    "HACK": {
-      "borderRadius": "0",
-      "fontStyle": "italic",
-      "type": "text-and-comment"
-    },
-    "FIXME": {
-      "borderRadius": "0",
-      "fontStyle": "italic",
-      "type": "text-and-comment"
-    },
-    "TODO": {
-      "borderRadius": "0",
-      "fontStyle": "italic",
-      "type": "text-and-comment"
-    }
-  },
   "editor.formatOnSave": true,
-  "todo-tree.highlights.useColourScheme": true,
-  "typescript.tsdk": "./node_modules/typescript/lib"
+  "js/ts.tsdk.path": "./node_modules/typescript/lib"
 }
